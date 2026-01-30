@@ -85,12 +85,18 @@ The HTML mockups become your **Rosetta Stone**—the bridge between "that looks 
 
 ### Installation
 
+**From GitHub (recommended):**
 ```bash
-# For development/testing
-claude --plugin-dir /path/to/claude-code-design
+# Add the marketplace
+/plugin marketplace add justinrich/claude-code-design
 
-# From marketplace (when published)
-/plugin install claude-code-design
+# Install the plugin
+/plugin install claude-code-design@justinrich-claude-code-design-marketplace
+```
+
+**For local development:**
+```bash
+claude --plugin-dir /path/to/claude-code-design
 ```
 
 ### Basic Usage
