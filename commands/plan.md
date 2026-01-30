@@ -6,6 +6,32 @@ description: "Generate design artifacts from PRD: UX plan, paradigm, tokens, com
 
 Generate design artifacts from a PRD (Product Requirements Document).
 
+## ⚠️ EXECUTE THIS FIRST - MANDATORY
+
+```
+STEP 1: Resolve target directory
+  - If target provided: use {target}/design/
+  - If no target: find nearest design.config.yaml or design/ directory
+
+STEP 2: Check design.config.yaml exists
+
+  IF NOT EXISTS:
+    ┌─────────────────────────────────────────────────────────┐
+    │ STOP. Run /pixel-perfect:init for this target.          │
+    │ DO NOT generate any YAML until init completes.          │
+    │ Init will ask about: requirements, platforms, vibe.     │
+    └─────────────────────────────────────────────────────────┘
+
+  IF EXISTS:
+    → Read config and proceed to planning
+```
+
+**This check is NOT optional. Never skip to generation.**
+
+---
+
+## Command Order: init → **plan** → prompts → mockups
+
 ## Usage
 
 ```
@@ -18,24 +44,6 @@ Generate design artifacts from a PRD (Product Requirements Document).
   - **Full path**: `.spec/epics/epic-1` → uses exact path
   - **Name only**: `epic-1` → searches spec directory for matching folder
   - **Nested**: `lunch-menu` → finds it anywhere under spec directory
-
-## Command Order: init → **plan** → prompts → mockups
-
-Plan is step 2. Before running, check previous steps are complete.
-
-## Scope Resolution
-
-If no target specified, find the nearest `design/` directory or `design.config.yaml` from current location.
-
-## Dependency Check
-
-**BEFORE doing anything else**, verify prerequisites for the scoped directory:
-
-```
-CHECK: {target}/design/design.config.yaml exists?
-  NO  → Run /pixel-perfect:init first, then return here
-  YES → Proceed to planning
-```
 
 Use `--skip-deps` to error instead of auto-running missing steps.
 

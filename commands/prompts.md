@@ -6,6 +6,36 @@ description: "Generate specification files from views.yaml for mockup generation
 
 Generate specification files from design artifacts for mockup generation.
 
+## ⚠️ EXECUTE THIS FIRST - MANDATORY
+
+```
+STEP 1: Resolve target directory
+  - If target provided: use {target}/design/
+  - If no target: find nearest design.config.yaml or design/ directory
+
+STEP 2: Check dependencies IN ORDER
+
+  CHECK: design.config.yaml exists?
+    NO → ┌──────────────────────────────────────────────────┐
+         │ STOP. Execute /pixel-perfect:init completely.   │
+         │ Wait for init to finish. Then return here.      │
+         └──────────────────────────────────────────────────┘
+
+  CHECK: views.yaml exists?
+    NO → ┌──────────────────────────────────────────────────┐
+         │ STOP. Execute /pixel-perfect:plan completely.   │
+         │ Wait for plan to finish. Then return here.      │
+         └──────────────────────────────────────────────────┘
+
+  ALL EXIST → Proceed to prompts generation
+```
+
+**This check is NOT optional. You MUST run missing steps.**
+
+---
+
+## Command Order: init → plan → **prompts** → mockups
+
 ## Usage
 
 ```
@@ -17,28 +47,6 @@ Generate specification files from design artifacts for mockup generation.
 - `<target>`: Epic or feature with design artifacts. Supports smart path resolution:
   - **Full path**: `.spec/epics/epic-1` → uses exact path
   - **Name only**: `epic-1` → searches spec directory for matching folder
-
-## Command Order: init → plan → **prompts** → mockups
-
-Prompts is step 3. Before running, check previous steps are complete.
-
-## Scope Resolution
-
-If no target specified, find the nearest `design/` directory or `design.config.yaml` from current location.
-
-## Dependency Check
-
-**BEFORE doing anything else**, verify prerequisites for the scoped directory:
-
-```
-CHECK 1: {target}/design/design.config.yaml exists?
-  NO  → Run /pixel-perfect:init first
-
-CHECK 2: {target}/design/views.yaml exists?
-  NO  → Run /pixel-perfect:plan first
-
-ALL CHECKS PASS → Proceed to prompts generation
-```
 
 Use `--skip-deps` to error instead of auto-running missing steps.
 

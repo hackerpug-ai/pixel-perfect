@@ -4,7 +4,38 @@ description: "Run the full design workflow: init → plan → prompts → mockup
 
 # Design Workflow
 
-Run the complete design workflow for an epic, starting with interactive preplanning.
+## ⚠️ EXECUTE THIS FIRST - MANDATORY
+
+Before ANY other action, run this dependency check:
+
+```
+STEP 1: Resolve target directory
+  - If target provided: use {target}/design/
+  - If no target: find nearest design.config.yaml or design/ directory
+
+STEP 2: Check design.config.yaml exists in target
+
+  IF NOT EXISTS:
+    ┌─────────────────────────────────────────────────────────┐
+    │ STOP. Run /pixel-perfect:init for this target.          │
+    │ DO NOT proceed to planning until init completes.        │
+    │ Init will ask about: requirements, platforms, vibe.     │
+    └─────────────────────────────────────────────────────────┘
+
+  IF EXISTS:
+    → Read config and continue to dependency checks below
+
+STEP 3: Check which phases are complete (by artifact presence)
+  - views.yaml missing? → Need to run plan
+  - prompts/*.spec.json missing? → Need to run prompts
+  - mocks/*.mock.html missing? → Need to run mockups
+
+STEP 4: Execute missing phases in order
+```
+
+**This check is NOT optional. Never skip to generation.**
+
+---
 
 ## Design is a Router
 
@@ -13,12 +44,6 @@ The design command orchestrates the full workflow by running commands in sequenc
 ```
 init → plan → prompts → mockups → review
 ```
-
-It checks what's already done and continues from where needed.
-
-## Scope Resolution
-
-If no target specified, find the nearest `design/` directory or `design.config.yaml` from current location.
 
 ## Usage
 
