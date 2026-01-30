@@ -1,0 +1,12 @@
+{
+  "name": "claude-code-design",
+  "description": "Tech-agnostic UI/UX design workflow: PRD to mockups. Supports React, Flutter, CLI, and any platform.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Justin Rich"
+  },
+  "homepage": "https://github.com/justinrich/claude-code-design",
+  "repository": "https://github.com/justinrich/claude-code-design",
+  "license": "MIT",
+  "keywords": ["design", "ux", "ui", "mockups", "workflows", "design-system"]
+}
