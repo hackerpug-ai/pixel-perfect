@@ -44,7 +44,7 @@ UX plan → paradigm → tokens → components → flows/workflows → views/scr
 See `docs/GENERATION-SEQUENCE.md` for full details.
 
 ### Foundation (Phase 1-4)
-1. **UX-DESIGN-PLAN.md** - Design overview (guides all artifacts)
+1. **UX-DESIGN-PLAN.md** - Design overview (references other artifacts, not hardcoded values)
 2. **paradigm.yaml** - Design patterns, principles, references
 3. **tokens.yaml** - Design tokens (colors, spacing, typography)
 4. **components.yaml** - Reusable component definitions (uses tokens)

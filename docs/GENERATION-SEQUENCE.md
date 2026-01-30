@@ -75,8 +75,34 @@ Commands should:
 
 1. **Detect what changed** - Compare against existing artifacts
 2. **Identify affected downstream** - Based on dependency graph
-3. **Skip unchanged** - Don't regenerate artifacts that aren't affected
-4. **Maintain order** - When regenerating multiple, follow the sequence
+3. **Review downstream for compliance** - Even if not regenerating, validate downstream artifacts still comply with upstream changes
+4. **Skip unchanged** - Don't regenerate artifacts that aren't affected
+5. **Maintain order** - When regenerating multiple, follow the sequence
+
+### Cascade Review
+
+When an upstream artifact changes, downstream artifacts need at least a **compliance review**:
+
+| Changed | Review These for Compliance |
+|---------|----------------------------|
+| tokens | components (token usage), views (spacing/colors), mocks (visual) |
+| components | views (component usage), flows (component refs), mocks |
+| paradigm | all artifacts (pattern adherence) |
+
+**Review vs Regenerate:**
+- **Review**: Check if existing artifact still complies with upstream changes. Flag issues.
+- **Regenerate**: Recreate the artifact from scratch.
+
+Example: If `tokens.yaml` changes the primary color:
+1. **Review** `components.yaml` - Do components reference the token correctly? (likely yes)
+2. **Review** `views.yaml` - Do views use the components/tokens correctly? (likely yes)
+3. **Regenerate** `prompts/` - Specs need updated token values
+4. **Regenerate** `mocks/` - Visuals need to reflect new color
+
+Example: If `tokens.yaml` adds a new spacing scale:
+1. **Review** `components.yaml` - Should any components use the new spacing?
+2. **Review** `views.yaml` - Should any views adopt the new spacing?
+3. **Prompt user** if reviews find opportunities to apply new standards
 
 ## Applying to Commands
 
@@ -102,9 +128,45 @@ Commands should:
 - Full workflow: init → plan → prompts → mocks → review
 - Each phase respects the sequence internally
 
+## UX-DESIGN-PLAN.md: Progressive Disclosure
+
+The UX-DESIGN-PLAN.md serves as an **overview that references other artifacts** rather than duplicating their content.
+
+**DO:**
+```markdown
+## Design Tokens
+See `tokens.yaml` for the complete token system.
+
+Key decisions:
+- Using 8px base grid (see `tokens.yaml#spacing`)
+- Primary palette inspired by ocean tones (see `tokens.yaml#colors.primary`)
+
+## Components
+See `components.yaml` for full component specifications.
+
+Core patterns:
+- Card-based layouts for content display (see `components.yaml#Card`)
+- Bottom sheet for contextual actions (see `components.yaml#BottomSheet`)
+```
+
+**DON'T:**
+```markdown
+## Design Tokens
+- Primary color: #0d9488
+- Spacing: 4px, 8px, 12px, 16px, 24px, 32px
+- Font sizes: 12px, 14px, 16px, 18px, 24px, 32px
+```
+
+**Benefits:**
+- Single source of truth (YAML files)
+- UX plan stays readable and high-level
+- Changes to tokens/components don't require UX plan updates
+- Progressive disclosure: overview → details
+
 ## Summary
 
 The sequence ensures:
 1. **Consistency** - Downstream artifacts always reflect upstream changes
 2. **Efficiency** - Skip unchanged steps
 3. **Correctness** - Dependencies are satisfied before dependents run
+4. **Compliance** - Downstream artifacts are reviewed when upstream changes

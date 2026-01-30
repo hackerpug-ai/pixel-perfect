@@ -137,8 +137,11 @@ See `docs/GENERATION-SEQUENCE.md` for full details.
 
 **Smart Cascade:**
 - Skip unchanged artifacts
-- Only regenerate downstream artifacts that actually depend on the change
-- Use judgment: internal component change may not need view regeneration
+- **Review** downstream artifacts for compliance with upstream changes
+- **Regenerate** only when review finds issues or visual output changes
+- Prompt user if reviews find opportunities to apply new standards
+
+See `docs/GENERATION-SEQUENCE.md` for review vs regenerate guidance.
 
 ## Section Detection Keywords
 
