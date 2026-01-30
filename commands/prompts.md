@@ -18,20 +18,29 @@ Generate specification files from design artifacts for mockup generation.
   - **Full path**: `.spec/epics/epic-1` → uses exact path
   - **Name only**: `epic-1` → searches spec directory for matching folder
 
-## FIRST: Check for Initialization
+## Command Order: init → plan → **prompts** → mockups
 
-**BEFORE doing anything else**, check if `{target}/design/design.config.yaml` exists:
+Prompts is step 3. Before running, check previous steps are complete.
+
+## Scope Resolution
+
+If no target specified, find the nearest `design/` directory or `design.config.yaml` from current location.
+
+## Dependency Check
+
+**BEFORE doing anything else**, verify prerequisites for the scoped directory:
 
 ```
-IF design.config.yaml does NOT exist:
-  → Run /pixel-perfect:init (full interactive workflow)
-  → DO NOT proceed until init is complete
+CHECK 1: {target}/design/design.config.yaml exists?
+  NO  → Run /pixel-perfect:init first
 
-IF design.config.yaml EXISTS:
-  → Read config and proceed
+CHECK 2: {target}/design/views.yaml exists?
+  NO  → Run /pixel-perfect:plan first
+
+ALL CHECKS PASS → Proceed to prompts generation
 ```
 
-This check is MANDATORY. Use `--skip-init` to error instead of auto-initializing.
+Use `--skip-deps` to error instead of auto-running missing steps.
 
 ## Options
 

@@ -17,20 +17,25 @@ Collect structured refinement feedback and intelligently re-run affected design 
 - `<target>`: Epic or feature to refine. Supports smart path resolution.
 - `[feedback]`: Optional free-form feedback text. If provided, auto-detects affected sections.
 
-## FIRST: Check for Initialization
+## Refine Requires Existing Design
 
-**BEFORE doing anything else**, check if `{target}/design/design.config.yaml` exists:
+Refine modifies existing artifacts. At minimum, init must be complete.
+
+## Scope Resolution
+
+If no target specified, find the nearest `design/` directory or `design.config.yaml` from current location.
+
+## Dependency Check
+
+**BEFORE doing anything else**, verify prerequisites for the scoped directory:
 
 ```
-IF design.config.yaml does NOT exist:
-  → Run /pixel-perfect:init (full interactive workflow)
-  → DO NOT proceed until init is complete
-
-IF design.config.yaml EXISTS:
-  → Read config and proceed
+CHECK: {target}/design/design.config.yaml exists?
+  NO  → Run /pixel-perfect:init first (can't refine what doesn't exist)
+  YES → Proceed to refine workflow
 ```
 
-This check is MANDATORY.
+Refine will detect which artifacts exist and only allow refinement of those.
 
 ## Workflow
 

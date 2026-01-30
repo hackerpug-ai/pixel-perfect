@@ -19,20 +19,25 @@ Generate design artifacts from a PRD (Product Requirements Document).
   - **Name only**: `epic-1` → searches spec directory for matching folder
   - **Nested**: `lunch-menu` → finds it anywhere under spec directory
 
-## FIRST: Check for Initialization
+## Command Order: init → **plan** → prompts → mockups
 
-**BEFORE doing anything else**, check if `{target}/design/design.config.yaml` exists:
+Plan is step 2. Before running, check previous steps are complete.
+
+## Scope Resolution
+
+If no target specified, find the nearest `design/` directory or `design.config.yaml` from current location.
+
+## Dependency Check
+
+**BEFORE doing anything else**, verify prerequisites for the scoped directory:
 
 ```
-IF design.config.yaml does NOT exist:
-  → Run /pixel-perfect:init (full interactive workflow)
-  → DO NOT proceed to planning until init is complete
-
-IF design.config.yaml EXISTS:
-  → Read config and proceed to planning
+CHECK: {target}/design/design.config.yaml exists?
+  NO  → Run /pixel-perfect:init first, then return here
+  YES → Proceed to planning
 ```
 
-This check is MANDATORY. Use `--skip-init` to error instead of auto-initializing.
+Use `--skip-deps` to error instead of auto-running missing steps.
 
 ## Options
 

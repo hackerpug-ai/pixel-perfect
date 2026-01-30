@@ -6,21 +6,19 @@ description: "Run the full design workflow: init → plan → prompts → mockup
 
 Run the complete design workflow for an epic, starting with interactive preplanning.
 
-## FIRST: Check for Initialization
+## Design is a Router
 
-**BEFORE doing anything else**, check if `{target}/design/design.config.yaml` exists:
+The design command orchestrates the full workflow by running commands in sequence:
 
 ```
-IF design.config.yaml does NOT exist:
-  → Run the full init workflow (see Phase 0 below)
-  → Ask user about requirements, platforms, vibe
-  → DO NOT proceed to planning until init is complete
-
-IF design.config.yaml EXISTS:
-  → Read config and proceed to planning
+init → plan → prompts → mockups → review
 ```
 
-This check is MANDATORY. Never skip directly to generating artifacts.
+It checks what's already done and continues from where needed.
+
+## Scope Resolution
+
+If no target specified, find the nearest `design/` directory or `design.config.yaml` from current location.
 
 ## Usage
 
