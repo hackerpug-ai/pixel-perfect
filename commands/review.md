@@ -9,7 +9,7 @@ Review mockups against specifications and design standards.
 ## Usage
 
 ```
-/claude-code-design:review <epic-path> [options]
+/pixel-perfect:review <epic-path> [options]
 ```
 
 ## Arguments
@@ -52,11 +52,11 @@ Updates `{epic}/design/mocks/DESIGN-REVIEW.md` with:
 
 ```
 # Review all pending mockups
-/claude-code-design:review .spec/epics/epic-1
+/pixel-perfect:review .spec/epics/epic-1
 
 # Review single mockup
-/claude-code-design:review .spec/epics/epic-1 --key user_profile
+/pixel-perfect:review .spec/epics/epic-1 --key user_profile
 
 # Reset and re-review all
-/claude-code-design:review .spec/epics/epic-1 --reset --all
+/pixel-perfect:review .spec/epics/epic-1 --reset --all
 ```

@@ -9,7 +9,7 @@ Generate specification files from design artifacts for mockup generation.
 ## Usage
 
 ```
-/claude-code-design:prompts <epic-path> [options]
+/pixel-perfect:prompts <epic-path> [options]
 ```
 
 ## Arguments
@@ -40,10 +40,10 @@ Generate specification files from design artifacts for mockup generation.
 
 ```
 # Generate all specs
-/claude-code-design:prompts .spec/epics/epic-1
+/pixel-perfect:prompts .spec/epics/epic-1
 
 # Generate single spec
-/claude-code-design:prompts .spec/epics/epic-1 --key user_profile
+/pixel-perfect:prompts .spec/epics/epic-1 --key user_profile
 ```
 
 ## Spec Format

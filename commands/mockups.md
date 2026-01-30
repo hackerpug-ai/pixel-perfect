@@ -9,7 +9,7 @@ Generate visual mockups from specification files.
 ## Usage
 
 ```
-/claude-code-design:mockups <epic-path> [options]
+/pixel-perfect:mockups <epic-path> [options]
 ```
 
 ## Arguments
@@ -39,10 +39,10 @@ Generate visual mockups from specification files.
 
 ```
 # Generate all mockups
-/claude-code-design:mockups .spec/epics/epic-1
+/pixel-perfect:mockups .spec/epics/epic-1
 
 # Generate single mockup
-/claude-code-design:mockups .spec/epics/epic-1 --key user_profile
+/pixel-perfect:mockups .spec/epics/epic-1 --key user_profile
 ```
 
 ## Supported Formats

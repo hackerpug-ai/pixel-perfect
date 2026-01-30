@@ -1,4 +1,4 @@
-# claude-code-design
+# pixel-perfect
 
 A Claude Code plugin for tech-agnostic UI/UX design workflows. Transform product requirements into structured design artifacts and HTML mockups that serve as blueprints for AI-assisted implementation.
 
@@ -57,7 +57,7 @@ From a screenshot, it would have to *guess* all of this.
 
 ---
 
-## What is claude-code-design?
+## What is pixel-perfect?
 
 This plugin provides a structured workflow for turning product requirements into implementable designs:
 
@@ -88,15 +88,15 @@ The HTML mockups become your **Rosetta Stone**—the bridge between "that looks 
 **From GitHub (recommended):**
 ```bash
 # Add the marketplace
-/plugin marketplace add justinrich/claude-code-design
+/plugin marketplace add justinrich/pixel-perfect
 
 # Install the plugin
-/plugin install claude-code-design@justinrich-claude-code-design-marketplace
+/plugin install pixel-perfect@justinrich-pixel-perfect-marketplace
 ```
 
 **For local development:**
 ```bash
-claude --plugin-dir /path/to/claude-code-design
+claude --plugin-dir /path/to/pixel-perfect
 ```
 
 ### Basic Usage
@@ -106,39 +106,39 @@ claude --plugin-dir /path/to/claude-code-design
 cat .spec/epics/epic-1/PRD.md
 
 # Run full design workflow
-/claude-code-design:design .spec/epics/epic-1
+/pixel-perfect:design .spec/epics/epic-1
 
 # Check progress anytime
-/claude-code-design:status .spec/epics/epic-1
+/pixel-perfect:status .spec/epics/epic-1
 ```
 
 ### Step-by-Step Usage
 
 ```bash
 # 1. Generate design artifacts from PRD
-/claude-code-design:plan .spec/epics/epic-1
+/pixel-perfect:plan .spec/epics/epic-1
 
 # 2. Create specification files from views.yaml
-/claude-code-design:prompts .spec/epics/epic-1
+/pixel-perfect:prompts .spec/epics/epic-1
 
 # 3. Generate HTML mockups
-/claude-code-design:mockups .spec/epics/epic-1
+/pixel-perfect:mockups .spec/epics/epic-1
 
 # 4. Review mockups against specs
-/claude-code-design:review .spec/epics/epic-1
+/pixel-perfect:review .spec/epics/epic-1
 ```
 
 ---
 
 ## Commands
 
-### /claude-code-design:design
+### /pixel-perfect:design
 
 Run the complete design workflow.
 
 **Usage:**
 ```
-/claude-code-design:design <epic-path> [options]
+/pixel-perfect:design <epic-path> [options]
 ```
 
 **Options:**
@@ -147,13 +147,13 @@ Run the complete design workflow.
 - `--skip-mockups` - Use existing mockups
 - `--review-only` - Only run review phase
 
-### /claude-code-design:plan
+### /pixel-perfect:plan
 
 Generate design artifacts from PRD.
 
 **Usage:**
 ```
-/claude-code-design:plan <epic-path> [options]
+/pixel-perfect:plan <epic-path> [options]
 ```
 
 **Options:**
@@ -175,31 +175,31 @@ Generate design artifacts from PRD.
 | 7 | tokens.yaml | Design tokens (colors, spacing, typography) |
 | Summary | UX-DESIGN-PLAN.md | Human-readable design overview |
 
-### /claude-code-design:prompts
+### /pixel-perfect:prompts
 
 Generate specification files from design artifacts.
 
 **Usage:**
 ```
-/claude-code-design:prompts <epic-path> [--key <design_key>] [--force]
+/pixel-perfect:prompts <epic-path> [--key <design_key>] [--force]
 ```
 
-### /claude-code-design:mockups
+### /pixel-perfect:mockups
 
 Generate HTML mockups from specifications.
 
 **Usage:**
 ```
-/claude-code-design:mockups <epic-path> [--key <design_key>] [--force]
+/pixel-perfect:mockups <epic-path> [--key <design_key>] [--force]
 ```
 
-### /claude-code-design:review
+### /pixel-perfect:review
 
 Review mockups against specifications.
 
 **Usage:**
 ```
-/claude-code-design:review <epic-path> [options]
+/pixel-perfect:review <epic-path> [options]
 ```
 
 **Options:**
@@ -208,13 +208,13 @@ Review mockups against specifications.
 - `--continue` - Continue from last position
 - `--reset` - Reset all statuses to pending
 
-### /claude-code-design:status
+### /pixel-perfect:status
 
 Show workflow progress and next steps.
 
 **Usage:**
 ```
-/claude-code-design:status <epic-path>
+/pixel-perfect:status <epic-path>
 ```
 
 ---
@@ -527,13 +527,13 @@ When everything clicks:
 Product Idea
     ↓ (ideation)
 Clear Flows + User Stories
-    ↓ (/claude-code-design:plan)
+    ↓ (/pixel-perfect:plan)
 Structured Design Artifacts (YAML)
-    ↓ (/claude-code-design:prompts)
+    ↓ (/pixel-perfect:prompts)
 Specification Files (JSON)
-    ↓ (/claude-code-design:mockups)
+    ↓ (/pixel-perfect:mockups)
 HTML Design Blueprints
-    ↓ (/claude-code-design:review)
+    ↓ (/pixel-perfect:review)
 Approved Designs
     ↓ (implementation with context)
 Working Code

@@ -9,7 +9,7 @@ Show the current status of design artifacts and workflow progress.
 ## Usage
 
 ```
-/claude-code-design:status <epic-path>
+/pixel-perfect:status <epic-path>
 ```
 
 ## Arguments
@@ -27,7 +27,7 @@ Displays:
 ## Example
 
 ```
-/claude-code-design:status .spec/epics/epic-1
+/pixel-perfect:status .spec/epics/epic-1
 ```
 
 ## Sample Output
@@ -54,5 +54,5 @@ Review Status:
   needs_work:  2
   pending:     2
 
-Next: /claude-code-design:mockups epic-1 --key settings_page
+Next: /pixel-perfect:mockups epic-1 --key settings_page
 ```

@@ -9,7 +9,7 @@ Generate design artifacts from a PRD (Product Requirements Document).
 ## Usage
 
 ```
-/claude-code-design:plan <epic-path> [options]
+/pixel-perfect:plan <epic-path> [options]
 ```
 
 ## Arguments
@@ -43,13 +43,13 @@ Generate design artifacts from a PRD (Product Requirements Document).
 
 ```
 # Full planning
-/claude-code-design:plan .spec/epics/epic-1
+/pixel-perfect:plan .spec/epics/epic-1
 
 # Foundation only
-/claude-code-design:plan .spec/epics/epic-1 --foundation
+/pixel-perfect:plan .spec/epics/epic-1 --foundation
 
 # Continue with details
-/claude-code-design:plan .spec/epics/epic-1 --continue
+/pixel-perfect:plan .spec/epics/epic-1 --continue
 ```
 
 ## Input Requirements

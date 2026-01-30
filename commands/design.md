@@ -9,7 +9,7 @@ Run the complete design workflow for an epic.
 ## Usage
 
 ```
-/claude-code-design:design <epic-path> [options]
+/pixel-perfect:design <epic-path> [options]
 ```
 
 ## Arguments
@@ -25,15 +25,15 @@ Run the complete design workflow for an epic.
 
 ## Workflow Phases
 
-1. **Plan** (`/claude-code-design:plan`) - Generate design artifacts from PRD
-2. **Prompts** (`/claude-code-design:prompts`) - Create spec files from views.yaml
-3. **Mockups** (`/claude-code-design:mockups`) - Generate visual mockups
-4. **Review** (`/claude-code-design:review`) - Review mockups against specs
+1. **Plan** (`/pixel-perfect:plan`) - Generate design artifacts from PRD
+2. **Prompts** (`/pixel-perfect:prompts`) - Create spec files from views.yaml
+3. **Mockups** (`/pixel-perfect:mockups`) - Generate visual mockups
+4. **Review** (`/pixel-perfect:review`) - Review mockups against specs
 
 ## Example
 
 ```
-/claude-code-design:design .spec/epics/epic-1
+/pixel-perfect:design .spec/epics/epic-1
 ```
 
 ## Output Structure

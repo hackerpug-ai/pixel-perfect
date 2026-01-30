@@ -1,5 +1,5 @@
 {
-  "name": "claude-code-design-marketplace",
+  "name": "pixel-perfect",
   "owner": {
     "name": "Justin Rich",
     "email": "justin@hackerpug.com"
@@ -10,14 +10,14 @@
   },
   "plugins": [
     {
-      "name": "claude-code-design",
+      "name": "pixel-perfect",
       "source": "./",
       "description": "Design workflow: PRD → YAML artifacts → JSON specs → HTML mockups → Review",
       "version": "1.0.0",
       "author": {
         "name": "Justin Rich"
       },
-      "homepage": "https://github.com/justinrich/claude-code-design",
+      "homepage": "https://github.com/justinrich/pixel-perfect",
       "keywords": ["design", "ux", "ui", "mockups", "workflows", "design-system"],
       "category": "design"
     }
