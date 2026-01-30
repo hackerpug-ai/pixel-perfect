@@ -11,7 +11,8 @@
   "plugins": [
     {
       "name": "pixel-perfect",
-      "source": "./",
+      "source": "github",
+      "repo": "hackerpug-ai/pixel-perfect",
       "description": "Design workflow: PRD → YAML artifacts → JSON specs → HTML mockups → Review",
       "version": "1.0.0",
       "author": {
