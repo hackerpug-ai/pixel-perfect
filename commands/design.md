@@ -308,9 +308,7 @@ requirements:
   path: "PRD.md"
 
 platforms:
-  - mobile-ios
-  - mobile-android
-  - web-desktop
+  - responsive-web  # Default: covers desktop + tablet + mobile web
 
 vibe:
   primary: "modern"

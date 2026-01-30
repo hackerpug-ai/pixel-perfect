@@ -118,18 +118,28 @@ No requirements file found in {epic}/
 
 ### Step 2: Device Targeting
 
-Based on requirements analysis, suggests target platforms. Confirm or modify:
+**Default: Responsive Web** (covers desktop + mobile web). Only ask for other platforms if requirements indicate them.
 
-| Platform | Indicators |
-|----------|------------|
-| Mobile (iOS/Android) | "app", "mobile", "touch", "swipe", "native" |
-| Web (Desktop) | "website", "dashboard", "browser", "responsive" |
-| Web (Mobile) | "responsive", "mobile-first", "PWA" |
-| Desktop App | "electron", "desktop", "native app", "menubar" |
-| CLI/Terminal | "command line", "terminal", "CLI", "shell" |
-| Tablet | "tablet", "iPad", "large screen" |
+| Platform | Indicators | Default |
+|----------|------------|---------|
+| Responsive Web | DEFAULT - use unless requirements specify otherwise | ✓ PRE-SELECTED |
+| Mobile (iOS) | "iOS", "iPhone", "Swift", "App Store" | |
+| Mobile (Android) | "Android", "Kotlin", "Play Store" | |
+| Desktop App | "electron", "desktop app", "native app", "menubar" | |
+| CLI/Terminal | "command line", "terminal", "CLI", "shell" | |
+| Tablet-specific | "tablet-only", "iPad-specific", "large screen only" | |
 
-You can select multiple platforms using the multi-selector.
+```
+? What platforms are you designing for?
+  [x] Responsive Web (Recommended - covers desktop & mobile)
+  [ ] Mobile - iOS native
+  [ ] Mobile - Android native
+  [ ] Desktop App (Electron/Tauri)
+  [ ] CLI/Terminal
+  [ ] Tablet-specific
+```
+
+User can add additional platforms or deselect Responsive Web if building native-only.
 
 ### Step 3: Design Vibe
 
@@ -170,11 +180,9 @@ requirements:
   path: "PRD.md"
   analyzed: true
 
-# Target platforms (multi-select)
+# Target platforms
 platforms:
-  - mobile-ios
-  - mobile-android
-  - web-desktop
+  - responsive-web  # Default: covers desktop + tablet + mobile web
 
 # Design aesthetic
 vibe:
@@ -220,17 +228,13 @@ Found potential requirements file: specs/epics/epic-1/sprints/lunch-menu/PRD.md
 
 Using: specs/epics/epic-1/sprints/lunch-menu/PRD.md
 
-Analyzing requirements for platform hints...
-Detected platforms: Mobile (iOS/Android), Web (Desktop)
-
-? Which platforms are you designing for? (multi-select)
-  [x] Mobile - iOS
-  [x] Mobile - Android
-  [x] Web - Desktop
-  [ ] Web - Mobile
-  [ ] Desktop App
+? What platforms are you designing for?
+  [x] Responsive Web (Recommended - covers desktop & mobile)
+  [ ] Mobile - iOS native
+  [ ] Mobile - Android native
+  [ ] Desktop App (Electron/Tauri)
   [ ] CLI/Terminal
-  [ ] Tablet
+  [ ] Tablet-specific
 
 Analyzing design direction...
 Detected vibe: "Modern" (based on: "clean interface", "minimal navigation")
