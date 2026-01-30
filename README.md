@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/banner.png" alt="pixel-perfect banner" width="100%">
+</p>
+
 # pixel-perfect
 
 A Claude Code plugin for tech-agnostic UI/UX design workflows. Transform product requirements into structured design artifacts and HTML mockups that serve as blueprints for AI-assisted implementation.
