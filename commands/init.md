@@ -21,6 +21,7 @@ Interactive preplanning phase that configures your design project before generat
 
 ## Options
 
+- `--requirements <path>`: Use this file as requirements (skips discovery search)
 - `--force`: Overwrite existing `design.config.yaml`
 - `--quick`: Auto-accept inferred values with minimal prompts
 - `--platforms <list>`: Pre-set platforms (comma-separated: `mobile-ios,web-desktop`)
@@ -62,14 +63,33 @@ If no project config exists, init searches from project root for your target fol
 
 ### Step 1: Requirements Discovery
 
-The command searches for requirements in this order:
-- `{epic}/PRD.md`
-- `{epic}/requirements.md`
-- `{epic}/REQUIREMENTS.md`
-- `{epic}/spec.md`
-- `{epic}/*.md` (any markdown file)
+**If `--requirements <path>` is provided:** Use that file directly, skip all discovery.
 
-If no requirements found, you'll be asked to provide the path or paste requirements directly.
+**Otherwise, search for requirements in this order:**
+1. `{epic}/PRD.md`
+2. `{epic}/requirements.md`
+3. `{epic}/REQUIREMENTS.md`
+4. `{epic}/spec.md`
+5. `{epic}/*.md` (any markdown file)
+
+**If a candidate file is found**, ask the user to confirm:
+```
+Found potential requirements file: {epic}/PRD.md
+
+? Is this your requirements document?
+  > Yes, use this file
+    No, search for another
+    Enter path manually
+```
+
+**If no candidate files found**, ask user for path:
+```
+No requirements file found in {epic}/
+
+? Where are your requirements?
+  > Enter path to requirements file
+    Paste requirements directly
+```
 
 ### Step 2: Device Targeting
 
@@ -154,8 +174,9 @@ naming:
   style: "snake_case"
 ```
 
-## Example Session
+## Example Sessions
 
+### With automatic discovery
 ```
 > /pixel-perfect:init lunch-menu
 
@@ -163,7 +184,14 @@ Searching for "lunch-menu"...
 Found: specs/epics/epic-1/sprints/lunch-menu
 
 Scanning for requirements...
-Found: specs/epics/epic-1/sprints/lunch-menu/PRD.md
+Found potential requirements file: specs/epics/epic-1/sprints/lunch-menu/PRD.md
+
+? Is this your requirements document?
+  > Yes, use this file
+    No, search for another
+    Enter path manually
+
+Using: specs/epics/epic-1/sprints/lunch-menu/PRD.md
 
 Analyzing requirements for platform hints...
 Detected platforms: Mobile (iOS/Android), Web (Desktop)
@@ -195,6 +223,37 @@ Configuration saved to specs/epics/epic-1/sprints/lunch-menu/design/design.confi
 
 Ready to plan! Run:
   /pixel-perfect:plan .spec/epics/epic-1
+```
+
+### With explicit requirements path
+```
+> /pixel-perfect:init lunch-menu --requirements ../shared/product-spec.md
+
+Searching for "lunch-menu"...
+Found: specs/epics/epic-1/sprints/lunch-menu
+
+Using requirements: ../shared/product-spec.md
+
+Analyzing requirements for platform hints...
+```
+
+### When no requirements found
+```
+> /pixel-perfect:init new-feature
+
+Searching for "new-feature"...
+Found: specs/epics/epic-2/new-feature
+
+Scanning for requirements...
+No requirements file found in specs/epics/epic-2/new-feature/
+
+? Where are your requirements?
+  > Enter path to requirements file
+    Paste requirements directly
+
+Enter path: ../docs/NEW-FEATURE-PRD.md
+
+Using: ../docs/NEW-FEATURE-PRD.md
 ```
 
 ## Skipping Init
