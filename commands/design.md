@@ -44,10 +44,15 @@ Run the complete design workflow for an epic, starting with interactive preplann
 **Runs automatically if `design.config.yaml` doesn't exist.**
 
 ### Phase 1: Plan
-Generates design artifacts from PRD:
-- workflows.yaml, paradigm.yaml, screens.yaml
-- flows.yaml, views.yaml, components.yaml, tokens.yaml
-- UX-DESIGN-PLAN.md summary
+Generates design artifacts from PRD in this exact sequence:
+1. **UX-DESIGN-PLAN.md** - Design overview (guides all artifacts)
+2. **paradigm.yaml** - Design patterns and principles
+3. **tokens.yaml** - Design tokens (colors, spacing, typography)
+4. **components.yaml** - Reusable components (uses tokens)
+5. **flows.yaml** - Interaction flows (uses components)
+6. **workflows.yaml** - User journeys and task flows
+7. **views.yaml** - Detailed view specifications
+8. **screens.yaml** - Screen inventory with hierarchy
 
 ### Phase 2: Prompts
 Creates specification files from views.yaml
@@ -190,21 +195,23 @@ Results saved to `{epic}/design/research/url-analysis.md`
 
 ## Output Structure
 
+Generated in dependency order:
+
 ```
 {epic}/design/
-├── design.config.yaml      # Preplanning configuration
-├── workflows.yaml
-├── paradigm.yaml
-├── screens.yaml
-├── flows.yaml
-├── views.yaml
-├── components.yaml
-├── tokens.yaml
-├── UX-DESIGN-PLAN.md
-├── prompts/
+├── design.config.yaml      # 1. Preplanning configuration
+├── UX-DESIGN-PLAN.md       # 2. Design overview
+├── paradigm.yaml           # 3. Design patterns
+├── tokens.yaml             # 4. Design tokens
+├── components.yaml         # 5. Reusable components
+├── flows.yaml              # 6. Interaction flows
+├── workflows.yaml          # 6. User journeys
+├── views.yaml              # 7. View specifications
+├── screens.yaml            # 7. Screen inventory
+├── prompts/                # 8. JSON specifications
 │   ├── {design_key}.spec.json
 │   └── manifest.json
-├── mocks/
+├── mocks/                  # 9. Visual mockups
 │   ├── {design_key}.mock.html
 │   └── DESIGN-REVIEW.md
 └── research/

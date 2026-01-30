@@ -116,29 +116,32 @@ Returns to summary after modification.
 
 ### Task Sequencing
 
-When confirmed, tasks are queued with dependency-aware ordering:
+When confirmed, tasks are queued with dependency-aware ordering.
+
+**IMPORTANT:** Artifacts MUST be generated in this exact order. Each artifact may depend on previous ones.
 
 **Execution Order:**
-1. **Init-level changes** (requirements, platforms, vibe)
-2. **Foundation artifacts** (workflows, paradigm, screens)
-3. **Detail artifacts** (flows, views)
-4. **Design system** (components, tokens)
-5. **Specifications** (prompts)
-6. **Visuals** (mockups)
-7. **Validation** (review)
+1. **config** - design.config.yaml (init-level: requirements, platforms, vibe)
+2. **UX-DESIGN-PLAN.md** - Design overview (guides all artifacts)
+3. **paradigm.yaml** - Design patterns and principles
+4. **tokens.yaml** - Design tokens (colors, spacing, typography)
+5. **components.yaml** - Reusable components (uses tokens)
+6. **flows.yaml / workflows.yaml** - Interaction flows and user journeys
+7. **views.yaml / screens.yaml** - View specs and screen inventory
+8. **prompts/*.spec.json** - JSON specifications for mockups
+9. **mocks/*.mock.html** - Visual mockups
 
 **Dependency Rules:**
-| If Changed | Also Regenerate |
-|------------|-----------------|
-| requirements | All downstream |
-| platforms | mockups (format may change) |
-| vibe | tokens, mockups |
-| workflows | screens, flows |
-| screens | flows, views, prompts, mockups |
-| flows | views, prompts, mockups |
-| views | prompts, mockups |
-| components | prompts, mockups |
-| tokens | components (if token-dependent), prompts, mockups |
+| If Changed | Also Regenerate (in order) |
+|------------|----------------------------|
+| config | UX plan → paradigm → tokens → components → flows → views → prompts → mocks |
+| UX plan | paradigm → tokens → components → flows → views → prompts → mocks |
+| paradigm | tokens → components → flows → views → prompts → mocks |
+| tokens | components → prompts → mocks |
+| components | flows → views → prompts → mocks |
+| flows/workflows | views → prompts → mocks |
+| views/screens | prompts → mocks |
+| prompts | mocks |
 
 ## Section Detection Keywords
 

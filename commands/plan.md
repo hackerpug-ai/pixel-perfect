@@ -1,5 +1,5 @@
 ---
-description: "Generate design artifacts from PRD: workflows, paradigm, screens, flows, views, components, tokens"
+description: "Generate design artifacts from PRD: UX plan, paradigm, tokens, components, flows, views"
 ---
 
 # Design Plan
@@ -28,26 +28,26 @@ Use `--skip-init` to error instead of auto-initializing.
 ## Options
 
 - `--skip-init`: Error if design.config.yaml missing instead of running init
-- `--foundation`: Generate only foundation artifacts (workflows, paradigm, screens)
-- `--continue`: Continue with detail artifacts (flows, views, components, tokens)
+- `--foundation`: Generate only foundation artifacts (UX plan, paradigm, tokens, components)
+- `--continue`: Continue with detail artifacts (flows, workflows, views, screens)
 - `--research <scope>`: Paradigm research scope: `codebase`, `web`, or `both`
 - `--skip-research`: Skip paradigm research phase
 
-## Phases
+## Generation Sequence
 
-### Foundation (Phase 1-3)
-1. **workflows.yaml** - User journeys and task flows
+**IMPORTANT:** Artifacts MUST be generated in this exact order. Each artifact may depend on previous ones.
+
+### Foundation (Phase 1-4)
+1. **UX-DESIGN-PLAN.md** - Human-readable design overview (generated first to guide all other artifacts)
 2. **paradigm.yaml** - Design patterns, principles, references
-3. **screens.yaml** - Screen inventory with hierarchy
+3. **tokens.yaml** - Design tokens (colors, spacing, typography)
+4. **components.yaml** - Reusable component definitions (uses tokens)
 
-### Detail (Phase 4-7)
-4. **flows.yaml** - Interaction flows between screens
-5. **views.yaml** - Detailed view specifications
-6. **components.yaml** - Reusable component definitions
-7. **tokens.yaml** - Design tokens (colors, spacing, typography)
-
-### Summary
-- **UX-DESIGN-PLAN.md** - Human-readable design summary
+### Detail (Phase 5-8)
+5. **flows.yaml** - Interaction flows (uses components)
+6. **workflows.yaml** - User journeys and task flows
+7. **views.yaml** - Detailed view specifications (uses components, tokens)
+8. **screens.yaml** - Screen inventory with hierarchy (uses views)
 
 ## Example
 
