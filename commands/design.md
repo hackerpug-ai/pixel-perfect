@@ -180,7 +180,7 @@ If requirements contain URLs:
 - Competitor sites
 - Documentation or inspiration
 
-The init phase fetches and analyzes each URL, extracting:
+The init phase fetches and analyzes each URL using available web tools (WebFetch, MCP servers, etc.), extracting:
 - Layout patterns
 - Color schemes
 - Component styles

@@ -125,9 +125,11 @@ You can also provide a custom vibe description.
 ### Step 4: URL Analysis
 
 If your requirements contain URLs (design references, competitor analysis, inspiration):
-- Fetches and analyzes each URL
+- Fetches and analyzes each URL using available web tools (WebFetch, MCP servers, or other configured tools)
 - Extracts relevant design patterns
 - Saves analysis to `{epic}/design/research/url-analysis.md`
+
+**Note:** URL analysis requires web access tools. If no web tools are available, this step is skipped and URLs are listed in the config for manual review.
 
 ### Step 5: Configuration Output
 
