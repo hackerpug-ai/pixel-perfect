@@ -1,10 +1,10 @@
 ---
-description: "Run the full design workflow: plan → prompts → mockups → review"
+description: "Run the full design workflow: init → plan → prompts → mockups → review"
 ---
 
 # Design Workflow
 
-Run the complete design workflow for an epic.
+Run the complete design workflow for an epic, starting with interactive preplanning.
 
 ## Usage
 
@@ -14,10 +14,16 @@ Run the complete design workflow for an epic.
 
 ## Arguments
 
-- `<epic-path>`: Path to epic directory containing PRD.md (e.g., `.spec/epics/epic-1`)
+- `<epic-path>`: Path to epic directory (e.g., `.spec/epics/epic-1`)
 
 ## Options
 
+### Preplanning Control
+- `--skip-init`: Skip preplanning, use existing `design.config.yaml`
+- `--reconfigure`: Force re-run preplanning even if config exists
+- `--quick`: Minimal prompts - auto-accept inferred values
+
+### Phase Control
 - `--skip-plan`: Skip planning phase, use existing YAML artifacts
 - `--skip-prompts`: Skip prompt generation, use existing specs
 - `--skip-mockups`: Skip mockup generation, use existing mocks
@@ -25,21 +31,118 @@ Run the complete design workflow for an epic.
 
 ## Workflow Phases
 
-1. **Plan** (`/pixel-perfect:plan`) - Generate design artifacts from PRD
-2. **Prompts** (`/pixel-perfect:prompts`) - Create spec files from views.yaml
-3. **Mockups** (`/pixel-perfect:mockups`) - Generate visual mockups
-4. **Review** (`/pixel-perfect:review`) - Review mockups against specs
+### Phase 0: Initialize (Preplanning)
+- Discovers or asks for requirements document
+- Confirms target platforms (mobile, web, desktop, CLI, etc.)
+- Establishes design vibe/aesthetic direction
+- Analyzes reference URLs found in requirements
+- Saves configuration to `design.config.yaml`
 
-## Example
+**Runs automatically if `design.config.yaml` doesn't exist.**
 
-```
+### Phase 1: Plan
+Generates design artifacts from PRD:
+- workflows.yaml, paradigm.yaml, screens.yaml
+- flows.yaml, views.yaml, components.yaml, tokens.yaml
+- UX-DESIGN-PLAN.md summary
+
+### Phase 2: Prompts
+Creates specification files from views.yaml
+
+### Phase 3: Mockups
+Generates HTML mockups from specifications
+
+### Phase 4: Review
+Reviews mockups against specs with approval workflow
+
+## Examples
+
+```bash
+# Full workflow with preplanning
 /pixel-perfect:design .spec/epics/epic-1
+
+# Skip preplanning (use existing config)
+/pixel-perfect:design .spec/epics/epic-1 --skip-init
+
+# Re-run preplanning to change platforms or vibe
+/pixel-perfect:design .spec/epics/epic-1 --reconfigure
+
+# Quick mode - auto-accept inferred values
+/pixel-perfect:design .spec/epics/epic-1 --quick
+
+# Continue from existing plan
+/pixel-perfect:design .spec/epics/epic-1 --skip-init --skip-plan
+
+# Review only
+/pixel-perfect:design .spec/epics/epic-1 --review-only
 ```
+
+## Preplanning Details
+
+### Requirements Discovery
+
+Searches for requirements in order:
+1. `{epic}/PRD.md`
+2. `{epic}/requirements.md`
+3. `{epic}/REQUIREMENTS.md`
+4. Any `.md` file in epic directory
+
+If none found, prompts you to:
+- Provide a path to your requirements
+- Paste requirements directly
+
+### Platform Detection
+
+Infers from requirements keywords:
+
+| Platform | Detected From |
+|----------|---------------|
+| Mobile iOS | "iOS", "iPhone", "Swift", "native app" |
+| Mobile Android | "Android", "Kotlin", "native app" |
+| Web Desktop | "dashboard", "website", "browser" |
+| Web Mobile | "responsive", "mobile-first", "PWA" |
+| Desktop App | "Electron", "Tauri", "desktop application" |
+| CLI | "command line", "terminal", "CLI" |
+| Tablet | "tablet", "iPad", "large screen" |
+
+Presents multi-selector to confirm or modify.
+
+### Design Vibe Detection
+
+Analyzes requirements for aesthetic hints:
+
+| Vibe | Indicators |
+|------|------------|
+| Minimal | "clean", "simple", "whitespace", "essential" |
+| Modern | "contemporary", "current", "fresh" |
+| Playful | "fun", "friendly", "colorful", "engaging" |
+| Corporate | "enterprise", "professional", "business" |
+| Bold | "impactful", "strong", "dramatic" |
+| Technical | "developer", "data", "code", "technical" |
+| Elegant | "premium", "sophisticated", "refined" |
+
+If no clear vibe detected, asks you to choose or describe.
+
+### URL Analysis
+
+If requirements contain URLs:
+- Design references (Dribbble, Behance, etc.)
+- Competitor sites
+- Documentation or inspiration
+
+The init phase fetches and analyzes each URL, extracting:
+- Layout patterns
+- Color schemes
+- Component styles
+- Navigation approaches
+
+Results saved to `{epic}/design/research/url-analysis.md`
 
 ## Output Structure
 
 ```
 {epic}/design/
+├── design.config.yaml      # Preplanning configuration
 ├── workflows.yaml
 ├── paradigm.yaml
 ├── screens.yaml
@@ -55,13 +158,35 @@ Run the complete design workflow for an epic.
 │   ├── {design_key}.mock.html
 │   └── DESIGN-REVIEW.md
 └── research/
+    └── url-analysis.md     # If URLs analyzed
 ```
 
 ## Configuration
 
-Override defaults via `.spec/design.config.yaml`:
+The `design.config.yaml` created during preplanning:
 
 ```yaml
+version: "1.0"
+created: "2025-01-30"
+
+requirements:
+  path: "PRD.md"
+
+platforms:
+  - mobile-ios
+  - mobile-android
+  - web-desktop
+
+vibe:
+  primary: "modern"
+  description: "Clean, contemporary with subtle interactions"
+
+references:
+  urls_analyzed: 2
+  patterns:
+    - "card-based layout"
+    - "bottom navigation"
+
 extensions:
   spec: ".spec.json"
   mock: ".mock.html"
