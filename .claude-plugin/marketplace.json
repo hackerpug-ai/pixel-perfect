@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Tech-agnostic UI/UX design workflows for Claude Code",
-    "version": "1.0.0"
+    "version": "1.0.1"
   },
   "plugins": [
     {
@@ -14,7 +14,7 @@
       "source": "github",
       "repo": "hackerpug-ai/pixel-perfect",
       "description": "Design workflow: PRD → YAML artifacts → JSON specs → HTML mockups → Review",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "Justin Rich"
       },
