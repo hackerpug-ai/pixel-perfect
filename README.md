@@ -373,6 +373,146 @@ For those, describe the interaction in prose alongside the mockup.
 
 ---
 
+## Using Designs with AI Agents
+
+The real power of structured design artifacts is feeding them to AI coding agents. Whether you're using Claude Code, Cursor, Copilot, or custom agents, the design files become task context that dramatically improves output quality.
+
+### Wrapping Designs into Tasks
+
+When creating implementation tasks, reference specific design artifacts:
+
+**Claude Code Task example:**
+```
+Implement the user profile screen.
+
+Design references:
+- Layout: .spec/epics/epic-1/design/mocks/user_profile.mock.html
+- Components: .spec/epics/epic-1/design/components.yaml (see: ProfileHeader, StatCard, ActionButton)
+- Tokens: .spec/epics/epic-1/design/tokens.yaml
+- Flow context: .spec/epics/epic-1/design/flows.yaml (see: profile_edit_flow)
+
+Requirements:
+- Use the HTML mockup as a DESIGN REFERENCE, not code to convert
+- Map components to our existing component library
+- Apply tokens from our theme system
+- Follow the interaction flow for edit actions
+```
+
+### Prompting Patterns by Platform
+
+The same design artifacts work across platforms—adjust your prompting:
+
+**React/Web:**
+```
+Reference: .spec/epics/epic-1/design/mocks/dashboard.mock.html
+
+Build a React component matching this design reference.
+- HTML div → React fragments or semantic elements
+- Tailwind classes → map to our CSS modules
+- Flex layouts → preserve spacing ratios
+- Icons → use lucide-react equivalents
+```
+
+**React Native/Mobile:**
+```
+Reference: .spec/epics/epic-1/design/mocks/camera_capture.mock.html
+
+Build a React Native screen using this HTML as a DESIGN PATTERN.
+- HTML structure → View hierarchy
+- Button elements → Pressable with haptic feedback
+- Flex layouts → flexDirection and gap
+- size-14, size-20 → map to spacing tokens (56px, 80px)
+- Material icons → lucide-react-native
+```
+
+**Flutter:**
+```
+Reference: .spec/epics/epic-1/design/mocks/settings.mock.html
+
+Create a Flutter widget matching this design reference.
+- HTML hierarchy → Widget tree
+- Flex containers → Row/Column with MainAxisAlignment
+- Buttons → ElevatedButton/TextButton per hierarchy
+- Spacing classes → SizedBox or theme spacing
+- Colors → Theme.of(context).colorScheme
+```
+
+**CLI/Terminal:**
+```
+Reference: .spec/epics/epic-1/design/mocks/status_display.mock.html
+
+Build a CLI output formatter matching this design's information hierarchy.
+- Visual sections → bordered boxes (unicode or ASCII)
+- Headings → bold/colored text
+- Lists → indented bullet points
+- Buttons/actions → numbered menu options
+- Status badges → colored tags [SUCCESS] [PENDING]
+```
+
+### Context Loading Strategy
+
+For best results, load context in this order:
+
+1. **Design tokens first** - establishes the visual language
+   ```
+   Read: .spec/epics/epic-1/design/tokens.yaml
+   ```
+
+2. **Component definitions** - shows available building blocks
+   ```
+   Read: .spec/epics/epic-1/design/components.yaml
+   ```
+
+3. **Specific mockup** - the target design
+   ```
+   Read: .spec/epics/epic-1/design/mocks/{screen}.mock.html
+   ```
+
+4. **Flow context** - where this screen fits
+   ```
+   Read: .spec/epics/epic-1/design/flows.yaml (relevant section)
+   ```
+
+### Multi-Agent Workflows
+
+For complex implementations, split work across specialized agents:
+
+```
+Agent 1 (Component Agent):
+"Using components.yaml, create base components that don't exist yet"
+
+Agent 2 (Screen Agent):
+"Using the mockup and existing components, build the screen"
+
+Agent 3 (Integration Agent):
+"Using flows.yaml, wire up navigation and state management"
+```
+
+### Key Prompting Principles
+
+1. **Always say "design reference" not "convert"**
+   - Convert = literal translation (broken)
+   - Reference = semantic understanding (works)
+
+2. **Specify your component library**
+   - "Map to our existing Button, Card, Input components"
+   - Don't let the agent invent new components
+
+3. **Reference tokens, not values**
+   - ❌ "Use 16px spacing"
+   - ✅ "Use spacing.md from tokens.yaml"
+
+4. **Include flow context for stateful screens**
+   - The mockup shows one state
+   - flows.yaml shows all states and transitions
+
+5. **Call out what HTML can't express**
+   - "Add pull-to-refresh gesture"
+   - "Animate the transition with a 300ms ease-out"
+   - "Show loading skeleton while fetching"
+
+---
+
 ## The Assembly Line
 
 When everything clicks:
