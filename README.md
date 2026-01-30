@@ -318,15 +318,12 @@ pixel-perfect uses two levels of configuration:
 
 ### Project Config (`.pixel-perfect/config.json`)
 
-Global settings for your entire project. Create this file to customize where your specs live:
+Global settings for your entire project. Create this file to customize behavior:
 
 ```json
 {
   "version": "1.0",
-  "paths": {
-    "specs": ".spec",
-    "epics": "epics"
-  },
+  "specRoot": ".",
   "defaults": {
     "platforms": ["mobile-ios", "web-desktop"],
     "vibe": "modern",
@@ -341,18 +338,17 @@ Global settings for your entire project. Create this file to customize where you
 
 | Field | Default | Description |
 |-------|---------|-------------|
-| `paths.specs` | `.spec` | Root directory for specifications |
-| `paths.epics` | `epics` | Subdirectory for epic folders |
+| `specRoot` | `.` (project root) | Root directory to search for targets |
 | `defaults.platforms` | `[]` | Pre-select platforms (skips multi-select) |
 | `defaults.vibe` | `null` | Default design vibe (skips vibe question) |
 | `defaults.naming` | `snake_case` | Design key style: `snake_case`, `kebab-case`, `camelCase` |
 
-**If no config exists**, defaults to `.spec/epics/{epic-name}`.
+**If no config exists**, searches from project root for your target folder.
 
-**Example paths:**
-- Default: `.spec/epics/epic-1`
-- Custom `"specs": "design"`: `design/epics/epic-1`
-- Monorepo: `packages/ui/specs/features/epic-1`
+**Example:** `/pixel-perfect:design lunch-menu` finds and initializes designs in:
+- `./lunch-menu/` (root level)
+- `./.spec/epics/epic-1/sprints/lunch-menu/` (deeply nested)
+- Anywhere the folder exists in your project
 
 ### Epic Config (`design.config.yaml`)
 

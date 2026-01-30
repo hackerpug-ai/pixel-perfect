@@ -15,10 +15,7 @@ your-project/
 ```json
 {
   "version": "1.0",
-  "paths": {
-    "specs": ".spec",
-    "epics": "epics"
-  },
+  "specRoot": ".",
   "defaults": {
     "platforms": [],
     "vibe": null,
@@ -33,16 +30,18 @@ your-project/
 
 ## Fields
 
-### paths
+### specRoot
 
 | Field | Default | Description |
 |-------|---------|-------------|
-| `specs` | `.spec` | Root directory for specifications and epics |
-| `epics` | `epics` | Subdirectory within specs for epic folders |
+| `specRoot` | `.` (project root) | Root directory to search for targets |
 
-**Full epic path**: `{paths.specs}/{paths.epics}/{epic-name}`
+**How it works:** When you run `/pixel-perfect:design lunch-menu`, the plugin searches from `specRoot` recursively to find a folder named `lunch-menu`.
 
-Example with defaults: `.spec/epics/epic-1`
+**Examples:**
+- Default (`"."`): Searches entire project for the folder
+- `".spec"`: Only searches within `.spec/` directory
+- `"packages/design"`: Only searches within that subdirectory
 
 ### defaults
 
@@ -81,17 +80,15 @@ Example with defaults: `.spec/epics/epic-1`
 
 ### Minimal Config
 
-Just override the specs directory:
+Limit search to a specific directory:
 
 ```json
 {
-  "paths": {
-    "specs": "design"
-  }
+  "specRoot": ".spec"
 }
 ```
 
-Epic path becomes: `design/epics/epic-1`
+Now `/pixel-perfect:design epic-1` only searches within `.spec/`.
 
 ### Team Defaults
 
@@ -99,9 +96,7 @@ Pre-configure platforms and vibe for consistent team output:
 
 ```json
 {
-  "paths": {
-    "specs": ".spec"
-  },
+  "specRoot": ".",
   "defaults": {
     "platforms": ["mobile-ios", "mobile-android"],
     "vibe": "modern",
@@ -112,18 +107,15 @@ Pre-configure platforms and vibe for consistent team output:
 
 ### Monorepo Setup
 
-Different specs location for a monorepo:
+Limit search to a specific package:
 
 ```json
 {
-  "paths": {
-    "specs": "packages/design-system/specs",
-    "epics": "features"
-  }
+  "specRoot": "packages/design-system/specs"
 }
 ```
 
-Epic path becomes: `packages/design-system/specs/features/epic-1`
+Now `/pixel-perfect:design feature-1` only searches within that package.
 
 ### Custom Extensions
 
@@ -159,7 +151,7 @@ Or create manually:
 
 ```bash
 mkdir -p .pixel-perfect
-echo '{"paths":{"specs":".spec"}}' > .pixel-perfect/config.json
+echo '{"specRoot":"."}' > .pixel-perfect/config.json
 ```
 
 ## Validation

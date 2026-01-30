@@ -40,7 +40,7 @@ This command walks you through setting up your design project:
 ## Project Configuration
 
 If `.pixel-perfect/config.json` exists in your project root, init uses it for:
-- **Default paths**: Where to look for epics (default: `.spec/epics`)
+- **Search root**: Where to search for targets (default: project root)
 - **Pre-selected platforms**: Skip platform multi-select if configured
 - **Default vibe**: Skip vibe question if configured
 - **Naming style**: Default design key naming convention
@@ -48,10 +48,7 @@ If `.pixel-perfect/config.json` exists in your project root, init uses it for:
 Example `.pixel-perfect/config.json`:
 ```json
 {
-  "paths": {
-    "specs": ".spec",
-    "epics": "epics"
-  },
+  "specRoot": ".",
   "defaults": {
     "platforms": ["mobile-ios", "web-desktop"],
     "vibe": "modern"
@@ -59,7 +56,7 @@ Example `.pixel-perfect/config.json`:
 }
 ```
 
-If no project config exists, init uses built-in defaults (`.spec/epics`).
+If no project config exists, init searches from project root for your target folder.
 
 ## Preplanning Workflow
 
@@ -160,10 +157,13 @@ naming:
 ## Example Session
 
 ```
-> /pixel-perfect:init .spec/epics/epic-1
+> /pixel-perfect:init lunch-menu
+
+Searching for "lunch-menu"...
+Found: specs/epics/epic-1/sprints/lunch-menu
 
 Scanning for requirements...
-Found: .spec/epics/epic-1/PRD.md
+Found: specs/epics/epic-1/sprints/lunch-menu/PRD.md
 
 Analyzing requirements for platform hints...
 Detected platforms: Mobile (iOS/Android), Web (Desktop)
@@ -191,7 +191,7 @@ Found 2 URLs in requirements. Analyzing...
 - https://dribbble.com/shots/... (design inspiration)
 - https://competitor.app/... (competitor reference)
 
-Configuration saved to .spec/epics/epic-1/design/design.config.yaml
+Configuration saved to specs/epics/epic-1/sprints/lunch-menu/design/design.config.yaml
 
 Ready to plan! Run:
   /pixel-perfect:plan .spec/epics/epic-1

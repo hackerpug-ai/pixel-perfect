@@ -85,7 +85,7 @@ Reviews mockups against specs with approval workflow
 You don't need to specify full paths. The plugin finds your target automatically:
 
 ```bash
-# These all work if "lunch-menu" exists somewhere under .spec/
+# Just use the folder name - searches entire project by default
 /pixel-perfect:design lunch-menu
 /pixel-perfect:design epic-1
 /pixel-perfect:design my-feature
@@ -93,27 +93,37 @@ You don't need to specify full paths. The plugin finds your target automatically
 
 **Resolution order:**
 1. Check if target is an exact path that exists
-2. Check `{specs}/{target}` (e.g., `.spec/lunch-menu`)
-3. Check `{specs}/{epics}/{target}` (e.g., `.spec/epics/lunch-menu`)
-4. Recursively search `{specs}/` for folder named `{target}`
+2. Recursively search from `specRoot` (default: project root) for folder named `{target}`
 
 **Example:** If your structure is:
 ```
-.spec/
-├── epics/
-│   └── epic-1/
-│       └── sprints/
-│           └── lunch-menu/
-│               └── PRD.md
+my-project/
+├── .pixel-perfect/
+│   └── config.json
+├── docs/
+├── src/
+└── specs/
+    └── epics/
+        └── epic-1/
+            └── sprints/
+                └── lunch-menu/
+                    └── PRD.md
 ```
 
-Then `/pixel-perfect:design lunch-menu` finds `.spec/epics/epic-1/sprints/lunch-menu`.
+Then `/pixel-perfect:design lunch-menu` finds `specs/epics/epic-1/sprints/lunch-menu` and creates `design/` folder there.
+
+**Limit search scope:** Set `specRoot` in `.pixel-perfect/config.json` to search only specific directories:
+```json
+{
+  "specRoot": "specs"
+}
+```
 
 **Ambiguous matches:** If multiple folders match, you'll be asked to choose:
 ```
 Found multiple matches for "menu":
-  1. .spec/epics/epic-1/lunch-menu
-  2. .spec/epics/epic-2/dinner-menu
+  1. specs/epics/epic-1/lunch-menu
+  2. specs/epics/epic-2/dinner-menu
 Which one? [1-2]:
 ```
 
