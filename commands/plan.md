@@ -14,7 +14,10 @@ Generate design artifacts from a PRD (Product Requirements Document).
 
 ## Arguments
 
-- `<epic-path>`: Path to epic directory containing PRD.md
+- `<target>`: Epic or feature to plan. Supports smart path resolution:
+  - **Full path**: `.spec/epics/epic-1` → uses exact path
+  - **Name only**: `epic-1` → searches spec directory for matching folder
+  - **Nested**: `lunch-menu` → finds it anywhere under spec directory
 
 ## Options
 

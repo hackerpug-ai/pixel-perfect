@@ -127,12 +127,19 @@ Add to `.claude/settings.json`:
 ### Basic Usage
 
 ```bash
-# Run full design workflow
+# Run full design workflow (just use the folder name!)
+/pixel-perfect:design epic-1
+
+# Or use full path
 /pixel-perfect:design .spec/epics/epic-1
 
 # Check progress anytime
-/pixel-perfect:status .spec/epics/epic-1
+/pixel-perfect:status epic-1
 ```
+
+**Smart path resolution:** You don't need full paths. Just use the folder name and the plugin finds it:
+- `epic-1` → finds `.spec/epics/epic-1`
+- `lunch-menu` → finds `.spec/epics/epic-1/sprints/lunch-menu`
 
 **First run?** Preplanning runs automatically—no extra commands needed. It will ask you:
 1. **Where are your requirements?** (auto-detects PRD.md or asks for location)

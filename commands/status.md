@@ -14,7 +14,9 @@ Show the current status of design artifacts and workflow progress.
 
 ## Arguments
 
-- `<epic-path>`: Path to epic directory
+- `<target>`: Epic or feature to check. Supports smart path resolution:
+  - **Full path**: `.spec/epics/epic-1` → uses exact path
+  - **Name only**: `epic-1` → searches spec directory for matching folder
 
 ## Output
 

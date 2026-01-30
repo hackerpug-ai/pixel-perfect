@@ -14,7 +14,10 @@ Run the complete design workflow for an epic, starting with interactive preplann
 
 ## Arguments
 
-- `<epic-path>`: Path to epic directory (e.g., `.spec/epics/epic-1`)
+- `<target>`: Epic or feature to design. Supports smart path resolution:
+  - **Full path**: `.spec/epics/epic-1` → uses exact path
+  - **Name only**: `epic-1` → searches spec directory for matching folder
+  - **Nested**: `lunch-menu` → finds `.spec/epics/epic-1/sprints/lunch-menu`
 
 ## Options
 
@@ -75,6 +78,43 @@ Reviews mockups against specs with approval workflow
 
 # Review only
 /pixel-perfect:design .spec/epics/epic-1 --review-only
+```
+
+## Smart Path Resolution
+
+You don't need to specify full paths. The plugin finds your target automatically:
+
+```bash
+# These all work if "lunch-menu" exists somewhere under .spec/
+/pixel-perfect:design lunch-menu
+/pixel-perfect:design epic-1
+/pixel-perfect:design my-feature
+```
+
+**Resolution order:**
+1. Check if target is an exact path that exists
+2. Check `{specs}/{target}` (e.g., `.spec/lunch-menu`)
+3. Check `{specs}/{epics}/{target}` (e.g., `.spec/epics/lunch-menu`)
+4. Recursively search `{specs}/` for folder named `{target}`
+
+**Example:** If your structure is:
+```
+.spec/
+├── epics/
+│   └── epic-1/
+│       └── sprints/
+│           └── lunch-menu/
+│               └── PRD.md
+```
+
+Then `/pixel-perfect:design lunch-menu` finds `.spec/epics/epic-1/sprints/lunch-menu`.
+
+**Ambiguous matches:** If multiple folders match, you'll be asked to choose:
+```
+Found multiple matches for "menu":
+  1. .spec/epics/epic-1/lunch-menu
+  2. .spec/epics/epic-2/dinner-menu
+Which one? [1-2]:
 ```
 
 ## Preplanning Details

@@ -14,7 +14,9 @@ Generate specification files from design artifacts for mockup generation.
 
 ## Arguments
 
-- `<epic-path>`: Path to epic directory with design artifacts
+- `<target>`: Epic or feature with design artifacts. Supports smart path resolution:
+  - **Full path**: `.spec/epics/epic-1` → uses exact path
+  - **Name only**: `epic-1` → searches spec directory for matching folder
 
 ## Options
 

@@ -14,7 +14,9 @@ Review mockups against specifications and design standards.
 
 ## Arguments
 
-- `<epic-path>`: Path to epic directory with mockups
+- `<target>`: Epic or feature with mockups. Supports smart path resolution:
+  - **Full path**: `.spec/epics/epic-1` → uses exact path
+  - **Name only**: `epic-1` → searches spec directory for matching folder
 
 ## Options
 

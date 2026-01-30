@@ -9,8 +9,15 @@ Interactive preplanning phase that configures your design project before generat
 ## Usage
 
 ```
-/pixel-perfect:init <epic-path> [options]
+/pixel-perfect:init <target> [options]
 ```
+
+## Arguments
+
+- `<target>`: Epic or feature to initialize. Supports smart path resolution:
+  - **Full path**: `.spec/epics/epic-1` → uses exact path
+  - **Name only**: `epic-1` → searches spec directory for matching folder
+  - **Nested**: `lunch-menu` → finds `.spec/epics/epic-1/sprints/lunch-menu`
 
 ## Options
 

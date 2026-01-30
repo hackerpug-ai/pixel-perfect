@@ -14,7 +14,9 @@ Generate visual mockups from specification files.
 
 ## Arguments
 
-- `<epic-path>`: Path to epic directory with spec files
+- `<target>`: Epic or feature with spec files. Supports smart path resolution:
+  - **Full path**: `.spec/epics/epic-1` → uses exact path
+  - **Name only**: `epic-1` → searches spec directory for matching folder
 
 ## Options
 
