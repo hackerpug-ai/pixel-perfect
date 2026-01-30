@@ -35,10 +35,16 @@ Use `--skip-init` to error instead of auto-initializing.
 
 ## Generation Sequence
 
-**IMPORTANT:** Artifacts MUST be generated in this exact order. Each artifact may depend on previous ones.
+**Relative ordering, not mandatory steps.** Only generate what's needed, but maintain this order:
+
+```
+UX plan → paradigm → tokens → components → flows/workflows → views/screens
+```
+
+See `docs/GENERATION-SEQUENCE.md` for full details.
 
 ### Foundation (Phase 1-4)
-1. **UX-DESIGN-PLAN.md** - Human-readable design overview (generated first to guide all other artifacts)
+1. **UX-DESIGN-PLAN.md** - Design overview (guides all artifacts)
 2. **paradigm.yaml** - Design patterns, principles, references
 3. **tokens.yaml** - Design tokens (colors, spacing, typography)
 4. **components.yaml** - Reusable component definitions (uses tokens)
@@ -48,6 +54,11 @@ Use `--skip-init` to error instead of auto-initializing.
 6. **workflows.yaml** - User journeys and task flows
 7. **views.yaml** - Detailed view specifications (uses components, tokens)
 8. **screens.yaml** - Screen inventory with hierarchy (uses views)
+
+### Smart Generation
+- Skip artifacts that already exist (unless `--force`)
+- When regenerating, only update changed artifacts + downstream dependencies
+- Always maintain relative order when multiple artifacts need updates
 
 ## Example
 

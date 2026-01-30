@@ -118,30 +118,27 @@ Returns to summary after modification.
 
 When confirmed, tasks are queued with dependency-aware ordering.
 
-**IMPORTANT:** Artifacts MUST be generated in this exact order. Each artifact may depend on previous ones.
+**Relative ordering, not mandatory steps.** Only run what's needed, but maintain this order:
 
-**Execution Order:**
-1. **config** - design.config.yaml (init-level: requirements, platforms, vibe)
-2. **UX-DESIGN-PLAN.md** - Design overview (guides all artifacts)
-3. **paradigm.yaml** - Design patterns and principles
-4. **tokens.yaml** - Design tokens (colors, spacing, typography)
-5. **components.yaml** - Reusable components (uses tokens)
-6. **flows.yaml / workflows.yaml** - Interaction flows and user journeys
-7. **views.yaml / screens.yaml** - View specs and screen inventory
-8. **prompts/*.spec.json** - JSON specifications for mockups
-9. **mocks/*.mock.html** - Visual mockups
+```
+config → UX plan → paradigm → tokens → components → flows/workflows → views/screens → prompts → mocks
+```
 
-**Dependency Rules:**
-| If Changed | Also Regenerate (in order) |
-|------------|----------------------------|
-| config | UX plan → paradigm → tokens → components → flows → views → prompts → mocks |
-| UX plan | paradigm → tokens → components → flows → views → prompts → mocks |
-| paradigm | tokens → components → flows → views → prompts → mocks |
-| tokens | components → prompts → mocks |
-| components | flows → views → prompts → mocks |
-| flows/workflows | views → prompts → mocks |
-| views/screens | prompts → mocks |
-| prompts | mocks |
+See `docs/GENERATION-SEQUENCE.md` for full details.
+
+**Examples:**
+
+| What Changed | Tasks Run (in order) |
+|--------------|----------------------|
+| tokens only | tokens → components → prompts → mocks |
+| components only | components → flows → views → prompts → mocks |
+| views only | views → prompts → mocks |
+| flows + tokens | tokens → components → flows → views → prompts → mocks |
+
+**Smart Cascade:**
+- Skip unchanged artifacts
+- Only regenerate downstream artifacts that actually depend on the change
+- Use judgment: internal component change may not need view regeneration
 
 ## Section Detection Keywords
 
