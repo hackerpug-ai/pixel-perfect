@@ -6,6 +6,22 @@ description: "Run the full design workflow: init → plan → prompts → mockup
 
 Run the complete design workflow for an epic, starting with interactive preplanning.
 
+## FIRST: Check for Initialization
+
+**BEFORE doing anything else**, check if `{target}/design/design.config.yaml` exists:
+
+```
+IF design.config.yaml does NOT exist:
+  → Run the full init workflow (see Phase 0 below)
+  → Ask user about requirements, platforms, vibe
+  → DO NOT proceed to planning until init is complete
+
+IF design.config.yaml EXISTS:
+  → Read config and proceed to planning
+```
+
+This check is MANDATORY. Never skip directly to generating artifacts.
+
 ## Usage
 
 ```
