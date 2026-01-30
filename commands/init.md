@@ -23,11 +23,36 @@ Interactive preplanning phase that configures your design project before generat
 
 This command walks you through setting up your design project:
 
-1. **Requirements Discovery** - Finds or asks for your PRD/requirements document
-2. **Device Targeting** - Infers and confirms which platforms you're designing for
-3. **Design Vibe** - Captures the aesthetic direction for your mockups
-4. **URL Analysis** - Fetches and analyzes any reference URLs in requirements
-5. **Configuration** - Saves preferences to `design.config.yaml`
+1. **Load Project Config** - Reads `.pixel-perfect/config.json` for defaults (if exists)
+2. **Requirements Discovery** - Finds or asks for your PRD/requirements document
+3. **Device Targeting** - Infers and confirms which platforms you're designing for
+4. **Design Vibe** - Captures the aesthetic direction for your mockups
+5. **URL Analysis** - Fetches and analyzes any reference URLs in requirements
+6. **Configuration** - Saves preferences to `{epic}/design/design.config.yaml`
+
+## Project Configuration
+
+If `.pixel-perfect/config.json` exists in your project root, init uses it for:
+- **Default paths**: Where to look for epics (default: `.spec/epics`)
+- **Pre-selected platforms**: Skip platform multi-select if configured
+- **Default vibe**: Skip vibe question if configured
+- **Naming style**: Default design key naming convention
+
+Example `.pixel-perfect/config.json`:
+```json
+{
+  "paths": {
+    "specs": ".spec",
+    "epics": "epics"
+  },
+  "defaults": {
+    "platforms": ["mobile-ios", "web-desktop"],
+    "vibe": "modern"
+  }
+}
+```
+
+If no project config exists, init uses built-in defaults (`.spec/epics`).
 
 ## Preplanning Workflow
 
