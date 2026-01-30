@@ -4,46 +4,85 @@ description: "Run the full design workflow: init → plan → prompts → mockup
 
 # Design Workflow
 
-## ⚠️ EXECUTE THIS FIRST - MANDATORY
+## EXECUTION GATE - MANDATORY
 
-Before ANY other action, run this dependency check:
+You MUST execute these gates IN ORDER. HALT means STOP COMPLETELY and run that command.
 
 ```
-STEP 1: Resolve target directory
-  - If target provided: use {target}/design/
-  - If no target: find nearest design.config.yaml or design/ directory
-
-STEP 2: Check design.config.yaml exists in target
-
-  IF NOT EXISTS:
-    ┌─────────────────────────────────────────────────────────┐
-    │ STOP. Run /pixel-perfect:init for this target.          │
-    │ DO NOT proceed to planning until init completes.        │
-    │ Init will ask about: requirements, platforms, vibe.     │
-    └─────────────────────────────────────────────────────────┘
-
-  IF EXISTS:
-    → Read config and continue to dependency checks below
-
-STEP 3: Check which phases are complete (by artifact presence)
-  - views.yaml missing? → Need to run plan
-  - prompts/*.spec.json missing? → Need to run prompts
-  - mocks/*.mock.html missing? → Need to run mockups
-
-STEP 4: Execute missing phases in order
+┌─────────────────────────────────────────────────────────────────────┐
+│ GATE 0: RESOLVE TARGET                                              │
+│                                                                     │
+│   target provided?                                                  │
+│     YES → dir = {target}/design/                                    │
+│     NO  → dir = find nearest design.config.yaml (search upward)    │
+│                                                                     │
+│   FAIL if no target and no design.config.yaml found anywhere       │
+└─────────────────────────────────────────────────────────────────────┘
+          ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ GATE 1: CHECK design.config.yaml                                    │
+│                                                                     │
+│   File exists: {dir}/design.config.yaml ?                          │
+│                                                                     │
+│     NO  → ╔═══════════════════════════════════════════════════════╗│
+│           ║ HALT. Execute: /pixel-perfect:init {target}           ║│
+│           ║                                                       ║│
+│           ║ Init MUST complete. It will ask:                      ║│
+│           ║   • Requirements file location                        ║│
+│           ║   • Target platforms (iOS, Android, Web, etc.)        ║│
+│           ║   • Design vibe (modern, minimal, playful, etc.)      ║│
+│           ║                                                       ║│
+│           ║ WAIT for init to finish. Then RESTART from GATE 1.    ║│
+│           ╚═══════════════════════════════════════════════════════╝│
+│     YES → CONTINUE to GATE 2                                       │
+└─────────────────────────────────────────────────────────────────────┘
+          ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ GATE 2: CHECK views.yaml                                            │
+│                                                                     │
+│   File exists: {dir}/views.yaml ?                                  │
+│                                                                     │
+│     NO  → ╔═══════════════════════════════════════════════════════╗│
+│           ║ HALT. Execute: /pixel-perfect:plan {target}           ║│
+│           ║ WAIT for plan to finish. Then RESTART from GATE 2.    ║│
+│           ╚═══════════════════════════════════════════════════════╝│
+│     YES → CONTINUE to GATE 3                                       │
+└─────────────────────────────────────────────────────────────────────┘
+          ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ GATE 3: CHECK prompts/*.spec.json                                   │
+│                                                                     │
+│   Any files exist: {dir}/prompts/*.spec.json ?                     │
+│                                                                     │
+│     NO  → ╔═══════════════════════════════════════════════════════╗│
+│           ║ HALT. Execute: /pixel-perfect:prompts {target}        ║│
+│           ║ WAIT for prompts to finish. Then RESTART from GATE 3. ║│
+│           ╚═══════════════════════════════════════════════════════╝│
+│     YES → CONTINUE to GATE 4                                       │
+└─────────────────────────────────────────────────────────────────────┘
+          ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ GATE 4: CHECK mocks/*.mock.html                                     │
+│                                                                     │
+│   Any files exist: {dir}/mocks/*.mock.html ?                       │
+│                                                                     │
+│     NO  → ╔═══════════════════════════════════════════════════════╗│
+│           ║ HALT. Execute: /pixel-perfect:mockups {target}        ║│
+│           ║ WAIT for mockups to finish. Then RESTART from GATE 4. ║│
+│           ╚═══════════════════════════════════════════════════════╝│
+│     YES → CONTINUE to review phase                                 │
+└─────────────────────────────────────────────────────────────────────┘
+          ↓
+     ALL GATES PASSED → Execute review phase
 ```
 
-**This check is NOT optional. Never skip to generation.**
+**NEVER skip gates. NEVER proceed past a HALT. NEVER generate artifacts without passing all prior gates.**
 
 ---
 
 ## Design is a Router
 
-The design command orchestrates the full workflow by running commands in sequence:
-
-```
-init → plan → prompts → mockups → review
-```
+Orchestrates: `init → plan → prompts → mockups → review`
 
 ## Usage
 

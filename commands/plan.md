@@ -6,27 +6,41 @@ description: "Generate design artifacts from PRD: UX plan, paradigm, tokens, com
 
 Generate design artifacts from a PRD (Product Requirements Document).
 
-## ⚠️ EXECUTE THIS FIRST - MANDATORY
+## EXECUTION GATE - MANDATORY
+
+You MUST execute this gate BEFORE generating any YAML.
 
 ```
-STEP 1: Resolve target directory
-  - If target provided: use {target}/design/
-  - If no target: find nearest design.config.yaml or design/ directory
-
-STEP 2: Check design.config.yaml exists
-
-  IF NOT EXISTS:
-    ┌─────────────────────────────────────────────────────────┐
-    │ STOP. Run /pixel-perfect:init for this target.          │
-    │ DO NOT generate any YAML until init completes.          │
-    │ Init will ask about: requirements, platforms, vibe.     │
-    └─────────────────────────────────────────────────────────┘
-
-  IF EXISTS:
-    → Read config and proceed to planning
+┌─────────────────────────────────────────────────────────────────────┐
+│ GATE 0: RESOLVE TARGET                                              │
+│                                                                     │
+│   target provided?                                                  │
+│     YES → dir = {target}/design/                                    │
+│     NO  → dir = find nearest design.config.yaml (search upward)    │
+└─────────────────────────────────────────────────────────────────────┘
+          ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ GATE 1: CHECK design.config.yaml                                    │
+│                                                                     │
+│   File exists: {dir}/design.config.yaml ?                          │
+│                                                                     │
+│     NO  → ╔═══════════════════════════════════════════════════════╗│
+│           ║ HALT. Execute: /pixel-perfect:init {target}           ║│
+│           ║                                                       ║│
+│           ║ Init MUST complete. It will ask:                      ║│
+│           ║   • Requirements file location                        ║│
+│           ║   • Target platforms (iOS, Android, Web, etc.)        ║│
+│           ║   • Design vibe (modern, minimal, playful, etc.)      ║│
+│           ║                                                       ║│
+│           ║ WAIT for init to finish. Then RESTART from GATE 1.    ║│
+│           ╚═══════════════════════════════════════════════════════╝│
+│     YES → CONTINUE to plan generation                              │
+└─────────────────────────────────────────────────────────────────────┘
+          ↓
+     GATE PASSED → Generate YAML artifacts
 ```
 
-**This check is NOT optional. Never skip to generation.**
+**NEVER generate YAML without passing GATE 1. NEVER skip init.**
 
 ---
 

@@ -6,6 +6,31 @@ description: "Initialize design project with interactive preplanning: requiremen
 
 Interactive preplanning phase that configures your design project before generating artifacts.
 
+## EXECUTION REQUIREMENT
+
+Init is STEP 1 of the workflow. It MUST complete before any other command can proceed.
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ INIT CREATES: design.config.yaml                                    │
+│                                                                     │
+│ This file is REQUIRED by all other commands:                       │
+│   • plan   - HALTS without it                                      │
+│   • prompts - HALTS without it                                     │
+│   • mockups - HALTS without it                                     │
+│   • design  - HALTS without it                                     │
+│                                                                     │
+│ Init MUST ask the user about:                                      │
+│   1. Requirements file location (or paste content)                 │
+│   2. Target platforms (multi-select: iOS, Android, Web, etc.)      │
+│   3. Design vibe (modern, minimal, playful, corporate, etc.)       │
+│                                                                     │
+│ NEVER auto-skip these questions. NEVER use defaults without asking.│
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## Usage
 
 ```

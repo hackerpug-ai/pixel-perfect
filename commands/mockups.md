@@ -6,37 +6,59 @@ description: "Generate visual mockups from specification files"
 
 Generate visual mockups from specification files.
 
-## ⚠️ EXECUTE THIS FIRST - MANDATORY
+## EXECUTION GATES - MANDATORY
+
+You MUST pass ALL gates IN ORDER before generating mockups.
 
 ```
-STEP 1: Resolve target directory
-  - If target provided: use {target}/design/
-  - If no target: find nearest design.config.yaml or design/ directory
-
-STEP 2: Check dependencies IN ORDER
-
-  CHECK: design.config.yaml exists?
-    NO → ┌──────────────────────────────────────────────────┐
-         │ STOP. Execute /pixel-perfect:init completely.   │
-         │ Wait for init to finish. Then return here.      │
-         └──────────────────────────────────────────────────┘
-
-  CHECK: views.yaml exists?
-    NO → ┌──────────────────────────────────────────────────┐
-         │ STOP. Execute /pixel-perfect:plan completely.   │
-         │ Wait for plan to finish. Then return here.      │
-         └──────────────────────────────────────────────────┘
-
-  CHECK: prompts/*.spec.json exists?
-    NO → ┌──────────────────────────────────────────────────┐
-         │ STOP. Execute /pixel-perfect:prompts completely.│
-         │ Wait for prompts to finish. Then return here.   │
-         └──────────────────────────────────────────────────┘
-
-  ALL EXIST → Proceed to mockup generation
+┌─────────────────────────────────────────────────────────────────────┐
+│ GATE 0: RESOLVE TARGET                                              │
+│                                                                     │
+│   target provided?                                                  │
+│     YES → dir = {target}/design/                                    │
+│     NO  → dir = find nearest design.config.yaml (search upward)    │
+└─────────────────────────────────────────────────────────────────────┘
+          ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ GATE 1: CHECK design.config.yaml                                    │
+│                                                                     │
+│   File exists: {dir}/design.config.yaml ?                          │
+│                                                                     │
+│     NO  → ╔═══════════════════════════════════════════════════════╗│
+│           ║ HALT. Execute: /pixel-perfect:init {target}           ║│
+│           ║ WAIT for init to finish. Then RESTART from GATE 1.    ║│
+│           ╚═══════════════════════════════════════════════════════╝│
+│     YES → CONTINUE to GATE 2                                       │
+└─────────────────────────────────────────────────────────────────────┘
+          ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ GATE 2: CHECK views.yaml                                            │
+│                                                                     │
+│   File exists: {dir}/views.yaml ?                                  │
+│                                                                     │
+│     NO  → ╔═══════════════════════════════════════════════════════╗│
+│           ║ HALT. Execute: /pixel-perfect:plan {target}           ║│
+│           ║ WAIT for plan to finish. Then RESTART from GATE 2.    ║│
+│           ╚═══════════════════════════════════════════════════════╝│
+│     YES → CONTINUE to GATE 3                                       │
+└─────────────────────────────────────────────────────────────────────┘
+          ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ GATE 3: CHECK prompts/*.spec.json                                   │
+│                                                                     │
+│   Any files exist: {dir}/prompts/*.spec.json ?                     │
+│                                                                     │
+│     NO  → ╔═══════════════════════════════════════════════════════╗│
+│           ║ HALT. Execute: /pixel-perfect:prompts {target}        ║│
+│           ║ WAIT for prompts to finish. Then RESTART from GATE 3. ║│
+│           ╚═══════════════════════════════════════════════════════╝│
+│     YES → CONTINUE to mockup generation                            │
+└─────────────────────────────────────────────────────────────────────┘
+          ↓
+     ALL GATES PASSED → Generate mockups
 ```
 
-**This check is NOT optional. You MUST run missing steps.**
+**NEVER generate mockups without passing ALL gates. NEVER skip init, plan, or prompts.**
 
 ---
 

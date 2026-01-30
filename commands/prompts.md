@@ -6,31 +6,47 @@ description: "Generate specification files from views.yaml for mockup generation
 
 Generate specification files from design artifacts for mockup generation.
 
-## ⚠️ EXECUTE THIS FIRST - MANDATORY
+## EXECUTION GATES - MANDATORY
+
+You MUST pass ALL gates IN ORDER before generating specs.
 
 ```
-STEP 1: Resolve target directory
-  - If target provided: use {target}/design/
-  - If no target: find nearest design.config.yaml or design/ directory
-
-STEP 2: Check dependencies IN ORDER
-
-  CHECK: design.config.yaml exists?
-    NO → ┌──────────────────────────────────────────────────┐
-         │ STOP. Execute /pixel-perfect:init completely.   │
-         │ Wait for init to finish. Then return here.      │
-         └──────────────────────────────────────────────────┘
-
-  CHECK: views.yaml exists?
-    NO → ┌──────────────────────────────────────────────────┐
-         │ STOP. Execute /pixel-perfect:plan completely.   │
-         │ Wait for plan to finish. Then return here.      │
-         └──────────────────────────────────────────────────┘
-
-  ALL EXIST → Proceed to prompts generation
+┌─────────────────────────────────────────────────────────────────────┐
+│ GATE 0: RESOLVE TARGET                                              │
+│                                                                     │
+│   target provided?                                                  │
+│     YES → dir = {target}/design/                                    │
+│     NO  → dir = find nearest design.config.yaml (search upward)    │
+└─────────────────────────────────────────────────────────────────────┘
+          ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ GATE 1: CHECK design.config.yaml                                    │
+│                                                                     │
+│   File exists: {dir}/design.config.yaml ?                          │
+│                                                                     │
+│     NO  → ╔═══════════════════════════════════════════════════════╗│
+│           ║ HALT. Execute: /pixel-perfect:init {target}           ║│
+│           ║ WAIT for init to finish. Then RESTART from GATE 1.    ║│
+│           ╚═══════════════════════════════════════════════════════╝│
+│     YES → CONTINUE to GATE 2                                       │
+└─────────────────────────────────────────────────────────────────────┘
+          ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ GATE 2: CHECK views.yaml                                            │
+│                                                                     │
+│   File exists: {dir}/views.yaml ?                                  │
+│                                                                     │
+│     NO  → ╔═══════════════════════════════════════════════════════╗│
+│           ║ HALT. Execute: /pixel-perfect:plan {target}           ║│
+│           ║ WAIT for plan to finish. Then RESTART from GATE 2.    ║│
+│           ╚═══════════════════════════════════════════════════════╝│
+│     YES → CONTINUE to spec generation                              │
+└─────────────────────────────────────────────────────────────────────┘
+          ↓
+     ALL GATES PASSED → Generate spec files
 ```
 
-**This check is NOT optional. You MUST run missing steps.**
+**NEVER generate specs without passing ALL gates. NEVER skip init or plan.**
 
 ---
 
