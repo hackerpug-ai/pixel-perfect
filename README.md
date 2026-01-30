@@ -90,13 +90,21 @@ The HTML mockups become your **Rosetta Stone**—the bridge between "that looks 
 
 ### Installation
 
-**From inside Claude Code** (recommended):
+This plugin is distributed as a **marketplace** (a collection of plugins hosted on GitHub). You must add the marketplace first, then install the plugin from it.
+
+**Step 1: Add the marketplace** (required once)
 ```
 /plugin marketplace add https://github.com/hackerpug-ai/pixel-perfect
+```
+This registers the pixel-perfect GitHub repo as a plugin source.
+
+**Step 2: Install the plugin**
+```
 /plugin install pixel-perfect@pixel-perfect
 ```
+The format is `plugin-name@marketplace-name`. Both are "pixel-perfect" in this case.
 
-**From your terminal** (CLI):
+**Alternative: From your terminal** (outside Claude Code):
 ```bash
 claude plugin marketplace add https://github.com/hackerpug-ai/pixel-perfect
 claude plugin install pixel-perfect@pixel-perfect
@@ -108,46 +116,65 @@ git clone https://github.com/hackerpug-ai/pixel-perfect.git
 claude --plugin-dir ./pixel-perfect
 ```
 
+---
+
+### Command Pipeline
+
+Commands must run **in sequence**. Each command checks that previous steps completed and will automatically run missing steps.
+
+```
+init → plan → prompts → mockups → review
+```
+
+| Step | Command | What it does |
+|------|---------|--------------|
+| 1 | `/pixel-perfect:init` | **Configure the project.** Asks about requirements location, target platforms, and design vibe. Creates `design.config.yaml`. |
+| 2 | `/pixel-perfect:plan` | **Generate design artifacts.** Reads your PRD and creates YAML files: tokens, components, flows, views, screens. |
+| 3 | `/pixel-perfect:prompts` | **Create spec files.** Converts views.yaml into detailed JSON specifications for each screen. |
+| 4 | `/pixel-perfect:mockups` | **Generate HTML mockups.** Creates visual HTML files from the JSON specs. |
+| 5 | `/pixel-perfect:review` | **Review mockups.** Compares mockups against specs and tracks approval status. |
+
+**If you skip a step**, the next command will detect it and run the missing step first. For example, running `/pixel-perfect:mockups` without having run `plan` or `prompts` will trigger both automatically.
+
+---
+
 ### Basic Usage
 
 ```bash
-# Run full design workflow (just use the folder name!)
+# Run full design workflow (recommended - runs all steps)
 /pixel-perfect:design epic-1
-
-# Or use full path
-/pixel-perfect:design .spec/epics/epic-1
 
 # Check progress anytime
 /pixel-perfect:status epic-1
 ```
 
-**Smart path resolution:** You don't need full paths. Just use the folder name and the plugin finds it:
+**Smart path resolution:** Just use the folder name—the plugin finds it:
 - `epic-1` → finds `.spec/epics/epic-1`
 - `lunch-menu` → finds `.spec/epics/epic-1/sprints/lunch-menu`
 
-**First run?** Preplanning runs automatically—no extra commands needed. It will ask you:
+**First run?** Init runs automatically and will ask you:
 1. **Where are your requirements?** (auto-detects PRD.md or asks for location)
-2. **What platforms?** (infers from requirements, confirms with multi-select)
-3. **What's the design vibe?** (infers aesthetic or asks you to choose)
+2. **What platforms?** (defaults to Responsive Web, or choose native iOS/Android/etc.)
+3. **What's the design vibe?** (modern, minimal, playful, etc.)
 4. **Any reference URLs to analyze?** (fetches and extracts patterns)
 
-### Step-by-Step Usage
+### Running Steps Individually
 
 ```bash
-# 0. Initialize with preplanning (run separately or auto-runs with design)
-/pixel-perfect:init .spec/epics/epic-1
+# 1. Initialize (configure project - runs automatically if needed)
+/pixel-perfect:init epic-1
 
-# 1. Generate design artifacts from PRD
-/pixel-perfect:plan .spec/epics/epic-1
+# 2. Plan (generate YAML artifacts from PRD)
+/pixel-perfect:plan epic-1
 
-# 2. Create specification files from views.yaml
-/pixel-perfect:prompts .spec/epics/epic-1
+# 3. Prompts (create JSON specs from views.yaml)
+/pixel-perfect:prompts epic-1
 
-# 3. Generate HTML mockups
-/pixel-perfect:mockups .spec/epics/epic-1
+# 4. Mockups (generate HTML from specs)
+/pixel-perfect:mockups epic-1
 
-# 4. Review mockups against specs
-/pixel-perfect:review .spec/epics/epic-1
+# 5. Review (compare mockups against specs)
+/pixel-perfect:review epic-1
 ```
 
 ---
@@ -265,6 +292,65 @@ Show workflow progress and next steps.
 ```
 /pixel-perfect:status <epic-path>
 ```
+
+### /pixel-perfect:refine
+
+Iteratively improve your designs with structured feedback. Refine detects what you want to change and intelligently re-runs only the affected steps.
+
+**Usage:**
+```
+/pixel-perfect:refine <epic-path> [feedback]
+```
+
+**Two modes:**
+
+**1. Smart Detection** (provide feedback inline):
+```
+/pixel-perfect:refine epic-1 "The colors feel too muted and the login flow needs a forgot password option"
+```
+Analyzes your feedback and detects affected sections:
+- "colors feel too muted" → tokens
+- "login flow" + "forgot password" → flows, screens, views
+
+**2. Interactive Selection** (no feedback):
+```
+/pixel-perfect:refine epic-1
+```
+Shows a multi-select menu:
+```
+? Which areas need refinement?
+  [ ] Tokens - Colors, spacing, typography
+  [ ] Components - Buttons, inputs, cards
+  [ ] Flows - Navigation and interactions
+  [ ] Views - Screen layouts
+  [ ] Mockups - Regenerate visuals
+```
+
+**How it works:**
+1. Collects feedback for each selected section
+2. Shows a summary of all changes for confirmation
+3. Queues tasks in dependency order (tokens → components → flows → views → prompts → mocks)
+4. Only regenerates what's actually affected
+
+**Example workflow:**
+```
+/pixel-perfect:refine epic-1 "Need dark mode and bigger buttons"
+
+Detected sections: tokens, components
+Affected downstream: views, prompts, mocks
+
+? Proceed with refinement?
+  > Confirm
+
+Executing:
+  1. Update tokens.yaml (add dark mode palette)
+  2. Update components.yaml (increase button sizes)
+  3. Review views.yaml for compliance
+  4. Regenerate affected prompts
+  5. Regenerate affected mockups
+```
+
+Refinement history is saved to `{epic}/design/refine-history.yaml`.
 
 ---
 
