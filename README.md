@@ -65,6 +65,8 @@ This plugin provides a structured workflow for turning product requirements into
 PRD.md → Design Artifacts (YAML) → Specifications (JSON) → Mockups (HTML) → Review
 ```
 
+*(PRD = Product Requirements Document—your feature specs and functionality requirements)*
+
 ### Core Concept
 
 Instead of jumping from requirements to code, this plugin creates an intermediate **design layer**:
