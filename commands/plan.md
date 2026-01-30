@@ -19,8 +19,15 @@ Generate design artifacts from a PRD (Product Requirements Document).
   - **Name only**: `epic-1` → searches spec directory for matching folder
   - **Nested**: `lunch-menu` → finds it anywhere under spec directory
 
+## Prerequisites
+
+**Auto-init:** If `{epic}/design/design.config.yaml` doesn't exist, runs `/pixel-perfect:init` first.
+
+Use `--skip-init` to error instead of auto-initializing.
+
 ## Options
 
+- `--skip-init`: Error if design.config.yaml missing instead of running init
 - `--foundation`: Generate only foundation artifacts (workflows, paradigm, screens)
 - `--continue`: Continue with detail artifacts (flows, views, components, tokens)
 - `--research <scope>`: Paradigm research scope: `codebase`, `web`, or `both`

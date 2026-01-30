@@ -21,10 +21,13 @@ Show the current status of design artifacts and workflow progress.
 ## Output
 
 Displays:
+- Init status (whether design.config.yaml exists)
 - Artifact completion status
 - Mockup generation progress
 - Review status summary
 - Next recommended action
+
+**Note:** If `design.config.yaml` doesn't exist, status shows "Not initialized" and recommends running init.
 
 ## Example
 

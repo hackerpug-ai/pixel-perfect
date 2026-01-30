@@ -18,8 +18,15 @@ Generate visual mockups from specification files.
   - **Full path**: `.spec/epics/epic-1` → uses exact path
   - **Name only**: `epic-1` → searches spec directory for matching folder
 
+## Prerequisites
+
+**Auto-init:** If `{epic}/design/design.config.yaml` doesn't exist, runs `/pixel-perfect:init` first.
+
+Use `--skip-init` to error instead of auto-initializing.
+
 ## Options
 
+- `--skip-init`: Error if design.config.yaml missing instead of running init
 - `--key <design_key>`: Generate mockup for single design key only
 - `--force`: Regenerate existing mockups
 - `--format <format>`: Output format (default: html)
