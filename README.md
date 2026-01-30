@@ -85,18 +85,42 @@ The HTML mockups become your **Rosetta Stone**—the bridge between "that looks 
 
 ### Installation
 
-**From GitHub (recommended):**
+**One-liner:**
 ```bash
-# Add the marketplace
-/plugin marketplace add justinrich/pixel-perfect
+/plugin marketplace add hackerpug-ai/pixel-perfect && /plugin install pixel-perfect@pixel-perfect
+```
 
-# Install the plugin
-/plugin install pixel-perfect@justinrich-pixel-perfect-marketplace
+**Step by step:**
+```bash
+# 1. Add the marketplace
+/plugin marketplace add hackerpug-ai/pixel-perfect
+
+# 2. Install the plugin
+/plugin install pixel-perfect@pixel-perfect
 ```
 
 **For local development:**
 ```bash
 claude --plugin-dir /path/to/pixel-perfect
+```
+
+**Project-level install** (auto-loads when teammates open the project):
+
+Add to `.claude/settings.json`:
+```json
+{
+  "extraKnownMarketplaces": {
+    "pixel-perfect": {
+      "source": {
+        "source": "github",
+        "repo": "hackerpug-ai/pixel-perfect"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "pixel-perfect@pixel-perfect": true
+  }
+}
 ```
 
 ### Basic Usage
