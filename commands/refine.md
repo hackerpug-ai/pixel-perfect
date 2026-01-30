@@ -17,9 +17,20 @@ Collect structured refinement feedback and intelligently re-run affected design 
 - `<target>`: Epic or feature to refine. Supports smart path resolution.
 - `[feedback]`: Optional free-form feedback text. If provided, auto-detects affected sections.
 
-## Prerequisites
+## FIRST: Check for Initialization
 
-**Requires init:** If `{epic}/design/design.config.yaml` doesn't exist, runs `/pixel-perfect:init` first.
+**BEFORE doing anything else**, check if `{target}/design/design.config.yaml` exists:
+
+```
+IF design.config.yaml does NOT exist:
+  → Run /pixel-perfect:init (full interactive workflow)
+  → DO NOT proceed until init is complete
+
+IF design.config.yaml EXISTS:
+  → Read config and proceed
+```
+
+This check is MANDATORY.
 
 ## Workflow
 
