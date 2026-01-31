@@ -57,11 +57,12 @@ Init is STEP 1 of the workflow. It MUST complete before any other command can pr
 This command walks you through setting up your design project:
 
 1. **Load Project Config** - Reads `.pixel-perfect/config.json` for defaults (if exists)
-2. **Requirements Discovery** - Finds or asks for your PRD/requirements document
-3. **Device Targeting** - Infers and confirms which platforms you're designing for
-4. **Design Vibe** - Captures the aesthetic direction for your mockups
-5. **URL Analysis** - Fetches and analyzes any reference URLs in requirements
-6. **Configuration** - Saves preferences to `{epic}/design/design.config.yaml`
+2. **Detect Global Design System** - Checks for shared design artifacts (if `designSystem` enabled)
+3. **Requirements Discovery** - Finds or asks for your PRD/requirements document
+4. **Device Targeting** - Infers and confirms which platforms you're designing for
+5. **Design Vibe** - Captures the aesthetic direction for your mockups
+6. **URL Analysis** - Fetches and analyzes any reference URLs in requirements
+7. **Configuration** - Saves preferences to `{epic}/design/design.config.yaml`
 
 ## Project Configuration
 
@@ -85,6 +86,37 @@ Example `.pixel-perfect/config.json`:
 If no project config exists, init searches from project root for your target folder.
 
 ## Preplanning Workflow
+
+### Step 0: Global Design System Detection
+
+**If `designSystem.enabled` is `true` in project config:**
+
+Check for existing global design artifacts at the configured path (default: `/design`).
+
+```
+Checking for global design system...
+
+Global design system detected at /design/:
+  ✓ paradigm.yaml (design patterns)
+  ✓ tokens.yaml (design tokens)
+  ✓ components.yaml (reusable components)
+
+These artifacts will be used instead of generating epic-specific versions.
+The plan phase will skip generation for: paradigm, tokens, components
+```
+
+**If global design is enabled but artifacts don't exist:**
+
+```
+Global design system enabled but no artifacts found at /design/
+
+? How would you like to proceed?
+  > Continue without global design (generate all artifacts per-epic)
+    Initialize global design system now (/pixel-perfect:library init)
+    Cancel
+```
+
+**If global design is not enabled:** Skip this step entirely.
 
 ### Step 1: Requirements Discovery
 
@@ -166,7 +198,7 @@ If your requirements contain URLs (design references, competitor analysis, inspi
 
 **Note:** URL analysis requires web access tools. If no web tools are available, this step is skipped and URLs are listed in the config for manual review.
 
-### Step 5: Configuration Output
+### Step 6: Configuration Output
 
 Saves all preferences to `{epic}/design/design.config.yaml`:
 
@@ -179,6 +211,15 @@ created: "2025-01-30"
 requirements:
   path: "PRD.md"
   analyzed: true
+
+# Global design system link (if enabled)
+designSystem:
+  enabled: true
+  path: "../../design"  # Relative path from {epic}/design/ to global
+  using:
+    - paradigm
+    - tokens
+    - components
 
 # Target platforms
 platforms:
@@ -209,9 +250,49 @@ naming:
   style: "snake_case"
 ```
 
+**Note:** The `designSystem` section is only included when global design system is enabled and artifacts exist. If global design is disabled or not configured, this section is omitted.
+
 ## Example Sessions
 
-### With automatic discovery
+### With global design system
+```
+> /pixel-perfect:init lunch-menu
+
+Searching for "lunch-menu"...
+Found: specs/epics/epic-1/sprints/lunch-menu
+
+Checking for global design system...
+Global design system detected at /design/:
+  ✓ paradigm.yaml
+  ✓ tokens.yaml
+  ✓ components.yaml
+
+These will be used instead of generating epic-specific versions.
+
+Scanning for requirements...
+Found potential requirements file: specs/epics/epic-1/sprints/lunch-menu/PRD.md
+
+? Is this your requirements document?
+  > Yes, use this file
+
+? What platforms are you designing for?
+  [x] Responsive Web (Recommended)
+
+? What's the design vibe you're going for?
+  > Modern (Recommended)
+
+Configuration saved to specs/epics/epic-1/sprints/lunch-menu/design/design.config.yaml
+
+Global design artifacts linked:
+  → /design/paradigm.yaml
+  → /design/tokens.yaml
+  → /design/components.yaml
+
+Ready to plan! Run:
+  /pixel-perfect:plan lunch-menu
+```
+
+### With automatic discovery (no global design)
 ```
 > /pixel-perfect:init lunch-menu
 

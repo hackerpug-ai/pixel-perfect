@@ -16,6 +16,11 @@ your-project/
 {
   "version": "1.0",
   "specRoot": ".",
+  "designSystem": {
+    "enabled": false,
+    "path": "design",
+    "artifacts": ["paradigm", "tokens", "components"]
+  },
   "defaults": {
     "platforms": [],
     "vibe": null,
@@ -76,6 +81,30 @@ your-project/
 | `spec` | `.spec.json` | File extension for specification files |
 | `mock` | `.mock.html` | File extension for mockup files |
 
+### designSystem
+
+Optional configuration for a global/project-level design system that persists across epics.
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `enabled` | `false` | Enable global design system |
+| `path` | `"design"` | Path to global design folder (relative to project root) |
+| `artifacts` | `["paradigm", "tokens", "components"]` | Which artifacts to use from global library |
+
+**How it works:** When enabled, the plan phase checks for existing artifacts in the global design folder. If found, those artifacts are used instead of generating new ones for each epic.
+
+**Artifact values:**
+- `paradigm` - Design patterns, principles, references
+- `tokens` - Design tokens (colors, spacing, typography)
+- `components` - Reusable component definitions
+
+**Note:** Epic-specific artifacts (`flows`, `workflows`, `views`, `screens`) are always generated per-epic since they derive from epic requirements.
+
+**Resolution order for artifacts:**
+1. Epic override exists (`{epic}/design/{artifact}.yaml`) → use epic version
+2. Global artifact enabled AND exists → use global version
+3. Neither → generate in epic
+
 ## Examples
 
 ### Minimal Config
@@ -126,6 +155,66 @@ Use different file extensions:
   "extensions": {
     "spec": ".design.json",
     "mock": ".preview.html"
+  }
+}
+```
+
+### Global Design System
+
+Share foundation artifacts (paradigm, tokens, components) across all epics:
+
+```json
+{
+  "specRoot": ".",
+  "designSystem": {
+    "enabled": true,
+    "path": "design",
+    "artifacts": ["paradigm", "tokens", "components"]
+  }
+}
+```
+
+This creates the structure:
+```
+project-root/
+├── design/                  # Global design system
+│   ├── paradigm.yaml
+│   ├── tokens.yaml
+│   └── components.yaml
+└── specs/epics/
+    └── epic-1/design/       # Epic-specific only
+        ├── flows.yaml
+        ├── views.yaml
+        └── screens.yaml
+```
+
+When you run `/pixel-perfect:plan epic-1`, it will:
+- Use global `paradigm.yaml`, `tokens.yaml`, `components.yaml`
+- Generate epic-specific `flows.yaml`, `workflows.yaml`, `views.yaml`, `screens.yaml`
+
+### Custom Global Design Path
+
+Store global design in a different location:
+
+```json
+{
+  "designSystem": {
+    "enabled": true,
+    "path": ".design-system/shared"
+  }
+}
+```
+
+### Partial Global Design
+
+Only share tokens globally, generate other artifacts per-epic:
+
+```json
+{
+  "designSystem": {
+    "enabled": true,
+    "path": "design",
+    "artifacts": ["tokens"]
   }
 }
 ```

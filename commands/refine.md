@@ -32,10 +32,23 @@ If no target specified, find the nearest `design/` directory or `design.config.y
 ```
 CHECK: {target}/design/design.config.yaml exists?
   NO  → Run /pixel-perfect:init first (can't refine what doesn't exist)
-  YES → Proceed to refine workflow
+  YES → Proceed to global design check
+
+CHECK: designSystem.enabled in design.config.yaml?
+  YES → Load global artifact resolution map
+        Mark artifacts as GLOBAL or EPIC in selection UI
+  NO  → All artifacts are EPIC (local)
 ```
 
 Refine will detect which artifacts exist and only allow refinement of those.
+
+## Global Design Awareness
+
+When global design is enabled, refine distinguishes between:
+- **GLOBAL artifacts** - Shared across epics (paradigm, tokens, components)
+- **EPIC artifacts** - Specific to this epic (flows, workflows, views, screens)
+
+Refinements to global artifacts affect all epics using them.
 
 ## Workflow
 
@@ -72,6 +85,45 @@ Shows multi-select of refinable sections:
   [ ] Tokens - Modify design tokens (colors, spacing, etc.)
   [ ] Mockups - Regenerate specific mockups
 ```
+
+**When global design is enabled**, sections are annotated:
+
+```
+? Which areas need refinement? (multi-select)
+  [ ] Requirements & Scope - Update PRD interpretation
+  [ ] Platforms - Change target devices
+  [ ] Design Vibe - Adjust aesthetic direction
+  [ ] Workflows - Modify user journeys
+  [ ] Screens - Add/remove/modify screens
+  [ ] Flows - Adjust interaction flows
+  [ ] Views - Refine view specifications
+  [ ] Components - Update component definitions [GLOBAL]
+  [ ] Tokens - Modify design tokens [GLOBAL]
+  [ ] Paradigm - Design patterns & principles [GLOBAL]
+  [ ] Mockups - Regenerate specific mockups
+```
+
+### Global Artifact Warning
+
+When a GLOBAL artifact is selected, show impact warning:
+
+```
+⚠️  You selected GLOBAL artifacts.
+
+Changes to these artifacts affect ALL epics using the global design system:
+  • tokens.yaml (used by: epic-1, epic-2, epic-3)
+  • components.yaml (used by: epic-1, epic-2, epic-3)
+
+? How would you like to proceed?
+  > Refine globally - Update /design/tokens.yaml (affects all epics)
+    Create epic override - Copy to epic-1/design/tokens.yaml (this epic only)
+    Cancel - Don't modify these artifacts
+```
+
+**If "Create epic override" selected:**
+- Copies global artifact to `{epic}/design/`
+- Future plan runs will use epic override instead of global
+- Only this epic is affected
 
 ### Feedback Collection
 
@@ -232,6 +284,60 @@ Executing...
 
 ? Proceed?
   > Confirm
+```
+
+### Refining global artifacts
+```
+/pixel-perfect:refine epic-1
+
+? Which areas need refinement?
+  [x] Tokens [GLOBAL]
+  [x] Flows
+  [ ] ...
+
+⚠️  You selected GLOBAL artifacts.
+
+Changes to tokens.yaml affect ALL epics using the global design system:
+  • epic-1 (current)
+  • epic-2
+  • epic-3
+
+? How would you like to proceed?
+  > Refine globally - Update /design/tokens.yaml
+
+? What changes for Tokens?
+  > Add dark mode color variants
+
+? What changes for Flows?
+  > Add onboarding flow
+
+[Summary with cascade info]
+
+Global artifacts to update:
+  → /design/tokens.yaml
+
+Epic artifacts to update:
+  → epic-1/design/flows.yaml
+  → epic-1/design/views.yaml
+
+Downstream impact on other epics:
+  ⚠ epic-2: Will use updated tokens on next plan/refine
+  ⚠ epic-3: Will use updated tokens on next plan/refine
+
+? Proceed?
+  > Confirm
+```
+
+### Creating an epic override instead
+```
+? How would you like to proceed?
+  > Create epic override - Copy to epic-1/design/tokens.yaml
+
+Copying /design/tokens.yaml → epic-1/design/tokens.yaml
+Future plan runs for epic-1 will use the local override.
+
+? What changes for Tokens?
+  > Add dark mode variants for this epic only
 ```
 
 ## Output
