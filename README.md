@@ -361,14 +361,25 @@ Manage the project design system shared across all epics. Enables consistent tok
 
 **Usage:**
 ```
-/pixel-perfect:design-system <action> [options]
+/pixel-perfect:design-system [action] [epic] [artifacts] [options]
 ```
+
+Options can be interactive, flags, or inferred from text:
+```bash
+/pixel-perfect:design-system                              # Interactive
+/pixel-perfect:design-system merge epic-1 tokens,components  # Positional
+/pixel-perfect:design-system --epic epic-1 --artifacts tokens # Flags
+```
+
+When called without arguments, enters interactive mode:
+- **No design system exists** → runs setup workflow
+- **Design system exists** → offers merge from detected epics with artifact selection
 
 **Actions:**
 
 | Action | Description |
 |--------|-------------|
-| `init` | Create empty project design system with template files |
+| `init` | Interactive setup - detects existing epics, offers to promote |
 | `promote` | Copy artifacts from an epic to project design system (overwrites) |
 | `merge` | Merge epic artifacts with diff-based conflict resolution |
 | `status` | Show project design system status and usage |
@@ -377,22 +388,25 @@ Manage the project design system shared across all epics. Enables consistent tok
 **Examples:**
 
 ```bash
-# Initialize empty project design system
-/pixel-perfect:design-system init
+# Interactive mode - setup if new, merge menu if exists
+/pixel-perfect:design-system
 
-# Promote from first completed epic
+# Merge with positional args (epic + artifacts inferred)
+/pixel-perfect:design-system epic-1 tokens,components
+
+# Merge with flags
+/pixel-perfect:design-system merge --epic epic-1 --artifacts tokens
+
+# Promote directly (overwrites without diff)
 /pixel-perfect:design-system promote epic-1
 
-# Check what's shared
+# Auto-accept all changes
+/pixel-perfect:design-system epic-1 --accept-all
+
+# Check status
 /pixel-perfect:design-system status
 
-# Merge epic changes back with conflict resolution
-/pixel-perfect:design-system merge epic-1
-
-# Auto-accept all changes from epic
-/pixel-perfect:design-system merge epic-1 --accept-all
-
-# Validate design system integrity
+# Validate integrity
 /pixel-perfect:design-system validate
 ```
 
@@ -437,7 +451,7 @@ See [commands/design-system.md](commands/design-system.md) for full documentatio
 
 **Project design system (optional, shared across epics):**
 ```
-design-system/             # Project library (via /pixel-perfect:design-system)
+{specRoot}/design-system/  # Project library (via /pixel-perfect:design-system)
 ├── paradigm.yaml           # Shared design patterns
 ├── tokens.yaml             # Shared design tokens
 └── components.yaml         # Shared component definitions
@@ -482,7 +496,7 @@ Global settings for your entire project. Create this file to customize behavior:
 | `defaults.vibe` | `null` | Default design vibe (skips vibe question) |
 | `defaults.naming` | `snake_case` | Design key style: `snake_case`, `kebab-case`, `camelCase` |
 | `designSystem.enabled` | `false` | Enable project design system inheritance |
-| `designSystem.path` | `design-system` | Path to project design system folder |
+| `designSystem.path` | `design-system` | Path to project design system folder (relative to `specRoot`) |
 
 **If no config exists**, searches from project root for your target folder.
 

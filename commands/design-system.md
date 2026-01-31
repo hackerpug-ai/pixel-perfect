@@ -1,64 +1,194 @@
 ---
-description: "Manage project-level global design system for shared artifacts across epics"
+description: "Manage project-level project design system for shared artifacts across epics"
 ---
 
 # Design System
 
-Manage the shared design system used across all epics. The global design system allows you to maintain consistent design tokens, components, and paradigms across your entire project.
+Manage the shared design system used across all epics. The project design system allows you to maintain consistent design tokens, components, and paradigms across your entire project.
 
 ## Usage
 
 ```
-/pixel-perfect:design-system <action> [options]
+/pixel-perfect:design-system [action] [epic] [artifacts] [options]
+```
+
+All options can be provided three ways:
+1. **Interactive** - prompts guide you through choices
+2. **Flags** - explicit options like `--artifacts tokens,components`
+3. **Positional** - inferred from text like `epic-1 tokens,paradigm`
+
+**Examples - all equivalent:**
+```bash
+# Interactive - prompts for everything
+/pixel-perfect:design-system
+
+# Positional - infers action, epic, artifacts from text
+/pixel-perfect:design-system merge epic-1 tokens,components
+
+# Flags - explicit options
+/pixel-perfect:design-system merge --epic epic-1 --artifacts tokens,components
+
+# Mixed - some positional, some flags
+/pixel-perfect:design-system epic-1 --artifacts tokens --accept-all
+```
+
+**Inference rules:**
+- First path-like argument → epic (e.g., `epic-1`, `onboarding`)
+- Comma-separated words matching artifact names → artifacts (e.g., `tokens,components`)
+- Action keywords → action (e.g., `merge`, `promote`, `init`, `status`, `validate`)
+
+## Interactive Mode (No Action)
+
+Running `/pixel-perfect:design-system` without an action triggers a context-aware flow:
+
+**If no design system exists:**
+```
+> /pixel-perfect:design-system
+
+No project design system found.
+
+? Would you like to set one up?
+  > Yes, run setup
+    Cancel
+
+[Proceeds to init workflow...]
+```
+
+**If design system already exists:**
+```
+> /pixel-perfect:design-system
+
+Project design system found at .spec/design-system/
+  • paradigm.yaml (last modified: 2 days ago)
+  • tokens.yaml (last modified: 2 days ago)
+  • components.yaml (last modified: 2 days ago)
+
+? What would you like to do?
+  > Merge changes from an epic
+    Cancel
+
+Found epics with design artifacts:
+  • epic-1 (paradigm ✓, tokens ✓, components ✓)
+  • epic-2 (paradigm ✓, tokens ✓, components ✓)
+  • epic-3 (paradigm ✓, tokens ✓, components -)
+
+? Select epic to merge from:
+  > epic-2
+    epic-1
+    epic-3
+
+? Select artifacts to merge (space to toggle):
+  [✓] paradigm.yaml
+  [✓] tokens.yaml
+  [✓] components.yaml
+
+Comparing epic-2/design/ with .spec/design-system/...
+
+paradigm.yaml: No changes (identical)
+tokens.yaml: CONFLICT (2 differences)
+components.yaml: CONFLICT (1 new component)
+
+? tokens.yaml has conflicts. How to resolve?
+  > Accept epic changes (update project)
+    Keep project version (skip)
+    View diff
+
+[Proceeds with merge...]
 ```
 
 ## Actions
 
 ### init
 
-Create an empty global design system folder with template files.
+Interactive setup for the project design system. Detects existing epics and offers smart defaults.
 
 ```
-/pixel-perfect:design-system init [--path <path>]
+/pixel-perfect:design-system init [--path <path>] [--empty]
 ```
 
 **Options:**
-- `--path <path>`: Custom location for global design (default: `design-system/`)
+- `--path <path>`: Custom location for project design (default: `design-system/`)
+- `--empty`: Skip detection, create empty templates only
 
-**Creates:**
-```
-{path}/
-├── paradigm.yaml   (empty template with structure)
-├── tokens.yaml     (empty template with structure)
-└── components.yaml (empty template with structure)
-```
+**Setup Workflow:**
 
-**Example:**
+1. **Detect specRoot** - Reads from `.pixel-perfect/config.json` or infers from project structure
+2. **Scan for existing epics** - Finds epics with design artifacts (paradigm, tokens, components)
+3. **Offer setup options** - Pre-selects based on what's found
+
+**Example: No existing epics**
 ```
 > /pixel-perfect:design-system init
 
-Creating global design system at /design-system/...
+Setting up project design system...
+
+Detected specRoot: .spec/
+Scanned for existing epics: none found
+
+? Where should the design system live?
+  > .spec/design-system/ (recommended)
+    Custom path...
+
+? How would you like to start?
+  > Empty templates (fill in manually)
+    Cancel
+
+Creating project design system at .spec/design-system/...
 
 Created:
-  ✓ /design-system/paradigm.yaml (design patterns template)
-  ✓ /design-system/tokens.yaml (design tokens template)
-  ✓ /design-system/components.yaml (components template)
+  ✓ paradigm.yaml (design patterns template)
+  ✓ tokens.yaml (design tokens template)
+  ✓ components.yaml (components template)
 
-Next steps:
-  1. Populate the template files with your design standards
-  2. Enable in .pixel-perfect/config.json:
-     {
-       "designSystem": {
-         "enabled": true,
-         "path": "design-system"
-       }
-     }
-  3. Run /pixel-perfect:plan on any epic to use global design
+Updated .pixel-perfect/config.json:
+  ✓ designSystem.enabled = true
+  ✓ designSystem.path = "design-system"
+```
+
+**Example: Existing epics found**
+```
+> /pixel-perfect:design-system init
+
+Setting up project design system...
+
+Detected specRoot: .spec/
+Found epics with design artifacts:
+  • epic-1 (paradigm ✓, tokens ✓, components ✓) - last modified 2 days ago
+  • epic-2 (paradigm ✓, tokens ✓, components ✓) - last modified today
+
+? Where should the design system live?
+  > .spec/design-system/ (recommended)
+    Custom path...
+
+? How would you like to populate the design system?
+  > Promote from epic-2 (most recent)
+    Promote from epic-1
+    Empty templates (fill in manually)
+    Cancel
+
+Promoting from epic-2...
+  ✓ paradigm.yaml copied
+  ✓ tokens.yaml copied
+  ✓ components.yaml copied
+
+Updated .pixel-perfect/config.json:
+  ✓ designSystem.enabled = true
+  ✓ designSystem.path = "design-system"
+
+Project design system ready! Future epics will inherit these artifacts.
+```
+
+**Creates:**
+```
+{specRoot}/{path}/
+├── paradigm.yaml   (from epic or empty template)
+├── tokens.yaml     (from epic or empty template)
+└── components.yaml (from epic or empty template)
 ```
 
 ### promote
 
-Promote foundation artifacts from an existing epic to the global design system.
+Promote foundation artifacts from an existing epic to the project design system.
 
 ```
 /pixel-perfect:design-system promote <epic> [--artifacts <list>]
@@ -72,16 +202,16 @@ Promote foundation artifacts from an existing epic to the global design system.
 
 **Workflow:**
 1. Validates source epic has the specified artifacts
-2. Shows diff if global artifacts already exist
+2. Shows diff if project artifacts already exist
 3. Confirms before overwriting
-4. Copies artifacts to global location
+4. Copies artifacts to project location
 5. Updates config if needed
 
 **Example:**
 ```
 > /pixel-perfect:design-system promote epic-1
 
-Promoting design artifacts from epic-1 to global library...
+Promoting design artifacts from epic-1 to project library...
 
 Source: epic-1/design-system/
   ✓ paradigm.yaml (3.2 KB)
@@ -89,9 +219,9 @@ Source: epic-1/design-system/
   ✓ components.yaml (8.7 KB)
 
 Destination: /design-system/
-  (empty - no existing global design)
+  (empty - no existing project design)
 
-? Promote these artifacts to the global design system?
+? Promote these artifacts to the project design system?
   > Yes, copy to /design-system/
     No, cancel
 
@@ -100,13 +230,13 @@ Copying artifacts...
   ✓ tokens.yaml → /design-system/tokens.yaml
   ✓ components.yaml → /design-system/components.yaml
 
-Global design system created!
+Project design system created!
 
 Other epics can now use these shared artifacts.
 Enable in .pixel-perfect/config.json if not already configured.
 ```
 
-**When global artifacts already exist:**
+**When project artifacts already exist:**
 ```
 > /pixel-perfect:design-system promote epic-2
 
@@ -126,7 +256,7 @@ Destination: /design-system/
 
 ### merge
 
-Merge epic design artifacts into the global design system with diff-based conflict resolution.
+Merge epic design artifacts into the project design system with diff-based conflict resolution.
 
 ```
 /pixel-perfect:design-system merge <epic> [options]
@@ -136,8 +266,8 @@ Merge epic design artifacts into the global design system with diff-based confli
 - `<epic>`: Source epic to merge from
 
 **Options:**
-- `--skip`: Skip all conflicting files (keep global versions)
-- `--accept-all`: Auto-accept all changes from epic (overwrite global)
+- `--skip`: Skip all conflicting files (keep project versions)
+- `--accept-all`: Auto-accept all changes from epic (overwrite project)
 - `--artifacts <list>`: Only merge specific artifacts (comma-separated)
 
 **Difference from promote:**
@@ -145,26 +275,26 @@ Merge epic design artifacts into the global design system with diff-based confli
 - `merge` - Shows diffs for conflicts and lets you resolve each one
 
 **Workflow:**
-1. Check if global design system exists
+1. Check if project design system exists
    - If not configured → offer to set up design system first
-2. Load epic artifacts and global artifacts
+2. Load epic artifacts and project artifacts
 3. For each artifact in scope:
-   - If global doesn't exist → copy from epic (no conflict)
-   - If global exists and identical → skip (no change needed)
-   - If global exists and different → show diff, prompt for resolution
+   - If project doesn't exist → copy from epic (no conflict)
+   - If project exists and identical → skip (no change needed)
+   - If project exists and different → show diff, prompt for resolution
 
 **When no design system exists:**
 ```
 > /pixel-perfect:design-system merge epic-1
 
-No global design system configured.
+No project design system configured.
 
 ? Would you like to set one up now?
   > Yes, create design system at /design-system/
     Yes, create at custom path
     No, cancel
 
-Creating global design system at /design-system/...
+Creating project design system at /design-system/...
 
 Updating .pixel-perfect/config.json:
   ✓ Added designSystem.enabled = true
@@ -196,7 +326,7 @@ components.yaml: CONFLICT (1 new component)
 
 tokens.yaml:
   ┌─ CONFLICT ────────────────────────────────────────────┐
-  │ Global (current):                                      │
+  │ Project (current):                                      │
   │   colors:                                              │
   │     primary: "#2563eb"                                 │
   │                                                        │
@@ -207,17 +337,17 @@ tokens.yaml:
   └────────────────────────────────────────────────────────┘
 
 ? How would you like to resolve this conflict?
-  > Accept epic changes (update global)
-    Keep global (skip this file)
+  > Accept epic changes (update project)
+    Keep project (skip this file)
     View full diff
     Accept all remaining (--accept-all)
     Skip all remaining (--skip)
 
 ? tokens.yaml: Accept epic changes?
-  > Yes, update global
+  > Yes, update project
 
 ? components.yaml: Accept epic changes?
-  > Yes, update global
+  > Yes, update project
 
 Merge complete:
   ✓ tokens.yaml updated
@@ -225,15 +355,15 @@ Merge complete:
   - paradigm.yaml unchanged
 ```
 
-**Using --skip to keep global versions:**
+**Using --skip to keep project versions:**
 ```
 > /pixel-perfect:design-system merge epic-2 --skip
 
 Comparing epic-2/design-system/ with /design-system/...
 
-paradigm.yaml: CONFLICT → skipped (kept global)
+paradigm.yaml: CONFLICT → skipped (kept project)
 tokens.yaml: No changes (identical)
-components.yaml: CONFLICT → skipped (kept global)
+components.yaml: CONFLICT → skipped (kept project)
 
 Merge complete:
   - paradigm.yaml skipped (conflict)
@@ -267,7 +397,7 @@ Comparing epic-1/design-system/ with /design-system/...
 tokens.yaml: CONFLICT (3 differences)
 
 ? Accept epic changes for tokens.yaml?
-  > Yes, update global
+  > Yes, update project
 
 Merge complete:
   ✓ tokens.yaml updated
@@ -275,7 +405,7 @@ Merge complete:
 
 ### status
 
-Show current global design system status and usage.
+Show current project design system status and usage.
 
 ```
 /pixel-perfect:design-system status
@@ -285,7 +415,7 @@ Show current global design system status and usage.
 ```
 > /pixel-perfect:design-system status
 
-Global Design System Status
+Project Design System Status
 ════════════════════════════════════════════════════════════════
 
 Configuration: .pixel-perfect/config.json
@@ -297,28 +427,28 @@ Artifacts:
   ✓ tokens.yaml      (4.2 KB, modified 2025-01-30)
   ✓ components.yaml  (9.1 KB, modified 2025-01-30)
 
-Epics using global design:
+Epics using project design:
   • epic-1/design-system/ (linked: paradigm, tokens, components)
   • epic-2/design-system/ (linked: paradigm, tokens, components)
   • epic-3/design-system/ (linked: tokens only - has local paradigm override)
 
-Epics NOT using global design:
+Epics NOT using project design:
   • epic-4/design-system/ (no designSystem in config)
-  • legacy-feature/design-system/ (predates global design)
+  • legacy-feature/design-system/ (predates project design)
 
 ════════════════════════════════════════════════════════════════
 ```
 
-**When global design is not configured:**
+**When project design is not configured:**
 ```
 > /pixel-perfect:design-system status
 
-Global Design System Status
+Project Design System Status
 ════════════════════════════════════════════════════════════════
 
 Configuration: Not enabled
 
-To enable global design system:
+To enable project design system:
 
 1. Create config: mkdir -p .pixel-perfect
 
@@ -337,7 +467,7 @@ To enable global design system:
 
 ### validate
 
-Validate integrity of global design system and check for issues.
+Validate integrity of project design system and check for issues.
 
 ```
 /pixel-perfect:design-system validate
@@ -353,7 +483,7 @@ Validate integrity of global design system and check for issues.
 ```
 > /pixel-perfect:design-system validate
 
-Validating global design system at /design-system/...
+Validating project design system at /design-system/...
 
 paradigm.yaml
   ✓ Valid YAML syntax
@@ -374,7 +504,7 @@ Summary:
   0 errors
   1 warning
 
-Global design system is valid.
+Project design system is valid.
 ```
 
 ## Project Configuration
@@ -391,12 +521,14 @@ The library command respects and can update `.pixel-perfect/config.json`:
 }
 ```
 
+**Note:** `path` is relative to `specRoot`. If `specRoot` is `.spec/`, the design system lives at `.spec/design-system/`.
+
 ## Workflow Benefits
 
-When a global design-system is configured, all commands automatically:
+When a project design-system is configured, all commands automatically:
 
 1. **Read from design-system first** - Commands check `design-system/` for paradigm, tokens, and components before generating new ones
-2. **Use library defaults** - Epic-level design inherits colors, spacing, typography, and component definitions from the global library
+2. **Use library defaults** - Epic-level design inherits colors, spacing, typography, and component definitions from the project library
 3. **Skip foundation preconditions** - Sequential epics don't need to re-run `/pixel-perfect:plan --foundation` since they inherit from the library
 4. **Focus on epic-specific artifacts** - Commands only generate workflows, screens, flows, and views (the epic-specific parts)
 
@@ -416,7 +548,7 @@ This means new epics start faster with consistent design foundations.
 
 ## Examples
 
-### Setting up global design from scratch
+### Setting up project design from scratch
 ```
 # 1. Initialize empty library
 /pixel-perfect:design-system init
@@ -427,7 +559,7 @@ This means new epics start faster with consistent design foundations.
 /pixel-perfect:design epic-1
 /pixel-perfect:design-system promote epic-1
 
-# 4. Future epics use global design automatically
+# 4. Future epics use project design automatically
 /pixel-perfect:design epic-2
 ```
 
@@ -436,14 +568,14 @@ This means new epics start faster with consistent design foundations.
 /pixel-perfect:design-system status
 ```
 
-### Updating global design
+### Updating project design
 ```
-# Option 1: Edit global files directly
+# Option 1: Edit project files directly
 # Edit /design-system/tokens.yaml
 
-# Option 2: Refine from an epic (with global option)
+# Option 2: Refine from an epic (with project option)
 /pixel-perfect:refine epic-1
-# Select tokens → Choose "Refine globally"
+# Select tokens → Choose "Refine projectly"
 
 # Option 3: Promote updated epic (overwrites)
 /pixel-perfect:design-system promote epic-1 --artifacts tokens
@@ -452,7 +584,7 @@ This means new epics start faster with consistent design foundations.
 /pixel-perfect:design-system merge epic-1
 ```
 
-### Merging epic improvements back to global
+### Merging epic improvements back to project
 ```
 # After refining an epic, merge changes back
 /pixel-perfect:design-system merge epic-1
