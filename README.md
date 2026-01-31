@@ -146,6 +146,9 @@ init → plan → prompts → mockups → review
 
 # Check progress anytime
 /pixel-perfect:status epic-1
+
+# Manage shared design system across epics
+/pixel-perfect:design-system status
 ```
 
 **Smart path resolution:** Just use the folder name—the plugin finds it:
@@ -352,10 +355,62 @@ Executing:
 
 Refinement history is saved to `{epic}/design/refine-history.yaml`.
 
+### /pixel-perfect:design-system
+
+Manage the project design system shared across all epics. Enables consistent tokens, components, and paradigms project-wide.
+
+**Usage:**
+```
+/pixel-perfect:design-system <action> [options]
+```
+
+**Actions:**
+
+| Action | Description |
+|--------|-------------|
+| `init` | Create empty project design system with template files |
+| `promote` | Copy artifacts from an epic to project design system (overwrites) |
+| `merge` | Merge epic artifacts with diff-based conflict resolution |
+| `status` | Show project design system status and usage |
+| `validate` | Check integrity of project design system |
+
+**Examples:**
+
+```bash
+# Initialize empty project design system
+/pixel-perfect:design-system init
+
+# Promote from first completed epic
+/pixel-perfect:design-system promote epic-1
+
+# Check what's shared
+/pixel-perfect:design-system status
+
+# Merge epic changes back with conflict resolution
+/pixel-perfect:design-system merge epic-1
+
+# Auto-accept all changes from epic
+/pixel-perfect:design-system merge epic-1 --accept-all
+
+# Validate design system integrity
+/pixel-perfect:design-system validate
+```
+
+**Typical workflow:**
+1. Complete your first epic design with `/pixel-perfect:design epic-1`
+2. Promote it to project: `/pixel-perfect:design-system promote epic-1`
+3. Future epics automatically inherit from the library (skips foundation generation)
+4. Merge improvements back: `/pixel-perfect:design-system merge epic-2`
+
+**Key benefit:** Once configured, new epics skip foundation artifacts (paradigm, tokens, components) and focus only on epic-specific design (workflows, screens, flows, views).
+
+See [commands/design-system.md](commands/design-system.md) for full documentation.
+
 ---
 
 ## Output Structure
 
+**Epic-level design (per epic):**
 ```
 {epic}/design/
 ├── design.config.yaml      # Preplanning configuration
@@ -380,6 +435,16 @@ Refinement history is saved to `{epic}/design/refine-history.yaml`.
     └── url-analysis.md     # Reference URL analysis
 ```
 
+**Project design system (optional, shared across epics):**
+```
+design-system/             # Project library (via /pixel-perfect:design-system)
+├── paradigm.yaml           # Shared design patterns
+├── tokens.yaml             # Shared design tokens
+└── components.yaml         # Shared component definitions
+```
+
+When enabled, epics inherit from the project design system. Epic-specific artifacts (workflows, screens, flows, views) remain per-epic.
+
 ---
 
 ## Configuration
@@ -399,6 +464,10 @@ Global settings for your entire project. Create this file to customize behavior:
     "vibe": "modern",
     "naming": "snake_case"
   },
+  "designSystem": {
+    "enabled": true,
+    "path": "design-system"
+  },
   "extensions": {
     "spec": ".spec.json",
     "mock": ".mock.html"
@@ -412,6 +481,8 @@ Global settings for your entire project. Create this file to customize behavior:
 | `defaults.platforms` | `[]` | Pre-select platforms (skips multi-select) |
 | `defaults.vibe` | `null` | Default design vibe (skips vibe question) |
 | `defaults.naming` | `snake_case` | Design key style: `snake_case`, `kebab-case`, `camelCase` |
+| `designSystem.enabled` | `false` | Enable project design system inheritance |
+| `designSystem.path` | `design-system` | Path to project design system folder |
 
 **If no config exists**, searches from project root for your target folder.
 
@@ -751,6 +822,7 @@ Without structured design artifacts, you'd spend 4-6 hours in back-and-forth bet
 - [Project Configuration](docs/CONFIG.md) - `.pixel-perfect/config.json` setup and options
 - [Design Conventions](docs/DESIGN-CONVENTIONS.md) - File structure, YAML schemas
 - [Design Keys](docs/DESIGN-KEYS.md) - Naming patterns, status model
+- [Design System](commands/design-system.md) - Project design system management
 
 ---
 
