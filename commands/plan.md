@@ -6,60 +6,71 @@ description: "Generate design artifacts from PRD: UX plan, paradigm, tokens, com
 
 Generate design artifacts from a PRD (Product Requirements Document).
 
+## Directory-Scoped Model (ESLint-Style)
+
+pixel-perfect works like ESLint: configuration and artifacts cascade from parent directories.
+
+```
+project/
+├── design/
+│   ├── config.yaml           # Base settings
+│   ├── tokens.yaml           # Shared tokens
+│   └── components.yaml       # Shared components
+└── features/
+    └── auth/
+        └── design/
+            ├── config.yaml   # Auth overrides (optional)
+            ├── flows.yaml    # Auth-specific flows
+            └── views.yaml    # Auth-specific views
+```
+
+**Config resolution:**
+1. Check `{target}/design/config.yaml`
+2. Check `{target}/design/design.config.yaml`
+3. Check parent directories for `design/config.yaml` or `design/design.config.yaml`
+4. Merge all found configs (most specific wins for conflicts)
+
+**Artifact resolution:**
+1. Check `{target}/design/{artifact}.yaml`
+2. Check parent directories for `{artifact}.yaml`
+3. Use first found, generate in target if not found
+
 ## EXECUTION GATES - MANDATORY
 
 You MUST execute these gates BEFORE generating any YAML.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│ GATE 0: RESOLVE TARGET                                              │
+│ GATE 0: RESOLVE TARGET DIRECTORY                                  │
 │                                                                     │
 │   target provided?                                                  │
-│     YES → dir = {target}/design/                                    │
-│     NO  → dir = find nearest design.config.yaml (search upward)    │
+│     YES → dir = {target}                                           │
+│     NO  → dir = current working directory                          │
 └─────────────────────────────────────────────────────────────────────┘
           ↓
 ┌─────────────────────────────────────────────────────────────────────┐
-│ GATE 1: CASCADING CONFIG RESOLUTION                                 │
+│ GATE 1: RESOLVE CONFIG (ESLint-Style Cascading)                  │
 │                                                                     │
-│   Check configs in order (most specific first):                     │
+│   Search upward for config files:                                  │
 │                                                                     │
-│   1. {dir}/design.config.yaml (local epic config)                  │
-│   2. Parent dir design.config.yaml (if nested epic)                │
-│   3. Project design system (if enabled in .pixel-perfect/config)   │
-│   4. .pixel-perfect/config.json (project defaults)                 │
+│   1. {dir}/design/config.yaml                                     │
+│   2. {dir}/design/design.config.yaml                               │
+│   3. {parent}/design/config.yaml                                 │
+│   4. {parent}/design/design.config.yaml                           │
+│   ... (continue until root or config found)                        │
 │                                                                     │
-│   Resolution:                                                       │
-│     • Local config found → USE as base, override design system     │
-│     • No local, design system exists → INHERIT from design system  │
-│     • Neither exists → HALT and run init                           │
+│   If NO config found → HALT and run init                           │
 │                                                                     │
 │   Display "cascade path" showing which configs were read:          │
-│     Base config: .pixel-perfect/config.json                        │
-│     Design system: .spec/design-system/ (enabled)                  │
-│     Local override: epic-1/design/design.config.yaml               │
-│     Effective: merged (design system + local overrides)            │
+│     Found: design/config.yaml                                      │
+│     Parent: /project/design/config.yaml (merged)                   │
+│     Effective: merged (parent + local overrides)                   │
 └─────────────────────────────────────────────────────────────────────┘
           ↓
-┌─────────────────────────────────────────────────────────────────────┐
-│ GATE 2: RESOLVE ARTIFACT INHERITANCE                                │
-│                                                                     │
-│   For each foundation artifact (paradigm, tokens, components):     │
-│                                                                     │
-│   1. Check if {dir}/design/{artifact}.yaml exists (local override) │
-│   2. If not, check designSystem.path for artifact                  │
-│   3. If neither, mark for generation                               │
-│                                                                     │
-│   Display resolution status:                                        │
-│     Global artifacts: paradigm ✓, tokens ✓, components ✓           │
-│     Epic artifacts: flows, workflows, views, screens                │
-│     Local overrides: None (or list overrides if present)           │
-└─────────────────────────────────────────────────────────────────────┘
-          ↓
-     ALL GATES PASSED → Generate YAML artifacts (respecting resolution)
+     ALL GATES PASSED → Generate YAML artifacts
 ```
 
-**NEVER generate YAML without passing all gates. NEVER skip init.**
+**NEVER generate YAML without passing config check. NEVER skip init if config missing.**
 
 ---
 
@@ -68,24 +79,18 @@ You MUST execute these gates BEFORE generating any YAML.
 ## Usage
 
 ```
-/pixel-perfect:plan <epic-path> [options]
+/pixel-perfect:plan [directory] [options]
 ```
 
 ## Arguments
 
-- `<target>`: Epic or feature to plan. Supports smart path resolution:
-  - **Full path**: `.spec/epics/epic-1` → uses exact path
-  - **Name only**: `epic-1` → searches spec directory for matching folder
-  - **Nested**: `lunch-menu` → finds it anywhere under spec directory
-
-Use `--skip-deps` to error instead of auto-running missing steps.
+- `[directory]`: Target directory for design artifacts. Defaults to current directory.
 
 ## Options
 
-- `--skip-init`: Error if no config available instead of running init
-- `--force-local`: Ignore design system, require local config or run init
-- `--show-cascade`: Display full cascade path and resolution order
-- `--foundation`: Generate only foundation artifacts (UX plan, paradigm, tokens, components)
+- `--force-init`: Run init even if config exists (recreates config)
+- `--show-cascade`: Display full cascade path and config resolution
+- `--foundation`: Generate only foundation artifacts (paradigm, tokens, components)
 - `--continue`: Continue with detail artifacts (flows, workflows, views, screens)
 - `--research <scope>`: Paradigm research scope: `codebase`, `web`, or `both`
 - `--skip-research`: Skip paradigm research phase
@@ -101,135 +106,85 @@ UX plan → paradigm → tokens → components → flows/workflows → views/scr
 See `docs/GENERATION-SEQUENCE.md` for full details.
 
 ### Foundation (Phase 1-4)
-1. **UX-DESIGN-PLAN.md** - Design overview (references other artifacts, not hardcoded values)
+1. **UX-DESIGN-PLAN.md** - Design overview
 2. **paradigm.yaml** - Design patterns, principles, references
 3. **tokens.yaml** - Design tokens (colors, spacing, typography)
-4. **components.yaml** - Reusable component definitions (uses tokens)
+4. **components.yaml** - Reusable component definitions
 
 ### Detail (Phase 5-8)
-5. **flows.yaml** - Interaction flows (uses components)
+5. **flows.yaml** - Interaction flows
 6. **workflows.yaml** - User journeys and task flows
-7. **views.yaml** - Detailed view specifications (uses components, tokens)
-8. **screens.yaml** - Screen inventory with hierarchy (uses views)
+7. **views.yaml** - Detailed view specifications
+8. **screens.yaml** - Screen inventory with hierarchy
 
 ### Smart Generation
-- Skip artifacts that already exist (unless `--force`)
+- Skip artifacts that exist in parent `design/` folders
+- Skip artifacts that already exist locally (unless `--force`)
 - When regenerating, only update changed artifacts + downstream dependencies
-- Always maintain relative order when multiple artifacts need updates
 
-### Cascading Config Resolution
+### Cascading Artifact Resolution
 
-Config values follow a cascading inheritance model (most specific wins):
-
-**Hierarchy:**
-```
-Project (.pixel-perfect/config.json)
-    ↓
-Design System ({specRoot}/{designSystem.path}/) [if enabled]
-    ↓
-Epic Config ({epic}/design/design.config.yaml) [optional]
-    ↓
-Sub-Epic Config ({epic}/sprints/{sub}/design/design.config.yaml) [optional]
-```
-
-**Resolution order for any config value:**
-1. **Most specific local config** (deepest nested folder with config)
-2. **Parent epic config** (if exists and nested)
-3. **Project design system** (if enabled)
-4. **Project config** (`.pixel-perfect/config.json`)
-5. **Built-in defaults** (lowest priority)
-
-**AI Agent Read Order:**
-When reading configs, agents should:
-1. Search upward from working directory for local configs
-2. Read all configs found in the "cascade path"
-3. Merge with "most specific wins" rule
-4. Report the effective config and cascade path to user
-
-**Terminology:**
-- **base config** - highest level config (project/design-system)
-- **overriding config** - more specific config that modifies base
-- **effective config** - final merged result
-- **cascade path** - ordered list of configs read to produce effective config
-
-### Global Design Resolution
-
-When `designSystem.enabled` is true in project config:
-
-**Resolution order for each artifact:**
-1. Local override exists (`{epic}/design/{artifact}.yaml`) → use local version
-2. Global artifact enabled AND exists → use global version (SKIP generation)
-3. Neither → generate in `{epic}/design/`
-
-**Example output when global design is active (no local config):**
-```
-Resolving design artifacts...
-
-Cascade path:
-  Base: .pixel-perfect/config.json
-  Design system: .spec/design-system/ (enabled)
-  Local config: None (inheriting from design system)
-
-Global design system (.spec/design-system/):
-  ✓ paradigm.yaml → USING GLOBAL
-  ✓ tokens.yaml → USING GLOBAL
-  ✓ components.yaml → USING GLOBAL
-
-Generating epic-specific artifacts:
-  → UX-DESIGN-PLAN.md
-  → flows.yaml
-  → workflows.yaml
-  → views.yaml
-  → screens.yaml
-```
-
-**Example output with local config override:**
-```
-Resolving design artifacts...
-
-Cascade path:
-  Base: .pixel-perfect/config.json
-  Design system: .spec/design-system/ (enabled)
-  Local config: epic-1/design/design.config.yaml (overrides present)
-
-Global design system (.spec/design-system/):
-  ✓ paradigm.yaml → USING GLOBAL
-  ✓ tokens.yaml → USING GLOBAL
-  ✗ components.yaml → OVERRIDDEN (using epic-1/design/components.yaml)
-
-Generating epic-specific artifacts:
-  → UX-DESIGN-PLAN.md
-  → flows.yaml
-  → workflows.yaml
-  → views.yaml
-  → screens.yaml
-```
-
-**Fallback behavior:**
-- If global artifact is missing, generate in epic (with info message)
-- Local overrides always take precedence over global
-- `design.config.yaml` is OPTIONAL when design system exists
-
-## Example
+When generating artifacts, the system checks parent directories:
 
 ```
-# Full planning (uses design system if configured)
-/pixel-perfect:plan .spec/epics/epic-1
+Working in: features/auth/design/
+
+For paradigm.yaml:
+  1. Check features/auth/design/paradigm.yaml → missing
+  2. Check features/design/paradigm.yaml → missing
+  3. Check design/paradigm.yaml → FOUND, use parent
+
+Result: Skip paradigm.yaml generation (inherit from parent)
+
+For views.yaml:
+  1. Check features/auth/design/views.yaml → missing
+  2. Check features/design/views.yaml → missing
+  3. Check design/views.yaml → missing
+
+Result: Generate views.yaml locally (auth-specific)
+```
+
+## Examples
+
+```bash
+# Plan current directory
+/pixel-perfect:plan
+
+# Plan specific directory
+/pixel-perfect:plan features/auth
+
+# Show cascade path
+/pixel-perfect:plan features/auth --show-cascade
 
 # Foundation only
-/pixel-perfect:plan .spec/epics/epic-1 --foundation
+/pixel-perfect:plan . --foundation
 
 # Continue with details
-/pixel-perfect:plan .spec/epics/epic-1 --continue
-
-# Force local config even if design system exists
-/pixel-perfect:plan .spec/epics/epic-1 --force-local
+/pixel-perfect:plan . --continue
 ```
+
+## Config File Resolution
+
+Both `config.yaml` and `design.config.yaml` are supported:
+
+```
+design/
+├── config.yaml           # Preferred
+├── design.config.yaml   # Also supported (backward compat)
+└── tokens.yaml
+```
+
+**Resolution order:**
+1. `{directory}/design/config.yaml`
+2. `{directory}/design/design.config.yaml`
+3. Parent directories (same order)
+
+If both exist, `config.yaml` takes precedence.
 
 ## Input Requirements
 
-- `{epic}/PRD.md` must exist with product requirements
+- `{directory}/PRD.md` or `{directory}/requirements.md` must exist
 
 ## Output
 
-All YAML artifacts written to `{epic}/design/`
+All YAML artifacts written to `{directory}/design/`

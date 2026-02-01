@@ -129,15 +129,15 @@ research (optional) → init → plan → prompts → mockups → review
 | Step | Command | What it does |
 |------|---------|--------------|
 | 0 | `/pixel-perfect:research` | **(Optional) Research design patterns.** Search for UI/UX patterns, trends, and competitor designs. Saves to shared research library. |
-| 1 | `/pixel-perfect:init` | **Configure the project.** Asks about requirements location, target platforms, and design vibe. Creates `design.config.yaml` (optional when design system exists). |
+| 1 | `/pixel-perfect:init` | **Configure the project.** Asks about requirements location, target platforms, and design vibe. Creates `design/config.yaml`. |
 | 2 | `/pixel-perfect:plan` | **Generate design artifacts.** Reads your PRD and creates YAML files: tokens, components, flows, views, screens. Incorporates research if available. |
 | 3 | `/pixel-perfect:prompts` | **Create spec files.** Converts views.yaml into detailed JSON specifications for each screen. |
 | 4 | `/pixel-perfect:mockups` | **Generate HTML mockups.** Creates visual HTML files from the JSON specs. |
 | 5 | `/pixel-perfect:review` | **Review mockups.** Compares mockups against specs and tracks approval status. |
+| — | `/pixel-perfect:merge` | **Promote artifacts.** Merge design artifacts from child directory to parent scope. |
+| — | `/pixel-perfect:refine` | **Iterate on designs.** Collect feedback and re-run affected design phases. |
 
 **If you skip a step**, the next command will detect it and run the missing step first. For example, running `/pixel-perfect:mockups` without having run `plan` or `prompts` will trigger both automatically.
-
-**When a design system exists**, `init` is optional. Epics will automatically inherit from the design system.
 
 ---
 
@@ -145,25 +145,17 @@ research (optional) → init → plan → prompts → mockups → review
 
 ```bash
 # Run full design workflow (recommended - runs all steps)
-/pixel-perfect:design epic-1
+/pixel-perfect:design auth-flow
 
 # Check progress anytime
-/pixel-perfect:status epic-1
-
-# Manage shared design system across epics
-/pixel-perfect:design-system status
+/pixel-perfect:status auth-flow
 ```
 
 **Smart path resolution:** Just use the folder name—the plugin finds it:
-- `epic-1` → finds `.spec/epics/epic-1`
-- `lunch-menu` → finds `.spec/epics/epic-1/sprints/lunch-menu`
+- `auth-flow` → finds `features/auth-flow`
+- `lunch-menu` → finds `features/booking/sprints/lunch-menu`
 
 **First run?** Init runs automatically and will ask you:
-
-**If a design system exists:**
-- "Does this epic need local configuration overrides?" (inherit by default)
-
-**If no design system exists:**
 1. **Where are your requirements?** (auto-detects PRD.md or asks for location)
 2. **What platforms?** (defaults to Responsive Web, or choose native iOS/Android/etc.)
 3. **What's the design vibe?** (modern, minimal, playful, etc.)
@@ -173,19 +165,19 @@ research (optional) → init → plan → prompts → mockups → review
 
 ```bash
 # 1. Initialize (configure project - runs automatically if needed)
-/pixel-perfect:init epic-1
+/pixel-perfect:init directory-1
 
 # 2. Plan (generate YAML artifacts from PRD)
-/pixel-perfect:plan epic-1
+/pixel-perfect:plan auth-flow
 
 # 3. Prompts (create JSON specs from views.yaml)
-/pixel-perfect:prompts epic-1
+/pixel-perfect:prompts directory-1
 
 # 4. Mockups (generate HTML from specs)
-/pixel-perfect:mockups epic-1
+/pixel-perfect:mockups directory-1
 
 # 5. Review (compare mockups against specs)
-/pixel-perfect:review epic-1
+/pixel-perfect:review directory-1
 ```
 
 ---
@@ -250,7 +242,7 @@ Interactive preplanning to configure your design project. **Runs automatically**
 
 **Usage:**
 ```
-/pixel-perfect:init <epic-path> [options]
+/pixel-perfect:init <directory-path> [options]
 ```
 
 **Options:**
@@ -272,7 +264,7 @@ Run the complete design workflow.
 
 **Usage:**
 ```
-/pixel-perfect:design <epic-path> [options]
+/pixel-perfect:design <directory-path> [options]
 ```
 
 **Preplanning Options:**
@@ -292,7 +284,7 @@ Generate design artifacts from PRD.
 
 **Usage:**
 ```
-/pixel-perfect:plan <epic-path> [options]
+/pixel-perfect:plan <directory-path> [options]
 ```
 
 **Options:**
@@ -320,7 +312,7 @@ Generate specification files from design artifacts.
 
 **Usage:**
 ```
-/pixel-perfect:prompts <epic-path> [--key <design_key>] [--force]
+/pixel-perfect:prompts <directory-path> [--key <design_key>] [--force]
 ```
 
 ### /pixel-perfect:mockups
@@ -329,7 +321,7 @@ Generate HTML mockups from specifications.
 
 **Usage:**
 ```
-/pixel-perfect:mockups <epic-path> [--key <design_key>] [--force]
+/pixel-perfect:mockups <directory-path> [--key <design_key>] [--force]
 ```
 
 ### /pixel-perfect:review
@@ -338,7 +330,7 @@ Review mockups against specifications.
 
 **Usage:**
 ```
-/pixel-perfect:review <epic-path> [options]
+/pixel-perfect:review <directory-path> [options]
 ```
 
 **Options:**
@@ -353,8 +345,45 @@ Show workflow progress and next steps.
 
 **Usage:**
 ```
-/pixel-perfect:status <epic-path>
+/pixel-perfect:status <directory-path>
 ```
+
+### /pixel-perfect:merge
+
+Promote design artifacts from a child directory to a parent design scope. This is how you "promote" tokens, components, or patterns that started in one feature to be shared across the entire project.
+
+**Usage:**
+```
+/pixel-perfect:merge [source] [options]
+```
+
+**Options:**
+- `--target <path>` - Target parent directory (default: upper-most design scope)
+- `--artifacts <list>` - Specific artifacts to merge (default: all promotable)
+- `--dry-run` - Show what would be merged without executing
+
+**What it does:**
+1. Detects all directories with design folders (or uses specified source)
+2. Prompts to select source directory if not specified
+3. Shows merge plan: what will move, what will stay, any conflicts
+4. **Asks for confirmation before executing**
+5. Moves promotable artifacts (tokens, components, paradigm) to target
+6. Leaves directory-specific artifacts (screens, flows, views) in source
+
+**Example:**
+```bash
+/pixel-perfect:merge features/auth
+
+# Prompts:
+# ? Target: project/design/ (upper-most scope) - confirm?
+# ? Artifacts to merge:
+#   [x] tokens.yaml
+#   [x] components.yaml
+#   [x] paradigm.yaml
+# ? Proceed with merge? > Confirm
+```
+
+After merging, child directories (and siblings) now inherit from the parent. See [commands/merge.md](commands/merge.md) for full documentation.
 
 ### /pixel-perfect:refine
 
@@ -362,14 +391,14 @@ Iteratively improve your designs with structured feedback. Refine detects what y
 
 **Usage:**
 ```
-/pixel-perfect:refine <epic-path> [feedback]
+/pixel-perfect:refine <directory-path> [feedback]
 ```
 
 **Two modes:**
 
 **1. Smart Detection** (provide feedback inline):
 ```
-/pixel-perfect:refine epic-1 "The colors feel too muted and the login flow needs a forgot password option"
+/pixel-perfect:refine auth-flow "The colors feel too muted and the login flow needs a forgot password option"
 ```
 Analyzes your feedback and detects affected sections:
 - "colors feel too muted" → tokens
@@ -377,7 +406,7 @@ Analyzes your feedback and detects affected sections:
 
 **2. Interactive Selection** (no feedback):
 ```
-/pixel-perfect:refine epic-1
+/pixel-perfect:refine auth-flow
 ```
 Shows a multi-select menu:
 ```
@@ -397,7 +426,7 @@ Shows a multi-select menu:
 
 **Example workflow:**
 ```
-/pixel-perfect:refine epic-1 "Need dark mode and bigger buttons"
+/pixel-perfect:refine auth-flow "Need dark mode and bigger buttons"
 
 Detected sections: tokens, components
 Affected downstream: views, prompts, mocks
@@ -413,84 +442,18 @@ Executing:
   5. Regenerate affected mockups
 ```
 
-Refinement history is saved to `{epic}/design/refine-history.yaml`.
+Refinement history is saved to `{directory}/design/refine-history.yaml`.
 
-### /pixel-perfect:design-system
-
-Manage the project design system shared across all epics. Enables consistent tokens, components, and paradigms project-wide.
-
-**Usage:**
-```
-/pixel-perfect:design-system [action] [epic] [artifacts] [options]
-```
-
-Options can be interactive, flags, or inferred from text:
-```bash
-/pixel-perfect:design-system                              # Interactive
-/pixel-perfect:design-system merge epic-1 tokens,components  # Positional
-/pixel-perfect:design-system --epic epic-1 --artifacts tokens # Flags
-```
-
-When called without arguments, enters interactive mode:
-- **No design system exists** → runs setup workflow
-- **Design system exists** → offers merge from detected epics with artifact selection
-
-**Actions:**
-
-| Action | Description |
-|--------|-------------|
-| `init` | Interactive setup - detects existing epics, offers to promote |
-| `promote` | Copy artifacts from an epic to project design system (overwrites) |
-| `merge` | Merge epic artifacts with diff-based conflict resolution |
-| `status` | Show project design system status and usage |
-| `validate` | Check integrity of project design system |
-
-**Examples:**
-
-```bash
-# Interactive mode - setup if new, merge menu if exists
-/pixel-perfect:design-system
-
-# Merge with positional args (epic + artifacts inferred)
-/pixel-perfect:design-system epic-1 tokens,components
-
-# Merge with flags
-/pixel-perfect:design-system merge --epic epic-1 --artifacts tokens
-
-# Promote directly (overwrites without diff)
-/pixel-perfect:design-system promote epic-1
-
-# Auto-accept all changes
-/pixel-perfect:design-system epic-1 --accept-all
-
-# Check status
-/pixel-perfect:design-system status
-
-# Validate integrity
-/pixel-perfect:design-system validate
-```
-
-**Typical workflow:**
-1. Complete your first epic design with `/pixel-perfect:design epic-1`
-2. Promote it to project: `/pixel-perfect:design-system promote epic-1`
-3. Future epics automatically inherit from the design system (no init needed)
-4. For epics needing overrides, run `/pixel-perfect:init epic-2` to create local config
-5. Merge improvements back with confirmation: `/pixel-perfect:design-system merge epic-2`
-
-**Key benefit:** Once configured, new epics skip foundation artifacts (paradigm, tokens, components) and focus only on epic-specific design (workflows, screens, flows, views). Local configs are OPTIONAL — only create them when you need to override design system values.
-
-**Key benefit:** Once configured, new epics skip foundation artifacts (paradigm, tokens, components) and focus only on epic-specific design (workflows, screens, flows, views).
-
-See [commands/design-system.md](commands/design-system.md) for full documentation.
+See [commands/refine.md](commands/refine.md) for full documentation.
 
 ---
 
 ## Output Structure
 
-**Epic-level design (per epic):**
+**Directory-scoped design:**
 ```
-{epic}/design/
-├── design.config.yaml      # Preplanning configuration
+{directory}/design/
+├── config.yaml             # Directory configuration (supports both config.yaml and design.config.yaml)
 ├── workflows.yaml          # User journeys and task flows
 ├── paradigm.yaml           # Design patterns and references
 ├── screens.yaml            # Screen inventory
@@ -512,38 +475,41 @@ See [commands/design-system.md](commands/design-system.md) for full documentatio
     └── url-analysis.md     # Reference URL analysis
 ```
 
-**Project design system (optional, shared across epics):**
+**Cascading configuration (ESLint-style):**
+
+Child directories inherit configuration from parent directories. For example:
+
 ```
-{specRoot}/design-system/  # Project library (via /pixel-perfect:design-system)
-├── paradigm.yaml           # Shared design patterns
-├── tokens.yaml             # Shared design tokens
-└── components.yaml         # Shared component definitions
+project/
+├── design/
+│   └── config.yaml         # Parent config: platforms, vibe, tokens
+├── features/
+│   ├── auth/
+│   │   └── design/
+│   │       └── config.yaml # Child: inherits parent, can override
+│   └── booking/
+│       └── design/         # No local config - inherits from parent
 ```
 
-When enabled, epics inherit from the project design system. Epic-specific artifacts (workflows, screens, flows, views) remain per-epic.
+The `features/booking/design/` folder will inherit configuration from `project/design/config.yaml` unless it defines its own `config.yaml`.
 
 ---
 
 ## Configuration
 
-pixel-perfect uses two levels of configuration:
+pixel-perfect uses **directory-scoped configuration** that cascades from parent directories (ESLint-style).
 
 ### Project Config (`.pixel-perfect/config.json`)
 
-Global settings for your entire project. Create this file to customize behavior:
+Optional global settings for your entire project:
 
 ```json
 {
-  "version": "1.0",
-  "specRoot": ".",
+  "version": "2.0",
   "defaults": {
     "platforms": ["mobile-ios", "web-desktop"],
     "vibe": "modern",
     "naming": "snake_case"
-  },
-  "designSystem": {
-    "enabled": true,
-    "path": "design-system"
   },
   "extensions": {
     "spec": ".spec.json",
@@ -554,41 +520,39 @@ Global settings for your entire project. Create this file to customize behavior:
 
 | Field | Default | Description |
 |-------|---------|-------------|
-| `specRoot` | `.` (project root) | Root directory to search for targets |
 | `defaults.platforms` | `[]` | Pre-select platforms (skips multi-select) |
 | `defaults.vibe` | `null` | Default design vibe (skips vibe question) |
 | `defaults.naming` | `snake_case` | Design key style: `snake_case`, `kebab-case`, `camelCase` |
-| `designSystem.enabled` | `false` | Enable project design system inheritance |
-| `designSystem.path` | `design-system` | Path to project design system folder (relative to `specRoot`) |
+| `extensions.spec` | `.spec.json` | File extension for specification files |
+| `extensions.mock` | `.mock.html` | File extension for mockup files |
 
-**If no config exists**, searches from project root for your target folder.
+**This file is optional.** Most configuration happens in `design/config.yaml` files within each directory.
 
-**Example:** `/pixel-perfect:design lunch-menu` finds and initializes designs in:
-- `./lunch-menu/` (root level)
-- `./.spec/epics/epic-1/sprints/lunch-menu/` (deeply nested)
-- Anywhere the folder exists in your project
+### Directory Config (`design/config.yaml`)
 
-### Epic Config (`design.config.yaml`)
-
-**OPTIONAL** when a design system exists. Per-epic settings created during preplanning when you need to override design system values:
+Primary configuration for each directory. Supports both `config.yaml` and `design.config.yaml` for backward compatibility:
 
 ```yaml
 # Auto-generated by /pixel-perfect:init
-version: "1.0"
-created: "2025-01-30"
+version: "2.0"
+created: "2025-02-01"
 
+# Requirements source
 requirements:
   path: "PRD.md"
 
+# Target platforms
 platforms:
   - mobile-ios
   - mobile-android
   - web-desktop
 
+# Design aesthetic
 vibe:
   primary: "modern"
   description: "Clean, contemporary with subtle interactions"
 
+# Reference patterns discovered
 references:
   urls_analyzed: 2
   patterns:
@@ -598,18 +562,26 @@ references:
 
 ### Config Resolution Order
 
-pixel-perfect uses **cascading configuration** (most specific wins):
+pixel-perfect uses **cascading configuration** (ESLint-style):
 
-1. **Command-line arguments** (highest priority)
-2. **Sub-epic config** (`{epic}/sprints/{sub}/design/design.config.yaml`)
-3. **Epic config** (`{epic}/design/design.config.yaml`) — **OPTIONAL when design system exists**
-4. **Project design system** (`{specRoot}/{designSystem.path}/`)
-5. **Project config** (`.pixel-perfect/config.json`)
-6. **Built-in defaults** (lowest priority)
+1. `{directory}/design/config.yaml` — **Primary location**
+2. `{directory}/design/design.config.yaml` — **Backward compatible**
+3. Parent directories' `design/config.yaml` — **Cascades upward**
+4. `.pixel-perfect/config.json` — **Global defaults fallback**
+5. Built-in defaults — **Lowest priority**
 
-When a design system exists, epics can skip `init` entirely and inherit defaults. Local configs are only needed when overriding design system values.
+Child configs only need to specify overrides. For example:
 
-To reconfigure an epic, run `/pixel-perfect:init --force` or `/pixel-perfect:design --reconfigure`.
+```yaml
+# features/auth/design/config.yaml - Only overrides platforms
+version: "2.0"
+platforms:
+  - mobile-ios
+  - mobile-android
+# Inherits vibe, tokens, components from parent
+```
+
+**To answer your question:** Yes, `.pixel-perfect/config.json` is still respected as the global defaults fallback. It applies when no directory-level config exists.
 
 See [docs/CONFIG.md](docs/CONFIG.md) for complete configuration reference.
 
@@ -740,10 +712,10 @@ When creating implementation tasks, reference specific design artifacts:
 Implement the user profile screen.
 
 Design references:
-- Layout: .spec/epics/epic-1/design/mocks/user_profile.mock.html
-- Components: .spec/epics/epic-1/design/components.yaml (see: ProfileHeader, StatCard, ActionButton)
-- Tokens: .spec/epics/epic-1/design/tokens.yaml
-- Flow context: .spec/epics/epic-1/design/flows.yaml (see: profile_edit_flow)
+- Layout: features/auth/design/mocks/user_profile.mock.html
+- Components: features/auth/design/components.yaml (see: ProfileHeader, StatCard, ActionButton)
+- Tokens: features/auth/design/tokens.yaml
+- Flow context: features/auth/design/flows.yaml (see: profile_edit_flow)
 
 Requirements:
 - Use the HTML mockup as a DESIGN REFERENCE, not code to convert
@@ -758,7 +730,7 @@ The same design artifacts work across platforms—adjust your prompting:
 
 **React/Web:**
 ```
-Reference: .spec/epics/epic-1/design/mocks/dashboard.mock.html
+Reference: features/auth/design/mocks/dashboard.mock.html
 
 Build a React component matching this design reference.
 - HTML div → React fragments or semantic elements
@@ -769,7 +741,7 @@ Build a React component matching this design reference.
 
 **React Native/Mobile:**
 ```
-Reference: .spec/epics/epic-1/design/mocks/camera_capture.mock.html
+Reference: features/auth/design/mocks/camera_capture.mock.html
 
 Build a React Native screen using this HTML as a DESIGN PATTERN.
 - HTML structure → View hierarchy
@@ -781,7 +753,7 @@ Build a React Native screen using this HTML as a DESIGN PATTERN.
 
 **Flutter:**
 ```
-Reference: .spec/epics/epic-1/design/mocks/settings.mock.html
+Reference: features/auth/design/mocks/settings.mock.html
 
 Create a Flutter widget matching this design reference.
 - HTML hierarchy → Widget tree
@@ -793,7 +765,7 @@ Create a Flutter widget matching this design reference.
 
 **CLI/Terminal:**
 ```
-Reference: .spec/epics/epic-1/design/mocks/status_display.mock.html
+Reference: features/auth/design/mocks/status_display.mock.html
 
 Build a CLI output formatter matching this design's information hierarchy.
 - Visual sections → bordered boxes (unicode or ASCII)
@@ -809,22 +781,22 @@ For best results, load context in this order:
 
 1. **Design tokens first** - establishes the visual language
    ```
-   Read: .spec/epics/epic-1/design/tokens.yaml
+   Read: features/auth/design/tokens.yaml
    ```
 
 2. **Component definitions** - shows available building blocks
    ```
-   Read: .spec/epics/epic-1/design/components.yaml
+   Read: features/auth/design/components.yaml
    ```
 
 3. **Specific mockup** - the target design
    ```
-   Read: .spec/epics/epic-1/design/mocks/{screen}.mock.html
+   Read: features/auth/design/mocks/{screen}.mock.html
    ```
 
 4. **Flow context** - where this screen fits
    ```
-   Read: .spec/epics/epic-1/design/flows.yaml (relevant section)
+   Read: features/auth/design/flows.yaml (relevant section)
    ```
 
 ### Multi-Agent Workflows
@@ -902,17 +874,16 @@ Without structured design artifacts, you'd spend 4-6 hours in back-and-forth bet
 
 ## Documentation
 
-- [Project Configuration](docs/CONFIG.md) - `.pixel-perfect/config.json` setup and options
+- [Project Configuration](docs/CONFIG.md) - `.pixel-perfect/config.json` and `design/config.yaml` setup
 - [Design Conventions](docs/DESIGN-CONVENTIONS.md) - File structure, YAML schemas
 - [Design Keys](docs/DESIGN-KEYS.md) - Naming patterns, status model
-- [Design System](commands/design-system.md) - Project design system management
 
 ---
 
 ## Requirements
 
 - Claude Code v1.0.33+
-- Epic directory with `PRD.md`
+- Directory with `PRD.md` or requirements document
 
 ---
 

@@ -1,12 +1,12 @@
 {
   "name": "pixel-perfect",
   "description": "Tech-agnostic UI/UX design workflow: PRD to mockups. Supports React, Flutter, CLI, and any platform.",
-  "version": "1.6.0",
+  "version": "2.0.0",
   "author": {
     "name": "Justin Rich"
   },
   "homepage": "https://github.com/hackerpug-ai/pixel-perfect",
   "repository": "https://github.com/hackerpug-ai/pixel-perfect",
   "license": "MIT",
-  "keywords": ["design", "ux", "ui", "mockups", "workflows", "design-system"]
+  "keywords": ["design", "ux", "ui", "mockups", "workflows"]
 }

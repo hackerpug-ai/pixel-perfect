@@ -12,10 +12,10 @@ invokable: false
 
 ## CONFIGURATION
 
-Projects can override defaults via `.spec/design.config.yaml`:
+Projects can override defaults via `design/config.yaml` (ESLint-style cascading):
 
 ```yaml
-# .spec/design.config.yaml (optional - all have defaults)
+# design/config.yaml (optional - all have defaults)
 extensions:
   spec: ".spec.json"      # default: .spec.json
   mock: ".mock.html"      # default: .mock.html
@@ -34,16 +34,16 @@ If no config exists, defaults apply.
 
 ## DESIGN KEY CONVENTION
 
-The **design key** is the primary identifier for a design artifact, scoped to an epic.
+The **design key** is the primary identifier for a design artifact, scoped to a directory.
 
 ```
 DEFINITION:
   design_key = filename stem without extensions
-  scope = epic directory
+  scope = directory directory
 
 PATTERN:
   Key:    {design_key}                    # e.g., user_profile
-  Scope:  {epic}/{design_key}             # e.g., epic-1/user_profile
+  Scope:  {directory}/{design_key}             # e.g., directory-1/user_profile
 
 EXTRACTION:
   From any artifact file, strip known extensions to get design_key
@@ -63,10 +63,10 @@ DISPLAY NAME:
 
 ## FILE STRUCTURE
 
-Design artifacts for an epic:
+Design artifacts for a directory:
 
 ```
-{epic}/design/
+{directory}/design/
 ├── workflows.yaml          # User journeys and task flows
 ├── paradigm.yaml           # Design patterns, principles, references
 ├── screens.yaml            # Screen inventory with hierarchy
@@ -89,7 +89,7 @@ Design artifacts for an epic:
 
 **Minimal structure** (specs + mocks only):
 ```
-{epic}/design/
+{directory}/design/
 ├── prompts/
 │   └── {design_key}.spec.json
 └── mocks/
@@ -98,7 +98,7 @@ Design artifacts for an epic:
 
 **Full structure** (complete design system):
 ```
-{epic}/design/
+{directory}/design/
 ├── workflows.yaml
 ├── paradigm.yaml
 ├── screens.yaml
@@ -111,6 +111,33 @@ Design artifacts for an epic:
 ├── mocks/
 └── research/
 ```
+
+---
+
+## CASCADING CONFIGURATION
+
+Configuration cascades from parent directories (ESLint-style):
+
+```
+project/
+├── design/
+│   └── config.yaml         # Parent: defines tokens, components, paradigm
+├── features/
+│   ├── auth/
+│   │   └── design/
+│   │       └── config.yaml # Child: inherits parent, overrides as needed
+│   └── booking/
+│       └── design/         # No config: fully inherits from parent
+```
+
+Artifacts in child directories can reference parent artifacts. If `booking/design/` doesn't define `tokens.yaml`, it uses the one from `project/design/`.
+
+**Resolution order:**
+1. `{directory}/design/config.yaml`
+2. `{directory}/design/design.config.yaml` (backward compatible)
+3. Parent directories' `design/config.yaml`
+4. `.pixel-perfect/config.json` (global defaults)
+5. Built-in defaults
 
 ---
 
@@ -179,22 +206,22 @@ tokens:
 ## KEY LOOKUP
 
 ```
-GIVEN design_key and epic:
-  spec_path = {epic}/design/{paths.specs}/{design_key}{extensions.spec}
-  mock_path = {epic}/design/{paths.mocks}/{design_key}{extensions.mock}
+GIVEN design_key and directory:
+  spec_path = {directory}/design/{paths.specs}/{design_key}{extensions.spec}
+  mock_path = {directory}/design/{paths.mocks}/{design_key}{extensions.mock}
 
 GIVEN file path:
   design_key = basename(path) with extensions stripped
-  epic = path segment after .spec/epics/
+  directory = containing directory (resolves from current working directory or explicit path)
 ```
 
 ---
 
 ## UNIQUENESS
 
-- design_key MUST be unique within an epic
-- design_key MAY repeat across epics (different scope)
-- Full identifier: `{epic}/{design_key}` is globally unique
+- design_key MUST be unique within a directory
+- design_key MAY repeat across directories (different scope)
+- Full identifier: `{directory}/{design_key}` is globally unique
 
 ---
 

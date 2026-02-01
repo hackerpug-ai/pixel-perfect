@@ -1,271 +1,387 @@
-# Change Plan: Add Design Research Command and Config Schema Validation
+# Change Plan: Directory-Scoped Design (ESLint-Style Cascading)
 
 ## Summary
 
-Add a new `/pixel-perfect:research` command for UI/UX design research using web search tools (Exa, Jina). Create a JSON schema for config validation that validates on plugin install.
+Simplify pixel-perfect to work like ESLint: directory-scoped with cascading configuration. Remove "design system," "epic," and "coding system" terminology. Every directory can have a `design/` folder. Configuration and artifacts cascade from parent directories - more specific (deeper) overrides less specific (higher).
+
+## ESLint Analogy
+
+**ESLint model:**
+- `.eslintrc` files cascade from parent directories
+- Nearest config wins
+- Works in any directory - no project-wide setup required
+
+**pixel-perfect model (same pattern):**
+- `design/config.yaml` OR `design/design.config.yaml` files cascade from parent directories
+- Check for `config.yaml` first, fall back to `design.config.yaml`
+- Nearest config wins
+- Works in any directory - no setup required
+- `design/` folder in any directory contains artifacts for that scope
 
 ## Change Type
 
-**MINOR** - New backward-compatible functionality (new command, new schema file)
+**MAJOR** - Breaking change to configuration model and terminology. This removes the concept of a global "design system" in favor of simple directory-based scoping.
 
 ## Current Version
 
-1.5.0
+1.7.0
 
 ## New Version
 
-1.6.0
+2.0.0
 
 ## Affected Files
 
 | File | Change | Description |
 |------|--------|-------------|
-| `commands/research.md` | add | New command for design research |
-| `schemas/config.schema.json` | add | JSON schema for config validation |
-| `README.md` | modify | Add research command to command list |
-| `docs/CONFIG.md` | modify | Add schema reference and research config section |
-| `.claude-plugin/plugin.json` | modify | Bump version to 1.6.0 |
-| `.claude-plugin/marketplace.json` | modify | Bump version to 1.6.0 |
+| `commands/plan.md` | major | Remove designSystem gates, simplify to directory-scoped |
+| `commands/init.md` | major | Remove design system detection, simplify to directory init |
+| `commands/design-system.md` | delete | Remove design-system command entirely |
+| `commands/refine.md` | modify | Update for directory-scoped workflow |
+| `commands/status.md` | modify | Update for directory-scoped workflow |
+| `docs/CONFIG.md` | major | Remove designSystem section, simplify config |
+| `schemas/config.schema.json` | modify | Remove designSystem from schema |
+| `README.md` | major | Remove design-system language, simplify docs |
+| `.claude-plugin/plugin.json` | modify | Bump version to 2.0.0 |
+| `.claude-plugin/marketplace.json` | modify | Bump version to 2.0.0 |
 
 ## Implementation Tasks
 
-- [x] Create `commands/research.md` with:
-  - Command usage and arguments
-  - Research sources configuration
-  - Artifact storage in `{specRoot}/design-research/`
-  - Integration with web search tools (Exa, Jina)
-  - Examples and output format
+### Remove Design System Command
 
-- [x] Create `schemas/config.schema.json` with:
-  - Full JSON Schema for `.pixel-perfect/config.json`
-  - All existing fields: version, specRoot, designSystem, defaults, extensions
-  - New `designResearch` section for research destination config
-  - Validation rules for each field
+- [ ] Delete `commands/design-system.md` entirely
+- [ ] Remove design-system command from README command list
+- [ ] Remove all references to design-system from documentation
 
-- [x] Add design research config to config schema:
-  - `designResearch.enabled` (boolean, default: false)
-  - `designResearch.path` (string, default: "design-research")
-  - `designResearch.sources` (array of research sources)
-  - `designResearch.defaultTopics` (array of default research topics)
+### Config File Support (Both Names)
 
-- [x] Update `docs/CONFIG.md`:
-  - Add section on Design Research configuration
-  - Add reference to config.schema.json
-  - Document validation on install
+- [ ] **Support both `config.yaml` and `design.config.yaml`**
+  - Prefer: `design/config.yaml` (new default)
+  - Fallback: `design/design.config.yaml` (for backward compatibility)
+  - Check both files when resolving config, use whichever exists
+  - Like ESLint supports `.eslintrc`, `.eslintrc.json`, `package.json`
+  - Update all documentation to mention both options
 
-- [x] Update `README.md`:
-  - Add research command to command pipeline table
-  - Add research command section with usage
-  - Update quick start to show optional research step
+### Simplify Config
 
-- [x] Create design-research folder structure:
-  - `{specRoot}/design-research/`
-  - `{specRoot}/design-research/topics/` (research by topic)
-  - `{specRoot}/design-research/trends/` (trend research)
-  - `{specRoot}/design-research/competitors/` (competitor analysis)
-  - `{specRoot}/design-research/INDEX.md` (catalog of all research)
+- [ ] Remove `designSystem` section from `.pixel-perfect/config.json` schema
+- [ ] Remove `designSystem` from `schemas/config.schema.json`
+- [ ] Simplify config to only: `version`, `defaults`, `extensions`
 
-## New Command Specification
+### Update Plan Command
 
-### /pixel-perfect:research
+- [ ] Remove GATE 2 (Resolve Artifact Inheritance)
+- [ ] Simplify GATE 1 to just check for local `design.config.yaml`
+- [ ] Remove all design system terminology
+- [ **New behavior**: Target directory → check for `design/config.yaml` → if missing, run init → generate artifacts
 
-**Usage:**
+### Update Init Command
+
+- [ ] Remove design system detection
+- [ ] Remove "inherit from design system" prompt
+- [ ] Simplify to: "Initialize design in this directory?"
+- [ ] Create `design/config.yaml` with user inputs
+- [ ] Create all artifact templates in `design/`
+
+### Update Refine Command
+
+- [ ] Remove design system merge options
+- [ ] Simplify to: refine artifacts in current directory's `design/` folder
+
+### Update Status Command
+
+- [ ] Remove design system status display
+- [ ] Show only: current directory's design artifacts and their status
+
+### Update Documentation
+
+- [ ] Rewrite README to remove "epic," "design system" terminology
+- [ ] Update examples to show directory-based workflow
+- [ ] Simplify getting started guide
+
+## New Directory-Scoped Model (ESLint-Style)
+
+### Universal Rule (Like ESLint)
+
+**Any directory can have a `design/` folder. Configuration cascades upward from the target directory.**
+
 ```
-/pixel-perfect:research <query> [options]
-/pixel-perfect:research --topic <topic> [options]
-/pixel-perfect:research --trend <trend-name> [options]
+any-directory/
+└── design/
+    ├── config.yaml           # Directory settings (preferred)
+    # OR
+    ├── design.config.yaml   # Also supported (backward compatibility)
+    ├── paradigm.yaml
+    ├── tokens.yaml
+    └── components.yaml
 ```
 
-**Arguments:**
-- `<query>`: Free-form search query for design research
+**Config file resolution (in order):**
+1. Check `{directory}/design/config.yaml`
+2. Check `{directory}/design/design.config.yaml`
+3. Use whichever is found (prefer `config.yaml` if both exist)
+4. Like ESLint checks `.eslintrc`, `.eslintrc.json`, `package.json`
 
-**Options:**
-- `--topic <topic>`: Research a specific design topic (e.g., "mobile-navigation", "form-design")
-- `--trend <name>`: Research current design trends (e.g., "bento-grids", "glassmorphism")
-- `--sources <list>`: Specific sources to use (exa, jina, web)
-- `--save`: Save research to design-research folder
-- `--append <file>`: Append to existing research file
+```
+project-root/
+├── design/
+│   ├── config.yaml           # Base settings (like root .eslintrc)
+│   ├── tokens.yaml           # Shared tokens
+│   └── components.yaml       # Shared components
+├── features/
+│   ├── design/
+│   │   ├── config.yaml       # Feature overrides (like .eslintrc in features/)
+│   │   └── views.yaml        # Feature-specific views
+│   └── auth/
+│       └── design/
+│           ├── config.yaml   # Auth overrides (most specific, wins)
+│           └── flows.yaml    # Auth-specific flows
+```
 
-**Research sources:**
-- Exa: Advanced semantic search for design content
-- Jina: Web reading and URL analysis
-- Web search: General web search fallback
+**When working in `features/auth/`:**
 
-**Output:**
-- Saves to `{specRoot}/design-research/topics/{topic}.md` (for --topic)
-- Saves to `{specRoot}/design-research/trends/{trend}.md` (for --trend)
-- Updates `{specRoot}/design-research/INDEX.md` catalog
+Config resolution (like ESLint):
+1. Start with `project-root/design/config.yaml` → ALL settings apply here
+2. Check `features/design/config.yaml` → if exists, merge in overrides
+3. Check `features/auth/design/config.yaml` → if exists, merge in overrides
+4. Result: Parent configs apply completely, child configs only specify changes
 
-## Config Schema Structure
+Artifact resolution:
+1. Check `features/auth/design/tokens.yaml` → missing
+2. Check `features/design/tokens.yaml` → missing
+3. Check `project-root/design/tokens.yaml` → found, use it!
+
+**Just like ESLint:** Parent configs/rules apply to all child directories. Child configs only specify what they want to override or add.
+
+**Example - child config with overrides only:**
+```yaml
+# project-root/design/config.yaml (base)
+platforms: [web-desktop, web-mobile]
+vibe: minimal
+naming: snake_case
+
+# features/auth/design/config.yaml (overrides ONLY)
+platforms: [mobile-ios, mobile-android]  # Override: replaces parent
+# vibe, naming inherited from parent
+```
+
+```
+any-directory/
+├── design/
+│   ├── config.yaml           # Directory-specific settings
+│   ├── paradigm.yaml
+│   ├── tokens.yaml
+│   ├── components.yaml
+│   ├── workflows.yaml
+│   ├── screens.yaml
+│   ├── flows.yaml
+│   ├── views.yaml
+│   ├── prompts/
+│   └── mocks/
+└── (other project files)
+```
+
+### Cascading Configuration
+
+Configs cascade naturally by directory hierarchy:
+
+```
+project-root/
+├── design/
+│   └── config.yaml           # Base settings
+├── features/
+│   ├── design/
+│   │   └── config.yaml       # Overrides for this feature
+│   └── auth/
+│       └── design/
+│           └── config.yaml   # Overrides for auth (most specific)
+```
+
+**Resolution:**
+1. Most specific (deepest nested) `design/config.yaml` wins
+2. Parent configs provide defaults
+3. No global "design system" - just directory hierarchy
+
+### Artifact Resolution
+
+When working in a directory:
+
+1. **Check for artifacts in current directory's `design/` folder**
+2. **If missing, check parent directory's `design/` folder**
+3. **Continue up until found or root reached**
+4. **Generate in current directory if not found**
+
+**Example:**
+```
+project/design/tokens.yaml exists (base colors)
+features/auth/design/ (no tokens.yaml)
+
+When working in features/auth/:
+  → Inherit tokens.yaml from project/design/
+  → Generate auth-specific artifacts locally
+```
+
+## Simplified Commands
+
+### /pixel-perfect:init
+
+Initialize design in the current/target directory.
+
+```
+/pixel-perfect:init [directory]
+```
+
+**What it does:**
+1. Creates `directory/design/config.yaml` with user inputs
+2. Creates empty artifact templates in `directory/design/`
+3. Asks: platforms, vibe, requirements location
+
+### /pixel-perfect:plan
+
+Generate design artifacts for the target directory.
+
+```
+/pixel-perfect:plan [directory]
+```
+
+**What it does:**
+1. Checks for `design/config.yaml` in target (or parent)
+2. If missing, runs init first
+3. Reads PRD from target directory
+4. Generates artifacts in `target/design/`
+5. Inherits from parent `design/` if available
+
+### /pixel-perfect:design
+
+Full workflow: init → plan → prompts → mockups → review
+
+```
+/pixel-perfect:design [directory]
+```
+
+## Removed Concepts
+
+| Removed | Replaced By |
+|---------|-------------|
+| "epic" | "directory" or "target" |
+| "design system" | Directory hierarchy with `design/` folders |
+| "promote to design system" | Manual copy or parent directory setup |
+| "merge to design system" | Manual file management |
+| "specRoot" | Current working directory or explicit path |
+
+## New Config Schema
 
 ```json
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Pixel Perfect Configuration",
-  "type": "object",
-  "required": ["version"],
-  "properties": {
-    "version": {
-      "type": "string",
-      "pattern": "^\\d+\\.\\d+$",
-      "description": "Config schema version"
-    },
-    "specRoot": {
-      "type": "string",
-      "description": "Root directory to search for targets"
-    },
-    "designSystem": {
-      "type": "object",
-      "properties": {
-        "enabled": { "type": "boolean" },
-        "path": { "type": "string" },
-        "artifacts": {
-          "type": "array",
-          "items": { "enum": ["paradigm", "tokens", "components"] }
-        }
-      }
-    },
-    "designResearch": {
-      "type": "object",
-      "properties": {
-        "enabled": { "type": "boolean", "default": false },
-        "path": { "type": "string", "default": "design-research" },
-        "sources": {
-          "type": "array",
-          "items": { "enum": ["exa", "jina", "web"] },
-          "default": ["exa", "jina"]
-        },
-        "defaultTopics": {
-          "type": "array",
-          "items": { "type": "string" }
-        }
-      }
-    },
-    "defaults": {
-      "type": "object",
-      "properties": {
-        "platforms": {
-          "type": "array",
-          "items": {
-            "enum": ["mobile-ios", "mobile-android", "web-desktop", "web-mobile", "desktop-app", "cli", "tablet"]
-          }
-        },
-        "vibe": {
-          "enum": ["minimal", "modern", "playful", "corporate", "bold", "technical", "elegant", null]
-        },
-        "naming": {
-          "enum": ["snake_case", "kebab-case", "camelCase"]
-        }
-      }
-    },
-    "extensions": {
-      "type": "object",
-      "properties": {
-        "spec": { "type": "string", "default": ".spec.json" },
-        "mock": { "type": "string", "default": ".mock.html" }
-      }
-    }
+  "version": "2.0",
+  "defaults": {
+    "platforms": [],
+    "vibe": null,
+    "naming": "snake_case"
+  },
+  "extensions": {
+    "spec": ".spec.json",
+    "mock": ".mock.html"
   }
 }
 ```
 
-## Design Research Workflow
+**Removed fields:**
+- `specRoot` - Use explicit paths or current directory
+- `designSystem` - No global design system
 
-```
-1. User runs: /pixel-perfect:research "mobile bottom navigation patterns 2025"
+## Examples
 
-2. Command:
-   - Reads config for research sources
-   - Searches using available tools (Exa, Jina)
-   - Aggregates findings
+### Single Project Workflow
 
-3. Output saved to:
-   {specRoot}/design-research/topics/mobile-bottom-navigation.md
+```bash
+# Initialize design in current directory
+/pixel-perfect:init
 
-4. INDEX.md updated with:
-   - Topic name
-   - Date researched
-   - Sources used
-   - Key findings summary
+# Generate design artifacts
+/pixel-perfect:plan
 
-5. Research available for plan phase:
-   - Plan command checks design-research/ for relevant topics
-   - Incorporates findings into paradigm.yaml
+# Generate mockups
+/pixel-perfect:mockups
+
+# Review
+/pixel-perfect:review
 ```
 
-## Design Research Artifact Format
+### Multi-Directory Project
 
-```markdown
-# Mobile Bottom Navigation Patterns
+```bash
+# Initialize base design at project root
+cd /project
+/pixel-perfect:init
 
-**Researched:** 2025-02-01
-**Sources:** Exa, Jina, Web Search
-**Query:** mobile bottom navigation patterns 2025
+# Work on feature subdirectory
+/pixel-perfect:plan features/auth
 
-## Summary
+# Auth inherits tokens/components from project/design/
+# Auth-specific artifacts (views, flows) generated in features/auth/design/
+```
 
-Brief overview of key findings...
+### Nested Directories (ESLint-Style)
 
-## Patterns Found
+```
+project/
+├── design/
+│   ├── config.yaml       # Base: vibe=minimal, platforms=[web]
+│   ├── tokens.yaml       # Base colors
+│   └── components.yaml   # Base components
+├── features/
+│   └── auth/
+│       └── design/
+│           ├── config.yaml   # Override: platforms (only what changes)
+│           ├── flows.yaml    # Auth-specific flows
+│           └── views.yaml    # Auth-specific views
 
-### Pattern 1: Floating Action Button Integration
-- Source: [URL]
-- Description: ...
-- Usage: Popular in productivity apps
-- Platforms: iOS, Android
+# project/design/config.yaml:
+platforms: [web-desktop, web-mobile]
+vibe: minimal
+naming: snake_case
 
-### Pattern 2: Label-Free Icons
-- Source: [URL]
-- Description: ...
-- Usage: Emerging trend
-- Platforms: Primarily Android
+# features/auth/design/config.yaml:
+platforms: [mobile-ios, mobile-android]  # Only override what changes
+# vibe, naming inherited from parent
 
-## References
-
-- [Article Title](URL) - Key insights
-- [Case Study](URL) - Real-world examples
-
-## Related Topics
-
-- Mobile navigation hierarchies
-- Gesture-based navigation
-- Tab bar alternatives
+# When working in features/auth:
+# - Config: platforms=[mobile-ios, mobile-android], vibe=minimal, naming=snake_case
+# - Artifacts: tokens, components inherited from project/design/
 ```
 
 ## Required: Version Bump
 
-- [x] Update `.claude-plugin/plugin.json` version to 1.6.0
-- [x] Update `.claude-plugin/marketplace.json` metadata.version to 1.6.0
-- [x] Update `.claude-plugin/marketplace.json` plugins[0].version to 1.6.0
+- [ ] Update `.claude-plugin/plugin.json` version to 2.0.0
+- [ ] Update `.claude-plugin/marketplace.json` metadata.version to 2.0.0
+- [ ] Update `.claude-plugin/marketplace.json` plugins[0].version to 2.0.0
 
 ## Required: Test Updates
 
 - [ ] Create/update tests in `/tests/` for:
-  - Research command execution with various sources
-  - Config schema validation against valid/invalid configs
-  - Design research artifact creation and INDEX.md updates
-  - Research integration with plan phase
-  - Config validation on plugin install
+  - Directory-scoped artifact resolution
+  - Cascading config from parent directories
+  - Init in nested directories
+  - Plan command without global config
+  - Status without design system
+  - Artifact inheritance from parent `design/` folders
 
-## New Folder Structure
+## Migration Notes
 
-```
-project-root/
-├── .pixel-perfect/
-│   ├── config.json          (validated against schema)
-│   └── config.schema.json   (NEW - schema definition)
-├── .spec/
-│   ├── design-system/       (existing)
-│   └── design-research/     (NEW)
-│       ├── INDEX.md         (catalog of all research)
-│       ├── topics/          (research by topic)
-│       │   ├── mobile-navigation.md
-│       │   └── form-design.md
-│       ├── trends/          (trend research)
-│       │   ├── bento-grids.md
-│       │   └── glassmorphism.md
-│       └── competitors/     (competitor analysis)
-│           └── competitor-name.md
-└── specs/epics/
-    └── epic-1/design/       (existing)
+**For users with existing design-system setup:**
+
+1. Your existing `design-system/` folder becomes a `design/` folder
+2. Rename: `.spec/design-system/` → `.spec/design/`
+3. Update config: Remove `designSystem` section
+4. Each epic that inherited from design system now works the same way via directory hierarchy
+5. No artifact changes needed - just folder structure
+
+**Migration script:**
+```bash
+# Rename design-system to design
+mv .spec/design-system .spec/design
+
+# Update config (remove designSystem section)
+# No other changes needed
 ```

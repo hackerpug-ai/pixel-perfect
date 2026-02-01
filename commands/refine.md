@@ -14,41 +14,28 @@ Collect structured refinement feedback and intelligently re-run affected design 
 
 ## Arguments
 
-- `<target>`: Epic or feature to refine. Supports smart path resolution.
+- `<directory>`: Directory to refine. Defaults to current directory.
 - `[feedback]`: Optional free-form feedback text. If provided, auto-detects affected sections.
 
 ## Refine Requires Existing Design
 
-Refine modifies existing artifacts. At minimum, init must be complete.
+Refine modifies existing artifacts. At minimum, `design/config.yaml` must exist in the target (or parent).
 
 ## Scope Resolution
 
-If no target specified, find the nearest `design/` directory or `design.config.yaml` from current location.
+If no target specified, use current directory.
 
 ## Dependency Check
 
-**BEFORE doing anything else**, verify prerequisites for the scoped directory:
+**BEFORE refining**, verify:
 
 ```
-CHECK: {target}/design/design.config.yaml exists?
+CHECK: design/config.yaml or design/design.config.yaml exists in {target} or parent?
   NO  → Run /pixel-perfect:init first (can't refine what doesn't exist)
-  YES → Proceed to global design check
-
-CHECK: designSystem.enabled in design.config.yaml?
-  YES → Load global artifact resolution map
-        Mark artifacts as GLOBAL or EPIC in selection UI
-  NO  → All artifacts are EPIC (local)
+  YES → Proceed
 ```
 
-Refine will detect which artifacts exist and only allow refinement of those.
-
-## Global Design Awareness
-
-When global design is enabled, refine distinguishes between:
-- **GLOBAL artifacts** - Shared across epics (paradigm, tokens, components)
-- **EPIC artifacts** - Specific to this epic (flows, workflows, views, screens)
-
-Refinements to global artifacts affect all epics using them.
+Refine detects which artifacts exist and only allows refinement of those.
 
 ## Workflow
 
@@ -86,7 +73,7 @@ Shows multi-select of refinable sections:
   [ ] Mockups - Regenerate specific mockups
 ```
 
-**When global design is enabled**, sections are annotated:
+**When parent directories have artifacts**, sections are annotated:
 
 ```
 ? Which areas need refinement? (multi-select)
@@ -97,7 +84,9 @@ Shows multi-select of refinable sections:
   [ ] Screens - Add/remove/modify screens
   [ ] Flows - Adjust interaction flows
   [ ] Views - Refine view specifications
-  [ ] Components - Update component definitions [GLOBAL]
+  [ ] Components - Update component definitions [inherited from parent/design/]
+  [ ] Tokens - Modify design tokens [inherited from parent/design/]
+```
   [ ] Tokens - Modify design tokens [GLOBAL]
   [ ] Paradigm - Design patterns & principles [GLOBAL]
   [ ] Mockups - Regenerate specific mockups

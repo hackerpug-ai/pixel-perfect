@@ -9,25 +9,28 @@ Show the current status of design artifacts and workflow progress.
 ## Usage
 
 ```
-/pixel-perfect:status <epic-path>
+/pixel-perfect:status [directory]
 ```
 
 ## Arguments
 
-- `<target>`: Epic or feature to check. Supports smart path resolution:
-  - **Full path**: `.spec/epics/epic-1` → uses exact path
-  - **Name only**: `epic-1` → searches spec directory for matching folder
+- `[directory]`: Directory to check. Defaults to current directory.
 
 ## Output
 
 Displays:
-- Init status (whether design.config.yaml exists)
-- Artifact completion status
+- Config status (whether `design/config.yaml` or `design/design.config.yaml` exists)
+- Config cascade path (which parent configs are being used)
+- Artifact completion status (local vs inherited)
 - Mockup generation progress
 - Review status summary
 - Next recommended action
 
-**Note:** If `design.config.yaml` doesn't exist, status shows "Not initialized" and recommends running init.
+**Inheritance indicators:**
+- `[x] artifact.yaml` - Local artifact (exists in this directory)
+- `[ ] artifact.yaml [inherited from ../design/]` - Uses parent's version
+
+**Note:** If no config exists in directory or parent, status shows "Not initialized" and recommends running init.
 
 ## Example
 
@@ -38,17 +41,21 @@ Displays:
 ## Sample Output
 
 ```
-Design Status: epic-1
+Design Status: features/auth
 =====================
+
+Config cascade:
+  → features/auth/design/config.yaml (local)
+  → project/design/config.yaml (parent)
 
 Artifacts:
   [x] workflows.yaml (12 workflows)
-  [x] paradigm.yaml
   [x] screens.yaml (8 screens)
   [x] flows.yaml (15 flows)
   [x] views.yaml (8 views)
-  [x] components.yaml (24 components)
-  [x] tokens.yaml
+  [ ] paradigm.yaml [inherited from project/design/]
+  [ ] components.yaml [inherited from project/design/]
+  [ ] tokens.yaml [inherited from project/design/]
   [x] UX-DESIGN-PLAN.md
 
 Specs: 8/8 generated
@@ -59,5 +66,5 @@ Review Status:
   needs_work:  2
   pending:     2
 
-Next: /pixel-perfect:mockups epic-1 --key settings_page
+Next: /pixel-perfect:mockups features/auth --key settings_page
 ```
