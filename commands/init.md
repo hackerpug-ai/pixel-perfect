@@ -8,17 +8,22 @@ Interactive preplanning phase that configures your design project before generat
 
 ## EXECUTION REQUIREMENT
 
-Init is STEP 1 of the workflow. It MUST complete before any other command can proceed.
+Init is STEP 1 of the workflow. It MUST complete when no config is available.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│ INIT CREATES: design.config.yaml                                    │
+│ INIT CREATES: design.config.yaml (OPTIONAL with design system)     │
 │                                                                     │
-│ This file is REQUIRED by all other commands:                       │
-│   • plan   - HALTS without it                                      │
-│   • prompts - HALTS without it                                     │
-│   • mockups - HALTS without it                                     │
-│   • design  - HALTS without it                                     │
+│ Config resolution order (cascading):                                │
+│   1. Local design.config.yaml (most specific)                      │
+│   2. Project design system (if enabled)                            │
+│   3. Project config (.pixel-perfect/config.json)                   │
+│   4. Built-in defaults                                             │
+│                                                                     │
+│ When to run init:                                                  │
+│   • No local config AND no design system → MUST RUN INIT           │
+│   • Design system exists, want local overrides → RUN INIT          │
+│   • Design system exists, no overrides needed → SKIP INIT          │
 │                                                                     │
 │ Init MUST ask the user about:                                      │
 │   1. Requirements file location (or paste content)                 │
@@ -57,12 +62,15 @@ Init is STEP 1 of the workflow. It MUST complete before any other command can pr
 This command walks you through setting up your design project:
 
 1. **Load Project Config** - Reads `.pixel-perfect/config.json` for defaults (if exists)
-2. **Detect Global Design System** - Checks for shared design artifacts (if `designSystem` enabled)
-3. **Requirements Discovery** - Finds or asks for your PRD/requirements document
-4. **Device Targeting** - Infers and confirms which platforms you're designing for
-5. **Design Vibe** - Captures the aesthetic direction for your mockups
-6. **URL Analysis** - Fetches and analyzes any reference URLs in requirements
-7. **Configuration** - Saves preferences to `{epic}/design/design.config.yaml`
+2. **Detect Design System** - Checks for shared design artifacts (if `designSystem` enabled)
+3. **Check if Config Needed** - If design system exists, asks if local overrides are needed
+4. **Requirements Discovery** - Finds or asks for your PRD/requirements document
+5. **Device Targeting** - Infers and confirms which platforms you're designing for
+6. **Design Vibe** - Captures the aesthetic direction for your mockups
+7. **URL Analysis** - Fetches and analyzes any reference URLs in requirements
+8. **Configuration** - Saves preferences to `{epic}/design/design.config.yaml` (override file)
+
+**Note:** When a design system exists, `design.config.yaml` becomes an **override file**. Only the values specified locally will override the design system. Unspecified values inherit from the design system.
 
 ## Project Configuration
 
@@ -87,36 +95,51 @@ If no project config exists, init searches from project root for your target fol
 
 ## Preplanning Workflow
 
-### Step 0: Global Design System Detection
+### Step 0: Design System Detection & Config Need
 
 **If `designSystem.enabled` is `true` in project config:**
 
 Check for existing global design artifacts at the configured path (default: `/design`).
 
 ```
-Checking for global design system...
+Checking for design system...
 
-Global design system detected at /design/:
+Design system detected at .spec/design-system/:
   ✓ paradigm.yaml (design patterns)
   ✓ tokens.yaml (design tokens)
   ✓ components.yaml (reusable components)
 
-These artifacts will be used instead of generating epic-specific versions.
-The plan phase will skip generation for: paradigm, tokens, components
-```
+These artifacts will be used as defaults for this epic.
+Local design.config.yaml is OPTIONAL.
 
-**If global design is enabled but artifacts don't exist:**
-
-```
-Global design system enabled but no artifacts found at /design/
-
-? How would you like to proceed?
-  > Continue without global design (generate all artifacts per-epic)
-    Initialize global design system now (/pixel-perfect:library init)
+? Does this epic need local configuration overrides?
+  > No, inherit everything from design system (recommended)
+    Yes, create local overrides for this epic
     Cancel
 ```
 
-**If global design is not enabled:** Skip this step entirely.
+**If user selects "No" (inherit):**
+- Skip config creation
+- Proceed directly to artifact generation
+- Epic will use design system defaults
+
+**If user selects "Yes" (overrides):**
+- Continue with full init workflow
+- Create `design.config.yaml` with override values
+- Only specified values will override design system
+
+**If design system is enabled but artifacts don't exist:**
+
+```
+Design system enabled but no artifacts found at .spec/design-system/
+
+? How would you like to proceed?
+  > Continue without design system (generate all artifacts per-epic)
+    Initialize design system now (/pixel-perfect:design-system init)
+    Cancel
+```
+
+**If design system is not enabled:** Skip detection, run full init.
 
 ### Step 1: Requirements Discovery
 
@@ -200,36 +223,51 @@ If your requirements contain URLs (design references, competitor analysis, inspi
 
 ### Step 6: Configuration Output
 
-Saves all preferences to `{epic}/design/design.config.yaml`:
+Saves preferences to `{epic}/design/design.config.yaml`:
+
+**When inheriting from design system (minimal override):**
 
 ```yaml
 # Auto-generated by /pixel-perfect:init
 version: "1.0"
 created: "2025-01-30"
+cascadeMode: "override"  # Only these values override design system
+
+# Local overrides (unspecified values inherit from design system)
+platforms:
+  - mobile-ios  # Override: design system has responsive-web
+  - mobile-android
+
+vibe:
+  primary: "playful"  # Override: design system has "minimal"
+
+# Requirements source
+requirements:
+  path: "PRD.md"
+```
+
+**When no design system exists (full config):**
+
+```yaml
+# Auto-generated by /pixel-perfect:init
+version: "1.0"
+created: "2025-01-30"
+cascadeMode: "full"  # No design system to inherit from
 
 # Requirements source
 requirements:
   path: "PRD.md"
   analyzed: true
 
-# Global design system link (if enabled)
-designSystem:
-  enabled: true
-  path: "../../design"  # Relative path from {epic}/design/ to global
-  using:
-    - paradigm
-    - tokens
-    - components
-
-# Target platforms
+# Target platforms (full definition required)
 platforms:
-  - responsive-web  # Default: covers desktop + tablet + mobile web
+  - responsive-web
 
-# Design aesthetic
+# Design aesthetic (full definition required)
 vibe:
   primary: "modern"
   description: "Clean, contemporary design with subtle micro-interactions"
-  colors: "neutral with accent" # inferred or specified
+  colors: "neutral with accent"
 
 # Analyzed references
 references:
@@ -237,7 +275,6 @@ references:
   patterns_extracted:
     - "bottom navigation"
     - "card-based layout"
-    - "floating action button"
 
 # Output preferences
 extensions:
@@ -250,43 +287,78 @@ naming:
   style: "snake_case"
 ```
 
-**Note:** The `designSystem` section is only included when global design system is enabled and artifacts exist. If global design is disabled or not configured, this section is omitted.
-
 ## Example Sessions
 
-### With global design system
+### With design system (inherit - no local config)
 ```
 > /pixel-perfect:init lunch-menu
 
 Searching for "lunch-menu"...
 Found: specs/epics/epic-1/sprints/lunch-menu
 
-Checking for global design system...
-Global design system detected at /design/:
-  ✓ paradigm.yaml
-  ✓ tokens.yaml
-  ✓ components.yaml
+Checking for design system...
+Design system detected at .spec/design-system/:
+  ✓ paradigm.yaml (design patterns)
+  ✓ tokens.yaml (design tokens)
+  ✓ components.yaml (reusable components)
 
-These will be used instead of generating epic-specific versions.
+These artifacts will be used as defaults for this epic.
+
+? Does this epic need local configuration overrides?
+  > No, inherit everything from design system (recommended)
+    Yes, create local overrides for this epic
 
 Scanning for requirements...
-Found potential requirements file: specs/epics/epic-1/sprints/lunch-menu/PRD.md
+Found: specs/epics/epic-1/sprints/lunch-menu/PRD.md
 
-? Is this your requirements document?
-  > Yes, use this file
+Using: specs/epics/epic-1/sprints/lunch-menu/PRD.md
+
+Configuration: Inheriting from design system
+No local design.config.yaml created
+
+Ready to plan! Run:
+  /pixel-perfect:plan lunch-menu
+```
+
+### With design system (local overrides)
+```
+> /pixel-perfect:init lunch-menu
+
+Searching for "lunch-menu"...
+Found: specs/epics/epic-1/sprints/lunch-menu
+
+Checking for design system...
+Design system detected at .spec/design-system/:
+  ✓ paradigm.yaml (design patterns)
+  ✓ tokens.yaml (design tokens)
+  ✓ components.yaml (reusable components)
+
+? Does this epic need local configuration overrides?
+  > No, inherit everything from design system (recommended)
+    Yes, create local overrides for this epic
+
+[User selects "Yes"]
+
+Scanning for requirements...
+Found: specs/epics/epic-1/sprints/lunch-menu/PRD.md
+
+Using: specs/epics/epic-1/sprints/lunch-menu/PRD.md
 
 ? What platforms are you designing for?
-  [x] Responsive Web (Recommended)
+    [ ] Responsive Web (Design system default)
+  > [x] Mobile - iOS native
+    [x] Mobile - Android native
 
 ? What's the design vibe you're going for?
-  > Modern (Recommended)
+    Minimal (Design system default)
+  > Playful
 
 Configuration saved to specs/epics/epic-1/sprints/lunch-menu/design/design.config.yaml
 
-Global design artifacts linked:
-  → /design/paradigm.yaml
-  → /design/tokens.yaml
-  → /design/components.yaml
+Cascade path:
+  Base: .pixel-perfect/config.json
+  Design system: .spec/design-system/
+  Local overrides: lunch-menu/design/design.config.yaml
 
 Ready to plan! Run:
   /pixel-perfect:plan lunch-menu
@@ -370,10 +442,14 @@ Using: ../docs/NEW-FEATURE-PRD.md
 
 ## Skipping Init
 
-If `design.config.yaml` already exists, the design workflow uses existing config.
-To reconfigure, either:
+**When design system exists:** Init is OPTIONAL. The design workflow will use design system defaults automatically if no local config exists.
+
+**When no design system exists:** Init is REQUIRED. The workflow will halt and prompt you to run init.
+
+To reconfigure an existing epic:
 - Delete `design.config.yaml` and run init again
-- Run `/pixel-perfect:init --force` to overwrite
+- Run `/pixel-perfect:init --force` to overwrite existing config
+- Edit the config file directly (changes take effect on next run)
 
 ## Integration with Design Workflow
 

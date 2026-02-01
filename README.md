@@ -123,18 +123,21 @@ claude --plugin-dir ./pixel-perfect
 Commands must run **in sequence**. Each command checks that previous steps completed and will automatically run missing steps.
 
 ```
-init → plan → prompts → mockups → review
+research (optional) → init → plan → prompts → mockups → review
 ```
 
 | Step | Command | What it does |
 |------|---------|--------------|
-| 1 | `/pixel-perfect:init` | **Configure the project.** Asks about requirements location, target platforms, and design vibe. Creates `design.config.yaml`. |
-| 2 | `/pixel-perfect:plan` | **Generate design artifacts.** Reads your PRD and creates YAML files: tokens, components, flows, views, screens. |
+| 0 | `/pixel-perfect:research` | **(Optional) Research design patterns.** Search for UI/UX patterns, trends, and competitor designs. Saves to shared research library. |
+| 1 | `/pixel-perfect:init` | **Configure the project.** Asks about requirements location, target platforms, and design vibe. Creates `design.config.yaml` (optional when design system exists). |
+| 2 | `/pixel-perfect:plan` | **Generate design artifacts.** Reads your PRD and creates YAML files: tokens, components, flows, views, screens. Incorporates research if available. |
 | 3 | `/pixel-perfect:prompts` | **Create spec files.** Converts views.yaml into detailed JSON specifications for each screen. |
 | 4 | `/pixel-perfect:mockups` | **Generate HTML mockups.** Creates visual HTML files from the JSON specs. |
 | 5 | `/pixel-perfect:review` | **Review mockups.** Compares mockups against specs and tracks approval status. |
 
 **If you skip a step**, the next command will detect it and run the missing step first. For example, running `/pixel-perfect:mockups` without having run `plan` or `prompts` will trigger both automatically.
+
+**When a design system exists**, `init` is optional. Epics will automatically inherit from the design system.
 
 ---
 
@@ -156,6 +159,11 @@ init → plan → prompts → mockups → review
 - `lunch-menu` → finds `.spec/epics/epic-1/sprints/lunch-menu`
 
 **First run?** Init runs automatically and will ask you:
+
+**If a design system exists:**
+- "Does this epic need local configuration overrides?" (inherit by default)
+
+**If no design system exists:**
 1. **Where are your requirements?** (auto-detects PRD.md or asks for location)
 2. **What platforms?** (defaults to Responsive Web, or choose native iOS/Android/etc.)
 3. **What's the design vibe?** (modern, minimal, playful, etc.)
@@ -183,6 +191,58 @@ init → plan → prompts → mockups → review
 ---
 
 ## Commands
+
+### /pixel-perfect:research
+
+Research UI/UX design patterns, trends, and competitor designs. Saves findings to a shared research library that informs the planning phase.
+
+**Usage:**
+```
+/pixel-perfect:research <query> [options]
+/pixel-perfect:research --topic <topic> [options]
+/pixel-perfect:research --trend <trend-name> [options]
+/pixel-perfect:research --competitor <url> [options]
+```
+
+**Options:**
+- `--topic <topic>` - Research a specific design topic (e.g., "mobile-navigation", "form-design")
+- `--trend <name>` - Research current design trends (e.g., "bento-grids", "glassmorphism")
+- `--competitor <url>` - Analyze a competitor's design patterns
+- `--sources <list>` - Specific sources to use (exa, jina, web)
+- `--save` - Save research to design-research folder (default: true)
+- `--no-save` - Display research only, don't save
+
+**What it does:**
+1. Searches for design patterns using web search tools (Exa, Jina)
+2. Aggregates findings into structured format
+3. Saves to `design-research/` folder
+4. Updates research catalog (INDEX.md)
+
+**Examples:**
+```bash
+# Research a design topic
+/pixel-perfect:research --topic "mobile bottom navigation" 2025
+
+# Research current trends
+/pixel-perfect:research --trend "bento grids"
+
+# Analyze competitor
+/pixel-perfect:research --competitor "https://linear.app"
+
+# Quick research without saving
+/pixel-perfect:research "card spacing patterns" --no-save
+```
+
+**Enable in config:**
+```json
+{
+  "designResearch": {
+    "enabled": true,
+    "path": "design-research",
+    "sources": ["exa", "jina"]
+  }
+}
+```
 
 ### /pixel-perfect:init
 
@@ -413,8 +473,11 @@ When called without arguments, enters interactive mode:
 **Typical workflow:**
 1. Complete your first epic design with `/pixel-perfect:design epic-1`
 2. Promote it to project: `/pixel-perfect:design-system promote epic-1`
-3. Future epics automatically inherit from the library (skips foundation generation)
-4. Merge improvements back: `/pixel-perfect:design-system merge epic-2`
+3. Future epics automatically inherit from the design system (no init needed)
+4. For epics needing overrides, run `/pixel-perfect:init epic-2` to create local config
+5. Merge improvements back with confirmation: `/pixel-perfect:design-system merge epic-2`
+
+**Key benefit:** Once configured, new epics skip foundation artifacts (paradigm, tokens, components) and focus only on epic-specific design (workflows, screens, flows, views). Local configs are OPTIONAL — only create them when you need to override design system values.
 
 **Key benefit:** Once configured, new epics skip foundation artifacts (paradigm, tokens, components) and focus only on epic-specific design (workflows, screens, flows, views).
 
@@ -507,7 +570,7 @@ Global settings for your entire project. Create this file to customize behavior:
 
 ### Epic Config (`design.config.yaml`)
 
-Per-epic settings created during preplanning:
+**OPTIONAL** when a design system exists. Per-epic settings created during preplanning when you need to override design system values:
 
 ```yaml
 # Auto-generated by /pixel-perfect:init
@@ -535,10 +598,16 @@ references:
 
 ### Config Resolution Order
 
+pixel-perfect uses **cascading configuration** (most specific wins):
+
 1. **Command-line arguments** (highest priority)
-2. **Epic-level config** (`{epic}/design/design.config.yaml`)
-3. **Project-level config** (`.pixel-perfect/config.json`)
-4. **Built-in defaults** (lowest priority)
+2. **Sub-epic config** (`{epic}/sprints/{sub}/design/design.config.yaml`)
+3. **Epic config** (`{epic}/design/design.config.yaml`) — **OPTIONAL when design system exists**
+4. **Project design system** (`{specRoot}/{designSystem.path}/`)
+5. **Project config** (`.pixel-perfect/config.json`)
+6. **Built-in defaults** (lowest priority)
+
+When a design system exists, epics can skip `init` entirely and inherit defaults. Local configs are only needed when overriding design system values.
 
 To reconfigure an epic, run `/pixel-perfect:init --force` or `/pixel-perfect:design --reconfigure`.
 

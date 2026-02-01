@@ -4,7 +4,28 @@ description: "Manage project-level project design system for shared artifacts ac
 
 # Design System
 
-Manage the shared design system used across all epics. The project design system allows you to maintain consistent design tokens, components, and paradigms across your entire project.
+Manage the shared design system used across all epics. The project design system allows you to maintain consistent design tokens, components, and paradigms across your entire project through **cascading configuration**.
+
+## Cascading Configuration Overview
+
+When a design system is enabled, it serves as the **base configuration** for all epics. Local configs become **overriding configurations** that modify only specific values.
+
+**Hierarchy (most specific wins):**
+```
+Project (.pixel-perfect/config.json)
+    ↓
+Design System ({specRoot}/{designSystem.path}/)
+    ↓
+Epic Config ({epic}/design/design.config.yaml) [OPTIONAL]
+    ↓
+Sub-Epic Config ({epic}/sprints/{sub}/design/design.config.yaml) [OPTIONAL]
+```
+
+**Key behaviors:**
+- `design.config.yaml` is OPTIONAL when design system exists
+- Unspecified values in local configs inherit from design system
+- Only explicitly stated values override the design system
+- Merge confirmation workflow prevents accidental overwrites
 
 ## Usage
 
@@ -256,32 +277,12 @@ Destination: /design-system/
 
 ### merge
 
-Merge epic design artifacts into the project design system with diff-based conflict resolution.
+Merge epic design artifacts into the project design system. See **Merge Confirmation Workflow** above for full details on the interactive resolution process.
 
-```
-/pixel-perfect:design-system merge <epic> [options]
-```
-
-**Arguments:**
-- `<epic>`: Source epic to merge from
-
-**Options:**
-- `--skip`: Skip all conflicting files (keep project versions)
-- `--accept-all`: Auto-accept all changes from epic (overwrite project)
-- `--artifacts <list>`: Only merge specific artifacts (comma-separated)
-
-**Difference from promote:**
-- `promote` - Copies/overwrites without detailed comparison
-- `merge` - Shows diffs for conflicts and lets you resolve each one
-
-**Workflow:**
-1. Check if project design system exists
-   - If not configured → offer to set up design system first
-2. Load epic artifacts and project artifacts
-3. For each artifact in scope:
-   - If project doesn't exist → copy from epic (no conflict)
-   - If project exists and identical → skip (no change needed)
-   - If project exists and different → show diff, prompt for resolution
+**Quick reference:**
+- Use `--accept-all` to skip prompts and accept all epic changes
+- Use `--skip` to keep all project values unchanged
+- Use `--artifacts tokens,components` to merge only specific files
 
 **When no design system exists:**
 ```
@@ -293,114 +294,6 @@ No project design system configured.
   > Yes, create design system at /design-system/
     Yes, create at custom path
     No, cancel
-
-Creating project design system at /design-system/...
-
-Updating .pixel-perfect/config.json:
-  ✓ Added designSystem.enabled = true
-  ✓ Added designSystem.path = "design"
-
-Now merging epic-1 into the new design system...
-
-paradigm.yaml: NEW → copying from epic
-tokens.yaml: NEW → copying from epic
-components.yaml: NEW → copying from epic
-
-Design system created and populated from epic-1:
-  ✓ /design-system/paradigm.yaml
-  ✓ /design-system/tokens.yaml
-  ✓ /design-system/components.yaml
-
-Future epics will now use these shared artifacts.
-```
-
-**Example:**
-```
-> /pixel-perfect:design-system merge epic-1
-
-Comparing epic-1/design-system/ with /design-system/...
-
-paradigm.yaml: No changes (identical)
-tokens.yaml: CONFLICT (3 differences)
-components.yaml: CONFLICT (1 new component)
-
-tokens.yaml:
-  ┌─ CONFLICT ────────────────────────────────────────────┐
-  │ Project (current):                                      │
-  │   colors:                                              │
-  │     primary: "#2563eb"                                 │
-  │                                                        │
-  │ Epic (incoming):                                       │
-  │   colors:                                              │
-  │     primary: "#0d9488"                                 │
-  │     accent: "#f59e0b"  # NEW                          │
-  └────────────────────────────────────────────────────────┘
-
-? How would you like to resolve this conflict?
-  > Accept epic changes (update project)
-    Keep project (skip this file)
-    View full diff
-    Accept all remaining (--accept-all)
-    Skip all remaining (--skip)
-
-? tokens.yaml: Accept epic changes?
-  > Yes, update project
-
-? components.yaml: Accept epic changes?
-  > Yes, update project
-
-Merge complete:
-  ✓ tokens.yaml updated
-  ✓ components.yaml updated
-  - paradigm.yaml unchanged
-```
-
-**Using --skip to keep project versions:**
-```
-> /pixel-perfect:design-system merge epic-2 --skip
-
-Comparing epic-2/design-system/ with /design-system/...
-
-paradigm.yaml: CONFLICT → skipped (kept project)
-tokens.yaml: No changes (identical)
-components.yaml: CONFLICT → skipped (kept project)
-
-Merge complete:
-  - paradigm.yaml skipped (conflict)
-  - tokens.yaml unchanged
-  - components.yaml skipped (conflict)
-```
-
-**Using --accept-all to auto-merge:**
-```
-> /pixel-perfect:design-system merge epic-3 --accept-all
-
-Comparing epic-3/design-system/ with /design-system/...
-
-paradigm.yaml: No changes (identical)
-tokens.yaml: CONFLICT → accepted epic version
-components.yaml: CONFLICT → accepted epic version
-
-Merge complete:
-  - paradigm.yaml unchanged
-  ✓ tokens.yaml updated (auto-accepted)
-  ✓ components.yaml updated (auto-accepted)
-```
-
-**Merging specific artifacts only:**
-```
-> /pixel-perfect:design-system merge epic-1 --artifacts tokens
-
-Comparing epic-1/design-system/ with /design-system/...
-(Only checking: tokens.yaml)
-
-tokens.yaml: CONFLICT (3 differences)
-
-? Accept epic changes for tokens.yaml?
-  > Yes, update project
-
-Merge complete:
-  ✓ tokens.yaml updated
 ```
 
 ### status
@@ -465,7 +358,110 @@ To enable project design system:
 4. Or promote from existing epic: /pixel-perfect:design-system promote <epic>
 ```
 
-### validate
+### merge (with confirmation workflow)
+
+Merge epic design artifacts into the project design system with **diff-based conflict resolution** and **interactive confirmation**.
+
+```
+/pixel-perfect:design-system merge <epic> [options]
+```
+
+**Arguments:**
+- `<epic>`: Source epic to merge from
+
+**Options:**
+- `--skip`: Skip all conflicting files (keep project versions)
+- `--accept-all`: Auto-accept all changes from epic (overwrite project)
+- `--artifacts <list>`: Only merge specific artifacts (comma-separated)
+
+**Difference from promote:**
+- `promote` - Copies/overwrites without detailed comparison
+- `merge` - Shows diffs for conflicts and lets you resolve each one
+
+**Merge Confirmation Workflow:**
+
+When merging, the system shows exactly what will be overwritten:
+
+```
+> /pixel-perfect:design-system merge epic-1
+
+Merging epic-1/design/ into .spec/design-system/...
+
+Reading configs in cascade order:
+  Base: .pixel-perfect/config.json
+  Design system: .spec/design-system/
+  Epic: epic-1/design/design.config.yaml
+
+The following settings will be OVERWRITTEN:
+
+  platforms:
+    Project: [responsive-web]
+    Epic:    [mobile-ios, mobile-android]
+    → WILL OVERWRITE
+
+  vibe.primary:
+    Project: "minimal"
+    Epic:    "playful"
+    → WILL OVERWRITE
+
+  tokens.colors.primary:
+    Project: "#2563eb"
+    Epic:    "#0d9488"
+    → WILL OVERWRITE
+
+  tokens.colors.accent:
+    Project: (not defined)
+    Epic:    "#f59e0b"
+    → WILL ADD
+
+  components.Button.variant:
+    Project: "primary, secondary"
+    Epic:    "primary, secondary, danger"
+    → WILL MERGE (adds "danger")
+
+? How would you like to proceed?
+  > Review each change individually
+    Accept all epic changes (overwrite project)
+    Reject all changes (keep project)
+    Cancel merge
+```
+
+**Individual change review:**
+
+```
+? platforms: Epic has [mobile-ios, mobile-android], Project has [responsive-web]
+  > Use epic values (overwrite project)
+    Keep project values (skip this)
+    Merge both (combine arrays)
+    Custom value...
+
+[User selects "Keep project"]
+
+? vibe.primary: Epic has "playful", Project has "minimal"
+  > Use epic value (overwrite project)
+    Keep project value (skip this)
+    Custom value...
+
+[User selects "Use epic value"]
+
+Merge complete:
+  ✓ tokens.colors.primary updated
+  ✓ tokens.colors.accent added
+  ✓ components.Button.variant merged
+  - platforms unchanged (kept project)
+  ✓ vibe.primary updated
+
+Summary: 3 changed, 1 unchanged, 1 added
+```
+
+**Workflow:**
+1. Check if project design system exists
+   - If not configured → offer to set up design system first
+2. Load epic artifacts and project artifacts
+3. For each artifact in scope:
+   - If project doesn't exist → copy from epic (no conflict)
+   - If project exists and identical → skip (no change needed)
+   - If project exists and different → show diff, prompt for resolution
 
 Validate integrity of project design system and check for issues.
 
@@ -525,12 +521,13 @@ The library command respects and can update `.pixel-perfect/config.json`:
 
 ## Workflow Benefits
 
-When a project design-system is configured, all commands automatically:
+When a project design system is configured, all commands automatically:
 
-1. **Read from design-system first** - Commands check `design-system/` for paradigm, tokens, and components before generating new ones
-2. **Use library defaults** - Epic-level design inherits colors, spacing, typography, and component definitions from the project library
-3. **Skip foundation preconditions** - Sequential epics don't need to re-run `/pixel-perfect:plan --foundation` since they inherit from the library
+1. **Cascade configuration** - Commands read configs in order (most specific first) and merge with "most specific wins"
+2. **Optional local configs** - `design.config.yaml` is only needed when overriding design system values
+3. **Skip foundation generation** - Sequential epics don't need to re-run `/pixel-perfect:plan --foundation` since they inherit artifacts
 4. **Focus on epic-specific artifacts** - Commands only generate workflows, screens, flows, and views (the epic-specific parts)
+5. **Merge confirmation** - When promoting/merging, shows what will be overwritten and asks for approval
 
 **Example: Second epic workflow**
 ```bash

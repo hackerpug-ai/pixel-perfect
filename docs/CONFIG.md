@@ -7,8 +7,11 @@ pixel-perfect uses a project-level configuration file to customize paths and def
 ```
 your-project/
 └── .pixel-perfect/
-    └── config.json
+    ├── config.json          # Your configuration
+    └── config.schema.json   # Schema for validation (included with plugin)
 ```
+
+**Schema Validation:** When the plugin is installed, it validates `config.json` against `config.schema.json`. Invalid configurations will show warnings with specific field errors.
 
 ## Configuration Schema
 
@@ -104,6 +107,33 @@ Optional configuration for a global/project-level design system that persists ac
 1. Epic override exists (`{epic}/design/{artifact}.yaml`) → use epic version
 2. Global artifact enabled AND exists → use global version
 3. Neither → generate in epic
+
+### designResearch
+
+Optional configuration for the design research feature that enables UI/UX pattern and trend research.
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `enabled` | `false` | Enable design research feature |
+| `path` | `"design-research"` | Path to research folder (relative to `specRoot`) |
+| `sources` | `["exa", "jina"]` | Available search sources |
+| `defaultTopics` | `[]` | Default topics to research on init |
+
+**Research sources:**
+- `exa` - Advanced semantic search for design content
+- `jina` - Web reading and URL analysis
+- `web` - General web search fallback
+
+**Folder structure created:**
+```
+{specRoot}/{designResearch.path}/
+├── INDEX.md              # Catalog of all research
+├── topics/               # Research by design topic
+├── trends/               # Trend research
+└── competitors/          # Competitor analysis
+```
+
+See `/pixel-perfect:research` command for usage.
 
 ## Examples
 
@@ -219,14 +249,211 @@ Only share tokens globally, generate other artifacts per-epic:
 }
 ```
 
-## Resolution Order
+### Design Research Enabled
 
-When running commands, pixel-perfect resolves configuration in this order:
+Enable design research for pattern and trend discovery:
+
+```json
+{
+  "specRoot": ".",
+  "designResearch": {
+    "enabled": true,
+    "path": "design-research",
+    "sources": ["exa", "jina"],
+    "defaultTopics": [
+      "mobile-navigation",
+      "form-design",
+      "onboarding"
+    ]
+  }
+}
+```
+
+### Full Configuration
+
+All features enabled:
+
+```json
+{
+  "version": "1.5",
+  "specRoot": ".",
+  "designSystem": {
+    "enabled": true,
+    "path": "design-system",
+    "artifacts": ["paradigm", "tokens", "components"]
+  },
+  "designResearch": {
+    "enabled": true,
+    "path": "design-research",
+    "sources": ["exa", "jina"],
+    "defaultTopics": ["mobile-navigation", "form-design"]
+  },
+  "defaults": {
+    "platforms": ["mobile-ios", "web-desktop"],
+    "vibe": "modern",
+    "naming": "snake_case"
+  },
+  "extensions": {
+    "spec": ".spec.json",
+    "mock": ".mock.html"
+  }
+}
+```
+
+## Cascading Resolution Order
+
+When running commands, pixel-perfect resolves configuration using a **cascading inheritance model** (most specific wins):
+
+### Visual Hierarchy
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ PROJECT LEVEL                                                       │
+│ .pixel-perfect/config.json                                         │
+│    ↓                                                                │
+│ designSystem.enabled = true                                        │
+│    ↓                                                                │
+│ {specRoot}/{designSystem.path}/                                    │
+│   ├─ paradigm.yaml                                                 │
+│   ├─ tokens.yaml                                                   │
+│   └─ components.yaml                                               │
+└─────────────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ EPIC LEVEL (OPTIONAL when design system exists)                     │
+│ {epic}/design/design.config.yaml                                   │
+│   (only needs to specify overrides, not full config)                │
+└─────────────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│ SUB-EPIC LEVEL (OPTIONAL)                                           │
+│ {epic}/sprints/{sub-epic}/design/design.config.yaml                │
+│   (inherits from epic, only specifies sub-epic overrides)           │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Resolution Order (for any config value)
+
+1. **Most specific local config** (deepest nested folder with config)
+2. **Parent epic config** (if exists and nested)
+3. **Project design system** (if enabled and artifact exists)
+4. **Project config** (`.pixel-perfect/config.json`)
+5. **Built-in defaults** (lowest priority)
+
+### AI Agent Read Order
+
+When agents need to read configs, they should follow this sequence:
+
+1. **Search upward** from working directory for `design.config.yaml`
+2. **Read all configs** found in the "cascade path"
+3. **Merge with "most specific wins" rule**
+4. **Report** the effective config and cascade path to user
+
+### Terminology
+
+| Term | Definition |
+|------|------------|
+| **base config** | Highest level config (project/design-system) |
+| **overriding config** | More specific config that modifies base |
+| **effective config** | Final merged result after cascading |
+| **cascade path** | Ordered list of configs read to produce effective config |
+| **inherit** | Use value from higher-level config when not specified locally |
+| **override** | Replace higher-level value with local value |
+
+### Example: Cascading in Action
+
+**Project config** (`.pixel-perfect/config.json`):
+```json
+{
+  "defaults": {
+    "platforms": ["responsive-web"],
+    "vibe": "minimal",
+    "naming": "snake_case"
+  }
+}
+```
+
+**Design system tokens** (`.spec/design-system/tokens.yaml`):
+```yaml
+colors:
+  primary: "#2563eb"
+  secondary: "#64748b"
+```
+
+**Epic config** (`epic-1/design/design.config.yaml`):
+```yaml
+# Only override what's different
+platforms:
+  - mobile-ios  # Override: project has responsive-web
+vibe:
+  primary: "playful"  # Override: project has minimal
+# naming, tokens inherit from design system
+```
+
+**Sub-epic config** (`epic-1/sprints/feature-a/design/design.config.yaml`):
+```yaml
+# Could add more specific overrides
+# If empty, fully inherits from epic-1
+```
+
+**Effective config for `feature-a`:**
+- platforms: `mobile-ios` (from epic-1)
+- vibe: `playful` (from epic-1)
+- naming: `snake_case` (from project)
+- tokens: from design system (`.spec/design-system/tokens.yaml`)
+
+## Merge Confirmation Workflow
+
+When promoting or merging configs/artifacts from lower to higher levels, the system shows exactly what will be overwritten:
+
+```
+Merging epic-1/design/ into .spec/design-system/...
+
+Cascade path analyzed:
+  Base: .pixel-perfect/config.json
+  Design system: .spec/design-system/
+  Epic: epic-1/design/design.config.yaml
+
+The following will be OVERWRITTEN:
+
+  platforms:
+    Project: [responsive-web]
+    Epic:    [mobile-ios, mobile-android]
+    → WILL OVERWRITE
+
+  tokens.colors.primary:
+    Project: "#2563eb"
+    Epic:    "#0d9488"
+    → WILL OVERWRITE
+
+? How would you like to proceed?
+  > Review each change individually
+    Accept all epic changes
+    Reject all changes (keep project)
+    Cancel
+```
+
+### Individual Change Options
+
+For each conflicting value, users can:
+
+| Option | Behavior |
+|--------|----------|
+| **Use epic value** | Overwrite project with epic value |
+| **Keep project value** | Skip this change, keep project value |
+| **Merge both** | For arrays/objects, combine both values |
+| **Custom value** | Enter a different value manually |
+
+## Command Resolution Order
+
+The complete resolution order including command-line arguments:
 
 1. **Command-line arguments** (highest priority)
-2. **Epic-level config** (`{epic}/design/design.config.yaml`)
-3. **Project-level config** (`.pixel-perfect/config.json`)
-4. **Built-in defaults** (lowest priority)
+2. **Sub-epic config** (`{epic}/sprints/{sub}/design/design.config.yaml`)
+3. **Epic config** (`{epic}/design/design.config.yaml`)
+4. **Project design system** (`{specRoot}/{designSystem.path}/`)
+5. **Project config** (`.pixel-perfect/config.json`)
+6. **Built-in defaults** (lowest priority)
 
 ## Creating Config
 

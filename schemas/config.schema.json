@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/hackerpug-ai/pixel-perfect/schemas/config.schema.json",
+  "title": "Pixel Perfect Configuration",
+  "description": "Configuration schema for pixel-perfect Claude Code plugin",
+  "type": "object",
+  "required": ["version"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+$",
+      "description": "Config schema version (major.minor)",
+      "examples": ["1.0", "1.5", "2.0"]
+    },
+    "specRoot": {
+      "type": "string",
+      "description": "Root directory to search for epic targets",
+      "examples": [".", ".spec", "packages/design/specs"]
+    },
+    "designSystem": {
+      "type": "object",
+      "description": "Project-level design system configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable global design system inheritance"
+        },
+        "path": {
+          "type": "string",
+          "default": "design-system",
+          "description": "Path to design system folder (relative to specRoot)"
+        },
+        "artifacts": {
+          "type": "array",
+          "description": "Which artifacts to use from global design system",
+          "items": {
+            "type": "string",
+            "enum": ["paradigm", "tokens", "components"]
+          },
+          "default": ["paradigm", "tokens", "components"]
+        }
+      }
+    },
+    "designResearch": {
+      "type": "object",
+      "description": "Design research configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable design research feature"
+        },
+        "path": {
+          "type": "string",
+          "default": "design-research",
+          "description": "Path to research folder (relative to specRoot)"
+        },
+        "sources": {
+          "type": "array",
+          "description": "Available search sources for research",
+          "items": {
+            "type": "string",
+            "enum": ["exa", "jina", "web"]
+          },
+          "default": ["exa", "jina"]
+        },
+        "defaultTopics": {
+          "type": "array",
+          "description": "Default topics to research on init",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "description": "Default values for epic configuration",
+      "properties": {
+        "platforms": {
+          "type": "array",
+          "description": "Pre-selected platforms (skips multi-select if set)",
+          "items": {
+            "type": "string",
+            "enum": ["mobile-ios", "mobile-android", "web-desktop", "web-mobile", "desktop-app", "cli", "tablet"]
+          },
+          "default": []
+        },
+        "vibe": {
+          "type": ["string", "null"],
+          "description": "Default design vibe (skips vibe question if set)",
+          "enum": ["minimal", "modern", "playful", "corporate", "bold", "technical", "elegant", null],
+          "default": null
+        },
+        "naming": {
+          "type": "string",
+          "description": "Design key naming style",
+          "enum": ["snake_case", "kebab-case", "camelCase"],
+          "default": "snake_case"
+        }
+      }
+    },
+    "extensions": {
+      "type": "object",
+      "description": "File extension preferences",
+      "properties": {
+        "spec": {
+          "type": "string",
+          "default": ".spec.json",
+          "description": "File extension for specification files"
+        },
+        "mock": {
+          "type": "string",
+          "default": ".mock.html",
+          "description": "File extension for mockup files"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "version": "1.5",
+      "specRoot": ".",
+      "designSystem": {
+        "enabled": true,
+        "path": "design-system",
+        "artifacts": ["paradigm", "tokens", "components"]
+      },
+      "designResearch": {
+        "enabled": true,
+        "path": "design-research",
+        "sources": ["exa", "jina"],
+        "defaultTopics": ["mobile-navigation", "form-design"]
+      },
+      "defaults": {
+        "platforms": ["mobile-ios", "web-desktop"],
+        "vibe": "modern",
+        "naming": "snake_case"
+      },
+      "extensions": {
+        "spec": ".spec.json",
+        "mock": ".mock.html"
+      }
+    },
+    {
+      "version": "1.5",
+      "specRoot": ".spec"
+    },
+    {
+      "version": "1.5",
+      "specRoot": ".",
+      "defaults": {
+        "platforms": ["mobile-ios", "mobile-android"],
+        "vibe": "playful",
+        "naming": "kebab-case"
+      },
+      "designResearch": {
+        "enabled": true,
+        "path": "design-research"
+      }
+    }
+  ]
+}
