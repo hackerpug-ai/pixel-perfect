@@ -19,7 +19,6 @@ Promote design artifacts from a child directory to a parent design scope. This i
 ## Options
 
 - `--target <path>` - Target parent directory (default: upper-most design scope)
-- `--artifacts <list>` - Specific artifacts to merge (default: all promotable)
 - `--dry-run` - Show what would be merged without executing
 - `--force` - Skip confirmation prompts (use with caution)
 
@@ -61,50 +60,26 @@ Promote design artifacts from a child directory to a parent design scope. This i
 1. Merges `features/auth/design/` → `features/design/`
 2. Useful for merging to intermediate parent (not just root)
 
-### Selective Artifact Merge
-
-```
-/pixel-perfect:merge features/auth --artifacts tokens,components,paradigm
-```
-
-1. Merges only specified artifacts
-2. Leaves other artifacts untouched in source directory
-
 ## Merge Planning
 
 The command analyzes what will be merged and presents a plan:
 
 ```
-═══════════════════════════════════════════════════════════
-MERGE PLAN
-═══════════════════════════════════════════════════════════
+Merge: features/auth/design/ → project/design/
 
-Source: features/auth/design/
-Target: project/design/
+Merging:
+  config.yaml, workflows.yaml, screens.yaml, flows.yaml, views.yaml
+  tokens.yaml, components.yaml, paradigm.yaml, prompts/, mocks/
 
-Artifacts to merge:
-  ✅ tokens.yaml        → will be promoted
-  ✅ components.yaml    → will be promoted
-  ✅ paradigm.yaml      → will be promoted
+Keeping in source:
+  research/, UX-DESIGN-PLAN.md
 
-Artifacts remaining in source:
-  ⏸️  workflows.yaml    → kept in features/auth/design/
-  ⏸️  screens.yaml      → kept in features/auth/design/
-  ⏸️  flows.yaml        → kept in features/auth/design/
-  ⏸️  views.yaml        → kept in features/auth/design/
-  ⏸️  UX-DESIGN-PLAN.md → kept in features/auth/design/
+⚠️  Conflicts: tokens.yaml, components.yaml exist in target (will overwrite)
 
-Conflict detection:
-  ⚠️  tokens.yaml exists in target - will be overwritten
-  ⚠️  components.yaml exists in target - will be overwritten
-
-═══════════════════════════════════════════════════════════
-
-? Proceed with merge?
-  > Confirm - Execute merge as planned
-    Modify - Select different artifacts or target
-    Cancel - Abort merge
+Proceed? (y/n)
 ```
+
+**What gets merged:** ALL artifacts in the `design/` folder except `research/` and `UX-DESIGN-PLAN.md` (which are always directory-specific).
 
 ## Conflict Resolution
 
@@ -119,73 +94,43 @@ When target artifacts already exist:
 
 **Recommendation:** Back up target directory before merging, or use `--dry-run` first.
 
-## Smart Detection
+## What Gets Merged
 
-If the invocation includes descriptions of what to merge:
+By default, **ALL artifacts** are merged except:
 
-```
-/pixel-perfect:merge features/auth "just the color tokens and button components"
-```
+| Excluded | Reason |
+|----------|--------|
+| `research/` | Context-specific findings (URL analysis, competitor research) |
+| `UX-DESIGN-PLAN.md` | Directory-specific design summary |
 
-Analyzes the free-text input:
-- "color tokens" → tokens.yaml (colors section)
-- "button components" → components.yaml (Button variants)
-
-Presents detected plan:
-```
-Detected from your description:
-  ✅ tokens.yaml (colors section)
-  ✅ components.yaml (Button component family)
-
-? Is this correct?
-  > Yes - merge these artifacts
-    No - I meant something else
-```
-
-## What Can Be Merged
-
-| Artifact | Mergeable | Notes |
-|----------|-----------|-------|
-| `tokens.yaml` | ✅ Yes | Commonly promoted - colors, spacing, typography |
-| `components.yaml` | ✅ Yes | Reusable components |
-| `paradigm.yaml` | ✅ Yes | Design patterns, principles |
-| `workflows.yaml` | ⚠️ Rare | Usually feature-specific, but possible |
-| `screens.yaml` | ❌ No | Always directory-specific - not mergeable |
-| `flows.yaml` | ❌ No | Always directory-specific - not mergeable |
-| `views.yaml` | ❌ No | Always directory-specific - not mergeable |
-
-Attempting to merge non-mergeable artifacts shows warning:
-
-```
-⚠️  screens.yaml cannot be merged (directory-specific)
-   Did you mean to copy the file manually instead?
-```
+**Everything else merges:**
+- `config.yaml` - Configuration (merges/overrides values)
+- `workflows.yaml` - User journeys and task flows
+- `screens.yaml` - Screen inventory
+- `flows.yaml` - Interaction flows
+- `views.yaml` - View specifications
+- `tokens.yaml` - Design tokens
+- `components.yaml` - Component definitions
+- `paradigm.yaml` - Design patterns
+- `prompts/` - Specification files
+- `mocks/` - HTML mockups
 
 ## Post-Merge
 
 After successful merge:
 
-1. **Source artifacts removed** (moved to target, not copied)
-2. **Target updated** with merged artifacts
-3. **Children of source** now inherit from target
-4. **Summary displayed:**
-
 ```
 ✓ Merge complete!
 
-Merged:
-  → tokens.yaml (features/auth/design/ → project/design/)
-  → components.yaml (features/auth/design/ → project/design/)
-  → paradigm.yaml (features/auth/design/ → project/design/)
+Merged: features/auth/design/ → project/design/
+  config.yaml, workflows.yaml, screens.yaml, flows.yaml, views.yaml
+  tokens.yaml, components.yaml, paradigm.yaml, prompts/, mocks/
 
-Impact:
-  → features/auth now inherits tokens from project/design/
-  → features/booking now inherits tokens from project/design/
-  → features/payment now inherits tokens from project/design/
+Keeping in source: research/, UX-DESIGN-PLAN.md
 
-Next steps:
-  → /pixel-perfect:status features/auth (verify inheritance)
-  → /pixel-perfect:plan features/auth (regenerate with parent tokens)
+Impact: features/auth now inherits from project/design/
+
+Next: /pixel-perfect:status features/auth
 ```
 
 ## Dry Run Mode
@@ -204,26 +149,19 @@ Shows the full merge plan but doesn't modify any files. Use this to:
 
 ## Examples
 
-### Merge all promotable artifacts
+### Merge all artifacts (default)
 ```bash
 /pixel-perfect:merge features/auth
 
-# Promotes tokens, components, paradigm to parent
-# Keeps workflows, screens, flows, views in source
+# Merges everything except research/, UX-DESIGN-PLAN.md
+# Confirmation shows exactly what will move
 ```
 
 ### Merge to specific parent
 ```bash
 /pixel-perfect:merge features/auth/sessions --target features/auth
 
-# Merges sessions → auth (not all the way to root)
-```
-
-### Selective merge
-```bash
-/pixel-perfect:merge features/auth --artifacts tokens
-
-# Only merges tokens.yaml
+# Merges sessions → auth (intermediate parent, not root)
 ```
 
 ### Dry run first
@@ -232,13 +170,6 @@ Shows the full merge plan but doesn't modify any files. Use this to:
 # Review plan
 /pixel-perfect:merge features/auth
 # Execute for real
-```
-
-### Smart detection
-```bash
-/pixel-perfect:merge features/auth "move the color system and button components"
-
-# Detects: tokens.yaml (colors), components.yaml (buttons)
 ```
 
 ## Safety
