@@ -216,6 +216,6 @@ When creating or managing design artifacts:
 
 ## RELATED DOCS
 
-- `brain/docs/DESIGN-CONVENTIONS.md` - Core conventions and config schema
-- `brain/docs/ui-design-standards/README.md` - Visual standards
-- `brain/docs/skill-state/README.md` - State management patterns
+- `docs/DESIGN-CONVENTIONS.md` - Core conventions and config schema
+- `docs/ui-design-standards.md` - Visual standards
+- `docs/skill-state.md` - State management patterns

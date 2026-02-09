@@ -314,5 +314,5 @@ The design artifacts are platform-agnostic. Implementation maps to target:
 
 ## RELATED DOCS
 
-- `brain/docs/DESIGN-KEYS.md` - Extended key patterns
-- `brain/docs/ui-design-standards/README.md` - Visual standards
+- `docs/DESIGN-KEYS.md` - Extended key patterns
+- `docs/ui-design-standards.md` - Visual standards
