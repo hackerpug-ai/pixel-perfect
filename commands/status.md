@@ -48,6 +48,9 @@ Config cascade:
   → features/auth/design/config.yaml (local)
   → project/design/config.yaml (parent)
 
+Design System: shadcn/ui
+Icon Library: Lucide (auto-selected)
+
 Artifacts:
   [x] workflows.yaml (12 workflows)
   [x] screens.yaml (8 screens)
@@ -65,6 +68,8 @@ Review Status:
   approved:    4
   needs_work:  2
   pending:     2
+
+Archives: 1 (2025-02-08)
 
 Next: /pixel-perfect:mockups features/auth --key settings_page
 ```

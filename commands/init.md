@@ -38,6 +38,8 @@ project/
 - `--quick`: Auto-accept inferred values with minimal prompts
 - `--platforms <list>`: Pre-set platforms (comma-separated: `mobile-ios,web-desktop`)
 - `--vibe <name>`: Pre-set design vibe (`minimal`, `modern`, `playful`, etc.)
+- `--design-system <name>`: Pre-set design system (`shadcn-ui`, `material-design-3`, etc.)
+- `--icon-library <name>`: Pre-set icon library (`lucide`, `material-symbols`, etc.)
 
 ## What It Does
 
@@ -46,8 +48,10 @@ This command walks you through setting up your design project:
 1. **Requirements Discovery** - Finds or asks for your PRD/requirements document
 2. **Device Targeting** - Infers and confirms which platforms you're designing for
 3. **Design Vibe** - Captures the aesthetic direction for your mockups
-4. **URL Analysis** - Fetches and analyzes any reference URLs in requirements
-5. **Configuration** - Saves preferences to `{directory}/design/config.yaml`
+4. **Design System** - Optionally select a UI component library (shadcn/ui, Material Design 3, etc.)
+5. **Icon Library** - Auto-selected from design system or vibe, confirmed with user
+6. **URL Analysis** - Fetches and analyzes any reference URLs in requirements
+7. **Configuration** - Saves preferences to `{directory}/design/config.yaml`
 
 ## Config File
 
@@ -71,6 +75,15 @@ platforms:
 vibe:
   primary: "modern"
   description: "Clean, contemporary design"
+
+# Design system (optional)
+designSystem:
+  name: "shadcn-ui"
+
+# Icon library (auto-selected from design system, or by vibe)
+iconLibrary:
+  name: "lucide"
+  autoSelected: true
 
 # Analyzed references
 references:
@@ -121,7 +134,73 @@ references:
 | Technical | Data-dense, developer-focused |
 | Elegant | Refined, sophisticated |
 
-### Step 4: URL Analysis
+### Step 4: Design System Selection
+
+**After vibe selection, ask about design system:**
+
+```
+? Are you using a specific design system or component library?
+  > None (general patterns)
+    shadcn/ui
+    Material Design 3
+    Chakra UI
+    Ant Design
+    Radix UI
+    Headless UI
+    DaisyUI
+    Park UI
+    Mantine
+```
+
+**PRD keyword detection:** If the PRD mentions a design system by name (e.g., "using shadcn", "Material Design", "chakra"), auto-detect and confirm:
+```
+Detected "shadcn" in requirements.
+? Use shadcn/ui as your design system?
+  > Yes
+    No, choose different
+    No design system
+```
+
+**If a design system is selected:**
+1. Set `designSystem.name` in config.yaml
+2. Auto-select icon library from pairing matrix (see `docs/design-systems/README.md`)
+3. Confirm icon library with user:
+   ```
+   shadcn/ui pairs with Lucide icons.
+   ? Use Lucide for this project?
+     > Yes (recommended)
+       No, choose different library
+   ```
+
+### Step 5: Icon Library Selection
+
+**If no design system was selected**, suggest icon library based on vibe:
+
+```
+Based on your "modern" vibe, Lucide icons are recommended.
+? Which icon library would you like to use?
+  > Lucide (recommended for modern vibe)
+    Material Symbols
+    Heroicons
+    Phosphor Icons
+    Tabler Icons
+    Font Awesome
+    Other...
+```
+
+**Vibe-based defaults** (from `docs/design-systems/README.md`):
+
+| Vibe | Default Icon Library |
+|------|---------------------|
+| minimal | Lucide |
+| modern | Lucide |
+| playful | Phosphor |
+| corporate | Font Awesome |
+| bold | Material Symbols |
+| technical | Tabler |
+| elegant | Feather |
+
+### Step 6: URL Analysis
 
 Fetches and analyzes URLs from requirements.
 
@@ -144,7 +223,16 @@ Found: PRD.md
 ? What's the design vibe?
   > Modern
 
+? Are you using a specific design system?
+  > shadcn/ui
+
+shadcn/ui pairs with Lucide icons.
+? Use Lucide for this project?
+  > Yes (recommended)
+
 Configuration saved to design/config.yaml
+  Design system: shadcn/ui
+  Icon library: Lucide (auto-selected)
 
 Ready to plan! Run:
   /pixel-perfect:plan

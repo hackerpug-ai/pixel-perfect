@@ -79,6 +79,40 @@
           "default": []
         }
       }
+    },
+    "designSystem": {
+      "type": "object",
+      "description": "Design system reference configuration. When set, informs token generation, component naming, CDN links in mockups, and review validation.",
+      "properties": {
+        "name": {
+          "type": ["string", "null"],
+          "enum": ["shadcn-ui", "material-design-3", "chakra-ui", "ant-design", "radix-ui", "headless-ui", "daisyui", "park-ui", "mantine", "custom", null],
+          "default": null,
+          "description": "Selected design system for component patterns and conventions"
+        },
+        "version": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Design system version if applicable"
+        }
+      }
+    },
+    "iconLibrary": {
+      "type": "object",
+      "description": "Icon library configuration. Auto-selected when a design system is chosen, or set manually.",
+      "properties": {
+        "name": {
+          "type": ["string", "null"],
+          "enum": ["lucide", "material-symbols", "heroicons", "phosphor", "tabler", "remix", "font-awesome", "ionicons", "feather", "ant-design-icons", "bootstrap-icons", null],
+          "default": null,
+          "description": "Selected icon library for mockup rendering and validation"
+        },
+        "autoSelected": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether icon library was auto-selected from design system pairing"
+        }
+      }
     }
   },
   "examples": [

@@ -26,6 +26,15 @@ paths:
 
 naming:
   style: "snake_case"     # default: snake_case (options: snake_case, kebab-case, camelCase)
+
+# Design system (optional - informs tokens, components, mockup CDN/classes)
+designSystem:
+  name: "shadcn-ui"       # see docs/design-systems/ for supported systems
+
+# Icon library (optional - auto-selected from design system or vibe)
+iconLibrary:
+  name: "lucide"          # see docs/icon-libraries/ for supported libraries
+  autoSelected: true
 ```
 
 If no config exists, defaults apply.
@@ -109,7 +118,12 @@ Design artifacts for a directory:
 ├── UX-DESIGN-PLAN.md
 ├── prompts/
 ├── mocks/
-└── research/
+├── research/
+└── archived/               # Archived artifacts from plan-level refinements
+    └── {timestamp}/        # e.g., 2025-02-08T14-30-00/
+        ├── prompts/
+        ├── mocks/
+        └── ARCHIVE-MANIFEST.md
 ```
 
 ---
@@ -191,6 +205,7 @@ components:
 ### tokens.yaml
 ```yaml
 # Design tokens - platform agnostic
+# When designSystem is set, values default to design system conventions
 tokens:
   colors:
     primary: "{value}"
@@ -199,6 +214,14 @@ tokens:
     unit: "{value}"
   typography:
     fontFamily: "{value}"
+  # Icon tokens (informed by iconLibrary selection)
+  icons:
+    library: "{iconLibrary.name}"   # e.g., "lucide", "material-symbols"
+    sizeScale:
+      sm: "16px"                     # Inline text, badges
+      md: "20px"                     # Buttons, inputs
+      lg: "24px"                     # Navigation, primary actions
+      xl: "32px"                     # Empty states, features
 ```
 
 ---

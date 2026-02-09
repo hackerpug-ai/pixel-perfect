@@ -85,10 +85,67 @@ Use `--skip-deps` to error instead of auto-running missing steps.
 - `--force`: Regenerate existing mockups
 - `--format <format>`: Output format (default: html)
 
+## Design System and Icon Library Integration
+
+When generating HTML mockups, the design system and icon library from config (via the spec file) determine the CSS framework and icon rendering approach.
+
+### CDN Injection
+
+The spec file contains `cdnLinks` and `iconSetup` fields. These are injected into the `<head>` of every generated mockup:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- CSS Framework from design system -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Icon Library from config -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>lucide.createIcons();</script>
+</head>
+```
+
+### Icon Rendering by Library
+
+Each icon library has a different HTML pattern. Use the correct pattern from the icon library reference doc (`docs/icon-libraries/{name}.md`):
+
+| Library | HTML Pattern |
+|---------|-------------|
+| Lucide | `<i data-lucide="home"></i>` |
+| Material Symbols | `<span class="material-symbols-outlined">home</span>` |
+| Heroicons | Inline `<svg>` with path data |
+| Phosphor | `<i class="ph ph-house"></i>` |
+| Tabler | `<i class="ti ti-home"></i>` |
+| Font Awesome | `<i class="fa-solid fa-house"></i>` |
+| Ionicons | `<ion-icon name="home"></ion-icon>` |
+| Feather | `<i data-feather="home"></i>` |
+| Remix | `<i class="ri-home-line"></i>` |
+| Bootstrap Icons | `<i class="bi bi-house"></i>` |
+
+### Design System CSS Patterns
+
+When a design system is selected, mockups use its CSS patterns:
+
+| Design System | CSS Approach |
+|---------------|-------------|
+| shadcn/ui | Tailwind utility classes |
+| Material Design 3 | Material Web components or Tailwind |
+| Chakra UI | Tailwind approximation for mockups |
+| Ant Design | Ant Design CDN classes |
+| DaisyUI | Tailwind + DaisyUI utility classes |
+| Park UI | Panda CSS or Tailwind approximation |
+| Mantine | Mantine CDN or Tailwind approximation |
+
+**Important:** Mockups are HTML approximations for blueprint purposes. They use CDN versions of CSS frameworks, not full component library builds. The goal is visual fidelity and structural accuracy, not runtime correctness.
+
 ## Input Requirements
 
 - `{epic}/design/prompts/{design_key}.spec.json` must exist
 - `{epic}/design/tokens.yaml` recommended for consistent styling
+- `{epic}/design/config.yaml` checked for:
+  - `designSystem.name` → loads CSS framework CDN
+  - `iconLibrary.name` → loads icon CDN and uses correct HTML patterns
 
 ## Output
 

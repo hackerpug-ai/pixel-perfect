@@ -81,6 +81,38 @@ Optional configuration for the design research feature.
 | `sources` | `["exa", "jina"]` | Available search sources |
 | `defaultTopics` | `[]` | Default topics to research on init |
 
+### designSystem
+
+Optional design system selection. When set, informs token generation, component naming, CDN links in mockups, and review validation. See `docs/design-systems/` for reference docs.
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `name` | `null` | Design system name |
+| `version` | `null` | Specific version (optional) |
+
+**Supported design systems:**
+- `shadcn-ui` - Radix-based components with Tailwind CSS
+- `material-design-3` - Google's Material Design system
+- `chakra-ui` - React component library with theme system
+- `ant-design` - Enterprise-level UI design language
+- `radix-ui` - Unstyled accessible primitives
+- `headless-ui` - Unstyled accessible components by Tailwind Labs
+- `daisyui` - Tailwind CSS component library
+- `park-ui` - Ark UI + Panda CSS component library
+- `mantine` - Full-featured React component library
+- `custom` - No specific system, uses general patterns
+
+### iconLibrary
+
+Optional icon library selection. Auto-selected when a design system is chosen, or manually specified. See `docs/icon-libraries/` for reference docs.
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `name` | `null` | Icon library name |
+| `autoSelected` | `false` | Whether auto-selected from design system pairing |
+
+**Supported icon libraries:** `lucide`, `material-symbols`, `heroicons`, `phosphor`, `tabler`, `remix`, `font-awesome`, `ionicons`, `feather`, `ant-design-icons`, `bootstrap-icons`
+
 ## Directory-Scoped Configuration (ESLint-Style)
 
 **Primary configuration happens in `design/config.yaml` files:**
@@ -123,6 +155,15 @@ platforms:
 vibe:
   primary: "modern"
   description: "Clean, contemporary design"
+
+# Design system (optional)
+designSystem:
+  name: "shadcn-ui"
+
+# Icon library (auto-selected from design system, or by vibe)
+iconLibrary:
+  name: "lucide"
+  autoSelected: true
 ```
 
 **Child configs only need to specify overrides:**

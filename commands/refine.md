@@ -200,6 +200,115 @@ See `docs/GENERATION-SEQUENCE.md` for full details.
 
 See `docs/GENERATION-SEQUENCE.md` for review vs regenerate guidance.
 
+## Artifact Invalidation and Archival
+
+When plan-level artifacts (paradigm, tokens, components, flows, views, screens) are modified during refinement, downstream artifacts that depend on them become stale. Refine handles this with archival and invalidation.
+
+### Refinement Scope
+
+At the start of refine, determine the scope:
+
+```
+? What level of refinement?
+  > Plan-level - Modify YAML artifacts (tokens, components, flows, views, etc.)
+    Mock-level - Regenerate mockups only (keep all plan artifacts as-is)
+```
+
+**Plan-level refinement** triggers the archival flow below.
+**Mock-level refinement** skips archival and goes straight to mock regeneration.
+
+### Archival Flow
+
+When plan-level artifacts are modified, the following happens BEFORE regeneration:
+
+1. **Identify downstream artifacts** that depend on what changed (using the dependency graph from `docs/GENERATION-SEQUENCE.md`)
+
+2. **Archive affected downstream artifacts** to `{directory}/design/archived/{timestamp}/`:
+   ```
+   design/archived/2025-02-08T14-30-00/
+   ├── prompts/
+   │   ├── login.spec.json
+   │   └── dashboard.spec.json
+   ├── mocks/
+   │   ├── login.mock.html
+   │   └── dashboard.mock.html
+   └── ARCHIVE-MANIFEST.md
+   ```
+
+3. **Create ARCHIVE-MANIFEST.md** in the archive folder:
+   ```markdown
+   # Archive Manifest
+
+   **Archived:** 2025-02-08T14:30:00Z
+   **Reason:** Plan-level refinement of tokens.yaml, components.yaml
+   **Trigger:** /pixel-perfect:refine
+
+   ## What Changed (Upstream)
+   - tokens.yaml - Primary color changed from #3b82f6 to #0d9488
+   - components.yaml - Button variants updated
+
+   ## What Was Archived (Downstream)
+   - prompts/login.spec.json
+   - prompts/dashboard.spec.json
+   - mocks/login.mock.html
+   - mocks/dashboard.mock.html
+
+   ## Recovery
+   To restore these artifacts, copy them back from this archive folder.
+   ```
+
+4. **Remove archived files from active locations** (design/prompts/, design/mocks/)
+
+5. **Nudge user to regenerate:**
+   ```
+   Archived 4 downstream artifacts to design/archived/2025-02-08T14-30-00/
+
+   ? Regenerate now or later?
+     > Regenerate now (runs prompts → mocks for affected keys)
+       Later (run /pixel-perfect:prompts and /pixel-perfect:mockups when ready)
+   ```
+
+### Dependency Map for Archival
+
+| Modified Artifact | Archives |
+|-------------------|----------|
+| paradigm.yaml | ALL downstream (tokens through mocks) |
+| tokens.yaml | affected prompts + mocks |
+| components.yaml | affected views, prompts, mocks |
+| flows.yaml | affected views, prompts, mocks |
+| workflows.yaml | affected views, prompts, mocks |
+| views.yaml | affected prompts + mocks only |
+| screens.yaml | affected prompts + mocks only |
+
+### Options
+
+- `--no-archive`: Skip archival (destructive overwrite of downstream artifacts in place)
+
+### Updated Summary Display
+
+The refinement summary now includes archival information:
+
+```
+═══════════════════════════════════════════════════════════
+REFINEMENT SUMMARY
+═══════════════════════════════════════════════════════════
+
+Tokens:
+  - Change primary blue to warmer teal
+
+Affected downstream artifacts (will be archived):
+  - prompts/login.spec.json → archived, then regenerated
+  - prompts/dashboard.spec.json → archived, then regenerated
+  - mocks/login.mock.html → archived, then regenerated
+  - mocks/dashboard.mock.html → archived, then regenerated
+
+Archive location: design/archived/2025-02-08T14-30-00/
+
+═══════════════════════════════════════════════════════════
+```
+
+---
+
 ## Section Detection Keywords
 
 Used for smart detection when feedback text is provided:
@@ -216,6 +325,8 @@ Used for smart detection when feedback text is provided:
 | components | "component", "button", "input", "card", "widget", "element" |
 | tokens | "color", "spacing", "font", "typography", "size", "shadow", "border" |
 | mockups | "mockup", "visual", "preview", "regenerate" |
+| designSystem | "design system", "shadcn", "material", "chakra", "ant design", "radix", "daisyui", "mantine" |
+| iconLibrary | "icon", "icon library", "lucide", "heroicons", "phosphor", "tabler", "font awesome" |
 
 ## Examples
 
@@ -336,12 +447,20 @@ Updates `{epic}/design/refine-history.yaml` with refinement log:
 ```yaml
 refinements:
   - date: "2025-01-30T14:30:00Z"
+    level: "plan"                    # "plan" or "mock"
     sections:
       - tokens
       - flows
     feedback:
       tokens: "Change primary blue to teal #0d9488"
       flows: "Add forgot password flow"
+    archived:                         # Only present for plan-level refinements
+      path: "design/archived/2025-01-30T14-30-00/"
+      files:
+        - prompts/login.spec.json
+        - prompts/forgot_password.spec.json
+        - mocks/login.mock.html
+        - mocks/forgot_password.mock.html
     tasks_executed:
       - tokens.yaml
       - flows.yaml

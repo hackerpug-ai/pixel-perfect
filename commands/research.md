@@ -319,11 +319,65 @@ Add to `.pixel-perfect/config.json`:
 
 ## Best Practices
 
-1. **Research before planning** - Use research to inform paradigm decisions
-2. **Save everything** - Build a reusable knowledge base over time
-3. **Use structured queries** - Include platform, year, and specific patterns
-4. **Update regularly** - Trends change; refresh research quarterly
-5. **Link findings** - Reference related topics for cross-discovery
+### Essential (always follow)
+
+1. **Research before planning** - Inform paradigm decisions with research findings
+2. **Use structured queries** - Include: platform + year + specific pattern
+   - Good: `"mobile bottom navigation patterns 2025 iOS"`
+   - Bad: `"navigation"`
+
+### Recommended (for better results)
+
+3. **Save everything** - Build reusable knowledge base over time
+4. **Link findings** - Cross-reference related topics for discovery
+5. **Include competitor analysis** - Research 2-3 competitors per category
+
+### Advanced (for power users)
+
+6. **Update quarterly** - Trends change; refresh research every 3 months
+7. **Track pattern evolution** - Note when patterns emerge, peak, decline
+8. **Cross-platform comparison** - Research same pattern on iOS vs Android vs Web
+
+> **Deep dive**: See [Design Research Methodology](../docs/DESIGN-RESEARCH-METHODOLOGY.md) for comprehensive guidance on research workflows, source evaluation, and pattern synthesis.
+
+---
+
+## Design Consistency Research
+
+When researching patterns, prioritize cross-view consistency to avoid inconsistencies during review.
+
+### Pattern Consistency Queries
+
+Research these topics to establish consistent patterns before designing:
+
+```
+"consistent navigation patterns mobile apps 2025"
+"design system component standardization best practices"
+"icon library selection material vs lucide vs heroicons"
+"design token enforcement strategies"
+"cross-platform UI consistency techniques"
+```
+
+### Consistency Research Checklist
+
+Before completing research, ensure:
+
+- [ ] **Single component definition** - Same component documented once, reused everywhere
+- [ ] **Icon library selected** - One library (Material, Lucide, or Heroicons) for entire project
+- [ ] **Token values exact** - No approximations; use precise hex codes, pixel values
+- [ ] **Navigation order defined** - Tab/nav item order specified and consistent
+- [ ] **Active state rules** - How to indicate current view in navigation
+
+### Research → Review Connection
+
+Research findings directly inform review criteria:
+
+| Research Topic | Review Validation |
+|----------------|-------------------|
+| Icon library choice | [Icon Rendering Validation](../docs/validators/icon-rendering.md) |
+| Navigation patterns | [Cross-Consistency Validation](../docs/validators/cross-consistency.md) |
+| Design tokens | Token uniformity checks |
+| Component standards | Component identity checks |
 
 ## Common Research Queries
 

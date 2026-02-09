@@ -97,11 +97,55 @@ Use `--skip-deps` to error instead of auto-running missing steps.
 /pixel-perfect:prompts .spec/epics/epic-1 --key user_profile
 ```
 
+## Design System and Icon Library Context
+
+After gates pass, read config for design system and icon library:
+
+```
+config.designSystem.name set?
+  YES → Read docs/design-systems/{name}.md for component names and CDN links
+config.iconLibrary.name set?
+  YES → Read docs/icon-libraries/{name}.md for icon naming conventions
+```
+
+When configured, specs include:
+- `metadata.designSystem` and `metadata.iconLibrary` fields
+- `cdnLinks` with CSS framework + icon library CDN URLs
+- `iconSetup` with HTML snippet for icon library initialization
+- Component names mapped to design system equivalents
+- Icon names using the correct library naming convention
+
 ## Spec Format
 
 Each `.spec.json` contains:
-- Screen metadata
-- Component specifications
+- Screen metadata (including `designSystem` and `iconLibrary` if configured)
+- Component specifications (using design system component names if configured)
 - Layout requirements
-- Token references
+- Token references (using design system token format if configured)
 - Interaction states
+- **CDN links** for CSS framework and icon library (if design system configured)
+- **Icon references** with library-specific icon names for each interactive element
+
+### Design System Context in Specs
+
+When a design system and/or icon library is configured:
+
+```json
+{
+  "metadata": {
+    "design_key": "user_profile",
+    "designSystem": "shadcn-ui",
+    "iconLibrary": "lucide"
+  },
+  "cdnLinks": {
+    "css": "https://cdn.tailwindcss.com",
+    "icons": "https://unpkg.com/lucide@latest"
+  },
+  "iconSetup": "<script src=\"https://unpkg.com/lucide@latest\"></script>\n<script>lucide.createIcons();</script>",
+  "icons": [
+    { "action": "back", "iconName": "arrow-left", "size": "icon-lg" },
+    { "action": "settings", "iconName": "settings", "size": "icon-lg" },
+    { "action": "notifications", "iconName": "bell", "size": "icon-lg" }
+  ]
+}
+```

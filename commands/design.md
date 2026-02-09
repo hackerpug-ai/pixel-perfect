@@ -116,6 +116,8 @@ Orchestrates: `init → plan → prompts → mockups → review`
 - Discovers or asks for requirements document
 - Confirms target platforms (mobile, web, desktop, CLI, etc.)
 - Establishes design vibe/aesthetic direction
+- **Selects design system** (optional: shadcn/ui, Material Design 3, Chakra UI, etc.)
+- **Selects icon library** (auto-paired with design system or vibe)
 - Analyzes reference URLs found in requirements
 - Saves configuration to `design.config.yaml`
 
@@ -313,6 +315,13 @@ platforms:
 vibe:
   primary: "modern"
   description: "Clean, contemporary with subtle interactions"
+
+designSystem:
+  name: "shadcn-ui"
+
+iconLibrary:
+  name: "lucide"
+  autoSelected: true
 
 references:
   urls_analyzed: 2

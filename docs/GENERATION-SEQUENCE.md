@@ -163,6 +163,51 @@ Core patterns:
 - Changes to tokens/components don't require UX plan updates
 - Progressive disclosure: overview → details
 
+## Artifact Archival During Refine
+
+When `/pixel-perfect:refine` modifies plan-level artifacts, downstream artifacts become stale and must be archived before regeneration.
+
+### Archive Structure
+
+```
+{directory}/design/archived/
+└── {ISO-timestamp}/           # e.g., 2025-02-08T14-30-00/
+    ├── prompts/
+    │   └── {design_key}.spec.json
+    ├── mocks/
+    │   └── {design_key}.mock.html
+    └── ARCHIVE-MANIFEST.md
+```
+
+### Archival Dependency Map
+
+When an artifact is modified, the following downstream artifacts are archived:
+
+| Modified Artifact | Archives |
+|-------------------|----------|
+| paradigm.yaml | ALL downstream (tokens through mocks) |
+| tokens.yaml | affected prompts + mocks |
+| components.yaml | affected views, prompts, mocks |
+| flows.yaml / workflows.yaml | affected views, prompts, mocks |
+| views.yaml / screens.yaml | affected prompts + mocks only |
+
+### Archival Flow
+
+1. **Identify** — Determine which downstream artifacts are affected using the dependency map above
+2. **Archive** — Move affected files from `design/prompts/` and `design/mocks/` to `design/archived/{timestamp}/`
+3. **Manifest** — Create `ARCHIVE-MANIFEST.md` in archive folder documenting what changed, what was archived, and recovery instructions
+4. **Remove** — Clear archived files from active directories
+5. **Nudge** — Prompt user to regenerate immediately or later
+
+### Integration with Smart Regeneration
+
+Archival works alongside smart regeneration:
+- **Plan-level refine** → Archives stale downstream, then optionally regenerates
+- **Mock-level refine** → No archival; directly regenerates mockups in place
+- **Recovery** — Archived artifacts can be restored by copying from `design/archived/{timestamp}/` back to active directories
+
+---
+
 ## Summary
 
 The sequence ensures:

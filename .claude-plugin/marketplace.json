@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Tech-agnostic UI/UX design workflows for Claude Code",
-    "version": "2.0.1"
+    "version": "2.1.0"
   },
   "plugins": [
     {
       "name": "pixel-perfect",
       "source": "./",
       "description": "Design workflow: PRD → YAML artifacts → JSON specs → HTML mockups → Review",
-      "version": "2.0.1",
+      "version": "2.1.0",
       "author": {
         "name": "Justin Rich"
       },
