@@ -291,13 +291,13 @@ AVOID:
 
 The design artifacts are platform-agnostic. Implementation maps to target:
 
-| Artifact | Web/React | Mobile/Flutter | CLI |
-|----------|-----------|----------------|-----|
-| screens.yaml | Routes/Pages | Screens | Commands |
-| components.yaml | Components | Widgets | Output formatters |
-| tokens.yaml | CSS vars | ThemeData | ANSI colors |
-| flows.yaml | Navigation | Navigator | Menu flow |
-| mocks | HTML | PNG/Figma | ASCII art |
+| Artifact | Web/React | Mobile/Flutter | CLI | TUI |
+|----------|-----------|----------------|-----|-----|
+| screens.yaml | Routes/Pages | Screens | Commands | Views/Panels |
+| components.yaml | Components | Widgets | Output formatters | Widgets (Bubble Tea/Ratatui) |
+| tokens.yaml | CSS vars | ThemeData | ANSI colors | ANSI/TrueColor + Lip Gloss styles |
+| flows.yaml | Navigation | Navigator | Menu flow | Keyboard-driven navigation |
+| mocks | HTML | PNG/Figma | ASCII art | ANSI mockup (.mock.ans) |
 
 ---
 

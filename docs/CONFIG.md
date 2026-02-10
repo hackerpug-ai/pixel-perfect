@@ -52,6 +52,7 @@ your-project/
 - `web-mobile`
 - `desktop-app`
 - `cli`
+- `tui`
 - `tablet`
 
 **Vibe values:**
@@ -112,6 +113,35 @@ Optional icon library selection. Auto-selected when a design system is chosen, o
 | `autoSelected` | `false` | Whether auto-selected from design system pairing |
 
 **Supported icon libraries:** `lucide`, `material-symbols`, `heroicons`, `phosphor`, `tabler`, `remix`, `font-awesome`, `ionicons`, `feather`, `ant-design-icons`, `bootstrap-icons`
+
+### mockups
+
+Optional mockup generation settings. Controls device frame behavior and display options.
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `deviceFrame` | `false` | Enable device frames for mockups |
+| `terminal` | `{}` | Terminal dimensions for CLI/TUI frames |
+
+**Device frame types by platform:**
+- `mobile-ios` → iPhone frame (390 × 844, 9:19.5 ratio)
+- `mobile-android` → Android phone frame (360 × 800, 9:20 ratio)
+- `tablet-ios` → iPad frame (1024 × 1367, 3:4 ratio)
+- `tablet-android` → Android tablet frame (800 × 1067, 3:4 ratio)
+- `web-mobile` → Mobile browser frame (375 × 667, 9:16 ratio)
+- `web-desktop` → Desktop browser frame (1920 × 1080, 16:9 ratio)
+- `cli` → Terminal window frame (customizable)
+- `tui` → Terminal emulator frame (customizable)
+
+**Terminal configuration:**
+```yaml
+mockups:
+  deviceFrame: true
+  terminal:
+    width: 120      # Terminal columns
+    height: 36      # Terminal rows
+    font: "Fira Code" # Monospace font family
+```
 
 ## Directory-Scoped Configuration (ESLint-Style)
 

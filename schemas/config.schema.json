@@ -20,7 +20,7 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["mobile-ios", "mobile-android", "web-desktop", "web-mobile", "desktop-app", "cli", "tablet"]
+            "enum": ["mobile-ios", "mobile-android", "web-desktop", "web-mobile", "desktop-app", "cli", "tui", "tablet"]
           },
           "default": []
         },
@@ -111,6 +111,42 @@
           "type": "boolean",
           "default": false,
           "description": "Whether icon library was auto-selected from design system pairing"
+        }
+      }
+    },
+    "mockups": {
+      "type": "object",
+      "description": "Mockup generation settings including device frame configuration",
+      "properties": {
+        "deviceFrame": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable device frames for mockups - renders mockups within appropriate device containers (iPhone, Android, browser, terminal)"
+        },
+        "terminal": {
+          "type": "object",
+          "description": "Terminal frame dimensions for CLI/TUI platforms",
+          "properties": {
+            "width": {
+              "type": "integer",
+              "default": 80,
+              "minimum": 40,
+              "maximum": 300,
+              "description": "Terminal width in columns"
+            },
+            "height": {
+              "type": "integer",
+              "default": 24,
+              "minimum": 10,
+              "maximum": 100,
+              "description": "Terminal height in rows"
+            },
+            "font": {
+              "type": "string",
+              "default": "monospace",
+              "description": "Monospace font family for terminal display"
+            }
+          }
         }
       }
     }

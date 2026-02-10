@@ -84,6 +84,7 @@ Use `--skip-deps` to error instead of auto-running missing steps.
 - `--key <design_key>`: Generate mockup for single design key only
 - `--force`: Regenerate existing mockups
 - `--format <format>`: Output format (default: html)
+- `--deviceFrame`: Render mockup within a device-appropriate frame (mobile, TUI, etc.)
 
 ## Design System and Icon Library Integration
 
@@ -172,3 +173,87 @@ When a design system is selected, mockups use its CSS patterns:
 | html | .mock.html | Web preview, React, Vue |
 | png | .mock.png | Mobile, Flutter, native |
 | ascii | .mock.txt | CLI applications |
+| ansi | .mock.ans | TUI applications (Bubble Tea, Ratatui, Textual) |
+
+## Device Frames
+
+When `--deviceFrame` is enabled, mockups are rendered within an appropriate device frame that maintains the target platform's aspect ratio. This helps visualize how the design will appear in its intended context.
+
+### Device Frame Types by Platform
+
+| Platform | Frame Type | Aspect Ratio | Dimensions |
+|----------|------------|--------------|------------|
+| `mobile-ios` | iPhone frame | 9:19.5 | 390 × 844 |
+| `mobile-android` | Android phone frame | 9:20 | 360 × 800 |
+| `tablet-ios` | iPad frame | 3:4 | 1024 × 1366 |
+| `tablet-android` | Android tablet frame | 3:4 | 800 × 1067 |
+| `web-mobile` | Mobile browser frame | 9:16 | 375 × 667 |
+| `web-desktop` | Desktop browser frame | 16:9 | 1920 × 1080 |
+| `cli` | Terminal window frame | Variable | 80 × 24 (default) |
+| `tui` | Terminal emulator frame | Variable | 120 × 36 (default) |
+
+### Frame Implementation
+
+When `--deviceFrame` is active, the generated HTML includes:
+
+1. **Outer container** styled as the device frame with realistic bezels, borders, and shadows
+2. **Aspect-ratio enforcement** using CSS to maintain correct proportions
+3. **Platform-specific styling** (notch for iOS, camera hole for Android, etc.)
+4. **Prototyping comment** in HTML source:
+
+```html
+<!--
+  DEVICE FRAME: FOR PROTOTYPING PURPOSES ONLY
+  This frame is a visualization aid for design review.
+  DO NOT include this frame in the final implementation.
+  The frame represents the target aspect ratio and form factor.
+-->
+<div class="device-frame iphone-14">
+  <div class="device-screen">
+    <!-- Actual mockup content goes here -->
+  </div>
+</div>
+```
+
+### Usage Examples
+
+```bash
+# Generate mobile mockups with iPhone frame
+/pixel-perfect:mockups auth-flow --deviceFrame
+
+# Generate with specific key and device frame
+/pixel-perfect:mockups .spec/epics/epic-1 --key user_profile --deviceFrame
+
+# Desktop mockups with browser frame (inherits from config platforms)
+/pixel-perfect:mockups dashboard --deviceFrame
+```
+
+### Platform Auto-Detection
+
+The device frame type is automatically selected based on the `platforms` array in `design/config.yaml`:
+
+- **Single platform**: Uses matching frame
+- **Multiple platforms**: Uses primary/first platform's frame
+- **Mobile + web**: Prioritizes mobile frame (most constrained)
+- **CLI/TUI**: Uses terminal window frame with configurable dimensions
+
+### Custom Frame Dimensions
+
+For CLI/TUI platforms, frame dimensions can be customized via tokens:
+
+```yaml
+# tokens.yaml
+cli:
+  terminal:
+    width: 120      # Terminal columns
+    height: 36      # Terminal rows
+    font: "monospace"
+```
+
+### Removing the Frame
+
+To view mockups without the device frame, simply omit the flag:
+
+```bash
+/pixel-perfect:mockups auth-flow  # No frame, full-width responsive
+```

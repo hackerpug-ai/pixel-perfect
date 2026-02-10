@@ -120,6 +120,7 @@ references:
 | Mobile (Android) | "Android", "Kotlin" |
 | Desktop App | "electron", "desktop app" |
 | CLI/Terminal | "command line", "CLI" |
+| TUI | "TUI", "terminal UI", "Bubble Tea", "Ratatui", "bubbletea", "lipgloss", "charmbracelet" |
 | Tablet | "tablet-only", "iPad" |
 
 ### Step 3: Design Vibe

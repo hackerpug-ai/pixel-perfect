@@ -110,6 +110,9 @@ Orchestrates: `init → plan → prompts → mockups → review`
 - `--skip-mockups`: Skip mockup generation, use existing mocks
 - `--review-only`: Only run review phase
 
+### Mockup Options
+- `--deviceFrame`: Render mockups within device-appropriate frames (mobile, tablet, browser, terminal) with correct aspect ratios for prototyping
+
 ## Workflow Phases
 
 ### Phase 0: Initialize (Preplanning)
@@ -238,6 +241,7 @@ Infers from requirements keywords:
 | Web Mobile | "responsive", "mobile-first", "PWA" |
 | Desktop App | "Electron", "Tauri", "desktop application" |
 | CLI | "command line", "terminal", "CLI" |
+| TUI | "TUI", "terminal UI", "Bubble Tea", "Ratatui", "bubbletea", "lipgloss", "charmbracelet", "textual" |
 | Tablet | "tablet", "iPad", "large screen" |
 
 Presents multi-selector to confirm or modify.

@@ -321,8 +321,13 @@ Generate HTML mockups from specifications.
 
 **Usage:**
 ```
-/pixel-perfect:mockups <directory-path> [--key <design_key>] [--force]
+/pixel-perfect:mockups <directory-path> [--key <design_key>] [--force] [--deviceFrame]
 ```
+
+**Options:**
+- `--key <design_key>` - Generate mockup for single design key only
+- `--force` - Regenerate existing mockups
+- `--deviceFrame` - Render mockup within a device-appropriate frame (mobile phone, tablet, browser, terminal) with correct aspect ratio for prototyping purposes
 
 ### /pixel-perfect:review
 

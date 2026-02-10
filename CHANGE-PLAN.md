@@ -4,6 +4,32 @@
 
 Simplify pixel-perfect to work like ESLint: directory-scoped with cascading configuration. Remove "design system," "epic," and "coding system" terminology. Every directory can have a `design/` folder. Configuration and artifacts cascade from parent directories - more specific (deeper) overrides less specific (higher).
 
+---
+
+## Pending Changes
+
+### Device Frame Support for Mockups
+
+**Status**: Documentation updated, implementation pending
+
+**Summary**: Add `--deviceFrame` flag to `/pixel-perfect:mockups` command to render HTML mockups within appropriate device frames (mobile, tablet, desktop, terminal) with correct aspect ratios.
+
+**Changes**:
+- ✅ Updated `commands/mockups.md` with `--deviceFrame` flag documentation
+- ✅ Updated `README.md` with flag reference
+- ⏳ HTML generation logic to wrap mockups in device frame containers
+- ⏳ CSS for device frame styling (bezels, notches, aspect ratios)
+- ⏳ Auto-detection logic for platform-based frame selection
+
+**Implementation details**:
+- Device frames wrap mockup HTML in a container styled to look like the target device
+- HTML comment added indicating frame is for prototyping only, not for production
+- Platform-specific frames: iPhone (iOS), Android phone, iPad, Android tablet, desktop browser, terminal window
+- Aspect ratio enforcement using CSS to maintain correct proportions
+- Customizable frame dimensions for CLI/TUI via tokens
+
+---
+
 ## ESLint Analogy
 
 **ESLint model:**

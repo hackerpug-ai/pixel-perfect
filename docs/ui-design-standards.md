@@ -447,6 +447,179 @@ Scope: {epic}/{design_key}
 
 ---
 
+## PATTERN 15: TUI (Terminal UI) Design Standards
+
+**For `tui` platform targets.** TUI applications are interactive, full-screen terminal programs with rich widget layouts (not simple CLI output).
+
+### TUI Frameworks
+
+| Framework | Language | Key Concepts |
+|-----------|----------|-------------|
+| Bubble Tea + Lip Gloss | Go | Elm Architecture (Model-Update-View), declarative styling |
+| Ratatui | Rust | Immediate-mode rendering, constraint-based layouts |
+| Textual | Python | CSS-like styling, widget tree, async I/O |
+| Terminal.Gui | C# | Event-driven, Windows Forms-like API |
+
+### TUI Design Principles
+
+```
+1. KEYBOARD-FIRST: Every action reachable via keyboard. Mouse is enhancement, not requirement.
+2. INFORMATION DENSITY: Terminals reward density. Show more, scroll less.
+3. PANEL COMPOSITION: Split views, tabbed panels, floating overlays. Think tiling WM.
+4. CONTEXT SWITCHING: Minimize mode changes. Vim-style modes are acceptable if well-signaled.
+5. PROGRESSIVE DISCLOSURE: Show essentials, reveal details on focus/expand.
+```
+
+### TUI Color System
+
+TUI tokens must account for terminal color capability tiers:
+
+| Tier | Support | Token Strategy |
+|------|---------|----------------|
+| ANSI 16 (4-bit) | All terminals | Use named colors: red, green, yellow, blue, magenta, cyan, white |
+| ANSI 256 (8-bit) | Most modern terminals | Extended palette with numeric identifiers |
+| True Color (24-bit) | iTerm2, Kitty, Alacritty, WezTerm, Ghostty | Full hex colors (#FAFAFA) |
+
+**Adaptive colors**: Define colors at all tiers with automatic degradation:
+```yaml
+tokens:
+  colors:
+    primary:
+      truecolor: "#7D56F4"
+      ansi256: 135
+      ansi16: "magenta"
+    surface:
+      truecolor: "#1E1E2E"
+      ansi256: 234
+      ansi16: "black"
+```
+
+### Popular TUI Color Themes
+
+When vibe is set, suggest appropriate terminal color themes:
+
+| Theme | Vibe Match | Palette Character |
+|-------|-----------|-------------------|
+| Catppuccin (Mocha/Frappe/Latte/Macchiato) | modern, elegant | Warm pastels, soothing contrast |
+| Dracula | bold, playful | High contrast, vibrant purples and greens |
+| Nord | minimal, corporate | Arctic blue, muted, professional |
+| Tokyo Night | modern, technical | Deep blues, neon accents |
+| Gruvbox | bold, technical | Warm retro, earthy tones |
+| Rosé Pine | elegant, minimal | Muted rose, pine, gold accents |
+
+### TUI Layout Patterns
+
+```
+PANEL SPLIT (lazygit-style):
+┌──────────┬─────────────────────────┐
+│ Sidebar  │ Main Content            │
+│ (list)   │                         │
+│          │                         │
+│          ├─────────────────────────┤
+│          │ Detail/Preview          │
+└──────────┴─────────────────────────┘
+
+TABBED PANELS (k9s-style):
+┌─[Pods]─[Services]─[Deploys]────────┐
+│ NAME        STATUS    AGE          │
+│ pod-abc     Running   2d           │
+│ pod-def     Pending   1h           │
+└────────────────────────────────────┘
+
+DASHBOARD (btop-style):
+┌──────────────┬─────────────────────┐
+│ CPU ████░░░  │ MEM ██████░░        │
+├──────────────┼─────────────────────┤
+│ Network      │ Disk I/O            │
+│ ▁▃▅▇▅▃▁     │ ▂▄▆▄▂              │
+└──────────────┴─────────────────────┘
+
+FORM (huh-style):
+┌─ New Item ──────────────────────────┐
+│                                     │
+│  Name:  [                        ]  │
+│  Type:  > Option A                  │
+│         ○ Option B                  │
+│         ○ Option C                  │
+│                                     │
+│  [Submit]           [Cancel]        │
+└─────────────────────────────────────┘
+```
+
+### TUI Typography
+
+| Element | Character Set |
+|---------|--------------|
+| Borders | Box drawing: `┌ ┐ └ ┘ │ ─ ├ ┤ ┬ ┴ ┼` (Unicode) or `+ - |` (ASCII fallback) |
+| Heavy borders | `┏ ┓ ┗ ┛ ┃ ━` for emphasis |
+| Rounded borders | `╭ ╮ ╰ ╯` for softer aesthetic |
+| Sparklines | `▁ ▂ ▃ ▄ ▅ ▆ ▇ █` for inline charts |
+| Progress | `█ ░` or `━ ─` for bars |
+| Status | `● ○ ◉ ◎ ✓ ✗ ⚠ ℹ` for indicators |
+| Arrows | `→ ← ↑ ↓ ▶ ▼` for navigation hints |
+| Powerline | `` `` for segment separators (requires Nerd Font) |
+
+### TUI Accessibility
+
+```markdown
+## TUI Accessibility Checklist
+
+### Color
+- [ ] Meaning never conveyed by color alone (use symbols: ✓ ✗ ⚠)
+- [ ] High contrast mode available (no background colors, bold text)
+- [ ] Respects NO_COLOR environment variable
+- [ ] Respects TERM color capability detection
+
+### Navigation
+- [ ] All actions reachable by keyboard
+- [ ] Key bindings shown in status bar or help overlay (? key)
+- [ ] Tab order is logical
+- [ ] Focus indicator is visible (highlight, reverse video, or bracket)
+
+### Screen Readers
+- [ ] Accessible fallback mode (linear output, no cursor positioning)
+- [ ] Huh-style accessible mode for forms (standard prompts)
+
+### Terminal Compatibility
+- [ ] Works in 80x24 minimum terminal size
+- [ ] Graceful degradation on resize
+- [ ] Supports both dark and light terminal backgrounds
+```
+
+### TUI Mockup Format (.mock.ans)
+
+ANSI mockups use Unicode box drawing and ANSI escape codes for realistic terminal preview:
+
+```
+ESC[1m  = Bold
+ESC[2m  = Dim
+ESC[7m  = Reverse (selection highlight)
+ESC[38;5;Nm = 256-color foreground
+ESC[48;5;Nm = 256-color background
+ESC[38;2;R;G;Bm = True color foreground
+```
+
+When generating TUI mockups, render as plain-text with box drawing characters. Use ANSI escape sequences only when the spec requires color fidelity.
+
+### TUI Component Mapping
+
+| Web Equivalent | TUI Widget | Notes |
+|---------------|------------|-------|
+| `<button>` | Styled text with key hint | `[S]ave  [Q]uit` |
+| `<input>` | Text input field | Single-line with cursor |
+| `<textarea>` | Text area / editor | Multi-line with scroll |
+| `<select>` | List selector | Arrow-key navigation |
+| `<checkbox>` | Toggle `[x] / [ ]` | Space to toggle |
+| `<table>` | Table widget | Column-aligned, sortable |
+| `<tabs>` | Tab bar | `[Tab1] [Tab2] [Tab3]` |
+| `<modal>` | Floating panel | Centered overlay with border |
+| `<progress>` | Progress bar | `████░░░░ 50%` |
+| `<chart>` | Sparkline / Braille chart | `▁▃▅▇▅▃▁` inline or block chart |
+| `<nav>` | Status bar / breadcrumb | Bottom or top bar with key hints |
+| `<toast>` | Inline message | Temporary status line message |
+
+---
+
 ## RELATED DOCS
 
 - `docs/DESIGN-CONVENTIONS.md` - Core conventions and config schema
