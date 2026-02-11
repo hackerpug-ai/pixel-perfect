@@ -42,7 +42,7 @@ CHECK 2: {target}/design/views.yaml exists?
 CHECK 3: {target}/design/prompts/*.spec.json exists?
   NO  → Run /pixel-perfect:prompts first
 
-CHECK 4: {target}/design/mocks/*.mock.html exists?
+CHECK 4: {target}/design/mocks/*.mock.html OR *.blueprint.txt exists?
   NO  → Run /pixel-perfect:mockups first
 
 ALL CHECKS PASS → Proceed to review
@@ -81,6 +81,17 @@ Standard review against specifications:
    - CDN links present and correct for CSS + icons
    - Component patterns follow design system conventions
    - Icon library matches configured library (no cross-library contamination)
+
+### Phase 1b: Blueprint Review (TUI/CLI only)
+
+When `.blueprint.txt` files exist, run these additional checks:
+
+1. **Blueprint Structure** - Box drawing characters are well-formed (borders close properly, no broken lines)
+2. **Dimension Compliance** - Blueprint fits within configured terminal dimensions (width x height from spec or tokens)
+3. **Component Coverage** - All components from the spec are represented in the blueprint
+4. **Key Binding Display** - Status bar or help area shows keyboard shortcuts for all interactive elements
+5. **Content Fidelity** - Blueprint content matches the spec layout (panels, sections, widgets in correct positions)
+6. **Focus Indicators** - At least one element shows a focused/selected state (`>`, `[x]`, reverse highlight)
 
 ### Phase 2: Cross-Mockup Consistency Review
 

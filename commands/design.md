@@ -62,9 +62,10 @@ You MUST execute these gates IN ORDER. HALT means STOP COMPLETELY and run that c
 └─────────────────────────────────────────────────────────────────────┘
           ↓
 ┌─────────────────────────────────────────────────────────────────────┐
-│ GATE 4: CHECK mocks/*.mock.html                                     │
+│ GATE 4: CHECK mocks/*.mock.html OR mocks/*.blueprint.txt           │
 │                                                                     │
-│   Any files exist: {dir}/mocks/*.mock.html ?                       │
+│   Any files exist: {dir}/mocks/*.mock.html                         │
+│                 OR {dir}/mocks/*.blueprint.txt ?                    │
 │                                                                     │
 │     NO  → ╔═══════════════════════════════════════════════════════╗│
 │           ║ HALT. Execute: /pixel-perfect:mockups {target}        ║│
@@ -112,6 +113,7 @@ Orchestrates: `init → plan → prompts → mockups → review`
 
 ### Mockup Options
 - `--deviceFrame`: Render mockups within device-appropriate frames (mobile, tablet, browser, terminal) with correct aspect ratios for prototyping
+- `--ascii-only`: Generate only ASCII blueprints (no HTML/ANSI mockups). Passed through to `/pixel-perfect:mockups`.
 
 ## Workflow Phases
 
@@ -297,6 +299,7 @@ Generated in dependency order:
 │   └── manifest.json
 ├── mocks/                  # 9. Visual mockups
 │   ├── {design_key}.mock.html
+│   ├── {design_key}.blueprint.txt   # TUI/CLI platforms only
 │   └── DESIGN-REVIEW.md
 └── research/
     └── url-analysis.md     # If URLs analyzed

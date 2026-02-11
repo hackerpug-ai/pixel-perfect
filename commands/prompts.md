@@ -126,6 +126,27 @@ Each `.spec.json` contains:
 - **CDN links** for CSS framework and icon library (if design system configured)
 - **Icon references** with library-specific icon names for each interactive element
 
+### TUI/CLI Context in Specs
+
+When `config.yaml` has `platforms` containing `tui` or `cli`, specs include additional terminal-specific metadata:
+
+```json
+{
+  "metadata": {
+    "design_key": "dashboard_main",
+    "platform": "tui",
+    "terminalDimensions": {
+      "width": 120,
+      "height": 36
+    },
+    "outputFormats": ["html", "blueprint"]
+  }
+}
+```
+
+- `terminalDimensions`: Read from `tokens.yaml` under `cli.terminal.width` / `cli.terminal.height`. Defaults: 80x24 (CLI), 120x36 (TUI).
+- `outputFormats`: Tells the mockup command which files to generate. Defaults to `["html", "blueprint"]` for TUI/CLI. Set to `["blueprint"]` when `--ascii-only` is intended.
+
 ### Design System Context in Specs
 
 When a design system and/or icon library is configured:

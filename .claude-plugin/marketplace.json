@@ -6,19 +6,19 @@
   },
   "metadata": {
     "description": "Tech-agnostic UI/UX design workflows for Claude Code",
-    "version": "2.2.0"
+    "version": "2.4.0"
   },
   "plugins": [
     {
       "name": "pixel-perfect",
       "source": "./",
       "description": "Design workflow: PRD → YAML artifacts → JSON specs → HTML mockups → Review",
-      "version": "2.2.0",
+      "version": "2.4.0",
       "author": {
         "name": "Justin Rich"
       },
       "homepage": "https://github.com/hackerpug-ai/pixel-perfect",
-      "keywords": ["design", "ux", "ui", "mockups", "workflows"],
+      "keywords": ["design", "ux", "tui", "ui", "mockups", "workflows"],
       "category": "design"
     }
   ]

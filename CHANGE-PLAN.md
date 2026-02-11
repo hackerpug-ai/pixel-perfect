@@ -8,6 +8,28 @@ Simplify pixel-perfect to work like ESLint: directory-scoped with cascading conf
 
 ## Pending Changes
 
+### ASCII Blueprints for TUI/CLI Platforms
+
+**Status**: Documentation updated, implementation pending
+
+**Summary**: Auto-generate `.blueprint.txt` ASCII blueprints alongside HTML mockups when platform is `tui` or `cli`. Add `--ascii-only` flag to skip HTML entirely.
+
+**Changes**:
+- ✅ Updated `commands/mockups.md` with `--ascii-only` flag and blueprint generation rules
+- ✅ Updated `commands/prompts.md` with TUI spec metadata (`terminalDimensions`, `outputFormats`)
+- ✅ Updated `commands/design.md` Gate 4 to accept `.blueprint.txt` files, added `--ascii-only` passthrough
+- ✅ Updated `commands/review.md` with Phase 1b blueprint review checks
+- ⏳ Blueprint rendering logic (box drawing, layout generation from spec)
+- ⏳ Spec generation logic for `terminalDimensions` and `outputFormats` fields
+
+**Implementation details**:
+- Blueprints use Unicode box drawing characters with terminal dimension constraints
+- Auto-generated for TUI/CLI platforms; `--ascii-only` works on any platform
+- Blueprint review validates structure, dimensions, component coverage, and key bindings
+- Follows TUI layout patterns from `docs/ui-design-standards.md` PATTERN 15
+
+---
+
 ### Device Frame Support for Mockups
 
 **Status**: Documentation updated, implementation pending
