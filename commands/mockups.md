@@ -16,19 +16,26 @@ You MUST pass ALL gates IN ORDER before generating mockups.
 │                                                                     │
 │   target provided?                                                  │
 │     YES → dir = {target}/design/                                    │
-│     NO  → dir = find nearest design.config.yaml (search upward)    │
+│     NO  → dir = find nearest config.yaml or design.config.yaml     │
+│            (search upward through parent directories)               │
 └─────────────────────────────────────────────────────────────────────┘
           ↓
 ┌─────────────────────────────────────────────────────────────────────┐
-│ GATE 1: CHECK design.config.yaml                                    │
+│ GATE 1: RESOLVE CONFIG (Cascading Lookup)                          │
 │                                                                     │
-│   File exists: {dir}/design.config.yaml ?                          │
+│   Search for config files in order:                                │
+│     1. {dir}/config.yaml              (preferred)                  │
+│     2. {dir}/design.config.yaml       (backward compat)            │
+│     3. {parent}/design/config.yaml    (search upward)              │
+│     4. {parent}/design/design.config.yaml (search upward)          │
 │                                                                     │
-│     NO  → ╔═══════════════════════════════════════════════════════╗│
+│   ANY found → CONTINUE to GATE 2                                   │
+│                                                                     │
+│   NONE found →                                                     │
+│           ╔═══════════════════════════════════════════════════════╗│
 │           ║ HALT. Execute: /pixel-perfect:init {target}           ║│
 │           ║ WAIT for init to finish. Then RESTART from GATE 1.    ║│
 │           ╚═══════════════════════════════════════════════════════╝│
-│     YES → CONTINUE to GATE 2                                       │
 └─────────────────────────────────────────────────────────────────────┘
           ↓
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -80,7 +87,7 @@ Use `--skip-deps` to error instead of auto-running missing steps.
 
 ## Options
 
-- `--skip-init`: Error if design.config.yaml missing instead of running init
+- `--skip-init`: Error if config missing instead of running init
 - `--key <design_key>`: Generate mockup for single design key only
 - `--force`: Regenerate existing mockups
 - `--format <format>`: Output format (default: html)
@@ -90,6 +97,148 @@ Use `--skip-deps` to error instead of auto-running missing steps.
 ## Design System and Icon Library Integration
 
 When generating HTML mockups, the design system and icon library from config (via the spec file) determine the CSS framework and icon rendering approach.
+
+### Required HTML Comments for AI Agents
+
+Every generated mockup MUST include the following HTML comment block immediately after `<html>`. This tells downstream AI Engineer Agents what the file is and how to use it:
+
+```html
+<!DOCTYPE html>
+<html>
+<!--
+  ============================================================
+  AI ENGINEER AGENT: IMPLEMENTATION GUIDANCE
+  ============================================================
+  This file is a DESIGN MOCKUP — a visual reference only.
+  It is NOT production code. Do NOT copy this HTML verbatim.
+
+  PURPOSE: Use this mockup as a visual blueprint to understand
+  layout, component hierarchy, spacing, colors, and typography.
+  Then implement using your project's actual framework, component
+  library, and build system.
+
+  WHAT TO EXTRACT:
+  - Layout structure and component hierarchy
+  - Spacing, sizing, and alignment relationships
+  - Color values and typography choices
+  - Component states and interaction patterns
+
+  WHAT TO IGNORE:
+  - CDN script tags (use your project's bundled dependencies)
+  - Inline styles (translate to your styling system)
+  - Raw HTML structure (translate to your component framework)
+  ============================================================
+-->
+<head>
+  ...
+</head>
+```
+
+When `--deviceFrame` is enabled, also include the frame-specific comment (see [Device Frames](#device-frames) section).
+
+### Mockup Annotation Requirements (HTML)
+
+To maximize first-pass fidelity for AI code generation, **every `.mock.html` must include the annotations below**.
+
+#### 1) Component Boundary Comments
+
+Wrap distinct logical components with explicit HTML comments. This prevents ambiguous component slicing during implementation.
+
+```html
+<!-- COMPONENT: AgentCard (Props: agent, status) -->
+<div class="agent-item selected">
+  ...
+</div>
+<!-- /COMPONENT: AgentCard -->
+```
+
+Rules:
+- Use a stable component name for the same UI object across all mockups.
+- Include Props when known (based on spec or reasonable inference).
+- Prefer one component per repeated list item.
+
+#### 2) Dynamic Field Markers
+
+Mark variable content explicitly so the AI can distinguish **data** from **labels**.
+
+```html
+<div class="agent-name" data-field="agent.name">AGENT ALPHA</div>
+<div class="agent-health">ELAPSED: <span data-field="agent.runtime">12:45</span></div>
+```
+
+Rules:
+- Apply `data-field` to the **exact element** containing dynamic text.
+- Use dot-paths (`user.name`, `agent.runtime`, `task.status`) for clarity.
+- For lists, optionally mark the container with `data-collection`:
+
+```html
+<ul class="mission-list" data-collection="missions">
+  <!-- COMPONENT: MissionRow (Props: mission) -->
+  <li class="mission-row">
+    <span data-field="mission.title">System Check</span>
+  </li>
+  <!-- /COMPONENT: MissionRow -->
+</ul>
+```
+
+#### 3) State Variations
+
+Include hidden variants for key states so conditional logic is implemented correctly.
+
+```html
+<!-- STATE VARIANTS: TaskCard -->
+<section class="task-card" data-state="default">
+  ...
+</section>
+
+<section class="task-card" data-state="loading" hidden aria-hidden="true">
+  <div class="skeleton-line"></div>
+  <div class="skeleton-line"></div>
+</section>
+
+<section class="task-card" data-state="error" hidden aria-hidden="true">
+  <div class="error-title" data-field="error.title">Connection Lost</div>
+  <div class="error-body" data-field="error.message">Retry in 10 seconds</div>
+</section>
+<!-- /STATE VARIANTS: TaskCard -->
+```
+
+Rules:
+- Use `data-state` for each variant.
+- Hide non-default variants with `hidden` + `aria-hidden="true"`.
+- Keep variant markup structurally similar to the default state.
+
+#### 4) ARIA Roles for Interactive Patterns
+
+Add ARIA roles and relationships so the AI infers interaction semantics.
+
+**Tabs example:**
+```html
+<div class="tabs" role="tablist" aria-label="Crew Tabs">
+  <button role="tab" aria-selected="true" aria-controls="panel-crew" id="tab-crew">Crew</button>
+  <button role="tab" aria-selected="false" aria-controls="panel-status" id="tab-status">Status</button>
+</div>
+<section role="tabpanel" id="panel-crew" aria-labelledby="tab-crew">...</section>
+<section role="tabpanel" id="panel-status" aria-labelledby="tab-status" hidden aria-hidden="true">...</section>
+```
+
+Apply the same pattern for dialogs (`role="dialog"`), menus (`role="menu"`/`menuitem`), listboxes, and accordions.
+
+#### 5) CSS Variable Definitions
+
+If the mockup uses `var(--token-name)`, **define those variables in a `:root` block** near the top of the `<head>`.
+
+```html
+<style>
+:root {
+  --moonlit-violet: #6c5ce7;
+  --surface-1: #0f1115;
+  --text-primary: #f5f7fb;
+}
+</style>
+```
+
+This preserves token names and allows AI to map visual values to design tokens.
 
 ### CDN Injection
 
@@ -285,14 +434,22 @@ When `--deviceFrame` is active, the generated HTML includes:
 1. **Outer container** styled as the device frame with realistic bezels, borders, and shadows
 2. **Aspect-ratio enforcement** using CSS to maintain correct proportions
 3. **Platform-specific styling** (notch for iOS, camera hole for Android, etc.)
-4. **Prototyping comment** in HTML source:
+4. **Prototyping comment** in HTML source (required for AI Engineer Agents):
 
 ```html
 <!--
-  DEVICE FRAME: FOR PROTOTYPING PURPOSES ONLY
-  This frame is a visualization aid for design review.
-  DO NOT include this frame in the final implementation.
-  The frame represents the target aspect ratio and form factor.
+  ============================================================
+  AI ENGINEER AGENT: DEVICE FRAME — DO NOT IMPLEMENT
+  ============================================================
+  The outer frame (.device-frame-container, .device-frame,
+  .device-screen) exists ONLY to preserve the design's target
+  aspect ratio during review. It is a visualization wrapper.
+
+  DO NOT include any frame markup or frame CSS in the final UI.
+  Only implement the content INSIDE .device-screen.
+
+  Target device: {platform} ({width} × {height})
+  ============================================================
 -->
 <div class="device-frame iphone-14">
   <div class="device-screen">

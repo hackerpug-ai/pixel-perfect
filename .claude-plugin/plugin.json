@@ -1,7 +1,7 @@
 {
   "name": "pixel-perfect",
   "description": "Tech-agnostic UI/UX design workflow: PRD to mockups. Supports React, Flutter, CLI, and any platform.",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "author": {
     "name": "Justin Rich"
   },

@@ -128,6 +128,86 @@ Design artifacts for a directory:
 
 ---
 
+## MOCKUP ANNOTATION STANDARDS
+
+HTML mockups are used directly by AI agents for high-fidelity UI implementation. To improve first-pass accuracy, **every `.mock.html` must include the annotations below**.
+
+### Component Boundary Comments
+
+Wrap each distinct logical component in HTML comments. Use a stable component name across all mockups.
+
+```html
+<!-- COMPONENT: AgentCard (Props: agent, status) -->
+<div class="agent-item selected">
+  ...
+</div>
+<!-- /COMPONENT: AgentCard -->
+```
+
+### Dynamic Field Markers
+
+Mark variable text so data is distinguishable from labels.
+
+```html
+<div class="agent-name" data-field="agent.name">AGENT ALPHA</div>
+<div class="agent-health">ELAPSED: <span data-field="agent.runtime">12:45</span></div>
+```
+
+For lists, optionally mark the collection:
+
+```html
+<ul class="mission-list" data-collection="missions">
+  <!-- COMPONENT: MissionRow (Props: mission) -->
+  <li class="mission-row">
+    <span data-field="mission.title">System Check</span>
+  </li>
+  <!-- /COMPONENT: MissionRow -->
+</ul>
+```
+
+### State Variants
+
+Include non-default UI states with `data-state`. Hide them with `hidden` and `aria-hidden="true"`.
+
+```html
+<!-- STATE VARIANTS: TaskCard -->
+<section class="task-card" data-state="default">...</section>
+<section class="task-card" data-state="loading" hidden aria-hidden="true">...</section>
+<section class="task-card" data-state="error" hidden aria-hidden="true">...</section>
+<!-- /STATE VARIANTS: TaskCard -->
+```
+
+### ARIA Roles for Interaction Semantics
+
+Use ARIA roles and relationships for tabs, dialogs, menus, listboxes, and accordions.
+
+```html
+<div role="tablist" aria-label="Crew Tabs">
+  <button role="tab" aria-selected="true" aria-controls="panel-crew" id="tab-crew">Crew</button>
+  <button role="tab" aria-selected="false" aria-controls="panel-status" id="tab-status">Status</button>
+</div>
+<section role="tabpanel" id="panel-crew" aria-labelledby="tab-crew">...</section>
+<section role="tabpanel" id="panel-status" aria-labelledby="tab-status" hidden aria-hidden="true">...</section>
+```
+
+### CSS Variable Definitions
+
+If the mockup uses `var(--token-name)`, define those variables in `:root` near the top of `<head>`.
+
+```html
+<style>
+:root {
+  --moonlit-violet: #6c5ce7;
+  --surface-1: #0f1115;
+  --text-primary: #f5f7fb;
+}
+</style>
+```
+
+These annotations are required regardless of design system choice.
+
+---
+
 ## CASCADING CONFIGURATION
 
 Configuration cascades from parent directories (ESLint-style):

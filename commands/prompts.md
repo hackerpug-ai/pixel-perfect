@@ -16,19 +16,26 @@ You MUST pass ALL gates IN ORDER before generating specs.
 │                                                                     │
 │   target provided?                                                  │
 │     YES → dir = {target}/design/                                    │
-│     NO  → dir = find nearest design.config.yaml (search upward)    │
+│     NO  → dir = find nearest config.yaml or design.config.yaml     │
+│            (search upward through parent directories)               │
 └─────────────────────────────────────────────────────────────────────┘
           ↓
 ┌─────────────────────────────────────────────────────────────────────┐
-│ GATE 1: CHECK design.config.yaml                                    │
+│ GATE 1: RESOLVE CONFIG (Cascading Lookup)                          │
 │                                                                     │
-│   File exists: {dir}/design.config.yaml ?                          │
+│   Search for config files in order:                                │
+│     1. {dir}/config.yaml              (preferred)                  │
+│     2. {dir}/design.config.yaml       (backward compat)            │
+│     3. {parent}/design/config.yaml    (search upward)              │
+│     4. {parent}/design/design.config.yaml (search upward)          │
 │                                                                     │
-│     NO  → ╔═══════════════════════════════════════════════════════╗│
+│   ANY found → CONTINUE to GATE 2                                   │
+│                                                                     │
+│   NONE found →                                                     │
+│           ╔═══════════════════════════════════════════════════════╗│
 │           ║ HALT. Execute: /pixel-perfect:init {target}           ║│
 │           ║ WAIT for init to finish. Then RESTART from GATE 1.    ║│
 │           ╚═══════════════════════════════════════════════════════╝│
-│     YES → CONTINUE to GATE 2                                       │
 └─────────────────────────────────────────────────────────────────────┘
           ↓
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -68,7 +75,7 @@ Use `--skip-deps` to error instead of auto-running missing steps.
 
 ## Options
 
-- `--skip-init`: Error if design.config.yaml missing instead of running init
+- `--skip-init`: Error if config missing instead of running init
 - `--key <design_key>`: Generate spec for single design key only
 - `--force`: Regenerate existing specs
 

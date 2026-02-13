@@ -13,17 +13,35 @@ Device frames provide visual context for mockups by rendering them within realis
 ```html
 <!DOCTYPE html>
 <html>
+<!--
+  ============================================================
+  AI ENGINEER AGENT: IMPLEMENTATION GUIDANCE
+  ============================================================
+  This file is a DESIGN MOCKUP — a visual reference only.
+  It is NOT production code. Do NOT copy this HTML verbatim.
+
+  PURPOSE: Use this mockup as a visual blueprint to understand
+  layout, component hierarchy, spacing, colors, and typography.
+  Then implement using your project's actual framework, component
+  library, and build system.
+
+  WHAT TO EXTRACT:
+  - Layout structure and component hierarchy
+  - Spacing, sizing, and alignment relationships
+  - Color values and typography choices
+  - Component states and interaction patterns
+
+  WHAT TO IGNORE:
+  - CDN script tags (use your project's bundled dependencies)
+  - Inline styles (translate to your styling system)
+  - Raw HTML structure (translate to your component framework)
+  - Device frame markup (see frame comment below)
+  ============================================================
+-->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{design_key} Mockup</title>
-
-  <!--
-    DEVICE FRAME: FOR PROTOTYPING PURPOSES ONLY
-    This frame is a visualization aid for design review.
-    DO NOT include this frame in the final implementation.
-    The frame represents the target aspect ratio and form factor.
-  -->
 
   <!-- Design System CSS (from config.designSystem) -->
   {cdnLinks}
@@ -99,6 +117,20 @@ Device frames provide visual context for mockups by rendering them within realis
   </style>
 </head>
 <body>
+  <!--
+    ============================================================
+    AI ENGINEER AGENT: DEVICE FRAME — DO NOT IMPLEMENT
+    ============================================================
+    The outer frame (.device-frame-container, .device-frame,
+    .device-screen) exists ONLY to preserve the design's target
+    aspect ratio during review. It is a visualization wrapper.
+
+    DO NOT include any frame markup or frame CSS in the final UI.
+    Only implement the content INSIDE .device-screen.
+
+    Target device: {device-type}
+    ============================================================
+  -->
   <div class="device-frame-container">
     <div class="device-frame {device-type}">
       <div class="device-screen">
@@ -228,11 +260,12 @@ Applied as:
 
 ## Implementation Notes
 
-1. **Always include the HTML comment** warning that frames are for prototyping only
+1. **Always include BOTH HTML comment blocks**: The top-level "AI ENGINEER AGENT: IMPLEMENTATION GUIDANCE" comment after `<html>`, and the "AI ENGINEER AGENT: DEVICE FRAME" comment before the frame container. These ensure downstream AI agents understand mockups are visual references and frames are not part of the target UI.
 2. **Frame styles should be scoped** to `.device-frame` classes to avoid conflicts with mockup content
 3. **Mockup content should be unmodified** - the frame wraps around it without changing internal structure
-4. **Responsive frames**: For desktop browser frames, use `max-width: 100%` to prevent overflow
-5. **Print-friendly**: Add `@media print` rules to hide background/shadow when printing mockups
+4. **Preserve mockup annotations inside `.device-screen`**: Component boundary comments, `data-field` markers, `data-state` variants, and ARIA roles must be applied to the actual mockup content, not the frame wrapper
+5. **Responsive frames**: For desktop browser frames, use `max-width: 100%` to prevent overflow
+6. **Print-friendly**: Add `@media print` rules to hide background/shadow when printing mockups
 
 ## CSS Variables for Customization
 

@@ -14,17 +14,25 @@ You MUST execute these gates IN ORDER. HALT means STOP COMPLETELY and run that c
 │                                                                     │
 │   target provided?                                                  │
 │     YES → dir = {target}/design/                                    │
-│     NO  → dir = find nearest design.config.yaml (search upward)    │
+│     NO  → dir = find nearest config.yaml or design.config.yaml     │
+│            (search upward through parent directories)               │
 │                                                                     │
-│   FAIL if no target and no design.config.yaml found anywhere       │
+│   FAIL if no target and no config found anywhere                   │
 └─────────────────────────────────────────────────────────────────────┘
           ↓
 ┌─────────────────────────────────────────────────────────────────────┐
-│ GATE 1: CHECK design.config.yaml                                    │
+│ GATE 1: RESOLVE CONFIG (Cascading Lookup)                          │
 │                                                                     │
-│   File exists: {dir}/design.config.yaml ?                          │
+│   Search for config files in order:                                │
+│     1. {dir}/config.yaml              (preferred)                  │
+│     2. {dir}/design.config.yaml       (backward compat)            │
+│     3. {parent}/design/config.yaml    (search upward)              │
+│     4. {parent}/design/design.config.yaml (search upward)          │
 │                                                                     │
-│     NO  → ╔═══════════════════════════════════════════════════════╗│
+│   ANY found → CONTINUE to GATE 2                                   │
+│                                                                     │
+│   NONE found →                                                     │
+│           ╔═══════════════════════════════════════════════════════╗│
 │           ║ HALT. Execute: /pixel-perfect:init {target}           ║│
 │           ║                                                       ║│
 │           ║ Init MUST complete. It will ask:                      ║│
@@ -34,7 +42,6 @@ You MUST execute these gates IN ORDER. HALT means STOP COMPLETELY and run that c
 │           ║                                                       ║│
 │           ║ WAIT for init to finish. Then RESTART from GATE 1.    ║│
 │           ╚═══════════════════════════════════════════════════════╝│
-│     YES → CONTINUE to GATE 2                                       │
 └─────────────────────────────────────────────────────────────────────┘
           ↓
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -101,7 +108,7 @@ Orchestrates: `init → plan → prompts → mockups → review`
 ## Options
 
 ### Preplanning Control
-- `--skip-init`: Skip preplanning, use existing `design.config.yaml`
+- `--skip-init`: Skip preplanning, use existing config (`config.yaml` or `design.config.yaml`)
 - `--reconfigure`: Force re-run preplanning even if config exists
 - `--quick`: Minimal prompts - auto-accept inferred values
 
@@ -124,9 +131,9 @@ Orchestrates: `init → plan → prompts → mockups → review`
 - **Selects design system** (optional: shadcn/ui, Material Design 3, Chakra UI, etc.)
 - **Selects icon library** (auto-paired with design system or vibe)
 - Analyzes reference URLs found in requirements
-- Saves configuration to `design.config.yaml`
+- Saves configuration to `config.yaml` (or `design.config.yaml` for backward compat)
 
-**Runs automatically if `design.config.yaml` doesn't exist.**
+**Runs automatically if no config file (`config.yaml` or `design.config.yaml`) is found.**
 
 ### Phase 1: Plan
 Generates design artifacts from PRD in this exact sequence:
@@ -285,7 +292,7 @@ Generated in dependency order:
 
 ```
 {epic}/design/
-├── design.config.yaml      # 1. Preplanning configuration
+├── config.yaml             # 1. Preplanning configuration
 ├── UX-DESIGN-PLAN.md       # 2. Design overview
 ├── paradigm.yaml           # 3. Design patterns
 ├── tokens.yaml             # 4. Design tokens
@@ -307,7 +314,7 @@ Generated in dependency order:
 
 ## Configuration
 
-The `design.config.yaml` created during preplanning:
+The `config.yaml` created during preplanning:
 
 ```yaml
 version: "1.0"

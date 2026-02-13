@@ -26,15 +26,18 @@ Review is step 5. Before running, check previous steps are complete.
 
 ## Scope Resolution
 
-If no target specified, find the nearest `design/` directory or `design.config.yaml` from current location.
+If no target specified, find the nearest `design/` directory or config file (`config.yaml` / `design.config.yaml`) from current location.
 
 ## Dependency Check
 
 **BEFORE doing anything else**, verify prerequisites for the scoped directory:
 
 ```
-CHECK 1: {target}/design/design.config.yaml exists?
-  NO  → Run /pixel-perfect:init first
+CHECK 1: Config exists? Search in order:
+  1. {target}/design/config.yaml           (preferred)
+  2. {target}/design/design.config.yaml    (backward compat)
+  3. Parent directories (search upward for either filename)
+  NONE found → Run /pixel-perfect:init first
 
 CHECK 2: {target}/design/views.yaml exists?
   NO  → Run /pixel-perfect:plan first
@@ -52,7 +55,7 @@ Use `--skip-deps` to error instead of auto-running missing steps.
 
 ## Options
 
-- `--skip-init`: Error if design.config.yaml missing instead of running init
+- `--skip-init`: Error if config missing instead of running init
 - `--key <design_key>`: Review single mockup only
 - `--all`: Review all mockups regardless of status
 - `--continue`: Continue review from last position
@@ -81,6 +84,12 @@ Standard review against specifications:
    - CDN links present and correct for CSS + icons
    - Component patterns follow design system conventions
    - Icon library matches configured library (no cross-library contamination)
+8. **Mockup Annotations** - Required AI-generation metadata present
+   - Component boundary comments for repeated or reusable elements
+   - `data-field` markers on dynamic text values
+   - State variants included for key conditional UI (loading/error/empty) using `data-state`
+   - ARIA roles for interactive patterns (tabs, dialogs, menus, listboxes)
+   - CSS variables defined in `:root` when `var(--token)` is used
 
 ### Phase 1b: Blueprint Review (TUI/CLI only)
 

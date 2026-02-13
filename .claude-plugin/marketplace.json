@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Tech-agnostic UI/UX design workflows for Claude Code",
-    "version": "2.4.0"
+    "version": "2.5.0"
   },
   "plugins": [
     {
