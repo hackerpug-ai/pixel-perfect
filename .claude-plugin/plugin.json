@@ -1,12 +1,21 @@
 {
   "name": "pixel-perfect",
-  "description": "Tech-agnostic UI/UX design workflow: PRD to mockups. Supports React, Flutter, CLI, and any platform.",
-  "version": "2.5.0",
+  "description": "Process orchestrator for building real UIs: enforces a 7-phase build process from PRD to running code sandboxed in Storybook. Supports web (React, Next.js, Vite) and mobile (React Native, Expo).",
+  "version": "4.0.0",
   "author": {
     "name": "Justin Rich"
   },
   "homepage": "https://github.com/hackerpug-ai/pixel-perfect",
   "repository": "https://github.com/hackerpug-ai/pixel-perfect",
   "license": "MIT",
-  "keywords": ["design", "ux", "tui", "ui", "mockups", "workflows"]
+  "keywords": [
+    "design",
+    "ux",
+    "ui",
+    "process",
+    "orchestrator",
+    "scaffolding",
+    "components",
+    "storybook"
+  ]
 }

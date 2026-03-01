@@ -1,0 +1,53 @@
+# Adapters
+
+Adapters teach the AI how to scaffold, build, and verify components for specific tools. They are **reference documents**, not executable code.
+
+## How Adapters Work
+
+When a project runs `/pixel-perfect:init`, the user selects tools for two categories (sandbox is always Storybook):
+
+| Category | What It Does | Examples |
+|----------|-------------|----------|
+| **Style** | Visual styling system | Tailwind CSS, NativeWind |
+| **Components** | UI component library | shadcn/ui, React Native Paper |
+| **Sandbox** | Isolated dev/preview environment | Storybook (always) |
+
+Each selection maps to an adapter doc in this directory. The AI loads the relevant adapter docs and follows their guidance during scaffold, build, and verify phases.
+
+## Composition Model
+
+Adapters compose by category. A project uses **one adapter per category**, and they stack:
+
+```
+Web project:     tailwind (style) + shadcn (components) + storybook (sandbox)
+Mobile project:  tailwind/nativewind (style) + react-native-paper (components) + storybook (sandbox) + react-native-web (polyfill)
+Minimal project: generic (process enforcement only) + storybook (sandbox)
+```
+
+When multiple adapters are active, the AI reads all of them and applies guidance from each in its respective domain. Style adapters control theming. Component adapters control component structure. The sandbox adapter (Storybook) controls preview and verification.
+
+## Adapter Doc Format
+
+Each adapter follows this structure:
+
+- **Platforms** - Which platforms this adapter serves
+- **Category** - style, components, sandbox, or polyfill
+- **Scaffold** - Installation and configuration steps
+- **Theme Integration** - How to connect the project vibe/theme to this tool
+- **Verify** - What to check at component level and screen level
+- **Sandbox** - Dev server command, preview setup
+
+## Available Adapters
+
+| Adapter | Category | Platforms |
+|---------|----------|-----------|
+| [Tailwind](tailwind.md) | style | web, mobile (via NativeWind) |
+| [shadcn/ui](shadcn.md) | components | web |
+| [React Native Paper](react-native-paper.md) | components | mobile-ios, mobile-android |
+| [Storybook](storybook.md) | sandbox | web, mobile |
+| [React Native Web](react-native-web.md) | polyfill | mobile (for web Storybook) |
+| [Generic](generic.md) | fallback | all |
+
+## Generic Fallback
+
+When no specific adapter is selected (or the user's tools aren't covered), the **generic** adapter applies. It enforces the pixel-perfect process (phases, gates, manifest tracking) without tool-specific guidance. The AI uses its general knowledge of the chosen tools instead.

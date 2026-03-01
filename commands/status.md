@@ -1,10 +1,10 @@
 ---
-description: "Show design workflow status and progress"
+description: "Show phase progress, gate status, and component tracking for the current project"
 ---
 
-# Design Status
+# Project Status
 
-Show the current status of design artifacts and workflow progress.
+Display the current state of the pixel-perfect build process: phase progress, gate statuses, tool choices, design token stories, controls coverage, and component/screen tracking.
 
 ## Usage
 
@@ -16,60 +16,113 @@ Show the current status of design artifacts and workflow progress.
 
 - `[directory]`: Directory to check. Defaults to current directory.
 
-## Output
+## What It Shows
 
-Displays:
-- Config status (whether `design/config.yaml` or `design/design.config.yaml` exists)
-- Config cascade path (which parent configs are being used)
-- Artifact completion status (local vs inherited)
-- Mockup generation progress
-- Review status summary
-- Next recommended action
+Reads `design/manifest.yaml` and displays:
 
-**Inheritance indicators:**
-- `[x] artifact.yaml` - Local artifact (exists in this directory)
-- `[ ] artifact.yaml [inherited from ../design/]` - Uses parent's version
+1. **Phase overview** - All 7 phases with gate status
+2. **Project info** - Goal, vibe, platforms, framework, tools
+3. **frontend-design detection** - Whether the frontend-design plugin is available
+4. **Design Token stories** - Status of Colors, Typography, Spacing, Icons stories
+5. **Controls coverage** - How many atoms have all props wired to Storybook controls
+6. **Component progress** - Atoms built and verified
+7. **Screen progress** - Screens composed and verified
+8. **Next action** - What to do next based on current phase
 
-**Note:** If no config exists in directory or parent, status shows "Not initialized" and recommends running init.
+## Status Icons
 
-## Example
-
-```
-/pixel-perfect:status .spec/epics/epic-1
-```
+| Icon | Meaning |
+|------|---------|
+| `[x]` | Gate passed |
+| `[~]` | In progress |
+| `[ ]` | Pending |
 
 ## Sample Output
 
 ```
-Design Status: features/auth
-=====================
+pixel-perfect v4.0 — Project Status
+====================================
 
-Config cascade:
-  → features/auth/design/config.yaml (local)
-  → project/design/config.yaml (parent)
+Goal: Field service management app for HVAC technicians
+Vibe: clean, professional, high-contrast for outdoor use
 
-Design System: shadcn/ui
-Icon Library: Lucide (auto-selected)
+Phases:
+  [x] 1. DISCOVER    — Goal and vibe captured
+  [x] 2. TARGET      — mobile-ios, mobile-android
+  [x] 3. EQUIP       — expo + nativewind + react-native-paper + storybook
+  [x] 4. SCAFFOLD    — Project structure ready, theme configured
+  [~] 5. ATOMS       — 3/5 components verified
+  [ ] 6. COMPOSE     — 0/2 screens verified
+  [ ] 7. INTEGRATE   — Pending
 
-Artifacts:
-  [x] workflows.yaml (12 workflows)
-  [x] screens.yaml (8 screens)
-  [x] flows.yaml (15 flows)
-  [x] views.yaml (8 views)
-  [ ] paradigm.yaml [inherited from project/design/]
-  [ ] components.yaml [inherited from project/design/]
-  [ ] tokens.yaml [inherited from project/design/]
-  [x] UX-DESIGN-PLAN.md
+Tools:
+  Framework:  Expo
+  Style:      NativeWind        (adapter: tailwind.md)
+  Components: React Native Paper (adapter: react-native-paper.md)
+  Sandbox:    Storybook          (adapter: storybook.md, web-only via react-native-web)
 
-Specs: 8/8 generated
-Mocks: 6/8 generated
+frontend-design: available (aesthetic gates active)
 
-Review Status:
-  approved:    4
-  needs_work:  2
-  pending:     2
+Design Token Stories:
+  [x] Design System/Colors       — 4 color groups rendered
+  [x] Design System/Typography   — 15 type variants rendered
+  [x] Design System/Spacing      — 7-step scale rendered
+  [x] Design System/Icons        — 10 project icons rendered
 
-Archives: 1 (2025-02-08)
+Controls Coverage: 3/5 atoms have full argTypes controls
 
-Next: /pixel-perfect:mockups features/auth --key settings_page
+Atoms (3/5 verified):
+  [x] StatusBadge     src/components/StatusBadge.tsx        (controls: yes)
+  [x] JobCard         src/components/JobCard.tsx            (controls: yes)
+  [x] DateChip        src/components/DateChip.tsx           (controls: yes)
+  [~] SectionHeader   src/components/SectionHeader.tsx      (controls: pending)
+  [ ] ActionButton    src/components/ActionButton.tsx       (controls: pending)
+
+Screens (0/2 verified):
+  [ ] TodayFeed       src/screens/TodayFeed.tsx
+      atoms: StatusBadge, JobCard, DateChip, SectionHeader
+  [ ] JobDetail       src/screens/JobDetail.tsx
+      atoms: StatusBadge, ActionButton
+
+Next: Continue building atoms
+  /pixel-perfect:build    — Resume building from current phase
+  /pixel-perfect:verify   — Run gate checks for atoms phase
 ```
+
+## No Manifest Found
+
+If no `design/manifest.yaml` exists in the directory or parents:
+
+```
+pixel-perfect v4.0 — Project Status
+====================================
+
+Status: Not initialized
+
+No design/manifest.yaml found in this directory or parent directories.
+
+Next: /pixel-perfect:init
+  This will walk you through project setup (discover → target → equip)
+```
+
+## frontend-design Detection
+
+The status command checks if the `frontend-design` plugin is available at runtime:
+
+- **Available**: Aesthetic gates are active during atoms and compose phases. Components get font pairing, color hierarchy, and spatial composition guidance.
+- **Not available**: Process gates still enforced (files exist, tests pass). Aesthetic quality depends on AI's general knowledge. A warning is shown:
+
+```
+frontend-design: NOT DETECTED (aesthetic gates degraded)
+  Install the frontend-design plugin for distinctive visual output.
+  Without it, components may look generic.
+```
+
+## Workflow Integration
+
+Status is informational only — it reads the manifest and displays it. It does not modify any files.
+
+Use it:
+- Before starting work to see where things stand
+- After running build or verify to confirm progress
+- To determine what command to run next

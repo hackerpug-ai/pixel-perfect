@@ -1,472 +1,226 @@
 ---
-description: "Refine design artifacts with structured feedback collection and smart task sequencing"
+description: "Iterate on components, screens, and theme with targeted feedback, then re-verify"
 ---
 
-# Design Refine
+# Refine (Code Iteration)
 
-Collect structured refinement feedback and intelligently re-run affected design phases.
+Collect feedback on specific components or screens, regenerate the affected code, and re-run verification. This is how you iterate after the initial build. Every refinement produces updated real code and re-verifies it in the Storybook sandbox.
 
 ## Usage
 
 ```
-/pixel-perfect:refine <target> [feedback]
+/pixel-perfect:refine [target] [feedback]
+/pixel-perfect:refine --component <name> [feedback]
+/pixel-perfect:refine --screen <name> [feedback]
 ```
 
 ## Arguments
 
-- `<directory>`: Directory to refine. Defaults to current directory.
-- `[feedback]`: Optional free-form feedback text. If provided, auto-detects affected sections.
+- `[target]`: Directory to refine. Defaults to current directory.
+- `[feedback]`: Optional free-form feedback text. If provided, auto-detects what's affected.
 
-## Refine Requires Existing Design
+## Options
 
-Refine modifies existing artifacts. At minimum, `design/config.yaml` must exist in the target (or parent).
+- `--component <name>`: Target a specific component for refinement
+- `--screen <name>`: Target a specific screen for refinement
+- `--vibe`: Refine the project vibe and regenerate the theme
+- `--theme`: Refine the theme file without changing the vibe
 
-## Scope Resolution
+## Gate Check
 
-If no target specified, use current directory.
-
-## Dependency Check
-
-**BEFORE refining**, verify:
-
-```
-CHECK: design/config.yaml or design/design.config.yaml exists in {target} or parent?
-  NO  → Run /pixel-perfect:init first (can't refine what doesn't exist)
-  YES → Proceed
-```
-
-Refine detects which artifacts exist and only allows refinement of those.
+**Requires:** `design/manifest.yaml` exists with at least `scaffold: passed`.
 
 ## Workflow
 
-### Mode 1: Smart Detection (feedback provided)
+### Mode 1: Targeted (component or screen specified)
 
 ```
-/pixel-perfect:refine epic-1 "The color palette feels too muted, and the login flow is missing a forgot password option"
+/pixel-perfect:refine --component StatusBadge "Make the badge more rounded, use a subtle gradient background"
 ```
 
-Analyzes feedback text to detect affected sections:
-- "color palette" → tokens
-- "login flow" + "forgot password" → flows, screens, views
-
-Presents detected sections for confirmation before proceeding.
-
-### Mode 2: Interactive Selection (no feedback)
-
-```
-/pixel-perfect:refine epic-1
-```
-
-Shows multi-select of refinable sections:
+1. Load the component file and its story
+2. Load adapter context and theme
+3. Load frontend-design context (if available)
+4. Regenerate the component with feedback applied
+5. Regenerate the story — ensure all props remain wired to `argTypes` controls
+6. Run verification for the affected component (compile, render, controls check)
+7. If this component is used in screens, note which screens may need updates
 
 ```
-? Which areas need refinement? (multi-select)
-  [ ] Requirements & Scope - Update PRD interpretation
-  [ ] Platforms - Change target devices
-  [ ] Design Vibe - Adjust aesthetic direction
-  [ ] Workflows - Modify user journeys
-  [ ] Screens - Add/remove/modify screens
-  [ ] Flows - Adjust interaction flows
-  [ ] Views - Refine view specifications
-  [ ] Components - Update component definitions
-  [ ] Tokens - Modify design tokens (colors, spacing, etc.)
-  [ ] Mockups - Regenerate specific mockups
+Refining: StatusBadge
+
+Applied changes:
+  - Increased border radius to pill shape
+  - Added subtle gradient background using theme primary colors
+
+Verification:
+  [x] StatusBadge compiles
+  [x] StatusBadge renders in Storybook
+  [x] Story updated with new appearance
+  [x] All props wired to argTypes controls
+
+Note: StatusBadge is used in these screens (may need re-compose):
+  - TodayFeed
+  - JobDetail
+
+Run /pixel-perfect:refine --screen TodayFeed to update if needed.
 ```
 
-**When parent directories have artifacts**, sections are annotated:
+### Mode 2: Smart Detection (feedback only)
 
 ```
-? Which areas need refinement? (multi-select)
-  [ ] Requirements & Scope - Update PRD interpretation
-  [ ] Platforms - Change target devices
-  [ ] Design Vibe - Adjust aesthetic direction
-  [ ] Workflows - Modify user journeys
-  [ ] Screens - Add/remove/modify screens
-  [ ] Flows - Adjust interaction flows
-  [ ] Views - Refine view specifications
-  [ ] Components - Update component definitions [inherited from parent/design/]
-  [ ] Tokens - Modify design tokens [inherited from parent/design/]
-```
-  [ ] Tokens - Modify design tokens [GLOBAL]
-  [ ] Paradigm - Design patterns & principles [GLOBAL]
-  [ ] Mockups - Regenerate specific mockups
+/pixel-perfect:refine "The color palette feels too muted, and the job cards need more visual weight"
 ```
 
-### Global Artifact Warning
+Analyzes feedback to detect affected items:
 
-When a GLOBAL artifact is selected, show impact warning:
-
-```
-⚠️  You selected GLOBAL artifacts.
-
-Changes to these artifacts affect ALL epics using the global design system:
-  • tokens.yaml (used by: epic-1, epic-2, epic-3)
-  • components.yaml (used by: epic-1, epic-2, epic-3)
-
-? How would you like to proceed?
-  > Refine globally - Update /design/tokens.yaml (affects all epics)
-    Create epic override - Copy to epic-1/design/tokens.yaml (this epic only)
-    Cancel - Don't modify these artifacts
-```
-
-**If "Create epic override" selected:**
-- Copies global artifact to `{epic}/design/`
-- Future plan runs will use epic override instead of global
-- Only this epic is affected
-
-### Feedback Collection
-
-For each selected section, prompt for free-form feedback:
+| Keywords | Affects |
+|----------|---------|
+| "color", "palette", "colors" | Theme file + Design System/Colors token story |
+| "font", "typography" | Theme file + Design System/Typography token story |
+| "spacing", "padding", "margin" | Theme file or specific components + Design System/Spacing token story |
+| Component name (e.g., "job card") | Named component + its story |
+| Screen name (e.g., "today feed") | Named screen + its story |
+| "vibe", "feel", "aesthetic" | Theme + token stories + potentially all components |
+| "controls", "props" | Story argTypes for named component |
 
 ```
-? What changes are needed for Tokens?
-  > The primary blue (#2563eb) feels too corporate. Want something warmer,
-    maybe a teal. Also increase the base spacing from 4px to 8px.
+Detected refinement targets:
+  - Theme (color palette)
+  - Design System/Colors token story
+  - JobCard component (visual weight)
 
-? What changes are needed for Flows?
-  > Add forgot password flow branching from login. Also need an onboarding
-    flow for first-time users.
+? Confirm targets? [Yes / Modify]
 ```
 
-### Summary & Confirmation
-
-After collecting all feedback, display summary:
+### Mode 3: Interactive (no feedback)
 
 ```
-═══════════════════════════════════════════════════════════
-REFINEMENT SUMMARY
-═══════════════════════════════════════════════════════════
-
-Tokens:
-  - Change primary blue to warmer teal
-  - Increase base spacing from 4px to 8px
-
-Flows:
-  - Add forgot password flow from login
-  - Add first-time user onboarding flow
-
-Affected downstream artifacts:
-  - components.yaml (uses tokens)
-  - views.yaml (uses updated flows)
-  - prompts/*.spec.json (regenerate affected)
-  - mocks/*.mock.html (regenerate affected)
-
-═══════════════════════════════════════════════════════════
-
-? How would you like to proceed?
-  > Confirm - Execute refinement tasks
-    Modify - Edit a section
-    Reject - Cancel refinement
+/pixel-perfect:refine
 ```
 
-**If "Modify" selected:**
-```
-? Which section do you want to modify?
-  > Tokens
-    Flows
-
-? What changes are needed for Tokens? (current: "Change primary blue...")
-  > [user can edit their previous input]
-```
-
-Returns to summary after modification.
-
-### Task Sequencing
-
-When confirmed, tasks are queued with dependency-aware ordering.
-
-**Relative ordering, not mandatory steps.** Only run what's needed, but maintain this order:
+Shows selection of what to refine:
 
 ```
-config → UX plan → paradigm → tokens → components → flows/workflows → views/screens → prompts → mocks
+? What would you like to refine?
+  [ ] Theme / Vibe
+  [ ] Design Token Stories
+  [ ] StatusBadge
+  [ ] JobCard
+  [ ] DateChip
+  [ ] SectionHeader
+  [ ] ActionButton
+  [ ] TodayFeed (screen)
+  [ ] JobDetail (screen)
 ```
 
-See `docs/GENERATION-SEQUENCE.md` for full details.
-
-**Examples:**
-
-| What Changed | Tasks Run (in order) |
-|--------------|----------------------|
-| tokens only | tokens → components → prompts → mocks |
-| components only | components → flows → views → prompts → mocks |
-| views only | views → prompts → mocks |
-| flows + tokens | tokens → components → flows → views → prompts → mocks |
-
-**Smart Cascade:**
-- Skip unchanged artifacts
-- **Review** downstream artifacts for compliance with upstream changes
-- **Regenerate** only when review finds issues or visual output changes
-- Prompt user if reviews find opportunities to apply new standards
-
-See `docs/GENERATION-SEQUENCE.md` for review vs regenerate guidance.
-
-## Artifact Invalidation and Archival
-
-When plan-level artifacts (paradigm, tokens, components, flows, views, screens) are modified during refinement, downstream artifacts that depend on them become stale. Refine handles this with archival and invalidation.
-
-### Refinement Scope
-
-At the start of refine, determine the scope:
+For each selected item, prompts for feedback:
 
 ```
-? What level of refinement?
-  > Plan-level - Modify YAML artifacts (tokens, components, flows, views, etc.)
-    Mock-level - Regenerate mockups only (keep all plan artifacts as-is)
+? What changes for JobCard?
+> Add a left border accent color based on job status. Make the shadow more pronounced.
 ```
 
-**Plan-level refinement** triggers the archival flow below.
-**Mock-level refinement** skips archival and goes straight to mock regeneration.
-
-### Archival Flow
-
-When plan-level artifacts are modified, the following happens BEFORE regeneration:
-
-1. **Identify downstream artifacts** that depend on what changed (using the dependency graph from `docs/GENERATION-SEQUENCE.md`)
-
-2. **Archive affected downstream artifacts** to `{directory}/design/archived/{timestamp}/`:
-   ```
-   design/archived/2025-02-08T14-30-00/
-   ├── prompts/
-   │   ├── login.spec.json
-   │   └── dashboard.spec.json
-   ├── mocks/
-   │   ├── login.mock.html
-   │   └── dashboard.mock.html
-   └── ARCHIVE-MANIFEST.md
-   ```
-
-3. **Create ARCHIVE-MANIFEST.md** in the archive folder:
-   ```markdown
-   # Archive Manifest
-
-   **Archived:** 2025-02-08T14:30:00Z
-   **Reason:** Plan-level refinement of tokens.yaml, components.yaml
-   **Trigger:** /pixel-perfect:refine
-
-   ## What Changed (Upstream)
-   - tokens.yaml - Primary color changed from #3b82f6 to #0d9488
-   - components.yaml - Button variants updated
-
-   ## What Was Archived (Downstream)
-   - prompts/login.spec.json
-   - prompts/dashboard.spec.json
-   - mocks/login.mock.html
-   - mocks/dashboard.mock.html
-
-   ## Recovery
-   To restore these artifacts, copy them back from this archive folder.
-   ```
-
-4. **Remove archived files from active locations** (design/prompts/, design/mocks/)
-
-5. **Nudge user to regenerate:**
-   ```
-   Archived 4 downstream artifacts to design/archived/2025-02-08T14-30-00/
-
-   ? Regenerate now or later?
-     > Regenerate now (runs prompts → mocks for affected keys)
-       Later (run /pixel-perfect:prompts and /pixel-perfect:mockups when ready)
-   ```
-
-### Dependency Map for Archival
-
-| Modified Artifact | Archives |
-|-------------------|----------|
-| paradigm.yaml | ALL downstream (tokens through mocks) |
-| tokens.yaml | affected prompts + mocks |
-| components.yaml | affected views, prompts, mocks |
-| flows.yaml | affected views, prompts, mocks |
-| workflows.yaml | affected views, prompts, mocks |
-| views.yaml | affected prompts + mocks only |
-| screens.yaml | affected prompts + mocks only |
-
-### Options
-
-- `--no-archive`: Skip archival (destructive overwrite of downstream artifacts in place)
-
-### Updated Summary Display
-
-The refinement summary now includes archival information:
+### Vibe Refinement
 
 ```
-═══════════════════════════════════════════════════════════
-REFINEMENT SUMMARY
-═══════════════════════════════════════════════════════════
-
-Tokens:
-  - Change primary blue to warmer teal
-
-Affected downstream artifacts (will be archived):
-  - prompts/login.spec.json → archived, then regenerated
-  - prompts/dashboard.spec.json → archived, then regenerated
-  - mocks/login.mock.html → archived, then regenerated
-  - mocks/dashboard.mock.html → archived, then regenerated
-
-Archive location: design/archived/2025-02-08T14-30-00/
-
-═══════════════════════════════════════════════════════════
+/pixel-perfect:refine --vibe "More industrial, less corporate. Think construction site, not office."
 ```
 
----
+1. Update the vibe in manifest
+2. Regenerate theme file with new vibe interpretation
+3. Regenerate Design Token stories (Colors, Typography, Spacing) to reflect new theme
+4. If frontend-design available: re-derive aesthetic decisions
+5. List components that may look different with the new theme
+6. Prompt: regenerate all components with new theme, or one at a time?
 
-## Section Detection Keywords
+```
+Vibe updated: "More industrial, less corporate"
 
-Used for smart detection when feedback text is provided:
+Theme regenerated:
+  - Primary: #1E3A5F → #D97706 (amber/orange)
+  - Font: Inter → Space Mono
+  - Border radius: rounded → sharp
 
-| Section | Keywords |
-|---------|----------|
-| requirements | "feature", "requirement", "user need", "scope", "add", "remove", "missing" |
-| platforms | "mobile", "desktop", "tablet", "iOS", "Android", "web", "device" |
-| vibe | "vibe", "aesthetic", "feel", "mood", "style", "brand", "look" |
-| workflows | "workflow", "journey", "user flow", "task", "process" |
-| screens | "screen", "page", "view", "add screen", "remove screen" |
-| flows | "flow", "navigation", "transition", "step", "sequence" |
-| views | "layout", "arrangement", "structure", "view" |
-| components | "component", "button", "input", "card", "widget", "element" |
-| tokens | "color", "spacing", "font", "typography", "size", "shadow", "border" |
-| mockups | "mockup", "visual", "preview", "regenerate" |
-| designSystem | "design system", "shadcn", "material", "chakra", "ant design", "radix", "daisyui", "mantine" |
-| iconLibrary | "icon", "icon library", "lucide", "heroicons", "phosphor", "tabler", "font awesome" |
+Token stories updated:
+  - Design System/Colors — new palette applied
+  - Design System/Typography — new font scale applied
+  - Design System/Spacing — updated if spacing changed
+
+Components that will look different with new theme:
+  StatusBadge, JobCard, DateChip, SectionHeader, ActionButton
+
+? Regenerate all components with new theme? [Yes / Select specific / No, just theme]
+```
+
+## Controls Refinement
+
+When refining a component that has new or changed props, the story must be updated to match:
+
+- **New prop added** → Add corresponding `argType` control
+- **Prop type changed** → Update `argType` control type (e.g., string → select)
+- **Prop removed** → Remove `argType` entry
+
+After refinement, verification confirms:
+```
+Controls check:
+  [x] All component props have matching argTypes
+  [x] Control types match prop types
+  [x] Default args are set for required props
+```
+
+## Cascade Handling
+
+When a refinement affects upstream items, downstream items may need updates:
+
+```
+Refinement cascade:
+  Theme changed → All components use theme tokens → Visual change expected
+  Theme changed → Design Token stories → Must regenerate
+  StatusBadge changed → Used in TodayFeed, JobDetail → Screens may need re-compose
+
+? Auto-propagate to affected screens? [Yes / No, I'll do it manually]
+```
+
+## Manifest Updates
+
+Refine updates the manifest to reflect changed items:
+
+```yaml
+atoms:
+  - name: StatusBadge
+    file: src/components/StatusBadge.tsx
+    story: src/components/StatusBadge.stories.tsx
+    status: verified    # Re-verified after refinement
+    controls: true      # All props wired to argTypes
+```
+
+If verification fails after refinement, status reverts to `in-progress`:
+```yaml
+    status: in-progress  # Needs attention
+    controls: false      # Controls need fixing
+```
 
 ## Examples
 
-### Quick refinement with smart detection
+### Refine a specific component
 ```
-/pixel-perfect:refine epic-1 "Need a dark mode option and the buttons feel too small"
-```
-→ Detects: tokens (dark mode, colors), components (buttons), mockups
-
-### Interactive multi-section refinement
-```
-/pixel-perfect:refine epic-1
-
-? Which areas need refinement?
-  [x] Flows
-  [x] Screens
-  [ ] ...
-
-? What changes for Flows?
-  > Add password reset flow
-
-? What changes for Screens?
-  > Add password reset screen, remove the deprecated settings screen
-
-[Summary displayed]
-
-? Proceed?
-  > Confirm
-
-Queuing tasks:
-  1. Update screens.yaml (add password_reset, remove settings)
-  2. Update flows.yaml (add password_reset_flow)
-  3. Update views.yaml (affected views)
-  4. Regenerate prompts/password_reset.spec.json
-  5. Generate mocks/password_reset.mock.html
-  6. Remove mocks/settings.mock.html
-
-Executing...
+/pixel-perfect:refine --component ActionButton "Add a loading spinner state and increase the touch target to 48px"
 ```
 
-### Modify during confirmation
+### Refine a screen layout
 ```
-[Summary displayed]
-
-? Proceed?
-  > Modify
-
-? Which section?
-  > Tokens
-
-? What changes for Tokens? (current: "Make blue warmer")
-  > Make blue warmer, specifically #0d9488. Keep the spacing as-is.
-
-[Updated summary displayed]
-
-? Proceed?
-  > Confirm
+/pixel-perfect:refine --screen TodayFeed "Add pull-to-refresh and a floating action button for new job"
 ```
 
-### Refining global artifacts
+### Broad feedback
 ```
-/pixel-perfect:refine epic-1
-
-? Which areas need refinement?
-  [x] Tokens [GLOBAL]
-  [x] Flows
-  [ ] ...
-
-⚠️  You selected GLOBAL artifacts.
-
-Changes to tokens.yaml affect ALL epics using the global design system:
-  • epic-1 (current)
-  • epic-2
-  • epic-3
-
-? How would you like to proceed?
-  > Refine globally - Update /design/tokens.yaml
-
-? What changes for Tokens?
-  > Add dark mode color variants
-
-? What changes for Flows?
-  > Add onboarding flow
-
-[Summary with cascade info]
-
-Global artifacts to update:
-  → /design/tokens.yaml
-
-Epic artifacts to update:
-  → epic-1/design/flows.yaml
-  → epic-1/design/views.yaml
-
-Downstream impact on other epics:
-  ⚠ epic-2: Will use updated tokens on next plan/refine
-  ⚠ epic-3: Will use updated tokens on next plan/refine
-
-? Proceed?
-  > Confirm
+/pixel-perfect:refine "Everything feels too cramped on mobile. Need more breathing room between cards."
 ```
+→ Detects: theme spacing + Design System/Spacing token story + JobCard + TodayFeed layout
 
-### Creating an epic override instead
+### Theme-only change
 ```
-? How would you like to proceed?
-  > Create epic override - Copy to epic-1/design/tokens.yaml
-
-Copying /design/tokens.yaml → epic-1/design/tokens.yaml
-Future plan runs for epic-1 will use the local override.
-
-? What changes for Tokens?
-  > Add dark mode variants for this epic only
+/pixel-perfect:refine --theme "Switch to dark mode as default"
 ```
-
-## Output
-
-Updates `{epic}/design/refine-history.yaml` with refinement log:
-
-```yaml
-refinements:
-  - date: "2025-01-30T14:30:00Z"
-    level: "plan"                    # "plan" or "mock"
-    sections:
-      - tokens
-      - flows
-    feedback:
-      tokens: "Change primary blue to teal #0d9488"
-      flows: "Add forgot password flow"
-    archived:                         # Only present for plan-level refinements
-      path: "design/archived/2025-01-30T14-30-00/"
-      files:
-        - prompts/login.spec.json
-        - prompts/forgot_password.spec.json
-        - mocks/login.mock.html
-        - mocks/forgot_password.mock.html
-    tasks_executed:
-      - tokens.yaml
-      - flows.yaml
-      - views.yaml
-      - prompts/login.spec.json
-      - prompts/forgot_password.spec.json
-      - mocks/login.mock.html
-      - mocks/forgot_password.mock.html
-```
+→ Regenerates: theme file + all Design Token stories

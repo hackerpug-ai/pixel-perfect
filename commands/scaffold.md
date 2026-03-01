@@ -1,0 +1,640 @@
+---
+description: "Set up project structure, install tools, create theme, generate design token stories, and verify with hello-world component (phase 4: SCAFFOLD)"
+---
+
+# Scaffold (Phase 4)
+
+Set up the project for the chosen tools. Installs dependencies, configures the build environment, creates a theme file from the project vibe, generates design token stories for the component sandbox, and verifies with a hello-world component.
+
+## Usage
+
+```
+/pixel-perfect:scaffold [directory]
+```
+
+## Arguments
+
+- `[directory]`: Project directory. Defaults to current directory.
+
+## Gate Check
+
+**Requires:** `design/manifest.yaml` with gates discover, target, and equip = passed.
+
+If gates are not met:
+```
+Cannot scaffold: missing prerequisites.
+  discover: passed
+  target: passed
+  equip: NOT PASSED — run /pixel-perfect:init first
+
+Run /pixel-perfect:init to complete project setup.
+```
+
+## What It Does
+
+1. **Read manifest** - Load tool choices and vibe from `design/manifest.yaml`
+2. **Load adapters** - Read relevant adapter docs from `docs/adapters/`
+3. **Install tools** - Follow adapter scaffold steps
+4. **Configure Storybook for web** - Install web-only Storybook with react-native-web aliases
+5. **Create theme** - Generate theme file from vibe (with frontend-design if available)
+6. **Generate design token stories** - Create visual documentation for Colors, Typography, Spacing, and Icons
+7. **Hello world** - Create first component + story with Storybook controls example
+8. **Verify** - Confirm sandbox runs, token stories render, and hello-world component renders
+9. **Update manifest** - Set `scaffold: passed`
+
+## Workflow
+
+### Step 1: Load Adapter Docs
+
+Based on manifest tool choices, load the corresponding adapter docs:
+
+```
+Tools from manifest:
+  framework: react-native  → context for scaffold decisions
+  style: nativewind        → load docs/adapters/tailwind.md
+  components: react-native-paper → load docs/adapters/react-native-paper.md
+  sandbox: storybook       → load docs/adapters/storybook.md
+```
+
+If no adapter exists for a tool, load `docs/adapters/generic.md` and warn:
+```
+No adapter found for "tamagui". Using generic adapter (process enforcement only).
+The AI will use its general knowledge for tool-specific setup.
+```
+
+### Step 2: Execute Adapter Scaffold Steps
+
+Follow the **Scaffold** section of each loaded adapter doc, in order:
+
+1. **Style adapter** scaffold steps (install, configure)
+2. **Component adapter** scaffold steps (install, configure)
+3. **Sandbox adapter** scaffold steps (install, configure) -- see Step 3 for Storybook specifics
+
+Each adapter doc specifies exact commands. Execute them sequentially.
+
+### Step 3: Configure Web-Only Storybook
+
+When the manifest specifies `sandbox: storybook`, always install the **web-based** Storybook, even for React Native projects. This uses `react-native-web` to render native components in the browser.
+
+#### 3a: Install Storybook Core
+
+```bash
+npx storybook@latest init --type react
+```
+
+This installs `@storybook/react-vite` (or `@storybook/react-webpack5` depending on the project bundler). Do NOT install `@storybook/react-native`.
+
+#### 3b: Install react-native-web Bridge (React Native projects only)
+
+```bash
+npm install --save-dev react-native-web react-dom
+```
+
+#### 3c: Configure Bundler Aliases
+
+**For Vite** (`.storybook/main.ts`):
+```typescript
+import type { StorybookConfig } from '@storybook/react-vite';
+
+const config: StorybookConfig = {
+  stories: [
+    '../src/**/*.stories.@(ts|tsx)',
+  ],
+  addons: [
+    '@storybook/addon-essentials',
+    '@storybook/addon-a11y',
+  ],
+  framework: '@storybook/react-vite',
+  viteFinal: async (config) => {
+    config.resolve = config.resolve || {};
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'react-native': 'react-native-web',
+    };
+    return config;
+  },
+};
+export default config;
+```
+
+**For Webpack** (`.storybook/main.ts`):
+```typescript
+import type { StorybookConfig } from '@storybook/react-webpack5';
+
+const config: StorybookConfig = {
+  stories: [
+    '../src/**/*.stories.@(ts|tsx)',
+  ],
+  addons: [
+    '@storybook/addon-essentials',
+    '@storybook/addon-a11y',
+  ],
+  framework: '@storybook/react-webpack5',
+  webpackFinal: async (config) => {
+    config.resolve = config.resolve || {};
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'react-native$': 'react-native-web',
+    };
+    return config;
+  },
+};
+export default config;
+```
+
+#### 3d: Configure Preview with Theme Provider
+
+`.storybook/preview.tsx`:
+```tsx
+import type { Preview } from '@storybook/react';
+// Import your project's theme provider and theme
+// The provider depends on the user's chosen component library:
+//   - React Native Paper: PaperProvider
+//   - Tamagui: TamaguiProvider
+//   - shadcn/Tailwind: just import globals.css
+//   - Custom: your ThemeProvider
+import { ThemeProvider } from '../src/theme';
+
+const preview: Preview = {
+  decorators: [
+    (Story) => (
+      <ThemeProvider>
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
+};
+export default preview;
+```
+
+The exact provider depends on the user's chosen component library. Consult the loaded adapter docs for the specific import and wrapping pattern. If no component library is selected, use a minimal theme context or just import global styles.
+
+#### 3e: Polyfill Limitations
+
+Document the following limitations in a comment block at the top of `.storybook/main.ts`:
+
+```typescript
+/**
+ * react-native-web polyfill limitations:
+ * - Native modules (Camera, Bluetooth, NFC) are NOT available in web Storybook
+ * - react-native-gesture-handler needs @react-native-web-gesture-handler shim
+ * - react-native-reanimated v3 works with web target; v2 needs babel plugin
+ * - Native navigation (react-navigation) requires @react-navigation/web
+ * - Platform-specific code (.ios.tsx / .android.tsx) will not resolve — use .tsx
+ *
+ * For components that depend on native modules, create mock providers
+ * or use conditional rendering with Platform.OS checks.
+ */
+```
+
+### Step 4: Create Theme
+
+**If frontend-design plugin is available:**
+1. Pass the project vibe to frontend-design
+2. frontend-design produces concrete aesthetic decisions:
+   - Font pairing (display + body)
+   - Color palette (primary, secondary, accent, neutrals, semantic)
+   - Border radius / shape philosophy
+   - Motion philosophy (which interactions get animation, duration, easing)
+   - Spatial rhythm (spacing scale, density)
+3. Write these decisions into the theme file using the style adapter's format
+
+**If frontend-design is NOT available:**
+1. Warn the user:
+   ```
+   frontend-design plugin not detected. Generating theme from vibe keywords only.
+   Install frontend-design for distinctive, characterful output.
+   ```
+2. Map vibe keywords to theme values using the adapter's vibe-to-theme mapping table
+3. Generate a functional but potentially generic theme
+
+**Theme file location** depends on the stack:
+- Web (Tailwind): `tailwind.config.ts` + `globals.css` custom properties
+- Web (shadcn): CSS variables in `globals.css`
+- Mobile (React Native Paper): `src/theme.ts`
+- Generic: `theme.{ts|js|css|json}` in project root or src/
+
+### Step 5: Generate Design Token Stories
+
+Create visual documentation stories that render the design tokens from the theme. These stories serve as a living style guide and verify the theme is configured correctly.
+
+All design token stories live under the **"Design System"** group in the Storybook sidebar.
+
+#### 5a: Colors Story
+
+`src/stories/tokens/Colors.stories.tsx`:
+
+```tsx
+import type { Meta, StoryObj } from '@storybook/react';
+// Import theme colors from YOUR project's theme file
+// Adapt imports based on chosen tools (useTheme hook, CSS vars, Tailwind config, etc.)
+import { themeColors } from '../src/theme';
+
+function ColorSwatch({ name, color }: { name: string; color: string }) {
+  return (
+    <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', margin: 8 }}>
+      <div style={{ width: 64, height: 64, backgroundColor: color, borderRadius: 8, border: '1px solid #eee' }} />
+      <span style={{ fontSize: 12, marginTop: 4 }}>{name}</span>
+      <span style={{ fontSize: 10, color: '#888' }}>{color}</span>
+    </div>
+  );
+}
+
+function ColorsGallery() {
+  // Access colors from your theme — adapt to your style system:
+  //   - React Native Paper: useTheme().colors
+  //   - Tailwind: read from tailwind.config.ts or CSS custom properties
+  //   - shadcn: read CSS variables
+  //   - Custom: import your theme object
+  const colorGroups = [
+    { title: 'Primary', items: [
+      { name: 'primary', color: themeColors.primary },
+      { name: 'primaryLight', color: themeColors.primaryLight },
+    ]},
+    { title: 'Secondary', items: [
+      { name: 'secondary', color: themeColors.secondary },
+    ]},
+    { title: 'Neutral', items: [
+      { name: 'background', color: themeColors.background },
+      { name: 'surface', color: themeColors.surface },
+      { name: 'text', color: themeColors.text },
+    ]},
+    { title: 'Semantic', items: [
+      { name: 'error', color: themeColors.error },
+      { name: 'success', color: themeColors.success },
+    ]},
+  ];
+
+  return (
+    <div style={{ padding: 16 }}>
+      {colorGroups.map(group => (
+        <div key={group.title} style={{ marginBottom: 24 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>{group.title}</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+            {group.items.map(item => (
+              <ColorSwatch key={item.name} name={item.name} color={item.color} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const meta: Meta = {
+  title: 'Design System/Colors',
+  component: ColorsGallery,
+};
+export default meta;
+
+type Story = StoryObj;
+
+export const Palette: Story = {};
+```
+
+**Adapt** the color entries and access pattern to match the actual theme structure of the user's chosen tools. The example above is generic — consult the loaded adapter docs for the correct theme access method.
+
+#### 5b: Typography Story
+
+`src/stories/tokens/Typography.stories.tsx`:
+
+```tsx
+import type { Meta, StoryObj } from '@storybook/react';
+// Import your typography scale from the project theme
+// Adapt to your style system (Tailwind classes, Paper fonts, CSS custom properties, etc.)
+
+// Generic type scale — adapt names and sizes to your theme
+const typeScale = [
+  { name: 'Display', size: 36, weight: '700', sample: 'Display Heading' },
+  { name: 'H1', size: 30, weight: '700', sample: 'Heading One' },
+  { name: 'H2', size: 24, weight: '600', sample: 'Heading Two' },
+  { name: 'H3', size: 20, weight: '600', sample: 'Heading Three' },
+  { name: 'Body Large', size: 18, weight: '400', sample: 'The quick brown fox jumps over the lazy dog' },
+  { name: 'Body', size: 16, weight: '400', sample: 'The quick brown fox jumps over the lazy dog' },
+  { name: 'Body Small', size: 14, weight: '400', sample: 'The quick brown fox jumps over the lazy dog' },
+  { name: 'Caption', size: 12, weight: '400', sample: 'Caption text for metadata' },
+  { name: 'Label', size: 11, weight: '600', sample: 'LABEL TEXT' },
+];
+
+function TypographyScale() {
+  return (
+    <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {typeScale.map(({ name, size, weight, sample }) => (
+        <div key={name} style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
+          <span style={{ width: 120, color: '#888', fontSize: 12, flexShrink: 0 }}>
+            {name} ({size}px)
+          </span>
+          <span style={{ fontSize: size, fontWeight: weight }}>{sample}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const meta: Meta = {
+  title: 'Design System/Typography',
+  component: TypographyScale,
+};
+export default meta;
+
+type Story = StoryObj;
+
+export const FontScale: Story = {};
+```
+
+**Adapt** the type scale to your actual theme. For Tailwind/web projects, render using `text-*` utility classes. For Paper, use `theme.fonts.*` variants. For custom themes, use your defined type tokens.
+
+#### 5c: Spacing Story
+
+`src/stories/tokens/Spacing.stories.tsx`:
+
+```tsx
+import type { Meta, StoryObj } from '@storybook/react';
+// Import spacing values from your project theme if defined
+// Otherwise use defaults from your style system (Tailwind scale, etc.)
+
+const spacingScale = [
+  { name: 'xs', value: 4 },
+  { name: 'sm', value: 8 },
+  { name: 'md', value: 16 },
+  { name: 'lg', value: 24 },
+  { name: 'xl', value: 32 },
+  { name: '2xl', value: 48 },
+  { name: '3xl', value: 64 },
+];
+
+function SpacingBoxes() {
+  return (
+    <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {spacingScale.map(({ name, value }) => (
+        <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <span style={{ width: 80, color: '#888', fontSize: 12 }}>{name} ({value}px)</span>
+          <div
+            style={{
+              width: value,
+              height: value,
+              backgroundColor: '#6366f1',
+              borderRadius: 2,
+            }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const meta: Meta = {
+  title: 'Design System/Spacing',
+  component: SpacingBoxes,
+};
+export default meta;
+
+type Story = StoryObj;
+
+export const Scale: Story = {};
+```
+
+Pull spacing values from the project's theme or Tailwind config. If the project defines a custom spacing scale, use those values. Otherwise, use the standard scale from the style adapter.
+
+#### 5d: Icons Story (conditional)
+
+`src/stories/tokens/Icons.stories.tsx` -- **only generated if an icon library is selected or detected** (e.g., `react-native-vector-icons`, `lucide-react`, `@expo/vector-icons`, `react-native-heroicons`):
+
+```tsx
+import type { Meta, StoryObj } from '@storybook/react';
+// Import icons from YOUR project's chosen icon library
+// Adapt to: lucide-react, @expo/vector-icons, react-native-vector-icons,
+//           @heroicons/react, @mdi/react, or any other icon set
+
+// Curated subset of icons relevant to the project's domain
+// Replace these with actual icons from the chosen library
+const projectIcons = [
+  { name: 'home', label: 'Home' },
+  { name: 'user', label: 'Account' },
+  { name: 'bell', label: 'Notifications' },
+  { name: 'settings', label: 'Settings' },
+  { name: 'search', label: 'Search' },
+  { name: 'plus', label: 'Add' },
+  { name: 'check', label: 'Success' },
+  { name: 'alert-triangle', label: 'Warning' },
+  { name: 'x', label: 'Close' },
+  { name: 'chevron-right', label: 'Navigate' },
+];
+
+function IconGallery() {
+  return (
+    <div style={{ padding: 16, display: 'flex', flexWrap: 'wrap', gap: 24 }}>
+      {projectIcons.map(({ name, label }) => (
+        <div key={name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 72 }}>
+          {/* Replace with actual icon component from chosen library */}
+          <span style={{ fontSize: 24 }}>{name}</span>
+          <span style={{ fontSize: 10, color: '#888', marginTop: 4 }}>{label}</span>
+          <span style={{ fontSize: 9, color: '#bbb' }}>{name}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const meta: Meta = {
+  title: 'Design System/Icons',
+  component: IconGallery,
+};
+export default meta;
+
+type Story = StoryObj;
+
+export const Gallery: Story = {};
+```
+
+Adapt the icon import and icon names to match the actual icon library in use. Curate the icon set to include icons relevant to the project's domain (based on the PRD/goal).
+
+### Step 6: Hello World Component
+
+Create a minimal component that uses the theme to verify the full stack works. The hello-world component must include **Storybook controls** (argTypes) to demonstrate interactive prop editing in the Storybook UI.
+
+**Component file** (`src/components/HelloWorld.tsx`):
+- Uses theme tokens for colors, fonts, spacing
+- Accepts props that can be controlled in Storybook (title, subtitle, variant, etc.)
+- Follows adapter conventions (Paper components for RN Paper, shadcn primitives for web, etc.)
+
+**Story file** (`src/components/HelloWorld.stories.tsx`):
+
+```tsx
+import type { Meta, StoryObj } from '@storybook/react';
+import { HelloWorld } from './HelloWorld';
+
+const meta: Meta<typeof HelloWorld> = {
+  title: 'Components/HelloWorld',
+  component: HelloWorld,
+  argTypes: {
+    title: {
+      control: 'text',
+      description: 'Primary heading text',
+    },
+    subtitle: {
+      control: 'text',
+      description: 'Secondary description text',
+    },
+    variant: {
+      control: 'select',
+      options: ['default', 'accent', 'muted'],
+      description: 'Visual variant of the component',
+    },
+    showIcon: {
+      control: 'boolean',
+      description: 'Whether to display the icon',
+    },
+  },
+  args: {
+    title: 'Hello, World',
+    subtitle: 'Your project is set up and ready to build.',
+    variant: 'default',
+    showIcon: true,
+  },
+};
+export default meta;
+
+type Story = StoryObj<typeof HelloWorld>;
+
+export const Default: Story = {};
+
+export const Accent: Story = {
+  args: {
+    variant: 'accent',
+    title: 'Accent Variant',
+  },
+};
+
+export const Muted: Story = {
+  args: {
+    variant: 'muted',
+    title: 'Muted Variant',
+    showIcon: false,
+  },
+};
+```
+
+The hello-world story serves as a **reference example** for how all future component stories should be structured: typed meta, argTypes with controls, named variants, and realistic default args.
+
+### Step 7: Verify
+
+Run verification checks:
+
+1. **Sandbox starts** - Storybook dev server runs without errors
+2. **Design token stories render** - All generated token stories appear under "Design System" group
+3. **Component renders** - HelloWorld component visible in Storybook with working controls
+4. **Theme applied** - Component and token stories use theme values (not defaults)
+
+```
+Verification:
+  [x] Storybook starts (port 6006)
+  [x] Design System/Colors renders palette
+  [x] Design System/Typography renders font scale
+  [x] Design System/Spacing renders spacing boxes
+  [x] Design System/Icons renders gallery
+  [x] Components/HelloWorld renders with controls
+  [x] Theme colors applied correctly
+
+Scaffold complete!
+```
+
+If verification fails, report the error and do not advance the gate:
+```
+Verification FAILED:
+  [x] Storybook starts (port 6006)
+  [x] Design System/Colors renders palette
+  [ ] Design System/Typography — Error: theme.fonts is undefined
+  [ ] Components/HelloWorld — Blocked by theme error
+  [ ] Theme colors applied — Blocked
+
+Fix the theme configuration and run /pixel-perfect:verify to retry.
+```
+
+### Step 8: Update Manifest
+
+On success, update `design/manifest.yaml`:
+```yaml
+phase: scaffold
+gates:
+  ...
+  scaffold: passed
+```
+
+## Storybook Organization Structure
+
+After scaffold completes, the Storybook sidebar is organized as follows:
+
+```
+Storybook sidebar:
+  Design System/
+    Colors           ← Color swatches from theme palette
+    Typography       ← Font scale with all type variants
+    Spacing          ← Spacing scale visualization
+    Icons            ← Icon gallery (if icon lib selected)
+  Components/
+    HelloWorld       ← First component with controls example
+  Screens/
+    (empty)          ← Populated during COMPOSE phase
+```
+
+This organization is enforced by the `title` field in each story's meta:
+- Token stories: `title: 'Design System/...'`
+- Atom stories: `title: 'Components/...'`
+- Screen stories: `title: 'Screens/...'`
+
+## File Structure After Scaffold
+
+```
+project/
+├── .storybook/
+│   ├── main.ts              ← Storybook config with react-native-web alias
+│   └── preview.tsx           ← Global decorators (theme provider)
+├── src/
+│   ├── components/
+│   │   ├── HelloWorld.tsx            ← First component using theme
+│   │   └── HelloWorld.stories.tsx    ← Story with argTypes/controls
+│   ├── stories/
+│   │   └── tokens/
+│   │       ├── Colors.stories.tsx     ← Color palette swatches
+│   │       ├── Typography.stories.tsx ← Font scale display
+│   │       ├── Spacing.stories.tsx    ← Spacing scale boxes
+│   │       └── Icons.stories.tsx      ← Icon gallery (conditional)
+│   └── theme.ts              ← Theme derived from project vibe
+├── design/
+│   └── manifest.yaml         ← Updated with scaffold: passed
+└── tailwind.config.ts        ← (if NativeWind/Tailwind selected)
+```
+
+## Output Summary
+
+```
+Scaffold complete for: Field service management app
+
+Tools configured:
+  Framework:  (from manifest — e.g. React Native, Next.js, Vite)
+  Style:      (from manifest — e.g. NativeWind, Tailwind CSS)
+  Components: (from manifest — e.g. shadcn/ui, React Native Paper, none)
+  Sandbox:    Storybook (web-only, port 6006)
+
+Theme created: src/theme.ts
+  Font: Space Grotesk + Inter
+  Primary: #1E3A5F
+  Accent: #FF6B35
+
+Design token stories:
+  src/stories/tokens/Colors.stories.tsx      — 4 color groups
+  src/stories/tokens/Typography.stories.tsx  — 15 type variants
+  src/stories/tokens/Spacing.stories.tsx     — 7-step scale
+  src/stories/tokens/Icons.stories.tsx       — 10 project icons
+
+Hello world: src/components/HelloWorld.tsx + story (3 variants, 4 controls)
+
+Storybook sidebar:
+  Design System/ (Colors, Typography, Spacing, Icons)
+  Components/ (HelloWorld)
+  Screens/ (empty — populated during compose)
+
+Next: /pixel-perfect:build
+  This will identify and build atomic components from your requirements.
+```

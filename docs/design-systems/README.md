@@ -48,12 +48,12 @@ When no design system is selected, the icon library is suggested based on the de
 
 ## How Progressive Disclosure Works
 
-1. User selects design system during `/pixel-perfect:init`
-2. `/pixel-perfect:plan` GATE 2 loads `docs/design-systems/{name}.md`
-3. Token generation uses design system defaults
+1. User selects component library during `/pixel-perfect:init`
+2. `/pixel-perfect:scaffold` loads `docs/design-systems/{name}.md` for theme and token setup
+3. Design Token stories use design system defaults (colors, typography, spacing)
 4. Component naming maps to design system equivalents
-5. Mockup generation includes correct CDN links and class patterns
-6. Review validates design system compliance
+5. `/pixel-perfect:build` uses design system class patterns and conventions
+6. `/pixel-perfect:verify` validates design system compliance
 
 ## Doc Template
 
