@@ -19,10 +19,12 @@ Each selection maps to an adapter doc in this directory. The AI loads the releva
 Adapters compose by category. A project uses **one adapter per category**, and they stack:
 
 ```
-Web project:     tailwind (style) + shadcn (components) + storybook (sandbox)
-Mobile project:  tailwind/nativewind (style) + react-native-paper (components) + storybook-native (sandbox)
+Web project:     {style} + {components} + storybook (sandbox)
+Mobile project:  {style} + {components} + storybook-native (sandbox)
 Minimal project: generic (process enforcement only) + storybook (sandbox)
 ```
+
+Style and component adapters are loaded based on user selection during init. If a style framework is detected in `package.json` (e.g., `nativewind`, `tailwindcss`, `tamagui`), that framework is suggested rather than presenting a blank choice.
 
 **Sandbox Selection is Automatic (Not a User Choice):**
 

@@ -78,7 +78,18 @@ The UI library is completely flexible — use whatever you want or build from sc
 
 Storybook is the universal sandbox for all platforms. Every component, design token, and screen gets a Storybook story.
 
-**For React Native projects**, components render in web-based Storybook through `react-native-web` polyfills. A small disclaimer indicates when native elements have been adapted for web preview.
+### Mobile Projects: Native On-Device Storybook
+
+For React Native/Expo projects, components render in **native on-device Storybook** (`@storybook/react-native`). This provides:
+- True native rendering in iOS Simulator / Android Emulator
+- No polyfills or web approximations
+- Direct launch via `pnpm storybook` (opens Storybook immediately)
+
+The scaffold phase creates a custom entry point (`index.js`) that conditionally switches between Storybook and your app based on the `EXPO_PUBLIC_STORYBOOK_ENABLED` environment variable.
+
+### Web Projects: Browser-Based Storybook
+
+For web projects (React, Next.js, Vite), components render in browser-based Storybook at `http://localhost:6006`.
 
 ### Storybook Sidebar Organization
 
@@ -147,19 +158,23 @@ Adapters are reference docs that teach the AI how to scaffold, build, and verify
 |---------|----------|-----------|
 | Tailwind | style | web, mobile (NativeWind) |
 | shadcn/ui | components | web |
+| React Native Reusables | components | mobile |
 | React Native Paper | components | mobile |
-| Storybook | sandbox | web, mobile |
+| Storybook | sandbox | web |
+| Storybook Native | sandbox | mobile (on-device) |
 | React Native Web | polyfill | mobile (for web Storybook) |
 | Generic | fallback | all |
 
 ### Stack Examples
 
 ```
-Web:     Tailwind + shadcn + Storybook
-Mobile:  NativeWind + React Native Paper + Storybook (via react-native-web)
+Web:     {style} + {components} + Storybook
+Mobile:  {style} + {components} + Storybook Native
 Custom:  Any style + any components + Storybook
 Minimal: Generic (process enforcement only)
 ```
+
+Style and component libraries are user-selected during init (or auto-detected from `package.json`).
 
 No specific UI library is required. Users can select "None" or "Other" with a docs URL, and the AI adapts.
 
@@ -179,9 +194,9 @@ No specific UI library is required. Users can select "None" or "Other" with a do
   "platforms": ["mobile-ios", "mobile-android"],
   "tools": {
     "framework": "expo",
-    "style": "nativewind",
-    "components": "react-native-paper",
-    "sandbox": "storybook"
+    "style": "nativewind",          // User-selected or auto-detected
+    "components": "react-native-paper",  // User-selected
+    "sandbox": "storybook"          // Auto-selected based on platform
   },
   "phase": "atoms",
   "gates": {

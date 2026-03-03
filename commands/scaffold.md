@@ -37,10 +37,80 @@ Run /pixel-perfect:init to complete project setup.
 3. **Install tools** - Follow adapter scaffold steps
 4. **Configure Storybook** - Platform-aware setup (native for mobile, web for web projects)
 5. **Create theme** - Generate theme file from vibe (with frontend-design if available)
-6. **Generate design token stories** - Create visual documentation for Colors, Typography, Spacing, and Icons
-7. **Hello world** - Create first component + story with Storybook controls example
-8. **Verify** - Confirm sandbox runs, token stories render, and hello-world component renders
-9. **Update manifest** - Set `scaffold: passed`
+6. **Enforce semantic colors** - Detect non-semantic color tokens, guide migration, verify in Storybook
+7. **Generate design token stories** - Create visual documentation for Colors, Typography, Spacing, and Icons
+8. **Hello world** - Create first component + story with Storybook controls example
+9. **Verify** - Confirm sandbox runs, token stories render, and hello-world component renders
+10. **Update manifest** - Set `scaffold: passed`
+
+---
+
+## Task-Based Execution
+
+Scaffold uses TaskList for compaction-resilient progress tracking. Each step is created as a task before execution begins. This ensures scaffold can resume correctly even if context is compacted during the long-running operation.
+
+### On Start
+
+When `/pixel-perfect:scaffold` is invoked:
+
+1. Check for existing scaffold tasks in TaskList
+2. If no tasks exist, create all scaffold tasks:
+
+```
+TaskCreate({ subject: "Read manifest and validate gates", description: "Load design/manifest.json, verify discover/target/equip gates passed" })
+TaskCreate({ subject: "Load adapter docs", description: "Read adapter docs for style, components, icons, sandbox from docs/adapters/" })
+TaskCreate({ subject: "Install style system", description: "Execute style adapter scaffold steps" })
+TaskCreate({ subject: "Install component library", description: "Execute component adapter scaffold steps, pull CLI components if applicable" })
+TaskCreate({ subject: "Install icon library", description: "Install icon package, create wrapper component" })
+TaskCreate({ subject: "Configure Storybook", description: "Set up storybook-native or storybook based on platform" })
+TaskCreate({ subject: "Create theme", description: "Generate theme file from vibe using frontend-design or keyword mapping" })
+TaskCreate({ subject: "Enforce semantic colors", description: "Detect non-semantic tokens, guide migration, verify in Storybook" })
+TaskCreate({ subject: "Generate design token stories", description: "Create Colors, Typography, Spacing, Icons stories" })
+TaskCreate({ subject: "Create hello-world component", description: "Build HelloWorld component with Storybook controls" })
+TaskCreate({ subject: "Verify sandbox", description: "Start Storybook, verify all stories render" })
+TaskCreate({ subject: "Complete scaffold", description: "Update manifest with scaffold: passed" })
+```
+
+3. Mark first incomplete task as `in_progress`
+4. Execute that task
+5. Mark task as `completed`
+6. Repeat from step 3 until all tasks complete
+
+### On Resume (After Compaction)
+
+1. Call `TaskList()` to see current state
+2. Find first task not marked `completed`
+3. Mark it `in_progress` and continue execution
+
+### Task Metadata
+
+Each task stores relevant context in metadata for recovery:
+
+```
+TaskCreate({
+  subject: "Install style system",
+  description: "Execute style adapter scaffold steps",
+  metadata: {
+    phase: "scaffold",
+    step: 3,
+    tools: { style: "nativewind" },  // From manifest
+    adapter: "docs/adapters/tailwind.md"
+  }
+})
+```
+
+### Progress Display
+
+Show progress at start of each task:
+
+```
+Scaffold Progress: [████░░░░░░] 4/12
+
+Current: Install component library
+  • Pulling React Native Reusables components...
+```
+
+---
 
 ## Workflow
 
@@ -52,9 +122,9 @@ Based on manifest tool choices, load the corresponding adapter docs:
 ```
 Tools from manifest:
   framework: expo              → context for scaffold decisions
-  style: nativewind            → load docs/adapters/tailwind.md
-  components: react-native-reusables → load docs/adapters/react-native-reusables.md
-  icons: lucide-react-native   → install lucide-react-native
+  style: {from manifest}       → load corresponding adapter doc
+  components: {from manifest}  → load corresponding adapter doc
+  icons: {from manifest}       → install icon package
   sandbox: storybook-native    → load docs/adapters/storybook-native.md
 ```
 
@@ -435,48 +505,50 @@ module.exports = withStorybook(styledConfig, {
 })
 ```
 
-##### 3A.5: Configure Root Layout for Auto-Loading
+##### 3A.5: Create Custom Entry Point (CRITICAL for Expo Router)
 
-**CRITICAL for Expo Router projects:** Modify the root `app/_layout.tsx` to check for the Storybook environment variable and render Storybook directly when enabled. This enables auto-loading without navigating to a route.
+**Problem:** The `withStorybook` wrapper only enables Storybook bundling, but doesn't change the app entry point. With Expo Router, `"main": "expo-router/entry"` always loads the regular app, ignoring the env flag.
 
-```typescript
-// app/_layout.tsx
-import '../global.css' // if using NativeWind
+**Solution:** Create a custom entry point that conditionally switches between Storybook and Expo Router.
 
-import { Stack } from 'expo-router'
-import { StatusBar } from 'expo-status-bar'
-// ... other imports
+Create `index.js` at project root:
 
-// When EXPO_PUBLIC_STORYBOOK_ENABLED=true, render Storybook directly
+```javascript
+// index.js
+/**
+ * Custom entry point - switches between Storybook and main app
+ */
+import { registerRootComponent } from 'expo'
+
 const STORYBOOK_ENABLED = process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === 'true'
 
-export default function RootLayout() {
-  // Render Storybook UI directly, bypassing Expo Router
-  if (STORYBOOK_ENABLED) {
-    const StorybookUI = require('../.rnstorybook').default
-    return <StorybookUI />
-  }
-
-  // Normal app rendering when Storybook is disabled
-  return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      {/* Add storybook route for manual navigation if needed */}
-      <Stack.Screen name="storybook" options={{ headerShown: false }} />
-      {/* other routes */}
-    </Stack>
-  )
+if (STORYBOOK_ENABLED) {
+  const StorybookUI = require('./.rnstorybook').default
+  registerRootComponent(StorybookUI)
+} else {
+  require('expo-router/entry')
 }
 ```
 
-You can also keep the optional route for manual access:
+**Why this works:**
+- The custom `index.js` runs before any framework code
+- It checks the env var at bundle time and conditionally requires either Storybook or Expo Router
+- The `--clear` flag forces Metro to rebuild, picking up the new env var value
 
-```typescript
-// app/storybook.tsx
-export { default } from '../.rnstorybook'
+##### 3A.6: Update package.json Entry Point
+
+Change the main entry from expo-router to the custom entry point:
+
+```json
+{
+  "main": "./index.js"
+}
 ```
 
-##### 3A.6: Add npm Scripts
+**Before:** `"main": "expo-router/entry"` (ignores Storybook flag)
+**After:** `"main": "./index.js"` (conditionally loads Storybook or Expo Router)
+
+##### 3A.7: Add npm Scripts
 
 ```json
 {
@@ -488,7 +560,26 @@ export { default } from '../.rnstorybook'
 }
 ```
 
-##### 3A.7: Story File Requirements
+**Key points:**
+- `EXPO_PUBLIC_STORYBOOK_ENABLED` — used by both Metro config and the entry point
+- `--clear` flag is **required** — ensures Metro rebuilds with the new env var value
+
+##### 3A.8: Optional Storybook Route (for in-app access)
+
+If you also want to access Storybook from within the normal app (e.g., via a dev menu):
+
+```typescript
+// app/storybook.tsx
+export { default } from '../.rnstorybook'
+```
+
+Register in layout:
+```typescript
+// app/_layout.tsx
+<Stack.Screen name="storybook" />
+```
+
+##### 3A.9: Story File Requirements
 
 **CRITICAL: Stories must use React Native components, NOT HTML.**
 
@@ -957,6 +1048,118 @@ When generating colors from vibe keywords, apply these transformations:
 
 The loaded component adapter doc contains the specific vibe-to-theme mapping table — use it for concrete values.
 
+### Step 4b: Enforce Semantic Color System
+
+**CRITICAL:** After generating the theme, verify that all color tokens use **semantic naming** (named by usage, not by what they are). This is essential for consistent theming, dark mode support, and maintainable code.
+
+#### Semantic Color Token Reference
+
+Colors should be named by **how they're used**, not **what they are**:
+
+| Semantic Token | Usage | NOT |
+|----------------|-------|-----|
+| `primary` | Main brand action | `blue`, `indigo-600` |
+| `primary-foreground` | Text on primary | `white`, `#fff` |
+| `secondary` | Secondary action | `gray`, `slate-500` |
+| `secondary-foreground` | Text on secondary | `gray-900`, `#1a1a1a` |
+| `background` | Page background | `white`, `#fafafa` |
+| `foreground` | Default text | `black`, `gray-900` |
+| `muted` | Subdued backgrounds | `gray-100`, `#f5f5f5` |
+| `muted-foreground` | Secondary text | `gray-500`, `#666` |
+| `destructive` | Danger/delete | `red`, `red-600` |
+| `destructive-foreground` | Text on destructive | `white`, `#fff` |
+| `border` | Border color | `gray-200`, `#e5e5e5` |
+| `input` | Form input border | `gray-300`, `#d1d5db` |
+| `ring` | Focus ring | `blue-500`, `#3b82f6` |
+| `accent` | Highlight/accent | `purple`, `amber-500` |
+| `accent-foreground` | Text on accent | `white`, `#fff` |
+| `card` | Card background | `white`, `#fff` |
+| `card-foreground` | Card text | `gray-900`, `#1a1a1a` |
+| `popover` | Popover background | `white`, `#fff` |
+| `popover-foreground` | Popover text | `gray-900`, `#1a1a1a` |
+
+#### Detection Flow
+
+After theme generation, scan theme files for non-semantic color patterns:
+
+```
+Analyzing theme colors...
+
+Non-semantic colors detected:
+  ❌ --blue-500: #3b82f6  (used for buttons)
+  ❌ --red-600: #dc2626   (used for errors)
+  ❌ --gray-100: #f3f4f6  (used for backgrounds)
+  ❌ --gray-900: #111827  (used for text)
+```
+
+If non-semantic colors are detected, use `AskUserQuestion` to strongly encourage migration:
+
+```
+? Non-semantic colors detected. Migrate to semantic tokens?
+
+Semantic naming is STRONGLY RECOMMENDED because:
+  • Enables consistent theming across components
+  • Simplifies dark mode implementation
+  • Makes intent clear when reading code
+  • Follows shadcn/ui and Tailwind best practices
+
+    Yes, migrate now (Recommended)
+    No, keep non-semantic colors
+```
+
+#### Migration Flow
+
+If user selects "Yes, migrate now", present the proposed mapping:
+
+```
+## Proposed Color Mapping
+
+| Non-Semantic | → Semantic | Usage |
+|--------------|------------|-------|
+| --blue-500   | --primary  | Main actions, links |
+| --blue-50    | --primary-foreground | Text on primary |
+| --red-600    | --destructive | Error, delete actions |
+| --red-50     | --destructive-foreground | Text on destructive |
+| --gray-100   | --muted    | Subdued backgrounds |
+| --gray-500   | --muted-foreground | Secondary text |
+| --gray-900   | --foreground | Default text |
+| --white      | --background | Page background |
+| --gray-200   | --border   | Borders |
+| --gray-300   | --input    | Form input borders |
+| --blue-500   | --ring     | Focus rings |
+
+? Apply this migration?
+    Yes, apply mapping
+    Modify mapping
+    Cancel
+```
+
+If "Modify mapping", allow user to adjust before applying.
+
+#### Storybook Verification Gate
+
+**CRITICAL:** After semantic colors are applied, user MUST verify colors look acceptable in Storybook before continuing to build phase.
+
+```
+## Storybook Color Verification
+
+Theme has been updated with semantic tokens.
+
+Open Storybook and verify the Colors story:
+  → Run: pnpm storybook
+  → Navigate to: Design System > Colors
+  → Check all color swatches render correctly
+  → Verify contrast ratios are acceptable
+
+? Do the colors look acceptable in Storybook?
+    Yes, colors look good — continue to build
+    No, I need to adjust colors — stay in scaffold
+```
+
+If user selects "No", scaffold pauses and waits for user to fix colors manually, then re-asks.
+
+**This verification is a GATE** — scaffold cannot complete until user confirms colors are acceptable.
+
 ### Step 5: Generate Design Token Stories
 
 Create visual documentation stories that render the design tokens from the theme. These stories serve as a living style guide and verify the theme is configured correctly.
@@ -1355,13 +1558,14 @@ This organization is enforced by the `title` field in each story's meta:
 **Mobile project (storybook-native):**
 ```
 project/
+├── index.js                  ← Custom entry point (switches between Storybook/app)
 ├── .rnstorybook/             ← Native Storybook config (NOT .storybook/)
-│   ├── index.tsx             ← Entry point with AsyncStorage
+│   ├── index.tsx             ← Storybook UI with AsyncStorage
 │   ├── main.ts               ← Story globs, addons
 │   ├── preview.tsx           ← Global decorators (theme provider)
 │   └── storybook.requires.ts ← Auto-generated by Metro
 ├── app/
-│   ├── _layout.tsx           ← Root layout with Storybook auto-load check
+│   ├── _layout.tsx           ← Root layout (normal app rendering)
 │   └── storybook.tsx         ← Optional Expo Router route to Storybook
 ├── stories/
 │   ├── tokens/

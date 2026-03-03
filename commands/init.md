@@ -207,20 +207,50 @@ Detected "Expo" in requirements.
 
 ### Step 3: Style System Drill-Down
 
-Based on the framework selection, present the appropriate style system options.
+Based on the framework selection, detect installed style frameworks or present options.
+
+#### Detection First
+
+Before prompting, check `package.json` for installed style frameworks:
+
+**React Native / Expo:**
+| Signal | Detected Framework |
+|--------|-------------------|
+| `nativewind` | NativeWind |
+| `tamagui` | Tamagui |
+| `@shopify/restyle` | Restyle |
+| `react-native-unistyles` | Unistyles |
+
+**React / Next.js / Vite:**
+| Signal | Detected Framework |
+|--------|-------------------|
+| `tailwindcss` | Tailwind CSS |
+
+If a framework is detected:
+```
+Detected "nativewind" in package.json.
+? Use NativeWind as your style system? [Yes / No, choose different]
+```
+
+#### No Detection - Present Options
+
+If no style framework detected, present options **without a default**:
 
 **React Native / Expo:**
 ```
 ? Style system:
-  > NativeWind (Tailwind for React Native)
+    NativeWind (Tailwind for React Native)
     StyleSheet (React Native built-in)
+    Tamagui (cross-platform style system)
+    Restyle (Shopify's type-safe styling)
+    Unistyles (universal styling)
     Other (provide link to docs)
 ```
 
 **React / Next.js / Vite:**
 ```
 ? Style system:
-  > Tailwind CSS
+    Tailwind CSS
     CSS Modules
     Other (provide link to docs)
 ```
@@ -240,7 +270,7 @@ Based on the framework selection, present the appropriate component library opti
 **React Native / Expo:**
 ```
 ? Component library:
-  > React Native Reusables (shadcn/ui for React Native)
+    React Native Reusables (shadcn/ui for React Native)
     React Native Paper
     Tamagui
     Gluestack
@@ -251,7 +281,7 @@ Based on the framework selection, present the appropriate component library opti
 **React / Next.js / Vite:**
 ```
 ? Component library:
-  > shadcn/ui
+    shadcn/ui
     Radix
     Mantine
     Chakra
@@ -349,22 +379,34 @@ Sandbox: Storybook Web (auto-selected for web)
 
 ### Confirmation Summary
 
-Present the full tool selection for confirmation before writing the manifest:
+Present the full tool selection for confirmation before writing the manifest. Use the **actual selected values** (not hardcoded examples):
 
+```
+Your configuration:
+
+  Platforms:   {selected_platforms}
+  Framework:   {selected_framework}
+  Style:       {selected_style}
+  Components:  {selected_components}
+  Icons:       {selected_icons}
+  Sandbox:     {auto_selected_sandbox}
+
+? Confirm and write manifest? [Yes / Change something]
+```
+
+**Mobile example:**
 ```
 Your configuration:
 
   Platforms:   mobile-ios, mobile-android
   Framework:   Expo
-  Style:       NativeWind
+  Style:       Tamagui
   Components:  React Native Reusables
   Icons:       Lucide React Native
   Sandbox:     Storybook Native (auto-selected for mobile)
-
-? Confirm and write manifest? [Yes / Change something]
 ```
 
-For web projects:
+**Web example:**
 ```
 Your configuration:
 
@@ -374,8 +416,6 @@ Your configuration:
   Components:  shadcn/ui
   Icons:       Lucide React
   Sandbox:     Storybook Web (auto-selected for web)
-
-? Confirm and write manifest? [Yes / Change something]
 ```
 
 If the user wants to change something, loop back to the relevant step.
@@ -497,5 +537,7 @@ After init completes:
 Initialization complete. Manifest saved to design/manifest.json
 
 Next: /pixel-perfect:scaffold
-  This will set up your project with NativeWind + React Native Paper + Storybook
+  This will set up your project with {style} + {components} + Storybook
 ```
+
+The message uses the actual tools selected during init (from the manifest).

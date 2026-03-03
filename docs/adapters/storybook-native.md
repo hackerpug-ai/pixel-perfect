@@ -123,7 +123,7 @@ const config = getDefaultConfig(__dirname)
 const styledConfig = withNativeWind(config, { input: './global.css' })
 
 // Apply Storybook - only when STORYBOOK_ENABLED=true
-const STORYBOOK_ENABLED = process.env.STORYBOOK_ENABLED === 'true'
+const STORYBOOK_ENABLED = process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === 'true'
 
 module.exports = withStorybook(styledConfig, {
   enabled: STORYBOOK_ENABLED,
@@ -137,7 +137,7 @@ const { getDefaultConfig } = require('expo/metro-config')
 const { withStorybook } = require('@storybook/react-native/metro/withStorybook')
 
 const config = getDefaultConfig(__dirname)
-const STORYBOOK_ENABLED = process.env.STORYBOOK_ENABLED === 'true'
+const STORYBOOK_ENABLED = process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === 'true'
 
 module.exports = withStorybook(config, {
   enabled: STORYBOOK_ENABLED,
@@ -145,62 +145,68 @@ module.exports = withStorybook(config, {
 })
 ```
 
-### Step 7: Configure Root Layout for Direct Storybook Rendering
+### Step 7: Create Custom Entry Point (CRITICAL for Expo Router)
 
-Modify the root layout to render Storybook directly when the env var is set, bypassing Expo Router entirely:
+**Problem:** The `withStorybook` wrapper only enables Storybook bundling, but doesn't change the app entry point. With Expo Router, `"main": "expo-router/entry"` always loads the regular app, ignoring the env flag.
 
-```typescript
-// app/_layout.tsx
-import '../global.css'
+**Solution:** Create a custom entry point that conditionally switches between Storybook and Expo Router.
 
-import { Stack } from 'expo-router'
-import { StatusBar } from 'expo-status-bar'
+Create `index.js` at project root:
 
-// When STORYBOOK_ENABLED=true, render Storybook directly
+```javascript
+// index.js
+/**
+ * Custom entry point - switches between Storybook and main app
+ */
+import { registerRootComponent } from 'expo'
+
 const STORYBOOK_ENABLED = process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === 'true'
 
-export default function RootLayout() {
-  // Render Storybook UI directly, bypassing Expo Router
-  if (STORYBOOK_ENABLED) {
-    const StorybookUI = require('../.rnstorybook').default
-    return <StorybookUI />
-  }
-
-  return (
-    <>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </>
-  )
+if (STORYBOOK_ENABLED) {
+  const StorybookUI = require('./.rnstorybook').default
+  registerRootComponent(StorybookUI)
+} else {
+  require('expo-router/entry')
 }
 ```
 
-**Key points:**
-- Uses `EXPO_PUBLIC_` prefix for runtime access (Expo inlines these at build time)
-- `require()` is used inside the condition to avoid loading Storybook in production
-- No navigation needed — app launches directly into Storybook
+**Why this works:**
+- The custom `index.js` runs before any framework code
+- It checks the env var at bundle time and conditionally requires either Storybook or Expo Router
+- The `--clear` flag forces Metro to rebuild, picking up the new env var value
 
-### Step 8: Add npm Scripts
+### Step 8: Update package.json Entry Point
+
+Change the main entry from expo-router to the custom entry point:
+
+```json
+{
+  "main": "./index.js"
+}
+```
+
+**Before:** `"main": "expo-router/entry"` (ignores Storybook flag)
+**After:** `"main": "./index.js"` (conditionally loads Storybook or Expo Router)
+
+### Step 9: Add npm Scripts
 
 ```json
 {
   "scripts": {
     "start": "expo start",
-    "storybook": "STORYBOOK_ENABLED=true EXPO_PUBLIC_STORYBOOK_ENABLED=true expo start --clear",
-    "storybook:ios": "STORYBOOK_ENABLED=true EXPO_PUBLIC_STORYBOOK_ENABLED=true expo start --ios --clear",
-    "storybook:android": "STORYBOOK_ENABLED=true EXPO_PUBLIC_STORYBOOK_ENABLED=true expo start --android --clear"
+    "storybook": "EXPO_PUBLIC_STORYBOOK_ENABLED=true expo start --clear",
+    "storybook:ios": "EXPO_PUBLIC_STORYBOOK_ENABLED=true expo start --ios --clear",
+    "storybook:android": "EXPO_PUBLIC_STORYBOOK_ENABLED=true expo start --android --clear"
   }
 }
 ```
 
-**Two env vars are needed:**
-- `STORYBOOK_ENABLED` — for Metro config (enables story file bundling)
-- `EXPO_PUBLIC_STORYBOOK_ENABLED` — for runtime app code (renders Storybook directly)
+**Key points:**
+- `EXPO_PUBLIC_STORYBOOK_ENABLED` — used by both Metro config and the entry point
+- `--clear` flag is **required** — ensures Metro rebuilds with the new env var value
+- Only one env var needed now (simplified from previous two-var approach)
 
-### Step 9: Optional Storybook Route (for in-app access)
+### Step 10: Optional Storybook Route (for in-app access)
 
 If you also want to access Storybook from within the normal app (e.g., via a dev menu):
 
@@ -211,11 +217,11 @@ export { default } from '../.rnstorybook'
 
 Register in layout:
 ```typescript
-// app/_layout.tsx (inside the normal app branch)
+// app/_layout.tsx
 <Stack.Screen name="storybook" />
 ```
 
-This is optional — the primary access method is `pnpm storybook` which opens Storybook directly.
+This is optional — the primary access method is `pnpm storybook` which opens Storybook directly via the custom entry point.
 
 ## Theme Integration
 
@@ -359,9 +365,10 @@ pnpm storybook
 | "Cannot read property 'getItem' of undefined" | Pass `storage: AsyncStorage` to `getStorybookUI()` |
 | "h2 is not defined" / HTML element errors | Convert story to use RN components (View, Text) |
 | Stories not updating | Restart Metro with `--clear` flag |
-| Storybook not loading on launch | Ensure both `STORYBOOK_ENABLED` and `EXPO_PUBLIC_STORYBOOK_ENABLED` are set |
-| Normal app shows Storybook | Check that env vars are NOT set when running `pnpm start` |
-| Storybook not loading when STORYBOOK_ENABLED=true | Clear Metro cache, check metro.config.js |
+| Storybook not loading on launch | Check `index.js` entry point exists and `package.json` has `"main": "./index.js"` |
+| Normal app shows Storybook | Check that `EXPO_PUBLIC_STORYBOOK_ENABLED` is NOT set when running `pnpm start` |
+| Storybook flag ignored | Ensure `--clear` flag is in storybook script so Metro rebuilds with env var |
+| Entry point not working | Verify `index.js` uses `registerRootComponent` from expo |
 
 ## Comparison: Native vs Web Storybook
 
