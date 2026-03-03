@@ -42,7 +42,7 @@ When multiple adapters are active, the AI reads all of them and applies guidance
 Each adapter follows this structure:
 
 - **Platforms** - Which platforms this adapter serves
-- **Category** - style, components, sandbox, or polyfill
+- **Category** - style, components, or sandbox
 - **Scaffold** - Installation and configuration steps
 - **Theme Integration** - How to connect the project vibe/theme to this tool
 - **Verify** - What to check at component level and screen level
@@ -56,9 +56,8 @@ Each adapter follows this structure:
 | [shadcn/ui](shadcn.md) | components | web |
 | [React Native Paper](react-native-paper.md) | components | mobile-ios, mobile-android |
 | [React Native Reusables](react-native-reusables.md) | components | mobile-ios, mobile-android |
-| [Storybook](storybook.md) | sandbox | web, mobile (via react-native-web) |
-| [Storybook Native](storybook-native.md) | sandbox | mobile-ios, mobile-android (on-device) |
-| [React Native Web](react-native-web.md) | polyfill | mobile (for web Storybook only) |
+| [Storybook](storybook.md) | sandbox | web |
+| [Storybook Native](storybook-native.md) | sandbox | mobile |
 | [Generic](generic.md) | fallback | all |
 
 ## Generic Fallback

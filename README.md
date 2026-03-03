@@ -4,35 +4,40 @@
 
 # pixel-perfect
 
-A Claude Code plugin that orchestrates a 7-phase build process for turning product requirements into real, running UI code sandboxed in Storybook. Supports web (React, Next.js, Vite) and mobile (React Native, Expo).
+A Claude Code plugin that skips the mockup abstraction entirely. Instead of generating designs that get "lost in translation," it scaffolds real React components during design ideation — all sandboxed in Storybook.
 
 ---
 
-## Why Process Orchestration?
+## Why Skip the Abstraction?
 
-AI can write code. What it can't do on its own is follow a disciplined build process. Without structure, you get components built before the goal is clear, screens composed before atoms exist, and integration attempted before anything renders.
+Your Figma mock is not your product. And AI just made that abstraction obsolete.
 
-pixel-perfect enforces the process. It doesn't generate intermediate artifacts or mockup files -- it ensures you define your goal before picking tools, pick tools before scaffolding, build atoms before composing screens, and verify each phase before advancing to the next.
+**AI reads code better than it reads pixels.** That insight flipped everything. Why mock when you can just… make the thing?
 
-**The output is real code in your project's source tree.** Not YAML descriptions. Not HTML mockups. Actual components, screens, and navigation — all viewable in Storybook as sandboxed views.
+The unlock was Storybook. That tool everyone wants to use but nobody has time to set up? Turns out when you can generate stories automatically, the platform actually works.
+
+pixel-perfect follows the organic design process:
+1. Define theme tokens
+2. Build atomic components
+3. Scaffold entire views
+
+All in a Storybook sandbox. All production-ready from the start. No more pointing at the moon — you just go there.
 
 ---
 
 ## The 7-Phase Process
 
-```
-Phase 1: DISCOVER     Define goal, vibe, direction
-Phase 2: TARGET       Define platforms + framework + style + components
-Phase 3: EQUIP        Confirm tool selections, validate adapters
-Phase 4: SCAFFOLD     Set up project, theme, design token stories
-Phase 5: ATOMS        Build + verify individual components
-Phase 6: COMPOSE      Assemble components into screens
-Phase 7: INTEGRATE    Wire navigation, state, data
-```
+| Phase | What Happens | Gate Checks |
+|-------|--------------|-------------|
+| **DISCOVER** | Define goal + vibe from PRD | Goal statement exists, vibe captured |
+| **TARGET** | Select platforms + framework | Platform/framework declared |
+| **EQUIP** | Select style + component libraries | Adapters validated |
+| **SCAFFOLD** | Install tools, create theme, generate token stories | Theme renders, Storybook runs |
+| **ATOMS** | Build individual components | Each component has story + controls |
+| **COMPOSE** | Assemble screens from atoms | Screens render with real data shapes |
+| **INTEGRATE** | Wire navigation + state | App navigates, state persists |
 
 Each phase has a **gate** that must pass before you proceed. The plugin tracks state in `design/manifest.json` and blocks forward progress until gates clear.
-
-Every command iteratively builds the UI system as real code — and finally when screens are composed, those are the sandboxed views in Storybook.
 
 ---
 
@@ -76,22 +81,16 @@ The UI library is completely flexible — use whatever you want or build from sc
 
 ## Storybook as the Sandbox
 
-Storybook is the universal sandbox for all platforms. Every component, design token, and screen gets a Storybook story.
+Storybook is the universal sandbox. Every component, design token, and screen gets a story — viewable immediately, interactive from day one.
 
-### Mobile Projects: Native On-Device Storybook
+| Platform | Sandbox | Launch |
+|----------|---------|--------|
+| Web (React, Next.js, Vite) | Browser Storybook | `pnpm storybook` → localhost:6006 |
+| Mobile (React Native, Expo) | On-device Storybook | `pnpm storybook` → iOS Simulator / Android Emulator |
 
-For React Native/Expo projects, components render in **native on-device Storybook** (`@storybook/react-native`). This provides:
-- True native rendering in iOS Simulator / Android Emulator
-- No polyfills or web approximations
-- Direct launch via `pnpm storybook` (opens Storybook immediately)
+The scaffold phase sets everything up. You just run `pnpm storybook` and start building.
 
-The scaffold phase creates a custom entry point (`index.js`) that conditionally switches between Storybook and your app based on the `EXPO_PUBLIC_STORYBOOK_ENABLED` environment variable.
-
-### Web Projects: Browser-Based Storybook
-
-For web projects (React, Next.js, Vite), components render in browser-based Storybook at `http://localhost:6006`.
-
-### Storybook Sidebar Organization
+### Sidebar Organization
 
 ```
 Design System/          ← Token reference stories (scaffold phase)
@@ -150,33 +149,18 @@ Adapters are reference docs that teach the AI how to scaffold, build, and verify
 | **Style** | Visual styling | User selects a style system |
 | **Components** | UI component library | User selects a component library |
 | **Sandbox** | Preview environment | Always (Storybook) |
-| **Polyfill** | Web compatibility layer | Mobile projects (react-native-web) |
 
 ### Included Adapters
 
-| Adapter | Category | Platforms |
-|---------|----------|-----------|
-| Tailwind | style | web, mobile (NativeWind) |
-| shadcn/ui | components | web |
-| React Native Reusables | components | mobile |
-| React Native Paper | components | mobile |
-| Storybook | sandbox | web |
-| Storybook Native | sandbox | mobile (on-device) |
-| React Native Web | polyfill | mobile (for web Storybook) |
-| Generic | fallback | all |
+| Adapter | Category |
+|---------|----------|
+| Tailwind / NativeWind | style |
+| shadcn/ui | components (web) |
+| React Native Paper | components (mobile) |
+| Storybook | sandbox |
+| Generic | fallback |
 
-### Stack Examples
-
-```
-Web:     {style} + {components} + Storybook
-Mobile:  {style} + {components} + Storybook Native
-Custom:  Any style + any components + Storybook
-Minimal: Generic (process enforcement only)
-```
-
-Style and component libraries are user-selected during init (or auto-detected from `package.json`).
-
-No specific UI library is required. Users can select "None" or "Other" with a docs URL, and the AI adapts.
+No specific library is required. Select "None" or "Other" with a docs URL, and the AI adapts.
 
 ---
 
@@ -188,15 +172,15 @@ No specific UI library is required. Users can select "None" or "Other" with a do
 {
   "version": "4.0",
   "created": "2026-03-01",
-  "goal": "Field service management app for HVAC technicians",
-  "vibe": "clean, professional, high-contrast for outdoor use",
+  "goal": "Dashboard for monitoring real-time analytics",
+  "vibe": "clean, data-dense, dark mode",
   "spec": "PRD.md",
-  "platforms": ["mobile-ios", "mobile-android"],
+  "platforms": ["web-desktop"],
   "tools": {
-    "framework": "expo",
-    "style": "nativewind",          // User-selected or auto-detected
-    "components": "react-native-paper",  // User-selected
-    "sandbox": "storybook"          // Auto-selected based on platform
+    "framework": "vite",
+    "style": "tailwind",
+    "components": "shadcn",
+    "sandbox": "storybook"
   },
   "phase": "atoms",
   "gates": {
