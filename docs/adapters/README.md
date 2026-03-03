@@ -53,6 +53,7 @@ Each adapter follows this structure:
 | [Tailwind](tailwind.md) | style | web, mobile (via NativeWind) |
 | [shadcn/ui](shadcn.md) | components | web |
 | [React Native Paper](react-native-paper.md) | components | mobile-ios, mobile-android |
+| [React Native Reusables](react-native-reusables.md) | components | mobile-ios, mobile-android |
 | [Storybook](storybook.md) | sandbox | web, mobile (via react-native-web) |
 | [Storybook Native](storybook-native.md) | sandbox | mobile-ios, mobile-android (on-device) |
 | [React Native Web](react-native-web.md) | polyfill | mobile (for web Storybook only) |

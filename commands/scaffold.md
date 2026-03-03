@@ -53,7 +53,8 @@ Based on manifest tool choices, load the corresponding adapter docs:
 Tools from manifest:
   framework: expo              → context for scaffold decisions
   style: nativewind            → load docs/adapters/tailwind.md
-  components: react-native-paper → load docs/adapters/react-native-paper.md
+  components: react-native-reusables → load docs/adapters/react-native-reusables.md
+  icons: lucide-react-native   → install lucide-react-native
   sandbox: storybook-native    → load docs/adapters/storybook-native.md
 ```
 
@@ -63,6 +64,7 @@ Tools from manifest:
   framework: nextjs            → context for scaffold decisions
   style: tailwind              → load docs/adapters/tailwind.md
   components: shadcn           → load docs/adapters/shadcn.md
+  icons: lucide-react          → install lucide-react
   sandbox: storybook           → load docs/adapters/storybook.md
 ```
 
@@ -78,9 +80,282 @@ Follow the **Scaffold** section of each loaded adapter doc, in order:
 
 1. **Style adapter** scaffold steps (install, configure)
 2. **Component adapter** scaffold steps (install, configure)
-3. **Sandbox adapter** scaffold steps (install, configure) -- see Step 3 for Storybook specifics
+3. **Icon library** installation (see Step 2a)
+4. **Sandbox adapter** scaffold steps (install, configure) -- see Step 3 for Storybook specifics
 
 Each adapter doc specifies exact commands. Execute them sequentially.
+
+### Step 2a: Install Icon Library
+
+Install the icon library specified in the manifest. Icon libraries are essential for UI components.
+
+**React Native / Expo:**
+
+| Icon Library | Install Command |
+|--------------|-----------------|
+| `lucide-react-native` | `npm install lucide-react-native react-native-svg` |
+| `@expo/vector-icons` | Included with Expo (no install needed) |
+| `react-native-vector-icons` | `npm install react-native-vector-icons` |
+| `phosphor-react-native` | `npm install phosphor-react-native react-native-svg` |
+
+**React / Next.js / Vite:**
+
+| Icon Library | Install Command |
+|--------------|-----------------|
+| `lucide-react` | `npm install lucide-react` |
+| `heroicons` | `npm install @heroicons/react` |
+| `phosphor-icons` | `npm install @phosphor-icons/react` |
+| `react-icons` | `npm install react-icons` |
+
+**After installation**, create an Icon wrapper component for consistent usage:
+
+**For React Native with Lucide:**
+```tsx
+// lib/icons/index.tsx
+import type { LucideIcon } from 'lucide-react-native';
+import { cssInterop } from 'nativewind';
+
+export function iconWithClassName(icon: LucideIcon) {
+  cssInterop(icon, {
+    className: {
+      target: 'style',
+      nativeStyleToProp: {
+        color: true,
+        opacity: true,
+      },
+    },
+  });
+}
+
+export { iconWithClassName as Icon };
+```
+
+**For React with Lucide:**
+```tsx
+// components/ui/icon.tsx
+import { type LucideIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+interface IconProps {
+  icon: LucideIcon;
+  className?: string;
+  size?: number;
+}
+
+export function Icon({ icon: IconComponent, className, size = 24 }: IconProps) {
+  return <IconComponent className={cn('shrink-0', className)} size={size} />;
+}
+```
+
+**For custom icon libraries** (when `icons_docs` is provided in manifest), reference the documentation URL for installation and usage patterns.
+
+### Step 2b: CLI-Based Component Libraries (shadcn/ui, React Native Reusables)
+
+**If using a CLI-based component library** (shadcn/ui, React Native Reusables), pull ALL components during scaffold so they're available from the start. Each component gets themed and receives a story file.
+
+#### Detecting CLI-Based Libraries
+
+Check the manifest for these component library values:
+- `components: "shadcn"` → CLI-based (web)
+- `components: "react-native-reusables"` → CLI-based (mobile)
+
+If detected, execute this step. Otherwise, skip to Step 3.
+
+#### 2b.1: Pull All Components
+
+**For shadcn/ui:**
+```bash
+# Add all available components at once
+npx shadcn@latest add --all --overwrite
+```
+
+**For React Native Reusables:**
+```bash
+# Add all core components (no --all flag, so list them explicitly)
+npx @react-native-reusables/cli@latest add \
+  accordion alert alert-dialog aspect-ratio avatar \
+  badge button card checkbox collapsible \
+  context-menu dialog dropdown-menu hover-card input \
+  label menubar navigation-menu popover progress \
+  radio-group scroll-area select separator skeleton \
+  slider switch table tabs textarea toggle \
+  toggle-group tooltip
+```
+
+This installs all components into `components/ui/` with the project's configured style (from `components.json` or `global.css`).
+
+#### 2b.2: Apply Project Theme
+
+After pulling components, ensure the theme is applied:
+
+1. **Verify `global.css`** has the CSS variables from Step 4 (Create Theme)
+2. **Verify `tailwind.config.ts`** references the CSS variables
+3. **For React Native Reusables:** Verify `theme.ts` mirrors the CSS variables
+
+The components automatically use theme tokens via CSS variables — no per-component customization needed.
+
+#### 2b.3: Generate Component Stories
+
+Create a story file for EACH pulled component. Stories provide:
+- Visual documentation in Storybook
+- Interactive prop controls (argTypes)
+- Multiple variants showing component states
+
+**Story location:**
+- Web: `src/components/ui/{component-name}.stories.tsx`
+- Mobile: `components/ui/{component-name}.stories.tsx`
+
+**Story template for each component:**
+
+```tsx
+import type { Meta, StoryObj } from '@storybook/react';
+// Import the component and its sub-components
+import { Button } from './button';
+// For React Native Reusables, also import Text:
+// import { Text } from './text';
+
+const meta: Meta<typeof Button> = {
+  title: 'Components/Button',
+  component: Button,
+  tags: ['autodocs'],
+  argTypes: {
+    variant: {
+      control: 'select',
+      options: ['default', 'destructive', 'outline', 'secondary', 'ghost', 'link'],
+      description: 'Visual style variant',
+    },
+    size: {
+      control: 'select',
+      options: ['default', 'sm', 'lg', 'icon'],
+      description: 'Button size',
+    },
+    disabled: {
+      control: 'boolean',
+      description: 'Disabled state',
+    },
+  },
+  args: {
+    variant: 'default',
+    size: 'default',
+    disabled: false,
+  },
+};
+export default meta;
+
+type Story = StoryObj<typeof Button>;
+
+export const Default: Story = {
+  render: (args) => <Button {...args}>Button</Button>,
+  // For React Native Reusables:
+  // render: (args) => <Button {...args}><Text>Button</Text></Button>,
+};
+
+export const Destructive: Story = {
+  args: { variant: 'destructive' },
+  render: (args) => <Button {...args}>Delete</Button>,
+};
+
+export const Outline: Story = {
+  args: { variant: 'outline' },
+  render: (args) => <Button {...args}>Outline</Button>,
+};
+
+export const Ghost: Story = {
+  args: { variant: 'ghost' },
+  render: (args) => <Button {...args}>Ghost</Button>,
+};
+
+export const WithIcon: Story = {
+  render: (args) => (
+    <Button {...args}>
+      {/* Add appropriate icon import */}
+      <span className="mr-2">+</span>
+      Add Item
+    </Button>
+  ),
+};
+
+export const Loading: Story = {
+  render: (args) => (
+    <Button {...args} disabled>
+      <span className="animate-spin mr-2">⏳</span>
+      Loading...
+    </Button>
+  ),
+};
+```
+
+**Generate stories for these component categories:**
+
+| Category | Components |
+|----------|------------|
+| **Buttons & Actions** | button, toggle, toggle-group |
+| **Form Controls** | input, textarea, checkbox, radio-group, select, switch, slider, label |
+| **Feedback** | alert, alert-dialog, dialog, progress, skeleton, badge |
+| **Navigation** | tabs, navigation-menu, menubar, dropdown-menu, context-menu |
+| **Layout** | card, separator, aspect-ratio, scroll-area, collapsible, accordion |
+| **Overlays** | popover, tooltip, hover-card, sheet (RN Reusables) |
+| **Data Display** | table, avatar |
+
+**Each story should include:**
+1. **Default** — Base state with default props
+2. **Variants** — All visual variants (if applicable)
+3. **States** — Disabled, loading, error states
+4. **Sizes** — All size options (if applicable)
+5. **With children** — Showing composition patterns (icons, text combinations)
+
+#### 2b.4: Storybook Organization
+
+After generating component stories, the Storybook sidebar shows:
+
+```
+Storybook sidebar:
+  Design System/
+    Colors
+    Typography
+    Spacing
+    Icons
+  Components/
+    Accordion
+    Alert
+    AlertDialog
+    Avatar
+    Badge
+    Button           ← Each component has its own story
+    Card
+    Checkbox
+    ... (all components)
+    Toggle
+    ToggleGroup
+    Tooltip
+  Screens/
+    (empty — populated during COMPOSE phase)
+```
+
+#### 2b.5: Track in Manifest
+
+After pulling components, record them in the manifest:
+
+```json
+{
+  "tools": {
+    "components": "react-native-reusables",
+    "components_pulled": true,
+    "components_count": 32
+  },
+  "components": [
+    "accordion", "alert", "alert-dialog", "avatar", "badge",
+    "button", "card", "checkbox", "collapsible", "context-menu",
+    "dialog", "dropdown-menu", "hover-card", "input", "label",
+    "menubar", "navigation-menu", "popover", "progress",
+    "radio-group", "scroll-area", "select", "separator", "skeleton",
+    "slider", "switch", "table", "tabs", "textarea", "toggle",
+    "toggle-group", "tooltip"
+  ]
+}
+```
+
+This lets the build phase know which components are available and have stories.
 
 ### Step 3: Configure Storybook (Platform-Aware)
 
@@ -151,7 +426,8 @@ const { withStorybook } = require('@storybook/react-native/metro/withStorybook')
 const config = getDefaultConfig(__dirname)
 const styledConfig = withNativeWind(config, { input: './global.css' })
 
-const STORYBOOK_ENABLED = process.env.STORYBOOK_ENABLED === 'true'
+// Use EXPO_PUBLIC_ prefix for client-side env vars (Expo SDK 50+)
+const STORYBOOK_ENABLED = process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === 'true'
 
 module.exports = withStorybook(styledConfig, {
   enabled: STORYBOOK_ENABLED,
@@ -159,7 +435,41 @@ module.exports = withStorybook(styledConfig, {
 })
 ```
 
-##### 3A.5: Add Expo Router Route
+##### 3A.5: Configure Root Layout for Auto-Loading
+
+**CRITICAL for Expo Router projects:** Modify the root `app/_layout.tsx` to check for the Storybook environment variable and render Storybook directly when enabled. This enables auto-loading without navigating to a route.
+
+```typescript
+// app/_layout.tsx
+import '../global.css' // if using NativeWind
+
+import { Stack } from 'expo-router'
+import { StatusBar } from 'expo-status-bar'
+// ... other imports
+
+// When EXPO_PUBLIC_STORYBOOK_ENABLED=true, render Storybook directly
+const STORYBOOK_ENABLED = process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === 'true'
+
+export default function RootLayout() {
+  // Render Storybook UI directly, bypassing Expo Router
+  if (STORYBOOK_ENABLED) {
+    const StorybookUI = require('../.rnstorybook').default
+    return <StorybookUI />
+  }
+
+  // Normal app rendering when Storybook is disabled
+  return (
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      {/* Add storybook route for manual navigation if needed */}
+      <Stack.Screen name="storybook" options={{ headerShown: false }} />
+      {/* other routes */}
+    </Stack>
+  )
+}
+```
+
+You can also keep the optional route for manual access:
 
 ```typescript
 // app/storybook.tsx
@@ -171,9 +481,9 @@ export { default } from '../.rnstorybook'
 ```json
 {
   "scripts": {
-    "storybook": "STORYBOOK_ENABLED=true expo start --clear",
-    "storybook:ios": "STORYBOOK_ENABLED=true expo start --ios --clear",
-    "storybook:android": "STORYBOOK_ENABLED=true expo start --android --clear"
+    "storybook": "EXPO_PUBLIC_STORYBOOK_ENABLED=true expo start --clear",
+    "storybook:ios": "EXPO_PUBLIC_STORYBOOK_ENABLED=true expo start --ios --clear",
+    "storybook:android": "EXPO_PUBLIC_STORYBOOK_ENABLED=true expo start --android --clear"
   }
 }
 ```
@@ -381,6 +691,8 @@ Verification FAILED:
 
 ### Step 4: Create Theme
 
+Generate a theme that matches the structure expected by the selected component library. Each UI system has its own theming convention.
+
 **If frontend-design plugin is available:**
 1. Pass the project vibe to frontend-design
 2. frontend-design produces concrete aesthetic decisions:
@@ -389,7 +701,7 @@ Verification FAILED:
    - Border radius / shape philosophy
    - Motion philosophy (which interactions get animation, duration, easing)
    - Spatial rhythm (spacing scale, density)
-3. Write these decisions into the theme file using the style adapter's format
+3. Write these decisions into the theme file(s) using the component library's required format
 
 **If frontend-design is NOT available:**
 1. Warn the user:
@@ -400,11 +712,250 @@ Verification FAILED:
 2. Map vibe keywords to theme values using the adapter's vibe-to-theme mapping table
 3. Generate a functional but potentially generic theme
 
-**Theme file location** depends on the stack:
-- Web (Tailwind): `tailwind.config.ts` + `globals.css` custom properties
-- Web (shadcn): CSS variables in `globals.css`
-- Mobile (React Native Paper): `src/theme.ts`
-- Generic: `theme.{ts|js|css|json}` in project root or src/
+#### Component Library Theme Structures
+
+**shadcn/ui + React Native Reusables** (CSS Variables):
+
+Both use CSS variables in HSL format. Generate `globals.css`:
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    /* ... dark mode values */
+  }
+}
+```
+
+**For React Native Reusables only**, also generate `lib/theme.ts` to mirror CSS variables:
+
+```typescript
+export const THEME = {
+  light: {
+    background: 'hsl(0 0% 100%)',
+    foreground: 'hsl(240 10% 3.9%)',
+    primary: 'hsl(240 5.9% 10%)',
+    primaryForeground: 'hsl(0 0% 98%)',
+    secondary: 'hsl(240 4.8% 95.9%)',
+    secondaryForeground: 'hsl(240 5.9% 10%)',
+    muted: 'hsl(240 4.8% 95.9%)',
+    mutedForeground: 'hsl(240 3.8% 46.1%)',
+    accent: 'hsl(240 4.8% 95.9%)',
+    accentForeground: 'hsl(240 5.9% 10%)',
+    destructive: 'hsl(0 84.2% 60.2%)',
+    destructiveForeground: 'hsl(0 0% 98%)',
+    border: 'hsl(240 5.9% 90%)',
+    input: 'hsl(240 5.9% 90%)',
+    ring: 'hsl(240 5.9% 10%)',
+  },
+  dark: {
+    background: 'hsl(240 10% 3.9%)',
+    foreground: 'hsl(0 0% 98%)',
+    // ... dark mode values
+  },
+};
+
+export const NAV_THEME = {
+  light: {
+    background: THEME.light.background,
+    border: THEME.light.border,
+    card: THEME.light.background,
+    notification: THEME.light.destructive,
+    primary: THEME.light.primary,
+    text: THEME.light.foreground,
+  },
+  dark: {
+    background: THEME.dark.background,
+    // ...
+  },
+};
+```
+
+**React Native Paper** (MD3 Theme Object):
+
+Generate `src/theme.ts` using Material Design 3 structure:
+
+```typescript
+import { MD3LightTheme, MD3DarkTheme, configureFonts } from 'react-native-paper';
+
+// Custom colors derived from project vibe
+const customColors = {
+  primary: '#6750A4',
+  primaryContainer: '#EADDFF',
+  secondary: '#625B71',
+  secondaryContainer: '#E8DEF8',
+  tertiary: '#7D5260',
+  tertiaryContainer: '#FFD8E4',
+  surface: '#FFFBFE',
+  surfaceVariant: '#E7E0EC',
+  background: '#FFFBFE',
+  error: '#B3261E',
+  errorContainer: '#F9DEDC',
+  onPrimary: '#FFFFFF',
+  onPrimaryContainer: '#21005D',
+  onSecondary: '#FFFFFF',
+  onSecondaryContainer: '#1D192B',
+  onTertiary: '#FFFFFF',
+  onTertiaryContainer: '#31111D',
+  onSurface: '#1C1B1F',
+  onSurfaceVariant: '#49454F',
+  onError: '#FFFFFF',
+  onErrorContainer: '#410E0B',
+  onBackground: '#1C1B1F',
+  outline: '#79747E',
+  outlineVariant: '#CAC4D0',
+  shadow: '#000000',
+  scrim: '#000000',
+  inverseSurface: '#313033',
+  inverseOnSurface: '#F4EFF4',
+  inversePrimary: '#D0BCFF',
+  elevation: {
+    level0: 'transparent',
+    level1: '#F7F2FA',
+    level2: '#F3EDF7',
+    level3: '#EFE9F4',
+    level4: '#EEE8F3',
+    level5: '#EBE5F1',
+  },
+};
+
+export const lightTheme = {
+  ...MD3LightTheme,
+  colors: {
+    ...MD3LightTheme.colors,
+    ...customColors,
+  },
+  roundness: 2, // Adjust based on vibe: 0=sharp, 2=default, 4=rounded
+};
+
+export const darkTheme = {
+  ...MD3DarkTheme,
+  colors: {
+    ...MD3DarkTheme.colors,
+    // Dark mode overrides
+    primary: '#D0BCFF',
+    primaryContainer: '#4F378B',
+    surface: '#1C1B1F',
+    background: '#1C1B1F',
+    // ... complete dark palette
+  },
+};
+```
+
+Apply in your app:
+```tsx
+import { PaperProvider } from 'react-native-paper';
+import { lightTheme, darkTheme } from './src/theme';
+
+export default function App() {
+  const colorScheme = useColorScheme();
+  return (
+    <PaperProvider theme={colorScheme === 'dark' ? darkTheme : lightTheme}>
+      {/* app content */}
+    </PaperProvider>
+  );
+}
+```
+
+**Mantine** (Theme Object):
+
+Generate `src/theme.ts`:
+
+```typescript
+import { createTheme, MantineColorsTuple } from '@mantine/core';
+
+const primary: MantineColorsTuple = [
+  '#f0f1fe', '#dfe0f2', '#bcc0e3', '#96a0d4', '#7785c7',
+  '#6474bf', '#5a6cbc', '#4a5aa6', '#415094', '#344483',
+];
+
+export const theme = createTheme({
+  primaryColor: 'primary',
+  colors: { primary },
+  fontFamily: 'Inter, system-ui, sans-serif',
+  headings: { fontFamily: 'Inter, system-ui, sans-serif' },
+  radius: { xs: '0.25rem', sm: '0.5rem', md: '0.75rem', lg: '1rem', xl: '1.5rem' },
+  defaultRadius: 'md',
+});
+```
+
+**Tailwind (no component library)**:
+
+Configure `tailwind.config.ts` with theme extensions:
+
+```typescript
+import type { Config } from 'tailwindcss';
+
+export default {
+  content: ['./src/**/*.{js,ts,jsx,tsx}'],
+  theme: {
+    extend: {
+      colors: {
+        primary: { DEFAULT: '#6750A4', foreground: '#FFFFFF' },
+        secondary: { DEFAULT: '#625B71', foreground: '#FFFFFF' },
+        accent: { DEFAULT: '#7D5260', foreground: '#FFFFFF' },
+        background: '#FFFBFE',
+        foreground: '#1C1B1F',
+        muted: { DEFAULT: '#E7E0EC', foreground: '#49454F' },
+        destructive: { DEFAULT: '#B3261E', foreground: '#FFFFFF' },
+        border: '#CAC4D0',
+        input: '#E7E0EC',
+        ring: '#6750A4',
+      },
+      borderRadius: {
+        lg: '0.75rem',
+        md: '0.5rem',
+        sm: '0.25rem',
+      },
+    },
+  },
+  plugins: [],
+} satisfies Config;
+```
+
+#### Vibe-to-Theme Mapping
+
+When generating colors from vibe keywords, apply these transformations:
+
+| Vibe Keyword | Color Strategy | Border Radius | Shadows |
+|-------------|----------------|---------------|---------|
+| minimal | Neutral grays, low saturation | `0.5rem` | Subtle or none |
+| bold / vibrant | High saturation primary, strong contrast | `0.75rem` | Prominent |
+| professional | Slate/zinc palette, desaturated accents | `0.375rem` | Subtle |
+| playful | Bright multi-hue, warm accents | `1rem+` | Soft, colorful |
+| elegant | Muted palette, gold/rose accents | `0.25rem` | Refined |
+| brutalist | Black/white + one accent | `0` (sharp) | None |
+| high-contrast | Maximum contrast ratios | `0.25rem` | Strong borders |
+
+The loaded component adapter doc contains the specific vibe-to-theme mapping table — use it for concrete values.
 
 ### Step 5: Generate Design Token Stories
 
@@ -715,9 +1266,30 @@ Run verification checks:
 
 1. **Sandbox starts** - Storybook dev server runs without errors
 2. **Design token stories render** - All generated token stories appear under "Design System" group
-3. **Component renders** - HelloWorld component visible in Storybook with working controls
-4. **Theme applied** - Component and token stories use theme values (not defaults)
+3. **Component library stories render** - If CLI-based library was pulled, all component stories render
+4. **HelloWorld renders** - HelloWorld component visible in Storybook with working controls
+5. **Theme applied** - All components and token stories use theme values (not defaults)
 
+**For projects with CLI-based component libraries (shadcn/ui, React Native Reusables):**
+```
+Verification:
+  [x] Storybook starts (port 6006)
+  [x] Design System/Colors renders palette
+  [x] Design System/Typography renders font scale
+  [x] Design System/Spacing renders spacing boxes
+  [x] Design System/Icons renders gallery
+  [x] Components pulled (32 components)
+  [x] Component stories generated (32 stories)
+  [x] Components/Button renders with variants
+  [x] Components/Card renders with sections
+  [x] Components/Dialog renders with portal
+  [x] All component stories render without errors
+  [x] Theme colors applied to all components
+
+Scaffold complete!
+```
+
+**For projects with non-CLI component libraries:**
 ```
 Verification:
   [x] Storybook starts (port 6006)
@@ -789,7 +1361,8 @@ project/
 │   ├── preview.tsx           ← Global decorators (theme provider)
 │   └── storybook.requires.ts ← Auto-generated by Metro
 ├── app/
-│   └── storybook.tsx         ← Expo Router route to Storybook
+│   ├── _layout.tsx           ← Root layout with Storybook auto-load check
+│   └── storybook.tsx         ← Optional Expo Router route to Storybook
 ├── stories/
 │   ├── tokens/
 │   │   ├── Colors.stories.tsx     ← Color palette (React Native components)
@@ -831,7 +1404,98 @@ project/
 
 ## Output Summary
 
-**Mobile project example:**
+**Mobile project with React Native Reusables:**
+```
+Scaffold complete for: Field service management app
+
+Tools configured:
+  Framework:  Expo
+  Style:      NativeWind
+  Components: React Native Reusables (shadcn for RN)
+  Sandbox:    Storybook Native (on-device)
+
+Theme created: global.css + theme.ts
+  Font: Space Grotesk + Inter
+  Primary: hsl(213 50% 24%)
+  Accent: hsl(17 100% 60%)
+
+Component library pulled (32 components):
+  accordion, alert, alert-dialog, avatar, badge, button, card,
+  checkbox, collapsible, context-menu, dialog, dropdown-menu,
+  hover-card, input, label, menubar, navigation-menu, popover,
+  progress, radio-group, scroll-area, select, separator, skeleton,
+  slider, switch, table, tabs, textarea, toggle, toggle-group, tooltip
+
+Component stories generated (32 stories):
+  components/ui/button.stories.tsx   — 6 variants, 3 controls
+  components/ui/card.stories.tsx     — 4 variants
+  components/ui/dialog.stories.tsx   — 3 variants
+  ... (all 32 components)
+
+Design token stories:
+  stories/tokens/Colors.stories.tsx      — 4 color groups
+  stories/tokens/Typography.stories.tsx  — 15 type variants
+  stories/tokens/Spacing.stories.tsx     — 7-step scale
+  stories/tokens/Icons.stories.tsx       — 10 project icons
+
+Storybook sidebar:
+  Design System/ (Colors, Typography, Spacing, Icons)
+  Components/ (Accordion, Alert, AlertDialog, ..., Tooltip) — 32 components
+  Screens/ (empty — populated during compose)
+
+Run: pnpm storybook → opens Expo with Storybook
+
+Next: /pixel-perfect:build
+```
+
+**Web project with shadcn/ui:**
+```
+Scaffold complete for: Dashboard web app
+
+Tools configured:
+  Framework:  Next.js
+  Style:      Tailwind CSS
+  Components: shadcn/ui
+  Sandbox:    Storybook Web (browser, port 6006)
+
+Theme created: globals.css + tailwind.config.ts
+  Font: Space Grotesk + Inter
+  Primary: hsl(213 50% 24%)
+  Accent: hsl(17 100% 60%)
+
+Component library pulled (45 components):
+  accordion, alert, alert-dialog, aspect-ratio, avatar, badge,
+  breadcrumb, button, calendar, card, carousel, chart, checkbox,
+  collapsible, command, context-menu, dialog, drawer, dropdown-menu,
+  form, hover-card, input, input-otp, label, menubar, navigation-menu,
+  pagination, popover, progress, radio-group, resizable, scroll-area,
+  select, separator, sheet, skeleton, slider, sonner, switch, table,
+  tabs, textarea, toast, toggle, toggle-group, tooltip
+
+Component stories generated (45 stories):
+  src/components/ui/button.stories.tsx   — 6 variants, 3 controls
+  src/components/ui/card.stories.tsx     — 4 variants
+  src/components/ui/dialog.stories.tsx   — 3 variants
+  ... (all 45 components)
+
+Design token stories:
+  src/stories/tokens/Colors.stories.tsx      — 4 color groups
+  src/stories/tokens/Typography.stories.tsx  — 15 type variants
+  src/stories/tokens/Spacing.stories.tsx     — 7-step scale
+  src/stories/tokens/Icons.stories.tsx       — 10 project icons
+
+Storybook sidebar:
+  Design System/ (Colors, Typography, Spacing, Icons)
+  Components/ (Accordion, Alert, AlertDialog, ..., Tooltip) — 45 components
+  Screens/ (empty — populated during compose)
+
+Run: pnpm storybook → http://localhost:6006
+
+Next: /pixel-perfect:build
+  The build phase will compose these components into screens.
+```
+
+**Mobile project with React Native Paper (non-CLI library):**
 ```
 Scaffold complete for: Field service management app
 
@@ -857,36 +1521,4 @@ Hello world: stories/components/HelloWorld.tsx + story (3 variants, 4 controls)
 Run: pnpm storybook → opens Expo, navigate to /storybook
 
 Next: /pixel-perfect:build
-```
-
-**Web project example:**
-```
-Scaffold complete for: Dashboard web app
-
-Tools configured:
-  Framework:  Next.js
-  Style:      Tailwind CSS
-  Components: shadcn/ui
-  Sandbox:    Storybook Web (browser, port 6006)
-
-Theme created: src/theme.ts
-  Font: Space Grotesk + Inter
-  Primary: #1E3A5F
-  Accent: #FF6B35
-
-Design token stories:
-  src/stories/tokens/Colors.stories.tsx      — 4 color groups
-  src/stories/tokens/Typography.stories.tsx  — 15 type variants
-  src/stories/tokens/Spacing.stories.tsx     — 7-step scale
-  src/stories/tokens/Icons.stories.tsx       — 10 project icons
-
-Hello world: src/components/HelloWorld.tsx + story (3 variants, 4 controls)
-
-Storybook sidebar:
-  Design System/ (Colors, Typography, Spacing, Icons)
-  Components/ (HelloWorld)
-  Screens/ (empty — populated during compose)
-
-Next: /pixel-perfect:build
-  This will identify and build atomic components from your requirements.
 ```

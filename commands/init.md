@@ -23,13 +23,14 @@ Interactive setup that captures your project's goal, selects target platforms, i
 - `--platforms <list>`: Pre-set platforms (comma-separated: `mobile-ios,web-desktop`)
 - `--vibe <description>`: Pre-set design vibe
 - `--framework <name>`: Pre-set framework (e.g., `react-native`, `nextjs`, `vite`)
+- `--icons <name>`: Pre-set icon library (e.g., `lucide`, `heroicons`, `phosphor`)
 
 ## What It Does
 
 Walks through three phases sequentially. Each phase has an exit gate that must pass before proceeding.
 
 1. **Phase 1: DISCOVER** - Define what you're building
-2. **Phase 2: TARGET** - Define where it runs, what framework, what style system, what component library
+2. **Phase 2: TARGET** - Define where it runs, what framework, what style system, what component library, what icon library
 3. **Phase 3: EQUIP** - Confirm tool selections and validate adapters
 
 Output: `design/manifest.json` with gates discover/target/equip = passed.
@@ -239,7 +240,8 @@ Based on the framework selection, present the appropriate component library opti
 **React Native / Expo:**
 ```
 ? Component library:
-  > React Native Paper
+  > React Native Reusables (shadcn/ui for React Native)
+    React Native Paper
     Tamagui
     Gluestack
     Other (provide link to docs)
@@ -261,13 +263,64 @@ Based on the framework selection, present the appropriate component library opti
 
 **If the user selects "Other":** Ask for a URL to the component library's documentation. Record under `tools.components_docs`.
 
-**PRD keyword detection:** If the PRD mentions a specific library (e.g., "shadcn components", "using Paper"):
+**PRD keyword detection:** If the PRD mentions a specific library (e.g., "shadcn components", "using Paper", "react-native-reusables"):
 ```
 Detected "shadcn" in requirements.
 ? Use shadcn/ui as your component library? [Yes / No, choose different]
 ```
 
-**Exit gate:** At least one platform selected, framework chosen, style system chosen, component library chosen (or explicitly "none"). Manifest has `target: passed`.
+For mobile projects mentioning shadcn:
+```
+Detected "shadcn" in requirements (mobile project).
+? Use React Native Reusables (shadcn/ui for React Native)? [Yes / No, choose different]
+```
+
+### Step 5: Icon Library Drill-Down
+
+Based on the framework selection, present the appropriate icon library options. Icons are essential for UI development and should always be selected during setup.
+
+**React Native / Expo:**
+```
+? Icon library:
+  > Lucide React Native (recommended for React Native Reusables)
+    @expo/vector-icons (Expo built-in, multiple icon sets)
+    React Native Vector Icons
+    Phosphor React Native
+    Other (provide link to docs)
+```
+
+**React / Next.js / Vite:**
+```
+? Icon library:
+  > Lucide React (recommended for shadcn/ui)
+    Heroicons
+    Phosphor Icons
+    React Icons (multiple icon sets)
+    Other (provide link to docs)
+```
+
+**If the user selects "Other":** Ask for a URL to the icon library's documentation. Record under `tools.icons_docs`.
+
+**PRD keyword detection:** If the PRD mentions a specific icon library (e.g., "using Lucide icons", "Heroicons", "vector-icons"):
+```
+Detected "Lucide" in requirements.
+? Use Lucide React as your icon library? [Yes / No, choose different]
+```
+
+**Component library auto-suggestion:** If certain component libraries are selected, suggest their recommended icon library:
+
+| Component Library | Recommended Icons | Reason |
+|------------------|-------------------|--------|
+| shadcn/ui | Lucide React | shadcn/ui uses Lucide by default |
+| React Native Reusables | Lucide React Native | RNR uses Lucide via wrapper pattern |
+| React Native Paper | @expo/vector-icons | Paper integrates with Expo icons |
+
+```
+You selected React Native Reusables.
+? Use Lucide React Native (recommended)? [Yes / No, choose different]
+```
+
+**Exit gate:** At least one platform selected, framework chosen, style system chosen, component library chosen (or explicitly "none"), icon library chosen. Manifest has `target: passed`.
 
 ---
 
@@ -304,7 +357,8 @@ Your configuration:
   Platforms:   mobile-ios, mobile-android
   Framework:   Expo
   Style:       NativeWind
-  Components:  React Native Paper
+  Components:  React Native Reusables
+  Icons:       Lucide React Native
   Sandbox:     Storybook Native (auto-selected for mobile)
 
 ? Confirm and write manifest? [Yes / Change something]
@@ -318,6 +372,7 @@ Your configuration:
   Framework:   Next.js
   Style:       Tailwind CSS
   Components:  shadcn/ui
+  Icons:       Lucide React
   Sandbox:     Storybook Web (auto-selected for web)
 
 ? Confirm and write manifest? [Yes / Change something]
@@ -331,7 +386,15 @@ After confirmation, verify adapter docs exist for chosen tools:
 - If adapter exists in `docs/adapters/`: note it will be loaded during scaffold
 - If no adapter exists: inform user the generic adapter will be used (process enforcement only, no tool-specific guidance)
 
-**Mobile project example:**
+**Mobile project example (with React Native Reusables):**
+```
+Adapter check:
+  [x] storybook-native → docs/adapters/storybook-native.md (auto-selected for mobile)
+  [x] tailwind         → docs/adapters/tailwind.md
+  [x] react-native-reusables → docs/adapters/react-native-reusables.md
+```
+
+**Mobile project example (with React Native Paper):**
 ```
 Adapter check:
   [x] storybook-native → docs/adapters/storybook-native.md (auto-selected for mobile)
@@ -378,7 +441,8 @@ Creates `{directory}/design/manifest.json`:
   "tools": {
     "framework": "expo",
     "style": "nativewind",
-    "components": "react-native-paper",
+    "components": "react-native-reusables",
+    "icons": "lucide-react-native",
     "sandbox": "storybook-native"
   },
   "phase": "equip",
@@ -406,6 +470,8 @@ The `spec` field is the path to the spec/PRD document (relative to the project r
     "style": "custom",
     "style_docs": "https://example.com/style-system/docs",
     "components": "react-native-paper",
+    "icons": "custom",
+    "icons_docs": "https://example.com/icons/docs",
     "sandbox": "storybook"
   }
 }
