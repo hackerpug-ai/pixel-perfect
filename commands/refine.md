@@ -28,7 +28,7 @@ Collect feedback on specific components or screens, regenerate the affected code
 
 ## Gate Check
 
-**Requires:** `design/manifest.yaml` exists with at least `scaffold: passed`.
+**Requires:** `design/manifest.json` exists with at least `scaffold: passed`.
 
 ## Workflow
 
@@ -186,19 +186,26 @@ Refinement cascade:
 
 Refine updates the manifest to reflect changed items:
 
-```yaml
-atoms:
-  - name: StatusBadge
-    file: src/components/StatusBadge.tsx
-    story: src/components/StatusBadge.stories.tsx
-    status: verified    # Re-verified after refinement
-    controls: true      # All props wired to argTypes
+```json
+{
+  "atoms": [
+    {
+      "name": "StatusBadge",
+      "file": "src/components/StatusBadge.tsx",
+      "story": "src/components/StatusBadge.stories.tsx",
+      "status": "verified",
+      "controls": true
+    }
+  ]
+}
 ```
 
 If verification fails after refinement, status reverts to `in-progress`:
-```yaml
-    status: in-progress  # Needs attention
-    controls: false      # Controls need fixing
+```json
+{
+  "status": "in-progress",
+  "controls": false
+}
 ```
 
 ## Examples

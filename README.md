@@ -30,7 +30,7 @@ Phase 6: COMPOSE      Assemble components into screens
 Phase 7: INTEGRATE    Wire navigation, state, data
 ```
 
-Each phase has a **gate** that must pass before you proceed. The plugin tracks state in `design/manifest.yaml` and blocks forward progress until gates clear.
+Each phase has a **gate** that must pass before you proceed. The plugin tracks state in `design/manifest.json` and blocks forward progress until gates clear.
 
 Every command iteratively builds the UI system as real code — and finally when screens are composed, those are the sandboxed views in Storybook.
 
@@ -167,48 +167,51 @@ No specific UI library is required. Users can select "None" or "Other" with a do
 
 ## The Manifest
 
-`design/manifest.yaml` is the single source of truth for process state:
+`design/manifest.json` is the single source of truth for process state:
 
-```yaml
-version: "4.0"
-created: "2026-03-01"
-
-goal: "Field service management app for HVAC technicians"
-vibe: "clean, professional, high-contrast for outdoor use"
-
-platforms:
-  - mobile-ios
-  - mobile-android
-
-tools:
-  framework: expo
-  style: nativewind
-  components: react-native-paper
-  sandbox: storybook
-
-phase: atoms
-gates:
-  discover: passed
-  target: passed
-  equip: passed
-  scaffold: passed
-  atoms: in-progress
-  compose: pending
-  integrate: pending
-
-atoms:
-  - name: StatusBadge
-    file: src/components/StatusBadge.tsx
-    story: src/components/StatusBadge.stories.tsx
-    status: verified
-    controls: true
-
-screens:
-  - name: TodayFeed
-    file: src/screens/TodayFeed.tsx
-    story: src/screens/TodayFeed.stories.tsx
-    status: pending
-    atoms: [StatusBadge, JobCard, DateChip, SectionHeader]
+```json
+{
+  "version": "4.0",
+  "created": "2026-03-01",
+  "goal": "Field service management app for HVAC technicians",
+  "vibe": "clean, professional, high-contrast for outdoor use",
+  "spec": "PRD.md",
+  "platforms": ["mobile-ios", "mobile-android"],
+  "tools": {
+    "framework": "expo",
+    "style": "nativewind",
+    "components": "react-native-paper",
+    "sandbox": "storybook"
+  },
+  "phase": "atoms",
+  "gates": {
+    "discover": "passed",
+    "target": "passed",
+    "equip": "passed",
+    "scaffold": "passed",
+    "atoms": "in-progress",
+    "compose": "pending",
+    "integrate": "pending"
+  },
+  "atoms": [
+    {
+      "name": "StatusBadge",
+      "file": "src/components/StatusBadge.tsx",
+      "story": "src/components/StatusBadge.stories.tsx",
+      "status": "verified",
+      "controls": true
+    }
+  ],
+  "screens": [
+    {
+      "name": "TodayFeed",
+      "file": "src/screens/TodayFeed.tsx",
+      "story": "src/screens/TodayFeed.stories.tsx",
+      "status": "pending",
+      "atoms": ["StatusBadge", "JobCard", "DateChip", "SectionHeader"]
+    }
+  ]
+}
 ```
 
 ---
@@ -232,7 +235,7 @@ When frontend-design is NOT installed:
 
 ## Auto-Activating Skill
 
-When you work in a project that has `design/manifest.yaml`, the **process-context** skill auto-activates. Even without running pixel-perfect commands explicitly, the AI will:
+When you work in a project that has `design/manifest.json`, the **process-context** skill auto-activates. Even without running pixel-perfect commands explicitly, the AI will:
 
 - Know the current build phase
 - Follow adapter conventions for the chosen tools

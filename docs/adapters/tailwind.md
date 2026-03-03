@@ -35,7 +35,7 @@ Create `tailwind.config.ts` at project root with theme values derived from the p
 
 ## Theme Integration
 
-Map the project vibe from `design/manifest.yaml` to Tailwind's theme configuration:
+Map the project vibe from `design/manifest.json` to Tailwind's theme configuration:
 
 ```typescript
 // tailwind.config.ts

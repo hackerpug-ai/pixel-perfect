@@ -4,7 +4,7 @@ description: "Initialize design project: DISCOVER goal + vibe, TARGET platforms,
 
 # Project Initialization (Phases 1-3)
 
-Interactive setup that captures your project's goal, selects target platforms, identifies the framework and toolchain, and locks in Storybook as the component sandbox. Produces a `design/manifest.yaml` that drives all subsequent phases.
+Interactive setup that captures your project's goal, selects target platforms, identifies the framework and toolchain, and locks in Storybook as the component sandbox. Produces a `design/manifest.json` that drives all subsequent phases.
 
 ## Usage
 
@@ -18,7 +18,7 @@ Interactive setup that captures your project's goal, selects target platforms, i
 
 ## Options
 
-- `--force`: Overwrite existing `design/manifest.yaml`
+- `--force`: Overwrite existing `design/manifest.json`
 - `--quick`: Auto-accept inferred values with minimal prompts
 - `--platforms <list>`: Pre-set platforms (comma-separated: `mobile-ios,web-desktop`)
 - `--vibe <description>`: Pre-set design vibe
@@ -32,7 +32,7 @@ Walks through three phases sequentially. Each phase has an exit gate that must p
 2. **Phase 2: TARGET** - Define where it runs, what framework, what style system, what component library
 3. **Phase 3: EQUIP** - Confirm tool selections and validate adapters
 
-Output: `design/manifest.yaml` with gates discover/target/equip = passed.
+Output: `design/manifest.json` with gates discover/target/equip = passed.
 
 ---
 
@@ -57,6 +57,46 @@ Found: PRD.md
 ```
 
 If no document exists, proceed without one. The user provides goal and vibe manually.
+
+### Step 1b: Spec Document for Sandbox Views
+
+After identifying the requirements document, ask the user if they have a **spec document (PRD or design spec)** that describes the views/screens they want to build. This spec drives the component hierarchy during build phases.
+
+```
+? Do you have a spec or PRD that describes your app's views/screens?
+  > Use the requirements doc found above (PRD.md)
+    Point to a different file
+    No spec — I'll define views later
+```
+
+If a spec is provided, record its path in the manifest under `spec`. This spec is used during the build phase to:
+
+1. **Derive the component hierarchy** following the progression:
+   - **Components** (atoms) — Smallest reusable UI elements (Button, Badge, Avatar, Input)
+   - **Molecules** — Compositions of 2-3 atoms that form a functional unit (SearchBar, UserCard, FormField)
+   - **Views** (screens) — Full screen layouts composed of molecules and components (Dashboard, Settings, Profile)
+
+2. **Generate sandbox stories** at each level of the hierarchy:
+   - `Components/` — Individual atom stories with controls
+   - **`Molecules/`** — Molecule stories showing atom composition
+   - `Views/` — Full view stories with realistic data
+
+3. **Plan the build order**: Components first, then molecules that compose them, then views that arrange molecules into layouts.
+
+```
+Component Hierarchy (from spec):
+
+  Components (atoms):     Button, Badge, Avatar, TextField, Icon
+                              ↓ compose into
+  Molecules:              SearchBar (TextField + Icon + Button)
+                          UserCard (Avatar + Badge + Text)
+                          NavItem (Icon + Text + Badge)
+                              ↓ compose into
+  Views (screens):        Dashboard (SearchBar + UserCard list + NavItem sidebar)
+                          Profile (Avatar + FormFields + ActionButtons)
+```
+
+This hierarchy is recorded in the manifest and drives the build phase ordering.
 
 ### Step 2: Goal Statement
 
@@ -235,12 +275,23 @@ Detected "shadcn" in requirements.
 
 Confirm tool selections, validate adapter availability, and lock the manifest. Storybook is the sandbox -- this is non-negotiable.
 
-### Sandbox: Storybook (Non-Negotiable)
+### Sandbox: Storybook (Platform-Aware, Non-Negotiable)
 
-Storybook is always the component sandbox. It is not presented as a choice. It is recorded automatically.
+Storybook is always the component sandbox. The **variant** is automatically determined by platform:
+
+| Platform | Sandbox Variant | Adapter |
+|----------|-----------------|---------|
+| `mobile-ios`, `mobile-android` | Storybook Native | `storybook-native.md` |
+| `web-desktop`, `web-mobile` | Storybook Web | `storybook.md` |
+
+This is **not a user choice**. The manifest records the platform-appropriate variant automatically:
 
 ```
-Sandbox: Storybook (locked)
+Sandbox: Storybook Native (auto-selected for mobile)
+```
+or
+```
+Sandbox: Storybook Web (auto-selected for web)
 ```
 
 ### Confirmation Summary
@@ -254,7 +305,20 @@ Your configuration:
   Framework:   Expo
   Style:       NativeWind
   Components:  React Native Paper
-  Sandbox:     Storybook (locked)
+  Sandbox:     Storybook Native (auto-selected for mobile)
+
+? Confirm and write manifest? [Yes / Change something]
+```
+
+For web projects:
+```
+Your configuration:
+
+  Platforms:   web-desktop, web-mobile
+  Framework:   Next.js
+  Style:       Tailwind CSS
+  Components:  shadcn/ui
+  Sandbox:     Storybook Web (auto-selected for web)
 
 ? Confirm and write manifest? [Yes / Change something]
 ```
@@ -267,11 +331,20 @@ After confirmation, verify adapter docs exist for chosen tools:
 - If adapter exists in `docs/adapters/`: note it will be loaded during scaffold
 - If no adapter exists: inform user the generic adapter will be used (process enforcement only, no tool-specific guidance)
 
+**Mobile project example:**
 ```
 Adapter check:
-  [x] storybook    → docs/adapters/storybook.md
-  [x] tailwind     → docs/adapters/tailwind.md
-  [ ] mantine      → No adapter found. Generic adapter will be used.
+  [x] storybook-native → docs/adapters/storybook-native.md (auto-selected for mobile)
+  [x] tailwind         → docs/adapters/tailwind.md
+  [x] react-native-paper → docs/adapters/react-native-paper.md
+```
+
+**Web project example:**
+```
+Adapter check:
+  [x] storybook        → docs/adapters/storybook.md (auto-selected for web)
+  [x] tailwind         → docs/adapters/tailwind.md
+  [ ] mantine          → No adapter found. Generic adapter will be used.
 ```
 
 For tools selected as "Other" with a docs URL provided, inform the user:
@@ -285,64 +358,69 @@ For tools selected as "Other" with a docs URL provided, inform the user:
 
 ## Manifest Output
 
-Creates `{directory}/design/manifest.yaml`:
+Creates `{directory}/design/manifest.json`:
 
-```yaml
-version: "3.0"
-created: "2026-03-01"
-
-# Phase 1: DISCOVER
-goal: "Field service management app for HVAC technicians"
-vibe: "clean, professional, high-contrast for outdoor use"
-references:
-  - "https://servicetitan.com"
-
-# Phase 2: TARGET
-platforms:
-  - mobile-ios
-  - mobile-android
-
-# Phase 3: EQUIP
-tools:
-  framework: expo
-  style: nativewind
-  components: react-native-paper
-  sandbox: storybook
-
-# Process state
-phase: equip
-gates:
-  discover: passed
-  target: passed
-  equip: passed
-  scaffold: pending
-  atoms: pending
-  compose: pending
-  integrate: pending
+**Mobile project example:**
+```json
+{
+  "version": "4.0",
+  "created": "2026-03-01",
+  "goal": "Field service management app for HVAC technicians",
+  "vibe": "clean, professional, high-contrast for outdoor use",
+  "spec": "PRD.md",
+  "references": [
+    "https://servicetitan.com"
+  ],
+  "platforms": [
+    "mobile-ios",
+    "mobile-android"
+  ],
+  "tools": {
+    "framework": "expo",
+    "style": "nativewind",
+    "components": "react-native-paper",
+    "sandbox": "storybook-native"
+  },
+  "phase": "equip",
+  "gates": {
+    "discover": "passed",
+    "target": "passed",
+    "equip": "passed",
+    "scaffold": "pending",
+    "atoms": "pending",
+    "compose": "pending",
+    "integrate": "pending"
+  }
+}
 ```
+
+The `spec` field is the path to the spec/PRD document (relative to the project root) that drives the component hierarchy during build. If no spec was provided, this field is omitted.
 
 **When "Other" is selected for any tool**, the manifest includes the docs URL:
 
-```yaml
-tools:
-  framework: custom
-  framework_docs: "https://example.com/framework/docs"
-  style: custom
-  style_docs: "https://example.com/style-system/docs"
-  components: react-native-paper
-  sandbox: storybook
+```json
+{
+  "tools": {
+    "framework": "custom",
+    "framework_docs": "https://example.com/framework/docs",
+    "style": "custom",
+    "style_docs": "https://example.com/style-system/docs",
+    "components": "react-native-paper",
+    "sandbox": "storybook"
+  }
+}
 ```
 
 ---
 
 ## Re-Initialization
 
-If `design/manifest.yaml` already exists:
+If `design/manifest.json` already exists:
 - Without `--force`: warn and exit
 - With `--force`: overwrite, resetting all gates
 
 ```
-design/manifest.yaml already exists (phase: atoms, 3/5 atoms verified).
+design/manifest.json already exists (phase: atoms, 3/5 atoms verified).
 Run with --force to reconfigure from scratch, or use /pixel-perfect:status to see progress.
 ```
 
@@ -350,7 +428,7 @@ Run with --force to reconfigure from scratch, or use /pixel-perfect:status to se
 
 After init completes:
 ```
-Initialization complete. Manifest saved to design/manifest.yaml
+Initialization complete. Manifest saved to design/manifest.json
 
 Next: /pixel-perfect:scaffold
   This will set up your project with NativeWind + React Native Paper + Storybook

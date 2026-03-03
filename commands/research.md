@@ -47,7 +47,7 @@ Research artifacts save to `design/research/` (compatible with the manifest stru
 
 ```
 design/
-├── manifest.yaml          # Process state (created by init)
+├── manifest.json          # Process state (created by init)
 └── research/              # Research artifacts
     ├── INDEX.md           # Catalog of all research
     ├── topics/

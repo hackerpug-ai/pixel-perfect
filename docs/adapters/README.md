@@ -20,11 +20,20 @@ Adapters compose by category. A project uses **one adapter per category**, and t
 
 ```
 Web project:     tailwind (style) + shadcn (components) + storybook (sandbox)
-Mobile project:  tailwind/nativewind (style) + react-native-paper (components) + storybook (sandbox) + react-native-web (polyfill)
+Mobile project:  tailwind/nativewind (style) + react-native-paper (components) + storybook-native (sandbox)
 Minimal project: generic (process enforcement only) + storybook (sandbox)
 ```
 
-When multiple adapters are active, the AI reads all of them and applies guidance from each in its respective domain. Style adapters control theming. Component adapters control component structure. The sandbox adapter (Storybook) controls preview and verification.
+**Sandbox Selection is Automatic (Not a User Choice):**
+
+| Platform | Sandbox Adapter |
+|----------|-----------------|
+| `mobile-ios`, `mobile-android` | `storybook-native` (on-device preview) |
+| `web-desktop`, `web-mobile` | `storybook` (browser-based preview) |
+
+The init command automatically selects the appropriate sandbox based on the target platform. This is **not presented as a user choice**.
+
+When multiple adapters are active, the AI reads all of them and applies guidance from each in its respective domain. Style adapters control theming. Component adapters control component structure. The sandbox adapter controls preview and verification.
 
 ## Adapter Doc Format
 
@@ -44,8 +53,9 @@ Each adapter follows this structure:
 | [Tailwind](tailwind.md) | style | web, mobile (via NativeWind) |
 | [shadcn/ui](shadcn.md) | components | web |
 | [React Native Paper](react-native-paper.md) | components | mobile-ios, mobile-android |
-| [Storybook](storybook.md) | sandbox | web, mobile |
-| [React Native Web](react-native-web.md) | polyfill | mobile (for web Storybook) |
+| [Storybook](storybook.md) | sandbox | web, mobile (via react-native-web) |
+| [Storybook Native](storybook-native.md) | sandbox | mobile-ios, mobile-android (on-device) |
+| [React Native Web](react-native-web.md) | polyfill | mobile (for web Storybook only) |
 | [Generic](generic.md) | fallback | all |
 
 ## Generic Fallback

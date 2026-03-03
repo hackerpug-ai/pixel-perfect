@@ -12,7 +12,7 @@ Fallback (covers all categories when no specific adapter is selected)
 
 ## Scaffold
 
-1. Read `design/manifest.yaml` for tool choices
+1. Read `design/manifest.json` for tool choices
 2. Create project structure appropriate for the platform:
    - Source directory for components
    - Theme/config file location

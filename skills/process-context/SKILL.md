@@ -3,25 +3,43 @@ name: process-context
 description: "Auto-activating context for pixel-perfect projects. Detects manifest, injects phase awareness and adapter conventions."
 autoActivate:
   files:
+    - "design/manifest.json"
     - "design/manifest.yaml"
 ---
 
 # pixel-perfect Process Context
 
-You are working in a project managed by **pixel-perfect v4.0**, a 7-phase build process orchestrator that produces real code sandboxed in Storybook. This context was auto-loaded because `design/manifest.yaml` exists in the project.
+You are working in a project managed by **pixel-perfect v4.0**, a 7-phase build process orchestrator that produces real code sandboxed in Storybook. This context was auto-loaded because `design/manifest.json` exists in the project.
+
+## Legacy YAML Migration
+
+If `design/manifest.yaml` exists but `design/manifest.json` does not, **auto-migrate** before proceeding:
+
+1. Read `design/manifest.yaml`
+2. Parse the YAML content into a JSON structure
+3. Write the equivalent `design/manifest.json`
+4. Delete `design/manifest.yaml`
+5. Inform the user:
+
+```
+Migrated design/manifest.yaml → design/manifest.json
+  All data preserved. YAML file removed.
+```
+
+This migration is automatic and transparent. No user confirmation needed — JSON is the canonical format going forward.
 
 ## Your Responsibilities
 
 1. **Respect the current phase** - Don't skip ahead. If the project is in ATOMS, build atoms before composing screens.
 2. **Follow adapter conventions** - Components should match the tool stack's patterns.
 3. **Use the theme** - Never hardcode colors, fonts, or spacing. Always reference theme tokens.
-4. **Track in manifest** - When you create or modify components/screens, update `design/manifest.yaml`.
+4. **Track in manifest** - When you create or modify components/screens, update `design/manifest.json`.
 5. **Wire controls** - Every component prop must have a corresponding Storybook `argType` control.
 6. **Organize stories** - Use the correct Storybook hierarchy prefix (`Design System/`, `Components/`, `Screens/`).
 
 ## Read the Manifest
 
-Before doing any component or screen work, read `design/manifest.yaml` to understand:
+Before doing any component or screen work, read `design/manifest.json` to understand:
 
 - **Current phase**: Which phase is active (discover → target → equip → scaffold → atoms → compose → integrate)
 - **Gate status**: Which phases are passed, in-progress, or pending
@@ -133,26 +151,34 @@ If the **frontend-design** plugin is available in the environment, defer to its 
 
 When you create or modify a component:
 
-```yaml
-# Add to atoms list or update status
-atoms:
-  - name: ComponentName
-    file: src/components/ComponentName.tsx
-    story: src/components/ComponentName.stories.tsx
-    status: verified  # or: pending, in-progress
-    controls: true    # all props wired to argTypes
+```json
+{
+  "atoms": [
+    {
+      "name": "ComponentName",
+      "file": "src/components/ComponentName.tsx",
+      "story": "src/components/ComponentName.stories.tsx",
+      "status": "verified",
+      "controls": true
+    }
+  ]
+}
 ```
 
 When you create or modify a screen:
 
-```yaml
-# Add to screens list or update status
-screens:
-  - name: ScreenName
-    file: src/screens/ScreenName.tsx
-    story: src/screens/ScreenName.stories.tsx
-    status: verified
-    atoms: [Atom1, Atom2, Atom3]
+```json
+{
+  "screens": [
+    {
+      "name": "ScreenName",
+      "file": "src/screens/ScreenName.tsx",
+      "story": "src/screens/ScreenName.stories.tsx",
+      "status": "verified",
+      "atoms": ["Atom1", "Atom2", "Atom3"]
+    }
+  ]
+}
 ```
 
 ## Commands Reference

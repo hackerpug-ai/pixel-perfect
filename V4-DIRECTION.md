@@ -97,7 +97,7 @@ Define what you're building. Read the PRD if one exists. Capture the essentials.
 - Design vibe (modern, minimal, playful, brutalist, etc.)
 - Reference URLs (optional -- things that feel right)
 
-**Exit gate:** `design/manifest.yaml` exists with goal + vibe.
+**Exit gate:** `design/manifest.json` exists with goal + vibe.
 
 ### Phase 2: TARGET
 
@@ -230,7 +230,7 @@ Wire up the real-world connections: navigation between screens, state management
 
 ```
 design/
-├── manifest.yaml        # Goal, vibe, platforms, tools, phase state
+├── manifest.json        # Goal, vibe, platforms, tools, phase state
 └── research/            # Optional research (from /research command)
 ```
 
@@ -276,19 +276,24 @@ Adapters are lightweight knowledge files that tell the orchestrator how to scaff
 
 ### Adapter Structure
 
-```yaml
-name: storybook
-for: [react, react-native]
-scaffold:
-  - install: "npx storybook@latest init"
-  - configure: "Add MCP addon, enable component manifest"
-  - theme: "Create theme from manifest vibe"
-verify:
-  component: "Story file exists and renders without errors"
-  screen: "Composition story exists and renders"
-sandbox:
-  start: "npm run storybook"
-  mcp: "http://localhost:6006/mcp"
+```json
+{
+  "name": "storybook",
+  "for": ["react", "react-native"],
+  "scaffold": [
+    { "install": "npx storybook@latest init" },
+    { "configure": "Add MCP addon, enable component manifest" },
+    { "theme": "Create theme from manifest vibe" }
+  ],
+  "verify": {
+    "component": "Story file exists and renders without errors",
+    "screen": "Composition story exists and renders"
+  },
+  "sandbox": {
+    "start": "npm run storybook",
+    "mcp": "http://localhost:6006/mcp"
+  }
+}
 ```
 
 Adapters are additive. New adapters can be contributed without changing the core process engine. If no adapter exists for a tool, the Generic adapter still enforces the 7-phase process -- it just can't automate the tool-specific steps.
@@ -299,57 +304,56 @@ Adapters are additive. New adapters can be contributed without changing the core
 
 The manifest replaces all YAML design artifacts. It's the single source of truth for process state.
 
-```yaml
-# design/manifest.yaml
-version: "3.0"
-created: "2026-02-17"
-
-# Phase 1: DISCOVER
-goal: "Field service management app for HVAC technicians"
-vibe: "clean, professional, high-contrast for outdoor use"
-references:
-  - "https://servicetitan.com"
-  - "https://housecallpro.com"
-
-# Phase 2: TARGET
-platforms:
-  - mobile-ios
-  - mobile-android
-
-# Phase 3: EQUIP
-tools:
-  style: nativewind
-  components: react-native-paper
-  sandbox: storybook
-
-# Process state
-phase: atoms
-gates:
-  discover: passed
-  target: passed
-  equip: passed
-  scaffold: passed
-  atoms: in-progress
-  compose: pending
-  integrate: pending
-
-# Component tracking (populated during atoms/compose phases)
-atoms:
-  - name: StatusBadge
-    file: src/components/StatusBadge.tsx
-    story: src/components/StatusBadge.stories.tsx
-    status: verified
-  - name: JobCard
-    file: src/components/JobCard.tsx
-    story: src/components/JobCard.stories.tsx
-    status: in-progress
-
-screens:
-  - name: TodayFeed
-    file: src/screens/TodayFeed.tsx
-    story: src/screens/TodayFeed.stories.tsx
-    status: pending
-    atoms: [StatusBadge, JobCard, DateChip, SectionHeader]
+```json
+{
+  "version": "3.0",
+  "created": "2026-02-17",
+  "goal": "Field service management app for HVAC technicians",
+  "vibe": "clean, professional, high-contrast for outdoor use",
+  "references": [
+    "https://servicetitan.com",
+    "https://housecallpro.com"
+  ],
+  "platforms": ["mobile-ios", "mobile-android"],
+  "tools": {
+    "style": "nativewind",
+    "components": "react-native-paper",
+    "sandbox": "storybook"
+  },
+  "phase": "atoms",
+  "gates": {
+    "discover": "passed",
+    "target": "passed",
+    "equip": "passed",
+    "scaffold": "passed",
+    "atoms": "in-progress",
+    "compose": "pending",
+    "integrate": "pending"
+  },
+  "atoms": [
+    {
+      "name": "StatusBadge",
+      "file": "src/components/StatusBadge.tsx",
+      "story": "src/components/StatusBadge.stories.tsx",
+      "status": "verified"
+    },
+    {
+      "name": "JobCard",
+      "file": "src/components/JobCard.tsx",
+      "story": "src/components/JobCard.stories.tsx",
+      "status": "in-progress"
+    }
+  ],
+  "screens": [
+    {
+      "name": "TodayFeed",
+      "file": "src/screens/TodayFeed.tsx",
+      "story": "src/screens/TodayFeed.stories.tsx",
+      "status": "pending",
+      "atoms": ["StatusBadge", "JobCard", "DateChip", "SectionHeader"]
+    }
+  ]
+}
 ```
 
 ---
@@ -383,7 +387,7 @@ v1 and v2 are fundamentally different philosophies. There is no incremental migr
 - **v1 artifacts** (YAML, JSON specs, HTML mocks) remain valid as design references
 - **v2** starts fresh with the 7-phase process
 - Existing `/pixel-perfect:research` output is compatible with both versions
-- The `design/` folder format changes (manifest.yaml replaces all YAML artifacts)
+- The `design/` folder format changes (manifest.json replaces all YAML artifacts)
 
 Users can continue using v1 for projects that benefit from the mockup approach. v2 is for projects where you want the plugin to help you build the real thing.
 

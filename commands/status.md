@@ -18,7 +18,7 @@ Display the current state of the pixel-perfect build process: phase progress, ga
 
 ## What It Shows
 
-Reads `design/manifest.yaml` and displays:
+Reads `design/manifest.json` and displays:
 
 1. **Phase overview** - All 7 phases with gate status
 2. **Project info** - Goal, vibe, platforms, framework, tools
@@ -91,7 +91,7 @@ Next: Continue building atoms
 
 ## No Manifest Found
 
-If no `design/manifest.yaml` exists in the directory or parents:
+If no `design/manifest.json` exists in the directory or parents:
 
 ```
 pixel-perfect v4.0 — Project Status
@@ -99,7 +99,7 @@ pixel-perfect v4.0 — Project Status
 
 Status: Not initialized
 
-No design/manifest.yaml found in this directory or parent directories.
+No design/manifest.json found in this directory or parent directories.
 
 Next: /pixel-perfect:init
   This will walk you through project setup (discover → target → equip)

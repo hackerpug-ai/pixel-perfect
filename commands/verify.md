@@ -25,11 +25,11 @@ Run verification checks appropriate for the current build phase. Reports pass/fa
 
 ## Gate Check
 
-**Requires:** `design/manifest.yaml` exists.
+**Requires:** `design/manifest.json` exists.
 
 ## What It Does
 
-1. Reads `design/manifest.yaml` to determine current phase
+1. Reads `design/manifest.json` to determine current phase
 2. Runs gate checks appropriate for that phase
 3. Reports results per check
 4. If all pass, advances the phase gate in manifest
@@ -240,9 +240,12 @@ StatusBadge:
 
 On full phase pass, verify updates the manifest:
 
-```yaml
-gates:
-  atoms: passed    # Advanced from "in-progress"
+```json
+{
+  "gates": {
+    "atoms": "passed"
+  }
+}
 ```
 
 On failure, the gate remains unchanged and the manifest is not modified.

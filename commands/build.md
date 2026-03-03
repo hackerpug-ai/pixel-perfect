@@ -24,7 +24,7 @@ The main orchestration command. Reads requirements, identifies components, build
 
 ## Gate Check
 
-**Requires:** `design/manifest.yaml` with `scaffold: passed`.
+**Requires:** `design/manifest.json` with `scaffold: passed`.
 
 If not met:
 ```
@@ -187,13 +187,18 @@ For each component, in order:
    - Spacing uses the theme scale
 
 6. **Update manifest:**
-   ```yaml
-   atoms:
-     - name: StatusBadge
-       file: src/components/StatusBadge.tsx
-       story: src/components/StatusBadge.stories.tsx
-       status: verified
-       controls: true  # all props wired to argTypes
+   ```json
+   {
+     "atoms": [
+       {
+         "name": "StatusBadge",
+         "file": "src/components/StatusBadge.tsx",
+         "story": "src/components/StatusBadge.stories.tsx",
+         "status": "verified",
+         "controls": true
+       }
+     ]
+   }
    ```
 
 ### Progress Tracking
@@ -211,10 +216,13 @@ Atoms: 3/5 verified
 ### Phase 5 Exit Gate
 
 All atoms in the manifest have `status: verified` and `controls: true`. Update manifest:
-```yaml
-phase: atoms
-gates:
-  atoms: passed
+```json
+{
+  "phase": "atoms",
+  "gates": {
+    "atoms": "passed"
+  }
+}
 ```
 
 ---
@@ -323,22 +331,30 @@ For each screen:
    - Component arrangement creates rhythm
 
 6. **Update manifest:**
-   ```yaml
-   screens:
-     - name: TodayFeed
-       file: src/screens/TodayFeed.tsx
-       story: src/screens/TodayFeed.stories.tsx
-       status: verified
-       atoms: [StatusBadge, JobCard, DateChip, SectionHeader]
+   ```json
+   {
+     "screens": [
+       {
+         "name": "TodayFeed",
+         "file": "src/screens/TodayFeed.tsx",
+         "story": "src/screens/TodayFeed.stories.tsx",
+         "status": "verified",
+         "atoms": ["StatusBadge", "JobCard", "DateChip", "SectionHeader"]
+       }
+     ]
+   }
    ```
 
 ### Phase 6 Exit Gate
 
 All screens have `status: verified`. Update manifest:
-```yaml
-phase: compose
-gates:
-  compose: passed
+```json
+{
+  "phase": "compose",
+  "gates": {
+    "compose": "passed"
+  }
+}
 ```
 
 ---
@@ -384,10 +400,13 @@ Integration:
 ### Phase 7 Exit Gate
 
 The app runs, screens navigate, data flows. Update manifest:
-```yaml
-phase: integrate
-gates:
-  integrate: passed
+```json
+{
+  "phase": "integrate",
+  "gates": {
+    "integrate": "passed"
+  }
+}
 ```
 
 ---
