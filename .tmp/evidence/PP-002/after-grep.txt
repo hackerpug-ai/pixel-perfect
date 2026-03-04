@@ -1,0 +1,5 @@
+=== PP-002 QG Evidence ===
+v4.0 count (expect 0):
+       0
+storybook-native.md in status.md:
+63:  Sandbox:    Storybook Native    (adapter: storybook-native.md)

@@ -2,37 +2,33 @@
 
 ## Overview
 
-- **CSS Framework:** Emotion + styled-components (CSS-in-JS); v3+ built on Panda CSS
-- **Component Pattern:** Props-based composable compound components; Slot Recipes for complex components
-- **Official Icon Library:** `@chakra-ui/icons` (Chakra's own); Tabler Icons recommended
-- **Theming Approach:** Theme object with tokens and semantic tokens; CSS variables support
+- **CSS Framework:** Panda CSS (v3+); Emotion/styled-components in v2
+- **Component Pattern:** Composable "snippet" components generated into your project; semantic tokens via `createSystem()`
+- **Official Icon Library:** `@chakra-ui/icons` removed in v3; use Lucide or Tabler Icons
+- **Theming Approach:** `createSystem()` config with semantic tokens and CSS variables
 
 ## Token Conventions
 
-Structure for `tokens.yaml` generation:
+Chakra v3 uses semantic tokens via `createSystem()`. Colors use oklch format (not hex).
 
-```yaml
-tokens:
-  colors:
-    # Chakra uses 10-shade color scales (50-900) per color family
-    # Default primary: blue scale; semantic roles: primary, secondary, error, success, warning, info
-    # Each shade accessed as color.{shade} (e.g., blue.500)
-    format: "hex"
-    scale: "10-shade (50, 100, 200, 300, 400, 500, 600, 700, 800, 900)"
-    primary_shade: 500          # Default interactive shade
-    roles: [primary, secondary, background, foreground, muted, border, error, success, warning, info]
-  spacing:
-    unit: "4px"
-    scale: "Chakra spacing scale (0-96 in 4px increments)"
-  typography:
-    fontFamily: "Inter, system-ui, sans-serif"
-    sizes: { xs: "0.75rem", sm: "0.875rem", md: "1rem", lg: "1.125rem", xl: "1.25rem" }
-  borderRadius:
-    # Chakra default: md = 0.375rem
-    scale: { sm: "0.125rem", md: "0.375rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" }
+```typescript
+import { createSystem, defaultConfig } from '@chakra-ui/react';
+
+export const system = createSystem(defaultConfig, {
+  theme: {
+    tokens: {
+      colors: {
+        brand: {
+          // oklch format: chakra v3 default palette
+          500: { value: 'oklch(0.623 0.214 259.815)' },  // blue equivalent
+        },
+      },
+    },
+  },
+});
 ```
 
-Fetch current defaults: see Source URLs below.
+For a full default token reference, see: https://chakra-ui.com/docs/get-started/theming
 
 ## Component Names
 
@@ -45,7 +41,7 @@ Fetch current defaults: see Source URLs below.
 | Radio | RadioGroup / Radio | — |
 | Toggle | Switch | — |
 | Slider | Slider | — |
-| Dialog / Modal | Modal (Dialog) | — |
+| Dialog / Modal | Dialog (was `Modal` in v2) | — |
 | Bottom Sheet | Drawer | — |
 | Card | Card | with CardHeader, CardBody, CardFooter |
 | Tabs | Tabs | line, enclosed, soft-rounded |
@@ -72,17 +68,16 @@ Fetch current defaults: see Source URLs below.
 Chakra UI does not have a traditional CDN for mockups. For HTML mockups, approximate the style:
 
 ```html
-<!-- Use system fonts and custom CSS variables -->
+<!-- Chakra v3 approximation for mockups -->
 <style>
   :root {
-    --chakra-colors-blue-500: #3182ce;
-    --chakra-colors-gray-100: #edf2f7;
-    --chakra-colors-gray-200: #e2e8f0;
-    --chakra-colors-gray-800: #1a202c;
+    /* Chakra v3 uses oklch; these are sRGB approximations for mockup use */
+    --chakra-blue-500: #3b82f6;
+    --chakra-gray-100: #f4f4f5;
+    --chakra-gray-800: #27272a;
     --chakra-radii-md: 0.375rem;
-    --chakra-space-4: 1rem;
   }
-  body { font-family: Inter, system-ui, sans-serif; color: #1a202c; }
+  body { font-family: Inter, system-ui, sans-serif; color: #18181b; }
 </style>
 
 <!-- Tabler Icons -->
@@ -117,20 +112,22 @@ Chakra UI is props-based in React, but for mockups use inline styles matching Ch
 
 ## Review Checklist
 
-- [ ] Color palette matches Chakra's 10-shade scale approach
+- [ ] Component imports from `@chakra-ui/react` (not separate packages)
+- [ ] Theme configured via `ChakraProvider` with `createSystem()` value
+- [ ] No `@chakra-ui/icons` used (removed in v3)
 - [ ] Buttons use Chakra variant patterns (solid, outline, ghost)
 - [ ] Cards use border + subtle shadow pattern
 - [ ] Layout uses Stack/Flex/Grid patterns
 - [ ] Spacing follows 4px base unit scale
 - [ ] Border radius consistent (default `md` = 0.375rem)
-- [ ] Icons use Tabler Icons (or Chakra's own icon set)
+- [ ] Icons use Lucide or Tabler Icons
 - [ ] No Tailwind utility classes or Material Design patterns mixed in
 - [ ] Toast/notification patterns match Chakra's Toast component
 
 ## Source URLs
 
 - Official site: https://chakra-ui.com
-- Default theme tokens: https://chakra-ui.com/docs/styled-system/theme
-- Color palette: https://chakra-ui.com/docs/styled-system/theme#colors
-- Components list: https://chakra-ui.com/docs/components
-- Spacing scale: https://chakra-ui.com/docs/styled-system/theme#spacing
+- v3 Getting Started: https://chakra-ui.com/docs/get-started/installation
+- v3 Theming: https://chakra-ui.com/docs/get-started/theming
+- v3 Components: https://chakra-ui.com/docs/components
+- Migration from v2: https://chakra-ui.com/docs/get-started/migration

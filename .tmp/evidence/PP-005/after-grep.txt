@@ -1,0 +1,5 @@
+=== PP-005 QG Evidence ===
+@tailwind base count (in note only):
+47:   > **NativeWind version note:** If you are using NativeWind 2.x (Tailwind v3), use `@tailwind base; @tailwind components; @tailwind utilities;` instead. Check your `nativewind` package version before choosing.
+Chakra v3 markers (expect ≥2):
+10

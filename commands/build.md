@@ -1,8 +1,8 @@
 ---
-description: "Build components and screens: ATOMS → COMPOSE → INTEGRATE (phases 5-7)"
+description: "Build components and screens: PLAN → ATOMS → MOLECULES → COMPOSE (phases 4b-6)"
 ---
 
-# Build (Phases 5-7)
+# Build (Phases 4b-6)
 
 The main orchestration command. Reads requirements, identifies components, builds them as real code, composes them into screens, and wires up navigation and data flow.
 
@@ -18,7 +18,7 @@ The main orchestration command. Reads requirements, identifies components, build
 
 ## Options
 
-- `--phase <name>`: Start from a specific phase (atoms, compose, integrate). Default: resume from current phase.
+- `--phase <name>`: Start from a specific phase (atoms, molecules, compose). Default: resume from current phase.
 - `--component <name>`: Build or rebuild a specific component
 - `--screen <name>`: Build or rebuild a specific screen
 
@@ -34,15 +34,193 @@ Run /pixel-perfect:scaffold first.
 
 ## Overview
 
-Build progresses through three phases. Each phase has entry/exit gates and tracks progress in the manifest.
+Build progresses through an analysis phase followed by adaptive build phases. Each phase has entry/exit gates and tracks progress in the manifest.
 
 ```
+Phase 4b: PLAN      → Analyze spec + codebase; produce level-tagged work plan; confirm with user
 Phase 5: ATOMS      → Individual components (Button, Card, Badge, etc.)
-Phase 6: COMPOSE    → Screen layouts composing atoms (Dashboard, Settings, etc.)
-Phase 7: INTEGRATE  → Navigation, state, data wiring
+Phase 5b: MOLECULES → Functional compositions of 2-3 atoms (SearchBar, UserCard, FormField)
+Phase 6: COMPOSE    → Screen layouts composing molecules and atoms (Dashboard, Settings, etc.)
 ```
+
+Phases 5, 5b, and 6 execute only for levels where the BUILD PLAN identifies non-zero delta.
 
 The command resumes from wherever the manifest says the project is. If atoms are partially complete, it picks up where it left off.
+
+---
+
+## Phase 4b: BUILD PLAN
+
+Analyze the requirements spec against the current codebase state. Determine which build levels have non-zero delta — what needs to be created, updated, or is already complete. Produce a work plan. The user confirms the plan before any code is written.
+
+This phase runs automatically when `/pixel-perfect:build` is invoked and `plan` is not yet `passed` in the manifest.
+
+### The Build Levels
+
+The build system works bottom-up across four levels:
+
+| Level | What It Covers | Can Skip? |
+|-------|---------------|-----------|
+| Tokens | Design primitives: color palette, type scale, spacing scale | Yes — if spec has no new brand/theme changes |
+| Atoms | Single-purpose UI primitives: Button, Input, Icon, Badge | Yes — if spec requires no new/changed components |
+| Molecules | Functional atom compositions: SearchBar, FormField, UserCard | Yes — if spec has no repeated multi-atom patterns |
+| Screens | Full view layouts composing molecules and atoms | No — screens are always the primary output |
+
+**Bottom-up rule:** A lower-level change propagates upward. If atoms change, molecules must be re-evaluated. If molecules change, screens must be re-evaluated. You cannot mark a higher level as SKIP if a lower level was ACTIVE — the propagation is automatic.
+
+### Step 1: Analyze Existing Codebase
+
+Before reading requirements, audit what already exists:
+
+```
+Auditing codebase...
+
+Tokens:    design/tokens.ts found (24 color tokens, 6 type sizes, 8 spacing steps)
+Atoms:     src/components/ — 3 files found (StatusBadge, JobCard, DateChip)
+Molecules: src/molecules/ — 0 files found
+Screens:   src/screens/ — 0 files found
+```
+
+If `design/tokens.ts` (or equivalent per framework) does not exist, the Tokens level is automatically ACTIVE (greenfield token setup needed).
+
+If `src/components/` (or equivalent) does not exist or is empty, Atoms is automatically ACTIVE.
+
+### Step 2: Analyze Requirements
+
+Read the requirements document (from `manifest.spec`). For each build level, identify what the spec demands:
+
+```
+Analyzing requirements (PRD.md)...
+
+Tokens required:    existing palette matches spec (no new colors mentioned)
+Atoms required:     StatusBadge ✓, JobCard ✓, DateChip ✓, ActionButton ✗ (missing)
+Molecules required: JobRow (StatusBadge + DateChip) — pattern repeated in 3 screens
+Screens required:   TodayFeed, JobDetail — both missing
+```
+
+### Step 3: Compute Delta and Apply Gate Logic
+
+For each level:
+- **Delta = required by spec − already verified in codebase**
+- A level is **ACTIVE** if delta > 0
+- A level is **SKIP** if delta = 0 AND no lower level is ACTIVE
+- A lower-level ACTIVE status forces re-evaluation of all higher levels (even if their own delta is 0)
+
+Gate-opening factors per level:
+
+**Tokens gate opens when:**
+- No existing token file (`design/tokens.ts` or equivalent)
+- Spec mentions new colors, fonts, or spacing system
+- Spec references a new theme variant (dark mode, rebrand)
+- Component library version change that alters design tokens
+
+**Atoms gate opens when:**
+- Tokens gate is ACTIVE (new tokens → atoms must use them)
+- Spec names a UI element not in the existing atom inventory
+- Spec describes a new interactive state or variant on an existing atom
+- A screen references a component that doesn't exist in codebase
+
+**Molecules gate opens when:**
+- Atoms gate is ACTIVE (changed atoms → compositions need re-evaluation)
+- The same 2-3 atom combination appears in ≥2 spec screens
+- No molecules exist and spec complexity warrants them
+
+**Screens gate:**
+- Never SKIP if any lower level is ACTIVE
+- Always ACTIVE if spec describes new or changed screens
+
+### Step 4: Output BUILD PLAN
+
+Present the plan for user confirmation before writing any code:
+
+```
+BUILD PLAN
+==========
+Analyzing: PRD.md vs current codebase (scaffold: passed)
+
+Mode: brownfield (existing components found)
+
+TOKENS    [ SKIP ]   — Existing token file matches spec. No new colors or fonts required.
+ATOMS     [ BUILD ]  — Need: ActionButton (missing). StatusBadge, JobCard, DateChip already verified.
+MOLECULES [ BUILD ]  — Need: JobRow (StatusBadge + DateChip). Triggered by atoms change.
+SCREENS   [ BUILD ]  — Need: TodayFeed (missing), JobDetail (missing).
+
+Planned work:
+  - 1 atom to create: ActionButton
+  - 1 molecule to create: JobRow
+  - 2 screens to create: TodayFeed, JobDetail
+
+? Proceed with this plan? [Yes / Modify / Cancel]
+```
+
+**Modification flow:** If the user selects "Modify", ask which level to adjust:
+- Add items to a level
+- Remove items from a level
+- Change a SKIP to BUILD or vice versa (user may have context the analysis missed)
+
+**Cancellation:** If "Cancel", exit build cleanly. Manifest `plan` gate remains `pending`.
+
+### Step 5: Write Plan to Manifest
+
+After user confirms, write the plan to manifest:
+
+```json
+{
+  "build_plan": {
+    "tokens": "skip",
+    "atoms": {
+      "status": "build",
+      "create": ["ActionButton"],
+      "existing_verified": ["StatusBadge", "JobCard", "DateChip"]
+    },
+    "molecules": {
+      "status": "build",
+      "create": ["JobRow"]
+    },
+    "screens": {
+      "status": "build",
+      "create": ["TodayFeed", "JobDetail"]
+    }
+  },
+  "gates": {
+    "plan": "passed"
+  }
+}
+```
+
+### Greenfield vs. Brownfield
+
+**Greenfield** (no existing components):
+- All levels are ACTIVE by default (everything needs creation)
+- No delta computation needed — BUILD PLAN immediately proposes creating everything from spec
+- Plan output shows: `Mode: greenfield (no existing components)`
+
+**Brownfield** (existing components found):
+- Delta computation runs per level
+- Plan proposes only what's missing or changed
+- Plan output shows: `Mode: brownfield (N existing components found)`
+
+### Resuming the Build
+
+After PLAN is confirmed, `/pixel-perfect:build` resumes from the first ACTIVE level in order (Tokens → Atoms → Molecules → Screens), executing only ACTIVE levels.
+
+If build is interrupted and resumed later, the plan in the manifest drives where to pick up:
+
+```
+> /pixel-perfect:build
+
+Resuming from BUILD PLAN:
+  [x] Tokens    — skipped (no changes)
+  [~] Atoms     — 0/1 built (ActionButton pending)
+  [ ] Molecules — pending (JobRow)
+  [ ] Screens   — pending (TodayFeed, JobDetail)
+
+Building: ActionButton...
+```
+
+### Phase 4b Exit Gate
+
+BUILD PLAN is confirmed by user. Manifest has `"plan": "passed"`. Subsequent build phases execute only ACTIVE levels from the plan.
 
 ---
 
@@ -220,7 +398,138 @@ All atoms in the manifest have `status: verified` and `controls: true`. Update m
 {
   "phase": "atoms",
   "gates": {
+    "plan": "passed",
     "atoms": "passed"
+  }
+}
+```
+
+---
+
+## Phase 5b: MOLECULES
+
+Assemble 2-3 atoms into functional, reusable UI groups. A molecule is not a full screen — it is a named, reusable composition that appears in multiple screens.
+
+### When to Build Molecules
+
+Build molecules when the spec or atom list reveals:
+- The same 2-3 atom combination appears in ≥2 screens
+- A named functional UI pattern exists (SearchBar, FormField, UserCard, NavItem)
+- Composing atoms directly in screens would cause repetition
+
+If none of these conditions apply, skip Phase 5b and proceed to Phase 6.
+
+### Step 1: Identify Molecules
+
+Review the atom list from Phase 5 and the requirements spec. Look for repeated atom groupings:
+
+```
+Analyzing atoms and spec for molecule candidates...
+
+Proposed molecules:
+  1. JobRow       — StatusBadge + DateChip (appears on TodayFeed, JobList, SearchResults)
+  2. ActionPanel  — ActionButton + StatusBadge (appears on JobDetail, QuickActions)
+
+? Confirm molecule list? [Yes / Add more / Remove / Skip molecules entirely]
+```
+
+Update manifest with the molecule list (all `status: pending`).
+
+### Step 2: Build Each Molecule
+
+For each molecule, in order:
+
+1. **Load context:**
+   - Atom files this molecule composes
+   - Project theme file
+   - Adapter docs for the chosen tools
+
+2. **Write molecule file:**
+   - Composes 2-3 atoms — does NOT re-implement atom internals
+   - Accepts props that delegate to constituent atoms
+   - Uses the same style system and theme tokens as the atoms
+   - File location: `src/molecules/MoleculeName.tsx` (or equivalent per framework)
+
+3. **Write story file:**
+   - Uses CSF3 format for Storybook
+   - **Story title MUST use `Molecules/` prefix** (e.g., `title: 'Molecules/JobRow'`)
+   - Shows molecule in realistic context with all variant combinations
+   - All molecule-level props wired to `argTypes` controls
+
+   **Example:**
+   ```tsx
+   // JobRow.stories.tsx
+   import type { Meta, StoryObj } from '@storybook/react';
+   import { JobRow } from './JobRow';
+
+   const meta: Meta<typeof JobRow> = {
+     title: 'Molecules/JobRow',
+     component: JobRow,
+     parameters: {
+       docs: {
+         description: {
+           component: 'Job summary row combining status badge and date chip. Used on feed and list screens.',
+         },
+       },
+     },
+     argTypes: {
+       status: { control: { type: 'select' }, options: ['open', 'in-progress', 'complete'] },
+       date: { control: { type: 'text' } },
+       jobTitle: { control: { type: 'text' } },
+     },
+     args: {
+       status: 'open',
+       date: 'Today, 9:00 AM',
+       jobTitle: 'Annual HVAC Service',
+     },
+   };
+
+   export default meta;
+   type Story = StoryObj<typeof JobRow>;
+
+   export const Default: Story = {};
+   export const InProgress: Story = { args: { status: 'in-progress' } };
+   export const Complete: Story = { args: { status: 'complete' } };
+   ```
+
+4. **Verify:**
+   - Molecule renders without errors
+   - Constituent atoms are composed (not re-implemented)
+   - Story loads in Storybook under `Molecules/` hierarchy
+   - All props wired to argTypes controls
+
+5. **Update manifest:**
+   ```json
+   {
+     "molecules": [
+       {
+         "name": "JobRow",
+         "file": "src/molecules/JobRow.tsx",
+         "story": "src/molecules/JobRow.stories.tsx",
+         "status": "verified",
+         "atoms": ["StatusBadge", "DateChip"]
+       }
+     ]
+   }
+   ```
+
+### Progress Tracking
+
+After each molecule:
+```
+Molecules: 1/2 verified
+  [x] JobRow        (atoms: StatusBadge + DateChip)
+  [ ] ActionPanel   (atoms: ActionButton + StatusBadge)
+```
+
+### Phase 5b Exit Gate
+
+All molecules in the manifest have `status: verified`. Update manifest:
+```json
+{
+  "phase": "molecules",
+  "gates": {
+    "molecules": "passed"
   }
 }
 ```
@@ -359,59 +668,9 @@ All screens have `status: verified`. Update manifest:
 
 ---
 
-## Phase 7: INTEGRATE
-
-Wire up the real-world connections.
-
-### What Gets Wired
-
-1. **Navigation/Routing:**
-   - Configure router or navigation container
-   - Define screen transitions
-   - Set up deep linking (if applicable)
-
-2. **State Management** (if needed):
-   - Shared state between screens
-   - Form state persistence
-   - User preferences/settings
-
-3. **Data Fetching** (if applicable):
-   - API client configuration
-   - Data loading patterns (loading, error, empty states)
-   - Cache strategy
-
-4. **End-to-End Verification:**
-   - Navigate between all screens
-   - Data flows correctly through the app
-   - Loading and error states work
-   - The app functions as a cohesive whole
-
-### Integration Steps
-
-```
-Integration:
-  [x] Navigation configured (React Navigation / Next.js Router / etc.)
-  [x] Screen transitions defined
-  [x] State management wired
-  [ ] Data fetching connected
-  [ ] End-to-end flow verified
-```
-
-### Phase 7 Exit Gate
-
-The app runs, screens navigate, data flows. Update manifest:
-```json
-{
-  "phase": "integrate",
-  "gates": {
-    "integrate": "passed"
-  }
-}
-```
-
----
-
 ## Resuming
+
+If BUILD PLAN has not been confirmed (plan gate is `pending`), `/pixel-perfect:build` runs Phase 4b first before resuming any other phase.
 
 Build automatically resumes from the current phase. If you stopped mid-atoms:
 
@@ -441,13 +700,13 @@ This re-generates the specified item while preserving everything else.
 Build complete!
 
   Atoms:    5/5 verified (all controls wired)
+  Molecules: verified (if applicable)
   Screens:  2/2 verified
-  Integration: complete
 
 All phases passed. Your project has running code with:
   - 5 themed components with full Storybook controls
+  - Functional molecule compositions sandboxed in Storybook
   - 2 composed screens at target viewport
-  - Navigation and data flow wired
 
 To iterate: /pixel-perfect:refine
 To verify:  /pixel-perfect:verify
