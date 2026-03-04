@@ -14,3 +14,8 @@ test-output/
 
 
 .woktrees/
+# Edge Agentic (local dev tooling — not part of this plugin)
+.edge-agentic/
+CLAUDE.md
+.claude/
+.mcp.json

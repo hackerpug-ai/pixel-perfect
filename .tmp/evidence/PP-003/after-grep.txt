@@ -1,0 +1,10 @@
+=== PP-003 Quality Gate Evidence ===
+
+URL check (roninoss=1, founded-labs=0)
+- GitHub: https://github.com/roninoss/react-native-reusables
+
+File exists + line count
+     151 docs/adapters/react-native-web.md
+
+Reference in storybook-conventions.md
+268:For React Native projects rendered in web Storybook, a disclaimer banner is required. See `docs/adapters/react-native-web.md` for the full decorator pattern.
