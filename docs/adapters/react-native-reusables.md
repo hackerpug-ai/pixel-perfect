@@ -335,5 +335,5 @@ The CLI provides these components (matching shadcn/ui naming):
 - Official site: https://reactnativereusables.com
 - Documentation: https://reactnativereusables.com/docs
 - Customization: https://reactnativereusables.com/docs/customization
-- GitHub: https://github.com/founded-labs/react-native-reusables
+- GitHub: https://github.com/roninoss/react-native-reusables
 - shadcn/ui themes: https://ui.shadcn.com/themes

@@ -1,5 +1,5 @@
 ---
-description: "Build components and screens: ATOMS → COMPOSE → INTEGRATE (phases 5-7)"
+description: "Build components and screens: ATOMS → MOLECULES → COMPOSE (phases 5-6)"
 ---
 
 # Build (Phases 5-7)
@@ -38,8 +38,8 @@ Build progresses through three phases. Each phase has entry/exit gates and track
 
 ```
 Phase 5: ATOMS      → Individual components (Button, Card, Badge, etc.)
-Phase 6: COMPOSE    → Screen layouts composing atoms (Dashboard, Settings, etc.)
-Phase 7: INTEGRATE  → Navigation, state, data wiring
+Phase 5b: MOLECULES → Functional compositions of 2-3 atoms (SearchBar, UserCard, FormField)
+Phase 6: COMPOSE    → Screen layouts composing molecules and atoms (Dashboard, Settings, etc.)
 ```
 
 The command resumes from wherever the manifest says the project is. If atoms are partially complete, it picks up where it left off.
@@ -221,6 +221,136 @@ All atoms in the manifest have `status: verified` and `controls: true`. Update m
   "phase": "atoms",
   "gates": {
     "atoms": "passed"
+  }
+}
+```
+
+---
+
+## Phase 5b: MOLECULES
+
+Assemble 2-3 atoms into functional, reusable UI groups. A molecule is not a full screen — it is a named, reusable composition that appears in multiple screens.
+
+### When to Build Molecules
+
+Build molecules when the spec or atom list reveals:
+- The same 2-3 atom combination appears in ≥2 screens
+- A named functional UI pattern exists (SearchBar, FormField, UserCard, NavItem)
+- Composing atoms directly in screens would cause repetition
+
+If none of these conditions apply, skip Phase 5b and proceed to Phase 6.
+
+### Step 1: Identify Molecules
+
+Review the atom list from Phase 5 and the requirements spec. Look for repeated atom groupings:
+
+```
+Analyzing atoms and spec for molecule candidates...
+
+Proposed molecules:
+  1. JobRow       — StatusBadge + DateChip (appears on TodayFeed, JobList, SearchResults)
+  2. ActionPanel  — ActionButton + StatusBadge (appears on JobDetail, QuickActions)
+
+? Confirm molecule list? [Yes / Add more / Remove / Skip molecules entirely]
+```
+
+Update manifest with the molecule list (all `status: pending`).
+
+### Step 2: Build Each Molecule
+
+For each molecule, in order:
+
+1. **Load context:**
+   - Atom files this molecule composes
+   - Project theme file
+   - Adapter docs for the chosen tools
+
+2. **Write molecule file:**
+   - Composes 2-3 atoms — does NOT re-implement atom internals
+   - Accepts props that delegate to constituent atoms
+   - Uses the same style system and theme tokens as the atoms
+   - File location: `src/molecules/MoleculeName.tsx` (or equivalent per framework)
+
+3. **Write story file:**
+   - Uses CSF3 format for Storybook
+   - **Story title MUST use `Molecules/` prefix** (e.g., `title: 'Molecules/JobRow'`)
+   - Shows molecule in realistic context with all variant combinations
+   - All molecule-level props wired to `argTypes` controls
+
+   **Example:**
+   ```tsx
+   // JobRow.stories.tsx
+   import type { Meta, StoryObj } from '@storybook/react';
+   import { JobRow } from './JobRow';
+
+   const meta: Meta<typeof JobRow> = {
+     title: 'Molecules/JobRow',
+     component: JobRow,
+     parameters: {
+       docs: {
+         description: {
+           component: 'Job summary row combining status badge and date chip. Used on feed and list screens.',
+         },
+       },
+     },
+     argTypes: {
+       status: { control: { type: 'select' }, options: ['open', 'in-progress', 'complete'] },
+       date: { control: { type: 'text' } },
+       jobTitle: { control: { type: 'text' } },
+     },
+     args: {
+       status: 'open',
+       date: 'Today, 9:00 AM',
+       jobTitle: 'Annual HVAC Service',
+     },
+   };
+
+   export default meta;
+   type Story = StoryObj<typeof JobRow>;
+
+   export const Default: Story = {};
+   export const InProgress: Story = { args: { status: 'in-progress' } };
+   export const Complete: Story = { args: { status: 'complete' } };
+   ```
+
+4. **Verify:**
+   - Molecule renders without errors
+   - Constituent atoms are composed (not re-implemented)
+   - Story loads in Storybook under `Molecules/` hierarchy
+   - All props wired to argTypes controls
+
+5. **Update manifest:**
+   ```json
+   {
+     "molecules": [
+       {
+         "name": "JobRow",
+         "file": "src/molecules/JobRow.tsx",
+         "story": "src/molecules/JobRow.stories.tsx",
+         "status": "verified",
+         "atoms": ["StatusBadge", "DateChip"]
+       }
+     ]
+   }
+   ```
+
+### Progress Tracking
+
+After each molecule:
+```
+Molecules: 1/2 verified
+  [x] JobRow        (atoms: StatusBadge + DateChip)
+  [ ] ActionPanel   (atoms: ActionButton + StatusBadge)
+```
+
+### Phase 5b Exit Gate
+
+All molecules in the manifest have `status: verified`. Update manifest:
+```json
+{
+  "phase": "molecules",
+  "gates": {
+    "molecules": "passed"
   }
 }
 ```
@@ -446,8 +576,8 @@ Build complete!
 
 All phases passed. Your project has running code with:
   - 5 themed components with full Storybook controls
+  - Functional molecule compositions sandboxed in Storybook
   - 2 composed screens at target viewport
-  - Navigation and data flow wired
 
 To iterate: /pixel-perfect:refine
 To verify:  /pixel-perfect:verify

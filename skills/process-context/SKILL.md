@@ -9,7 +9,7 @@ autoActivate:
 
 # pixel-perfect Process Context
 
-You are working in a project managed by **pixel-perfect v4.0**, a 7-phase build process orchestrator that produces real code sandboxed in Storybook. This context was auto-loaded because `design/manifest.json` exists in the project.
+You are working in a project managed by **pixel-perfect v4.0**, a 6-phase build process orchestrator that produces real code sandboxed in Storybook. This context was auto-loaded because `design/manifest.json` exists in the project.
 
 ## Legacy YAML Migration
 
@@ -41,7 +41,7 @@ This migration is automatic and transparent. No user confirmation needed — JSO
 
 Before doing any component or screen work, read `design/manifest.json` to understand:
 
-- **Current phase**: Which phase is active (discover → target → equip → scaffold → atoms → compose → integrate)
+- **Current phase**: Which phase is active (discover → target → equip → scaffold → atoms → molecules → compose)
 - **Gate status**: Which phases are passed, in-progress, or pending
 - **Tools**: What framework, style system, component library, and sandbox are configured
 - **Vibe**: The project's aesthetic direction
@@ -56,9 +56,9 @@ Before doing any component or screen work, read `design/manifest.json` to unders
 | target | Help select platforms, framework, style, components | Write any code |
 | equip | Help confirm tool selections | Write any code |
 | scaffold | Set up project, create theme, generate token stories | Build feature components |
-| atoms | Build individual components with Storybook controls | Compose screens, wire navigation |
-| compose | Assemble screens from atoms | Skip atom verification, wire data |
-| integrate | Wire navigation, state, data | Rebuild verified components |
+| atoms | Build individual components with Storybook controls | Skip to molecules or compose directly |
+| molecules | Build functional atom compositions (2-3 atoms per molecule) | Compose screens before molecules are verified |
+| compose | Assemble screens from molecules and atoms | Skip atom/molecule verification, wire data |
 
 ## Adapter Conventions
 
@@ -112,6 +112,7 @@ Stories must use the correct hierarchy prefix:
 |----------|--------|---------|
 | Design tokens | `Design System/` | `title: 'Design System/Colors'` |
 | Atomic components | `Components/` | `title: 'Components/StatusBadge'` |
+| Molecule compositions | `Molecules/` | `title: 'Molecules/JobRow'` |
 | Composed screens | `Screens/` | `title: 'Screens/TodayFeed'` |
 
 ## Polyfill Disclaimer Convention
@@ -187,7 +188,7 @@ When you create or modify a screen:
 |---------|-------------|
 | `/pixel-perfect:init` | Phases 1-3: discover + target + equip |
 | `/pixel-perfect:scaffold` | Phase 4: set up project structure, theme, token stories |
-| `/pixel-perfect:build` | Phases 5-7: atoms → compose → integrate |
+| `/pixel-perfect:build` | Phases 5-6: atoms → molecules → compose |
 | `/pixel-perfect:verify` | Run gate checks for current phase |
 | `/pixel-perfect:status` | Show progress |
 | `/pixel-perfect:research` | Design research |

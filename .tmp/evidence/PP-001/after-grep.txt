@@ -1,0 +1,31 @@
+=== PP-001 Quality Gate Evidence ===
+
+QG1: Phase 5b in build.md (expect ≥1)
+41:Phase 5b: MOLECULES → Functional compositions of 2-3 atoms (SearchBar, UserCard, FormField)
+230:## Phase 5b: MOLECULES
+241:If none of these conditions apply, skip Phase 5b and proceed to Phase 6.
+346:### Phase 5b Exit Gate
+
+QG2: Molecules/ in build.md (expect ≥2)
+276:   - **Story title MUST use `Molecules/` prefix** (e.g., `title: 'Molecules/JobRow'`)
+287:     title: 'Molecules/JobRow',
+319:   - Story loads in Storybook under `Molecules/` hierarchy
+
+QG3: molecules in SKILL.md (expect ≥2)
+44:- **Current phase**: Which phase is active (discover → target → equip → scaffold → atoms → molecules → compose)
+59:| atoms | Build individual components with Storybook controls | Skip to molecules or compose directly |
+60:| molecules | Build functional atom compositions (2-3 atoms per molecule) | Compose screens before molecules are verified |
+61:| compose | Assemble screens from molecules and atoms | Skip atom/molecule verification, wire data |
+191:| `/pixel-perfect:build` | Phases 5-6: atoms → molecules → compose |
+
+QG4: integrate row in SKILL.md (expect 0)
+(none — PASS)
+
+QG5: init.md diff (expect empty)
+
+QG6: files changed by our slices
+.claude/settings.json
+commands/build.md
+commands/status.md
+docs/adapters/react-native-reusables.md
+skills/process-context/SKILL.md

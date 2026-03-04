@@ -20,13 +20,14 @@ Display the current state of the pixel-perfect build process: phase progress, ga
 
 Reads `design/manifest.json` and displays:
 
-1. **Phase overview** - All 7 phases with gate status
+1. **Phase overview** - All 6 phases with gate status
 2. **Project info** - Goal, vibe, platforms, framework, tools
 3. **frontend-design detection** - Whether the frontend-design plugin is available
 4. **Design Token stories** - Status of Colors, Typography, Spacing, Icons stories
 5. **Controls coverage** - How many atoms have all props wired to Storybook controls
-6. **Component progress** - Atoms built and verified
-7. **Screen progress** - Screens composed and verified
+6. **Molecule progress** - Molecules built and verified
+7. **Component progress** - Atoms built and verified
+8. **Screen progress** - Screens composed and verified
 8. **Next action** - What to do next based on current phase
 
 ## Status Icons
@@ -52,8 +53,8 @@ Phases:
   [x] 3. EQUIP       — expo + nativewind + react-native-paper + storybook
   [x] 4. SCAFFOLD    — Project structure ready, theme configured
   [~] 5. ATOMS       — 3/5 components verified
+  [ ] 5b. MOLECULES  — 0/2 molecules identified
   [ ] 6. COMPOSE     — 0/2 screens verified
-  [ ] 7. INTEGRATE   — Pending
 
 Tools:
   Framework:  Expo
@@ -77,6 +78,12 @@ Atoms (3/5 verified):
   [x] DateChip        src/components/DateChip.tsx           (controls: yes)
   [~] SectionHeader   src/components/SectionHeader.tsx      (controls: pending)
   [ ] ActionButton    src/components/ActionButton.tsx       (controls: pending)
+
+Molecules (0/2 identified):
+  [ ] JobRow          src/molecules/JobRow.tsx
+      atoms: StatusBadge, DateChip
+  [ ] ActionPanel     src/molecules/ActionPanel.tsx
+      atoms: ActionButton, StatusBadge
 
 Screens (0/2 verified):
   [ ] TodayFeed       src/screens/TodayFeed.tsx
