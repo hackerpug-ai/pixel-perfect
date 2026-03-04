@@ -41,10 +41,14 @@ Components
 
 4. **Create `global.css`** with theme variables:
    ```css
-   @tailwind base;
-   @tailwind components;
-   @tailwind utilities;
+   @import "tailwindcss";
+   ```
 
+   > **NativeWind version note:** If you are using NativeWind 2.x (Tailwind v3), use `@tailwind base; @tailwind components; @tailwind utilities;` instead. Check your `nativewind` package version before choosing.
+
+   Continue adding theme variables in `:root`:
+
+   ```css
    :root {
      --background: 0 0% 100%;
      --foreground: 240 10% 3.9%;
@@ -175,7 +179,9 @@ When updating `global.css`, sync `theme.ts` using this pattern:
 ### Using shadcn/ui Themes
 
 You can import themes from [shadcn/ui themes](https://ui.shadcn.com/themes):
-- Use the **Tailwind v3 version** (CSS variables format)
+- Use the **CSS variables format** from the shadcn/ui themes page
+- For NativeWind 4.x (Tailwind v4), the CSS variables theme format is compatible
+- For NativeWind 2.x (Tailwind v3), select the "v3" tab on the themes page
 - Replace `.dark` with `.dark:root` for NativeWind compatibility
 
 ## Web Storybook via react-native-web

@@ -41,7 +41,7 @@ Reads `design/manifest.json` and displays:
 ## Sample Output
 
 ```
-pixel-perfect v4.0 — Project Status
+pixel-perfect v4.3.1 — Project Status
 ====================================
 
 Goal: Field service management app for HVAC technicians
@@ -60,7 +60,7 @@ Tools:
   Framework:  Expo
   Style:      NativeWind        (adapter: tailwind.md)
   Components: React Native Paper (adapter: react-native-paper.md)
-  Sandbox:    Storybook          (adapter: storybook.md, web-only via react-native-web)
+  Sandbox:    Storybook Native    (adapter: storybook-native.md)
 
 frontend-design: available (aesthetic gates active)
 
@@ -101,7 +101,7 @@ Next: Continue building atoms
 If no `design/manifest.json` exists in the directory or parents:
 
 ```
-pixel-perfect v4.0 — Project Status
+pixel-perfect v4.3.1 — Project Status
 ====================================
 
 Status: Not initialized

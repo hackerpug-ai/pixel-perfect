@@ -1,0 +1,7 @@
+     158 docs/adapters/tamagui.md
+     147 docs/adapters/gluestack.md
+     148 docs/adapters/mantine.md
+     106 docs/adapters/headless-ui.md
+     152 docs/adapters/daisyui.md
+     120 docs/adapters/radix.md
+     831 total

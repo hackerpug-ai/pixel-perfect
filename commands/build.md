@@ -18,7 +18,7 @@ The main orchestration command. Reads requirements, identifies components, build
 
 ## Options
 
-- `--phase <name>`: Start from a specific phase (atoms, compose, integrate). Default: resume from current phase.
+- `--phase <name>`: Start from a specific phase (atoms, molecules, compose). Default: resume from current phase.
 - `--component <name>`: Build or rebuild a specific component
 - `--screen <name>`: Build or rebuild a specific screen
 
@@ -489,58 +489,6 @@ All screens have `status: verified`. Update manifest:
 
 ---
 
-## Phase 7: INTEGRATE
-
-Wire up the real-world connections.
-
-### What Gets Wired
-
-1. **Navigation/Routing:**
-   - Configure router or navigation container
-   - Define screen transitions
-   - Set up deep linking (if applicable)
-
-2. **State Management** (if needed):
-   - Shared state between screens
-   - Form state persistence
-   - User preferences/settings
-
-3. **Data Fetching** (if applicable):
-   - API client configuration
-   - Data loading patterns (loading, error, empty states)
-   - Cache strategy
-
-4. **End-to-End Verification:**
-   - Navigate between all screens
-   - Data flows correctly through the app
-   - Loading and error states work
-   - The app functions as a cohesive whole
-
-### Integration Steps
-
-```
-Integration:
-  [x] Navigation configured (React Navigation / Next.js Router / etc.)
-  [x] Screen transitions defined
-  [x] State management wired
-  [ ] Data fetching connected
-  [ ] End-to-end flow verified
-```
-
-### Phase 7 Exit Gate
-
-The app runs, screens navigate, data flows. Update manifest:
-```json
-{
-  "phase": "integrate",
-  "gates": {
-    "integrate": "passed"
-  }
-}
-```
-
----
-
 ## Resuming
 
 Build automatically resumes from the current phase. If you stopped mid-atoms:
@@ -571,8 +519,8 @@ This re-generates the specified item while preserving everything else.
 Build complete!
 
   Atoms:    5/5 verified (all controls wired)
+  Molecules: verified (if applicable)
   Screens:  2/2 verified
-  Integration: complete
 
 All phases passed. Your project has running code with:
   - 5 themed components with full Storybook controls
