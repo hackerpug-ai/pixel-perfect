@@ -1,8 +1,8 @@
 ---
-description: "Build components and screens: ATOMS → MOLECULES → COMPOSE (phases 5-6)"
+description: "Build components and screens: PLAN → ATOMS → MOLECULES → COMPOSE (phases 4b-6)"
 ---
 
-# Build (Phases 5-7)
+# Build (Phases 4b-6)
 
 The main orchestration command. Reads requirements, identifies components, builds them as real code, composes them into screens, and wires up navigation and data flow.
 
@@ -34,15 +34,193 @@ Run /pixel-perfect:scaffold first.
 
 ## Overview
 
-Build progresses through three phases. Each phase has entry/exit gates and tracks progress in the manifest.
+Build progresses through an analysis phase followed by adaptive build phases. Each phase has entry/exit gates and tracks progress in the manifest.
 
 ```
+Phase 4b: PLAN      → Analyze spec + codebase; produce level-tagged work plan; confirm with user
 Phase 5: ATOMS      → Individual components (Button, Card, Badge, etc.)
 Phase 5b: MOLECULES → Functional compositions of 2-3 atoms (SearchBar, UserCard, FormField)
 Phase 6: COMPOSE    → Screen layouts composing molecules and atoms (Dashboard, Settings, etc.)
 ```
 
+Phases 5, 5b, and 6 execute only for levels where the BUILD PLAN identifies non-zero delta.
+
 The command resumes from wherever the manifest says the project is. If atoms are partially complete, it picks up where it left off.
+
+---
+
+## Phase 4b: BUILD PLAN
+
+Analyze the requirements spec against the current codebase state. Determine which build levels have non-zero delta — what needs to be created, updated, or is already complete. Produce a work plan. The user confirms the plan before any code is written.
+
+This phase runs automatically when `/pixel-perfect:build` is invoked and `plan` is not yet `passed` in the manifest.
+
+### The Build Levels
+
+The build system works bottom-up across four levels:
+
+| Level | What It Covers | Can Skip? |
+|-------|---------------|-----------|
+| Tokens | Design primitives: color palette, type scale, spacing scale | Yes — if spec has no new brand/theme changes |
+| Atoms | Single-purpose UI primitives: Button, Input, Icon, Badge | Yes — if spec requires no new/changed components |
+| Molecules | Functional atom compositions: SearchBar, FormField, UserCard | Yes — if spec has no repeated multi-atom patterns |
+| Screens | Full view layouts composing molecules and atoms | No — screens are always the primary output |
+
+**Bottom-up rule:** A lower-level change propagates upward. If atoms change, molecules must be re-evaluated. If molecules change, screens must be re-evaluated. You cannot mark a higher level as SKIP if a lower level was ACTIVE — the propagation is automatic.
+
+### Step 1: Analyze Existing Codebase
+
+Before reading requirements, audit what already exists:
+
+```
+Auditing codebase...
+
+Tokens:    design/tokens.ts found (24 color tokens, 6 type sizes, 8 spacing steps)
+Atoms:     src/components/ — 3 files found (StatusBadge, JobCard, DateChip)
+Molecules: src/molecules/ — 0 files found
+Screens:   src/screens/ — 0 files found
+```
+
+If `design/tokens.ts` (or equivalent per framework) does not exist, the Tokens level is automatically ACTIVE (greenfield token setup needed).
+
+If `src/components/` (or equivalent) does not exist or is empty, Atoms is automatically ACTIVE.
+
+### Step 2: Analyze Requirements
+
+Read the requirements document (from `manifest.spec`). For each build level, identify what the spec demands:
+
+```
+Analyzing requirements (PRD.md)...
+
+Tokens required:    existing palette matches spec (no new colors mentioned)
+Atoms required:     StatusBadge ✓, JobCard ✓, DateChip ✓, ActionButton ✗ (missing)
+Molecules required: JobRow (StatusBadge + DateChip) — pattern repeated in 3 screens
+Screens required:   TodayFeed, JobDetail — both missing
+```
+
+### Step 3: Compute Delta and Apply Gate Logic
+
+For each level:
+- **Delta = required by spec − already verified in codebase**
+- A level is **ACTIVE** if delta > 0
+- A level is **SKIP** if delta = 0 AND no lower level is ACTIVE
+- A lower-level ACTIVE status forces re-evaluation of all higher levels (even if their own delta is 0)
+
+Gate-opening factors per level:
+
+**Tokens gate opens when:**
+- No existing token file (`design/tokens.ts` or equivalent)
+- Spec mentions new colors, fonts, or spacing system
+- Spec references a new theme variant (dark mode, rebrand)
+- Component library version change that alters design tokens
+
+**Atoms gate opens when:**
+- Tokens gate is ACTIVE (new tokens → atoms must use them)
+- Spec names a UI element not in the existing atom inventory
+- Spec describes a new interactive state or variant on an existing atom
+- A screen references a component that doesn't exist in codebase
+
+**Molecules gate opens when:**
+- Atoms gate is ACTIVE (changed atoms → compositions need re-evaluation)
+- The same 2-3 atom combination appears in ≥2 spec screens
+- No molecules exist and spec complexity warrants them
+
+**Screens gate:**
+- Never SKIP if any lower level is ACTIVE
+- Always ACTIVE if spec describes new or changed screens
+
+### Step 4: Output BUILD PLAN
+
+Present the plan for user confirmation before writing any code:
+
+```
+BUILD PLAN
+==========
+Analyzing: PRD.md vs current codebase (scaffold: passed)
+
+Mode: brownfield (existing components found)
+
+TOKENS    [ SKIP ]   — Existing token file matches spec. No new colors or fonts required.
+ATOMS     [ BUILD ]  — Need: ActionButton (missing). StatusBadge, JobCard, DateChip already verified.
+MOLECULES [ BUILD ]  — Need: JobRow (StatusBadge + DateChip). Triggered by atoms change.
+SCREENS   [ BUILD ]  — Need: TodayFeed (missing), JobDetail (missing).
+
+Planned work:
+  - 1 atom to create: ActionButton
+  - 1 molecule to create: JobRow
+  - 2 screens to create: TodayFeed, JobDetail
+
+? Proceed with this plan? [Yes / Modify / Cancel]
+```
+
+**Modification flow:** If the user selects "Modify", ask which level to adjust:
+- Add items to a level
+- Remove items from a level
+- Change a SKIP to BUILD or vice versa (user may have context the analysis missed)
+
+**Cancellation:** If "Cancel", exit build cleanly. Manifest `plan` gate remains `pending`.
+
+### Step 5: Write Plan to Manifest
+
+After user confirms, write the plan to manifest:
+
+```json
+{
+  "build_plan": {
+    "tokens": "skip",
+    "atoms": {
+      "status": "build",
+      "create": ["ActionButton"],
+      "existing_verified": ["StatusBadge", "JobCard", "DateChip"]
+    },
+    "molecules": {
+      "status": "build",
+      "create": ["JobRow"]
+    },
+    "screens": {
+      "status": "build",
+      "create": ["TodayFeed", "JobDetail"]
+    }
+  },
+  "gates": {
+    "plan": "passed"
+  }
+}
+```
+
+### Greenfield vs. Brownfield
+
+**Greenfield** (no existing components):
+- All levels are ACTIVE by default (everything needs creation)
+- No delta computation needed — BUILD PLAN immediately proposes creating everything from spec
+- Plan output shows: `Mode: greenfield (no existing components)`
+
+**Brownfield** (existing components found):
+- Delta computation runs per level
+- Plan proposes only what's missing or changed
+- Plan output shows: `Mode: brownfield (N existing components found)`
+
+### Resuming the Build
+
+After PLAN is confirmed, `/pixel-perfect:build` resumes from the first ACTIVE level in order (Tokens → Atoms → Molecules → Screens), executing only ACTIVE levels.
+
+If build is interrupted and resumed later, the plan in the manifest drives where to pick up:
+
+```
+> /pixel-perfect:build
+
+Resuming from BUILD PLAN:
+  [x] Tokens    — skipped (no changes)
+  [~] Atoms     — 0/1 built (ActionButton pending)
+  [ ] Molecules — pending (JobRow)
+  [ ] Screens   — pending (TodayFeed, JobDetail)
+
+Building: ActionButton...
+```
+
+### Phase 4b Exit Gate
+
+BUILD PLAN is confirmed by user. Manifest has `"plan": "passed"`. Subsequent build phases execute only ACTIVE levels from the plan.
 
 ---
 
@@ -220,6 +398,7 @@ All atoms in the manifest have `status: verified` and `controls: true`. Update m
 {
   "phase": "atoms",
   "gates": {
+    "plan": "passed",
     "atoms": "passed"
   }
 }
@@ -490,6 +669,8 @@ All screens have `status: verified`. Update manifest:
 ---
 
 ## Resuming
+
+If BUILD PLAN has not been confirmed (plan gate is `pending`), `/pixel-perfect:build` runs Phase 4b first before resuming any other phase.
 
 Build automatically resumes from the current phase. If you stopped mid-atoms:
 
