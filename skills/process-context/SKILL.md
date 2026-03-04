@@ -89,20 +89,7 @@ Based on the tools in the manifest, follow these conventions:
 - Every component gets at least a Default story
 - Interactive components get variant stories
 
-## Storybook Controls Convention
-
-**Every component prop must be wired to a Storybook control via `argTypes`.** This is mandatory — no exceptions.
-
-| Prop Type | Control | Example |
-|-----------|---------|---------|
-| `string` | `text` | `label: { control: 'text' }` |
-| `number` | `number` | `size: { control: { type: 'number', min: 1, max: 100 } }` |
-| `boolean` | `boolean` | `disabled: { control: 'boolean' }` |
-| `enum / union` | `select` | `variant: { control: 'select', options: [...] }` |
-| `color string` | `color` | `tint: { control: 'color' }` |
-| `() => void` | `action` | `onPress: { action: 'pressed' }` |
-
-When a prop is added during refinement, the corresponding argType must be added too.
+For full argTypes control conventions, see `docs/storybook-conventions.md`.
 
 ## Story Organization Convention
 
@@ -115,72 +102,7 @@ Stories must use the correct hierarchy prefix:
 | Molecule compositions | `Molecules/` | `title: 'Molecules/JobRow'` |
 | Composed screens | `Screens/` | `title: 'Screens/TodayFeed'` |
 
-## Polyfill Disclaimer Convention
-
-For React Native projects rendered in web Storybook via `react-native-web`, a polyfill disclaimer must be visible. This is typically a global decorator in `.storybook/preview.tsx`:
-
-```
-Web Preview — Some native elements (icons, gestures, haptics) are
-polyfilled via react-native-web and may differ from device rendering.
-```
-
-## Design Token Stories Convention
-
-When the theme changes (vibe refinement, theme-only changes), the Design Token stories must be regenerated:
-
-- `Design System/Colors` — Reflects current theme palette
-- `Design System/Typography` — Reflects current font scale
-- `Design System/Spacing` — Reflects current spacing scale
-- `Design System/Icons` — Reflects current icon library (if any)
-
-## Aesthetic Guidance
-
-The project vibe (from the manifest) should inform every visual decision:
-
-- **Color choices**: Follow the theme's hierarchy. Primary for key actions, secondary for supporting elements, accent for highlights.
-- **Typography**: Use the configured font pairing. Display font for headings, body font for content.
-- **Spacing**: Use the theme's spacing scale consistently. Don't mix different spacing approaches.
-- **Motion**: Be intentional. Not every element needs animation. Key transitions (page enter, state change, user action feedback) deserve motion. Idle states don't.
-
-If the **frontend-design** plugin is available in the environment, defer to its aesthetic standards for:
-- Font pairing selection and usage
-- Color palette application and hierarchy
-- Spatial composition and layout rhythm
-- Motion design philosophy
-
-## Manifest Updates
-
-When you create or modify a component:
-
-```json
-{
-  "atoms": [
-    {
-      "name": "ComponentName",
-      "file": "src/components/ComponentName.tsx",
-      "story": "src/components/ComponentName.stories.tsx",
-      "status": "verified",
-      "controls": true
-    }
-  ]
-}
-```
-
-When you create or modify a screen:
-
-```json
-{
-  "screens": [
-    {
-      "name": "ScreenName",
-      "file": "src/screens/ScreenName.tsx",
-      "story": "src/screens/ScreenName.stories.tsx",
-      "status": "verified",
-      "atoms": ["Atom1", "Atom2", "Atom3"]
-    }
-  ]
-}
-```
+For design token story regeneration and the polyfill disclaimer pattern (required for React Native web Storybook), see `docs/storybook-conventions.md` and `docs/adapters/react-native-web.md`.
 
 ## Commands Reference
 
