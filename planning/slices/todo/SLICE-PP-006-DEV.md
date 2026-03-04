@@ -1,4 +1,4 @@
-# SLICE-PP-006-DEV: Add Missing Adapter Stubs and Expand INTEGRATE Phase
+# SLICE-PP-006-DEV: Add Adapter Stubs and Remove Phase 7 INTEGRATE
 
 ---
 
@@ -6,10 +6,10 @@
 
 SLICE-ID: PP-006
 ROLE: Dev
-STATUS: READY
+STATUS: READY (execute after PP-001 merges)
 PRIORITY: MEDIUM
 EFFORT: M
-TYPE: enhancement
+TYPE: enhancement + removal
 EVIDENCE_TIER: T3
 PARENT_SLICE: PP-006
 CONTEXT_SCOPE: SLICE
@@ -46,12 +46,12 @@ TASK_LIST_ID: PP-006-DEV
 **Finding #9 — Missing adapter docs for libraries listed in init.md:**
 `commands/init.md` offers these component library options to users: React Native Reusables, React Native Paper, Tamagui, Gluestack (mobile); shadcn/ui, Radix, Mantine, Chakra, Headless UI, DaisyUI (web). Existing adapters: `react-native-reusables.md`, `react-native-paper.md`, `shadcn.md`. Missing adapters: Tamagui, Gluestack, Mantine, Headless UI, DaisyUI, Radix. Users selecting these libraries get only the generic adapter, with no tool-specific guidance.
 
-**Fix:** Create focused adapter stubs for 6 missing libraries. Stubs must follow the established adapter format and provide enough guidance to scaffold and build components (not just a placeholder).
+**Fix:** Create focused adapter stubs for 6 missing libraries.
 
-**Finding #12 — Phase 7 INTEGRATE severely underspecified:**
-`commands/build.md` Phase 7 (INTEGRATE) is ~35 lines vs ~150+ lines for Phase 5 (ATOMS) and Phase 6 (COMPOSE). It lists 4 integration topics without concrete guidance for how to implement them in common frameworks. Developers using the plugin to wire navigation, state, or data fetching get no specific patterns.
+**Confirmed architectural decision — Phase 7 INTEGRATE is out of scope:**
+The pixel-perfect plugin's purpose is to build UI components and screens in a Storybook sandbox. Navigation, state management, and data fetching are explicitly outside this scope. UI components expose props; backend/data/business logic consuming those props is a separate concern. Phase 7 INTEGRATE is removed entirely — not reduced, not marked optional. Clean break.
 
-**Fix:** Expand Phase 7 in build.md with framework-aware examples for navigation (React Navigation for mobile, Next.js App Router / React Router for web), state management, and data fetching — at the same specificity level as Phases 5-6.
+**Fix:** Remove the entire Phase 7 INTEGRATE section from `commands/build.md`. Update all references to the phase count and gate sequence.
 
 ---
 
@@ -63,232 +63,241 @@ TASK_LIST_ID: PP-006-DEV
 - `docs/adapters/headless-ui.md` — CREATE new adapter stub
 - `docs/adapters/daisyui.md` — CREATE new adapter stub
 - `docs/adapters/radix.md` — CREATE new adapter stub
-- `commands/build.md` — Expand Phase 7 INTEGRATE section
+- `commands/build.md` — Remove Phase 7 INTEGRATE section; update Overview; update Completion block; update manifest gate examples
 
 ---
 
 ## WRITE-PROHIBITED
 
 - `commands/init.md` — Do NOT modify (owned by PP-001, PP-002)
+- `commands/status.md` — Do NOT modify (INTEGRATE already removed by PP-001)
+- `skills/process-context/SKILL.md` — Do NOT modify (INTEGRATE already removed by PP-001)
 - `docs/adapters/react-native-reusables.md` — Do NOT modify (owned by PP-003, PP-005)
 - `docs/adapters/react-native-paper.md` — Do NOT modify
 - `docs/adapters/shadcn.md` — Do NOT modify
-- `skills/` — Do NOT modify
+- `docs/adapters/tailwind.md` — Do NOT modify
+
+---
+
+## Prerequisite: PP-001 Must Have Merged
+
+Before executing this slice, confirm PP-001 has merged into the branch. PP-001 also modifies build.md (adding Phase 5b). This slice removes Phase 7 from the end of build.md. These are non-overlapping sections, but you must operate on the post-PP-001 version to avoid conflicts.
+
+**Verify PP-001 is merged:**
+```bash
+grep -n "Phase 5b" commands/build.md
+# Expected: ≥1 match — if missing, PP-001 has not merged yet. STOP and wait.
+```
 
 ---
 
 ## Implementation Steps
 
-### Step 1: Create Missing Adapter Stubs
+### Step 1: Read Reference Adapters
 
-Each adapter must follow the established format: platforms, category, scaffold steps, theme integration, component names/patterns, verify checklist, sandbox, source URLs.
+Before writing any adapter stub, read these two reference files completely to internalize the format:
+- `docs/adapters/react-native-paper.md`
+- `docs/adapters/shadcn.md`
 
-Study `docs/adapters/react-native-paper.md` and `docs/adapters/shadcn.md` as format references before writing.
+The format consists of: h1 title, Platforms section, Category section, Scaffold section (with install commands), Theme integration, Key components list, Verify checklist, Source URLs.
 
-**Create `docs/adapters/tamagui.md`** (mobile-first cross-platform UI):
+---
+
+### Step 2: Create 6 Adapter Stubs
+
+Each stub must be ≥40 lines and follow the established format. No placeholders, no TODOs. Real content only.
+
+#### `docs/adapters/tamagui.md`
 - Platforms: mobile-ios, mobile-android, web-desktop, web-mobile
-- Category: Components + Style
-- Key scaffold: `npm install @tamagui/core tamagui` + `tamagui.config.ts`
-- Theme integration: `createTamagui()` config, `TamaguiProvider` wrapper
-- Key components: `Button`, `Text`, `Stack`, `XStack`, `YStack`, `Sheet`, `Dialog`
-- Verify: Components use Tamagui tokens, not hardcoded values; `TamaguiProvider` in story decorator
+- Category: Components + Style (combined system)
+- Scaffold: `npm install @tamagui/core tamagui` + generate `tamagui.config.ts`
+- Theme integration: `createTamagui()` config, `TamaguiProvider` wrapper in Storybook decorator
+- Key components: `Button`, `Text`, `Stack`, `XStack`, `YStack`, `Sheet`, `Dialog`, `Input`
+- Verify checklist: Components use Tamagui tokens (not hardcoded values); `TamaguiProvider` present in story decorator; tokens resolve at build time
 - Source URLs: https://tamagui.dev, https://tamagui.dev/docs/core/installation
 
-**Create `docs/adapters/gluestack.md`** (Gluestack UI v2):
+#### `docs/adapters/gluestack.md`
 - Platforms: mobile-ios, mobile-android, web-desktop, web-mobile
 - Category: Components
-- Key scaffold: `npx gluestack-ui@latest init`
-- Theme integration: `GluestackUIProvider` with config
-- Key components: `Button`, `Text`, `Box`, `VStack`, `HStack`, `Input`, `Select`, `Modal`
-- Verify: Uses Gluestack theme tokens; GluestackUIProvider wraps story decorator
+- Scaffold: `npx gluestack-ui@latest init` (interactive CLI handles setup)
+- Theme integration: `GluestackUIProvider` with config object; wrap Storybook preview with provider
+- Key components: `Button`, `Text`, `Box`, `VStack`, `HStack`, `Input`, `Select`, `Modal`, `Badge`, `Pressable`
+- Verify checklist: GluestackUIProvider wraps story decorator; theme tokens resolve; components render in both native and web Storybook
 - Source URLs: https://gluestack.io, https://gluestack.io/ui/docs/home/overview
 
-**Create `docs/adapters/mantine.md`** (web React component library):
+#### `docs/adapters/mantine.md`
 - Platforms: web-desktop, web-mobile
 - Category: Components
-- Key scaffold: `npm install @mantine/core @mantine/hooks`; import CSS: `import '@mantine/core/styles.css'`
-- Theme integration: `MantineProvider` with `createTheme()` config
-- Key components: `Button`, `TextInput`, `Select`, `Modal`, `Drawer`, `Card`, `Stack`, `Group`, `Badge`
-- Verify: Components use Mantine theme vars; `MantineProvider` in story decorator
+- Scaffold: `npm install @mantine/core @mantine/hooks`; CSS import required: `import '@mantine/core/styles.css'` in Storybook preview
+- Theme integration: `MantineProvider` wrapper with `createTheme()` config; CSS import is mandatory — missing it causes unstyled components
+- Key components: `Button`, `TextInput`, `Select`, `Modal`, `Drawer`, `Card`, `Stack`, `Group`, `Badge`, `Tabs`
+- Verify checklist: `@mantine/core/styles.css` imported in `.storybook/preview.tsx`; `MantineProvider` wraps story decorator; Mantine CSS vars resolve to theme values
 - Source URLs: https://mantine.dev, https://mantine.dev/getting-started/
 
-**Create `docs/adapters/headless-ui.md`** (Tailwind-first headless components for web):
+#### `docs/adapters/headless-ui.md`
 - Platforms: web-desktop, web-mobile
-- Category: Components
-- Key scaffold: `npm install @headlessui/react`; requires Tailwind CSS (see tailwind.md adapter)
-- Theme integration: No theme provider — components are unstyled, styled entirely via Tailwind classes
-- Key components: `Dialog`, `Disclosure`, `Listbox`, `Menu`, `Popover`, `RadioGroup`, `Switch`, `Tab`, `Transition`
-- Note: Components are intentionally unstyled — AI must apply Tailwind utility classes per the project vibe
-- Verify: Components render without default browser styling; all visual styling from Tailwind classes
+- Category: Components (unstyled — requires separate style system)
+- Scaffold: `npm install @headlessui/react`; requires Tailwind CSS (see tailwind.md adapter); no provider needed
+- Theme integration: None — components are intentionally unstyled. All visual styling applied via Tailwind utility classes per project vibe. AI must supply all visual styling.
+- Key components: `Dialog`, `Disclosure`, `Listbox`, `Menu`, `Popover`, `RadioGroup`, `Switch`, `Tab`, `Transition`, `Combobox`
+- Note: Components handle accessibility and behavior only (keyboard nav, focus management, ARIA). Visual design is 100% Tailwind classes.
+- Verify checklist: Components render without default browser styling; all visual styling from Tailwind classes; keyboard navigation works; focus is managed correctly
 - Source URLs: https://headlessui.com, https://headlessui.com/react/dialog
 
-**Create `docs/adapters/daisyui.md`** (Tailwind plugin providing pre-styled components for web):
+#### `docs/adapters/daisyui.md`
 - Platforms: web-desktop, web-mobile
-- Category: Components
-- Key scaffold: `npm install -D daisyui`; add to tailwind.config.js plugins
-- Theme integration: DaisyUI theme system via `data-theme` attribute; `theme` in tailwind.config.js
-- Key components: Class-based (not React components): `btn`, `card`, `badge`, `input`, `select`, `modal`, `drawer`, `navbar`, `tabs`
-- Note: DaisyUI uses CSS classes applied to HTML elements — no React component imports; scaffold generates utility components wrapping DaisyUI classes
-- Verify: DaisyUI classes resolve to correct styles; theme attribute switches correctly
+- Category: Components (CSS class-based — not React components)
+- Scaffold: `npm install -D daisyui@latest`; add to `tailwind.config.js` plugins array: `require('daisyui')`
+- Theme integration: DaisyUI theme system via `data-theme` attribute on `<html>` or root element; theme list configured in `tailwind.config.js` under `daisyui.themes`
+- Key "components": DaisyUI uses CSS class names applied to HTML elements, not React component imports. Examples: `btn`, `btn-primary`, `card`, `badge`, `input`, `select`, `modal`, `drawer`, `navbar`, `tabs`
+- Scaffold approach: Generate thin React wrapper components that apply DaisyUI class names, giving them a React API. E.g., `<Button variant="primary">` renders `<button className="btn btn-primary">`.
+- Verify checklist: DaisyUI classes resolve to correct styles (not unstyled); `data-theme` attribute switches theme correctly; generated React wrappers expose variant props as argTypes
 - Source URLs: https://daisyui.com, https://daisyui.com/docs/install/
 
-**Create `docs/adapters/radix.md`** (unstyled accessible primitives for web):
+#### `docs/adapters/radix.md`
 - Platforms: web-desktop, web-mobile
-- Category: Components
-- Key scaffold: `npm install @radix-ui/react-{component}` per component; no provider needed
-- Theme integration: No built-in theme — style with CSS Modules, Tailwind, or CSS-in-JS; tokens from project theme apply
-- Key components: `Dialog`, `DropdownMenu`, `Select`, `Popover`, `Tooltip`, `Switch`, `Checkbox`, `Slider`, `Tabs`, `Accordion`
-- Import pattern: `import * as Dialog from '@radix-ui/react-dialog'`
-- Verify: Components are accessible (keyboard nav, focus management); all visual styling from project's style system
+- Category: Components (unstyled accessible primitives)
+- Scaffold: Per-component package installation — `npm install @radix-ui/react-dialog`, `npm install @radix-ui/react-dropdown-menu`, etc. No monolithic install, no provider needed.
+- Theme integration: No built-in theme. Style entirely with the project's existing style system (CSS Modules, Tailwind, or CSS-in-JS). Project theme tokens apply directly via className or style props.
+- Key components: `Dialog`, `DropdownMenu`, `Select`, `Popover`, `Tooltip`, `Switch`, `Checkbox`, `Slider`, `Tabs`, `Accordion`, `HoverCard`
+- Import pattern: `import * as Dialog from '@radix-ui/react-dialog'` — namespace import required
+- Verify checklist: Components are accessible (keyboard nav, focus trap, ARIA attributes); all visual styling from project style system (no Radix default styles leaking); TypeScript types satisfied
 - Source URLs: https://www.radix-ui.com, https://www.radix-ui.com/primitives/docs/overview/introduction
 
-### Step 2: Expand build.md Phase 7 INTEGRATE
+---
 
-Read `commands/build.md`. Locate Phase 7 INTEGRATE section (~line 362 to end of phase).
+### Step 3: Remove Phase 7 INTEGRATE from `commands/build.md`
 
-Current Phase 7 is:
-- "What Gets Wired" (4 bullet points: navigation, state, data fetching, end-to-end verification)
-- "Integration Steps" (checklist)
-- Phase 7 Exit Gate
+Read `commands/build.md` in full first. Then make the following edits:
 
-Expand to match the specificity of Phases 5-6. Add framework-aware subsections:
+#### 3a. Remove the Phase 7 section entirely
 
-**Add: Navigation Integration (with framework-specific examples)**
+Delete from the `## Phase 7: INTEGRATE` header through the Phase 7 Exit Gate closing block (everything in that section including "What Gets Wired", "Integration Steps", "Phase 7 Exit Gate"). This is a clean removal — no replacement text, no stub, no "out of scope" placeholder.
 
-For React Native / Expo:
-```typescript
-// Example: React Navigation stack setup
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+#### 3b. Update the Overview block
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+The Overview block references Phase 7. Update it (PP-001 already removed Phase 7 from this block, but verify it is gone):
 
-export function AppNavigator() {
-  return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="TodayFeed">
-        <Stack.Screen name="TodayFeed" component={TodayFeedScreen} />
-        <Stack.Screen name="JobDetail" component={JobDetailScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-}
+```
+Phase 5: ATOMS      → Individual components (Button, Card, Badge, etc.)
+Phase 5b: MOLECULES → Functional compositions of 2-3 atoms (SearchBar, UserCard, FormField)
+Phase 6: COMPOSE    → Screen layouts composing molecules and atoms (Dashboard, Settings, etc.)
 ```
 
-For Next.js (App Router):
-```typescript
-// Screens map to app/ directory structure
-// app/
-// ├── page.tsx          → TodayFeed screen
-// └── job/[id]/page.tsx → JobDetail screen
+If Phase 7 still appears in the Overview after PP-001's merge, remove it now.
+
+#### 3c. Update the Completion block
+
+The Completion message at the bottom of build.md may reference "Integration: complete". Remove that line:
+
+OLD (if present after PP-001):
+```
+  - Functional molecule compositions sandboxed in Storybook
+  - 2 composed screens at target viewport
+  - Navigation and data flow wired
 ```
 
-For React (React Router / Vite):
-```typescript
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-
-const router = createBrowserRouter([
-  { path: '/', element: <TodayFeedScreen /> },
-  { path: '/job/:id', element: <JobDetailScreen /> },
-]);
+NEW:
+```
+  - Functional molecule compositions sandboxed in Storybook
+  - 2 composed screens at target viewport
 ```
 
-**Add: State Management (with examples)**
+Remove the "Navigation and data flow wired" line or any integration-related completion note.
 
-For shared state between screens, use React Context as the default minimal approach:
-```typescript
-// Simple shared state pattern
-const AppStateContext = React.createContext<AppState | null>(null);
+#### 3d. Update the --phase option docs
 
-export function AppStateProvider({ children }: { children: React.ReactNode }) {
-  const [selectedJobId, setSelectedJobId] = React.useState<string | null>(null);
-  return (
-    <AppStateContext.Provider value={{ selectedJobId, setSelectedJobId }}>
-      {children}
-    </AppStateContext.Provider>
-  );
-}
+`commands/build.md` has an Options section showing `--phase <name>` with valid values `atoms, compose, integrate`. Update to remove `integrate`:
+
+OLD:
+```
+- `--phase <name>`: Start from a specific phase (atoms, compose, integrate). Default: resume from current phase.
 ```
 
-**Add: Data Fetching (brief pattern)**
-
-Loading state pattern that connects to atoms:
-```typescript
-// Standard data loading with loading/error/empty states
-function TodayFeedScreen() {
-  const { data: jobs, isLoading, error } = useJobs();
-
-  if (isLoading) return <LoadingSkeleton />;  // Verified atom
-  if (error) return <ErrorState message={error.message} />;  // Verified atom
-  if (!jobs?.length) return <EmptyState />;   // Verified atom
-  return <JobList jobs={jobs} />;
-}
+NEW:
+```
+- `--phase <name>`: Start from a specific phase (atoms, molecules, compose). Default: resume from current phase.
 ```
 
-**Add: INTEGRATE Exit Gate**
+---
 
-Expand the current gate check to include:
-- All screens navigate from the entry point
-- Back navigation returns to expected screen
-- Data passes correctly between screens (no prop drilling issues)
-- Loading, error, and empty states all render correctly in the real app (not just Storybook)
-- App compiles without TypeScript errors
-
-### Step 3: Verify
+### Step 4: Verify
 
 ```bash
-# All 6 new adapter stubs created
+# Step 4a: All 6 adapter stubs exist
 ls docs/adapters/{tamagui,gluestack,mantine,headless-ui,daisyui,radix}.md
+# Expected: all 6 files listed without error
 
-# Adapter stubs are substantive (not empty)
-for f in docs/adapters/tamagui.md docs/adapters/gluestack.md docs/adapters/mantine.md \
-         docs/adapters/headless-ui.md docs/adapters/daisyui.md docs/adapters/radix.md; do
-  echo "$f: $(wc -l < $f) lines"
-done
-# Expected: each >40 lines
+# Step 4b: Stubs are substantive (not placeholders)
+wc -l docs/adapters/tamagui.md docs/adapters/gluestack.md docs/adapters/mantine.md \
+       docs/adapters/headless-ui.md docs/adapters/daisyui.md docs/adapters/radix.md
+# Expected: each ≥40 lines
 
-# Phase 7 is expanded
-wc -l commands/build.md
-# Expected: meaningfully longer than before (was ~60 lines for phase 7, should be ~120+)
+# Step 4c: No TODOs or placeholders in stubs
+grep -ri "TODO\|TBD\|PLACEHOLDER\|\[FILL" docs/adapters/tamagui.md \
+     docs/adapters/gluestack.md docs/adapters/mantine.md docs/adapters/headless-ui.md \
+     docs/adapters/daisyui.md docs/adapters/radix.md
+# Expected: 0 matches
 
-# Only expected files changed
+# Step 4d: Phase 7 INTEGRATE removed from build.md
+grep -n "Phase 7\|INTEGRATE" commands/build.md
+# Expected: 0 matches
+
+# Step 4e: Phase 5b still present (PP-001's work preserved)
+grep -n "Phase 5b" commands/build.md
+# Expected: ≥1 match (PP-001's addition must be intact)
+
+# Step 4f: Scope check
 git diff --name-only
-git status --short | grep "^?"  # new files
+# Expected: commands/build.md only (the 6 adapter stubs show as untracked new files)
+git status --short docs/adapters/
+# Expected: 6 ?? (untracked) new adapter files
 ```
 
 ---
 
 ## Acceptance Criteria
 
-1. 6 new adapter files created: tamagui.md, gluestack.md, mantine.md, headless-ui.md, daisyui.md, radix.md
-2. Each adapter file is ≥40 lines with: platforms, category, scaffold steps, theme integration, verify checklist, source URLs
-3. `commands/build.md` Phase 7 INTEGRATE section is expanded with: framework-specific navigation examples (React Navigation + Next.js App Router + React Router), state management pattern, data fetching pattern with loading/error/empty states
-4. Phase 7 exit gate in build.md includes specific navigation and data-flow verification checks
-5. No existing files modified except `commands/build.md`
-6. Adapter stubs follow the same format as `docs/adapters/react-native-paper.md`
+1. **6 adapter stubs created:** tamagui.md, gluestack.md, mantine.md, headless-ui.md, daisyui.md, radix.md
+2. **Each stub ≥40 lines** with: h1 title, Platforms section, Category section, Scaffold section (with real install commands), Theme integration details, Key components list, Verify checklist, Source URLs
+3. **No stub contains placeholder text** — no "TODO", "TBD", "[FILL THIS IN]"
+4. **Phase 7 INTEGRATE is completely absent from `commands/build.md`** — `grep -c "Phase 7\|INTEGRATE" commands/build.md` returns 0
+5. **Phase 5b MOLECULES is intact** — PP-001's additions to build.md are not accidentally removed
+6. **build.md `--phase` option docs updated** — `integrate` removed, `molecules` added to valid values
+7. **No existing adapter files modified** — react-native-paper.md, shadcn.md, tailwind.md, react-native-reusables.md are unchanged
+8. **No other command files modified** — only build.md in the commands/ directory
 
 ---
 
 ## Quality Gates
 
 ```bash
-# All 6 stubs exist
+# QG1: All 6 stubs exist
 ls docs/adapters/tamagui.md docs/adapters/gluestack.md docs/adapters/mantine.md \
    docs/adapters/headless-ui.md docs/adapters/daisyui.md docs/adapters/radix.md
-# Expected: all 6 found
+# Expected: exit code 0
 
-# Stubs are substantive
-wc -l docs/adapters/tamagui.md docs/adapters/gluestack.md | awk '{print $1}' | sort -n | head -1
-# Expected: ≥40
+# QG2: No placeholders
+grep -ric "TODO\|TBD\|PLACEHOLDER" docs/adapters/tamagui.md docs/adapters/gluestack.md \
+     docs/adapters/mantine.md docs/adapters/headless-ui.md docs/adapters/daisyui.md \
+     docs/adapters/radix.md | grep -v ":0"
+# Expected: no output (all files return 0)
 
-# Phase 7 has navigation examples
-grep -n "NavigationContainer\|createBrowserRouter\|App Router" commands/build.md
-# Expected: ≥2 matches
+# QG3: Phase 7 completely gone from build.md
+grep -c "Phase 7\|INTEGRATE\|integrate" commands/build.md
+# Expected: 0
 
-# Scope check
+# QG4: Phase 5b still intact
+grep -c "Phase 5b" commands/build.md
+# Expected: ≥1
+
+# QG5: Existing adapters untouched
+git diff docs/adapters/react-native-paper.md docs/adapters/shadcn.md docs/adapters/tailwind.md
+# Expected: empty
+
+# QG6: Scope check
 git diff --name-only
 # Expected: commands/build.md only
-# New files: 6 adapter stubs
 ```
 
 ---
@@ -296,8 +305,13 @@ git diff --name-only
 ## Deliverables
 
 1. 6 new adapter stub files in `docs/adapters/`
-2. Expanded `commands/build.md` Phase 7 INTEGRATE section
-3. Evidence: `ls docs/adapters/ | wc -l` before and after, `wc -l commands/build.md` before and after, saved to `.tmp/evidence/PP-006/`
+2. Edited `commands/build.md` with Phase 7 removed
+3. Evidence saved to `.tmp/evidence/PP-006/`:
+   - `before-build-linecount.txt`: `wc -l commands/build.md` before edit
+   - `after-build-linecount.txt`: `wc -l commands/build.md` after edit
+   - `adapter-list.txt`: `ls -la docs/adapters/` after creation
+   - `adapter-linecounts.txt`: `wc -l docs/adapters/{tamagui,gluestack,mantine,headless-ui,daisyui,radix}.md`
+   - `integrate-grep.txt`: `grep -n "Phase 7\|INTEGRATE" commands/build.md` → must be empty
 
 ---
 

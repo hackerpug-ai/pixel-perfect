@@ -1,4 +1,4 @@
-# SLICE-PP-001-QA: Verify Molecules Hierarchy Inconsistency Fix
+# SLICE-PP-001-QA: Verify Molecules Phase Added to Build Pipeline
 
 ---
 
@@ -14,7 +14,6 @@ Approach this verification with SKEPTICISM:
 - Do not mark PASS unless FULLY verified
 - Question any evidence that seems too perfect
 - Test failure modes and error handling
-- Verify rollback procedures actually work
 
 **If in doubt, mark as FAIL and require fixes.**
 
@@ -26,7 +25,7 @@ Your job is to protect quality, not to be agreeable. Be thorough, be critical, b
 
 **Your context scope: FRESH**
 
-### CRITICAL: You Are QA - Fresh Context Required
+### CRITICAL: You Are QA — Fresh Context Required
 
 Your objectivity depends on evaluating evidence against requirements, NOT understanding Dev's journey.
 
@@ -41,14 +40,7 @@ Your objectivity depends on evaluating evidence against requirements, NOT unders
 - Dev's implementation narrative (confirmation bias)
 - Dev's debugging journey (sympathy bias)
 - Dev's commentary or reasoning (sycophancy risk)
-- Dev handoffs (PROHIBITED - preserves fresh context)
-
-### Handoff Policy:
-- **When pausing:** Run `/handoff` → produces QA handoff automatically
-- **When resuming:** Run `/handoff-resume` → shows only QA handoffs for this slice
-- **What you write:** Evidence-focused review state only
-- **What you read:** QA handoffs for same slice only
-- **PROHIBITED:** Reading Dev handoffs (violates fresh context)
+- Dev handoffs (PROHIBITED — preserves fresh context)
 
 ---
 
@@ -58,7 +50,7 @@ SLICE-ID: PP-001
 ROLE: QA
 STATUS: BLOCKED (waiting for Dev)
 PRIORITY: CRITICAL
-EFFORT: XS
+EFFORT: S
 TYPE: verification
 EVIDENCE_TIER: T3
 PARENT_SLICE: PP-001
@@ -71,108 +63,166 @@ TASK_LIST_ID: PP-001-QA
 ## Scope
 
 Verify that the Dev implementation:
-- Removed all Molecules references from `commands/init.md`
-- Updated the component hierarchy to 2-level (atoms → screens)
-- Updated the ASCII diagram
-- Did NOT modify any files outside `commands/init.md`
+- Added Phase 5b MOLECULES to `commands/build.md` (between ATOMS and COMPOSE)
+- Updated manifest gate sequence in build.md (molecules gate added, integrate removed)
+- Updated `skills/process-context/SKILL.md` Phase Awareness table (molecules added, integrate removed)
+- Updated `skills/process-context/SKILL.md` Story Organization table (Molecules/ prefix added)
+- Updated `commands/status.md` to show molecules progress and remove INTEGRATE line
+- Left `commands/init.md` COMPLETELY UNCHANGED
 
 ---
 
 ## Verification Checklist
 
-### A. Primary Fix Verification
+### A. build.md — Phase 5b Presence
 
-- [ ] **A1.** Read `commands/init.md` completely. Confirm ZERO occurrences of "Molecules" or "Molecule" (case-sensitive and case-insensitive)
-- [ ] **A2.** Confirm the "Step 1b" section describes only 2 levels: Components (atoms) and Screens (views)
-- [ ] **A3.** Confirm the ASCII hierarchy diagram shows only 2 rows: Components (atoms) and Screens (views)
-- [ ] **A4.** Confirm the "Storybook story prefixes" mentioned in the hierarchy use only `Components/` and `Screens/` — NOT `Molecules/`
-- [ ] **A5.** Confirm "Plan the build order" text does not mention molecules
+- [ ] **A1.** Read `commands/build.md` fully. Confirm a `## Phase 5b: MOLECULES` section exists between the Phase 5 exit gate and the `## Phase 6: COMPOSE` header.
+- [ ] **A2.** Confirm Phase 5b includes a "When to Build Molecules" or equivalent guidance (explaining when to skip Phase 5b)
+- [ ] **A3.** Confirm Phase 5b includes a step to identify molecules from the atom list + spec
+- [ ] **A4.** Confirm Phase 5b includes build steps: write molecule file + write story file
+- [ ] **A5.** Confirm the story file instructions specify `Molecules/` as the required Storybook prefix (e.g., `title: 'Molecules/JobRow'`)
+- [ ] **A6.** Confirm Phase 5b includes a manifest update format showing `"molecules": [...]` array with name, file, story, status, atoms fields
+- [ ] **A7.** Confirm Phase 5b has an exit gate block with `"molecules": "passed"` manifest update
 
-### B. Cross-Reference Verification
+### B. build.md — Manifest Gate Sequence
 
-- [ ] **B1.** Read `commands/build.md` — confirm it is IDENTICAL to its pre-edit state (no Molecules added)
-- [ ] **B2.** Read `commands/verify.md` — confirm it is IDENTICAL to its pre-edit state
-- [ ] **B3.** Read `skills/process-context/SKILL.md` — confirm it is IDENTICAL to its pre-edit state
-- [ ] **B4.** Read `commands/status.md` — confirm it is IDENTICAL to its pre-edit state
+- [ ] **B1.** Locate at least one manifest JSON example in build.md. Confirm it shows `"molecules"` gate between `"atoms"` and `"compose"`.
+- [ ] **B2.** Confirm `"integrate"` does NOT appear in manifest gate examples in build.md.
+- [ ] **B3.** Confirm the Overview block at the top of build.md lists `Phase 5b: MOLECULES` and does NOT list `Phase 7: INTEGRATE`.
 
-### C. Consistency Verification
+### C. SKILL.md — Phase Awareness Table
 
-- [ ] **C1.** Verify that the story prefixes in init.md (`Components/`, `Screens/`) match those defined in `commands/build.md` (Phase 5: `Components/`, Phase 6: `Screens/`)
-- [ ] **C2.** Verify that the story prefixes in init.md match those in `docs/storybook-conventions.md`
-- [ ] **C3.** Verify the component hierarchy in init.md matches the phase names in `skills/process-context/SKILL.md` Phase Awareness table (atoms, compose — no molecules)
+- [ ] **C1.** Read `skills/process-context/SKILL.md` fully. Confirm the Phase Awareness table has a `molecules` row.
+- [ ] **C2.** Confirm the `molecules` row appears BETWEEN the `atoms` row and the `compose` row.
+- [ ] **C3.** Confirm the `integrate` row has been REMOVED from the Phase Awareness table.
+- [ ] **C4.** Confirm the phase list string (e.g., `discover → target → ... → compose`) includes `molecules` and excludes `integrate`.
+- [ ] **C5.** Confirm "7-phase" has been updated to "6-phase" (or equivalent count).
 
-### D. Git Diff Verification
+### D. SKILL.md — Story Organization Table
 
-- [ ] **D1.** Run `git diff --name-only` — only `commands/init.md` should appear
-- [ ] **D2.** Run `git diff commands/init.md` — confirm only the Molecules-related text is removed, no other content changed
-- [ ] **D3.** Confirm no new files were created
+- [ ] **D1.** Confirm the Story Organization table includes a `Molecules/` prefix row.
+- [ ] **D2.** Confirm the row is positioned between `Components/` and `Screens/`.
 
-### E. Evidence Review
+### E. SKILL.md — Commands Reference
 
-- [ ] **E1.** Review `.tmp/evidence/PP-001/after-grep.txt` — confirm it shows 0 Molecule matches in init.md
+- [ ] **E1.** Confirm the `/pixel-perfect:build` entry in the Commands Reference reflects the new phase range (no longer "Phases 5-7: atoms → compose → integrate").
+
+### F. status.md Updates
+
+- [ ] **F1.** Read `commands/status.md` fully. Confirm the sample output Phases block includes a MOLECULES line.
+- [ ] **F2.** Confirm INTEGRATE has been removed from the sample output Phases block.
+- [ ] **F3.** Confirm a Molecules progress section exists in the sample output (showing molecule name, file path, constituent atoms).
+- [ ] **F4.** Confirm the "What It Shows" section references molecules tracking.
+
+### G. init.md UNCHANGED — Critical Check
+
+- [ ] **G1.** Run `git diff commands/init.md`. Confirm the output is **completely empty**.
+- [ ] **G2.** Read `commands/init.md` Step 1b section. Confirm it STILL shows the 3-level hierarchy: Components (atoms) → Molecules → Views (screens). If Dev accidentally touched init.md, FAIL immediately.
+
+### H. Scope Containment
+
+- [ ] **H1.** Run `git diff --name-only`. Confirm only these files appear: `commands/build.md`, `skills/process-context/SKILL.md`, `commands/status.md`
+- [ ] **H2.** Confirm `commands/verify.md` is UNCHANGED
+- [ ] **H3.** Confirm `commands/scaffold.md` is UNCHANGED
+- [ ] **H4.** Confirm no new files were created
 
 ---
 
 ## Test Commands
 
 ```bash
-# A1: Zero Molecules occurrences
-grep -ci "molecules\|molecule" commands/init.md
-# Expected output: 0
+# A1: Phase 5b section exists
+grep -n "Phase 5b" commands/build.md
+# Expected: ≥1 match
 
-# B: Other files unchanged
-git diff commands/build.md commands/verify.md skills/process-context/SKILL.md commands/status.md
-# Expected output: (empty — no changes)
+# A5: Molecules/ story prefix documented in build.md
+grep -n "Molecules/" commands/build.md
+# Expected: ≥2 matches (instruction + example)
 
-# D1: Only init.md changed
+# B1: molecules gate in manifest example
+grep -n '"molecules"' commands/build.md
+# Expected: ≥1 match
+
+# B2: integrate gate removed from manifest examples
+grep -n '"integrate"' commands/build.md
+# Expected: 0 matches (or only in Phase 7 section — which PP-006 will remove)
+
+# C1/C2/C3: SKILL.md Phase Awareness table
+grep -n "molecules\|integrate" skills/process-context/SKILL.md
+# Expected: molecules appears ≥2x; integrate appears 0x
+
+# D1: Molecules/ prefix in SKILL.md Story table
+grep -n "Molecules/" skills/process-context/SKILL.md
+# Expected: ≥1 match
+
+# G1: CRITICAL — init.md untouched
+git diff commands/init.md
+# Expected: (empty — absolutely nothing)
+
+# H1: Scope check
 git diff --name-only
-# Expected output: commands/init.md
-
-# C1: Story prefixes match between init.md and build.md
-grep -n "Components/\|Screens/\|Molecules/" commands/init.md commands/build.md
-# Expected: Molecules/ appears in NEITHER file
+# Expected: commands/build.md, skills/process-context/SKILL.md, commands/status.md
 ```
 
 ---
 
-## Regression Checks
+## Adversarial Probes
 
-- [ ] **R1.** The 2-level hierarchy in init.md still includes the full explanation of what atoms are (Button, Badge, Avatar, Input examples)
-- [ ] **R2.** The "Plan the build order" text still exists and is coherent (atoms then screens)
-- [ ] **R3.** No markdown formatting was broken in the edit (headers, code blocks, lists are properly closed)
-- [ ] **R4.** init.md still has the 3-step numbered list under "Spec Document for Sandbox Views" (just with Molecules removed from steps 1, 2, and 3)
+1. **Did Dev accidentally remove content from build.md Phase 5 or Phase 6?** Read both phases completely — they should be byte-identical to before the edit. Only the Phase 5b section and manifest examples should have changed.
+
+2. **Is Phase 5b actually complete, or is it a stub?** A stub would have the header but vague content like "TODO: add molecule steps here." Read the section fully — it should have identify step, build step, story example, manifest update, exit gate. All five elements required.
+
+3. **Did Dev touch init.md?** Run `git diff commands/init.md` — this is the single most important check. init.md was correct before and must remain unchanged.
+
+4. **Is the `Molecules/` prefix capitalized correctly?** The Storybook prefix must be `Molecules/` (capital M), not `molecules/` or `molecule/`. Check the story example in Phase 5b.
+
+5. **Was the integrate row actually removed from SKILL.md's Phase Awareness table, or just commented out?** Read the table raw — the row should not exist at all.
+
+6. **Does the status.md sample output make sense after the edit?** Read the full sample output from top to bottom. Does it flow logically? Is the MOLECULES line positioned correctly between ATOMS and COMPOSE?
 
 ---
 
 ## Evidence to Collect
 
-1. Output of `grep -ci "molecules\|molecule" commands/init.md` → must be `0`
-2. Output of `git diff --name-only` → must be `commands/init.md` only
-3. Screenshot or text capture of the updated hierarchy section in init.md showing the 2-level structure
-4. Output of `git diff commands/build.md commands/verify.md skills/process-context/SKILL.md commands/status.md` → must be empty
+1. Output of `grep -n "Phase 5b" commands/build.md`
+2. Output of `grep -n "Molecules/" commands/build.md`
+3. Output of `grep -n "molecules\|integrate" skills/process-context/SKILL.md`
+4. Output of `git diff commands/init.md` → **must be empty**
+5. Output of `git diff --name-only`
+6. Full text of the Phase 5b section from build.md (copy/paste into evidence file)
 
 ---
 
 ## Pass/Fail Criteria
 
 **PASS** if:
-- A1-A5: All "Molecules" references removed from init.md
-- B1-B4: No other files modified
-- C1-C3: Story prefixes consistent across all referenced files
-- D1-D3: Git diff shows only init.md changed
-- R1-R4: No regressions in init.md structure
+- A1-A7: Phase 5b section is present and complete in build.md
+- B1-B3: Manifest gate examples updated (molecules added, integrate removed)
+- C1-C5: SKILL.md Phase Awareness table correct
+- D1-D2: SKILL.md Story Organization table has Molecules/ row
+- E1: Commands Reference updated
+- F1-F4: status.md shows molecules
+- G1-G2: `git diff commands/init.md` is empty AND init.md still shows 3-level hierarchy
+- H1-H4: Only expected files changed
 
 **FAIL** if:
-- Any occurrence of "Molecules" or "Molecule" remains in init.md
-- Any file other than init.md appears in git diff
-- The hierarchy section is incoherent, broken, or missing the atoms-to-screens explanation
-- Markdown formatting is broken
+- Phase 5b section is absent or incomplete (missing any of: identify step, build step, Molecules/ prefix, manifest format, exit gate)
+- `git diff commands/init.md` shows ANY changes whatsoever
+- `integrate` row still present in SKILL.md Phase Awareness table
+- `Molecules/` prefix not documented in SKILL.md Story Organization table
+- Any unexpected files in git diff
 
 ---
 
 ## Rollback Trigger
 
-If FAIL: `git checkout commands/init.md` to restore the original file. No other files were modified so no other rollback needed.
+If FAIL:
+```bash
+git checkout commands/build.md
+git checkout skills/process-context/SKILL.md
+git checkout commands/status.md
+# DO NOT touch init.md — it should be unchanged
+```
 
 ---
 
@@ -180,13 +230,11 @@ If FAIL: `git checkout commands/init.md` to restore the original file. No other 
 
 **FIND PROBLEMS. Do not rubber-stamp.**
 
-If ANY criterion is not fully met → **FAIL** and send back to Dev.
-
-Key adversarial probes:
-1. Did Dev accidentally delete MORE than the Molecules text? (regression check)
-2. Did Dev leave "Molecule" in a singular form somewhere? (search both "Molecules" and "Molecule")
-3. Did Dev modify the ASCII diagram correctly — is it still readable and accurate?
-4. Does the remaining text flow coherently after removal, or are there orphaned references?
+The most common failure modes for this slice:
+1. Dev removed Molecules from init.md instead of adding to build.md (wrong direction fix)
+2. Phase 5b stub is incomplete (missing exit gate, missing manifest format, missing story example)
+3. SKILL.md integrate row was left in table
+4. status.md INTEGRATE line was not removed
 
 ---
 

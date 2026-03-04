@@ -1,4 +1,4 @@
-# SLICE-PP-006-QA: Verify Missing Adapter Stubs and INTEGRATE Phase Expansion
+# SLICE-PP-006-QA: Verify Adapter Stubs and INTEGRATE Phase Removal
 
 ---
 
@@ -6,10 +6,11 @@
 
 **Your role is to FIND PROBLEMS, not rubber-stamp work.**
 
-This slice creates 6 new files and modifies 1. Adversarial focus:
+This slice creates 6 new files and destructively removes a section from build.md.
+Adversarial focus:
 - Are the adapter stubs actually useful, or are they placeholders?
-- Is the INTEGRATE phase expansion accurate for each framework?
-- Did Dev miss any of the 6 adapters?
+- Was Phase 7 INTEGRATE completely removed — not just commented out or shrunk?
+- Did Dev accidentally remove Phase 5b MOLECULES (PP-001's work) while editing build.md?
 - Is the format consistent with existing adapter docs?
 
 **If in doubt, mark as FAIL and require fixes.**
@@ -22,7 +23,7 @@ SLICE-ID: PP-006
 ROLE: QA
 STATUS: BLOCKED (waiting for Dev)
 PRIORITY: MEDIUM
-EFFORT: M
+EFFORT: S
 TYPE: verification
 EVIDENCE_TIER: T3
 PARENT_SLICE: PP-006
@@ -37,8 +38,9 @@ TASK_LIST_ID: PP-006-QA
 Verify that:
 1. All 6 adapter stubs exist and are substantive (not placeholders)
 2. Each stub follows the established adapter format
-3. Phase 7 INTEGRATE in build.md has meaningful framework-specific guidance
-4. No existing files were unexpectedly modified
+3. Phase 7 INTEGRATE is completely absent from build.md
+4. Phase 5b MOLECULES (from PP-001) is still intact in build.md
+5. No existing files were unexpectedly modified
 
 ---
 
@@ -58,52 +60,52 @@ Verify that:
 For EACH of the 6 adapter files, verify it contains:
 
 - [ ] **B1.** A `# [Library Name]` h1 header
-- [ ] **B2.** A `## Platforms` section with listed platform targets
+- [ ] **B2.** A `## Platforms` section listing target platforms
 - [ ] **B3.** A `## Category` section
-- [ ] **B4.** A `## Scaffold` section with installation commands
-- [ ] **B5.** A `## Verify` checklist
-- [ ] **B6.** A `## Source URLs` section with actual URLs (not placeholder text)
+- [ ] **B4.** A `## Scaffold` section with real installation commands (not "install the package")
+- [ ] **B5.** A `## Verify` or verification checklist section
+- [ ] **B6.** A `## Source URLs` section with actual https:// links
 
-**Adversarial probe — Is it a placeholder?**
-Read each file. Look for "TODO", "TBD", "PLACEHOLDER", "[FILL THIS IN]" or similar. If any file is a stub without real content, FAIL that file.
+**Adversarial probe — Placeholders?**
+Read each file. Look for "TODO", "TBD", "PLACEHOLDER", "[FILL THIS IN]", "add content here". Any match → FAIL that file.
 
 ### C. Adapter Stubs — Content Accuracy
 
-For each adapter:
+For each adapter, verify the technically specific details are correct:
 
-- [ ] **C1.** tamagui.md: Scaffold shows `@tamagui/core` package; `TamaguiProvider` is mentioned; Source URL is `https://tamagui.dev`
-- [ ] **C2.** gluestack.md: Scaffold shows `npx gluestack-ui init` or equivalent; `GluestackUIProvider` is mentioned; Source URL is `https://gluestack.io`
-- [ ] **C3.** mantine.md: Scaffold shows `@mantine/core`; `MantineProvider` is mentioned; CSS import (`@mantine/core/styles.css`) is documented; Source URL is `https://mantine.dev`
-- [ ] **C4.** headless-ui.md: Scaffold shows `@headlessui/react`; notes that components are unstyled; lists specific component names (Dialog, Popover, etc.); Source URL is `https://headlessui.com`
-- [ ] **C5.** daisyui.md: Scaffold shows DaisyUI as a Tailwind plugin; uses CSS class-based approach (not React components); `data-theme` is mentioned; Source URL is `https://daisyui.com`
-- [ ] **C6.** radix.md: Scaffold shows per-package installation; notes no provider needed; lists components with their import pattern; Source URL is `https://www.radix-ui.com`
+- [ ] **C1.** tamagui.md: Mentions `@tamagui/core`; mentions `TamaguiProvider`; mentions `createTamagui()`; Source URL is `https://tamagui.dev`
+- [ ] **C2.** gluestack.md: Mentions `npx gluestack-ui` init command (or equivalent); mentions `GluestackUIProvider`; Source URL is `https://gluestack.io`
+- [ ] **C3.** mantine.md: Mentions `@mantine/core`; mentions `MantineProvider`; **critically: mentions the required CSS import** `@mantine/core/styles.css` (missing this is a common cause of unstyled Mantine components); Source URL is `https://mantine.dev`
+- [ ] **C4.** headless-ui.md: Mentions `@headlessui/react`; **explicitly states components are unstyled**; lists specific component names (Dialog, Popover, Menu, etc.); notes Tailwind is required for styling; Source URL is `https://headlessui.com`
+- [ ] **C5.** daisyui.md: Mentions DaisyUI is a Tailwind plugin (not React components); mentions `data-theme` attribute; describes CSS class-based approach (e.g., `btn`, `card`, `badge`); mentions wrapping classes in React components for API; Source URL is `https://daisyui.com`
+- [ ] **C6.** radix.md: **Correctly shows per-component package installation** (not a monolithic `@radix-ui` install); shows namespace import pattern `import * as Dialog from '@radix-ui/react-dialog'`; notes no provider needed; Source URL is `https://www.radix-ui.com`
 
-### D. Phase 7 INTEGRATE Expansion
+### D. build.md — Phase 7 INTEGRATE Removal
 
-- [ ] **D1.** Read `commands/build.md` Phase 7 INTEGRATE section fully
-- [ ] **D2.** React Navigation example is present for mobile projects (imports `@react-navigation/native`)
-- [ ] **D3.** Next.js App Router navigation pattern is present for web projects
-- [ ] **D4.** React Router example is present for React/Vite projects
-- [ ] **D5.** State management section is present (even if brief — React Context or similar)
-- [ ] **D6.** Data fetching with loading/error/empty state handling is present
-- [ ] **D7.** Phase 7 exit gate has specific verification checks (not just "the app works")
+- [ ] **D1.** Run `grep -n "Phase 7" commands/build.md` → expected: **0 matches**
+- [ ] **D2.** Run `grep -n "INTEGRATE" commands/build.md` → expected: **0 matches**
+- [ ] **D3.** Run `grep -n "integrate" commands/build.md` → expected: **0 matches** (including lowercase)
+- [ ] **D4.** Read `commands/build.md` fully. The file should end at or after the Phase 6 (COMPOSE) exit gate and Completion block — there should be no Phase 7 content whatsoever.
+- [ ] **D5.** Confirm the `--phase` option documentation lists only `atoms, molecules, compose` — not `integrate`
 
-**Adversarial probe — Specificity:**
-Is the Phase 7 content at the same level of detail as Phase 5 (ATOMS)? Phase 5 has full argTypes examples, compilation verification, file path verification. Phase 7 should have equivalently specific integration checks. If Phase 7 is still vague ("configure your router"), FAIL.
+**Adversarial probe — Was Phase 7 just commented out or reduced to a stub?**
+Search for any remnant: `<!-- Phase 7`, `~~Phase 7~~`, `[REMOVED]`, `## ~~INTEGRATE~~`. Any form of preserved but hidden content is a FAIL. Complete removal required.
 
-### E. Scope Containment
+### E. build.md — Phase 5b MOLECULES Preserved (Regression Check)
 
-- [ ] **E1.** `git diff --name-only` shows only `commands/build.md` as modified
-- [ ] **E2.** 6 new files in `docs/adapters/` (new files don't appear in `git diff`, check `git status`)
-- [ ] **E3.** `docs/adapters/react-native-paper.md`, `docs/adapters/react-native-reusables.md`, `docs/adapters/shadcn.md`, `docs/adapters/tailwind.md` are UNCHANGED
-- [ ] **E4.** No command files other than build.md were modified
+This is the most important regression check. PP-006-DEV edited build.md. PP-001-DEV previously added Phase 5b. PP-006 must not have accidentally removed PP-001's work.
 
-### F. No Regression in build.md
+- [ ] **E1.** Run `grep -n "Phase 5b" commands/build.md` → expected: **≥1 match**
+- [ ] **E2.** Run `grep -n "Molecules/" commands/build.md` → expected: **≥2 matches**
+- [ ] **E3.** Read the section of build.md between Phase 5 exit gate and Phase 6 header. Confirm Phase 5b MOLECULES section is complete (has identify step, build step, story example with `Molecules/` prefix, exit gate).
 
-- [ ] **F1.** Phase 5 ATOMS section is unchanged
-- [ ] **F2.** Phase 6 COMPOSE section is unchanged
-- [ ] **F3.** The "Gate Check" at the top of build.md is unchanged
-- [ ] **F4.** Phase 7 "What Gets Wired" original 4 bullet points are still present (or replaced by a more detailed equivalent — not missing)
+### F. Scope Containment
+
+- [ ] **F1.** Run `git diff --name-only` → expected: `commands/build.md` only
+- [ ] **F2.** Run `git status --short docs/adapters/` → expected: 6 new `??` files (untracked)
+- [ ] **F3.** Run `git diff docs/adapters/react-native-paper.md docs/adapters/shadcn.md docs/adapters/tailwind.md docs/adapters/react-native-reusables.md` → expected: empty
+- [ ] **F4.** Confirm `commands/status.md` is unchanged (INTEGRATE already removed by PP-001)
+- [ ] **F5.** Confirm `skills/process-context/SKILL.md` is unchanged (INTEGRATE already removed by PP-001)
 
 ---
 
@@ -112,59 +114,67 @@ Is the Phase 7 content at the same level of detail as Phase 5 (ATOMS)? Phase 5 h
 ```bash
 # A: All 6 stubs exist
 ls docs/adapters/{tamagui,gluestack,mantine,headless-ui,daisyui,radix}.md
-# Expected: all 6 files listed
+# Expected: all 6 listed, exit code 0
 
-# B/C: Stubs are substantive (check line counts)
+# B: Stubs are substantive
 wc -l docs/adapters/tamagui.md docs/adapters/gluestack.md docs/adapters/mantine.md \
        docs/adapters/headless-ui.md docs/adapters/daisyui.md docs/adapters/radix.md
 # Expected: each ≥40 lines
 
-# B6: Source URLs present in all stubs
-for f in docs/adapters/tamagui.md docs/adapters/gluestack.md docs/adapters/mantine.md \
-         docs/adapters/headless-ui.md docs/adapters/daisyui.md docs/adapters/radix.md; do
-  grep -c "Source URLs\|https://" "$f" | xargs echo "$f:"
-done
-# Expected: each file has ≥1 match for Source URLs section and https:// links
+# B: No placeholders
+grep -ri "TODO\|TBD\|PLACEHOLDER" docs/adapters/tamagui.md docs/adapters/gluestack.md \
+     docs/adapters/mantine.md docs/adapters/headless-ui.md docs/adapters/daisyui.md \
+     docs/adapters/radix.md
+# Expected: 0 matches
 
-# D2: React Navigation in build.md
-grep -n "NavigationContainer\|react-navigation" commands/build.md
-# Expected: at least 1 match
+# C3: Mantine CSS import documented (critical detail)
+grep -i "styles.css\|@mantine/core/styles" docs/adapters/mantine.md
+# Expected: ≥1 match
 
-# D3: Next.js App Router pattern
-grep -n "App Router\|app/.*page.tsx" commands/build.md
-# Expected: at least 1 match
+# C6: Radix per-package install pattern
+grep -n "@radix-ui/react-" docs/adapters/radix.md
+# Expected: ≥2 matches (showing individual packages)
 
-# E1: Scope check
+# D1-D3: Phase 7 completely gone
+grep -cin "phase 7\|INTEGRATE\|integrate" commands/build.md
+# Expected: 0
+
+# E1: Phase 5b preserved
+grep -n "Phase 5b" commands/build.md
+# Expected: ≥1 match
+
+# E2: Molecules/ prefix preserved
+grep -n "Molecules/" commands/build.md
+# Expected: ≥2 matches
+
+# F1: Scope check
 git diff --name-only
-# Expected: commands/build.md
+# Expected: commands/build.md only
 
-# E2: New files count
-git status --short docs/adapters/
-# Expected: 6 new ?? files (untracked or staged new files)
-
-# E3: Existing adapter files unchanged
-git diff docs/adapters/react-native-paper.md docs/adapters/shadcn.md docs/adapters/tailwind.md
-# Expected: empty (no changes)
+# F3: Existing adapters untouched
+git diff docs/adapters/react-native-paper.md docs/adapters/shadcn.md
+# Expected: empty
 ```
 
 ---
 
 ## Regression Checks
 
-- [ ] build.md Phase 5 ATOMS still has the argTypes example
-- [ ] build.md Phase 5 ATOMS still has the "progress tracking" section
-- [ ] build.md Phase 6 COMPOSE still has the viewport configuration section
-- [ ] build.md overall structure (Phase 5 → 6 → 7 ordering) is intact
+- [ ] build.md Phase 5 ATOMS section is unchanged (read it fully — Dev should not have touched it)
+- [ ] build.md Phase 5b MOLECULES section is complete (from PP-001)
+- [ ] build.md Phase 6 COMPOSE section is unchanged
+- [ ] build.md Overview block correctly shows 3 phases (5 ATOMS, 5b MOLECULES, 6 COMPOSE) — no Phase 7
 
 ---
 
 ## Evidence to Collect
 
-1. `ls docs/adapters/` output (showing all adapter files)
+1. `ls docs/adapters/` output (showing all adapter files including the 6 new ones)
 2. `wc -l docs/adapters/{tamagui,gluestack,mantine,headless-ui,daisyui,radix}.md` output
-3. `git diff --name-only` output
-4. `grep -n "NavigationContainer\|App Router\|createBrowserRouter" commands/build.md` output
-5. First 15 lines of each new adapter stub (showing format compliance)
+3. `grep -cin "phase 7\|INTEGRATE\|integrate" commands/build.md` → must be 0
+4. `grep -n "Phase 5b\|Molecules/" commands/build.md` → must show ≥3 total matches
+5. `git diff --name-only` output
+6. First 15 lines of each new adapter stub (format verification)
 
 ---
 
@@ -172,18 +182,20 @@ git diff docs/adapters/react-native-paper.md docs/adapters/shadcn.md docs/adapte
 
 **PASS** if:
 - A1-A6: All 6 adapter stubs exist
-- B1-B6: All stubs have required sections
-- C1-C6: All stubs have accurate, substantive content
-- D1-D7: Phase 7 expanded with framework-specific examples
-- E1-E4: Scope contained to expected files
-- F1-F4: No regressions in build.md
+- B1-B6: All stubs have required sections (no placeholders)
+- C1-C6: All stubs have accurate, technically specific content
+- D1-D5: Phase 7 INTEGRATE is completely absent from build.md
+- E1-E3: Phase 5b MOLECULES from PP-001 is fully intact
+- F1-F5: Scope contained to expected files
 
 **FAIL** if:
 - Any of the 6 adapter stubs is missing
-- Any stub is a placeholder (TODO/TBD content)
-- Phase 7 expansion is still vague without framework-specific examples
-- Any existing adapter file was modified
+- Any stub contains TODO/TBD/placeholder content
+- "Phase 7" or "INTEGRATE" or "integrate" appears anywhere in build.md
+- Phase 5b MOLECULES section is missing or damaged in build.md
 - Any unexpected files in git diff
+- Mantine stub omits the `@mantine/core/styles.css` CSS import requirement
+- Radix stub shows monolithic install instead of per-component packages
 
 ---
 
@@ -191,7 +203,10 @@ git diff docs/adapters/react-native-paper.md docs/adapters/shadcn.md docs/adapte
 
 If FAIL:
 ```bash
+# Restore build.md to PP-001's post-merge state
 git checkout commands/build.md
+
+# Remove the 6 new adapter stubs
 rm -f docs/adapters/{tamagui,gluestack,mantine,headless-ui,daisyui,radix}.md
 ```
 
@@ -202,11 +217,11 @@ rm -f docs/adapters/{tamagui,gluestack,mantine,headless-ui,daisyui,radix}.md
 **FIND PROBLEMS. Do not rubber-stamp.**
 
 Key adversarial checks:
-1. Read tamagui.md fully — is the scaffold content actually correct for Tamagui? Or did Dev just write generic placeholder text about "install the library and wrap with provider"?
-2. Is the DaisyUI adapter technically accurate? (DaisyUI is CSS classes, not React components — this is a common misunderstanding)
-3. Does the Radix adapter correctly note that each Radix component is a separate package (`@radix-ui/react-dialog`, etc.)?
-4. Phase 7: Are the React Navigation imports correct (`@react-navigation/native` + `@react-navigation/native-stack`)? This is a common source of errors.
-5. Does Phase 7 cover BOTH mobile and web navigation patterns? Or only one?
+1. **Was Phase 7 fully removed or just reduced?** Read from the Phase 6 exit gate to end of file. Any Phase 7 remnant = FAIL.
+2. **Did removing Phase 7 accidentally delete the Completion block?** The Completion block (showing build totals) should still exist.
+3. **Is the DaisyUI adapter technically accurate?** DaisyUI uses CSS classes, NOT React components. If Dev wrote it as if you import `<Button>` from DaisyUI, that's wrong.
+4. **Is the Radix adapter correct about per-package installs?** `npm install @radix-ui/react-dialog` — not a single `npm install @radix-ui`. If Dev shows a single package install, that's inaccurate.
+5. **Did Dev accidentally delete Phase 5b while removing Phase 7?** Both PP-001 and PP-006 edited build.md. PP-006's job was to remove the END of the file (Phase 7). If Phase 5b (in the middle) is missing, Dev made a mistake.
 
 ---
 
