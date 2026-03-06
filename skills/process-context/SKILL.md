@@ -56,6 +56,7 @@ Before doing any component or screen work, read `design/manifest.json` to unders
 | target | Help select platforms, framework, style, components | Write any code |
 | equip | Help confirm tool selections | Write any code |
 | scaffold | Set up project, create theme, generate token stories | Build feature components |
+| plan | Review the BUILD PLAN; confirm component hierarchy before coding | Write component code |
 | atoms | Build individual components with Storybook controls | Skip to molecules or compose directly |
 | molecules | Build functional atom compositions (2-3 atoms per molecule) | Compose screens before molecules are verified |
 | compose | Assemble screens from molecules and atoms | Skip atom/molecule verification, wire data |
@@ -110,7 +111,7 @@ For design token story regeneration and the polyfill disclaimer pattern (require
 |---------|-------------|
 | `/pixel-perfect:init` | Phases 1-3: discover + target + equip |
 | `/pixel-perfect:scaffold` | Phase 4: set up project structure, theme, token stories |
-| `/pixel-perfect:build` | Phases 5-6: atoms → molecules → compose |
+| `/pixel-perfect:build` | Phases 4b-6: plan → atoms → molecules → compose |
 | `/pixel-perfect:verify` | Run gate checks for current phase |
 | `/pixel-perfect:status` | Show progress |
 | `/pixel-perfect:research` | Design research |

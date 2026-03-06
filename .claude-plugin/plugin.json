@@ -1,6 +1,6 @@
 {
   "name": "pixel-perfect",
-  "description": "Process orchestrator for building real UIs: enforces a 7-phase build process from PRD to running code sandboxed in Storybook. Supports web (React, Next.js, Vite) and mobile (React Native, Expo).",
+  "description": "Process orchestrator for building real UIs: enforces a 6-phase build process from PRD to running code sandboxed in Storybook. Supports web (React, Next.js, Vite) and mobile (React Native, Expo).",
   "version": "4.3.1",
   "author": {
     "name": "Justin Rich"

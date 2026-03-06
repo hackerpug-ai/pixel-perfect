@@ -491,9 +491,10 @@ Creates `{directory}/design/manifest.json`:
     "target": "passed",
     "equip": "passed",
     "scaffold": "pending",
+    "plan": "pending",
     "atoms": "pending",
-    "compose": "pending",
-    "integrate": "pending"
+    "molecules": "pending",
+    "compose": "pending"
   }
 }
 ```
