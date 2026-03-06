@@ -41,7 +41,7 @@ Reads `design/manifest.json` and displays:
 ## Sample Output
 
 ```
-pixel-perfect v4.3.2 — Project Status
+pixel-perfect v4.4.2 — Project Status
 ====================================
 
 Goal: Field service management app for HVAC technicians
@@ -102,7 +102,7 @@ Next: Continue building atoms
 If no `design/manifest.json` exists in the directory or parents:
 
 ```
-pixel-perfect v4.3.2 — Project Status
+pixel-perfect v4.4.2 — Project Status
 ====================================
 
 Status: Not initialized
