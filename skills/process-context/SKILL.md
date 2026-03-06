@@ -9,7 +9,7 @@ autoActivate:
 
 # pixel-perfect Process Context
 
-You are working in a project managed by **pixel-perfect v4.3.2**, a 6-phase build process orchestrator that produces real code sandboxed in Storybook. This context was auto-loaded because `design/manifest.json` exists in the project.
+You are working in a project managed by **pixel-perfect v4.4.2**, a 6-phase build process orchestrator that produces real code sandboxed in Storybook. This context was auto-loaded because `design/manifest.json` exists in the project.
 
 ## Legacy YAML Migration
 

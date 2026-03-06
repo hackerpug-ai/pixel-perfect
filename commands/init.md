@@ -466,7 +466,7 @@ Creates `{directory}/design/manifest.json`:
 **Mobile project example:**
 ```json
 {
-  "version": "4.3.2",
+  "version": "4.4.2",
   "created": "2026-03-01",
   "goal": "Field service management app for HVAC technicians",
   "vibe": "clean, professional, high-contrast for outdoor use",
