@@ -32,6 +32,7 @@ Style and component adapters are loaded based on user selection during init. If 
 |----------|-----------------|
 | `mobile-ios`, `mobile-android` | `storybook-native` (on-device preview) |
 | `web-desktop`, `web-mobile` | `storybook` (browser-based preview) |
+| `tui`, `cli` | `tui-sandbox` (terminal preview) |
 
 The init command automatically selects the appropriate sandbox based on the target platform. This is **not presented as a user choice**.
 
@@ -58,6 +59,13 @@ Each adapter follows this structure:
 | [React Native Reusables](react-native-reusables.md) | components | mobile-ios, mobile-android |
 | [Storybook](storybook.md) | sandbox | web |
 | [Storybook Native](storybook-native.md) | sandbox | mobile |
+| [tui-sandbox](tui-sandbox.md) | sandbox | tui, cli |
+| [Lipgloss](lipgloss.md) | style | tui (Go) |
+| [Rich](rich.md) | style | tui (Python) |
+| [Ink Styles](ink-styles.md) | style | tui (JS/TS) |
+| [Bubbletea](bubbletea.md) | components | tui (Go) |
+| [Textual](textual.md) | components | tui (Python) |
+| [Ink](ink.md) | components | tui (JS/TS) |
 | [Generic](generic.md) | fallback | all |
 
 ## Generic Fallback
