@@ -92,6 +92,15 @@ Based on the tools in the manifest, follow these conventions:
 
 For full argTypes control conventions, see `docs/storybook-conventions.md`.
 
+### When `tools.sandbox` is tui-sandbox:
+- Stories use `.story.ts` format (not CSF3)
+- Co-locate stories in `stories/` directory (not with components)
+- Stories have `StoryMeta` default export with `title`, `adapter`, `terminal` dimensions
+- Stories use declarative `mount` or imperative `run` functions
+- Terminal output is captured as frames, not browser DOM
+- Use `createTestHarness()` for automated testing
+- ANSI codes must be stripped for text assertions
+
 ## Story Organization Convention
 
 Stories must use the correct hierarchy prefix:
@@ -102,6 +111,8 @@ Stories must use the correct hierarchy prefix:
 | Atomic components | `Components/` | `title: 'Components/StatusBadge'` |
 | Molecule compositions | `Molecules/` | `title: 'Molecules/JobRow'` |
 | Composed screens | `Screens/` | `title: 'Screens/TodayFeed'` |
+
+**Note for TUI projects:** Stories use the `.story.ts` format with `StoryMeta` in the default export, not CSF3. The hierarchy prefixes are the same, but the story file format differs.
 
 For design token story regeneration and the polyfill disclaimer pattern (required for React Native web Storybook), see `docs/storybook-conventions.md` and `docs/adapters/react-native-web.md`.
 

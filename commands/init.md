@@ -162,6 +162,8 @@ Present options with auto-detection from PRD keywords:
 | `web-mobile` | "responsive", "mobile web", "PWA" |
 | `mobile-ios` | "iOS", "iPhone", "Swift", "React Native", "Expo" |
 | `mobile-android` | "Android", "Kotlin", "React Native", "Expo" |
+| `tui` | "terminal", "TUI", "command-line", "CLI tool", "Bubbletea", "Textual", "Ink", "gum" |
+| `cli` | "CLI", "command-line interface", "terminal output" |
 
 **If PRD exists**, scan for keywords and pre-select matches:
 ```
@@ -194,6 +196,15 @@ Based on the selected platform category, ask which framework the project uses.
   > React (Create React App / standalone)
     Next.js
     Vite (React + Vite)
+    Other (provide link to framework docs)
+```
+
+**If any TUI platform is selected** (`tui`, `cli`):
+```
+? What TUI framework?
+  > Bubbletea (Go)
+    Textual (Python)
+    Ink (JavaScript/TypeScript)
     Other (provide link to framework docs)
 ```
 
@@ -255,6 +266,30 @@ If no style framework detected, present options **without a default**:
     Other (provide link to docs)
 ```
 
+**TUI platforms (Bubbletea):**
+```
+? Style system:
+    Lipgloss (recommended for Bubbletea)
+    ANSI codes (manual)
+    Other (provide link to docs)
+```
+
+**TUI platforms (Textual):**
+```
+? Style system:
+    Rich CSS (Textual built-in)
+    ANSI codes (manual)
+    Other (provide link to docs)
+```
+
+**TUI platforms (Ink):**
+```
+? Style system:
+    Ink styles (CSS-in-JS)
+    ANSI codes (manual)
+    Other (provide link to docs)
+```
+
 **If the user selects "Other":** Ask for a URL to the style system's documentation. Record under `tools.style_docs`.
 
 **PRD keyword detection:** If the PRD mentions a style system (e.g., "using Tailwind", "NativeWind styles"):
@@ -287,6 +322,31 @@ Based on the framework selection, present the appropriate component library opti
     Chakra
     Headless UI
     DaisyUI
+    Other (provide link to docs)
+    None (build from scratch)
+```
+
+**TUI platforms (Bubbletea):**
+```
+? Component library:
+    Bubbletea (built-in)
+    Charm components (gum, etc.)
+    Other (provide link to docs)
+    None (build from scratch)
+```
+
+**TUI platforms (Textual):**
+```
+? Component library:
+    Textual (built-in widgets)
+    Other (provide link to docs)
+    None (build from scratch)
+```
+
+**TUI platforms (Ink):**
+```
+? Component library:
+    Ink (built-in components)
     Other (provide link to docs)
     None (build from scratch)
 ```
@@ -329,6 +389,16 @@ Based on the framework selection, present the appropriate icon library options. 
     Other (provide link to docs)
 ```
 
+**TUI platforms:**
+```
+? Icon library:
+  > Nerd Fonts (terminal icons)
+    Emoji (Unicode emoji)
+    ASCII characters
+    None (text-based only)
+    Other (provide link to docs)
+```
+
 **If the user selects "Other":** Ask for a URL to the icon library's documentation. Record under `tools.icons_docs`.
 
 **PRD keyword detection:** If the PRD mentions a specific icon library (e.g., "using Lucide icons", "Heroicons", "vector-icons"):
@@ -358,14 +428,15 @@ You selected React Native Reusables.
 
 Confirm tool selections, validate adapter availability, and lock the manifest. Storybook is the sandbox -- this is non-negotiable.
 
-### Sandbox: Storybook (Platform-Aware, Non-Negotiable)
+### Sandbox: Platform-Aware Selection
 
-Storybook is always the component sandbox. The **variant** is automatically determined by platform:
+The sandbox is automatically determined by platform:
 
 | Platform | Sandbox Variant | Adapter |
 |----------|-----------------|---------|
 | `mobile-ios`, `mobile-android` | Storybook Native | `storybook-native.md` |
 | `web-desktop`, `web-mobile` | Storybook Web | `storybook.md` |
+| `tui`, `cli` | tui-sandbox | `tui-sandbox.md` |
 
 This is **not a user choice**. The manifest records the platform-appropriate variant automatically:
 
@@ -375,6 +446,10 @@ Sandbox: Storybook Native (auto-selected for mobile)
 or
 ```
 Sandbox: Storybook Web (auto-selected for web)
+```
+or
+```
+Sandbox: tui-sandbox (auto-selected for TUI/CLI)
 ```
 
 ### Confirmation Summary
@@ -418,6 +493,18 @@ Your configuration:
   Sandbox:     Storybook Web (auto-selected for web)
 ```
 
+**TUI example:**
+```
+Your configuration:
+
+  Platforms:   tui
+  Framework:   Bubbletea
+  Style:       Lipgloss
+  Components:  Bubbletea (built-in)
+  Icons:       Nerd Fonts
+  Sandbox:     tui-sandbox (auto-selected for TUI)
+```
+
 If the user wants to change something, loop back to the relevant step.
 
 ### Adapter Validation
@@ -448,6 +535,14 @@ Adapter check:
   [x] storybook        → docs/adapters/storybook.md (auto-selected for web)
   [x] tailwind         → docs/adapters/tailwind.md
   [ ] mantine          → No adapter found. Generic adapter will be used.
+```
+
+**TUI project example (Bubbletea + Lipgloss):**
+```
+Adapter check:
+  [x] tui-sandbox      → docs/adapters/tui-sandbox.md (auto-selected for TUI)
+  [x] lipgloss         → docs/adapters/lipgloss.md
+  [x] bubbletea        → docs/adapters/bubbletea.md
 ```
 
 For tools selected as "Other" with a docs URL provided, inform the user:
