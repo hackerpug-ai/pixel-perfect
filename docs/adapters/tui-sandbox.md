@@ -1,5 +1,7 @@
 # tui-sandbox
 
+> **Experimental** — tui-sandbox is not yet released as a standalone package. This adapter is included for early feedback and may change significantly before a stable release.
+
 Sandbox adapter for isolated TUI component development and verification. tui-sandbox provides a Storybook-like experience for terminal UI components with frame capture, keyboard simulation, and ANSI processing.
 
 ## Platforms
