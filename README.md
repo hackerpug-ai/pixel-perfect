@@ -87,6 +87,9 @@ Storybook is the universal sandbox. Every component, design token, and screen ge
 |----------|---------|--------|
 | Web (React, Next.js, Vite) | Browser Storybook | `pnpm storybook` → localhost:6006 |
 | Mobile (React Native, Expo) | On-device Storybook | `pnpm storybook` → iOS Simulator / Android Emulator |
+| TUI / CLI | tui-sandbox | `tsbx dev` → terminal preview |
+
+> **Note:** tui-sandbox support is experimental and not yet released as a standalone package. The adapter docs and integration are included for early feedback, but the tui-sandbox tooling may change significantly before a stable release.
 
 The scaffold phase sets everything up. You just run `pnpm storybook` and start building.
 
@@ -152,13 +155,16 @@ Adapters are reference docs that teach the AI how to scaffold, build, and verify
 
 ### Included Adapters
 
-| Adapter | Category |
-|---------|----------|
-| Tailwind / NativeWind | style |
-| shadcn/ui | components (web) |
-| React Native Paper | components (mobile) |
-| Storybook | sandbox |
-| Generic | fallback |
+| Adapter | Category | Status |
+|---------|----------|--------|
+| Tailwind / NativeWind | style | stable |
+| shadcn/ui | components (web) | stable |
+| React Native Paper | components (mobile) | stable |
+| Storybook | sandbox | stable |
+| tui-sandbox | sandbox (TUI/CLI) | experimental |
+| Lipgloss / Rich / Ink | style (TUI) | experimental |
+| Bubbletea / Textual / Ink | components (TUI) | experimental |
+| Generic | fallback | stable |
 
 No specific library is required. Select "None" or "Other" with a docs URL, and the AI adapts.
 
