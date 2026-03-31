@@ -18,19 +18,23 @@ The main orchestration command. Reads requirements, identifies components, build
 
 ## Options
 
+- `--platform <name>`: Target platform to build (e.g., `tui`, `web-desktop`). Required when multiple platforms exist. Auto-selected when only one platform is configured.
 - `--phase <name>`: Start from a specific phase (atoms, molecules, compose). Default: resume from current phase.
 - `--component <name>`: Build or rebuild a specific component
 - `--screen <name>`: Build or rebuild a specific screen
 
 ## Gate Check
 
-**Requires:** `design/manifest.json` with `scaffold: passed`.
+**Requires:** `design/manifest.json` with the selected platform's `scaffold: passed`.
 
-If not met:
-```
-Cannot build: scaffold not complete.
-Run /pixel-perfect:scaffold first.
-```
+**Platform selection:**
+- If only one platform exists, auto-selected.
+- If multiple platforms exist and `--platform` is not provided, prompt the user to choose.
+- If the selected platform's scaffold gate is not passed:
+  ```
+  Cannot build: scaffold not complete for "{platform}".
+  Run /pixel-perfect:scaffold --platform {platform} first.
+  ```
 
 ## Overview
 
@@ -46,6 +50,10 @@ Phase 6: COMPOSE    → Screen layouts composing molecules and atoms (Dashboard,
 Phases 5, 5b, and 6 execute only for levels where the BUILD PLAN identifies non-zero delta.
 
 The command resumes from wherever the manifest says the project is. If atoms are partially complete, it picks up where it left off.
+
+### Platform Scoping
+
+All build operations read from and write to `manifest.platforms[platform]`. References to `tools`, `phase`, `gates`, `atoms`, `molecules`, `screens` in this document refer to the selected platform's fields. The `spec` field remains top-level (shared across platforms).
 
 ---
 
@@ -697,18 +705,18 @@ This re-generates the specified item while preserving everything else.
 ## Completion
 
 ```
-Build complete!
+Build complete for {platform}!
 
   Atoms:    5/5 verified (all controls wired)
   Molecules: verified (if applicable)
   Screens:  2/2 verified
 
-All phases passed. Your project has running code with:
+All phases passed for {platform}. Your project has running code with:
   - 5 themed components with full Storybook controls
   - Functional molecule compositions sandboxed in Storybook
   - 2 composed screens at target viewport
 
-To iterate: /pixel-perfect:refine
-To verify:  /pixel-perfect:verify
+To iterate: /pixel-perfect:refine --platform {platform}
+To verify:  /pixel-perfect:verify --platform {platform}
 To check:   /pixel-perfect:status
 ```
