@@ -20,15 +20,11 @@ Display the current state of the pixel-perfect build process: phase progress, ga
 
 Reads `design/manifest.json` and displays:
 
-1. **Phase overview** - All 6 phases with gate status
-2. **Project info** - Goal, vibe, platforms, framework, tools
-3. **frontend-design detection** - Whether the frontend-design plugin is available
-4. **Design Token stories** - Status of Colors, Typography, Spacing, Icons stories
-5. **Controls coverage** - How many atoms have all props wired to Storybook controls
-6. **Molecule progress** - Molecules built and verified
-7. **Component progress** - Atoms built and verified
-8. **Screen progress** - Screens composed and verified
-8. **Next action** - What to do next based on current phase
+1. **Project info** - Goal, vibe (shared across all platforms)
+2. **Platform overview** - All platforms with phase status and tool summary
+3. **Per-platform detail** - For each platform: gates, tools, atoms, molecules, screens
+4. **frontend-design detection** - Whether the frontend-design plugin is available
+5. **Next action** - What to do next based on platform states
 
 ## Status Icons
 
@@ -41,60 +37,63 @@ Reads `design/manifest.json` and displays:
 ## Sample Output
 
 ```
-pixel-perfect v4.4.2 — Project Status
+pixel-perfect v5.0.0 — Project Status
 ====================================
 
 Goal: Field service management app for HVAC technicians
 Vibe: clean, professional, high-contrast for outdoor use
 
-Phases:
-  [x] 1. DISCOVER    — Goal and vibe captured
-  [x] 2. TARGET      — mobile-ios, mobile-android
-  [x] 3. EQUIP       — expo + nativewind + react-native-paper + storybook
-  [x] 4. SCAFFOLD    — Project structure ready, theme configured
-  [x] 4b. PLAN       — Build plan confirmed
-  [~] 5. ATOMS       — 3/5 components verified
-  [ ] 5b. MOLECULES  — 0/2 molecules identified
-  [ ] 6. COMPOSE     — 0/2 screens verified
+Platforms:
+  web-desktop  [compose passed]     vite + tailwind + shadcn -> storybook
+  tui          [scaffold pending]   bubbletea + lipgloss -> tui-sandbox
 
-Tools:
-  Framework:  Expo
-  Style:      NativeWind        (adapter: tailwind.md)
-  Components: React Native Paper (adapter: react-native-paper.md)
-  Sandbox:    Storybook Native    (adapter: storybook-native.md)
+--- web-desktop ---
+
+  Phases:
+    [x] SCAFFOLD    — Project structure ready, theme configured
+    [x] PLAN        — Build plan confirmed
+    [x] ATOMS       — 5/5 components verified
+    [x] MOLECULES   — 2/2 molecules verified
+    [x] COMPOSE     — 2/2 screens verified
+
+  Tools:
+    Framework:  Vite
+    Style:      Tailwind CSS      (adapter: tailwind.md)
+    Components: shadcn/ui         (adapter: shadcn.md)
+    Icons:      Lucide React      (adapter: n/a)
+    Sandbox:    Storybook         (adapter: storybook.md)
+
+  Atoms (5/5 verified):
+    [x] StatusBadge     src/components/StatusBadge.tsx        (controls: yes)
+    [x] JobCard         src/components/JobCard.tsx            (controls: yes)
+    [x] DateChip        src/components/DateChip.tsx           (controls: yes)
+    [x] SectionHeader   src/components/SectionHeader.tsx      (controls: yes)
+    [x] ActionButton    src/components/ActionButton.tsx       (controls: yes)
+
+  Screens (2/2 verified):
+    [x] TodayFeed       src/screens/TodayFeed.tsx
+    [x] JobDetail       src/screens/JobDetail.tsx
+
+--- tui ---
+
+  Phases:
+    [ ] SCAFFOLD    — Pending
+    [ ] PLAN        — Pending
+    [ ] ATOMS       — Pending
+    [ ] MOLECULES   — Pending
+    [ ] COMPOSE     — Pending
+
+  Tools:
+    Framework:  Bubbletea
+    Style:      Lipgloss          (adapter: lipgloss.md)
+    Components: Bubbletea         (adapter: bubbletea.md)
+    Icons:      Nerd Fonts        (adapter: n/a)
+    Sandbox:    tui-sandbox       (adapter: tui-sandbox.md)
 
 frontend-design: available (aesthetic gates active)
 
-Design Token Stories:
-  [x] Design System/Colors       — 4 color groups rendered
-  [x] Design System/Typography   — 15 type variants rendered
-  [x] Design System/Spacing      — 7-step scale rendered
-  [x] Design System/Icons        — 10 project icons rendered
-
-Controls Coverage: 3/5 atoms have full argTypes controls
-
-Atoms (3/5 verified):
-  [x] StatusBadge     src/components/StatusBadge.tsx        (controls: yes)
-  [x] JobCard         src/components/JobCard.tsx            (controls: yes)
-  [x] DateChip        src/components/DateChip.tsx           (controls: yes)
-  [~] SectionHeader   src/components/SectionHeader.tsx      (controls: pending)
-  [ ] ActionButton    src/components/ActionButton.tsx       (controls: pending)
-
-Molecules (0/2 identified):
-  [ ] JobRow          src/molecules/JobRow.tsx
-      atoms: StatusBadge, DateChip
-  [ ] ActionPanel     src/molecules/ActionPanel.tsx
-      atoms: ActionButton, StatusBadge
-
-Screens (0/2 verified):
-  [ ] TodayFeed       src/screens/TodayFeed.tsx
-      atoms: StatusBadge, JobCard, DateChip, SectionHeader
-  [ ] JobDetail       src/screens/JobDetail.tsx
-      atoms: StatusBadge, ActionButton
-
-Next: Continue building atoms
-  /pixel-perfect:build    — Resume building from current phase
-  /pixel-perfect:verify   — Run gate checks for atoms phase
+Next: Scaffold the tui platform
+  /pixel-perfect:scaffold --platform tui
 ```
 
 ## No Manifest Found
@@ -102,7 +101,7 @@ Next: Continue building atoms
 If no `design/manifest.json` exists in the directory or parents:
 
 ```
-pixel-perfect v4.4.2 — Project Status
+pixel-perfect v5.0.0 — Project Status
 ====================================
 
 Status: Not initialized
