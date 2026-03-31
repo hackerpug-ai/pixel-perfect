@@ -438,7 +438,7 @@ The sandbox is automatically determined by platform:
 | `web-desktop`, `web-mobile` | Storybook Web | `storybook.md` |
 | `tui`, `cli` | tui-sandbox | `tui-sandbox.md` |
 
-This is **not a user choice**. The manifest records the platform-appropriate variant automatically:
+This is **not a user choice**. Each platform entry in the manifest records the platform-appropriate sandbox variant automatically:
 
 ```
 Sandbox: Storybook Native (auto-selected for mobile)
@@ -558,57 +558,153 @@ For tools selected as "Other" with a docs URL provided, inform the user:
 
 Creates `{directory}/design/manifest.json`:
 
-**Mobile project example:**
+**Single platform example (web):**
 ```json
 {
-  "version": "4.4.2",
-  "created": "2026-03-01",
+  "version": "5.0.0",
+  "created": "2026-03-31",
   "goal": "Field service management app for HVAC technicians",
   "vibe": "clean, professional, high-contrast for outdoor use",
   "spec": "PRD.md",
   "references": [
     "https://servicetitan.com"
   ],
-  "platforms": [
-    "mobile-ios",
-    "mobile-android"
-  ],
-  "tools": {
-    "framework": "expo",
-    "style": "nativewind",
-    "components": "react-native-reusables",
-    "icons": "lucide-react-native",
-    "sandbox": "storybook-native"
-  },
-  "phase": "equip",
   "gates": {
     "discover": "passed",
     "target": "passed",
-    "equip": "passed",
-    "scaffold": "pending",
-    "plan": "pending",
-    "atoms": "pending",
-    "molecules": "pending",
-    "compose": "pending"
+    "equip": "passed"
+  },
+  "platforms": {
+    "web-desktop": {
+      "tools": {
+        "framework": "vite",
+        "style": "tailwind",
+        "components": "shadcn",
+        "icons": "lucide-react",
+        "sandbox": "storybook"
+      },
+      "phase": "equip",
+      "gates": {
+        "scaffold": "pending",
+        "plan": "pending",
+        "atoms": "pending",
+        "molecules": "pending",
+        "compose": "pending"
+      }
+    }
+  }
+}
+```
+
+**Multi-platform example (mobile):**
+```json
+{
+  "version": "5.0.0",
+  "created": "2026-03-31",
+  "goal": "Field service management app for HVAC technicians",
+  "vibe": "clean, professional, high-contrast for outdoor use",
+  "spec": "PRD.md",
+  "references": [
+    "https://servicetitan.com"
+  ],
+  "gates": {
+    "discover": "passed",
+    "target": "passed",
+    "equip": "passed"
+  },
+  "platforms": {
+    "mobile-ios": {
+      "tools": {
+        "framework": "expo",
+        "style": "nativewind",
+        "components": "react-native-reusables",
+        "icons": "lucide-react-native",
+        "sandbox": "storybook-native"
+      },
+      "phase": "equip",
+      "gates": {
+        "scaffold": "pending",
+        "plan": "pending",
+        "atoms": "pending",
+        "molecules": "pending",
+        "compose": "pending"
+      }
+    },
+    "mobile-android": {
+      "tools": {
+        "framework": "expo",
+        "style": "nativewind",
+        "components": "react-native-reusables",
+        "icons": "lucide-react-native",
+        "sandbox": "storybook-native"
+      },
+      "phase": "equip",
+      "gates": {
+        "scaffold": "pending",
+        "plan": "pending",
+        "atoms": "pending",
+        "molecules": "pending",
+        "compose": "pending"
+      }
+    }
+  }
+}
+```
+
+**TUI example:**
+```json
+{
+  "version": "5.0.0",
+  "created": "2026-03-31",
+  "goal": "Terminal dashboard for system monitoring",
+  "vibe": "technical, brutalist",
+  "spec": "PRD.md",
+  "gates": {
+    "discover": "passed",
+    "target": "passed",
+    "equip": "passed"
+  },
+  "platforms": {
+    "tui": {
+      "tools": {
+        "framework": "bubbletea",
+        "style": "lipgloss",
+        "components": "bubbletea",
+        "icons": "nerd-fonts",
+        "sandbox": "tui-sandbox"
+      },
+      "phase": "equip",
+      "gates": {
+        "scaffold": "pending",
+        "plan": "pending",
+        "atoms": "pending",
+        "molecules": "pending",
+        "compose": "pending"
+      }
+    }
   }
 }
 ```
 
 The `spec` field is the path to the spec/PRD document (relative to the project root) that drives the component hierarchy during build. If no spec was provided, this field is omitted.
 
-**When "Other" is selected for any tool**, the manifest includes the docs URL:
+**When "Other" is selected for any tool**, the manifest includes the docs URL inside the platform's tools:
 
 ```json
 {
-  "tools": {
-    "framework": "custom",
-    "framework_docs": "https://example.com/framework/docs",
-    "style": "custom",
-    "style_docs": "https://example.com/style-system/docs",
-    "components": "react-native-paper",
-    "icons": "custom",
-    "icons_docs": "https://example.com/icons/docs",
-    "sandbox": "storybook"
+  "platforms": {
+    "web-desktop": {
+      "tools": {
+        "framework": "custom",
+        "framework_docs": "https://example.com/framework/docs",
+        "style": "custom",
+        "style_docs": "https://example.com/style-system/docs",
+        "components": "react-native-paper",
+        "icons": "custom",
+        "icons_docs": "https://example.com/icons/docs",
+        "sandbox": "storybook"
+      }
+    }
   }
 }
 ```
@@ -634,6 +730,8 @@ Initialization complete. Manifest saved to design/manifest.json
 
 Next: /pixel-perfect:scaffold
   This will set up your project with {style} + {components} + Storybook
+
+To add another platform later: /pixel-perfect:add-platform
 ```
 
 The message uses the actual tools selected during init (from the manifest).
