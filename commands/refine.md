@@ -21,6 +21,7 @@ Collect feedback on specific components or screens, regenerate the affected code
 
 ## Options
 
+- `--platform <name>`: Target platform to refine. Required when multiple platforms exist. Auto-selected when only one platform is configured.
 - `--component <name>`: Target a specific component for refinement
 - `--screen <name>`: Target a specific screen for refinement
 - `--vibe`: Refine the project vibe and regenerate the theme
@@ -127,30 +128,26 @@ For each selected item, prompts for feedback:
 /pixel-perfect:refine --vibe "More industrial, less corporate. Think construction site, not office."
 ```
 
-1. Update the vibe in manifest
-2. Regenerate theme file with new vibe interpretation
-3. Regenerate Design Token stories (Colors, Typography, Spacing) to reflect new theme
+1. Update the vibe in manifest (top-level — shared across all platforms)
+2. For the selected platform (or prompt if multiple): regenerate theme file with new vibe interpretation
+3. Regenerate Design Token stories (Colors, Typography, Spacing) for the selected platform
 4. If frontend-design available: re-derive aesthetic decisions
-5. List components that may look different with the new theme
+5. List components on the selected platform that may look different with the new theme
 6. Prompt: regenerate all components with new theme, or one at a time?
+7. If multiple platforms exist, ask: propagate vibe to other platforms too?
 
 ```
 Vibe updated: "More industrial, less corporate"
 
-Theme regenerated:
-  - Primary: #1E3A5F → #D97706 (amber/orange)
-  - Font: Inter → Space Mono
-  - Border radius: rounded → sharp
+Theme regenerated for web-desktop:
+  - Primary: #1E3A5F -> #D97706 (amber/orange)
+  - Font: Inter -> Space Mono
+  - Border radius: rounded -> sharp
 
-Token stories updated:
-  - Design System/Colors — new palette applied
-  - Design System/Typography — new font scale applied
-  - Design System/Spacing — updated if spacing changed
+Other platforms with existing themes:
+  - tui (scaffold: passed)
 
-Components that will look different with new theme:
-  StatusBadge, JobCard, DateChip, SectionHeader, ActionButton
-
-? Regenerate all components with new theme? [Yes / Select specific / No, just theme]
+? Propagate new vibe to tui theme? [Yes / No, keep existing tui theme]
 ```
 
 ## Controls Refinement
