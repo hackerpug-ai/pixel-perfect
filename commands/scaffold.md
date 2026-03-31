@@ -9,18 +9,38 @@ Set up the project for the chosen tools. Installs dependencies, configures the b
 ## Usage
 
 ```
-/pixel-perfect:scaffold [directory]
+/pixel-perfect:scaffold [directory] [options]
 ```
 
 ## Arguments
 
 - `[directory]`: Project directory. Defaults to current directory.
 
+## Options
+
+- `--platform <name>`: Target platform to scaffold (e.g., `tui`, `web-desktop`). Required when multiple platforms exist. Auto-selected when only one platform is configured.
+
 ## Gate Check
 
-**Requires:** `design/manifest.json` with gates discover, target, and equip = passed.
+**Requires:** `design/manifest.json` with top-level gates discover, target, and equip = passed.
 
-If gates are not met:
+**Platform selection:**
+- If only one platform exists in the manifest, it is auto-selected.
+- If multiple platforms exist and `--platform` is not provided, prompt:
+  ```
+  Multiple platforms configured:
+    1. web-desktop (scaffold: passed)
+    2. tui (scaffold: pending)
+
+  ? Which platform to scaffold? [1/2]
+  ```
+- If the selected platform's scaffold gate is already `passed`:
+  ```
+  Scaffold already complete for "web-desktop".
+  Run with --force to re-scaffold, or choose a different platform.
+  ```
+
+If top-level gates are not met:
 ```
 Cannot scaffold: missing prerequisites.
   discover: passed
@@ -55,13 +75,13 @@ Scaffold uses TaskList for compaction-resilient progress tracking. On start, cre
 
 ### Step 1: Load Adapter Docs
 
-Read manifest tool choices, then load the corresponding docs:
+Read the selected platform's tool choices from `manifest.platforms[platform].tools`, then load the corresponding docs:
 
 | Manifest field | Adapter location |
 |----------------|-----------------|
-| `tools.style` | `docs/adapters/{style}.md` |
-| `tools.components` | `docs/adapters/{components}.md` |
-| `tools.sandbox` | `docs/adapters/storybook.md` or `docs/adapters/storybook-native.md` |
+| `platforms[platform].tools.style` | `docs/adapters/{style}.md` |
+| `platforms[platform].tools.components` | `docs/adapters/{components}.md` |
+| `platforms[platform].tools.sandbox` | `docs/adapters/{sandbox}.md` |
 
 If no adapter exists for a tool, load `docs/adapters/generic.md` and warn:
 ```
@@ -111,11 +131,33 @@ Follow `docs/adapters/{components}.md` for the exact component list and story te
 
 ### Step 3: Configure Storybook
 
-Check `manifest.tools.sandbox`:
-- `"storybook-native"` → Follow `docs/adapters/storybook-native.md` (creates `.rnstorybook/`, custom `index.js` entry point, Metro config with `withStorybook`)
-- `"storybook"` → Follow `docs/adapters/storybook.md` (web Storybook, `.storybook/` config, theme provider decorator)
+Check `manifest.platforms[platform].tools.sandbox`:
+- `"storybook-native"` -> Follow `docs/adapters/storybook-native.md`
+- `"storybook"` -> Follow `docs/adapters/storybook.md`
+- `"tui-sandbox"` -> Follow `docs/adapters/tui-sandbox.md`
 
 **Troubleshooting React/React-DOM version mismatch:** If Storybook shows `Invalid hook call` or blank page errors, run `npm ls react react-dom` to check for version conflicts. Install the matching `react-dom` version and use `overrides` in package.json to prevent drift on future installs.
+
+### Step 3b: Theme Carry-Over Check
+
+Before generating a theme, check if any sibling platform in the manifest already has a theme (its scaffold gate is `passed`).
+
+If a sibling theme exists, prompt the user:
+
+```
+Existing theme found from {sibling_platform}:
+  Primary: {primary_color}, Secondary: {secondary_color}, Destructive: {destructive_color}
+  Font: {font_family}, Spacing scale: {spacing_base}
+
+? Translate these values to your {current_platform} platform?
+  > Yes, adapt for {platform_type} (map to closest {color_system}, keep semantic names)
+    Start fresh (generate new theme from vibe)
+    Cherry-pick (I'll tell you which tokens to keep)
+```
+
+For TUI platforms, "adapt" means mapping hex colors to the closest ANSI 256-color equivalents while preserving semantic token names (primary, secondary, destructive, etc.).
+
+If no sibling theme exists, skip this step and proceed to theme generation as normal.
 
 ### Step 4: Create Theme
 
@@ -231,12 +273,16 @@ If any check fails, report the specific error and do not advance the gate. User 
 
 ### Step 8: Update Manifest
 
-On success:
+On success, update the selected platform's gates:
 ```json
 {
-  "phase": "scaffold",
-  "gates": {
-    "scaffold": "passed"
+  "platforms": {
+    "{platform}": {
+      "phase": "scaffold",
+      "gates": {
+        "scaffold": "passed"
+      }
+    }
   }
 }
 ```
@@ -265,12 +311,12 @@ Screens/
 ## Completion Output
 
 ```
-Scaffold complete for: [project name]
+Scaffold complete for: [project name] ({platform})
 
 Tools configured: [framework] / [style] / [components] / [sandbox]
 Theme created: [files] — [font pairing], [primary color]
 [Component library pulled: N components (if CLI-based)]
 Design token stories: Colors, Typography, Spacing[, Icons]
 
-Next: /pixel-perfect:build
+Next: /pixel-perfect:build --platform {platform}
 ```
