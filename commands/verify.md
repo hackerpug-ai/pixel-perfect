@@ -18,6 +18,7 @@ Run verification checks appropriate for the current build phase. Reports pass/fa
 
 ## Options
 
+- `--platform <name>`: Target platform to verify. Required when multiple platforms exist. Auto-selected when only one platform is configured.
 - `--phase <name>`: Verify a specific phase instead of current (scaffold, atoms, compose, integrate)
 - `--component <name>`: Verify a specific component only
 - `--screen <name>`: Verify a specific screen only
@@ -29,10 +30,11 @@ Run verification checks appropriate for the current build phase. Reports pass/fa
 
 ## What It Does
 
-1. Reads `design/manifest.json` to determine current phase
-2. Runs gate checks appropriate for that phase
-3. Reports results per check
-4. If all pass, advances the phase gate in manifest
+1. Reads `design/manifest.json` and selects the target platform
+2. Reads the selected platform's current phase from `manifest.platforms[platform].phase`
+3. Runs gate checks appropriate for that phase
+4. Reports results per check
+5. If all pass, advances the platform's phase gate in manifest
 
 ---
 
@@ -238,12 +240,16 @@ StatusBadge:
 
 ## Manifest Updates
 
-On full phase pass, verify updates the manifest:
+On full phase pass, verify updates the selected platform's manifest entry:
 
 ```json
 {
-  "gates": {
-    "atoms": "passed"
+  "platforms": {
+    "{platform}": {
+      "gates": {
+        "atoms": "passed"
+      }
+    }
   }
 }
 ```
