@@ -14,7 +14,7 @@ Add a new platform to an existing pixel-perfect project. Runs the TARGET drill-d
 
 ## Arguments
 
-- `[platform]`: Optional. The platform to add (e.g., `tui`, `web-desktop`, `mobile-ios`). If omitted, presents the platform selection prompt.
+- `[platform]`: Optional. The platform to add (e.g., `mobile-ios`, `web-desktop`, `web-mobile`). If omitted, presents the platform selection prompt.
 
 ## Gate Check
 
@@ -58,8 +58,6 @@ Present available platforms, excluding those already in the manifest:
   [ ] web-mobile
   [ ] mobile-ios
   [ ] mobile-android
-  > tui
-  [ ] cli
 ```
 
 If the `[platform]` argument was provided and is valid, skip this prompt.
@@ -78,7 +76,6 @@ Run the same framework, style, component library, and icon library selection as 
 
 **Framework selection** — same options as init Phase 2, Step 2, filtered to the platform category:
 
-- TUI platforms (`tui`, `cli`): Bubbletea, Textual, Ink, Other
 - Web platforms (`web-desktop`, `web-mobile`): React, Next.js, Vite, Other
 - Mobile platforms (`mobile-ios`, `mobile-android`): React Native, Expo, Other
 
@@ -98,18 +95,17 @@ Auto-select sandbox based on platform (same mapping as init Phase 3):
 |----------|---------|
 | `web-desktop`, `web-mobile` | `storybook` |
 | `mobile-ios`, `mobile-android` | `storybook-native` |
-| `tui`, `cli` | `tui-sandbox` |
 
 Present confirmation summary:
 
 ```
-Adding platform "tui":
+Adding platform "web-mobile":
 
-  Framework:   Bubbletea
-  Style:       Lipgloss
-  Components:  Bubbletea (built-in)
-  Icons:       Nerd Fonts
-  Sandbox:     tui-sandbox (auto-selected for TUI)
+  Framework:   Next.js
+  Style:       Tailwind CSS
+  Components:  shadcn/ui
+  Icons:       Lucide React
+  Sandbox:     storybook (auto-selected for web)
 
 ? Confirm and add to manifest? [Yes / Change something]
 ```
@@ -119,9 +115,9 @@ If "Change something", loop back to the relevant TARGET step.
 Validate adapter availability:
 ```
 Adapter check:
-  [x] tui-sandbox  -> docs/adapters/tui-sandbox.md
-  [x] lipgloss     -> docs/adapters/lipgloss.md
-  [x] bubbletea    -> docs/adapters/bubbletea.md
+  [x] storybook  -> docs/adapters/storybook.md
+  [x] tailwind   -> docs/adapters/tailwind.md
+  [x] shadcn     -> docs/adapters/shadcn.md
 ```
 
 ## Step 5: Update Manifest
@@ -132,13 +128,13 @@ Add the new platform entry to `manifest.platforms`:
 {
   "platforms": {
     "existing-platform": { "..." : "..." },
-    "tui": {
+    "web-mobile": {
       "tools": {
-        "framework": "bubbletea",
-        "style": "lipgloss",
-        "components": "bubbletea",
-        "icons": "nerd-fonts",
-        "sandbox": "tui-sandbox"
+        "framework": "nextjs",
+        "style": "tailwind",
+        "components": "shadcn",
+        "icons": "lucide-react",
+        "sandbox": "storybook"
       },
       "phase": "equip",
       "gates": {
@@ -158,16 +154,16 @@ Add the new platform entry to `manifest.platforms`:
 ## Completion Output
 
 ```
-Platform "tui" added successfully.
+Platform "web-mobile" added successfully.
 
-  Framework:   Bubbletea
-  Style:       Lipgloss
-  Components:  Bubbletea (built-in)
-  Icons:       Nerd Fonts
-  Sandbox:     tui-sandbox (auto-selected for TUI)
+  Framework:   Next.js
+  Style:       Tailwind CSS
+  Components:  shadcn/ui
+  Icons:       Lucide React
+  Sandbox:     storybook (auto-selected for web)
 
-Next: /pixel-perfect:scaffold --platform tui
-  This will set up the TUI project with Lipgloss + Bubbletea + tui-sandbox
+Next: /pixel-perfect:scaffold --platform web-mobile
+  This will set up the web-mobile project with Tailwind CSS + shadcn/ui + storybook
 ```
 
 ## What It Does NOT Do

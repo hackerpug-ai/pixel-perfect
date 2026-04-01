@@ -18,7 +18,7 @@ The main orchestration command. Reads requirements, identifies components, build
 
 ## Options
 
-- `--platform <name>`: Target platform to build (e.g., `tui`, `web-desktop`). Required when multiple platforms exist. Auto-selected when only one platform is configured.
+- `--platform <name>`: Target platform to build (e.g., `mobile-ios`, `web-desktop`). Required when multiple platforms exist. Auto-selected when only one platform is configured.
 - `--phase <name>`: Start from a specific phase (atoms, molecules, compose). Default: resume from current phase.
 - `--component <name>`: Build or rebuild a specific component
 - `--screen <name>`: Build or rebuild a specific screen

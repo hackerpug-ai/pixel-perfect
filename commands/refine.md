@@ -145,9 +145,9 @@ Theme regenerated for web-desktop:
   - Border radius: rounded -> sharp
 
 Other platforms with existing themes:
-  - tui (scaffold: passed)
+  - mobile-ios (scaffold: passed)
 
-? Propagate new vibe to tui theme? [Yes / No, keep existing tui theme]
+? Propagate new vibe to mobile-ios theme? [Yes / No, keep existing mobile-ios theme]
 ```
 
 ## Controls Refinement
