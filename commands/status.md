@@ -45,7 +45,7 @@ Vibe: clean, professional, high-contrast for outdoor use
 
 Platforms:
   web-desktop  [compose passed]     vite + tailwind + shadcn -> storybook
-  tui          [scaffold pending]   bubbletea + lipgloss -> tui-sandbox
+  mobile-ios   [scaffold pending]   expo + nativewind + react-native-reusables -> storybook-native
 
 --- web-desktop ---
 
@@ -74,7 +74,7 @@ Platforms:
     [x] TodayFeed       src/screens/TodayFeed.tsx
     [x] JobDetail       src/screens/JobDetail.tsx
 
---- tui ---
+--- mobile-ios ---
 
   Phases:
     [ ] SCAFFOLD    — Pending
@@ -84,16 +84,16 @@ Platforms:
     [ ] COMPOSE     — Pending
 
   Tools:
-    Framework:  Bubbletea
-    Style:      Lipgloss          (adapter: lipgloss.md)
-    Components: Bubbletea         (adapter: bubbletea.md)
-    Icons:      Nerd Fonts        (adapter: n/a)
-    Sandbox:    tui-sandbox       (adapter: tui-sandbox.md)
+    Framework:  Expo
+    Style:      NativeWind        (adapter: nativewind.md)
+    Components: React Native Reusables (adapter: react-native-reusables.md)
+    Icons:      Lucide React Native (adapter: n/a)
+    Sandbox:    storybook-native  (adapter: storybook-native.md)
 
 frontend-design: available (aesthetic gates active)
 
-Next: Scaffold the tui platform
-  /pixel-perfect:scaffold --platform tui
+Next: Scaffold the mobile-ios platform
+  /pixel-perfect:scaffold --platform mobile-ios
 ```
 
 ## No Manifest Found

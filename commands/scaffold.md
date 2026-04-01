@@ -18,7 +18,7 @@ Set up the project for the chosen tools. Installs dependencies, configures the b
 
 ## Options
 
-- `--platform <name>`: Target platform to scaffold (e.g., `tui`, `web-desktop`). Required when multiple platforms exist. Auto-selected when only one platform is configured.
+- `--platform <name>`: Target platform to scaffold (e.g., `mobile-ios`, `web-desktop`). Required when multiple platforms exist. Auto-selected when only one platform is configured.
 
 ## Gate Check
 
@@ -30,7 +30,7 @@ Set up the project for the chosen tools. Installs dependencies, configures the b
   ```
   Multiple platforms configured:
     1. web-desktop (scaffold: passed)
-    2. tui (scaffold: pending)
+    2. mobile-ios (scaffold: pending)
 
   ? Which platform to scaffold? [1/2]
   ```
@@ -134,7 +134,6 @@ Follow `docs/adapters/{components}.md` for the exact component list and story te
 Check `manifest.platforms[platform].tools.sandbox`:
 - `"storybook-native"` -> Follow `docs/adapters/storybook-native.md`
 - `"storybook"` -> Follow `docs/adapters/storybook.md`
-- `"tui-sandbox"` -> Follow `docs/adapters/tui-sandbox.md`
 
 **Troubleshooting React/React-DOM version mismatch:** If Storybook shows `Invalid hook call` or blank page errors, run `npm ls react react-dom` to check for version conflicts. Install the matching `react-dom` version and use `overrides` in package.json to prevent drift on future installs.
 
