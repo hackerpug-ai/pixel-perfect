@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Process orchestrator for building real UIs: PRD to running code sandboxed in Storybook",
-    "version": "5.0.1"
+    "version": "5.0.2"
   },
   "plugins": [
     {
       "name": "pixel-perfect",
       "source": "./",
-      "description": "6-phase build process: PRD → real code → Storybook sandbox. Supports web (React, Next.js, Vite) and mobile (React Native, Expo).",
-      "version": "5.0.1",
+      "description": "6-phase build process: PRD → real code → Storybook sandbox. Supports web (React, Next.js, Vite) and mobile (React Native, Expo) with independent per-platform progression.",
+      "version": "5.0.2",
       "author": {
         "name": "Justin Rich"
       },
