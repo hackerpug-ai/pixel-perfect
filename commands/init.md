@@ -22,7 +22,7 @@ Interactive setup that captures your project's goal, selects target platforms, i
 - `--quick`: Auto-accept inferred values with minimal prompts
 - `--platforms <list>`: Pre-set platforms (comma-separated: `mobile-ios,web-desktop`)
 - `--vibe <description>`: Pre-set design vibe
-- `--framework <name>`: Pre-set framework (e.g., `react-native`, `nextjs`, `vite`)
+- `--framework <name>`: Pre-set framework (e.g., `react-native`, `nextjs`, `vite`, `sveltekit`)
 - `--icons <name>`: Pre-set icon library (e.g., `lucide`, `heroicons`, `phosphor`)
 
 ## What It Does
@@ -194,12 +194,15 @@ Based on the selected platform category, ask which framework the project uses.
   > React (Create React App / standalone)
     Next.js
     Vite (React + Vite)
+    SvelteKit
     Other (provide link to framework docs)
 ```
 
+When the user selects **SvelteKit**, a dedicated framework adapter (`docs/adapters/sveltekit.md`) is loaded during scaffold, and the component-library and icon options below switch to their Svelte equivalents (React libraries like shadcn/Radix do not work in Svelte).
+
 **If the user selects "Other":** Ask them to provide a URL to the framework's documentation. Record the URL in the manifest under `tools.framework_docs` so adapters and downstream phases can reference it.
 
-**PRD keyword detection:** If the PRD mentions a specific framework (e.g., "built with Expo", "Next.js app"), auto-detect and suggest:
+**PRD keyword detection:** If the PRD mentions a specific framework (e.g., "built with Expo", "Next.js app", "SvelteKit"), auto-detect and suggest:
 ```
 Detected "Expo" in requirements.
 ? Use Expo as your mobile framework? [Yes / No, choose different]
@@ -291,6 +294,17 @@ Based on the framework selection, present the appropriate component library opti
     None (build from scratch)
 ```
 
+**SvelteKit:** (component libraries are framework-specific — React libraries do **not** work in Svelte)
+```
+? Component library:
+    shadcn-svelte (shadcn/ui for Svelte — built on Bits UI)
+    Bits UI (headless primitives — the Radix of Svelte)
+    Skeleton (Tailwind-based design system + components)
+    Flowbite Svelte
+    Other (provide link to docs)
+    None (build from scratch)
+```
+
 **If the user selects "Other":** Ask for a URL to the component library's documentation. Record under `tools.components_docs`.
 
 **PRD keyword detection:** If the PRD mentions a specific library (e.g., "shadcn components", "using Paper", "react-native-reusables"):
@@ -303,6 +317,12 @@ For mobile projects mentioning shadcn:
 ```
 Detected "shadcn" in requirements (mobile project).
 ? Use React Native Reusables (shadcn/ui for React Native)? [Yes / No, choose different]
+```
+
+For SvelteKit projects mentioning shadcn:
+```
+Detected "shadcn" in requirements (SvelteKit project).
+? Use shadcn-svelte (shadcn/ui for Svelte)? [Yes / No, choose different]
 ```
 
 ### Step 5: Icon Library Drill-Down
@@ -329,6 +349,15 @@ Based on the framework selection, present the appropriate icon library options. 
     Other (provide link to docs)
 ```
 
+**SvelteKit:**
+```
+? Icon library:
+  > @lucide/svelte (recommended for shadcn-svelte)
+    Iconify (@iconify/svelte — multiple icon sets)
+    unplugin-icons
+    Other (provide link to docs)
+```
+
 **If the user selects "Other":** Ask for a URL to the icon library's documentation. Record under `tools.icons_docs`.
 
 **PRD keyword detection:** If the PRD mentions a specific icon library (e.g., "using Lucide icons", "Heroicons", "vector-icons"):
@@ -342,6 +371,8 @@ Detected "Lucide" in requirements.
 | Component Library | Recommended Icons | Reason |
 |------------------|-------------------|--------|
 | shadcn/ui | Lucide React | shadcn/ui uses Lucide by default |
+| shadcn-svelte | @lucide/svelte | shadcn-svelte uses Lucide by default |
+| Skeleton | @lucide/svelte | Skeleton is icon-agnostic; Lucide pairs well |
 | React Native Reusables | Lucide React Native | RNR uses Lucide via wrapper pattern |
 | React Native Paper | @expo/vector-icons | Paper integrates with Expo icons |
 
@@ -442,13 +473,24 @@ Adapter check:
   [x] react-native-paper → docs/adapters/react-native-paper.md
 ```
 
-**Web project example:**
+**Web project example (React):**
 ```
 Adapter check:
   [x] storybook        → docs/adapters/storybook.md (auto-selected for web)
   [x] tailwind         → docs/adapters/tailwind.md
   [ ] mantine          → No adapter found. Generic adapter will be used.
 ```
+
+**Web project example (SvelteKit):**
+```
+Adapter check:
+  [x] sveltekit        → docs/adapters/sveltekit.md (framework adapter)
+  [x] storybook        → docs/adapters/storybook.md (auto-selected for web)
+  [x] tailwind         → docs/adapters/tailwind.md
+  [x] shadcn-svelte    → docs/adapters/shadcn-svelte.md
+```
+
+The framework adapter is optional and only listed when one exists (e.g. `sveltekit`); React/Next/Vite show no framework-adapter row.
 
 For tools selected as "Other" with a docs URL provided, inform the user:
 ```

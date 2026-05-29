@@ -76,12 +76,12 @@ Run the same framework, style, component library, and icon library selection as 
 
 **Framework selection** — same options as init Phase 2, Step 2, filtered to the platform category:
 
-- Web platforms (`web-desktop`, `web-mobile`): React, Next.js, Vite, Other
+- Web platforms (`web-desktop`, `web-mobile`): React, Next.js, Vite, SvelteKit, Other
 - Mobile platforms (`mobile-ios`, `mobile-android`): React Native, Expo, Other
 
 **Style system selection** — same options as init Phase 2, Step 3, filtered to framework.
 
-**Component library selection** — same options as init Phase 2, Step 4, filtered to framework.
+**Component library selection** — same options as init Phase 2, Step 4, filtered to framework. For **SvelteKit**, present the Svelte libraries (shadcn-svelte, Bits UI, Skeleton, Flowbite Svelte, Other, None) — React libraries do not apply.
 
 **Icon library selection** — same options as init Phase 2, Step 5, filtered to framework.
 
@@ -112,12 +112,13 @@ Adding platform "web-mobile":
 
 If "Change something", loop back to the relevant TARGET step.
 
-Validate adapter availability:
+Validate adapter availability (include the framework adapter when one exists, e.g. `sveltekit`; omit the row for React/Next/Vite):
 ```
 Adapter check:
-  [x] storybook  -> docs/adapters/storybook.md
-  [x] tailwind   -> docs/adapters/tailwind.md
-  [x] shadcn     -> docs/adapters/shadcn.md
+  [x] sveltekit      -> docs/adapters/sveltekit.md   (framework adapter)
+  [x] storybook      -> docs/adapters/storybook.md
+  [x] tailwind       -> docs/adapters/tailwind.md
+  [x] shadcn-svelte  -> docs/adapters/shadcn-svelte.md
 ```
 
 ## Step 5: Update Manifest

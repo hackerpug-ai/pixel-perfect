@@ -17,7 +17,11 @@ Sandbox (always selected — not a user choice)
 
 ## Scaffold
 
+> **Framework adapters take precedence.** When a framework adapter exists for the project's framework (e.g. `docs/adapters/sveltekit.md`), follow **its** Storybook-init and story-format guidance — it knows the correct `framework` field, builder, addons, and story file format. The React/Next/Vite path below is the default when no framework adapter is present. This doc always owns the framework-agnostic conventions (sidebar organization, controls, token stories, addons, verification).
+
 ### Web (React / Next.js / Vite)
+
+For **SvelteKit**, do not use the React steps below — see `docs/adapters/sveltekit.md` (it uses `@storybook/sveltekit` + `@storybook/addon-svelte-csf`, with `.stories.svelte` or `@storybook/svelte` stories).
 
 1. Install: `npx storybook@latest init`
 2. Verify `.storybook/` directory was created with `main.ts` and `preview.ts`
@@ -90,7 +94,7 @@ const meta: Meta<typeof StatusBadge> = {
 
 ## Controls Convention
 
-**Every component prop must be wired to a Storybook control.** Use `argTypes` in the story meta:
+**Every component prop must be wired to a Storybook control.** Use `argTypes` in the story meta. (The example below imports from `@storybook/react`; for **SvelteKit** import from `@storybook/svelte` in `.stories.ts`, or use native Svelte CSF in `.stories.svelte` — see `docs/adapters/sveltekit.md`. The `argTypes` shape is identical across frameworks.)
 
 ```typescript
 import type { Meta, StoryObj } from '@storybook/react';
