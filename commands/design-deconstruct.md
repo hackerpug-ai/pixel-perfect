@@ -30,6 +30,7 @@ design-deconstruct (Phase 0, optional)   ← you have existing UI or a concept
   - **image** — a screenshot of a UI (`.png`/`.jpg`/`.webp`)
   - **Claude Design HTML** — a standalone HTML export (passed through; bundled exports are decoded)
   - **concept** — a `.md`/`.txt` description, or quoted free text
+  - **wireframes** — a `design/wireframes/` directory from `/pixel-perfect:wireframe` (the low-fi rung; its ASCII screens become the concept)
 
 ## Options
 
@@ -68,6 +69,7 @@ The engine consumes a **concept HTML**. Normalize every input type into one self
 | **Image** | View the screenshot and reconstruct a faithful concept HTML from the visual (layout, hierarchy, colors, type). If `frontend-design` is available, use it to raise fidelity. |
 | **Claude Design HTML** | Use as the concept directly (copy into `design/concepts/`). The engine decodes bundled `__bundler/template` exports itself. |
 | **Concept** (text/PRD) | Synthesize a concept HTML from the description (use `frontend-design` if available for a distinctive, coherent starting point). |
+| **Wireframes** (`design/wireframes/`) | Read the per-screen ASCII wireframes and assemble one concept HTML laying out the same screens/regions (box-drawing layout → HTML structure; the annotations name the components). Produced by `/pixel-perfect:wireframe` — the low-fi rung below this command. |
 
 Write `design/concepts/<name>.html`. This file is the hand-off to the deconstruction engine.
 

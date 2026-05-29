@@ -1,7 +1,7 @@
 {
   "name": "pixel-perfect",
-  "description": "Process orchestrator for building real UIs: enforces a 6-phase build process from a PRD (or an existing design via design-deconstruct) to running code sandboxed in Storybook. Supports web (React, Next.js, Vite, SvelteKit) and mobile (React Native, Expo) with independent per-platform progression.",
-  "version": "5.1.0",
+  "description": "Process orchestrator for building real UIs: enforces a 6-phase build process from a PRD (or ASCII wireframes, or an existing design via design-deconstruct) to running code sandboxed in Storybook. Supports web (React, Next.js, Vite, SvelteKit) and mobile (React Native, Expo) with independent per-platform progression.",
+  "version": "5.2.0",
   "author": {
     "name": "Justin Rich"
   },
@@ -20,6 +20,7 @@
     "multi-platform",
     "sveltekit",
     "svelte",
-    "design-deconstruct"
+    "design-deconstruct",
+    "wireframe"
   ]
 }
