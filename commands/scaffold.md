@@ -79,11 +79,14 @@ Read the selected platform's tool choices from `manifest.platforms[platform].too
 
 | Manifest field | Adapter location |
 |----------------|-----------------|
+| `platforms[platform].tools.framework` | `docs/adapters/{framework}.md` (optional — load only if it exists) |
 | `platforms[platform].tools.style` | `docs/adapters/{style}.md` |
 | `platforms[platform].tools.components` | `docs/adapters/{components}.md` |
 | `platforms[platform].tools.sandbox` | `docs/adapters/{sandbox}.md` |
 
-If no adapter exists for a tool, load `docs/adapters/generic.md` and warn:
+**Framework adapter (optional).** Some frameworks ship a dedicated adapter that teaches framework-specific project structure, Storybook setup, and story format (e.g., `docs/adapters/sveltekit.md`). Load `docs/adapters/{framework}.md` **if it exists**. React / Next.js / Vite have **no** framework adapter — their setup is the default path baked into `docs/adapters/storybook.md`, so finding none is expected and is **not** a warning.
+
+If no adapter exists for a **style, components, or sandbox** tool, load `docs/adapters/generic.md` and warn:
 ```
 No adapter found for "{tool}". Using generic adapter (process enforcement only).
 The AI will use its general knowledge for tool-specific setup.
@@ -93,10 +96,11 @@ The AI will use its general knowledge for tool-specific setup.
 
 Follow the **Scaffold** section of each loaded adapter doc, in order:
 
-1. Style adapter scaffold steps (install, configure)
-2. Component adapter scaffold steps (install, configure)
-3. Icon library installation (Step 2a)
-4. Sandbox adapter scaffold steps (Step 3)
+1. Framework adapter scaffold steps — **only if a framework adapter was loaded** (project structure + framework-specific Storybook init + story format)
+2. Style adapter scaffold steps (install, configure)
+3. Component adapter scaffold steps (install, configure)
+4. Icon library installation (Step 2a)
+5. Sandbox adapter scaffold steps (Step 3)
 
 Each adapter doc specifies exact commands. Execute them sequentially.
 
@@ -117,9 +121,10 @@ For custom icon libraries, reference the `icons_docs` URL in the manifest.
 
 ### Step 2b: CLI-Based Component Libraries
 
-If `tools.components` is `shadcn` or `react-native-reusables`, pull ALL components during scaffold:
+If `tools.components` is `shadcn`, `shadcn-svelte`, or `react-native-reusables`, pull ALL components during scaffold:
 
 - **shadcn/ui:** `npx shadcn@latest add --all --overwrite`
+- **shadcn-svelte:** `npx shadcn-svelte@latest add --all --overwrite --yes` (components land in `$lib/components/ui/`)
 - **React Native Reusables:** `npx @react-native-reusables/cli@latest add` (all components)
 
 After pulling:

@@ -4,13 +4,16 @@ Adapters teach the AI how to scaffold, build, and verify components for specific
 
 ## How Adapters Work
 
-When a project runs `/pixel-perfect:init`, the user selects tools for two categories (sandbox is always Storybook):
+When a project runs `/pixel-perfect:init`, the user selects tools across these categories (sandbox is always Storybook):
 
 | Category | What It Does | Examples |
 |----------|-------------|----------|
+| **Framework** | App framework — loaded only when an adapter exists | SvelteKit (React / Next.js / Vite use the default path) |
 | **Style** | Visual styling system | Tailwind CSS, NativeWind |
-| **Components** | UI component library | shadcn/ui, React Native Paper |
+| **Components** | UI component library | shadcn/ui, shadcn-svelte, React Native Paper |
 | **Sandbox** | Isolated dev/preview environment | Storybook (always) |
+
+The **framework** adapter is optional: it is loaded only when `docs/adapters/{framework}.md` exists (e.g. `sveltekit`). React / Next.js / Vite have no framework adapter — their setup is the default React path inside `storybook.md`.
 
 Each selection maps to an adapter doc in this directory. The AI loads the relevant adapter docs and follows their guidance during scaffold, build, and verify phases.
 
@@ -19,10 +22,12 @@ Each selection maps to an adapter doc in this directory. The AI loads the releva
 Adapters compose by category. A project uses **one adapter per category**, and they stack:
 
 ```
-Web project:     {style} + {components} + storybook (sandbox)
+Web project:     [{framework}] + {style} + {components} + storybook (sandbox)
 Mobile project:  {style} + {components} + storybook-native (sandbox)
 Minimal project: generic (process enforcement only) + storybook (sandbox)
 ```
+
+`[{framework}]` is bracketed because it is optional — loaded only when an adapter exists for the chosen framework (e.g. `sveltekit`). A framework adapter, when present, is applied **first**: it governs project structure, Storybook initialization, and story format; the style/components/sandbox adapters layer on top.
 
 Style and component adapters are loaded based on user selection during init. If a style framework is detected in `package.json` (e.g., `nativewind`, `tailwindcss`, `tamagui`), that framework is suggested rather than presenting a blank choice.
 
@@ -43,7 +48,7 @@ When multiple adapters are active, the AI reads all of them and applies guidance
 Each adapter follows this structure:
 
 - **Platforms** - Which platforms this adapter serves
-- **Category** - style, components, or sandbox
+- **Category** - framework, style, components, or sandbox
 - **Scaffold** - Installation and configuration steps
 - **Theme Integration** - How to connect the project vibe/theme to this tool
 - **Verify** - What to check at component level and screen level
@@ -53,8 +58,12 @@ Each adapter follows this structure:
 
 | Adapter | Category | Platforms |
 |---------|----------|-----------|
+| [SvelteKit](sveltekit.md) | framework | web |
 | [Tailwind](tailwind.md) | style | web, mobile (via NativeWind) |
 | [shadcn/ui](shadcn.md) | components | web |
+| [shadcn-svelte](shadcn-svelte.md) | components | web (SvelteKit) |
+| [Bits UI](bits-ui.md) | components | web (Svelte) |
+| [Skeleton](skeleton.md) | components | web (Svelte) |
 | [React Native Paper](react-native-paper.md) | components | mobile-ios, mobile-android |
 | [React Native Reusables](react-native-reusables.md) | components | mobile-ios, mobile-android |
 | [Storybook](storybook.md) | sandbox | web |

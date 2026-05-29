@@ -100,7 +100,15 @@ Commands that operate on build phases (scaffold, build, verify, refine) are **pl
 
 ## Adapter Conventions
 
+A **framework adapter** (`docs/adapters/{framework}.md`) is loaded first when one exists for `platforms[name].tools.framework` (e.g. `sveltekit`); it governs project structure, Storybook setup, and story format. React/Next/Vite have no framework adapter and use the default React path in `docs/adapters/storybook.md`.
+
 Based on the tools in the manifest, follow these conventions:
+
+### When `platforms[name].tools.framework` is sveltekit:
+- Components are `.svelte` files authored with Svelte 5 runes (`$props()`, `$state()`, `$derived()`); use snippet children, not legacy slots
+- Stories are `.stories.svelte` (native CSF via `@storybook/addon-svelte-csf` — `defineMeta` + `<Story>`) or `.stories.ts` (`@storybook/svelte`)
+- Import shared code via the `$lib` alias; supply SvelteKit `load`/route data through props (mock with `parameters.sveltekit_experimental` in stories)
+- Storybook framework is `@storybook/sveltekit`; see `docs/adapters/sveltekit.md`
 
 ### When `platforms[name].tools.style` is tailwind/nativewind:
 - Use utility classes, not inline styles
@@ -114,6 +122,12 @@ Based on the tools in the manifest, follow these conventions:
 - Follow shadcn's CSS variable theming
 - Compose from shadcn primitives, don't rebuild them
 
+### When `platforms[name].tools.components` is shadcn-svelte / bits-ui / skeleton:
+- **shadcn-svelte**: import primitives from `$lib/components/ui/`, use `cn()` from `$lib/utils`, follow the CSS-variable theme (same tokens as shadcn)
+- **bits-ui**: wrap headless primitives in styled atoms; all styling comes from the project theme (no built-in styles)
+- **skeleton**: use `@skeletonlabs/skeleton-svelte` components + Skeleton theme tokens; select the theme via `data-theme`
+- See `docs/adapters/{components}.md`
+
 ### When `platforms[name].tools.components` is react-native-paper:
 - Use `useTheme()` for dynamic values
 - Wrap with `PaperProvider` at app root
@@ -122,8 +136,8 @@ Based on the tools in the manifest, follow these conventions:
 - In web Storybook, components render via `react-native-web` polyfill
 
 ### When `platforms[name].tools.sandbox` is storybook:
-- Co-locate stories with components (`ComponentName.stories.tsx`)
-- Use CSF3 format
+- Co-locate stories with components — `ComponentName.stories.tsx` (React) or `ComponentName.stories.svelte` / `.stories.ts` (SvelteKit; follow the framework adapter)
+- Use CSF3 (React) or Svelte CSF (SvelteKit) format
 - Every component gets at least a Default story
 - Interactive components get variant stories
 

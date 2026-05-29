@@ -260,7 +260,7 @@ Update manifest with the component list (all `status: pending`).
 For each component, in order:
 
 1. **Load context:**
-   - Adapter docs for the chosen tools
+   - Adapter docs for the chosen tools, including the **framework adapter** if one exists (e.g. `docs/adapters/sveltekit.md`) — it defines the component file extension and story format
    - Project theme file
    - frontend-design aesthetic context (if available)
 
@@ -341,6 +341,10 @@ For each component, in order:
      args: { status: 'complete' },
    };
    ```
+
+   **Framework story format (React shown above; other frameworks differ):**
+
+   The story file's language, extension, and imports follow the **framework adapter**. The example above is React (`StatusBadge.stories.tsx`, `@storybook/react`, JSX). For **SvelteKit**, write `StatusBadge.stories.svelte` using native Svelte CSF (`defineMeta` + `<Story>` from `@storybook/addon-svelte-csf`) — or `StatusBadge.stories.ts` importing `Meta`/`StoryObj` from `@storybook/svelte`. The `argTypes`/`args`/controls conventions are identical across frameworks. See `docs/adapters/{framework}.md` and `docs/storybook-conventions.md`.
 
    **React Native polyfill decorator:**
 

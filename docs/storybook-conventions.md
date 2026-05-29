@@ -237,10 +237,16 @@ const IconGallery = () => (
 
 ## CSF3 Format Reference
 
-All stories use Component Story Format 3 (CSF3):
+All stories use Component Story Format 3 (CSF3). The example below is **React**; the `Meta`/`StoryObj`/`argTypes` shape is the same on every framework — only the import source and component syntax change:
+
+| Framework | Story file | Import | Notes |
+|-----------|-----------|--------|-------|
+| React / Next.js / Vite | `Name.stories.tsx` | `@storybook/react` | JSX render functions |
+| SvelteKit | `Name.stories.ts` | `@storybook/svelte` | CSF object format |
+| SvelteKit (native) | `Name.stories.svelte` | `@storybook/addon-svelte-csf` (`defineMeta` + `<Story>`) | recommended for slots/snippets — see `docs/adapters/sveltekit.md` |
 
 ```typescript
-// Required structure
+// Required structure (React)
 import type { Meta, StoryObj } from '@storybook/react';
 import { ComponentName } from './ComponentName';
 
