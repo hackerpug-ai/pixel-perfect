@@ -123,6 +123,7 @@ Every component prop is wired to Storybook controls via `argTypes`. This makes e
 
 | Command | Phases | What It Does |
 |---------|--------|-------------|
+| `/pixel-perfect:wireframe` | 0 (optional) | Low-fi: ASCII wireframes from plans/targets into `design/wireframes/` — a pre-step to design-deconstruct |
 | `/pixel-perfect:design-deconstruct` | 0 (optional) | Deconstruct existing UI (code, URL, screenshot, concept) into token-governed HTML mockups that seed the build |
 | `/pixel-perfect:init` | 1-3 | DISCOVER goal + vibe, TARGET platforms + framework + tools, EQUIP |
 | `/pixel-perfect:scaffold` | 4 | Install tools, create theme, generate design token stories, verify hello-world |
@@ -135,12 +136,13 @@ Every component prop is wired to Storybook controls via `argTypes`. This makes e
 ### Command Flow
 
 ```
-design-deconstruct (optional)    research (optional)
-  Phase 0: existing UI/concept         |
-         \                            /
-          v                          v
-       init  -->  scaffold  -->  build  -->  verify
-       (1-3)      (4)           (5-7)       (gates)
+wireframe ─▶ design-deconstruct      research (optional)
+(ASCII,      (HTML mockups,                 |
+ optional)    optional)                     |
+        \           \                       |
+         v           v                      v
+        init  ──▶  scaffold  ──▶  build  ──▶  verify
+        (1-3)      (4)           (5-7)       (gates)
                                   |
                                   v
                                refine (iterate)
@@ -163,6 +165,14 @@ It normalizes the source into a concept HTML, then deconstructs it into a **toke
 - each **view mockup** becomes a pixel-perfect *target* the real component is built to match
 
 **This does not contradict "skip the mockup abstraction."** The deconstructed HTML is a precise, token-governed *reference spec* — clean markup the AI reads perfectly — not a lossy hand-drawn mock, and never the deliverable. The real React/SvelteKit components in Storybook still supersede it. When the standalone `design-deconstruct` skill is installed, pixel-perfect delegates to it; otherwise a lighter built-in path runs.
+
+### Wireframe first (the low-fi rung)
+
+When you're starting from **plans** rather than existing UI, run `/pixel-perfect:wireframe` first. It turns a PRD / sprint plan / spec (or a one-line concept) into **ASCII box-drawing wireframes** in `design/wireframes/` — one per screen, desktop + mobile, annotated and mapped to the components they imply. No renderer, no pixels: it commits the *structure* (layout, IA, hierarchy, states) cheaply. That gives the full **fidelity ladder**:
+
+> **wireframe** (ASCII, structure) → **mockup** (HTML, design-deconstruct / high-fi) → **component** (real, Storybook)
+
+Each rung is a *target* the next is built to match. Wireframes feed `design-deconstruct` directly (`/pixel-perfect:design-deconstruct design/wireframes`) or seed `init` (it detects them and pre-fills your screen list).
 
 ---
 

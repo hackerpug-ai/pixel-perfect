@@ -5,15 +5,15 @@
     "email": "justin@hackerpug.com"
   },
   "metadata": {
-    "description": "Process orchestrator for building real UIs: a PRD (or an existing design via design-deconstruct) to running code sandboxed in Storybook",
-    "version": "5.1.0"
+    "description": "Process orchestrator for building real UIs: a PRD (or ASCII wireframes / an existing design via design-deconstruct) to running code sandboxed in Storybook",
+    "version": "5.2.0"
   },
   "plugins": [
     {
       "name": "pixel-perfect",
       "source": "./",
-      "description": "6-phase build process: a PRD (or an existing design via design-deconstruct) → real code → Storybook sandbox. Supports web (React, Next.js, Vite, SvelteKit) and mobile (React Native, Expo) with independent per-platform progression.",
-      "version": "5.1.0",
+      "description": "6-phase build process: a PRD (or ASCII wireframes / an existing design via design-deconstruct) → real code → Storybook sandbox. Supports web (React, Next.js, Vite, SvelteKit) and mobile (React Native, Expo) with independent per-platform progression.",
+      "version": "5.2.0",
       "author": {
         "name": "Justin Rich"
       },
@@ -28,7 +28,8 @@
         "components",
         "storybook",
         "sveltekit",
-        "design-deconstruct"
+        "design-deconstruct",
+        "wireframe"
       ],
       "category": "design"
     }

@@ -171,6 +171,7 @@ For design token story regeneration and the polyfill disclaimer pattern (require
 
 | Command | What It Does |
 |---------|-------------|
+| `/pixel-perfect:wireframe` | Phase 0 (optional, low-fi): ASCII wireframes from plans/targets into `design/wireframes/` — a pre-step to design-deconstruct |
 | `/pixel-perfect:design-deconstruct` | Phase 0 (optional): deconstruct existing UI/concepts into HTML mockups that seed the build |
 | `/pixel-perfect:init` | Phases 1-3: discover + target + equip |
 | `/pixel-perfect:add-platform` | Add a new platform to an existing project (post-init) |
@@ -180,3 +181,5 @@ For design token story regeneration and the polyfill disclaimer pattern (require
 | `/pixel-perfect:status` | Show progress |
 | `/pixel-perfect:research` | Design research |
 | `/pixel-perfect:refine` | Iterate on code |
+
+**Fidelity ladder.** When `design/wireframes/` (structural ASCII) or `design/system/` (high-fi HTML mockups) exist, build each screen/component to match the **highest-fidelity target available** (mockup > wireframe). These are targets/specs — the real components supersede them.

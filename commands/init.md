@@ -41,9 +41,11 @@ Output: `design/manifest.json` with gates discover/target/equip = passed.
 
 Capture the project's purpose and aesthetic direction.
 
-### Step 0: Detect a prior deconstruction (optional)
+### Step 0: Detect prior design artifacts (optional)
 
-If `design/deconstruction.json` (or a `design/system/` directory) exists — produced by `/pixel-perfect:design-deconstruct` — use it to pre-seed this init:
+**Wireframes** — if `design/wireframes.json` (or a `design/wireframes/` directory) exists, produced by `/pixel-perfect:wireframe` (the low-fi sibling), pre-seed the **screen list** (the Step 1b component hierarchy) from its `screens` inventory — including the atoms/molecules each screen implies — and append each wireframe file to `references`. Set top-level `wireframed: true`. Wireframes commit the *structure*; a later `design-deconstruct` run (or the build phases) adds fidelity. Each `design/wireframes/{screen}.md` is the structural target the real screen is built to match.
+
+**Deconstruction** — if `design/deconstruction.json` (or a `design/system/` directory) exists — produced by `/pixel-perfect:design-deconstruct` — use it to pre-seed this init:
 
 - **Vibe**: infer the vibe from the extracted tokens/typography (low-chroma + generous spacing → "clean, minimal"; high-contrast → "bold") and propose it in Step 3 for confirmation.
 - **Theme**: note that `design/theme-seed.json` exists — scaffold will generate the theme from it instead of from vibe keywords.
@@ -51,7 +53,7 @@ If `design/deconstruction.json` (or a `design/system/` directory) exists — pro
 - **References**: add each view's mockup to the manifest `references`.
 - **Markers**: set top-level `deconstructed: true` and `design_system: "design/system"` when writing the manifest.
 
-Confirm the seeded values with the user — don't accept them blindly. If no deconstruction exists, proceed normally.
+Confirm the seeded values with the user — don't accept them blindly. If no wireframes or deconstruction exist, proceed normally.
 
 ### Step 1: Requirements Discovery
 

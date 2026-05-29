@@ -65,6 +65,8 @@ This phase runs automatically when `/pixel-perfect:build` is invoked and `plan` 
 
 **If the project was seeded by `/pixel-perfect:design-deconstruct`** (`design/deconstruction.json` exists): the atoms/molecules/screens lists are pre-populated from the deconstruction inventory (atoms→atoms, molecules→molecules, views→screens), and each item carries a `target` mockup. Treat these as the required set, reconcile against the spec, and confirm with the user as usual.
 
+**If the project was wireframed** (`design/wireframes.json` exists): the **screen list** — and the atoms/molecules each screen implies — is pre-populated from the wireframe inventory, with each screen carrying its `design/wireframes/{screen}.md` as a structural target. (A later `design-deconstruct` run upgrades these structural targets to high-fi mockups.)
+
 ### The Build Levels
 
 The build system works bottom-up across four levels:
@@ -583,7 +585,7 @@ For each screen:
    - Adapter docs
    - Theme file
    - frontend-design spatial composition rules (if available)
-   - **Deconstruction target** (if `design/deconstruction.json` exists): the matching view mockup (`inventory.views[].html` / `.png`) — build the screen to match it
+   - **Target (fidelity precedence)** — build the screen to match the highest-fidelity reference available: a **deconstruction mockup** (`design/deconstruction.json` → `inventory.views[].html`/`.png`, high-fi) if present; otherwise the screen's **wireframe** (`design/wireframes/{screen}.md`, structural — match its layout/IA/regions). If both exist, the mockup governs pixels while the wireframe still informs structure.
 
 2. **Write screen file:**
    - Composes atoms into a complete layout
@@ -649,7 +651,7 @@ For each screen:
    - All listed atoms are used correctly
    - Layout responds to viewport changes (if applicable)
    - No hardcoded spacing or colors (uses theme)
-   - If a deconstruction `target` exists for this screen: the layout matches the view mockup (structure, spacing rhythm, responsive behavior)
+   - If a `target` exists for this screen (a deconstruction mockup, or else the wireframe): the layout matches it — structure, spacing rhythm, responsive behavior (and pixels too when the target is a high-fi mockup)
 
 5. **Aesthetic gate** (if frontend-design available):
    - Layout has intentional hierarchy (not uniform spacing)
