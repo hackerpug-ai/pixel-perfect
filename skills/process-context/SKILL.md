@@ -171,6 +171,7 @@ For design token story regeneration and the polyfill disclaimer pattern (require
 
 | Command | What It Does |
 |---------|-------------|
+| `/pixel-perfect:design-deconstruct` | Phase 0 (optional): deconstruct existing UI/concepts into HTML mockups that seed the build |
 | `/pixel-perfect:init` | Phases 1-3: discover + target + equip |
 | `/pixel-perfect:add-platform` | Add a new platform to an existing project (post-init) |
 | `/pixel-perfect:scaffold` | Phase 4: set up project structure, theme, token stories |

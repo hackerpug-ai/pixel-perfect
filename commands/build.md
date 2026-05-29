@@ -63,6 +63,8 @@ Analyze the requirements spec against the current codebase state. Determine whic
 
 This phase runs automatically when `/pixel-perfect:build` is invoked and `plan` is not yet `passed` in the manifest.
 
+**If the project was seeded by `/pixel-perfect:design-deconstruct`** (`design/deconstruction.json` exists): the atoms/molecules/screens lists are pre-populated from the deconstruction inventory (atoms→atoms, molecules→molecules, views→screens), and each item carries a `target` mockup. Treat these as the required set, reconcile against the spec, and confirm with the user as usual.
+
 ### The Build Levels
 
 The build system works bottom-up across four levels:
@@ -263,6 +265,7 @@ For each component, in order:
    - Adapter docs for the chosen tools, including the **framework adapter** if one exists (e.g. `docs/adapters/sveltekit.md`) — it defines the component file extension and story format
    - Project theme file
    - frontend-design aesthetic context (if available)
+   - **Deconstruction target** (if `design/deconstruction.json` exists): the matching mockup for this atom (its `inventory.atoms[].html` / `.png`) — build the real component to match the mockup's structure, tokens, and states
 
 2. **Write component file:**
    - Real component code (`.tsx`, `.vue`, `.svelte`, etc.)
@@ -369,6 +372,7 @@ For each component, in order:
    - Compilation succeeds (no type errors, no import errors)
    - Component renders in Storybook
    - All props are wired to argTypes controls
+   - If a deconstruction `target` exists for this atom: the rendered component matches the mockup's structure, tokens, and states (the literal pixel-perfect goal)
 
 5. **Aesthetic gate** (if frontend-design available):
    - Component uses the project font pairing
@@ -579,6 +583,7 @@ For each screen:
    - Adapter docs
    - Theme file
    - frontend-design spatial composition rules (if available)
+   - **Deconstruction target** (if `design/deconstruction.json` exists): the matching view mockup (`inventory.views[].html` / `.png`) — build the screen to match it
 
 2. **Write screen file:**
    - Composes atoms into a complete layout
@@ -644,6 +649,7 @@ For each screen:
    - All listed atoms are used correctly
    - Layout responds to viewport changes (if applicable)
    - No hardcoded spacing or colors (uses theme)
+   - If a deconstruction `target` exists for this screen: the layout matches the view mockup (structure, spacing rhythm, responsive behavior)
 
 5. **Aesthetic gate** (if frontend-design available):
    - Layout has intentional hierarchy (not uniform spacing)
