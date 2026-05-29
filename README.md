@@ -4,7 +4,7 @@
 
 # pixel-perfect
 
-A Claude Code plugin that skips the mockup abstraction entirely. Instead of generating designs that get "lost in translation," it scaffolds real React components during design ideation — all sandboxed in Storybook.
+A Claude Code plugin that skips the mockup abstraction entirely. Instead of generating designs that get "lost in translation," it scaffolds real components (React or SvelteKit) during design ideation — all sandboxed in Storybook.
 
 ---
 
@@ -53,6 +53,9 @@ Each phase has a **gate** that must pass before you proceed. The plugin tracks s
 ### First Project
 
 ```bash
+# 0. (Optional) Start from an existing design instead of a blank PRD
+/pixel-perfect:design-deconstruct https://example.com   # or a screenshot, repo, or concept
+
 # 1. Set up your project (phases 1-3)
 /pixel-perfect:init
 
@@ -71,9 +74,9 @@ Init walks you through:
 2. **What's the goal?** (one sentence)
 3. **What's the design vibe?** (clean, bold, playful, etc.)
 4. **What platforms?** (web-desktop, web-mobile, mobile-ios, mobile-android)
-5. **What framework?** (React, Next.js, Vite, React Native, Expo, or provide docs URL)
+5. **What framework?** (React, Next.js, Vite, SvelteKit, React Native, Expo, or provide docs URL)
 6. **What style system?** (Tailwind, NativeWind, CSS Modules, or provide docs URL)
-7. **What component library?** (shadcn, Paper, Mantine, none, or provide docs URL)
+7. **What component library?** (shadcn, shadcn-svelte, Bits UI, Skeleton, Paper, Mantine, none, or provide docs URL)
 
 The UI library is completely flexible — use whatever you want or build from scratch. pixel-perfect uses `AskUserQuestion` to follow your lead.
 
@@ -85,7 +88,7 @@ Storybook is the universal sandbox. Every component, design token, and screen ge
 
 | Platform | Sandbox | Launch |
 |----------|---------|--------|
-| Web (React, Next.js, Vite) | Browser Storybook | `pnpm storybook` → localhost:6006 |
+| Web (React, Next.js, Vite, SvelteKit) | Browser Storybook | `pnpm storybook` → localhost:6006 |
 | Mobile (React Native, Expo) | On-device Storybook | `pnpm storybook` → iOS Simulator / Android Emulator |
 | TUI / CLI | tui-sandbox | `tsbx dev` → terminal preview |
 
@@ -120,6 +123,7 @@ Every component prop is wired to Storybook controls via `argTypes`. This makes e
 
 | Command | Phases | What It Does |
 |---------|--------|-------------|
+| `/pixel-perfect:design-deconstruct` | 0 (optional) | Deconstruct existing UI (code, URL, screenshot, concept) into token-governed HTML mockups that seed the build |
 | `/pixel-perfect:init` | 1-3 | DISCOVER goal + vibe, TARGET platforms + framework + tools, EQUIP |
 | `/pixel-perfect:scaffold` | 4 | Install tools, create theme, generate design token stories, verify hello-world |
 | `/pixel-perfect:build` | 5-7 | Build atoms, compose screens, wire integration |
@@ -131,15 +135,34 @@ Every component prop is wired to Storybook controls via `argTypes`. This makes e
 ### Command Flow
 
 ```
-research (optional)
-    |
-    v
-  init  -->  scaffold  -->  build  -->  verify
-  (1-3)      (4)           (5-7)       (gates)
-                              |
-                              v
-                           refine (iterate)
+design-deconstruct (optional)    research (optional)
+  Phase 0: existing UI/concept         |
+         \                            /
+          v                          v
+       init  -->  scaffold  -->  build  -->  verify
+       (1-3)      (4)           (5-7)       (gates)
+                                  |
+                                  v
+                               refine (iterate)
 ```
+
+---
+
+## Starting From Existing UI or Concepts
+
+Not every project starts from a written PRD. If you already have a design — a competitor's site, an old app's components, a screenshot, a Claude Design export, or just a concept — run the optional **`design-deconstruct`** step first:
+
+```
+/pixel-perfect:design-deconstruct <source>   # code path, URL, image, HTML, or concept text
+```
+
+It normalizes the source into a concept HTML, then deconstructs it into a **token-governed atomic design system** under `design/system/` — semantic tokens plus atom / molecule / organism / view HTML mockups (with PNG references). Those outputs seed the rest of the process:
+
+- the extracted **tokens** become the theme (`scaffold` reads `design/theme-seed.json`)
+- the **inventory** pre-fills the atom / molecule / screen build lists
+- each **view mockup** becomes a pixel-perfect *target* the real component is built to match
+
+**This does not contradict "skip the mockup abstraction."** The deconstructed HTML is a precise, token-governed *reference spec* — clean markup the AI reads perfectly — not a lossy hand-drawn mock, and never the deliverable. The real React/SvelteKit components in Storybook still supersede it. When the standalone `design-deconstruct` skill is installed, pixel-perfect delegates to it; otherwise a lighter built-in path runs.
 
 ---
 
@@ -157,8 +180,10 @@ Adapters are reference docs that teach the AI how to scaffold, build, and verify
 
 | Adapter | Category | Status |
 |---------|----------|--------|
+| SvelteKit | framework (web) | stable |
 | Tailwind / NativeWind | style | stable |
 | shadcn/ui | components (web) | stable |
+| shadcn-svelte / Bits UI / Skeleton | components (Svelte) | stable |
 | React Native Paper | components (mobile) | stable |
 | Storybook | sandbox | stable |
 | tui-sandbox | sandbox (TUI/CLI) | experimental |

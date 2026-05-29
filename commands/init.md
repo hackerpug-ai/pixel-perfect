@@ -41,6 +41,18 @@ Output: `design/manifest.json` with gates discover/target/equip = passed.
 
 Capture the project's purpose and aesthetic direction.
 
+### Step 0: Detect a prior deconstruction (optional)
+
+If `design/deconstruction.json` (or a `design/system/` directory) exists — produced by `/pixel-perfect:design-deconstruct` — use it to pre-seed this init:
+
+- **Vibe**: infer the vibe from the extracted tokens/typography (low-chroma + generous spacing → "clean, minimal"; high-contrast → "bold") and propose it in Step 3 for confirmation.
+- **Theme**: note that `design/theme-seed.json` exists — scaffold will generate the theme from it instead of from vibe keywords.
+- **Inventory**: read `design/deconstruction.json` `inventory` + `level_map` to pre-fill the component hierarchy (Step 1b) and the build lists — atoms→atoms, molecules→molecules, views→screens (organisms become screen sections). Seed the manifest's `atoms`/`molecules`/`screens` (status `pending`, each with a `target` pointing at its mockup HTML/PNG).
+- **References**: add each view's mockup to the manifest `references`.
+- **Markers**: set top-level `deconstructed: true` and `design_system: "design/system"` when writing the manifest.
+
+Confirm the seeded values with the user — don't accept them blindly. If no deconstruction exists, proceed normally.
+
 ### Step 1: Requirements Discovery
 
 **If a path is provided via argument:** Use that file directly.
@@ -599,6 +611,8 @@ Creates `{directory}/design/manifest.json`:
 ```
 
 The `spec` field is the path to the spec/PRD document (relative to the project root) that drives the component hierarchy during build. If no spec was provided, this field is omitted.
+
+**Deconstruction fields (optional).** When the project was seeded by `/pixel-perfect:design-deconstruct`, the manifest also carries top-level `"deconstructed": true` and `"design_system": "design/system"`, and seeded `atoms`/`molecules`/`screens` entries include a `"target"` (the mockup the real component is built to match), e.g. `"target": "design/system/views/feed/feed.html"`. These are additive and ignored by projects that never ran deconstruct.
 
 **When "Other" is selected for any tool**, the manifest includes the docs URL inside the platform's tools:
 

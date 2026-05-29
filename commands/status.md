@@ -24,7 +24,8 @@ Reads `design/manifest.json` and displays:
 2. **Platform overview** - All platforms with phase status and tool summary
 3. **Per-platform detail** - For each platform: gates, tools, atoms, molecules, screens
 4. **frontend-design detection** - Whether the frontend-design plugin is available
-5. **Next action** - What to do next based on platform states
+5. **Deconstruction** - Whether a `design-deconstruct` system seeds this project (`design/system/` + `deconstructed: true`)
+6. **Next action** - What to do next based on platform states
 
 ## Status Icons
 
@@ -91,6 +92,7 @@ Platforms:
     Sandbox:    storybook-native  (adapter: storybook-native.md)
 
 frontend-design: available (aesthetic gates active)
+deconstruction: design/system/ (4 views, 9 atoms) — pixel-perfect targets active
 
 Next: Scaffold the mobile-ios platform
   /pixel-perfect:scaffold --platform mobile-ios
