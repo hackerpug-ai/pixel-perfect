@@ -4,6 +4,46 @@ A **sandbox** is a component-showcase harness: it catalogs your components by at
 
 pixel-perfect treats the sandbox as a **spec, not a tool**. By default it **builds a sandbox from scratch in your target framework** (see `docs/adapters/custom-sandbox.md`); an off-the-shelf tool (Storybook, `tui-sandbox`) is used only when you ask.
 
+---
+
+## Why a custom sandbox is the default (v6)
+
+The v6 default is **not Storybook**. This was a deliberate architectural choice, not a preference. Here's why:
+
+### 1. Cross-platform reality
+
+pixel-perfect targets **any** framework — React, SvelteKit, React Native, Expo, GPUI (Rust desktop), Ratatui (terminal), SwiftUI, Compose. Storybook only runs in a web browser. That means:
+
+- **React Native / Expo**: Storybook requires `react-native-web` shimming — rendering native components in a browser. This leaks abstractions, breaks native-only APIs, and adds a dependency tree the real app never uses.
+- **TUI (Ratatui / Bubbletea / Textual)**: Storybook literally cannot run here. There's no browser. A terminal sandbox must be a terminal app.
+- **Desktop (GPUI, SwiftUI)**: Same problem — no browser, no DOM. A sandbox must be a native window.
+- **SvelteKit**: Storybook works but requires Svelte-specific adapters (CSF via `@storybook/addon-svelte-csf`), which add setup complexity and occasional rough edges.
+
+A custom sandbox is generated *in the target framework*. A React project gets a React sandbox. A Ratatui project gets a Ratatui sandbox. GPUI gets GPUI. The spec is the same; the implementation matches the platform.
+
+### 2. Agentic generation is cheap
+
+The seven pieces of this spec are small — a registry, a two-pane shell, token codegen, a run command. An AI agent generates this in ~60 lines of code during scaffold. That's cheaper than:
+
+- Installing Storybook (~200 transitive dependencies)
+- Configuring it for a non-standard framework
+- Maintaining version compatibility across Storybook upgrades
+- Working around addon incompatibilities
+
+When the agent can generate the sandbox, "just use Storybook" is no longer the easy path.
+
+### 3. No shoehorning
+
+Storybook is opinionated about how stories are written (CSF), how they're discovered (file globbing), how they're rendered (iframes), and how they're configured (`.storybook/`). These opinions are great for a React web project. They become constraints everywhere else.
+
+A custom sandbox lets the project use its framework's native patterns — Svelte components in Svelte, SwiftUI previews in Swift, Ratatui widgets in Rust. No adapters, no shims, no impedance mismatch.
+
+### 4. You can still use Storybook
+
+This is not anti-Storybook. If you're building a React web project and want Storybook's ecosystem (addons, Chromatic, visual snapshots), set `"sandbox": "storybook"` in the manifest. The scaffold step installs and configures it. The same seven-piece spec applies — Storybook just implements it with its own machinery.
+
+The point is: **the default should work for every platform**. Storybook doesn't. A generated native sandbox does.
+
 > **This spec is derived from two real, running sandboxes** — not invented:
 > - **`../mega-button`** — a from-scratch **GPUI** (Rust desktop/GPU) sandbox (`sandbox/crates/sandbox`, `make sandbox-run`). *Verified: `make sandbox-build` compiles clean.*
 > - **`../get-spoke`** — a from-scratch **TUI** (Rust/Ratatui) sandbox (`.tui-storybook/`, `make sandbox`). *Verified: `make sandbox-check` renders the full catalog headless to stdout.*

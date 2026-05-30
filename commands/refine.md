@@ -4,7 +4,7 @@ description: "Iterate on components, screens, and theme with targeted feedback, 
 
 # Refine (Code Iteration)
 
-Collect feedback on specific components or screens, regenerate the affected code, and re-run verification. This is how you iterate after the initial build. Every refinement produces updated real code and re-verifies it in the Storybook sandbox.
+Collect feedback on specific components or screens, regenerate the affected code, and re-run verification. This is how you iterate after the initial build. Every refinement produces updated real code and re-verifies it in the sandbox.
 
 ## Usage
 
@@ -56,7 +56,7 @@ Applied changes:
 
 Verification:
   [x] StatusBadge compiles
-  [x] StatusBadge renders in Storybook
+  [x] StatusBadge renders in sandbox
   [x] Story updated with new appearance
   [x] All props wired to argTypes controls
 

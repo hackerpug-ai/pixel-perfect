@@ -32,7 +32,7 @@ All in a sandbox — native to your framework (or Storybook, if you prefer). All
 | **DISCOVER** | Define goal + vibe from PRD | Goal statement exists, vibe captured |
 | **TARGET** | Select platforms + framework | Platform/framework declared |
 | **EQUIP** | Select style + component libraries | Adapters validated |
-| **SCAFFOLD** | Install tools, create theme, generate token stories | Theme renders, Storybook runs |
+| **SCAFFOLD** | Install tools, create theme, generate token stories | Theme renders, sandbox runs |
 | **ATOMS** | Build individual components | Each component has story + controls |
 | **COMPOSE** | Assemble screens from atoms | Screens render with real data shapes |
 | **INTEGRATE** | Wire navigation + state | App navigates, state persists |
@@ -88,6 +88,28 @@ A **sandbox** is just a component browser: it catalogs your components by layer 
 
 The spec is ~7 small pieces (a layer-keyed story registry · isolated render · a two-pane navigator · token codegen from `theme.*.json` · a run command · pixel-target refs). It's derived from two real, running sandboxes built from scratch in Rust — a GPUI desktop one and a Ratatui TUI one — the same concept in totally different paradigms.
 
+### Why custom (v6 default)
+
+**Storybook is great — for web projects that want Storybook.** But pixel-perfect builds UI in *any* framework: React, SvelteKit, React Native, Expo, GPUI, Ratatui, SwiftUI. Shoehorning all of those into Storybook means fighting Storybook — native-web shimming, addon incompatibilities, version conflicts, and an entire toolchain that doesn't apply outside a browser.
+
+The agentic development model changes the calculus. An AI agent can generate a sandbox from scratch in ~60 lines — a registry + a two-pane shell + token codegen + a run command — *in whatever language and framework you're actually using*. That's cheaper than installing, configuring, and maintaining Storybook in a project where it's a poor fit.
+
+**Why this works better cross-platform:**
+
+| Concern | Storybook | Custom sandbox (v6 default) |
+|---------|-----------|----------------------------|
+| React web | ✅ native fit | ✅ tiny Vite browser, same result |
+| SvelteKit | ⚠️ needs adapter, some rough edges | ✅ generated in Svelte, native |
+| React Native / Expo | ⚠️ web shimming required | ✅ runs on-device in your framework |
+| TUI (Ratatui / Bubbletea) | ❌ impossible | ✅ terminal-native, derived from real Rust sandboxes |
+| Desktop (GPUI, SwiftUI) | ❌ impossible | ✅ platform-native |
+| Maintenance burden | Storybook upgrades, addon compat, version pinning | ~60 lines you own; agent can regenerate anytime |
+| Install footprint | ~200 deps, 30s+ cold start | ~0 deps, instant |
+
+The agent **generates the sandbox during scaffold** — it's not a manual step. The spec (`docs/sandbox-spec.md`) is small and stable; the implementation varies by framework. Two real sandboxes (GPUI + Ratatui) prove the spec works across entirely different rendering paradigms.
+
+Storybook remains a **first-class opt-in** for web projects that want it. Set `"sandbox": "storybook"` in the manifest and the scaffold step installs and configures it normally. But it's no longer the default — because the default should work for *every* platform.
+
 | `tools.sandbox` | What you get | Launch |
 |-----------------|-------------|--------|
 | **`custom`** (default) | a native component browser generated in your framework | `npm run sandbox` / `make sandbox` |
@@ -97,7 +119,7 @@ The spec is ~7 small pieces (a layer-keyed story registry · isolated render · 
 
 > **v6 (breaking):** the default sandbox is now `custom`, not Storybook. Existing projects that want to keep Storybook: set `"sandbox": "storybook"` under the platform's `tools` in `design/manifest.json`.
 
-The scaffold phase sets everything up. You just run `pnpm storybook` and start building.
+The scaffold phase generates the sandbox and sets everything up. Run `npm run sandbox` (or `make sandbox` / `pnpm storybook` if you opted into Storybook) and start building.
 
 ### Sidebar Organization
 
@@ -118,7 +140,7 @@ Screens/                ← Composed screens (compose phase)
 
 ### Controls
 
-Every component prop is wired to Storybook controls via `argTypes`. This makes every component interactive — you can tweak props directly in the browser.
+Every component prop is wired to sandbox controls (`argTypes` in Storybook; labeled variants in a custom sandbox). This makes every component interactive — you can tweak props directly in the browser or terminal.
 
 ---
 
@@ -284,7 +306,7 @@ When you work in a project that has `design/manifest.json`, the **process-contex
 - Know the current build phase
 - Follow adapter conventions for the chosen tools
 - Use theme tokens instead of hardcoded values
-- Wire all props to Storybook controls
+- Wire all props to sandbox controls (Storybook `argTypes` or custom sandbox variants)
 - Respect gate requirements before advancing phases
 
 ---
@@ -292,7 +314,8 @@ When you work in a project that has `design/manifest.json`, the **process-contex
 ## Documentation
 
 - [Adapter System](docs/adapters/README.md) - How adapters work and compose
-- [Storybook Conventions](docs/storybook-conventions.md) - Controls, token stories, organization
+- [Storybook Conventions](docs/storybook-conventions.md) - Controls, token stories, organization (Storybook opt-in)
+- [Sandbox Spec](docs/sandbox-spec.md) - The seven-piece spec every sandbox implements (custom default)
 - [Design Systems](docs/design-systems/README.md) - Supported design system references
 - [Icon Libraries](docs/icon-libraries/README.md) - Supported icon library references
 
@@ -303,7 +326,7 @@ When you work in a project that has `design/manifest.json`, the **process-contex
 v4 is a clean break from v2. There is no incremental migration path.
 
 - **v2 users**: Stay on the v2 git tag. Your YAML artifacts remain valid.
-- **v4+**: Starts fresh with the 7-phase process. Real code is the artifact, Storybook is the sandbox.
+- **v4+**: Starts fresh with the 7-phase process. Real code is the artifact, the sandbox is generated natively in your framework.
 - **Research**: `/pixel-perfect:research` output is compatible with both versions.
 
 ---

@@ -2,6 +2,24 @@
 
 The **default** sandbox adapter. Instead of installing an off-the-shelf tool, it **generates a component browser from scratch in the project's target framework**, implementing the seven pieces of `docs/sandbox-spec.md`. You own it, it's tiny, and it renders the *real* components (no web prototype throwaway).
 
+## Why this is the default (not Storybook)
+
+**Storybook is a web tool.** pixel-perfect builds UI in any framework — React, SvelteKit, React Native, GPUI, Ratatui, SwiftUI. Shoehorning all of those into a browser-based tool means fighting the tool instead of building the product. The agentic model makes custom generation cheap (~60 lines) and Storybook's install/configure/maintain overhead expensive by comparison.
+
+| | Storybook | Custom (this adapter) |
+|---|---|---|
+| React web | ✅ native fit | ✅ tiny Vite browser, same result |
+| SvelteKit | ⚠️ needs adapter | ✅ generated in Svelte |
+| React Native | ⚠️ web shimming | ✅ runs on-device |
+| Terminal (Ratatui etc.) | ❌ impossible | ✅ terminal-native |
+| Desktop (GPUI, SwiftUI) | ❌ impossible | ✅ platform-native |
+| Install footprint | ~200 deps | ~0 deps |
+| Maintenance | version upgrades, addon compat | you own ~60 lines |
+
+Storybook remains available as an **opt-in** (`tools.sandbox: "storybook"`). The custom sandbox is the default because the default should work for *every* platform without shoehorning.
+
+---
+
 Use an off-the-shelf adapter (`docs/adapters/storybook.md`, `storybook-native.md`, `tui-sandbox.md`) only when the user explicitly asks (`tools.sandbox: "storybook"` etc.).
 
 ## Platforms

@@ -4,7 +4,7 @@ description: "Initialize design project: DISCOVER goal + vibe, TARGET platforms,
 
 # Project Initialization (Phases 1-3)
 
-Interactive setup that captures your project's goal, selects target platforms, identifies the framework and toolchain, and locks in Storybook as the component sandbox. Produces a `design/manifest.json` that drives all subsequent phases.
+Interactive setup that captures your project's goal, selects target platforms, identifies the framework and toolchain, and locks in your tool choices. Produces a `design/manifest.json` that drives all subsequent phases. The sandbox defaults to **custom** — a native component browser generated in your framework during scaffold.
 
 ## Usage
 
@@ -476,7 +476,7 @@ After confirmation, verify adapter docs exist for chosen tools:
 **Mobile project example (with React Native Reusables):**
 ```
 Adapter check:
-  [x] storybook-native → docs/adapters/storybook-native.md (auto-selected for mobile)
+  [x] custom-sandbox   → docs/adapters/custom-sandbox.md (default for all platforms)
   [x] tailwind         → docs/adapters/tailwind.md
   [x] react-native-reusables → docs/adapters/react-native-reusables.md
 ```
@@ -484,7 +484,7 @@ Adapter check:
 **Mobile project example (with React Native Paper):**
 ```
 Adapter check:
-  [x] storybook-native → docs/adapters/storybook-native.md (auto-selected for mobile)
+  [x] custom-sandbox   → docs/adapters/custom-sandbox.md (default for all platforms)
   [x] tailwind         → docs/adapters/tailwind.md
   [x] react-native-paper → docs/adapters/react-native-paper.md
 ```
@@ -492,7 +492,7 @@ Adapter check:
 **Web project example (React):**
 ```
 Adapter check:
-  [x] storybook        → docs/adapters/storybook.md (auto-selected for web)
+  [x] custom-sandbox   → docs/adapters/custom-sandbox.md (default for all platforms)
   [x] tailwind         → docs/adapters/tailwind.md
   [ ] mantine          → No adapter found. Generic adapter will be used.
 ```
@@ -501,7 +501,7 @@ Adapter check:
 ```
 Adapter check:
   [x] sveltekit        → docs/adapters/sveltekit.md (framework adapter)
-  [x] storybook        → docs/adapters/storybook.md (auto-selected for web)
+  [x] custom-sandbox   → docs/adapters/custom-sandbox.md (default for all platforms)
   [x] tailwind         → docs/adapters/tailwind.md
   [x] shadcn-svelte    → docs/adapters/shadcn-svelte.md
 ```
@@ -524,7 +524,7 @@ Creates `{directory}/design/manifest.json`:
 **Single platform example (web):**
 ```json
 {
-  "version": "5.0.0",
+  "version": "6.0.0",
   "created": "2026-03-31",
   "goal": "Field service management app for HVAC technicians",
   "vibe": "clean, professional, high-contrast for outdoor use",
@@ -562,7 +562,7 @@ Creates `{directory}/design/manifest.json`:
 **Multi-platform example (mobile):**
 ```json
 {
-  "version": "5.0.0",
+  "version": "6.0.0",
   "created": "2026-03-31",
   "goal": "Field service management app for HVAC technicians",
   "vibe": "clean, professional, high-contrast for outdoor use",
@@ -659,7 +659,7 @@ After init completes:
 Initialization complete. Manifest saved to design/manifest.json
 
 Next: /pixel-perfect:scaffold
-  This will set up your project with {style} + {components} + Storybook
+  This will set up your project with {style} + {components} + your sandbox ({sandbox})
 
 To add another platform later: /pixel-perfect:add-platform
 ```
