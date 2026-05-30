@@ -55,11 +55,11 @@ Run /pixel-perfect:init to complete project setup.
 1. **Read manifest** - Load tool choices and vibe from `design/manifest.json`
 2. **Load adapters** - Read relevant adapter docs from `docs/adapters/`
 3. **Install tools** - Follow adapter scaffold steps
-4. **Configure Sandbox** - Build a native component browser by default (`custom`); or set up the chosen tool (Storybook, etc.)
+4. **Configure Sandbox** - Generate a native component browser by default (`custom` — see `docs/sandbox-spec.md`); or set up the chosen tool (Storybook, tui-sandbox, etc.)
 5. **Create theme** - Generate theme file from vibe (with frontend-design if available)
-6. **Enforce semantic colors** - Detect non-semantic color tokens, guide migration, verify in Storybook
+6. **Enforce semantic colors** - Detect non-semantic color tokens, guide migration, verify in sandbox
 7. **Generate design token stories** - Create visual documentation for Colors, Typography, Spacing, and Icons
-8. **Hello world** - Create first component + story with Storybook controls example
+8. **Hello world** - Create first component + story with sandbox controls example
 9. **Verify** - Confirm sandbox runs, token stories render, and hello-world component renders
 10. **Update manifest** - Set `scaffold: passed`
 
@@ -84,7 +84,7 @@ Read the selected platform's tool choices from `manifest.platforms[platform].too
 | `platforms[platform].tools.components` | `docs/adapters/{components}.md` |
 | `platforms[platform].tools.sandbox` | `docs/adapters/{sandbox}.md` |
 
-**Framework adapter (optional).** Some frameworks ship a dedicated adapter that teaches framework-specific project structure, Storybook setup, and story format (e.g., `docs/adapters/sveltekit.md`). Load `docs/adapters/{framework}.md` **if it exists**. React / Next.js / Vite have **no** framework adapter — their setup is the default path baked into `docs/adapters/storybook.md`, so finding none is expected and is **not** a warning.
+**Framework adapter (optional).** Some frameworks ship a dedicated adapter that teaches framework-specific project structure, sandbox setup, and story format (e.g., `docs/adapters/sveltekit.md`). Load `docs/adapters/{framework}.md` **if it exists**. React / Next.js / Vite have **no** framework adapter — their setup is the default path baked into `docs/adapters/custom-sandbox.md` (or `storybook.md` if Storybook was chosen), so finding none is expected and is **not** a warning.
 
 If no adapter exists for a **style, components, or sandbox** tool, load `docs/adapters/generic.md` and warn:
 ```
@@ -228,19 +228,20 @@ Semantic naming is STRONGLY RECOMMENDED because:
 
 If "Yes, migrate now": present the proposed semantic mapping table (non-semantic → semantic, with usage notes) and allow the user to confirm or adjust before applying.
 
-#### Storybook Verification Gate
+#### Sandbox Verification Gate
 
-**CRITICAL:** After semantic colors are applied, verify in Storybook before continuing:
+**CRITICAL:** After semantic colors are applied, verify in the sandbox before continuing:
 
 ```
-## Storybook Color Verification
+## Sandbox Color Verification
 
-Open Storybook and verify the Colors story:
+Run the sandbox and verify the Colors story:
+  → Run: npm run sandbox (or make sandbox / pnpm storybook)
   → Navigate to: Design System > Colors
   → Check all color swatches render correctly
   → Verify contrast ratios are acceptable
 
-? Do the colors look acceptable in Storybook?
+? Do the colors look acceptable in the sandbox?
     Yes, colors look good — continue to build
     No, I need to adjust colors — stay in scaffold
 ```
@@ -302,9 +303,9 @@ On success, update the selected platform's gates:
 
 ---
 
-## Storybook Organization
+## Sandbox Organization
 
-After scaffold, the sidebar structure is:
+After scaffold, the sidebar/catalog structure is (same layout for custom sandbox or Storybook):
 
 ```
 Design System/

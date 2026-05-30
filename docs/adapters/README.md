@@ -4,16 +4,16 @@ Adapters teach the AI how to scaffold, build, and verify components for specific
 
 ## How Adapters Work
 
-When a project runs `/pixel-perfect:init`, the user selects tools across these categories (the **sandbox** defaults to a **custom** native component browser — see `docs/sandbox-spec.md`):
+When a project runs `/pixel-perfect:init`, the user selects tools across these categories (the **sandbox** defaults to a **custom** native component browser — see `docs/sandbox-spec.md` for the "why"):
 
 | Category | What It Does | Examples |
 |----------|-------------|----------|
 | **Framework** | App framework — loaded only when an adapter exists | SvelteKit (React / Next.js / Vite use the default path) |
 | **Style** | Visual styling system | Tailwind CSS, NativeWind |
 | **Components** | UI component library | shadcn/ui, shadcn-svelte, React Native Paper |
-| **Sandbox** | Isolated component browser | **custom (default)**, Storybook, tui-sandbox |
+| **Sandbox** | Isolated component browser | **custom (default)**, Storybook (opt-in), tui-sandbox |
 
-The **framework** adapter is optional: it is loaded only when `docs/adapters/{framework}.md` exists (e.g. `sveltekit`). React / Next.js / Vite have no framework adapter — their setup is the default React path inside `storybook.md`.
+The **framework** adapter is optional: it is loaded only when `docs/adapters/{framework}.md` exists (e.g. `sveltekit`). React / Next.js / Vite have no framework adapter — their setup is the default path inside `custom-sandbox.md` (or `storybook.md` if the user opted into Storybook).
 
 Each selection maps to an adapter doc in this directory. The AI loads the relevant adapter docs and follows their guidance during scaffold, build, and verify phases.
 
@@ -35,7 +35,7 @@ Style and component adapters are loaded based on user selection during init. If 
 
 **Sandbox Defaults to `custom` (a Native Browser):**
 
-The default sandbox is `custom` — generated from scratch in the project's framework per `docs/sandbox-spec.md` (adapter: `custom-sandbox.md`). It is **not** tied to a platform; it matches the framework, renders the real components, and needs nothing extra installed. Off-the-shelf adapters are opt-in:
+The default sandbox is `custom` — generated from scratch in the project's framework per `docs/sandbox-spec.md` (adapter: `custom-sandbox.md`). It is **not** tied to a platform; it matches the framework, renders the real components, and needs nothing extra installed. This is the v6 default because it works for *every* platform (web, mobile, desktop, terminal) — Storybook only works in a browser. See `docs/sandbox-spec.md` for the full rationale. Off-the-shelf adapters are opt-in:
 
 | `tools.sandbox` | Adapter | When |
 |-----------------|---------|------|

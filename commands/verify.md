@@ -42,45 +42,45 @@ Run verification checks appropriate for the current build phase. Reports pass/fa
 
 ### Scaffold Gate
 
-Verifies the project is set up correctly with Storybook and theme.
+Verifies the project is set up correctly with the sandbox and theme.
 
 | Check | What It Verifies |
 |-------|-----------------|
 | Theme exists | Theme file exists at expected location |
-| Storybook runs | `npm run storybook` starts without errors |
-| Hello world renders | First component renders in Storybook with controls |
+| Sandbox runs | `npm run sandbox` (or `make sandbox` / `pnpm storybook`) starts without errors |
+| Hello world renders | First component renders in the sandbox with controls |
 | Token stories exist | Design System stories render (Colors, Typography, Spacing) |
 | Story organization | Stories use correct hierarchy prefixes (Design System/, Components/) |
 | Adapters loaded | Correct adapter docs loaded for chosen tools |
-| Polyfill configured | (React Native only) `react-native-web` alias configured |
+| Polyfill configured | (React Native + Storybook only) `react-native-web` alias configured |
 
 ```
 Scaffold verification:
   [x] Theme file exists (src/theme.ts)
-  [x] Storybook starts without errors
+  [x] Sandbox starts without errors (npm run sandbox)
   [x] HelloWorld component renders with controls
   [x] Token stories: Colors, Typography, Spacing
   [x] Story hierarchy: Design System/, Components/
-  [x] Adapters: tailwind.md, shadcn.md, storybook.md
-  [x] Polyfill: react-native-web alias configured
+  [x] Adapters: tailwind.md, shadcn.md, custom-sandbox.md
+  [x] Polyfill: n/a (not a Storybook RN project)
 
 Result: PASSED — scaffold gate advanced
 ```
 
 ### Atoms Gate
 
-Verifies all atomic components with Storybook controls.
+Verifies all atomic components with sandbox controls.
 
 | Check | What It Verifies |
 |-------|-----------------|
 | File exists | Component file at path in manifest |
-| Story exists | Companion `.stories.tsx` file alongside component |
+| Story exists | Companion story/registry file alongside component |
 | Compiles | No type errors or import errors |
-| Renders | Component visible in Storybook |
+| Renders | Component visible in the sandbox |
 | Uses theme | Theme tokens used (not hardcoded values) |
-| Controls wired | All component props have corresponding `argTypes` |
-| Story organization | Story title uses `Components/` prefix |
-| Polyfill disclaimer | (React Native only) Stories include polyfill notice decorator |
+| Controls wired | All component props exposed to sandbox controls (`argTypes` or labeled variants) |
+| Story organization | Registered under `Components/` layer (or `Components/` prefix in Storybook) |
+| Polyfill disclaimer | (React Native + Storybook only) Stories include polyfill notice decorator |
 | Aesthetic* | Font pairing, color hierarchy, intentional motion |
 
 *Aesthetic checks only run if frontend-design plugin is available.
@@ -92,11 +92,11 @@ Atoms verification (5 components):
     [x] File exists: src/components/StatusBadge.tsx
     [x] Story exists: src/components/StatusBadge.stories.tsx
     [x] Compiles without errors
-    [x] Renders in Storybook
+    [x] Renders in sandbox
     [x] Uses theme tokens
     [x] Controls: status (select), label (text), size (select), animated (boolean)
-    [x] Story title: 'Components/StatusBadge'
-    [x] Polyfill disclaimer present
+    [x] Layer: Components/StatusBadge
+    [x] Polyfill: n/a
     [x] Aesthetic: font pairing, color hierarchy
 
   JobCard:

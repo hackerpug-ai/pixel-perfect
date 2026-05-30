@@ -38,15 +38,15 @@ Reads `design/manifest.json` and displays:
 ## Sample Output
 
 ```
-pixel-perfect v5.0.0 — Project Status
+pixel-perfect v6.0.0 — Project Status
 ====================================
 
 Goal: Field service management app for HVAC technicians
 Vibe: clean, professional, high-contrast for outdoor use
 
 Platforms:
-  web-desktop  [compose passed]     vite + tailwind + shadcn -> storybook
-  mobile-ios   [scaffold pending]   expo + nativewind + react-native-reusables -> storybook-native
+  web-desktop  [compose passed]     vite + tailwind + shadcn -> custom sandbox
+  mobile-ios   [scaffold pending]   expo + nativewind + react-native-reusables -> custom sandbox
 
 --- web-desktop ---
 
@@ -62,7 +62,7 @@ Platforms:
     Style:      Tailwind CSS      (adapter: tailwind.md)
     Components: shadcn/ui         (adapter: shadcn.md)
     Icons:      Lucide React      (adapter: n/a)
-    Sandbox:    Storybook         (adapter: storybook.md)
+    Sandbox:    Custom            (adapter: custom-sandbox.md)
 
   Atoms (5/5 verified):
     [x] StatusBadge     src/components/StatusBadge.tsx        (controls: yes)
@@ -89,7 +89,7 @@ Platforms:
     Style:      NativeWind        (adapter: nativewind.md)
     Components: React Native Reusables (adapter: react-native-reusables.md)
     Icons:      Lucide React Native (adapter: n/a)
-    Sandbox:    storybook-native  (adapter: storybook-native.md)
+    Sandbox:    Custom            (adapter: custom-sandbox.md)
 
 frontend-design: available (aesthetic gates active)
 wireframes:     design/wireframes/ (3 screens) — structural targets
@@ -104,7 +104,7 @@ Next: Scaffold the mobile-ios platform
 If no `design/manifest.json` exists in the directory or parents:
 
 ```
-pixel-perfect v5.0.0 — Project Status
+pixel-perfect v6.0.0 — Project Status
 ====================================
 
 Status: Not initialized

@@ -45,7 +45,7 @@ Display what's already configured:
 
 ```
 Current platforms:
-  web-desktop  [compose passed]   vite + tailwind + shadcn -> storybook
+  web-desktop  [compose passed]   vite + tailwind + shadcn -> custom sandbox
 ```
 
 ## Step 2: Platform Selection
@@ -89,12 +89,11 @@ Follow the same PRD keyword detection and `package.json` auto-detection logic fr
 
 ## Step 4: EQUIP Validation
 
-Auto-select sandbox based on platform (same mapping as init Phase 3):
+The **sandbox defaults to `custom`** for all platforms (a native component browser generated in the target framework per `docs/sandbox-spec.md`). Use the same sandbox choice flow as init Phase 3 — custom by default, Storybook/tui-sandbox only if the user asks.
 
-| Platform | Sandbox |
+| Platform | Default Sandbox |
 |----------|---------|
-| `web-desktop`, `web-mobile` | `storybook` |
-| `mobile-ios`, `mobile-android` | `storybook-native` |
+| all platforms | `custom` (native browser generated in the framework) |
 
 Present confirmation summary:
 
@@ -105,7 +104,7 @@ Adding platform "web-mobile":
   Style:       Tailwind CSS
   Components:  shadcn/ui
   Icons:       Lucide React
-  Sandbox:     storybook (auto-selected for web)
+  Sandbox:     custom (native Next.js component browser)
 
 ? Confirm and add to manifest? [Yes / Change something]
 ```
@@ -116,7 +115,7 @@ Validate adapter availability (include the framework adapter when one exists, e.
 ```
 Adapter check:
   [x] sveltekit      -> docs/adapters/sveltekit.md   (framework adapter)
-  [x] storybook      -> docs/adapters/storybook.md
+  [x] custom-sandbox -> docs/adapters/custom-sandbox.md (default)
   [x] tailwind       -> docs/adapters/tailwind.md
   [x] shadcn-svelte  -> docs/adapters/shadcn-svelte.md
 ```
@@ -135,7 +134,7 @@ Add the new platform entry to `manifest.platforms`:
         "style": "tailwind",
         "components": "shadcn",
         "icons": "lucide-react",
-        "sandbox": "storybook"
+        "sandbox": "custom"
       },
       "phase": "equip",
       "gates": {
@@ -161,10 +160,10 @@ Platform "web-mobile" added successfully.
   Style:       Tailwind CSS
   Components:  shadcn/ui
   Icons:       Lucide React
-  Sandbox:     storybook (auto-selected for web)
+  Sandbox:     custom (native Next.js component browser)
 
 Next: /pixel-perfect:scaffold --platform web-mobile
-  This will set up the web-mobile project with Tailwind CSS + shadcn/ui + storybook
+  This will set up the web-mobile project with Tailwind CSS + shadcn/ui + custom sandbox
 ```
 
 ## What It Does NOT Do
