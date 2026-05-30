@@ -276,12 +276,12 @@ For each component, in order:
    - If frontend-design is available: distinctive typography, intentional color hierarchy, considered motion
 
 3. **Write story file:**
-   - Uses CSF3 format for Storybook
+   - Registered in the project's sandbox (the sandbox adapter defines the format — for `custom`, a registry entry in the target language per `docs/sandbox-spec.md`; for Storybook, CSF3)
    - Shows all states (default, loading, error, disabled, etc.)
    - Uses realistic mock data
    - **Story title MUST use `Components/` prefix** (e.g., `title: 'Components/StatusBadge'`)
    - Includes `parameters.docs.description` for auto-generated docs
-   - **ALL props MUST be wired to Storybook controls via `argTypes`**
+   - **ALL props MUST be exposed to the sandbox's controls** (Storybook `argTypes`; or rendered as labeled variants in a `custom` sandbox)
    - Controls use the appropriate type for each prop:
      - `select` for enums / union types
      - `boolean` for flags
@@ -372,8 +372,8 @@ For each component, in order:
    - File exists at path recorded in manifest
    - Story file exists alongside component
    - Compilation succeeds (no type errors, no import errors)
-   - Component renders in Storybook
-   - All props are wired to argTypes controls
+   - Component renders in the sandbox (in isolation, under its layer)
+   - All props are exposed to the sandbox's controls / variants
    - If a deconstruction `target` exists for this atom: the rendered component matches the mockup's structure, tokens, and states (the literal pixel-perfect goal)
 
 5. **Aesthetic gate** (if frontend-design available):
@@ -469,7 +469,7 @@ For each molecule, in order:
    - File location: `src/molecules/MoleculeName.tsx` (or equivalent per framework)
 
 3. **Write story file:**
-   - Uses CSF3 format for Storybook
+   - Registered in the project's sandbox (the sandbox adapter defines the format — for `custom`, a registry entry in the target language per `docs/sandbox-spec.md`; for Storybook, CSF3)
    - **Story title MUST use `Molecules/` prefix** (e.g., `title: 'Molecules/JobRow'`)
    - Shows molecule in realistic context with all variant combinations
    - All molecule-level props wired to `argTypes` controls
@@ -513,7 +513,7 @@ For each molecule, in order:
 4. **Verify:**
    - Molecule renders without errors
    - Constituent atoms are composed (not re-implemented)
-   - Story loads in Storybook under `Molecules/` hierarchy
+   - Registered in the sandbox under the `Molecules/` layer
    - All props wired to argTypes controls
 
 5. **Update manifest:**
@@ -594,7 +594,7 @@ For each screen:
    - If frontend-design available: intentional visual hierarchy, considered negative space, eye-flow guidance
 
 3. **Write screen story:**
-   - Uses CSF3 format for Storybook
+   - Registered in the project's sandbox (the sandbox adapter defines the format — for `custom`, a registry entry in the target language per `docs/sandbox-spec.md`; for Storybook, CSF3)
    - **Story title MUST use `Screens/` prefix** (e.g., `title: 'Screens/TodayFeed'`)
    - Realistic mock data
    - Shows primary state and key variations (empty state, loading state, error state)
@@ -724,8 +724,8 @@ Build complete for {platform}!
   Screens:  2/2 verified
 
 All phases passed for {platform}. Your project has running code with:
-  - 5 themed components with full Storybook controls
-  - Functional molecule compositions sandboxed in Storybook
+  - 5 themed components registered in the sandbox with full controls
+  - Functional molecule compositions in the sandbox
   - 2 composed screens at target viewport
 
 To iterate: /pixel-perfect:refine --platform {platform}

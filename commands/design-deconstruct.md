@@ -4,7 +4,7 @@ description: "Optional first step: deconstruct existing UI (code, URL, screensho
 
 # Design Deconstruct (Phase 0 — optional on-ramp)
 
-Most pixel-perfect projects start from a PRD. **This command lets you start from an existing design instead.** Point it at any UI — a running site, a component repo, a screenshot, a Claude Design export, or a written concept — and it produces a **token-governed atomic design system of HTML mockups** under `design/system/`, then wires those outputs so `init` → `scaffold` → `build` reconstruct them as real, themed components in Storybook.
+Most pixel-perfect projects start from a PRD. **This command lets you start from an existing design instead.** Point it at any UI — a running site, a component repo, a screenshot, a Claude Design export, or a written concept — and it produces a **token-governed atomic design system** under `design/system/` (tokens + atoms…views as HTML/PNG pixel-targets). **When a target framework is known** (detected from the repo/manifest, or `--framework`), it goes further and **builds the real components in that framework** with a native sandbox (Step 2.5) — the HTML/PNG become the pixel-targets the code is matched against. When no target is known, it stops at the mocks + seed, and `init → scaffold → build` build them later.
 
 This does **not** contradict pixel-perfect's "skip the mockup abstraction" philosophy. The deconstructed HTML is a *precise, token-governed reference spec* — clean markup + semantic tokens the AI reads perfectly ("AI reads code better than pixels"). It is the **target**, never the deliverable: the real framework components still supersede it. Mockups live in `design/system/` and are never shipped.
 
@@ -36,6 +36,8 @@ design-deconstruct (Phase 0, optional)   ← you have existing UI or a concept
 
 - `--output <dir>`: design-system output directory (default: `design/system`)
 - `--from <type>`: force the input type (`code` | `url` | `image` | `html` | `concept`) instead of auto-detecting
+- `--framework <id>` (alias `--target`): the **target framework/lang** to build into (e.g. `react`, `sveltekit`, `rust-gpui`, `rust-tui`, `swiftui`). When set (or detected), deconstruct **builds the real components in that framework** (Step 2.5), not just HTML mocks.
+- `--html-only`: never build native — produce HTML mocks + seed only, even if a target is detected (the classic on-ramp)
 - `--name <name>`: name for the generated concept file (default: derived from the source)
 - `--resume-from <phase>`: resume the deconstruction at a phase (`tokens` | `atoms` | `molecules` | `organisms` | `views`)
 - `--force`: full re-deconstruction, ignoring existing output
@@ -55,8 +57,9 @@ design-deconstruct (Phase 0, optional)   ← you have existing UI or a concept
    - **Available** → delegate the deconstruction to it (Step 2A). This mirrors how pixel-perfect optionally delegates aesthetics to `frontend-design`.
    - **Not available** → run the **built-in fallback** deconstruction (Step 2B). The fallback is real (it extracts tokens and emits atom + screen HTML mockups) but lighter (no PDF, PNG only if headless Chrome is present, no cascade engine). Tell the user which engine ran.
 2. **Renderer.** Check for headless Chrome (`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` on macOS, or `google-chrome`/`chromium` on PATH). PNG snapshots require it. If absent, continue with HTML-only mockups and note the degradation — **do not fail**.
+3. **Target framework.** Resolve the lang/framework the design will be **built into**, in priority order: `--framework`/`--target` flag → the manifest's `tools.framework` (if a manifest exists) → **detect from the current repo** (`Cargo.toml` + GPUI deps → `rust-gpui`; `Cargo.toml` + ratatui → `rust-tui`; `package.json` + React/Next/Vite/Svelte → that web framework; a `Makefile` `sandbox` target → match its toolchain; `*.xcodeproj` / SwiftUI → `swiftui`). If a target is found **and** `--html-only` is not set → **native mode** (Step 2.5). If none is found → **HTML-only mode** (the on-ramp): produce mocks + seed; the target is chosen later at `init`.
 
-Report the detected engine + renderer before proceeding. Never silently substitute a stub for the deconstruction.
+Report the detected engine + renderer + **target + mode (native | html-only)** before proceeding. Never silently substitute a stub for the deconstruction.
 
 ### Step 1: Acquire & normalize the source into a concept HTML
 
@@ -93,6 +96,18 @@ Produce the same `<output>/` shape, lighter but **real** — not a stub:
 3. **PNGs** — if headless Chrome is present, render each HTML to a sibling `.png` with a headless screenshot, e.g. `"<chrome>" --headless --screenshot="<name>.png" --window-size=1320,2400 --hide-scrollbars "<name>.html"` (use the resolved Chrome/Chromium path from Step 0). If Chrome is absent, skip PNGs and note it — HTML mockups alone are still usable targets.
 4. Write `<output>/manifest.json` recording engine=`builtin`, the concept path, and any gaps.
 
+### Step 2.5: Native reconstruct — build in the target framework (native mode only)
+
+When a target framework was resolved (Step 0.3) and `--html-only` is not set, **don't stop at HTML mocks — build the real components in the target framework**, keeping `design/system/` HTML/PNG as pixel-targets. This runs the pixel-perfect build *natively from the deconstruction*, through the layer gates (it **is** the gated build, just native). Load `docs/sandbox-spec.md` + `docs/adapters/custom-sandbox.md` (and the framework adapter if one exists), then:
+
+1. **Token codegen.** Generate target-language tokens from `design/system/tokens/theme.{light,dark}.json` — `build.rs` constants for Rust, CSS vars / a tokens module for web, a `Palette` for TUI, a `Tokens` type for native-mobile. Components reference these — never hardcode.
+2. **Native sandbox.** Generate the component browser (registry + two-pane navigator + run command) per `custom-sandbox.md`. (Use Storybook only if `tools.sandbox` is `storybook*`.)
+3. **Build the layers, gated.** In order — **atoms → molecules → organisms → views** — build each item as a **real component in the target framework**, register it in the sandbox under its layer, and add a `// Target: design/system/{layer}/{name}/dark.png` reference. Match the mockup's structure / tokens / states. Honor the layer gates: a layer must render in the sandbox before the next (and the theme/color confirm gate before atoms). Pause for the same human checkpoints `build` uses.
+4. **Pixel-targets stay.** The HTML/PNG in `design/system/` remain the design spec; the target-framework code is the deliverable.
+5. **Record in the manifest.** Write/update `design/manifest.json`: set `tools.framework` + `tools.sandbox: "custom"`, the built `atoms`/`molecules`/`screens` inventory (status `verified`, each with its `target`), and mark the matching gates built — so a later `status`/`build` sees a built native project, not a fresh one.
+
+The result is a **running native component browser** of real components (`make sandbox` / `npm run sandbox`). HTML-only mode skips this step entirely.
+
 ### Step 3: Wire outputs into pixel-perfect
 
 (Skip this entire step if `--no-seed`.) Translate the design system into pixel-perfect's process inputs:
@@ -128,21 +143,24 @@ Produce the same `<output>/` shape, lighter but **real** — not a stub:
 ### Step 4: Report + next step
 
 ```
-Deconstructed: <source>  (engine: skill | builtin; renderer: chrome | html-only)
+Deconstructed: <source>  (engine: skill | builtin; renderer: chrome | html-only; mode: native | html-only)
 
   design/concepts/<name>.html      normalized concept
-  design/system/                   tokens + atoms…views (HTML mockups[, PNGs])
+  design/system/                   tokens + atoms…views (HTML/PNG pixel-targets)
   design/theme-seed.json           semantic theme for scaffold
   design/deconstruction.json       inventory + pixel-perfect targets
 
   Inventory: N atoms, N molecules, N organisms, N views
   [skipped: <screens not captured>]   ← only if a source was sampled
 
-These HTML mockups are design TARGETS — pixel-perfect will build real, themed
-components in Storybook to match them.
+— Native mode (target framework known) also produced:
+  <sandbox>/                       native component browser — real {framework} components
+  Run it:  make sandbox  /  npm run sandbox
+  The design/system/ HTML/PNG are the pixel-targets the code was matched to.
 
-Next: /pixel-perfect:init   (it will detect design/system/ and pre-seed vibe,
-theme, and the screen/atom inventory)
+Next:
+  • native mode → review the running sandbox; iterate with /pixel-perfect:refine
+  • html-only  → /pixel-perfect:init (detects design/system/ + pre-seeds vibe, theme, inventory)
 ```
 
 ---

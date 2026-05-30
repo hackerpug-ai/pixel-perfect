@@ -55,7 +55,7 @@ Run /pixel-perfect:init to complete project setup.
 1. **Read manifest** - Load tool choices and vibe from `design/manifest.json`
 2. **Load adapters** - Read relevant adapter docs from `docs/adapters/`
 3. **Install tools** - Follow adapter scaffold steps
-4. **Configure Storybook** - Platform-aware setup (native for mobile, web for web projects)
+4. **Configure Sandbox** - Build a native component browser by default (`custom`); or set up the chosen tool (Storybook, etc.)
 5. **Create theme** - Generate theme file from vibe (with frontend-design if available)
 6. **Enforce semantic colors** - Detect non-semantic color tokens, guide migration, verify in Storybook
 7. **Generate design token stories** - Create visual documentation for Colors, Typography, Spacing, and Icons
@@ -134,11 +134,15 @@ After pulling:
 
 Follow `docs/adapters/{components}.md` for the exact component list and story template.
 
-### Step 3: Configure Storybook
+### Step 3: Configure Sandbox
 
 Check `manifest.platforms[platform].tools.sandbox`:
-- `"storybook-native"` -> Follow `docs/adapters/storybook-native.md`
+- `"custom"` (**default**) -> **Build a native component browser from scratch** per `docs/adapters/custom-sandbox.md` (implementing `docs/sandbox-spec.md`): create the sandbox project for the framework, the token codegen (`theme.*.json` → target constants), the registry + two-pane navigator, and a run command. Nothing off-the-shelf to install.
 - `"storybook"` -> Follow `docs/adapters/storybook.md`
+- `"storybook-native"` -> Follow `docs/adapters/storybook-native.md`
+- `"tui-sandbox"` -> Follow `docs/adapters/tui-sandbox.md`
+
+If a **framework adapter** was loaded (e.g. `sveltekit.md`), apply its sandbox-setup guidance for the chosen sandbox.
 
 **Troubleshooting React/React-DOM version mismatch:** If Storybook shows `Invalid hook call` or blank page errors, run `npm ls react react-dom` to check for version conflicts. Install the matching `react-dom` version and use `overrides` in package.json to prevent drift on future installs.
 
@@ -243,14 +247,14 @@ Open Storybook and verify the Colors story:
 
 This is a **gate** — scaffold cannot complete until user confirms colors are acceptable. If "No", scaffold pauses until the user fixes colors manually.
 
-### Step 5: Generate Design Token Stories
+### Step 5: Generate the Token Catalog
 
-Create four stories under the `Design System/` group:
+Register a token catalog in the sandbox under the **Tokens** layer (in Storybook these are `Design System/` stories; in a `custom` sandbox, Tokens-layer registry entries):
 
-- `Design System/Colors` — Color swatches from theme palette
-- `Design System/Typography` — Font scale with all type variants
-- `Design System/Spacing` — Spacing scale visualization
-- `Design System/Icons` — Icon gallery (only if icon library is configured)
+- **Colors** — Color swatches from theme palette
+- **Typography** — Font scale with all type variants
+- **Spacing** — Spacing scale visualization
+- **Icons** — Icon gallery (only if icon library is configured)
 
 Follow `docs/adapters/{components}.md` for the correct theme access method (useTheme hook, CSS vars, Tailwind config, etc.) and adapt the story to the actual theme structure. For native projects, stories must use React Native components — not HTML.
 
@@ -267,7 +271,7 @@ The hello-world story is a **reference example** for all future component storie
 
 ```
 Verification:
-  [x] Storybook starts
+  [x] Sandbox runs (`npm run sandbox` / `make sandbox` / Storybook)
   [x] Design System/Colors renders palette
   [x] Design System/Typography renders font scale
   [x] Design System/Spacing renders spacing boxes

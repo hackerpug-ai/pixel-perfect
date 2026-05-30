@@ -4,7 +4,7 @@
 
 # pixel-perfect
 
-A Claude Code plugin that skips the mockup abstraction entirely. Instead of generating designs that get "lost in translation," it scaffolds real components (React or SvelteKit) during design ideation — all sandboxed in Storybook.
+A Claude Code plugin that skips the mockup abstraction entirely. Instead of generating designs that get "lost in translation," it builds the **real components in your target framework** during design ideation — browsable in a **native sandbox** it generates from scratch (Storybook optional).
 
 ---
 
@@ -14,14 +14,14 @@ Your Figma mock is not your product. And AI just made that abstraction obsolete.
 
 **AI reads code better than it reads pixels.** That insight flipped everything. Why mock when you can just… make the thing?
 
-The unlock was Storybook. That tool everyone wants to use but nobody has time to set up? Turns out when you can generate stories automatically, the platform actually works.
+The unlock was the **sandbox** — a tiny component browser. Storybook is one web version of it; but the AI can generate one from scratch in *any* framework. Turns out when the sandbox builds itself, every stack gets one.
 
 pixel-perfect follows the organic design process:
 1. Define theme tokens
 2. Build atomic components
 3. Scaffold entire views
 
-All in a Storybook sandbox. All production-ready from the start. No more pointing at the moon — you just go there.
+All in a sandbox — native to your framework (or Storybook, if you prefer). All production-ready from the start. No more pointing at the moon — you just go there.
 
 ---
 
@@ -82,17 +82,20 @@ The UI library is completely flexible — use whatever you want or build from sc
 
 ---
 
-## Storybook as the Sandbox
+## The Sandbox — a spec, not a tool
 
-Storybook is the universal sandbox. Every component, design token, and screen gets a story — viewable immediately, interactive from day one.
+A **sandbox** is just a component browser: it catalogs your components by layer and renders each one in isolation, themed. Storybook is *one* implementation of that idea (for the web) — not the idea. So pixel-perfect treats the sandbox as a **spec** ([`docs/sandbox-spec.md`](docs/sandbox-spec.md)) and, by default, **builds one from scratch in your target framework** — rendering the *real* components, nothing extra to install. An off-the-shelf tool is used only if you ask.
 
-| Platform | Sandbox | Launch |
-|----------|---------|--------|
-| Web (React, Next.js, Vite, SvelteKit) | Browser Storybook | `pnpm storybook` → localhost:6006 |
-| Mobile (React Native, Expo) | On-device Storybook | `pnpm storybook` → iOS Simulator / Android Emulator |
-| TUI / CLI | tui-sandbox | `tsbx dev` → terminal preview |
+The spec is ~7 small pieces (a layer-keyed story registry · isolated render · a two-pane navigator · token codegen from `theme.*.json` · a run command · pixel-target refs). It's derived from two real, running sandboxes built from scratch in Rust — a GPUI desktop one and a Ratatui TUI one — the same concept in totally different paradigms.
 
-> **Note:** tui-sandbox support is experimental and not yet released as a standalone package. The adapter docs and integration are included for early feedback, but the tui-sandbox tooling may change significantly before a stable release.
+| `tools.sandbox` | What you get | Launch |
+|-----------------|-------------|--------|
+| **`custom`** (default) | a native component browser generated in your framework | `npm run sandbox` / `make sandbox` |
+| `storybook` | off-the-shelf Storybook (web) | `pnpm storybook` → localhost:6006 |
+| `storybook-native` | on-device Storybook (RN/Expo) | `pnpm storybook` → simulator |
+| `tui-sandbox` | terminal browser (experimental) | `tsbx dev` |
+
+> **v6 (breaking):** the default sandbox is now `custom`, not Storybook. Existing projects that want to keep Storybook: set `"sandbox": "storybook"` under the platform's `tools` in `design/manifest.json`.
 
 The scaffold phase sets everything up. You just run `pnpm storybook` and start building.
 
@@ -164,13 +167,13 @@ It normalizes the source into a concept HTML, then deconstructs it into a **toke
 - the **inventory** pre-fills the atom / molecule / screen build lists
 - each **view mockup** becomes a pixel-perfect *target* the real component is built to match
 
-**This does not contradict "skip the mockup abstraction."** The deconstructed HTML is a precise, token-governed *reference spec* — clean markup the AI reads perfectly — not a lossy hand-drawn mock, and never the deliverable. The real React/SvelteKit components in Storybook still supersede it. When the standalone `design-deconstruct` skill is installed, pixel-perfect delegates to it; otherwise a lighter built-in path runs.
+**This does not contradict "skip the mockup abstraction."** The deconstructed HTML is a precise, token-governed *reference spec* — clean markup the AI reads perfectly — not a lossy hand-drawn mock, and never the deliverable. The real components in your framework's native sandbox still supersede it. When the standalone `design-deconstruct` skill is installed, pixel-perfect delegates to it; otherwise a lighter built-in path runs.
 
 ### Wireframe first (the low-fi rung)
 
 When you're starting from **plans** rather than existing UI, run `/pixel-perfect:wireframe` first. It turns a PRD / sprint plan / spec (or a one-line concept) into **ASCII box-drawing wireframes** in `design/wireframes/` — one per screen, desktop + mobile, annotated and mapped to the components they imply. No renderer, no pixels: it commits the *structure* (layout, IA, hierarchy, states) cheaply. That gives the full **fidelity ladder**:
 
-> **wireframe** (ASCII, structure) → **mockup** (HTML, design-deconstruct / high-fi) → **component** (real, Storybook)
+> **wireframe** (ASCII, structure) → **mockup** (HTML, design-deconstruct / high-fi) → **component** (real, in your framework's native sandbox)
 
 Each rung is a *target* the next is built to match. Wireframes feed `design-deconstruct` directly (`/pixel-perfect:design-deconstruct design/wireframes`) or seed `init` (it detects them and pre-fills your screen list).
 
@@ -184,7 +187,7 @@ Adapters are reference docs that teach the AI how to scaffold, build, and verify
 |----------|-----------------|-------------|
 | **Style** | Visual styling | User selects a style system |
 | **Components** | UI component library | User selects a component library |
-| **Sandbox** | Preview environment | Always (Storybook) |
+| **Sandbox** | Component browser | `custom` by default (Storybook opt-in) |
 
 ### Included Adapters
 
@@ -195,8 +198,9 @@ Adapters are reference docs that teach the AI how to scaffold, build, and verify
 | shadcn/ui | components (web) | stable |
 | shadcn-svelte / Bits UI / Skeleton | components (Svelte) | stable |
 | React Native Paper | components (mobile) | stable |
-| Storybook | sandbox | stable |
-| tui-sandbox | sandbox (TUI/CLI) | experimental |
+| Custom Sandbox | sandbox (**default**) | stable |
+| Storybook / Storybook Native | sandbox (opt-in) | stable |
+| tui-sandbox | sandbox (opt-in, TUI/CLI) | experimental |
 | Lipgloss / Rich / Ink | style (TUI) | experimental |
 | Bubbletea / Textual / Ink | components (TUI) | experimental |
 | Generic | fallback | stable |
@@ -221,7 +225,7 @@ No specific library is required. Select "None" or "Other" with a docs URL, and t
     "framework": "vite",
     "style": "tailwind",
     "components": "shadcn",
-    "sandbox": "storybook"
+    "sandbox": "custom"
   },
   "phase": "atoms",
   "gates": {

@@ -401,26 +401,28 @@ You selected React Native Reusables.
 
 ## Phase 3: EQUIP
 
-Confirm tool selections, validate adapter availability, and lock the manifest. Storybook is the sandbox -- this is non-negotiable.
+Confirm tool selections, validate adapter availability, and lock the manifest. The **sandbox** defaults to a **custom** native component browser built from scratch in the target framework (see `docs/sandbox-spec.md`). An off-the-shelf tool (Storybook, tui-sandbox) is used only if the user asks.
 
-### Sandbox: Platform-Aware Selection
+### Sandbox: Custom by Default
 
-The sandbox is automatically determined by platform:
+The sandbox defaults to **`custom`** — a native component browser generated from scratch in the project's framework, implementing `docs/sandbox-spec.md` (adapter: `docs/adapters/custom-sandbox.md`). It renders the *real* components; nothing extra to install.
 
-| Platform | Sandbox Variant | Adapter |
-|----------|-----------------|---------|
-| `mobile-ios`, `mobile-android` | Storybook Native | `storybook-native.md` |
-| `web-desktop`, `web-mobile` | Storybook Web | `storybook.md` |
-
-This is **not a user choice**. Each platform entry in the manifest records the platform-appropriate sandbox variant automatically:
+Only offer a sandbox choice if the user asks for one (or mentions Storybook in the PRD):
 
 ```
-Sandbox: Storybook Native (auto-selected for mobile)
+? Sandbox (how components are previewed in isolation):
+  > custom — native component browser, built in {framework} (recommended)
+    storybook — off-the-shelf (web; storybook-native for mobile)
+    tui-sandbox — for terminal UIs
 ```
-or
-```
-Sandbox: Storybook Web (auto-selected for web)
-```
+
+| Choice | Adapter | When |
+|--------|---------|------|
+| `custom` (default) | `custom-sandbox.md` | any framework — the native, from-scratch browser |
+| `storybook` / `storybook-native` | `storybook.md` / `storybook-native.md` | user asks for Storybook (web / mobile) |
+| `tui-sandbox` | `tui-sandbox.md` | terminal UIs |
+
+Record the choice in `platforms[platform].tools.sandbox` (default `"custom"`).
 
 ### Confirmation Summary
 
@@ -434,7 +436,7 @@ Your configuration:
   Style:       {selected_style}
   Components:  {selected_components}
   Icons:       {selected_icons}
-  Sandbox:     {auto_selected_sandbox}
+  Sandbox:     {selected_sandbox}   (default: custom — native browser)
 
 ? Confirm and write manifest? [Yes / Change something]
 ```
@@ -448,7 +450,7 @@ Your configuration:
   Style:       Tamagui
   Components:  React Native Reusables
   Icons:       Lucide React Native
-  Sandbox:     Storybook Native (auto-selected for mobile)
+  Sandbox:     custom (native Expo component browser)
 ```
 
 **Web example:**
@@ -460,7 +462,7 @@ Your configuration:
   Style:       Tailwind CSS
   Components:  shadcn/ui
   Icons:       Lucide React
-  Sandbox:     Storybook Web (auto-selected for web)
+  Sandbox:     custom (native Next.js component browser)
 ```
 
 If the user wants to change something, loop back to the relevant step.
@@ -542,7 +544,7 @@ Creates `{directory}/design/manifest.json`:
         "style": "tailwind",
         "components": "shadcn",
         "icons": "lucide-react",
-        "sandbox": "storybook"
+        "sandbox": "custom"
       },
       "phase": "equip",
       "gates": {
@@ -580,7 +582,7 @@ Creates `{directory}/design/manifest.json`:
         "style": "nativewind",
         "components": "react-native-reusables",
         "icons": "lucide-react-native",
-        "sandbox": "storybook-native"
+        "sandbox": "custom"
       },
       "phase": "equip",
       "gates": {
@@ -597,7 +599,7 @@ Creates `{directory}/design/manifest.json`:
         "style": "nativewind",
         "components": "react-native-reusables",
         "icons": "lucide-react-native",
-        "sandbox": "storybook-native"
+        "sandbox": "custom"
       },
       "phase": "equip",
       "gates": {
@@ -630,7 +632,7 @@ The `spec` field is the path to the spec/PRD document (relative to the project r
         "components": "react-native-paper",
         "icons": "custom",
         "icons_docs": "https://example.com/icons/docs",
-        "sandbox": "storybook"
+        "sandbox": "custom"
       }
     }
   }

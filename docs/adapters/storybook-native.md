@@ -2,6 +2,8 @@
 
 > Native on-device Storybook for React Native/Expo using `@storybook/react-native`
 
+> **Optional / opt-in.** pixel-perfect's default sandbox is a `custom` native browser (see `docs/sandbox-spec.md`). Use this adapter only when the user asks for on-device Storybook (`tools.sandbox: "storybook-native"`).
+
 ## Platforms
 
 - `mobile-ios`
