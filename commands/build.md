@@ -110,6 +110,140 @@ Molecules required: JobRow (StatusBadge + DateChip) — pattern repeated in 3 sc
 Screens required:   TodayFeed, JobDetail — both missing
 ```
 
+### Step 2b: Ecosystem Scan (Component Library Recommendations)
+
+Before committing to building custom components, scan the planned atom/molecule list against well-supported ecosystem libraries. Many UI patterns — tables, calendars, charts, date pickers, command palettes, rich-text editors, drag-and-drop, carousels — have mature, battle-tested libraries that are almost always a better choice than rolling your own.
+
+**Purpose:** Catch opportunities where a popular, well-maintained library can replace a planned custom build — saving time, reducing bugs, and giving the user a richer feature set out of the box.
+
+#### When to Scan
+
+This step runs for every component in the ACTIVE atoms and molecules lists. It is **not** a full research phase — it is a lightweight, targeted check.
+
+#### How It Works
+
+For each planned component, evaluate whether it matches a known "complex UI pattern" category. These are patterns where the ecosystem consensus is strong and the build-vs-adopt calculus overwhelmingly favors adopting:
+
+**Category → Ecosystem Library Map (defaults — always verify current popularity via web search):**
+
+| Pattern Category | When It Triggers | Example Libraries (verify before recommending) |
+|---|---|---|
+| **Data Table / Data Grid** | Component renders rows/columns with sorting, filtering, pagination, or selection | TanStack Table, AG Grid, react-data-table-component |
+| **Chart / Data Visualization** | Component renders charts, graphs, sparklines, or analytics | Recharts, Chart.js, Nivo, Victory, D3 |
+| **Date Picker / Calendar** | Component involves date selection, date ranges, or calendar views | react-datepicker, react-day-picker, @mui/x-date-pickers |
+| **Rich Text / WYSIWYG Editor** | Component is a text editor with formatting controls | TipTap, Slate.js, ProseMirror, Lexical |
+| **Command Palette** | Component is a Cmd+K / Spotlight-style quick-action overlay | cmdk, kbar |
+| **Drag and Drop** | Component involves reordering, kanban boards, or sortable lists | @dnd-kit, react-beautiful-dnd, Pragmatic drag-and-drop |
+| **Carousel / Slider** | Component is an image or content carousel | Embla Carousel, Swiper, react-slick |
+| **Form Validation** | Multiple form components or complex form state | React Hook Form, Formik, Conform |
+| **Infinite Scroll / Virtualized List** | Component renders large lists with scroll-based loading | TanStack Virtual, react-window, react-virtuoso |
+| **Maps / Geospatial** | Component renders a map or location picker | Mapbox GL, Leaflet, react-map-gl |
+| **File Upload / Dropzone** | Component handles file selection, drag-to-upload, progress | react-dropzone, uppy, filepond |
+| **Toast / Notification System** | Component manages ephemeral notification stack | react-hot-toast, sonner, notistack |
+| **Modals / Dialogs (complex)** | Multi-step wizards, nested dialogs, or complex overlay stacks | The component library usually handles this; flag only if the need exceeds it |
+| **Animation / Motion** | Complex orchestrated animations or gesture-driven interactions | Framer Motion, react-spring, Motion One |
+
+> **This is not an exhaustive list.** When a planned component doesn't match a known category but *feels* complex (many states, accessibility requirements, cross-browser edge cases), err on the side of searching.
+
+#### The Scan Process
+
+1. **Categorize:** For each planned atom/molecule, determine if it falls into one of the pattern categories above (or seems like it *might* benefit from an ecosystem library).
+
+2. **Check existing tools:** If the user's chosen component adapter already provides this component (e.g., shadcn/ui has a Data Table built on TanStack Table), note that the adapter covers it and move on — no recommendation needed.
+
+3. **Web search when uncertain:** If a planned component *might* match a category but you're not sure what the current best-in-class library is (or whether the landscape has shifted), **use available web search tools** to verify. Query pattern:
+   ```
+   "best {framework} {pattern} library 2026"
+   "{framework} {pattern} component library npm"
+   ```
+   Prefer libraries that are:
+   - **Actively maintained** (commits in the last 6 months)
+   - **Popular** (high npm weekly downloads, many GitHub stars)
+   - **Framework-native** (React lib for React, Svelte lib for Svelte, etc.)
+   - **Compatible** with the project's existing component adapter where possible
+
+4. **Present recommendations:** For each component where a library match was found, present the recommendation to the user **before** the BUILD PLAN is finalized:
+
+   ```
+   ECOSYSTEM SCAN
+   ==============
+   Scanning planned components for ecosystem library opportunities...
+
+   ✓ ActionButton         — Custom build (simple button, covered by component adapter)
+   ✓ StatusBadge          — Custom build (simple, domain-specific)
+   ✓ JobCard              — Custom build (domain-specific composition)
+   ⚠ DataTable            — Library recommended!
+     → TanStack Table (react-table)
+       - 25k+ GitHub stars, actively maintained
+       - Headless: works with any component adapter (shadcn has a built-in wrapper)
+       - Handles sorting, filtering, pagination, row selection out of the box
+     → Build custom instead? Only if the table needs are trivial (< 5 rows, no sorting)
+
+   ⚠ DateRangePicker      — Library recommended!
+     → react-day-picker
+       - 6k+ stars, monthly releases
+       - Accessible, composable, supports range selection
+     → Build custom instead? Only if a simple native <input type="date"> suffices
+
+   ? How would you like to handle these?
+     1. Use recommended libraries (install + wrap as project components)
+     2. Build some custom (specify which)
+     3. Use a different library (specify which)
+   ```
+
+5. **User decision is final.** Respect the user's choice:
+   - **"Use recommended libraries"** → The atom/molecule is still built, but it wraps the ecosystem library rather than implementing from scratch. The manifest records the dependency:
+     ```json
+     {
+       "name": "DataTable",
+       "file": "src/components/DataTable.tsx",
+       "status": "pending",
+       "ecosystemLib": {
+         "package": "@tanstack/react-table",
+         "version": "^8.x",
+         "purpose": "Headless table logic (sorting, filtering, pagination)"
+       }
+     }
+     ```
+   - **"Build custom"** → Proceed as a normal custom build. No ecosystem entry.
+   - **"Different library"** → Record the user's choice in the manifest and build the wrapper for their preferred library.
+
+#### When NOT to Recommend
+
+Do **not** recommend a library when:
+- The component is simple enough that a library adds more complexity than value (a basic badge, a single button, a label)
+- The component is **domain-specific** (StatusBadge, JobCard, UserCard — these are *your* product, not generic UI)
+- The project's existing component adapter already provides a good implementation
+- The user has explicitly opted out (add `"ecosystemScan": false` to the manifest to disable this step entirely)
+
+#### Ecosystem Scan Output in the Build Plan
+
+The BUILD PLAN output (Step 4) now includes an ecosystem scan summary:
+
+```
+BUILD PLAN
+==========
+Analyzing: PRD.md vs current codebase (scaffold: passed)
+Mode: brownfield (existing components found)
+
+ECOSYSTEM SCAN:
+  ✓ ActionButton, StatusBadge, JobCard, DateChip — custom build
+  📦 DataTable → @tanstack/react-table (user approved)
+  📦 DateRangePicker → react-day-picker (user approved)
+
+TOKENS    [ SKIP ]   — ...
+ATOMS     [ BUILD ]  — Need: DataTable (wrapping @tanstack/react-table), ActionButton, ...
+MOLECULES [ BUILD ]  — ...
+SCREENS   [ BUILD ]  — ...
+
+Planned work:
+  - 2 atoms wrapping ecosystem libraries: DataTable (@tanstack/react-table), DateRangePicker (react-day-picker)
+  - 3 atoms to create custom: ActionButton, StatusBadge, JobCard
+  ...
+
+? Proceed with this plan? [Yes / Modify / Cancel]
+```
+
 ### Step 3: Compute Delta and Apply Gate Logic
 
 For each level:
@@ -174,7 +308,7 @@ Planned work:
 
 ### Step 5: Write Plan to Manifest
 
-After user confirms, write the plan to manifest:
+After user confirms, write the plan to manifest. If any ecosystem library recommendations were accepted in Step 2b, include the `ecosystemLibs` record:
 
 ```json
 {
@@ -192,13 +326,36 @@ After user confirms, write the plan to manifest:
     "screens": {
       "status": "build",
       "create": ["TodayFeed", "JobDetail"]
-    }
+    },
+    "ecosystemLibs": {}
   },
   "gates": {
     "plan": "passed"
   }
 }
 ```
+
+If ecosystem libraries were accepted:
+
+```json
+{
+  "build_plan": {
+    "atoms": {
+      "status": "build",
+      "create": ["DataTable", "ActionButton"],
+      "ecosystemLibs": {
+        "DataTable": {
+          "package": "@tanstack/react-table",
+          "version": "^8.x",
+          "purpose": "Headless table logic (sorting, filtering, pagination)"
+        }
+      }
+    }
+  }
+}
+```
+
+When building an atom that has an `ecosystemLibs` entry, the build process installs the package and wraps it as a project component (using theme tokens and adapter conventions) rather than implementing the logic from scratch.
 
 ### Greenfield vs. Brownfield
 
@@ -274,6 +431,13 @@ For each component, in order:
    - Uses theme tokens (not hardcoded values)
    - Follows adapter conventions (shadcn patterns, Paper patterns, etc.)
    - If frontend-design is available: distinctive typography, intentional color hierarchy, considered motion
+   - **If an ecosystem library was approved** (the atom has an `ecosystemLibs` entry in the build plan):
+     1. Install the package: `npm install {package}@{version}` (or pnpm/yarn as appropriate)
+     2. Build a **wrapper component** that wraps the library's API and applies:
+        - The project's theme tokens (colors, spacing, typography)
+        - Adapter conventions (follow the same patterns as hand-built components)
+        - Any domain-specific props or defaults the spec requires
+     3. The wrapper is the atom — it has the same story file, controls, and manifest entry as any other atom. The library is an implementation detail, not a leaky abstraction
 
 3. **Write story file:**
    - Registered in the project's sandbox (the sandbox adapter defines the format — for `custom`, a registry entry in the target language per `docs/sandbox-spec.md`; for Storybook, CSF3)
@@ -394,6 +558,21 @@ For each component, in order:
          "controls": true
        }
      ]
+   }
+   ```
+   For atoms wrapping an ecosystem library, the entry includes the `ecosystemLib` record from the build plan:
+   ```json
+   {
+     "name": "DataTable",
+     "file": "src/components/DataTable.tsx",
+     "story": "src/components/DataTable.stories.tsx",
+     "status": "verified",
+     "controls": true,
+     "ecosystemLib": {
+       "package": "@tanstack/react-table",
+       "version": "^8.x",
+       "purpose": "Headless table logic (sorting, filtering, pagination)"
+     }
    }
    ```
 
