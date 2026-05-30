@@ -1,6 +1,8 @@
 # Storybook Conventions
 
-Comprehensive reference for the pixel-perfect Storybook-centric approach. All components, screens, and design tokens are developed and previewed in Storybook.
+> **Applies when `tools.sandbox: "storybook"`** (opt-in). pixel-perfect's default sandbox is a `custom` native browser — the portable, sandbox-agnostic conventions (layer grouping, isolation, variants×states, token codegen) live in `docs/sandbox-spec.md`. This doc is the Storybook-specific reference.
+
+Comprehensive reference for the pixel-perfect Storybook approach (when Storybook is the chosen sandbox). All components, screens, and design tokens are developed and previewed in Storybook.
 
 ## Story Organization
 

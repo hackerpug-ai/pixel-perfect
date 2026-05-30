@@ -1,6 +1,6 @@
 # Storybook
 
-Sandbox adapter for isolated component development and visual verification. Storybook is the **only supported sandbox** in pixel-perfect — all components, screens, and design tokens are developed and previewed in Storybook's web interface.
+**Optional** sandbox adapter (opt-in). pixel-perfect's default is a **custom** native component browser (see `docs/sandbox-spec.md` + `docs/adapters/custom-sandbox.md`); use Storybook only when the user asks (`tools.sandbox: "storybook"`). When chosen, all components, screens, and design tokens are developed and previewed in Storybook's web interface.
 
 ## Platforms
 

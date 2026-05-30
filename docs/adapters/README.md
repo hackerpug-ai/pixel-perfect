@@ -4,14 +4,14 @@ Adapters teach the AI how to scaffold, build, and verify components for specific
 
 ## How Adapters Work
 
-When a project runs `/pixel-perfect:init`, the user selects tools across these categories (sandbox is always Storybook):
+When a project runs `/pixel-perfect:init`, the user selects tools across these categories (the **sandbox** defaults to a **custom** native component browser — see `docs/sandbox-spec.md`):
 
 | Category | What It Does | Examples |
 |----------|-------------|----------|
 | **Framework** | App framework — loaded only when an adapter exists | SvelteKit (React / Next.js / Vite use the default path) |
 | **Style** | Visual styling system | Tailwind CSS, NativeWind |
 | **Components** | UI component library | shadcn/ui, shadcn-svelte, React Native Paper |
-| **Sandbox** | Isolated dev/preview environment | Storybook (always) |
+| **Sandbox** | Isolated component browser | **custom (default)**, Storybook, tui-sandbox |
 
 The **framework** adapter is optional: it is loaded only when `docs/adapters/{framework}.md` exists (e.g. `sveltekit`). React / Next.js / Vite have no framework adapter — their setup is the default React path inside `storybook.md`.
 
@@ -22,24 +22,27 @@ Each selection maps to an adapter doc in this directory. The AI loads the releva
 Adapters compose by category. A project uses **one adapter per category**, and they stack:
 
 ```
-Web project:     [{framework}] + {style} + {components} + storybook (sandbox)
-Mobile project:  {style} + {components} + storybook-native (sandbox)
-Minimal project: generic (process enforcement only) + storybook (sandbox)
+Web project:     [{framework}] + {style} + {components} + {sandbox: custom*}
+Mobile project:  {style} + {components} + {sandbox: custom*}
+Minimal project: generic (process enforcement only) + {sandbox: custom*}
 ```
+
+`*` the **sandbox** defaults to `custom` (a native browser generated per `docs/sandbox-spec.md` via `custom-sandbox.md`); set `tools.sandbox` to `storybook` / `storybook-native` / `tui-sandbox` to use an off-the-shelf tool instead.
 
 `[{framework}]` is bracketed because it is optional — loaded only when an adapter exists for the chosen framework (e.g. `sveltekit`). A framework adapter, when present, is applied **first**: it governs project structure, Storybook initialization, and story format; the style/components/sandbox adapters layer on top.
 
 Style and component adapters are loaded based on user selection during init. If a style framework is detected in `package.json` (e.g., `nativewind`, `tailwindcss`, `tamagui`), that framework is suggested rather than presenting a blank choice.
 
-**Sandbox Selection is Automatic (Not a User Choice):**
+**Sandbox Defaults to `custom` (a Native Browser):**
 
-| Platform | Sandbox Adapter |
-|----------|-----------------|
-| `mobile-ios`, `mobile-android` | `storybook-native` (on-device preview) |
-| `web-desktop`, `web-mobile` | `storybook` (browser-based preview) |
-| `tui`, `cli` | `tui-sandbox` (terminal preview) |
+The default sandbox is `custom` — generated from scratch in the project's framework per `docs/sandbox-spec.md` (adapter: `custom-sandbox.md`). It is **not** tied to a platform; it matches the framework, renders the real components, and needs nothing extra installed. Off-the-shelf adapters are opt-in:
 
-The init command automatically selects the appropriate sandbox based on the target platform. This is **not presented as a user choice**.
+| `tools.sandbox` | Adapter | When |
+|-----------------|---------|------|
+| `custom` (default) | `custom-sandbox` | any framework — native, from-scratch |
+| `storybook` | `storybook` | user asks (web) |
+| `storybook-native` | `storybook-native` | user asks (mobile, on-device) |
+| `tui-sandbox` | `tui-sandbox` | terminal UIs |
 
 When multiple adapters are active, the AI reads all of them and applies guidance from each in its respective domain. Style adapters control theming. Component adapters control component structure. The sandbox adapter controls preview and verification.
 
@@ -66,9 +69,10 @@ Each adapter follows this structure:
 | [Skeleton](skeleton.md) | components | web (Svelte) |
 | [React Native Paper](react-native-paper.md) | components | mobile-ios, mobile-android |
 | [React Native Reusables](react-native-reusables.md) | components | mobile-ios, mobile-android |
-| [Storybook](storybook.md) | sandbox | web |
-| [Storybook Native](storybook-native.md) | sandbox | mobile |
-| [tui-sandbox](tui-sandbox.md) | sandbox | tui, cli |
+| [Custom Sandbox](custom-sandbox.md) | sandbox (**default**) | all |
+| [Storybook](storybook.md) | sandbox (opt-in) | web |
+| [Storybook Native](storybook-native.md) | sandbox (opt-in) | mobile |
+| [tui-sandbox](tui-sandbox.md) | sandbox (opt-in) | tui, cli |
 | [Lipgloss](lipgloss.md) | style | tui (Go) |
 | [Rich](rich.md) | style | tui (Python) |
 | [Ink Styles](ink-styles.md) | style | tui (JS/TS) |

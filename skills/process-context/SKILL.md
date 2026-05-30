@@ -9,7 +9,7 @@ autoActivate:
 
 # pixel-perfect Process Context
 
-You are working in a project managed by **pixel-perfect v5.0.0**, a 6-phase build process orchestrator that produces real code sandboxed in Storybook. This context was auto-loaded because `design/manifest.json` exists in the project.
+You are working in a project managed by **pixel-perfect**, a 6-phase build process orchestrator that produces real code in the target framework, browsable in a **sandbox** — a `custom` native component browser by default (see `docs/sandbox-spec.md`), or Storybook only if `tools.sandbox` says so. This context was auto-loaded because `design/manifest.json` exists in the project.
 
 ## Legacy YAML Migration
 
@@ -60,8 +60,8 @@ This migration is automatic and transparent. No user confirmation needed.
 2. **Follow adapter conventions** - Components should match the tool stack's patterns.
 3. **Use the theme** - Never hardcode colors, fonts, or spacing. Always reference theme tokens.
 4. **Track in manifest** - When you create or modify components/screens, update `design/manifest.json`.
-5. **Wire controls** - Every component prop must have a corresponding Storybook `argType` control.
-6. **Organize stories** - Use the correct Storybook hierarchy prefix (`Design System/`, `Components/`, `Screens/`).
+5. **Wire controls** - Every component prop must be exposed to the sandbox's controls (Storybook `argType`, or a labeled variant in a `custom` sandbox).
+6. **Organize by layer** - Register each component under the correct sandbox layer (`Tokens`/`Design System`, `Components`, `Molecules`, `Screens`).
 
 ## Read the Manifest
 
@@ -134,6 +134,12 @@ Based on the tools in the manifest, follow these conventions:
 - Follow Material Design 3 patterns
 - Minimum 44x44pt touch targets
 - In web Storybook, components render via `react-native-web` polyfill
+
+### When `platforms[name].tools.sandbox` is custom (default):
+- Implement `docs/sandbox-spec.md` natively in the target framework (see `docs/adapters/custom-sandbox.md`): a layer-keyed story registry, a two-pane navigator, token codegen from `theme.*.json`, one run command.
+- Register each component under its layer; render it in isolation; show variants × states together.
+- Codegen tokens (build.rs / CSS vars / `Palette`) — components reference tokens, never hardcode.
+- Each story names its pixel-target (`// Target: design/system/{layer}/{name}/dark.png`).
 
 ### When `platforms[name].tools.sandbox` is storybook:
 - Co-locate stories with components — `ComponentName.stories.tsx` (React) or `ComponentName.stories.svelte` / `.stories.ts` (SvelteKit; follow the framework adapter)
