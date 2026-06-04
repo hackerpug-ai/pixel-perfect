@@ -342,3 +342,107 @@ addons: [
   '@storybook/addon-themes',      // theme switching (light/dark)
 ],
 ```
+
+## State Scenario Stories
+
+For molecules and organisms with declared internal state (`state.declared` in the manifest), each `state.scenarios[]` entry must have a corresponding named story export. State scenarios exercise specific internal state configurations, not just external prop variations.
+
+**Screens** follow the same rule against their `states` list (a route + its named states — see `docs/state-patterns.md`): each state name gets one named story that drives the screen into that state. A screen collapsed from several route-variants (e.g. `/feed` with `["default","empty","loading","error"]`) exports one story per state — the same states stay viewable as siblings under `Screens/Feed`, just not as separate screens. *How* the screen is driven into a state (override/controlled props, naming, precedence) is left to the implementer/adapter; the examples below show the molecule pattern, and screens reuse it.
+
+### Pattern (React)
+
+```tsx
+// SearchBar.stories.tsx
+import type { Meta, StoryObj } from '@storybook/react';
+import { userEvent, within } from '@storybook/test';
+import { SearchBar } from './SearchBar';
+
+const meta: Meta<typeof SearchBar> = {
+  title: 'Molecules/SearchBar',
+  component: SearchBar,
+  parameters: {
+    docs: { description: { component: '...' } },
+  },
+  argTypes: {
+    placeholder: { control: { type: 'text' } },
+    onSearch: { action: 'searched' },
+  },
+};
+
+export default meta;
+type Story = StoryObj<typeof SearchBar>;
+
+// State scenario: empty (default — no input, no focus)
+export const Empty: Story = {};
+
+// State scenario: typing (user types — suggestions visible)
+export const Typing: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.type(canvas.getByRole('textbox'), 'hva');
+  },
+};
+
+// State scenario: results visible (pre-populated with suggestions)
+export const ResultsVisible: Story = {
+  args: {
+    initialQuery: 'hvac',
+    suggestions: [{ id: 1, label: 'HVAC Service' }],
+  },
+};
+
+// State scenario: no-results (query returned empty)
+export const NoResults: Story = {
+  args: {
+    initialQuery: 'xyz',
+    suggestions: [],
+  },
+};
+
+// State scenario: error (search failed)
+export const Error: Story = {
+  args: {
+    initialQuery: 'hvac',
+    error: 'Search failed. Try again.',
+  },
+};
+```
+
+### Pattern (Svelte)
+
+For SvelteKit projects, pass initial state via component props and use `$state()` values in the story:
+
+```svelte
+<!-- SearchBar.stories.svelte -->
+<script lang="ts" context="module">
+  export const meta = defineMeta({
+    title: 'Molecules/SearchBar',
+    component: SearchBar,
+    args: {
+      placeholder: 'Search jobs...',
+    },
+  });
+</script>
+```
+
+Each scenario gets its own `<Story>` block with the initial state configured through args:
+
+```svelte
+<Story name="Empty">
+  <SearchBar placeholder="Search jobs..." />
+</Story>
+
+<Story name="Typing" args={{ initialQuery: 'hva', initialSuggestions: [{ id: 1, label: 'HVAC Service' }] }}>
+  <SearchBar {args} />
+</Story>
+```
+
+### Rules
+
+1. **Every declared scenario gets a named story.** If `state.scenarios` lists 5 scenarios, the story file must export 5 named stories (or Svelte CSF `<Story>` blocks).
+2. **Each scenario exercises a distinct state.** Don't reuse the same state values across scenarios — each one should demonstrate a unique internal state configuration.
+3. **Use `play` functions (React) for interactive scenarios** (typing, clicking, focusing).
+4. **Use initial props (Svelte, pre-populated) for static scenarios.**
+5. **For TUI stories**, create separate model instances initialized to the target state values. Register each as its own story entry in the terminal catalog.
+6. **Stateless molecules/organisms** (those with `"state": null`) don't need state scenario stories — standard prop-variant stories suffice.
+7. **Screens** export one named story per entry in their `states` list (each driving the screen into that state). Single-state screens (`["default"]` or no `states`) need only a Default story.

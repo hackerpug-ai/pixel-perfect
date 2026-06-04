@@ -81,6 +81,7 @@ Verifies all atomic components with sandbox controls.
 | Controls wired | All component props exposed to sandbox controls (`argTypes` or labeled variants) |
 | Story organization | Registered under `Components/` layer (or `Components/` prefix in Storybook) |
 | Polyfill disclaimer | (React Native + Storybook only) Stories include polyfill notice decorator |
+| **Ecosystem lib validated** | **If `ecosystemLib` exists, package is installed, importable, and vetting matches manifest** |
 | Aesthetic* | Font pairing, color hierarchy, intentional motion |
 
 *Aesthetic checks only run if frontend-design plugin is available.
@@ -88,16 +89,17 @@ Verifies all atomic components with sandbox controls.
 ```
 Atoms verification (5 components):
 
-  StatusBadge:
-    [x] File exists: src/components/StatusBadge.tsx
-    [x] Story exists: src/components/StatusBadge.stories.tsx
-    [x] Compiles without errors
-    [x] Renders in sandbox
-    [x] Uses theme tokens
-    [x] Controls: status (select), label (text), size (select), animated (boolean)
-    [x] Layer: Components/StatusBadge
-    [x] Polyfill: n/a
-    [x] Aesthetic: font pairing, color hierarchy
+StatusBadge:
+     [x] File exists: src/components/StatusBadge.tsx
+     [x] Story exists: src/components/StatusBadge.stories.tsx
+     [x] Compiles without errors
+     [x] Renders in sandbox
+     [x] Uses theme tokens
+     [x] Controls: status (select), label (text), size (select), animated (boolean)
+     [x] Layer: Components/StatusBadge
+     [x] Polyfill: n/a
+     [x] Ecosystem lib: n/a
+     [x] Aesthetic: font pairing, color hierarchy
 
   JobCard:
     [x] File exists
@@ -116,6 +118,108 @@ Result: FAILED — 1 component has errors
   Fix JobCard import and run /pixel-perfect:verify again
 ```
 
+### Molecules Gate
+
+Verifies all molecule compositions including state coverage for stateful molecules.
+
+| Check | What It Verifies |
+|-------|-----------------|
+| File exists | Molecule file at path in manifest |
+| Story exists | Companion story file alongside molecule |
+| Compiles | No type errors or import errors |
+| Renders | Molecule renders in the sandbox |
+| Atoms composed (not re-implemented) | Constituent atoms are imported and used, not re-created |
+| Controls wired | All molecule-level props exposed to sandbox controls |
+| Story organization | Registered under `Molecules/` layer |
+| **State scenarios** | **Every declared state scenario has a corresponding named story export** |
+| **State isolation** | **Each scenario exercises a distinct internal state (not just prop variants)** |
+
+**State scenario check (stateful molecules only):**
+
+For each molecule with `state.declared`, verify:
+1. The manifest's `state.scenarios` list has ≥1 entry
+2. Each scenario name has a matching named story export
+3. Stories exercise internal state transitions, not just external prop changes
+
+```
+Molecules verification (3 molecules):
+
+  JobRow:
+    [x] File exists: src/molecules/JobRow.tsx
+    [x] Story exists: src/molecules/JobRow.stories.tsx
+    [x] Compiles
+    [x] Renders
+    [x] Atoms composed: StatusBadge, DateChip
+    [x] Controls: status, date, jobTitle
+    [x] Layer: Molecules/JobRow
+    [x] State: N/A (stateless molecule)
+
+  SearchBar:
+    [x] File exists
+    [x] Story exists
+    [x] Compiles
+    [x] Renders
+    [x] Atoms composed: Input, Button
+    [x] Controls: placeholder, onSearch
+    [x] Layer: Molecules/SearchBar
+    [x] State scenarios: 5/5 declared scenarios have named story exports
+    [x] State isolation: each story exercises a distinct internal state
+
+  FormField:
+    [x] File exists
+    [x] Story exists
+    [x] Compiles
+    [ ] Renders — Error: useFieldContext requires provider
+    [ ] Controls — Blocked
+    [ ] State scenarios: 0/4 (blocked by render failure)
+
+Result: FAILED — 1 molecule has errors
+  Fix FormField render and run /pixel-perfect:verify again
+```
+
+### Organisms Gate
+
+Verifies all organism compositions with state coverage.
+
+| Check | What It Verifies |
+|-------|-----------------|
+| File exists | Organism file at path in manifest |
+| Story exists | Companion story file |
+| Compiles | No errors |
+| Renders | Organism renders with composed molecules/atoms |
+| Molecules/atoms composed | All listed dependencies are imported, not re-implemented |
+| Controls wired | All organism-level props exposed to controls |
+| Story organization | Registered under `Organisms/` layer |
+| **State scenarios** | **Every declared state scenario has a named story export** |
+| **State isolation** | **Each scenario exercises a distinct internal state** |
+| **Ecosystem lib validated** | **If `ecosystemLib` exists, package is installed, importable, vetting matches** |
+
+```
+Organisms verification (1 organism):
+
+  DataTable:
+    [x] File exists: src/organisms/DataTable.tsx
+    [x] Story exists: src/organisms/DataTable.stories.tsx
+    [x] Compiles
+    [x] Renders
+    [x] Molecules composed: SearchBar (imported)
+    [x] Atoms composed: Pagination, TableRow (imported)
+    [x] Controls: columns, data, sortable, selectable
+    [x] Layer: Organisms/DataTable
+    [x] State scenarios: 6/6 declared scenarios have named story exports
+    [x] State isolation: each story exercises a distinct state configuration
+    [x] Ecosystem lib: @tanstack/react-table@^8.20.0 installed, import verified, 8/8 (researched 2026-06-04)
+
+  CommandPalette:
+    [x] File exists
+    [x] Story exists
+    [x] Compiles
+    [ ] Renders — Error: Missing SuggestionList component
+    [ ] State scenarios: 0/3 (blocked by render failure)
+
+Result: FAILED — 1 organism has errors
+```
+
 ### Compose Gate
 
 Verifies all composed screens.
@@ -127,6 +231,7 @@ Verifies all composed screens.
 | Compiles | No errors |
 | Renders | Screen visible with all atoms |
 | Atoms correct | All listed atoms are used in the screen |
+| States covered | Every state in the screen's `states` list has a story that drives the screen into that state |
 | Responsive | Layout responds to viewport changes (if applicable) |
 | Controls wired | Screen-level props have `argTypes` where applicable |
 | Story organization | Story title uses `Screens/` prefix |
@@ -136,12 +241,13 @@ Verifies all composed screens.
 ```
 Compose verification (2 screens):
 
-  TodayFeed:
+  TodayFeed (route /today):
     [x] File exists: src/screens/TodayFeed.tsx
     [x] Story exists: src/screens/TodayFeed.stories.tsx
     [x] Compiles
     [x] Renders
     [x] Atoms used: StatusBadge, JobCard, DateChip, SectionHeader
+    [x] States: 3/3 (default, empty, loading) — each has a story
     [x] Responsive: mobile and tablet breakpoints
     [x] Controls: filter (select), showCompleted (boolean)
     [x] Story title: 'Screens/TodayFeed'

@@ -138,6 +138,8 @@ The result is a **running native component browser** of real components (`make s
    }
    ```
    Each view (and its PNG) is a **pixel-perfect target** — the reference the real screen is built to match during COMPOSE.
+
+   **State-split views.** When a view is captured per state (e.g. `feed/default`, `feed/empty`, `feed/loading`, or `settings/billing`), emit one `views[]` entry per state-variant as usual — keep the per-state HTML/PNG. These are **not** separate screens: the consuming `init`/`build` collapse views sharing a **route** into ONE screen with a `states` list, and each per-state mockup becomes the `target` for that state's sandbox story (see `docs/state-patterns.md` and `init.md` Step 0). No change to this output shape is required — just don't assume one view = one screen downstream.
 3. **Manifest markers** — if `design/manifest.json` exists, set top-level `deconstructed: true`, `design_system: "design/system"`, and append each view's HTML/PNG to `references`. If no manifest exists, leave the seed files for `init` to detect (Step in `init.md`).
 
 ### Step 4: Report + next step

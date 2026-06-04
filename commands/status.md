@@ -72,8 +72,8 @@ Platforms:
     [x] ActionButton    src/components/ActionButton.tsx       (controls: yes)
 
   Screens (2/2 verified):
-    [x] TodayFeed       src/screens/TodayFeed.tsx
-    [x] JobDetail       src/screens/JobDetail.tsx
+    [x] TodayFeed   /today      src/screens/TodayFeed.tsx   (3 states: default, empty, loading)
+    [x] JobDetail   /jobs/:id   src/screens/JobDetail.tsx   (2 states: default, loading)
 
 --- mobile-ios ---
 

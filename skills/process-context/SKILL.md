@@ -61,7 +61,9 @@ This migration is automatic and transparent. No user confirmation needed.
 3. **Use the theme** - Never hardcode colors, fonts, or spacing. Always reference theme tokens.
 4. **Track in manifest** - When you create or modify components/screens, update `design/manifest.json`.
 5. **Wire controls** - Every component prop must be exposed to the sandbox's controls (Storybook `argType`, or a labeled variant in a `custom` sandbox).
-6. **Organize by layer** - Register each component under the correct sandbox layer (`Tokens`/`Design System`, `Components`, `Molecules`, `Screens`).
+6. **Organize by layer** - Register each component under the correct sandbox layer (`Tokens`/`Design System`, `Components`, `Molecules`, `Organisms`, `Screens`).
+7. **Respect state levels** - Atoms are stateless (pure render from props). Molecules may be stateful (manage interaction state). Organisms and screens are stateful (manage complex domain/UI state). Follow `docs/state-patterns.md` for framework-specific state idioms.
+8. **Plan screens as route + states** - A screen is keyed by its `route`, not by visual state. Collapse views that differ only by state (default/empty/loading/error, or different tabs of one page) into ONE screen carrying a `states` list; each state becomes its own sandbox story. The screen owns internal state and must be drivable into each listed state for those stories (the mechanism is an implementation/adapter detail). When the route/page layout is uncertain, ask the user. See `docs/state-patterns.md` ([Screens: Route + States](../../docs/state-patterns.md)) for the state-vs-route decision rule.
 
 ## Read the Manifest
 
@@ -73,7 +75,7 @@ Before doing any component or screen work, read `design/manifest.json` to unders
   - `tools`: framework, style, components, icons, sandbox for this platform
   - `phase`: current active phase for this platform
   - `gates`: scaffold through compose gate status for this platform
-  - `atoms`, `molecules`, `screens`: component inventory for this platform
+  - `atoms`, `molecules`, `screens`: component inventory for this platform. Each `screens[]` entry is keyed by `route` (the page identity / dedup key) and carries a `states` list (the named states for that route — each maps to one sandbox story). See `docs/state-patterns.md`.
 
 When a command operates on a specific platform, read `platforms[platformName]` for all platform-specific state.
 
@@ -94,7 +96,8 @@ Commands that operate on build phases (scaffold, build, verify, refine) are **pl
 | plan | Review the BUILD PLAN for the selected platform | Write component code |
 | atoms | Build individual components for the selected platform | Skip to molecules or compose directly |
 | molecules | Build functional atom compositions for the selected platform | Compose screens before molecules are verified |
-| compose | Assemble screens from molecules and atoms for the selected platform | Skip atom/molecule verification, wire data |
+| organisms | Build complex stateful compositions of molecules + atoms for the selected platform | Compose screens before organisms are verified |
+| compose | Assemble screens from organisms, molecules, and atoms for the selected platform | Skip molecule/organism verification, wire data |
 
 **Important:** Each platform progresses independently. One platform may be at `compose: passed` while another is at `scaffold: in-progress`. Always check the selected platform's gates, not another platform's.
 
@@ -167,9 +170,50 @@ Stories must use the correct hierarchy prefix:
 | Design tokens | `Design System/` | `title: 'Design System/Colors'` |
 | Atomic components | `Components/` | `title: 'Components/StatusBadge'` |
 | Molecule compositions | `Molecules/` | `title: 'Molecules/JobRow'` |
+| Organism compositions | `Organisms/` | `title: 'Organisms/DataTable'` |
 | Composed screens | `Screens/` | `title: 'Screens/TodayFeed'` |
 
 **Note for TUI projects:** Stories use the `.story.ts` format with `StoryMeta` in the default export, not CSF3. The hierarchy prefixes are the same, but the story file format differs.
+
+## State Pattern Convention
+
+Based on the project's framework, use the appropriate state pattern for molecules and organisms:
+
+| Framework | Atom State | Molecule/Organism State | Reference |
+|-----------|-----------|------------------------|-----------|
+| React/Vite/Next | None (props only) | `useState` / `useReducer` | `docs/state-patterns.md` |
+| SvelteKit | None (props via `$props()`) | `$state()` / `$derived()` runes | `docs/state-patterns.md` |
+| React Native/Expo | None (props only) | `useState` / `useReducer` | `docs/state-patterns.md` |
+| SwiftUI | None (props) | `@State` / `@Observable` | `docs/state-patterns.md` |
+| GPUI | None | `Entity<T>` + `update()` | `docs/state-patterns.md` |
+| Bubbletea | None (functional params) | Model struct + `Update()` method | `docs/state-patterns.md` |
+| Textual | None (functional params) | `reactive()` / `@on` | `docs/state-patterns.md` |
+| Ink | None (props) | `useState` / `useReducer` (same as React) | `docs/state-patterns.md` |
+
+Atoms must NEVER manage internal state. If state is needed, promote to a molecule or organism.
+
+**Screens** are the top-level stateful level, planned as a **route + a list of states** (not one screen per state). The screen owns internal state to switch between its listed states and must be drivable into any listed state for its sandbox stories — the override mechanism (controlled/uncontrolled props, naming, precedence) is an implementation/adapter detail, not prescribed here. Use the same framework idiom above to own the internal state. To decide whether a tab/sub-view is a state of one route or a separate route, follow the **state-vs-route decision rule** in `docs/state-patterns.md`.
+
+## Library Research Convention
+
+When building components that match complex UI patterns (data tables, date pickers, rich text editors, drag-and-drop, charts, etc.), the Ecosystem Scan during BUILD PLAN may recommend ecosystem libraries.
+
+**How library research works:**
+
+1. **During build** (Phase 4b Step 2b): The Ecosystem Scan automatically evaluates complex patterns against `docs/library-vetting-rubric.md` and recommends well-scored libraries (≥5/8).
+
+2. **Before build** (standalone): `/pixel-perfect:research --libraries "{pattern}"` pre-researches libraries, saving scored results to `design/research/libraries/`.
+
+3. **Vetting**: Every recommended library is scored on 8 criteria (maintenance, popularity, compatibility, bundle, a11y, license, tests, community). Score ≥5/8 required for recommendation.
+
+4. **Validation**: Before building a wrapper, verify the package exists on npm (or equivalent registry), has no peer dependency conflicts, and imports successfully.
+
+5. **Manifest trail**: Every used library records package, version, vetting score, research date, and tradeoffs in the manifest's `ecosystemLibs`.
+
+**When to research independently:**
+- User asks "what library should I use for X?"
+- You encounter a complex UI pattern not in the lookup table
+- An existing library in the project may be stale
 
 For design token story regeneration and the polyfill disclaimer pattern (required for React Native web Storybook), see `docs/storybook-conventions.md` and `docs/adapters/react-native-web.md`.
 

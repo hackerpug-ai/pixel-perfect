@@ -34,7 +34,9 @@ All in a sandbox — native to your framework (or Storybook, if you prefer). All
 | **EQUIP** | Select style + component libraries | Adapters validated |
 | **SCAFFOLD** | Install tools, create theme, generate token stories | Theme renders, sandbox runs |
 | **ATOMS** | Build individual components | Each component has story + controls |
-| **COMPOSE** | Assemble screens from atoms | Screens render with real data shapes |
+| **MOLECULES** | Build functional atom compositions (optional) | Each molecule has story + state scenarios |
+| **ORGANISMS** | Build complex stateful compositions (optional) | Each organism has story + state scenarios |
+| **COMPOSE** | Assemble screens from organisms, molecules, atoms | Screens render with real data shapes |
 | **INTEGRATE** | Wire navigation + state | App navigates, state persists |
 
 Each phase has a **gate** that must pass before you proceed. The plugin tracks state in `design/manifest.json` and blocks forward progress until gates clear.
@@ -130,9 +132,8 @@ Design System/          ← Token reference stories (scaffold phase)
   Spacing
   Icons
 Components/             ← Atomic components (atoms phase)
-  StatusBadge
-  JobCard
-  ActionButton
+Molecules/               ← Molecule compositions (molecules phase, optional)
+Organisms/               ← Complex stateful compositions (organisms phase, optional)
 Screens/                ← Composed screens (compose phase)
   TodayFeed
   JobDetail
@@ -155,7 +156,7 @@ Every component prop is wired to sandbox controls (`argTypes` in Storybook; labe
 | `/pixel-perfect:build` | 5-7 | Build atoms, compose screens, wire integration |
 | `/pixel-perfect:verify` | any | Run gate checks for current phase |
 | `/pixel-perfect:status` | any | Show phase progress, controls coverage, and component tracking |
-| `/pixel-perfect:research` | any | Research design patterns and competitors |
+| `/pixel-perfect:research` | any | Research design patterns, competitors, and ecosystem libraries (`--libraries`) |
 | `/pixel-perfect:refine` | 5+ | Iterate on components/screens with feedback |
 
 ### Command Flow
@@ -266,15 +267,54 @@ No specific library is required. Select "None" or "Other" with a docs URL, and t
       "story": "src/components/StatusBadge.stories.tsx",
       "status": "verified",
       "controls": true
+    },
+    {
+      "name": "DataTable",
+      "file": "src/components/DataTable.tsx",
+      "story": "src/components/DataTable.stories.tsx",
+      "status": "verified",
+      "controls": true,
+      "ecosystemLib": {
+        "package": "@tanstack/react-table",
+        "version": "^8.20.0",
+        "purpose": "Headless table logic",
+        "vetting": {
+          "score": "8/8",
+          "researchDate": "2026-06-04"
+        }
+      }
+    }
+  ],
+  "molecules": [],
+  "organisms": [
+    {
+      "name": "DataTable",
+      "file": "src/organisms/DataTable.tsx",
+      "story": "src/organisms/DataTable.stories.tsx",
+      "status": "verified",
+      "molecules": ["SearchBar"],
+      "atoms": ["Pagination", "TableRow"],
+      "state": {
+        "declared": [
+          { "name": "sortColumn", "type": "string | null" },
+          { "name": "sortDirection", "type": "'asc' | 'desc'" },
+          { "name": "currentPage", "type": "number" }
+        ],
+        "scenarios": ["default-sort", "custom-sort", "page-2", "rows-selected", "empty"]
+      }
     }
   ],
   "screens": [
     {
       "name": "TodayFeed",
+      "route": "/today",
+      "states": ["default", "empty", "loading"],
       "file": "src/screens/TodayFeed.tsx",
       "story": "src/screens/TodayFeed.stories.tsx",
       "status": "pending",
-      "atoms": ["StatusBadge", "JobCard", "DateChip", "SectionHeader"]
+      "atoms": ["StatusBadge", "JobCard", "DateChip", "SectionHeader"],
+      "molecules": ["JobRow"],
+      "organisms": []
     }
   ]
 }
@@ -314,8 +354,10 @@ When you work in a project that has `design/manifest.json`, the **process-contex
 ## Documentation
 
 - [Adapter System](docs/adapters/README.md) - How adapters work and compose
+- [State Patterns](docs/state-patterns.md) - Framework-by-framework state patterns for molecules and organisms
 - [Storybook Conventions](docs/storybook-conventions.md) - Controls, token stories, organization (Storybook opt-in)
 - [Sandbox Spec](docs/sandbox-spec.md) - The seven-piece spec every sandbox implements (custom default)
+- [Library Vetting Rubric](docs/library-vetting-rubric.md) - 8-criteria rubric for evaluating ecosystem libraries
 - [Design Systems](docs/design-systems/README.md) - Supported design system references
 - [Icon Libraries](docs/icon-libraries/README.md) - Supported icon library references
 

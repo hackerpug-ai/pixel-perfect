@@ -1,7 +1,7 @@
 {
   "name": "pixel-perfect",
   "description": "Process orchestrator for building real UIs in your target framework, browsable in a native sandbox built from scratch (Storybook optional). Start from a PRD, ASCII wireframes, or deconstruct an existing design straight into native components. Web (React, Next.js, Vite, SvelteKit), mobile (React Native, Expo), and any framework via a custom sandbox.",
-  "version": "6.0.0",
+  "version": "6.1.0",
   "author": {
     "name": "Justin Rich"
   },

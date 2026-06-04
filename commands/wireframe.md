@@ -106,7 +106,7 @@ Write one file per screen: `design/wireframes/{screen}.md`. Each file contains:
 2. A **Desktop** fenced ASCII block at `--width` (default ~100 chars), using box-drawing per `tui-design`, with `[n]` callouts on regions.
 3. A **Mobile** fenced ASCII block (~40 chars) — show the *responsive transform* (e.g. sidebar → bottom tab bar). Omit if `--desktop-only`.
 4. **Annotations** — each `[n]` callout → the component it implies and its level: `[n] Name (atom|molecule)`.
-5. **States** — default / empty / loading / error notes.
+5. **States** — default / empty / loading / error notes. This seeds the screen's `states` list: **one wireframe = one route = one screen with N states**, not N screens. The real screen owns internal state to switch between them and renders one sandbox story per state (see `docs/state-patterns.md`).
 6. A `→ Build mapping:` line listing the atoms / molecules / screen this implies (this is what seeds the build inventory).
 
 No color, no CSS, no pixel values — structural only.
