@@ -106,6 +106,31 @@ A story shows a component's variants and states **together** (a static catalog),
 - TUI registers `Meter · 8/12`, `· 14/14 ok`, `· 2/10 bad`, `· 0/6 empty`, `· no label` as sibling stories.
 - Optional: per-story **snapshots** (get-spoke `tests/snapshots.rs` via `insta` + `TestBackend`) for regression.
 
+### State Scenarios for Molecules, Organisms, and Screens
+
+For components with declared internal state (`state.declared` in the manifest), each declared state **scenario** must have its own story entry — not just prop combinations, but distinct internal state configurations that exercise the component's behavior.
+
+**Screens** carry a `states` list (a route + its named states — see `docs/state-patterns.md`) rather than a `state.declared` block. The rule is the same: **each state in a screen's `states` list gets its own story**, driving the screen into that state for visual review. A screen collapsed from N route-variants therefore keeps all N states viewable as N sibling stories under one `Screens/{name}` entry — no coverage is lost. *How* the screen is driven into each state (override/controlled props, the precedence rule, prop names) is an implementation/adapter detail, not prescribed here.
+
+**What a state scenario covers:**
+- A specific combination of internal state values
+- The visual/behavioral output that results from those values
+- Any state transitions that are relevant (e.g., typing → results appearing)
+
+**Example (SearchBar molecule with 4 declared scenarios):**
+```
+Stories:
+  - Empty           → query='', isFocused=false, showSuggestions=false
+  - Typing          → query='hva', isFocused=true, showSuggestions=true
+  - NoResults       → query='xyz', results=[], showSuggestions=true
+  - Error           → query='hva', error='Search failed'
+```
+
+Each scenario gets its own story entry in the catalog — not a single play-through sequence. The sandbox must render each scenario independently for visual review.
+
+**For TUI frameworks:** Create separate model instances initialized to the target state values. Register each as its own story entry.
+**For GPUI:** Create Entity instances with specific initial values. Register each as its own story entry.
+
 ---
 
 ## Storybook is one implementation

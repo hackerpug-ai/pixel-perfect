@@ -43,13 +43,13 @@ Capture the project's purpose and aesthetic direction.
 
 ### Step 0: Detect prior design artifacts (optional)
 
-**Wireframes** — if `design/wireframes.json` (or a `design/wireframes/` directory) exists, produced by `/pixel-perfect:wireframe` (the low-fi sibling), pre-seed the **screen list** (the Step 1b component hierarchy) from its `screens` inventory — including the atoms/molecules each screen implies — and append each wireframe file to `references`. Set top-level `wireframed: true`. Wireframes commit the *structure*; a later `design-deconstruct` run (or the build phases) adds fidelity. Each `design/wireframes/{screen}.md` is the structural target the real screen is built to match.
+**Wireframes** — if `design/wireframes.json` (or a `design/wireframes/` directory) exists, produced by `/pixel-perfect:wireframe` (the low-fi sibling), pre-seed the **screen list** (the Step 1b component hierarchy) from its `screens` inventory — including the atoms/molecules each screen implies — and append each wireframe file to `references`. Set top-level `wireframed: true`. **One wireframe = one route = one screen**: assign each wireframe a `route`, and seed that screen's `states` list from the wireframe's `## States` annotation (e.g. `default · empty · loading · error`) — do not create a separate screen per state. Wireframes commit the *structure*; a later `design-deconstruct` run (or the build phases) adds fidelity. Each `design/wireframes/{screen}.md` is the structural target the real screen is built to match.
 
 **Deconstruction** — if `design/deconstruction.json` (or a `design/system/` directory) exists — produced by `/pixel-perfect:design-deconstruct` — use it to pre-seed this init:
 
 - **Vibe**: infer the vibe from the extracted tokens/typography (low-chroma + generous spacing → "clean, minimal"; high-contrast → "bold") and propose it in Step 3 for confirmation.
 - **Theme**: note that `design/theme-seed.json` exists — scaffold will generate the theme from it instead of from vibe keywords.
-- **Inventory**: read `design/deconstruction.json` `inventory` + `level_map` to pre-fill the component hierarchy (Step 1b) and the build lists — atoms→atoms, molecules→molecules, views→screens (organisms become screen sections). Seed the manifest's `atoms`/`molecules`/`screens` (status `pending`, each with a `target` pointing at its mockup HTML/PNG).
+- **Inventory**: read `design/deconstruction.json` `inventory` + `level_map` to pre-fill the component hierarchy (Step 1b) and the build lists — atoms→atoms, molecules→molecules (organisms become screen sections). For **views → screens, do NOT map 1:1**: deconstruction views are often **state-split** into nested folders (`feed/default`, `feed/empty`, `feed/loading`). First assign each view a **route** (strip state suffixes like `-empty`/`-loading`/`-error` and tab suffixes; nested folders like `feed/empty` share route `/feed`), then **collapse** views sharing a route into ONE screen whose `states` list is those variants (apply the state-vs-route rule in `docs/state-patterns.md`). Seed the manifest's `atoms`/`molecules` and the collapsed `screens` (status `pending`); each screen carries its `route` + `states`, and each per-state mockup HTML/PNG becomes the `target` for that state's story. Confirm the collapsed route map with the user (the route-map confirm in Step 1b).
 - **References**: add each view's mockup to the manifest `references`.
 - **Markers**: set top-level `deconstructed: true` and `design_system: "design/system"` when writing the manifest.
 
@@ -98,6 +98,8 @@ If a spec is provided, record its path in the manifest under `spec`. This spec i
 
 3. **Plan the build order**: Components first, then molecules that compose them, then views that arrange molecules into layouts.
 
+4. **Derive a route map**: From the spec's information architecture / navigation, list the distinct **routes** (pages) — not states. A screen is keyed by its route and carries a **list of states**; views that differ only by state (default/empty/loading/error, or different tabs of one page) are ONE route with a states list, not separate screens. A login page with an error state is `/login` with `[default, error]`; a settings page with three tabs is `/settings` with `[account, billing, team]`. Use the **state-vs-route decision rule** in `docs/state-patterns.md` to decide whether a tab/sub-view is a state or its own route.
+
 ```
 Component Hierarchy (from spec):
 
@@ -107,11 +109,19 @@ Component Hierarchy (from spec):
                           UserCard (Avatar + Badge + Text)
                           NavItem (Icon + Text + Badge)
                               ↓ compose into
-  Views (screens):        Dashboard (SearchBar + UserCard list + NavItem sidebar)
-                          Profile (Avatar + FormFields + ActionButtons)
+  Routes (screens):       /dashboard → Dashboard  [default · empty · loading]
+                          /profile   → Profile    [view · edit]
+                          /settings  → Settings   [account · billing · team]
 ```
 
-This hierarchy is recorded in the manifest and drives the build phase ordering.
+This hierarchy is recorded in the manifest (each screen carries a `route` + `states` list) and drives the build phase ordering.
+
+```
+? Confirm the route map? (state-variants are collapsed into one screen per route)
+  [Yes / Adjust routes / Keep some views separate]
+```
+
+If the route/page layout can't be confidently derived from the spec, **ask the user** to confirm it rather than guessing.
 
 ### Step 2: Goal Statement
 
@@ -617,6 +627,8 @@ Creates `{directory}/design/manifest.json`:
 The `spec` field is the path to the spec/PRD document (relative to the project root) that drives the component hierarchy during build. If no spec was provided, this field is omitted.
 
 **Deconstruction fields (optional).** When the project was seeded by `/pixel-perfect:design-deconstruct`, the manifest also carries top-level `"deconstructed": true` and `"design_system": "design/system"`, and seeded `atoms`/`molecules`/`screens` entries include a `"target"` (the mockup the real component is built to match), e.g. `"target": "design/system/views/feed/feed.html"`. These are additive and ignored by projects that never ran deconstruct.
+
+**Screen entries (`platforms[platform].screens[]`).** Each screen is keyed by **`route`** (the page identity / dedup key — a URL path on web like `/feed`; a navigator destination on mobile like `Feed`; a named view on TUI/desktop; default `"/" + kebab-case(name)` on web, `PascalCase(name)` elsewhere) and carries a **`states`** list — the named states for that route (`["default","empty","loading","error"]`, or tab names like `["account","billing","team"]`), each of which becomes one sandbox story. Views that differ only by state collapse into ONE screen with a `states` list rather than separate screens. Single-state screens carry `["default"]` (or omit `states`). The remaining fields are `name`, `file`, `story`, `status`, `atoms`/`molecules`/`organisms`, and optional `target`. Both fields are additive and backward-compatible (a screen with no `route` uses the default derivation; no `states` means a single Default story). See `docs/state-patterns.md`.
 
 **When "Other" is selected for any tool**, the manifest includes the docs URL inside the platform's tools:
 
