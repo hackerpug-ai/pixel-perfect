@@ -1,5 +1,6 @@
 ---
 description: "Build components and screens: PLAN → ATOMS → MOLECULES → COMPOSE (phases 4b-6)"
+agent: primary
 ---
 
 # Build (Phases 4b-6)
@@ -125,72 +126,86 @@ Before committing to building custom components, scan the planned atom/molecule 
 
 #### When to Scan
 
-This step runs for every component in the ACTIVE atoms, molecules, and organisms lists. It is **not** a full research phase — it is a targeted verification of library recommendations against the current ecosystem state.
+This step runs for every component in the ACTIVE atoms, molecules, and organisms lists. It is controlled by `ecosystemMode` in `design/manifest.json`:
+
+| `ecosystemMode` | Behavior |
+|-----------------|----------|
+| `suggest` (default) | Runs the scan. Presents library suggestions but **never blocks** the BUILD PLAN. User can ignore all suggestions and proceed with custom builds. |
+| `off` | Skips the scan entirely. No library suggestions appear. The agent builds everything custom. |
+| `required` | Runs the scan and **blocks** the BUILD PLAN until every complex pattern has a resolved library choice ("use X" or "build custom confirmed"). |
+
+If `ecosystemMode` is not set in the manifest, default to `suggest`. The scan also respects per-category overrides in `manifest.librarySuggestions.categories` (each category can independently be `off`, `suggest`, or `required`).
+
+When `ecosystemMode` is `off`: output a brief note and skip directly to Step 2c (skip Steps 2a and 2b entirely).
 
 #### How It Works
 
-For each planned component, evaluate whether it matches a known "complex UI pattern" category. These are patterns where the ecosystem consensus is strong and the build-vs-adopt calculus overwhelmingly favors adopting.
+For each planned component, evaluate whether it matches a known "complex UI pattern" category from `docs/ecosystem-patterns.md`. These are patterns where the ecosystem consensus is strong and the build-vs-adopt calculus favors adopting.
 
-The **Category → Library Map** below is a **starting point** — common patterns and their historically dominant libraries. Libraries go stale. For every match, **verify currency** using web search before recommending. If a table entry is unmaintained, search for its replacement.
-
-**Category → Ecosystem Library Map (defaults — always verify current popularity via web search):**
-
-| Pattern Category | When It Triggers | Example Libraries (verify before recommending) |
-|---|---|---|
-| **Data Table / Data Grid** | Component renders rows/columns with sorting, filtering, pagination, or selection | TanStack Table, AG Grid, react-data-table-component |
-| **Chart / Data Visualization** | Component renders charts, graphs, sparklines, or analytics | Recharts, Chart.js, Nivo, Victory, D3 |
-| **Date Picker / Calendar** | Component involves date selection, date ranges, or calendar views | react-datepicker, react-day-picker, @mui/x-date-pickers |
-| **Rich Text / WYSIWYG Editor** | Component is a text editor with formatting controls | TipTap, Slate.js, ProseMirror, Lexical |
-| **Command Palette** | Component is a Cmd+K / Spotlight-style quick-action overlay | cmdk, kbar |
-| **Drag and Drop** | Component involves reordering, kanban boards, or sortable lists | @dnd-kit, react-beautiful-dnd, Pragmatic drag-and-drop |
-| **Carousel / Slider** | Component is an image or content carousel | Embla Carousel, Swiper, react-slick |
-| **Form Validation** | Multiple form components or complex form state | React Hook Form, Formik, Conform |
-| **Infinite Scroll / Virtualized List** | Component renders large lists with scroll-based loading | TanStack Virtual, react-window, react-virtuoso |
-| **Maps / Geospatial** | Component renders a map or location picker | Mapbox GL, Leaflet, react-map-gl |
-| **File Upload / Dropzone** | Component handles file selection, drag-to-upload, progress | react-dropzone, uppy, filepond |
-| **Toast / Notification System** | Component manages ephemeral notification stack | react-hot-toast, sonner, notistack |
-| **Modals / Dialogs (complex)** | Multi-step wizards, nested dialogs, or complex overlay stacks | The component library usually handles this; flag only if the need exceeds it |
-| **Animation / Motion** | Complex orchestrated animations or gesture-driven interactions | Framer Motion, react-spring, Motion One |
-
-> **This is not an exhaustive list.** When a planned component doesn't match a known category but *feels* complex (many states, accessibility requirements, cross-browser edge cases), err on the side of searching.
+The **Category → Pattern Map** lives in `docs/ecosystem-patterns.md` — a reference document with 19 pattern categories and their historically dominant libraries. This is a starting point; the scan verifies every match against the current ecosystem using the search guardrails below.
 
 #### Research-Enhanced Scan
 
-The table above is a **starting point**. Libraries go stale. The scan process now includes real-time verification using `docs/library-vetting-rubric.md`:
+The scan uses `docs/ecosystem-patterns.md` for pattern matching and `docs/library-vetting-rubric.md` for scoring. Every library recommendation is verified against the current ecosystem state before being presented.
 
-1. **Start from the table.** Match each planned component against the categories above.
-2. **Verify each match via web search.** For each match, search:
-   ```
-   "{library-name} npm 2026"
-   "{library-name} maintained status github"
-   "{library-name} vs alternatives {framework}"
-   ```
-3. **Check for unmaintained libraries.** If a table entry is stale (e.g., `react-beautiful-dnd` — unmaintained since 2023), search for its replacement:
-   ```
-   "react-beautiful-dnd alternative 2026"
-   "{framework} drag and drop library 2026"
-   ```
-4. **Apply the vetting rubric.** Score each candidate against `docs/library-vetting-rubric.md`. A library scoring ≥5/8 is recommended.
-5. **Present with scores.** Show ranked recommendations with vetting scores and tradeoffs.
+**Search guardrails — preferred tools in order of availability:**
 
-**Standalone pre-research caching:** If `design/research/libraries/{pattern}.md` exists from a prior `/pixel-perfect:research --libraries` run and was researched within the last 30 days, reuse those findings rather than re-searching. Search only if the cached research is stale or absent.
+| Tool | Priority | Use Case |
+|------|----------|----------|
+| **Default harness search** (built-in WebSearch) | **First** — always available, zero setup | Broad queries, npm package existence, GitHub repo lookups |
+| **Jina Reader** (`jina_read_url`) | Use when provisioned | Deep-read npm package pages, GitHub READMEs, library docs |
+| **Exa** (`exa_web_search_exa`) | Use when provisioned | Semantic search for current alternatives, design research |
+| **Firecrawl MCP** (`firecrawl` tools) | Use when provisioned | Scraping changelogs, release pages, structured data extraction |
+
+**Fallback:** Default harness search is sufficient for all queries. The other tools enrich the research but are not required. Never assume a tool is available — check the harness's available tools before referencing them.
+
+**Reputational signals — objective metrics for library quality:**
+
+| Signal | Source | How to Check |
+|--------|--------|---------------|
+| **Stars** | GitHub | Search `"{library-name} github stars"` |
+| **Weekly Downloads** | npm registry | Search `"{library-name} weekly downloads npm"` or `npm view {library-name}` |
+| **Last Release** | npm / GitHub | Search `"{library-name} latest release"` or `npm view {library-name} time` |
+| **Rating (if available)** | npm search | Search `"{library-name} rating"` or check npm page |
+
+These signals feed into the vetting rubric (`maintenance` ← Last Release, `popularity` ← Stars + Downloads, `community` ← Rating + Stars). Libraries with STRONG downloads + ACTIVE releases + HIGH rating are top-tier recommendations.
+
+**Scan steps:**
+
+1. **Start from the pattern map.** Match each planned component against categories in `docs/ecosystem-patterns.md`.
+2. **Verify current state.** For each match, search framework-specifically:
+   ```
+   "best {framework} {pattern} library 2026"
+   "{library-name} npm downloads stars 2026"
+   "{library-name} latest release date"
+   ```
+3. **Check reputation.** Verify the four reputational signals (stars, downloads, last release, rating). A library stale for >12 months is automatically flagged and alternatives are searched.
+4. **Check for stale entries.** If a table entry has no recent release, search:
+   ```
+   "{stale-library} alternative {framework} 2026"
+   "best {framework} {pattern} library 2026"
+   ```
+5. **Apply the vetting rubric.** Score each candidate against `docs/library-vetting-rubric.md`. Library scoring ≥5/8 is recommended.
+6. **Present with scores.** Show ranked recommendations with vetting scores, reputational signals, and tradeoffs.
+
+**Pre-research caching:** If `design/research/libraries/{pattern}.md` exists from a prior `/pixel-perfect:research --libraries` run and was researched within the last 30 days, reuse those findings. Search fresh only if cached research is stale or absent. No libraries are cached outside the project directory.
 
 #### The Scan Process
 
-1. **Categorize:** For each planned atom/molecule/organism, determine if it falls into one of the pattern categories above (or seems like it *might* benefit from an ecosystem library).
+1. **Categorize:** For each planned atom/molecule/organism, determine if it falls into one of the pattern categories in `docs/ecosystem-patterns.md` (or seems like it *might* benefit from an ecosystem library).
 
 2. **Check existing tools:** If the user's chosen component adapter already provides this component (e.g., shadcn/ui has a Data Table built on TanStack Table), note that the adapter covers it and move on — no recommendation needed.
 
-3. **Verify via web search:** For each match, verify the table's recommendation against the current ecosystem. Search for:
+3. **Verify via web search:** For each match, verify the pattern map's recommendation against the current ecosystem using the search guardrails documented above. Search:
    ```
    "best {framework} {pattern} library 2026"
-   "{framework} {pattern} component library npm"
+   "{framework} {pattern} component npm stars downloads"
    ```
-   Apply `docs/library-vetting-rubric.md` to each candidate. Prefer libraries scoring ≥5/8 that are:
-   - **Actively maintained** (commits in the last 6 months)
+   Verify reputational signals (stars, weekly downloads, last release date, rating). Apply `docs/library-vetting-rubric.md` to each candidate. Prefer libraries that are:
+   - **Actively maintained** (LAST RELEASE ≤ 6 months)
+   - **Well-adopted** (STARS + DOWNLOADS both STRONG or MODERATE)
    - **Framework-native** (React lib for React, Svelte lib for Svelte, etc.)
    - **Compatible** with the project's existing component adapter where possible
-   - **Well-scored** on maintenance, popularity, and compatibility criteria
 
 4. **Present ranked recommendations:** For each component where a library match was found, present scored recommendations to the user **before** the BUILD PLAN is finalized:
 
@@ -263,7 +278,7 @@ Do **not** recommend a library when:
 - The component is simple enough that a library adds more complexity than value (a basic badge, a single button, a label)
 - The component is **domain-specific** (StatusBadge, JobCard, UserCard — these are *your* product, not generic UI)
 - The project's existing component adapter already provides a good implementation
-- The user has explicitly opted out (add `"ecosystemScan": false` to the manifest to disable this step entirely)
+- The user has set `ecosystemMode: "off"` (or set the specific category to `"off"` in `librarySuggestions.categories`)
 
 #### Step 2c: Library Validation (after user accepts)
 

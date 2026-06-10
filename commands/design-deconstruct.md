@@ -1,5 +1,6 @@
 ---
 description: "Optional first step: deconstruct existing UI (code, URL, screenshot, or concept) into token-governed HTML mockups that seed the pixel-perfect build (Phase 0)"
+agent: primary
 ---
 
 # Design Deconstruct (Phase 0 — optional on-ramp)

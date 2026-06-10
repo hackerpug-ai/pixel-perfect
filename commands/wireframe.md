@@ -1,5 +1,6 @@
 ---
 description: "Optional first step: generate low-fidelity ASCII wireframes from plans/targets into design/wireframes/ — a pre-step to design-deconstruct or high-fidelity design (Phase 0)"
+agent: primary
 ---
 
 # Wireframe (Phase 0 — low-fidelity on-ramp)

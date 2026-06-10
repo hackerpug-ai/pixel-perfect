@@ -4,7 +4,7 @@
 
 # pixel-perfect
 
-A Claude Code plugin that skips the mockup abstraction entirely. Instead of generating designs that get "lost in translation," it builds the **real components in your target framework** during design ideation — browsable in a **native sandbox** it generates from scratch (Storybook optional).
+A Claude Code and OpenCode plugin that skips the mockup abstraction entirely. Instead of generating designs that get "lost in translation," it builds the **real components in your target framework** during design ideation — browsable in a **native sandbox** it generates from scratch (Storybook optional).
 
 ---
 
@@ -47,16 +47,37 @@ Each phase has a **gate** that must pass before you proceed. The plugin tracks s
 
 ### Installation
 
+#### Claude Code
+
 ```
 /plugin marketplace add https://github.com/hackerpug-ai/pixel-perfect
 /plugin install pixel-perfect@pixel-perfect
 ```
 
+#### OpenCode
+
+Clone the repo into your project (or a shared location) and create symlinks:
+
+```bash
+# Option A: Clone into your project
+git clone https://github.com/hackerpug-ai/pixel-perfect.git .pixel-perfect
+ln -sf .pixel-perfect/.opencode/commands .opencode/commands
+ln -sf .pixel-perfect/.opencode/skills .opencode/skills
+
+# Option B: Clone to a shared location and symlink per-project
+git clone https://github.com/hackerpug-ai/pixel-perfect.git ~/pixel-perfect
+ln -sf ~/pixel-perfect/.opencode/commands .opencode/commands
+ln -sf ~/pixel-perfect/.opencode/skills .opencode/skills
+```
+
+Commands appear as `/init`, `/build`, etc. (without the `pixel-perfect:` prefix).
+
 ### First Project
 
 ```bash
 # 0. (Optional) Start from an existing design instead of a blank PRD
-/pixel-perfect:design-deconstruct https://example.com   # or a screenshot, repo, or concept
+/pixel-perfect:design-deconstruct https://example.com   # Claude Code
+# or:  /design-deconstruct https://example.com          # OpenCode
 
 # 1. Set up your project (phases 1-3)
 /pixel-perfect:init
@@ -70,6 +91,8 @@ Each phase has a **gate** that must pass before you proceed. The plugin tracks s
 # Check progress anytime
 /pixel-perfect:status
 ```
+
+> **OpenCode users**: commands are available without the `pixel-perfect:` prefix (e.g., `/init`, `/build`, `/status`).
 
 Init walks you through:
 1. **Where are your requirements?** (auto-detects PRD.md)
@@ -243,6 +266,7 @@ No specific library is required. Select "None" or "Other" with a docs URL, and t
   "goal": "Dashboard for monitoring real-time analytics",
   "vibe": "clean, data-dense, dark mode",
   "spec": "PRD.md",
+  "ecosystemMode": "suggest",
   "platforms": ["web-desktop"],
   "tools": {
     "framework": "vite",
@@ -358,6 +382,7 @@ When you work in a project that has `design/manifest.json`, the **process-contex
 - [Storybook Conventions](docs/storybook-conventions.md) - Controls, token stories, organization (Storybook opt-in)
 - [Sandbox Spec](docs/sandbox-spec.md) - The seven-piece spec every sandbox implements (custom default)
 - [Library Vetting Rubric](docs/library-vetting-rubric.md) - 8-criteria rubric for evaluating ecosystem libraries
+- [Ecosystem Patterns](docs/ecosystem-patterns.md) - Pattern map, search guardrails, and reputational scoring for library recommendations
 - [Design Systems](docs/design-systems/README.md) - Supported design system references
 - [Icon Libraries](docs/icon-libraries/README.md) - Supported icon library references
 
@@ -375,7 +400,7 @@ v4 is a clean break from v2. There is no incremental migration path.
 
 ## Requirements
 
-- Claude Code with plugin support
+- **Claude Code** with plugin support, **or** **OpenCode** with command/skill support
 - A project directory with requirements (PRD.md or similar)
 
 ---
