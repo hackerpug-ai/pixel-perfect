@@ -1,5 +1,6 @@
 ---
 description: "Run gate checks for the current phase and advance if all pass"
+agent: primary
 ---
 
 # Verify (Gate Checks)

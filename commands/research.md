@@ -1,5 +1,6 @@
 ---
 description: "Research UI/UX design patterns, trends, and competitor designs using web search tools"
+agent: primary
 ---
 
 # Design Research

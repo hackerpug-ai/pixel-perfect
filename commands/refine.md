@@ -1,5 +1,6 @@
 ---
 description: "Iterate on components, screens, and theme with targeted feedback, then re-verify"
+agent: primary
 ---
 
 # Refine (Code Iteration)

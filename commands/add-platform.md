@@ -1,5 +1,6 @@
 ---
 description: "Add a new platform to an existing pixel-perfect project (post-init TARGET + EQUIP for one platform)"
+agent: primary
 ---
 
 # Add Platform

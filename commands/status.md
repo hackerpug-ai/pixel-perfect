@@ -1,5 +1,6 @@
 ---
 description: "Show phase progress, gate status, and component tracking for the current project"
+agent: primary
 ---
 
 # Project Status

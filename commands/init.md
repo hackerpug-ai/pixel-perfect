@@ -1,5 +1,6 @@
 ---
 description: "Initialize design project: DISCOVER goal + vibe, TARGET platforms, EQUIP tools (phases 1-3)"
+agent: primary
 ---
 
 # Project Initialization (Phases 1-3)

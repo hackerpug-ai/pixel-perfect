@@ -212,8 +212,17 @@ When building components that match complex UI patterns (data tables, date picke
 
 **When to research independently:**
 - User asks "what library should I use for X?"
-- You encounter a complex UI pattern not in the lookup table
+- You encounter a complex UI pattern not in `docs/ecosystem-patterns.md`
 - An existing library in the project may be stale
+
+**Respecting ecosystemMode:**
+
+Check `manifest.ecosystemMode` before running the Ecosystem Scan during BUILD PLAN:
+- `suggest` (default): Run the scan, present suggestions, but never block the plan.
+- `off`: Skip the scan entirely. No library suggestions anywhere.
+- `required`: Run the scan and block until every complex pattern has a resolved decision.
+
+Individual categories can override the global mode via `manifest.librarySuggestions.categories`.
 
 For design token story regeneration and the polyfill disclaimer pattern (required for React Native web Storybook), see `docs/storybook-conventions.md` and `docs/adapters/react-native-web.md`.
 

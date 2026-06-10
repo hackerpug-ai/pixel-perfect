@@ -1,5 +1,6 @@
 ---
 description: "Set up project structure, install tools, create theme, generate design token stories, and verify with hello-world component (phase 4: SCAFFOLD)"
+agent: primary
 ---
 
 # Scaffold (Phase 4)
