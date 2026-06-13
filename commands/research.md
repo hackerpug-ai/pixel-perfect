@@ -250,10 +250,13 @@ Contracts are cached to `design/research/styling/{id}.md` and reused for 30 days
    d. Synthesize the contract in the canonical schema (Markdown + YAML frontmatter + a
       fenced ```json checks block — see docs/styling-contracts/README.md). The checks block
       is JSON (zero-dep gate), with runnable glob+regex detections.
-   e. Validate: frontmatter complete; checks JSON parses; every detection regex compiles
-      (run them through the gate script against an empty dir to confirm it loads);
-      contradiction-check rejects contracts that contradict well-known facts
-      (e.g. a "Tailwind" contract that permits global custom-class CSS).
+   e. Validate: frontmatter complete; checks JSON parses; every detection regex compiles;
+      then PROVE the detections work by running the gate script against a tiny known-good
+      sample (idiomatic code → must pass, exit 0) AND a known-bad sample (code that
+      violates each forbidden pattern → must flag it, exit 1). An empty-dir load test only
+      proves the JSON parses — it does not prove the checks fire or avoid false positives,
+      so it is not sufficient. contradiction-check rejects contracts that contradict
+      well-known facts (e.g. a "Tailwind" contract that permits global custom-class CSS).
    f. Cache to design/research/styling/{id}.md and return the contract id.
 
 3. Output:

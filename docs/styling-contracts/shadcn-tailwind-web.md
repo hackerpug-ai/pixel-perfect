@@ -73,7 +73,8 @@ shadcn defines semantic tokens as CSS custom properties (`:root`/`.dark` in `glo
 
 - **Global CSS with custom classes** (`.atom-*`/`.mol-*`/`.org-*` or bespoke component classes). *Rationale:* parallel system that bypasses Tailwind + the shadcn token layer (the `fabrio` failure).
 - **Inline `style={{}}`** for static values. *Rationale:* bypasses utilities + tokens.
-- **Literal Tailwind palette colors** (`bg-blue-600`, `text-zinc-500`) used as theme values. *Rationale:* breaks theming/dark mode; use the shadcn token utility (`bg-primary`) instead.
+
+> **Advisory, not blocking:** prefer shadcn token utilities (`bg-primary`, `text-muted-foreground`) over literal palette colors (`bg-blue-600`) for *semantic* values. Neutral palette colors for non-semantic styling (e.g. `border-slate-200`) are acceptable, so this is a verify-checklist item rather than a blocking check — a blocking palette ban would false-positive on legitimate neutral usage.
 
 ## Verify checklist (component level)
 
@@ -100,13 +101,6 @@ shadcn defines semantic tokens as CSS custom properties (`:root`/`.dark` in `glo
       "glob": ["src/**/*.{tsx,jsx,ts,js}"],
       "regex": "\\bstyle=\\{\\{",
       "rationale": "Inline style={{}} bypasses utilities and the shadcn token layer."
-    },
-    {
-      "id": "literal-palette-colors",
-      "mode": "content",
-      "glob": ["src/**/*.{tsx,jsx}"],
-      "regex": "(bg|text|border|ring|fill|stroke)-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-[0-9]{2,3}",
-      "rationale": "Literal Tailwind palette colors break shadcn theming/dark mode; use the semantic token utility (bg-primary, text-muted-foreground)."
     }
   ],
   "mustInclude": [

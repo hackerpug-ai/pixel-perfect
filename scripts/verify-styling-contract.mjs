@@ -19,7 +19,9 @@
 //                   files are not flagged.
 //   --json          emit only the JSON report on stdout (suppress the human summary).
 //
-// Exit codes: 0 = clean (no violations); 1 = violations found; 2 = usage/parse error.
+// Exit codes: 0 = clean (no violations); 1 = violations found; 2 = contract/usage
+// error; 3 = vacuous scan (checks present but 0 files matched — almost always a
+// wrong source-root, treated as a failure so it can't silently pass).
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -124,13 +126,23 @@ function parseContract(path) {
     }
   }
 
-  // the checks block — the only ```json fence in the file
-  const jsonMatch = md.match(/```json\n([\s\S]*?)\n```/);
-  if (!jsonMatch) throw new Error(`No \`\`\`json checks block found in ${path}`);
+  // the checks block — the ```json fence directly under the "## Checks" heading.
+  // Anchoring to the heading (not "first json fence in the file") keeps parsing
+  // correct even if a contract body contains an unrelated ```json code example.
+  const checksHeading = md.indexOf("## Checks");
+  if (checksHeading === -1) throw new Error(`${path} has no '## Checks' section`);
+  const jsonMatch = md.slice(checksHeading).match(/```json\n([\s\S]*?)\n```/);
+  if (!jsonMatch) throw new Error(`No \`\`\`json checks block found under '## Checks' in ${path}`);
+  const raw = jsonMatch[1].trim();
+  if (!raw) throw new Error(`Checks block under '## Checks' in ${path} is empty`);
   let checks;
-  try { checks = JSON.parse(jsonMatch[1]); } catch (e) { throw new Error(`Checks block in ${path} is not valid JSON: ${e.message}`); }
+  try { checks = JSON.parse(raw); } catch (e) { throw new Error(`Checks block in ${path} is not valid JSON: ${e.message}`); }
   if (!Array.isArray(checks.forbiddenPatterns)) checks.forbiddenPatterns = [];
   if (!Array.isArray(checks.mustInclude)) checks.mustInclude = [];
+  // A contract with no checks enforces nothing — reject it rather than silently pass.
+  if (checks.forbiddenPatterns.length === 0 && checks.mustInclude.length === 0) {
+    throw new Error(`${path}: checks block defines no forbiddenPatterns and no mustInclude — it would enforce nothing`);
+  }
 
   // compile + validate every regex up front (fail fast on a bad contract)
   for (const list of [checks.forbiddenPatterns, checks.mustInclude]) {
@@ -155,8 +167,10 @@ function detect(contractPath, sourceRoot, allowGlobs) {
   const { id, name, checks } = parseContract(contractPath);
   const allFiles = walk(sourceRoot).map((f) => relative(sourceRoot, f));
   const allow = allowGlobs.length ? makeMatcher(allowGlobs) : null;
+  const allChecks = [...checks.forbiddenPatterns, ...checks.mustInclude];
 
   const violations = [];
+  const scoped = new Set(); // files that were actually evaluated by at least one check
 
   function inScope(file, c) {
     if (!c._include(file)) return false;
@@ -169,6 +183,7 @@ function detect(contractPath, sourceRoot, allowGlobs) {
     if (c.mode === "exists") {
       for (const file of allFiles) {
         if (inScope(file, c)) {
+          scoped.add(file);
           violations.push({ type: "forbidden", checkId: c.id, file, rationale: c.rationale || "" });
         }
       }
@@ -177,6 +192,7 @@ function detect(contractPath, sourceRoot, allowGlobs) {
     // content mode: scan lines
     for (const file of allFiles) {
       if (!inScope(file, c)) continue;
+      scoped.add(file);
       let content;
       try { content = readFileSync(join(sourceRoot, file), "utf8"); } catch { continue; }
       const lines = content.split("\n");
@@ -192,6 +208,7 @@ function detect(contractPath, sourceRoot, allowGlobs) {
   for (const c of checks.mustInclude) {
     for (const file of allFiles) {
       if (!inScope(file, c)) continue;
+      scoped.add(file);
       let content;
       try { content = readFileSync(join(sourceRoot, file), "utf8"); } catch { continue; }
       const has = content.split("\n").some((l) => c._re.test(l));
@@ -201,6 +218,17 @@ function detect(contractPath, sourceRoot, allowGlobs) {
     }
   }
 
+  const warnings = [];
+  // Vacuous-scan guard: a contract that matched zero files usually means the
+  // wrong source-root was passed (e.g. `src/` instead of the project root, so
+  // globs like `src/components/**` match nothing). That silently passes — surface it.
+  if (allChecks.length > 0 && scoped.size === 0) {
+    warnings.push(
+      `The contract's globs matched 0 of ${allFiles.length} file(s) under "${sourceRoot}". ` +
+      `A vacuous pass — likely the wrong source-root. Pass the PROJECT ROOT (the dir containing src/), not src/.`
+    );
+  }
+
   return {
     contract: { id, name },
     sourceRoot,
@@ -208,7 +236,11 @@ function detect(contractPath, sourceRoot, allowGlobs) {
       total: violations.length,
       forbidden: violations.filter((v) => v.type === "forbidden").length,
       mustInclude: violations.filter((v) => v.type === "mustInclude").length,
+      filesScanned: allFiles.length,
+      filesInScope: scoped.size,
+      hasChecks: allChecks.length,
     },
+    warnings,
     violations,
   };
 }
@@ -256,8 +288,13 @@ function main(argv) {
         process.stderr.write(`  ${where} — ${detail}. ${why}\n${sample}\n`);
       }
     }
+    for (const w of report.warnings) process.stderr.write(`⚠ ${report.contract.id}: ${w}\n`);
   }
-  return report.violations.length === 0 ? 0 : 1;
+  // A vacuous scan (checks present, zero files matched) is treated as a hard
+  // failure, not a silent pass — it almost always means the wrong source-root,
+  // and silently "passing" would defeat the gate.
+  const vacuous = report.warnings.length > 0;
+  return vacuous ? 3 : (report.violations.length === 0 ? 0 : 1);
 }
 
 // Export internals for testing; run main() only when invoked directly.
