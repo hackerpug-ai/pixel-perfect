@@ -3,7 +3,7 @@ id: css-modules-web
 name: CSS Modules (Web)
 appliesTo:
   platforms: [web-desktop, web-mobile]
-  frameworks: [react, nextjs, vite, sveltekit]
+  frameworks: [react, nextjs, vite]
   styleSystem: css-modules
   componentLibrary: any
 source: builtin

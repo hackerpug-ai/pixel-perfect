@@ -3,7 +3,7 @@ id: tailwind-web
 name: Tailwind CSS (Web)
 appliesTo:
   platforms: [web-desktop, web-mobile]
-  frameworks: [react, nextjs, vite, sveltekit]
+  frameworks: [react, nextjs, vite]
   styleSystem: tailwind
   componentLibrary: any
 source: builtin
@@ -13,7 +13,9 @@ lastUpdated: 2026-06-13
 
 # Tailwind CSS (Web) — Styling Contract
 
-All styling is expressed as **Tailwind utility classes** applied through the framework's class attribute (`className` for React, `class` for Svelte/Vue). There are no per-component CSS files, no global custom classes, and no inline style objects. Design tokens reach components through Tailwind's theme (CSS custom properties mapped into the Tailwind theme config) and are consumed as utilities (`bg-primary`, `text-foreground`, `border-border`).
+All styling is expressed as **Tailwind utility classes** applied through the `className` prop (React-family: React / Next.js / Vite). There are no per-component CSS files, no global custom classes, and no inline style objects. Design tokens reach components through Tailwind's theme (CSS custom properties mapped into the Tailwind theme config) and are consumed as utilities (`bg-primary`, `text-foreground`, `border-border`).
+
+> **Scope:** This built-in covers React-family frameworks. SvelteKit/Vue + Tailwind resolve through `/pixel-perfect:research --styling`, which synthesizes a contract with framework-correct checks (`class=` rather than `className=`, etc.).
 
 This contract exists precisely because "declared Tailwind" is easy to bypass: without an enforced rule, a build can ship a parallel global-CSS system of custom `.atom-*` / `.mol-*` classes (the `fabrio` failure). The checks below make that drift a blocking violation.
 
