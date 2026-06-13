@@ -231,6 +231,11 @@ Contracts are cached to `design/research/styling/{id}.md` and reused for 30 days
       - "{system} component styling best practices {year}"
       - "{system} theming design tokens"
       - "{system} style API reference"   (e.g. "SwiftUI ViewModifier reference")
+      **JS-rendered docs note:** some vendor doc sites (e.g. developer.apple.com) are
+      single-page apps that return only nav chrome to a reader. If the fetched content
+      is thin (no API/styling substance), fall back to a renderable authoritative source
+      (a screenshot capture tool, or a reputable secondary guide: Hacking with Swift, the
+      framework's GitHub README, MDN, etc.) and cite it. Never synthesize from nav chrome.
    b. Extract the five contract facts from the official docs:
       - Emit method   — HOW styles are expressed (utility classes? StyleSheet.create?
                         CSS Modules? view modifiers? modifier chains? style structs?)
