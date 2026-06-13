@@ -524,7 +524,52 @@ For tools selected as "Other" with a docs URL provided, inform the user:
   [ ] custom-style → No adapter. AI will reference provided docs URL during scaffold.
 ```
 
-**Exit gate:** All tool categories have a selection. Manifest has `equip: passed`.
+### Resolve Styling Contract
+
+Now that platform, framework, style system, and component library are all chosen, resolve the **styling contract** that will govern how styles are emitted during BUILD (see `docs/styling-contracts/README.md`). This is the step that turns a *declared* style system into an *enforced* one — the gap that let a prior project drift into a parallel global-CSS system.
+
+**Step 1 — Built-in match (fast path).** If the `(platform, framework, style, components)` tuple matches a shipped built-in, use it automatically:
+
+| Platform | Framework | Style | Components | Contract ID |
+|----------|-----------|-------|------------|-------------|
+| web | react / nextjs / vite | tailwind | shadcn | `shadcn-tailwind-web` |
+| web | react / nextjs / vite | tailwind | (none / other) | `tailwind-web` |
+| web | react / nextjs / vite | css-modules | any | `css-modules-web` |
+| mobile | react-native / expo | nativewind | any | `nativewind-mobile` |
+| mobile | react-native / expo | stylesheet | paper | `paper-md3-mobile` |
+| mobile | react-native / expo | stylesheet | (none / other) | `rn-stylesheet-mobile` |
+
+Most-specific row wins. Report the match:
+```
+Styling contract: shadcn-tailwind-web (built-in)
+  emit: utility-classes-via-className · colocated · forbids global custom CSS + inline styles
+```
+
+**Step 2 — Research (no built-in).** If nothing matches — exotic framework (SvelteKit, Vue), exotic style system, or "Other" — and a docs URL was recorded (`tools.style_docs`) or can be derived, trigger `/pixel-perfect:research --styling <system> --framework <framework> --docs <url>`:
+
+```
+No built-in styling contract for: {framework} + {style}.
+? Research the styling conventions now (searches official docs, ~30–60s)?
+    Yes, research now
+    I'll author a contract manually in docs/styling-contracts/
+    Proceed WITHOUT a contract (not recommended)
+```
+
+- **Yes →** research synthesizes a contract, vets it against `docs/styling-convention-rubric.md` (≥6/7, no-contradiction auto-reject), caches it to `design/research/styling/{id}.md`. Record `style_contract_source: "researched"`.
+- **Manual →** the user authors `docs/styling-contracts/{id}.md` (validate it loads in the gate before recording). Record `style_contract_source: "manual"`.
+- **Proceed without →** explicit opt-out only. Record `style_contract_source: "none"`, `style_contract_enforcement: "off"`. Flag at every subsequent build that styles are unenforced. This is never the default and never silent.
+
+**Step 3 — Fail closed.** If research cannot produce a rubric-passing contract, do **not** fabricate one and do **not** silently proceed. Offer: provide a better docs URL / author manually / choose a supported system from the menu / explicit proceed-without (above). A missing contract is an honest blocker.
+
+**Step 4 — Record.** Write the resolution into the manifest under `platforms[platform].tools`:
+- `style_contract` — the contract id (e.g. `shadcn-tailwind-web`, `swiftui-view-modifiers`).
+- `style_contract_source` — `builtin` | `researched` | `manual` | `none`.
+- `style_contract_enforcement` — `hard-fail` (default) | `warn` | `off`. Hard-fail blocks the BUILD layer on any forbidden pattern; `warn` reports but proceeds (for legacy/migration projects).
+- `style_contract_overrides` — `{}` initially; per-component justified exceptions added later during BUILD (`{componentName: reason}`).
+
+**Staleness nudge.** When a built-in's `lastUpdated` is older than ~90 days, offer: "Built-in contract `<id>` was last reviewed `<date>`. Re-run `/pixel-perfect:research --styling` to refresh?" Re-research writes to `design/research/styling/` (it does not overwrite the shipped built-in).
+
+**Exit gate:** All tool categories have a selection AND a styling contract is resolved (or the user explicitly chose proceed-without, recorded as `style_contract_source: "none"`). Manifest has `equip: passed`.
 
 ---
 
@@ -555,7 +600,11 @@ Creates `{directory}/design/manifest.json`:
         "style": "tailwind",
         "components": "shadcn",
         "icons": "lucide-react",
-        "sandbox": "custom"
+        "sandbox": "custom",
+        "style_contract": "shadcn-tailwind-web",
+        "style_contract_source": "builtin",
+        "style_contract_enforcement": "hard-fail",
+        "style_contract_overrides": {}
       },
       "phase": "equip",
       "gates": {
@@ -593,7 +642,11 @@ Creates `{directory}/design/manifest.json`:
         "style": "nativewind",
         "components": "react-native-reusables",
         "icons": "lucide-react-native",
-        "sandbox": "custom"
+        "sandbox": "custom",
+        "style_contract": "nativewind-mobile",
+        "style_contract_source": "builtin",
+        "style_contract_enforcement": "hard-fail",
+        "style_contract_overrides": {}
       },
       "phase": "equip",
       "gates": {
@@ -610,7 +663,11 @@ Creates `{directory}/design/manifest.json`:
         "style": "nativewind",
         "components": "react-native-reusables",
         "icons": "lucide-react-native",
-        "sandbox": "custom"
+        "sandbox": "custom",
+        "style_contract": "nativewind-mobile",
+        "style_contract_source": "builtin",
+        "style_contract_enforcement": "hard-fail",
+        "style_contract_overrides": {}
       },
       "phase": "equip",
       "gates": {
@@ -631,7 +688,7 @@ The `spec` field is the path to the spec/PRD document (relative to the project r
 
 **Screen entries (`platforms[platform].screens[]`).** Each screen is keyed by **`route`** (the page identity / dedup key — a URL path on web like `/feed`; a navigator destination on mobile like `Feed`; a named view on TUI/desktop; default `"/" + kebab-case(name)` on web, `PascalCase(name)` elsewhere) and carries a **`states`** list — the named states for that route (`["default","empty","loading","error"]`, or tab names like `["account","billing","team"]`), each of which becomes one sandbox story. Views that differ only by state collapse into ONE screen with a `states` list rather than separate screens. Single-state screens carry `["default"]` (or omit `states`). The remaining fields are `name`, `file`, `story`, `status`, `atoms`/`molecules`/`organisms`, and optional `target`. Both fields are additive and backward-compatible (a screen with no `route` uses the default derivation; no `states` means a single Default story). See `docs/state-patterns.md`.
 
-**When "Other" is selected for any tool**, the manifest includes the docs URL inside the platform's tools:
+**When "Other" is selected for any tool**, the manifest includes the docs URL inside the platform's tools. For a custom style system, the styling contract is resolved by research (`style_contract_source: "researched"`) or, if research was inconclusive and the user opted out, marked `"none"`:
 
 ```json
 {
@@ -645,12 +702,18 @@ The `spec` field is the path to the spec/PRD document (relative to the project r
         "components": "react-native-paper",
         "icons": "custom",
         "icons_docs": "https://example.com/icons/docs",
-        "sandbox": "custom"
+        "sandbox": "custom",
+        "style_contract": "swiftui-view-modifiers",
+        "style_contract_source": "researched",
+        "style_contract_enforcement": "hard-fail",
+        "style_contract_overrides": {}
       }
     }
   }
 }
 ```
+
+If research could not produce a rubric-passing contract and the user chose to proceed without one, `style_contract` is omitted and `style_contract_source: "none"`, `style_contract_enforcement: "off"` are recorded instead (flagged at every build).
 
 ---
 
