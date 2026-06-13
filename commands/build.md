@@ -539,12 +539,31 @@ For each component, in order:
 
 1. **Load context:**
    - Adapter docs for the chosen tools, including the **framework adapter** if one exists (e.g. `docs/adapters/sveltekit.md`) — it defines the component file extension and story format
+   - **Styling contract** for this platform's style system (`manifest.platforms[platform].tools.style_contract`). Load `docs/styling-contracts/{id}.md` when `style_contract_source` is `builtin`/`manual`, or `design/research/styling/{id}.md` when `researched`. This is a **hard constraint** on how styles are emitted (Step 1b) — not optional guidance. If `style_contract_source: "none"`, no contract is loaded (styles are unenforced; flag this to the user).
    - Project theme file
    - frontend-design aesthetic context (if available)
    - **Deconstruction target** (if `design/deconstruction.json` exists): the matching mockup for this atom (its `inventory.atoms[].html` / `.png`) — build the real component to match the mockup's structure, tokens, and states
 
+### Step 1b: Apply Styling Contract
+
+Before writing the component, read the loaded styling contract and treat it as a **hard constraint**, not a suggestion. This is precisely what prevents the drift where a build silently bypasses the declared style system — e.g. inventing a parallel global-CSS system of custom `.atom-*` / `.mol-*` classes ported from a mockup's `<style>` block, the failure that motivated contracts.
+
+From the contract, you MUST:
+- **Emit styles via `<emitMethod>`** — e.g. Tailwind utility classes on `className`; colocated `StyleSheet.create`; `import styles from './X.module.css'`. No other mechanism for static styles.
+- **Place styles per `<filePlacement.rule>`** — e.g. colocated; never a top-level `styles/` of global CSS.
+- **Bind tokens via `<tokenBinding.mechanism>`** — e.g. CSS custom properties → Tailwind theme; theme object → `StyleSheet.create`. The theme flows through the chosen system, not a side channel.
+
+You MUST NOT:
+- Use any **forbidden pattern** in the contract's `checks` block (e.g. global custom-class CSS, inline `style={{}}` for static values, hardcoded color literals). These are blocking — Step 4's gate fails the layer on any.
+- **Port a mockup's `<style>` block verbatim into the project.** A deconstruction target's CSS is a *pixel reference only*; translate every style into the contract's emit method. (The gate would block the verbatim port anyway.)
+
+The contract governs the **styling mechanism**; the adapter doc governs **component-library patterns** (shadcn's `cn()`/`@/components/ui/`, Paper's themed components). Both apply.
+
+### Step 2: Build Each Atom (continued)
+
 2. **Write component file:**
    - Real component code (`.tsx`, `.vue`, `.svelte`, etc.)
+   - **Emits styles exactly per the styling contract (Step 1b)** — emit method, file placement, token binding, and no forbidden patterns
    - Uses theme tokens (not hardcoded values)
    - Follows adapter conventions (shadcn patterns, Paper patterns, etc.)
    - If frontend-design is available: distinctive typography, intentional color hierarchy, considered motion
@@ -655,6 +674,12 @@ For each component, in order:
    - Compilation succeeds (no type errors, no import errors)
    - Component renders in the sandbox (in isolation, under its layer)
    - All props are exposed to the sandbox's controls / variants
+   - **Styling contract gate** (unless `style_contract_enforcement: "off"`): run
+     `node {plugin}/scripts/verify-styling-contract.mjs <contract.md> <source-root> [--allow GLOB ...]`
+     where `<contract.md>` is the resolved contract path and `<source-root>` is the project source root (e.g. `.` or `src/`). Pass one `--allow <glob>` per active override in `tools.style_contract_overrides` (component files legitimately exempted). If the script exits non-zero:
+     - `hard-fail` (default): **block this atom** — print the violations (file, line, pattern, rationale) and fix the component to comply before continuing. Do NOT mark the atom verified.
+     - `warn`: print the violations and continue (the atom is still verified).
+     - Non-Node target, or the script path unresolvable: run the contract's `checks` block detections directly with `grep`/`glob` against `<source-root>` and apply the same pass/fail rule. The decision is deterministic either way — the LLM only formats the report.
    - If a deconstruction `target` exists for this atom: the rendered component matches the mockup's structure, tokens, and states (the literal pixel-perfect goal)
 
 5. **Aesthetic gate** (if frontend-design available):
@@ -720,16 +745,19 @@ Atoms: 3/5 verified
 
 ### Phase 5 Exit Gate
 
-All atoms in the manifest have `status: verified` and `controls: true`. Update manifest:
+All atoms in the manifest have `status: verified` and `controls: true`, AND the styling contract gate passes for the atom files (or `style_contract_enforcement` is `"off"`/`"warn"`). Update manifest:
 ```json
 {
   "phase": "atoms",
   "gates": {
     "plan": "passed",
-    "atoms": "passed"
+    "atoms": "passed",
+    "atoms_styling_contract": "passed"
   }
 }
 ```
+
+> **The styling-contract gate (Step 4) runs for every layer.** Molecules (5b), organisms (5c), and compose (6) each load the same contract (their Step 1), apply it (Step 1b), and run the same `verify-styling-contract.mjs` gate before their exit gate opens. Each layer records `{layer}_styling_contract: "passed"`. When `style_contract_enforcement` is `hard-fail` (default), a layer whose emitted files violate the contract is **blocked** until fixed or a per-component override is recorded in `tools.style_contract_overrides`. This is the gate that would have caught a parallel global-CSS system before it shipped.
 
 ---
 
@@ -990,12 +1018,13 @@ Molecules: 1/2 verified
 
 ### Phase 5b Exit Gate
 
-All molecules in the manifest have `status: verified`. Update manifest:
+All molecules in the manifest have `status: verified`, AND the styling-contract gate passes for the molecule files (Step 4 gate; `hard-fail` blocks). Update manifest:
 ```json
 {
   "phase": "molecules",
   "gates": {
-    "molecules": "passed"
+    "molecules": "passed",
+    "molecules_styling_contract": "passed"
   }
 }
 ```
@@ -1134,12 +1163,13 @@ Organisms: 1/2 verified
 
 ### Phase 5c Exit Gate
 
-All organisms in the manifest have `status: verified` AND all declared state scenarios have corresponding stories. Update manifest:
+All organisms in the manifest have `status: verified` AND all declared state scenarios have corresponding stories, AND the styling-contract gate passes for the organism files (Step 4 gate; `hard-fail` blocks). Update manifest:
 ```json
 {
   "phase": "organisms",
   "gates": {
-    "organisms": "passed"
+    "organisms": "passed",
+    "organisms_styling_contract": "passed"
   }
 }
 ```
@@ -1314,12 +1344,13 @@ For each screen:
 
 ### Phase 6 Exit Gate
 
-All screens have `status: verified`, **and** every screen has one sandbox story per entry in its `states` list (each driving the screen into that state). Update manifest:
+All screens have `status: verified`, **and** every screen has one sandbox story per entry in its `states` list (each driving the screen into that state), **and** the styling-contract gate passes across all built component/screen files (Step 4 gate; `hard-fail` blocks). Update manifest:
 ```json
 {
   "phase": "compose",
   "gates": {
-    "compose": "passed"
+    "compose": "passed",
+    "compose_styling_contract": "passed"
   }
 }
 ```
