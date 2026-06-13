@@ -548,6 +548,8 @@ For each component, in order:
 
 Before writing the component, read the loaded styling contract and treat it as a **hard constraint**, not a suggestion. This is precisely what prevents the drift where a build silently bypasses the declared style system — e.g. inventing a parallel global-CSS system of custom `.atom-*` / `.mol-*` classes ported from a mockup's `<style>` block, the failure that motivated contracts.
 
+**If a contract should apply but failed to load** (no `style_contract` in the manifest, or the contract file is missing/malformed): STOP and report to the user — do not build the component against an unknown styling basis. Re-run the EQUIP "Resolve Styling Contract" step (built-in / research / manual) or proceed only if the user explicitly set `style_contract_enforcement: "off"`.
+
 From the contract, you MUST:
 - **Emit styles via `<emitMethod>`** — e.g. Tailwind utility classes on `className`; colocated `StyleSheet.create`; `import styles from './X.module.css'`. No other mechanism for static styles.
 - **Place styles per `<filePlacement.rule>`** — e.g. colocated; never a top-level `styles/` of global CSS.
@@ -675,11 +677,11 @@ The contract governs the **styling mechanism**; the adapter doc governs **compon
    - Component renders in the sandbox (in isolation, under its layer)
    - All props are exposed to the sandbox's controls / variants
    - **Styling contract gate** (unless `style_contract_enforcement: "off"`): run
-     `node {plugin}/scripts/verify-styling-contract.mjs <contract.md> <source-root> [--allow GLOB ...]`
-     where `<contract.md>` is the resolved contract path and `<source-root>` is the project source root (e.g. `.` or `src/`). Pass one `--allow <glob>` per active override in `tools.style_contract_overrides` (component files legitimately exempted). If the script exits non-zero:
-     - `hard-fail` (default): **block this atom** — print the violations (file, line, pattern, rationale) and fix the component to comply before continuing. Do NOT mark the atom verified.
+     `node {plugin}/scripts/verify-styling-contract.mjs <contract.md> <project-root> [--allow GLOB ...]`
+     where `<contract.md>` is the resolved contract path and `<project-root>` is the **project root** (the directory containing `src/`; usually `.`). **Do not pass `src/` itself** — contract globs are written relative to the project root, so pointing at `src/` makes them match zero files and the gate fails the run (exit `3`, vacuous scan). Pass one `--allow <glob>` per active override in `tools.style_contract_overrides` (component files legitimately exempted). If the script exits non-zero (`1` = violations, `2` = contract/usage error, `3` = vacuous scan — treat **all** as blocking):
+     - `hard-fail` (default): **block this atom** — print the violations (file, line, pattern, rationale) and fix the component to comply before continuing. Do NOT mark the atom verified. (Exit `2` = malformed/missing contract; exit `3` = wrong source-root — stop and fix the cause before building.)
      - `warn`: print the violations and continue (the atom is still verified).
-     - Non-Node target, or the script path unresolvable: run the contract's `checks` block detections directly with `grep`/`glob` against `<source-root>` and apply the same pass/fail rule. The decision is deterministic either way — the LLM only formats the report.
+     - Non-Node target, or the script path unresolvable: run the contract's `checks` block detections directly with `grep`/`glob` against `<project-root>` and apply the same pass/fail rule. The decision is deterministic either way — the LLM only formats the report.
    - If a deconstruction `target` exists for this atom: the rendered component matches the mockup's structure, tokens, and states (the literal pixel-perfect goal)
 
 5. **Aesthetic gate** (if frontend-design available):
