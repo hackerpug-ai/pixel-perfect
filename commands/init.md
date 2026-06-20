@@ -686,6 +686,66 @@ The `spec` field is the path to the spec/PRD document (relative to the project r
 
 **Deconstruction fields (optional).** When the project was seeded by `/pixel-perfect:design-deconstruct`, the manifest also carries top-level `"deconstructed": true` and `"design_system": "design/system"`, and seeded `atoms`/`molecules`/`screens` entries include a `"target"` (the mockup the real component is built to match), e.g. `"target": "design/system/views/feed/feed.html"`. These are additive and ignored by projects that never ran deconstruct.
 
+**Ecosystem mode (optional, top-level).** Controls how the BUILD PLAN Ecosystem Scan (Phase 4b Step 2b) behaves. See `docs/ecosystem-patterns.md` for the full matrix. Omitting it defaults to `"suggest"`.
+
+```json
+{
+  "ecosystemMode": "suggest",
+  "librarySuggestions": {
+    "threshold": 5,
+    "categories": {
+      "ai-chat-surface": "suggest",
+      "data-table": "suggest",
+      "date-picker": "off",
+      "drag-and-drop": "required"
+    }
+  }
+}
+```
+
+**Pre-declared ecosystem libs (optional, top-level).** When a project knows its AI chat stack upfront (or any other ecosystem choice), it can pre-declare it under `ecosystemLibs` to skip re-research during BUILD PLAN. The BUILD PLAN honors this and only re-verifies if the entry is older than 30 days. Each entry follows the format in `docs/library-vetting-rubric.md`. AI chat entries additionally carry an `aiSdk` sub-block (see [AI SDK Dependency Vetting](../docs/library-vetting-rubric.md#ai-sdk-dependency-vetting)).
+
+```json
+{
+  "ecosystemLibs": {
+    "aiChat": {
+      "package": "ai-elements",
+      "version": "^1.9.0",
+      "purpose": "AI chat component registry (shadcn-based)",
+      "vetting": {
+        "maintenance": "PASS",
+        "popularity": "STRONG",
+        "compatibility": "PASS",
+        "bundleSize": "LARGE",
+        "accessibility": "PARTIAL",
+        "license": "COMPATIBLE",
+        "tests": "HIGH",
+        "community": "ACTIVE",
+        "score": "6/8",
+        "researchDate": "2026-06-20",
+        "aiSdk": {
+          "peerVsBundled": "bundled",
+          "aiSdkVersion": "^6.0.0",
+          "typeContract": "direct-from-ai",
+          "frameworkCoupling": "next.js-preferred-vite-compatible",
+          "distributionModel": "shadcn-registry",
+          "streamingMockSupport": "mocked-not-tested",
+          "bundleWeight": "heavy-default-install"
+        }
+      },
+      "tradeoffs": "Bundled deps (no peerDeps) means heavy default install. a11y PARTIAL. shadcn registry = copy-in (no auto-updates)."
+    },
+    "streamingMarkdown": {
+      "package": "streamdown",
+      "version": "^2.4.0",
+      "purpose": "Streaming markdown renderer with plugin ecosystem"
+    }
+  }
+}
+```
+
+When `ecosystemLibs.aiChat` (or any AI chat category entry) is present, the BUILD PLAN additionally loads [`docs/ai-chat-patterns.md`](../docs/ai-chat-patterns.md) and [`docs/styling-contracts/ai-chat-tailwind-web.md`](../docs/styling-contracts/ai-chat-tailwind-web.md) (when the platform uses shadcn + Tailwind) so the build applies the streaming-aware state pattern, compound-component conventions, and group-marker theming automatically.
+
 **Screen entries (`platforms[platform].screens[]`).** Each screen is keyed by **`route`** (the page identity / dedup key — a URL path on web like `/feed`; a navigator destination on mobile like `Feed`; a named view on TUI/desktop; default `"/" + kebab-case(name)` on web, `PascalCase(name)` elsewhere) and carries a **`states`** list — the named states for that route (`["default","empty","loading","error"]`, or tab names like `["account","billing","team"]`), each of which becomes one sandbox story. Views that differ only by state collapse into ONE screen with a `states` list rather than separate screens. Single-state screens carry `["default"]` (or omit `states`). The remaining fields are `name`, `file`, `story`, `status`, `atoms`/`molecules`/`organisms`, and optional `target`. Both fields are additive and backward-compatible (a screen with no `route` uses the default derivation; no `states` means a single Default story). See `docs/state-patterns.md`.
 
 **When "Other" is selected for any tool**, the manifest includes the docs URL inside the platform's tools. For a custom style system, the styling contract is resolved by research (`style_contract_source: "researched"`) or, if research was inconclusive and the user opted out, marked `"none"`:

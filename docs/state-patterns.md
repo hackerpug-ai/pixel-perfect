@@ -331,3 +331,120 @@ function SearchBar({ onSearch }: Props) {
     );
 }
 ```
+
+---
+
+## Streaming-aware state (AI chat components)
+
+When a molecule or organism renders streamed LLM output, the standard `useState`/`useReducer` patterns are not enough. AI chat components have a distinct state shape: streaming flags, lifecycle-driven panel disclosure, and dual-mode (standalone vs provider-lifted) state sources. **See [`docs/ai-chat-patterns.md`](ai-chat-patterns.md) for the full pattern catalog** — the four patterns below are the state-specific subset.
+
+### Pattern: Controlled/uncontrolled triple via Radix
+
+Anything toggle-able (reasoning panel, branch selector, file tree expansion) uses the prop triple with `@radix-ui/react-use-controllable-state`:
+
+```tsx
+import { useControllableState } from "@radix-ui/react-use-controllable-state";
+
+type ReasoningProps = {
+  open?: boolean;           // controlled
+  defaultOpen?: boolean;    // uncontrolled initial
+  onOpenChange?: (open: boolean) => void;
+};
+
+const [isOpen, setIsOpen] = useControllableState({
+  prop: open,
+  defaultProp: defaultOpen,
+  onChange: onOpenChange,
+});
+```
+
+Lets consumers pick: pass `open` to fully control, pass `defaultOpen` for uncontrolled, or pass neither for self-managed. Standardizes on Radix's implementation.
+
+### Pattern: Reasoning lifecycle state machine
+
+Reasoning panels follow a streaming-aware lifecycle — closed → stream starts → auto-open → stream ends → wait 1s → auto-close once. Requires a `hasAutoClosed` ref (one-shot gate) and a `hasEverStreamedRef` (so the close only fires after a real stream):
+
+```tsx
+const [hasAutoClosed, setHasAutoClosed] = useState(false);
+const hasEverStreamedRef = useRef(false);
+const startTimeRef = useRef<number | null>(null);
+
+// Auto-close 1s after stream ends — exactly once, only after a real stream
+useEffect(() => {
+  if (hasEverStreamedRef.current && !isStreaming && isOpen && !hasAutoClosed) {
+    const t = setTimeout(() => {
+      setIsOpen(false);
+      setHasAutoClosed(true);
+    }, 1000);
+    return () => clearTimeout(t);
+  }
+}, [isStreaming, isOpen, hasAutoClosed]);
+
+useEffect(() => {
+  if (isStreaming) hasEverStreamedRef.current = true;
+}, [isStreaming]);
+```
+
+Full implementation in `docs/ai-chat-patterns.md` §8.
+
+### Pattern: Dual-mode provider (standalone OR lifted state)
+
+For components that should work both standalone and with parent-owned state, ship two hooks — one throws, one returns null:
+
+```tsx
+const ControllerContext = createContext<Controller | null>(null);
+
+// Strict — sub-components that REQUIRE a parent provider use this
+export const useController = () => {
+  const ctx = useContext(ControllerContext);
+  if (!ctx) throw new Error("Wrap your component inside <Provider>");
+  return ctx;
+};
+
+// Lenient — the component itself uses this to detect provider presence
+const useOptionalController = () => useContext(ControllerContext);
+
+export const PromptInput = (props) => {
+  const controller = useOptionalController();
+  const usingProvider = !!controller;
+  const files = usingProvider ? controller.attachments.files : localFiles;
+  // ...
+};
+```
+
+### Pattern: Memo with custom comparator for streaming content
+
+LLM token streaming causes parent re-renders on every token. Children rendering streaming-derived content must use a custom memo comparator — default `memo()` shallow-compares all props including function references:
+
+```tsx
+export const MessageResponse = memo(
+  (props: MessageResponseProps) => <Streamdown {...props} />,
+  (prev, next) =>
+    prev.children === next.children &&
+    next.isAnimating === prev.isAnimating,
+);
+MessageResponse.displayName = "MessageResponse";  // required — memo anonymizes
+```
+
+### Anti-pattern: useEffect to sync children → context state
+
+**Do NOT** push `children` into context state via `useEffect`. State derived from props should be computed inline:
+
+```tsx
+// ✗ wrong — fragile, causes extra renders
+export const BranchContent = ({ children }) => {
+  const { setBranches } = useBranch();
+  useEffect(() => { setBranches(childrenToBranches(children)); }, [children]);
+  return <>{children}</>;
+};
+
+// ✓ correct — compute inline
+export const BranchContent = ({ children }) => {
+  const branches = useMemo(() => childrenToBranches(children), [children]);
+  return <BranchContext.Provider value={{ branches }}>{children}</BranchContext.Provider>;
+};
+```
+
+### Anti-pattern: derived-state sync (use sparingly)
+
+The "call setState during render" pattern (`if (external !== prevExternal) { setPrevExternal(external); setInternal(external); }`) is documented by React but controversial. Use **only** for "external source of truth should overwrite editable internal state" — URL inputs, controlled navigators. For most state, compute inline or use `useEffect`.

@@ -124,6 +124,12 @@ Each pattern category maps to historically dominant libraries. These are **start
 | **CSS-in-JS** | Project needs runtime style composition or dynamic theming | Panda CSS, Vanilla Extract, StyleX, Pigment CSS |
 | **Component Testing** | Test infrastructure for isolated component verification | Testing Library, Vitest, Playwright, Cypress |
 | **Icons** | Project needs a consistent icon set | Lucide, Phosphor, Heroicons, Tabler Icons, Material Symbols |
+| **AI Chat Surface** | Component renders streamed LLM output, chat transcript, reasoning disclosure, or tool-call results | ai-elements (shadcn registry), @assistant-ui/react, @chatscope/chat-ui-kit-react |
+| **Streaming Markdown** | Component renders token-by-token LLM output as incremental markdown | streamdown (+ @streamdown/{cjk,code,math,mermaid} plugins), react-markdown + remark-gfm |
+| **Code Syntax Highlighting** | Component renders source code with language-aware coloring | shiki, starry-night, prism-react-renderer, highlight.js |
+| **Chat Autoscroll** | Chat surface needs stick-to-bottom + programmatic scroll + "scroll to bottom" button | use-stick-to-bottom, react-scroll-to-bottom |
+
+> **AI chat pattern details:** When the AI Chat Surface pattern triggers, **always consult [`docs/ai-chat-patterns.md`](ai-chat-patterns.md)** before recommending a library. That doc covers 16 replicable patterns (compound components, streaming markdown, reasoning lifecycle, tool-call rendering, shimmer loading, etc.) that apply regardless of whether a library is chosen. The library is the starting point; the patterns are the contract.
 
 > **This is not exhaustive.** When a planned component doesn't match a known category but *feels* complex (many states, accessibility requirements, cross-browser edge cases), err on the side of searching. The agent should use the search guardrails above to discover if an ecosystem library exists.
 

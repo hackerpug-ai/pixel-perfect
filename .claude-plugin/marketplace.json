@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Build real UIs in your target framework with a native sandbox (Storybook optional); deconstruct existing designs straight into native components",
-    "version": "6.0.0"
+    "version": "6.2.0"
   },
   "plugins": [
     {
       "name": "pixel-perfect",
       "source": "./",
       "description": "6-phase build process → real components in your target framework, browsable in a native sandbox built from scratch (Storybook optional). Start from a PRD, ASCII wireframes, or deconstruct an existing design straight into native components.",
-      "version": "6.0.0",
+      "version": "6.2.0",
       "author": {
         "name": "Justin Rich"
       },

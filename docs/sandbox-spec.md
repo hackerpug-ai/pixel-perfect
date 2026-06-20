@@ -131,6 +131,64 @@ Each scenario gets its own story entry in the catalog — not a single play-thro
 **For TUI frameworks:** Create separate model instances initialized to the target state values. Register each as its own story entry.
 **For GPUI:** Create Entity instances with specific initial values. Register each as its own story entry.
 
+### AI Chat State Scenarios
+
+AI chat components (conversational surfaces, reasoning panels, tool-call displays, streaming markdown renderers) carry a specialized state matrix. **When the BUILD PLAN detects an AI chat surface** (per [`ecosystem-patterns.md`](ecosystem-patterns.md) → "AI Chat Surface"), the sandbox must cover these states as separate stories. See [`ai-chat-patterns.md`](ai-chat-patterns.md) for the underlying patterns.
+
+| State | When to use | Required for |
+|---|---|---|
+| `default` | Populated message list, scrolled to bottom | Conversation, Message |
+| `empty` | No messages / welcome state | Conversation, PromptInput |
+| `streaming` | Assistant message actively streaming (mock token arrival) | Conversation, Message, MessageResponse, Reasoning |
+| `error` | Error banner visible | Conversation, Tool |
+| `tool-running` | Tool-call in `input-available` state | Tool |
+| `tool-complete` | Tool-call in `output-available` state | Tool |
+| `reasoning-open` | Reasoning panel expanded during stream | Reasoning |
+| `reasoning-closed` | Reasoning panel collapsed after stream | Reasoning |
+| `loading` | Pre-stream / initial (Shimmer visible) | Reasoning, Plan, Task |
+
+**Mock fixtures:** Provide a `__mocks__/chat-fixtures.ts` exporting typed message arrays per state. For React/TypeScript projects, type against the `ai` package's `UIMessage`:
+
+```tsx
+// __mocks__/chat-fixtures.ts
+import type { UIMessage } from "ai";
+
+export const messagesDefault: UIMessage[] = [
+  { id: "1", role: "user", parts: [{ type: "text", text: "Hello" }] },
+  { id: "2", role: "assistant", parts: [{ type: "text", text: "Hi there!" }] },
+];
+
+export const messagesStreaming: UIMessage[] = [
+  { id: "1", role: "user", parts: [{ type: "text", text: "Write a function" }] },
+  { id: "2", role: "assistant", parts: [{ type: "text", text: "Here's a function that" }] }, // partial
+];
+
+export const messagesWithError: UIMessage[] = [
+  // ...previous messages...
+  { id: "3", role: "assistant", parts: [{ type: "error", errorText: "Rate limit exceeded" }] },
+];
+
+// ...etc for each state
+```
+
+**Streaming simulation:** The `streaming` state story must visibly animate token arrival. Use a test helper that appends tokens to the last message on an interval:
+
+```tsx
+// __mocks__/use-streaming-mock.ts
+export function useStreamingMock(fullText: string, intervalMs = 50) {
+  const [text, setText] = useState("");
+  useEffect(() => {
+    let i = 0;
+    const timer = setInterval(() => {
+      if (i >= fullText.length) clearInterval(timer);
+      else setText(fullText.slice(0, ++i));
+    }, intervalMs);
+    return () => clearInterval(timer);
+  }, [fullText]);
+  return text;
+}
+```
+
 ---
 
 ## Storybook is one implementation
