@@ -135,6 +135,16 @@ When reviewing mockups for shadcn/ui compliance:
 - [ ] Icons use `<i data-lucide="icon-name"></i>` pattern
 - [ ] No Material Design, Bootstrap, or other framework classes mixed in
 
+## AI Chat Extension
+
+shadcn/ui primitives (Collapsible, Button, Tooltip, Avatar, etc.) compose into AI chat components. When building chatbot/AI-assistant UI on shadcn, additionally consult:
+
+- **[`../ai-chat-patterns.md`](../ai-chat-patterns.md)** — 16 replicable patterns (compound components, streaming markdown, reasoning lifecycle, tool-call rendering, shimmer loading, etc.) distilled from vercel/ai-elements
+- **[`../styling-contracts/ai-chat-tailwind-web.md`](../styling-contracts/ai-chat-tailwind-web.md)** — extended styling contract for AI chat components (group-based parent-state styling, Shiki dual-theme exception, status-icon-only palette)
+- **[`../ecosystem-patterns.md`](../ecosystem-patterns.md)** "AI Chat Surface" row — points to libraries (ai-elements, assistant-ui, chatscope)
+
+ai-elements itself is a shadcn/ui registry — components are copy-in source via `npx ai-elements@latest` (delegates to `npx shadcn@latest add`). The patterns it codifies apply regardless of whether you use the library.
+
 ## Source URLs
 
 - Official site: https://ui.shadcn.com

@@ -260,3 +260,66 @@ When web search is unavailable or times out:
    Run /pixel-perfect:research --libraries to verify independently.
    ```
 4. Do NOT block the BUILD PLAN — the user can proceed with unverified recommendations.
+
+---
+
+## AI SDK Dependency Vetting
+
+When a candidate library integrates with the [Vercel AI SDK](https://ai-sdk.dev/) (`ai`, `@ai-sdk/react`, `@ai-sdk/svelte`, etc.), apply the eight standard criteria above **plus** these AI-SDK-specific checks. They are advisory (don't subtract from the 8-criteria score) but flag integration risks before adoption.
+
+| Check | What to verify | Why it matters |
+|---|---|---|
+| **Peer vs bundled** | Does the lib declare `ai` and `@ai-sdk/react` as `peerDependencies`, or bundle them as regular `dependencies`? | ai-elements bundles — consumers pay the install cost + may get version conflicts. Prefer peerDeps. |
+| **AI SDK version pinning** | Which major versions of `ai` are supported? Check `peerDependencies.ai` in package.json. | AI SDK v6 has breaking changes from v5. A lib pinning `ai: "^5"` won't work with `ai: "^6"` consumers. |
+| **Type contract** | Does the lib import `UIMessage`, `ToolUIPart`, etc. from `ai` directly, or wrap in local abstractions? | Direct import = better ecosystem fit (works with any UI SDK consumer). Wrapper = lock-in. |
+| **Framework coupling** | Does it work in Vite/Remix/Plain React, or only Next.js? Check for `next/*` imports. | ai-elements uses `"use client"` and zero `next/*` imports — Vite-compatible despite Next.js framing. |
+| **Distribution model** | npm package or shadcn registry? | Registry = copy-in = full customization but no auto-updates + heavy default install. npm = auto-updates but harder to customize. |
+| **Streaming mock support** | Do the lib's tests mock streaming, or test it for real? | ai-elements mocks streaming entirely (use-stick-to-bottom is vi.mock'd). Real-stream testing is rare; flag if you need it. |
+| **Bundle weight** | What's the install footprint? List the deps that ship. | ai-elements pulls `@rive-app/react-webgl2`, `@xyflow/react`, `media-chrome`, `motion`, `shiki` even for users who want just Message. Large default footprint. |
+
+### Recording AI SDK vetting
+
+When a library has AI SDK integration, record the additional checks under `vetting.aiSdk` in the manifest:
+
+```json
+{
+  "ecosystemLibs": {
+    "AIChatSurface": {
+      "package": "ai-elements",
+      "purpose": "AI chat component registry (shadcn-based)",
+      "vetting": {
+        "maintenance": "PASS",
+        "popularity": "STRONG",
+        "compatibility": "PASS",
+        "bundleSize": "LARGE",
+        "accessibility": "PARTIAL",
+        "license": "COMPATIBLE",
+        "tests": "HIGH",
+        "community": "ACTIVE",
+        "score": "6/8",
+        "researchDate": "2026-06-20",
+        "aiSdk": {
+          "peerVsBundled": "bundled",
+          "aiSdkVersion": "^6.0.0",
+          "typeContract": "direct-from-ai",
+          "frameworkCoupling": "next.js-preferred-vite-compatible",
+          "distributionModel": "shadcn-registry",
+          "streamingMockSupport": "mocked-not-tested",
+          "bundleWeight": "heavy-default-install"
+        }
+      },
+      "tradeoffs": "Bundled deps (no peerDeps) means heavy default install. a11y is PARTIAL (no role=log on Conversation). shadcn registry = copy-in (no auto-updates). Patterns are exemplary — see docs/ai-chat-patterns.md."
+    }
+  }
+}
+```
+
+### AI chat pattern precedent
+
+When evaluating any AI chat library, **always consult [`docs/ai-chat-patterns.md`](ai-chat-patterns.md)**. The 16 patterns there (compound components, streaming markdown, reasoning lifecycle, etc.) define what "good" looks like — a library that violates them should be docked points even if its raw 8-criteria score is high. Common red flags:
+
+- No compound component convention (parent + sub-components as named exports)
+- No memoization strategy for streaming content
+- Hardcoded colors instead of CSS-var tokens
+- No state-machine for reasoning disclosure (just a Collapsible)
+- No group-based parent-state styling (lots of conditional className logic)

@@ -224,6 +224,37 @@ Check `manifest.ecosystemMode` before running the Ecosystem Scan during BUILD PL
 
 Individual categories can override the global mode via `manifest.librarySuggestions.categories`.
 
+## AI Chat Pattern Convention
+
+**When building AI chat components** (chatbot UI, AI assistant surface, conversational form, anything rendering streamed LLM output, model reasoning, or tool-call results), **consult [`docs/ai-chat-patterns.md`](docs/ai-chat-patterns.md)** before writing code. That doc covers 16 replicable patterns distilled from assimilating vercel/ai-elements:
+
+- Compound component convention (`<Parent>` + `<ParentChild>` named exports)
+- Context + throw-on-missing hook
+- Dual-mode provider (standalone OR lifted state)
+- Controlled/uncontrolled triple via Radix `useControllableState`
+- Discriminated-union props for polymorphic components
+- Streaming markdown + memo with custom comparator
+- Autoscroll via `use-stick-to-bottom`
+- Reasoning disclosure lifecycle state machine (auto-open on stream start, auto-close 1s after stream ends, once)
+- Tool-call rendering with polymorphic output (`ReactElement | object | string`)
+- Shimmer loading (motion text-clip gradient)
+- Async-with-sync-fallback render pattern (shiki-style)
+- CSS counters for line numbers (a11y-friendly)
+- Group-based parent-state styling (`group-[.is-user]:` variants)
+- `cn()` className-last discipline
+- Derived-state sync pattern (sparingly)
+- Skill-generation pipeline (if you ship a sandbox)
+
+**Auto-detection:** The BUILD PLAN Ecosystem Scan flags the "AI Chat Surface" pattern (`docs/ecosystem-patterns.md`) when any planned component matches the categories in `docs/ai-chat-patterns.md` §"When to apply". When detected, load:
+- `docs/ai-chat-patterns.md` (the 16 patterns — primary reference)
+- `docs/styling-contracts/ai-chat-tailwind-web.md` (if platform uses shadcn + Tailwind)
+- `docs/state-patterns.md` §"Streaming-aware state" (the state-specific subset)
+- `docs/sandbox-spec.md` §"AI Chat State Scenarios" (the 9 required sandbox states)
+
+**Pre-declared stack:** If the manifest carries `ecosystemLibs.aiChat` (see `commands/init.md`), the BUILD PLAN honors it without re-research and loads the AI chat docs automatically. AI SDK integration adds an `aiSdk` sub-block to the vetting record (`docs/library-vetting-rubric.md` §"AI SDK Dependency Vetting").
+
+**Accessibility override:** AI chat components have specific a11y requirements that ai-elements (the source of these patterns) gets wrong. The pixel-perfect version requires: `role="log"` + `aria-live="polite"` on streaming containers, `aria-busy` on reasoning triggers during stream, `aria-label` on tool-call status badges, and `aria-hidden` toggling (not unmount) on conditional scroll buttons. See `docs/ai-chat-patterns.md` §"Accessibility".
+
 For design token story regeneration and the polyfill disclaimer pattern (required for React Native web Storybook), see `docs/storybook-conventions.md` and `docs/adapters/react-native-web.md`.
 
 ## Commands Reference
