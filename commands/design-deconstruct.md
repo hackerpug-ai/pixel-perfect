@@ -54,13 +54,11 @@ design-deconstruct (Phase 0, optional)   ← you have existing UI or a concept
 
 ### Step 0: Detect engine + renderer
 
-1. **Deconstruction engine.** Check whether the **`design-deconstruct` skill** is available (it is the authoritative engine: 5 phases tokens → atoms → molecules → organisms → views, each component a README + HTML + PDF + PNG quartet, token-governed with a zero-hardcoded-values audit).
-   - **Available** → delegate the deconstruction to it (Step 2A). This mirrors how pixel-perfect optionally delegates aesthetics to `frontend-design`.
-   - **Not available** → run the **built-in fallback** deconstruction (Step 2B). The fallback is real (it extracts tokens and emits atom + screen HTML mockups) but lighter (no PDF, PNG only if headless Chrome is present, no cascade engine). Tell the user which engine ran.
+1. **Deconstruction engine.** The **`deconstruct-engine` skill ships with this plugin** and is always used. It is the authoritative engine: 5 phases (tokens → atoms → molecules → organisms → views), token-governed with a zero-hardcoded-values audit. Output shape is defined by the engine — see `skills/deconstruct-engine/docs/OUTPUT-SCHEMA.md`. Each component folder holds a per-theme pair (`dark.html`/`light.html`, each with its own `.png` and `.pdf`); views are split by route → state. Always delegate deconstruction to it (Step 2A).
 2. **Renderer.** Check for headless Chrome (`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` on macOS, or `google-chrome`/`chromium` on PATH). PNG snapshots require it. If absent, continue with HTML-only mockups and note the degradation — **do not fail**.
 3. **Target framework.** Resolve the lang/framework the design will be **built into**, in priority order: `--framework`/`--target` flag → the manifest's `tools.framework` (if a manifest exists) → **detect from the current repo** (`Cargo.toml` + GPUI deps → `rust-gpui`; `Cargo.toml` + ratatui → `rust-tui`; `package.json` + React/Next/Vite/Svelte → that web framework; a `Makefile` `sandbox` target → match its toolchain; `*.xcodeproj` / SwiftUI → `swiftui`). If a target is found **and** `--html-only` is not set → **native mode** (Step 2.5). If none is found → **HTML-only mode** (the on-ramp): produce mocks + seed; the target is chosen later at `init`.
 
-Report the detected engine + renderer + **target + mode (native | html-only)** before proceeding. Never silently substitute a stub for the deconstruction.
+Report the engine (always `deconstruct-engine`) + renderer + **target + mode (native | html-only)** before proceeding. Never silently substitute a stub for the deconstruction.
 
 ### Step 1: Acquire & normalize the source into a concept HTML
 
@@ -77,25 +75,16 @@ The engine consumes a **concept HTML**. Normalize every input type into one self
 
 Write `design/concepts/<name>.html`. This file is the hand-off to the deconstruction engine.
 
-### Step 2A: Deconstruct via the skill (when available)
+### Step 2A: Deconstruct via the co-shipped engine
 
-Invoke the skill against the normalized concept, targeting the pixel-perfect output dir:
+Invoke the engine against the normalized concept, targeting the pixel-perfect output dir:
 
 ```
-Skill("design-deconstruct", "design/concepts/<name>.html --output <output>")
+Skill("deconstruct-engine", "design/concepts/<name>.html --output <output>")
 # pass through --resume-from / --force when supplied
 ```
 
-It produces `<output>/` with: `tokens/` (`tokens.css`, `theme.light.json`, `theme.dark.json`, `theme.schema.json`), `typography/`, `atoms/…`, `molecules/…`, `organisms/…`, `views/…` (each a README + HTML + PDF + PNG quartet), `tokens.html`, and `manifest.json`. Let the skill own its TaskList, quality audit, and cascades.
-
-### Step 2B: Built-in fallback deconstruction (when the skill is absent)
-
-Produce the same `<output>/` shape, lighter but **real** — not a stub:
-
-1. **Tokens** — extract semantic tokens from the concept (colors, type scale, spacing, radii, shadows) into `tokens/tokens.css` (light + dark CSS custom properties) and `tokens/theme.light.json` + `tokens/theme.dark.json`. Name every token by role, not by value — use pixel-perfect's semantic color names (`primary`, `primary-foreground`, `secondary`, `background`, `foreground`, `muted`, `muted-foreground`, `accent`, `destructive`, `border`, …; the full table is in `commands/scaffold.md` Step 4b). (If the `design-deconstruct` skill is installed, prefer its richer `docs/SEMANTIC-TOKENS.md` vocabulary — but the fallback must not depend on it.)
-2. **Atoms / Molecules / Screens** — identify components from the concept and write a self-contained HTML mockup per component (`<output>/{layer}/{name}/{name}.html`) that references `tokens.css` (zero hardcoded colors/spacing). Group full pages under `views/`.
-3. **PNGs** — if headless Chrome is present, render each HTML to a sibling `.png` with a headless screenshot, e.g. `"<chrome>" --headless --screenshot="<name>.png" --window-size=1320,2400 --hide-scrollbars "<name>.html"` (use the resolved Chrome/Chromium path from Step 0). If Chrome is absent, skip PNGs and note it — HTML mockups alone are still usable targets.
-4. Write `<output>/manifest.json` recording engine=`builtin`, the concept path, and any gaps.
+It produces `<output>/` with: `tokens/` (`tokens.css`, `theme.light.json`, `theme.dark.json`, `theme.schema.json`), `typography/`, `atoms/…`, `molecules/…`, `organisms/…`, `views/…`, `tokens.html`, and `manifest.json`. Output shape is defined by the engine — see `skills/deconstruct-engine/docs/OUTPUT-SCHEMA.md`. Each component folder holds a per-theme pair (`dark.html`/`light.html`, each with its own `.png` and `.pdf`); views are split by route → state. Let the engine own its TaskList, quality audit, and cascades.
 
 ### Step 2.5: Native reconstruct — build in the target framework (native mode only)
 
@@ -128,14 +117,14 @@ The result is a **running native component browser** of real components (`make s
    ```json
    {
      "design_system": "design/system",
-     "engine": "skill",
+     "engine": "deconstruct-engine",
      "source": { "type": "url", "ref": "https://…", "concept_html": "design/concepts/<name>.html" },
      "level_map": { "tokens": "theme", "atoms": "atoms", "molecules": "molecules", "organisms": "screen-sections", "views": "screens" },
      "inventory": {
-       "atoms":     [{ "name": "Button", "html": "design/system/atoms/button/button.html", "png": "design/system/atoms/button/button.png" }],
+       "atoms":     [{ "name": "Button", "dark": "design/system/atoms/button/dark.html", "light": "design/system/atoms/button/light.html", "png": "design/system/atoms/button/dark.png" }],
        "molecules": [ … ],
        "organisms": [ … ],
-       "views":     [{ "name": "Feed", "html": "design/system/views/feed/feed.html", "png": "design/system/views/feed/feed.png" }]
+       "views":     [{ "name": "Feed", "dark": "design/system/views/feed/default/dark.html", "light": "design/system/views/feed/default/light.html", "png": "design/system/views/feed/default/dark.png" }]
      }
    }
    ```
@@ -147,7 +136,7 @@ The result is a **running native component browser** of real components (`make s
 ### Step 4: Report + next step
 
 ```
-Deconstructed: <source>  (engine: skill | builtin; renderer: chrome | html-only; mode: native | html-only)
+Deconstructed: <source>  (engine: deconstruct-engine; renderer: chrome | html-only; mode: native | html-only)
 
   design/concepts/<name>.html      normalized concept
   design/system/                   tokens + atoms…views (HTML/PNG pixel-targets)
@@ -174,7 +163,6 @@ Next:
 | Case | Handling |
 |------|----------|
 | Source missing / unreadable / URL unreachable | Stop and report; suggest a valid source. Never fabricate a design. |
-| `design-deconstruct` skill absent | Run the built-in fallback (Step 2B); state that output is lighter (no PDF/cascade). |
 | Headless Chrome absent | Produce HTML-only mockups; note PNGs were skipped. Do not fail. |
 | Large repo / many screens | Capture the primary screens; **log included vs skipped** in the report. Offer `--from code --name <screen>` to target more. |
 | Existing `design/system/` | Honor `--resume-from` / `--force` (skill handles selective regen). Without flags, the skill prompts which phases to regenerate. |
