@@ -19,3 +19,6 @@ test-output/
 CLAUDE.md
 .claude/
 .mcp.json
+
+# Local operational handoffs — never published
+.handoff/
