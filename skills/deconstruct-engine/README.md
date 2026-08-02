@@ -4,11 +4,11 @@ Authoritative deconstruction engine for **`/pixel-perfect:design-deconstruct`**.
 
 Reverse-engineers a Claude Design exported HTML (or other concept) into a token-governed atomic design system. Every mock ships **one file per theme** (`dark.html` + `light.html`, each with its own PDF + PNG); views are **state-split** into nested route folders and can be **driven by an external view inventory** with a deterministic coverage gate. Deterministic tooling owns token emission (with a live semantic ⇄ concept round-trip), theme-split, link depth, bundling, render, per-component processing, a Phase-0 concept preflight, a 3-axis audit (token-purity + link-resolution + render-sanity), and the **Design Review Browser**.
 
-> **Do not use the standalone `design-deconstruct` skill** (`~/.claude/skills/design-deconstruct` or `brain/skills/design-deconstruct`). That copy is **deprecated**. Invoke via:
+> **Do not use any standalone `design-deconstruct` skill copy.** That skill is **deprecated** and no longer distributed. Invoke via:
 > ```
 > /pixel-perfect:design-deconstruct <source>
 > ```
-> which always runs this engine.
+> which always runs this co-shipped engine.
 
 ## Getting started
 
