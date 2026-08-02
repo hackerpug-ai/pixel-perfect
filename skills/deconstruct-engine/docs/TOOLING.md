@@ -15,7 +15,8 @@ the tooling does the rest.
 ```
 cp -R assets/tooling/* <output>/
 # yields: <output>/{_preflight.sh,_head.mjs,_split.mjs,_build-bundle.mjs,_render.sh,
-#                   _process.mjs,_audit.mjs,_sanity.py,_coverage.mjs}
+#                   _process.mjs,_audit.mjs,_sanity.py,_coverage.mjs,_build-catalog.mjs}
+#         <output>/browse/{index.html,browse.css,browse.js}
 #         <output>/tokens/build-tokens.mjs
 ```
 
@@ -125,6 +126,27 @@ All are zero-dependency (Node ≥ ESM, Python 3 + PIL, Chrome headless). Run fro
   every missing/broken key. Exit 0 iff missing = broken = 0 (`--advisory` always 0;
   exit 2 = inventory unparseable, with the expected format printed).
 
+### `_build-catalog.mjs` + `browse/` — Design Review Browser
+- **Purpose:** knit every deconstruct leaf into one human review surface. Generic
+  over any `<output>/` tree — no project constants. Catalog is deterministic;
+  the shell is a staged static SPA (editorial lightbox: film-strip, keyboard,
+  theme/pair, live HTML, local feedback export).
+- **CLI:** `node _build-catalog.mjs` (cwd = `<output>/`)
+  - `--root <dir>` · `--out browse/catalog.json` · `--layer views|atoms|…`
+- **Scans:** `views/**/dark.html` (route→state→leaf), plus `atoms|molecules|organisms/{name}/`.
+  Optional: `manifest.json` § coverage for status enrichment; nearest `README.md` H1 for labels.
+- **Emits:** `browse/catalog.json`
+- **Shell:** `browse/index.html` (+ `browse.css`, `browse.js`) — serve from `<output>/`:
+  ```
+  cd <output> && python3 -m http.server 8765
+  open http://localhost:8765/browse/
+  ```
+  Requires http(s) (`fetch` catalog + iframe leaves). Do not open via `file://`.
+- **Standalone regen** (existing trees without a full re-run): copy staged tooling
+  from this skill's `assets/tooling/{_build-catalog.mjs,browse/}` into `<output>/`, then
+  `node _build-catalog.mjs`.
+- **Invariant:** `catalog.counts.views` equals the number of view leaves with `dark.html`.
+
 ## Per-phase call order
 
 ```
@@ -134,6 +156,8 @@ Phase N:  node _build-bundle.mjs <layer>               # molecules/organisms/vie
           (subagent authors {component}/_src.html)
           node _process.mjs <layer> {component}        # split + render + audit + sanity → verdict
 Phase 5:  + node _coverage.mjs <inventory>             # with --views-from
+          + node _build-catalog.mjs                    # Design Review catalog
 Final:    node _audit.mjs {atoms,molecules,organisms,views} ; python3 _sanity.py … (all layers)
           + node _coverage.mjs <inventory>             # with --views-from
+          + node _build-catalog.mjs                    # refresh catalog
 ```

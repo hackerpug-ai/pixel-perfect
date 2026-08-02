@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Design Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="browse.css" />
+</head>
+<body>
+  <a class="skip-link" href="#stage">Skip to stage</a>
+
+  <header class="top" role="banner">
+    <div class="top__brand">
+      <span class="top__mark" aria-hidden="true"></span>
+      <div class="top__titles">
+        <h1 class="top__title">Design Review</h1>
+        <p class="top__sub" id="source-label">Loading catalog…</p>
+      </div>
+    </div>
+
+    <nav class="layers" aria-label="Layer" id="layer-chips"></nav>
+
+    <div class="top__tools">
+      <label class="search">
+        <span class="visually-hidden">Search</span>
+        <input type="search" id="search" placeholder="Search routes, states, leaves…" autocomplete="off" />
+        <kbd class="kbd">/</kbd>
+      </label>
+
+      <div class="seg" role="group" aria-label="Theme">
+        <button type="button" class="seg__btn" data-theme-mode="dark" aria-pressed="true">Dark</button>
+        <button type="button" class="seg__btn" data-theme-mode="light" aria-pressed="false">Light</button>
+        <button type="button" class="seg__btn" data-theme-mode="pair" aria-pressed="false">Pair</button>
+      </div>
+
+      <div class="seg" role="group" aria-label="Stage mode">
+        <button type="button" class="seg__btn" data-stage-mode="png" aria-pressed="true">Shot</button>
+        <button type="button" class="seg__btn" data-stage-mode="live" aria-pressed="false">Live</button>
+      </div>
+
+      <div class="progress" id="progress" title="Reviewed leaves">
+        <span class="progress__bar" id="progress-bar"></span>
+        <span class="progress__text" id="progress-text">0 / 0</span>
+      </div>
+
+      <button type="button" class="btn btn--ghost" id="export-btn" title="Export feedback (E)">Export</button>
+    </div>
+  </header>
+
+  <div class="workspace">
+    <aside class="rail" aria-label="Routes and states">
+      <div class="rail__section">
+        <h2 class="rail__h">Routes</h2>
+        <ul class="rail__list" id="route-list"></ul>
+      </div>
+      <div class="rail__section" id="state-section" hidden>
+        <h2 class="rail__h">States</h2>
+        <ul class="rail__list" id="state-list"></ul>
+      </div>
+      <div class="rail__filter">
+        <label class="check">
+          <input type="checkbox" id="filter-unreviewed" />
+          Unreviewed only
+        </label>
+        <label class="check">
+          <input type="checkbox" id="filter-flagged" />
+          Needs work / blockers
+        </label>
+      </div>
+      <p class="rail__hint">
+        <kbd>j</kbd><kbd>k</kbd> leaf · <kbd>d</kbd> theme · <kbd>i</kbd> live · <kbd>o</kbd><kbd>n</kbd><kbd>b</kbd> status
+      </p>
+    </aside>
+
+    <main class="main" id="stage" tabindex="-1">
+      <div class="stage-head">
+        <nav class="crumb" id="crumb" aria-label="Breadcrumb"></nav>
+        <div class="stage-head__meta">
+          <h2 class="stage-title" id="stage-title">—</h2>
+          <span class="stage-count" id="stage-count"></span>
+        </div>
+        <div class="stage-actions">
+          <button type="button" class="icon-btn" id="prev-btn" aria-label="Previous leaf">‹</button>
+          <button type="button" class="icon-btn" id="next-btn" aria-label="Next leaf">›</button>
+          <a class="link" id="open-html" href="#" target="_blank" rel="noopener">Open HTML</a>
+          <button type="button" class="link" id="copy-path">Copy path</button>
+        </div>
+      </div>
+
+      <div class="stage-body" id="stage-body">
+        <div class="frame-wrap" id="frame-wrap">
+          <!-- frames injected -->
+        </div>
+        <p class="stage-empty" id="stage-empty" hidden>No leaves match this filter.</p>
+      </div>
+    </main>
+
+    <aside class="notes" aria-label="Feedback">
+      <h2 class="notes__h">Feedback</h2>
+      <div class="status-picks" role="radiogroup" aria-label="Status">
+        <button type="button" class="status" data-status="unseen" aria-pressed="true">Unseen</button>
+        <button type="button" class="status status--ok" data-status="ok" aria-pressed="false">Ok</button>
+        <button type="button" class="status status--needs" data-status="needs-work" aria-pressed="false">Needs work</button>
+        <button type="button" class="status status--block" data-status="blocker" aria-pressed="false">Blocker</button>
+      </div>
+      <label class="notes__label" for="note-field">Notes</label>
+      <textarea id="note-field" class="notes__field" rows="10" placeholder="What feels off? Doctrine breach, spacing, missing state…"></textarea>
+      <p class="notes__meta" id="notes-meta"></p>
+      <p class="notes__path" id="notes-path"></p>
+    </aside>
+  </div>
+
+  <footer class="strip" aria-label="Film strip">
+    <div class="strip__track" id="strip" tabindex="0"></div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="browse.js" type="module"></script>
+</body>
+</html>
