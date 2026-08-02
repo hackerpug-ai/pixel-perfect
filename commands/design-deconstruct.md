@@ -84,7 +84,13 @@ Skill("deconstruct-engine", "design/concepts/<name>.html --output <output>")
 # pass through --resume-from / --force when supplied
 ```
 
-It produces `<output>/` with: `tokens/` (`tokens.css`, `theme.light.json`, `theme.dark.json`, `theme.schema.json`), `typography/`, `atoms/…`, `molecules/…`, `organisms/…`, `views/…`, `tokens.html`, and `manifest.json`. Output shape is defined by the engine — see `skills/deconstruct-engine/docs/OUTPUT-SCHEMA.md`. Each component folder holds a per-theme pair (`dark.html`/`light.html`, each with its own `.png` and `.pdf`); views are split by route → state. Let the engine own its TaskList, quality audit, and cascades.
+It produces `<output>/` with: `tokens/` (`tokens.css`, `theme.light.json`, `theme.dark.json`, `theme.schema.json`), `typography/`, `atoms/…`, `molecules/…`, `organisms/…`, `views/…`, `tokens.html`, `manifest.json`, and the **Design Review Browser** (`browse/` + `_build-catalog.mjs` → `browse/catalog.json`). Output shape is defined by the engine — see `skills/deconstruct-engine/docs/OUTPUT-SCHEMA.md`. Each component folder holds a per-theme pair (`dark.html`/`light.html`, each with its own `.png` and `.pdf`); views are split by route → state. Let the engine own its TaskList, quality audit, cascades, and catalog generation.
+
+After the engine finishes (or when resuming an existing system), ensure the review catalog is current:
+
+```
+cd <output> && node _build-catalog.mjs
+```
 
 ### Step 2.5: Native reconstruct — build in the target framework (native mode only)
 
@@ -140,11 +146,19 @@ Deconstructed: <source>  (engine: deconstruct-engine; renderer: chrome | html-on
 
   design/concepts/<name>.html      normalized concept
   design/system/                   tokens + atoms…views (HTML/PNG pixel-targets)
+  design/system/browse/            Design Review Browser (catalog + shell)
   design/theme-seed.json           semantic theme for scaffold
   design/deconstruction.json       inventory + pixel-perfect targets
 
   Inventory: N atoms, N molecules, N organisms, N views
   [skipped: <screens not captured>]   ← only if a source was sampled
+
+— Design Review Browser (human feedback on every leaf — not filesystem click-through):
+  cd design/system   # or --output path
+  node _build-catalog.mjs          # if catalog is stale
+  python3 -m http.server 8765
+  open http://localhost:8765/browse/
+  Keys: j/k leaf · d theme · p pair · i live · o/n/b status · e export notes
 
 — Native mode (target framework known) also produced:
   <sandbox>/                       native component browser — real {framework} components
@@ -152,10 +166,10 @@ Deconstructed: <source>  (engine: deconstruct-engine; renderer: chrome | html-on
   The design/system/ HTML/PNG are the pixel-targets the code was matched to.
 
 Next:
+  • review views in the Design Review Browser first (feedback export → handoff)
   • native mode → review the running sandbox; iterate with /pixel-perfect:refine
   • html-only  → /pixel-perfect:init (detects design/system/ + pre-seeds vibe, theme, inventory)
 ```
-
 ---
 
 ## Edge Cases

@@ -3,7 +3,7 @@ name: deconstruct-engine
 description: "Reverse-engineer a concept HTML file into a token-governed atomic design system across 5 phases (tokens → atoms → molecules → organisms → views). Every mock ships one file per theme (dark.html + light.html) with its own PDF + PNG; views are state-split into nested route folders and can be driven by an external view inventory (--views-from) with a deterministic coverage gate. Deterministic tooling owns token emission, theme-split, link-depth, bundling, render, per-component processing (_process.mjs), a Phase-0 concept preflight, and a 3-axis audit (token-purity + link-resolution + render-sanity)."
 ---
 
-# design-deconstruct
+# deconstruct-engine
 
 Sequentially decompose a concept HTML into a governed atomic design system. Five phases, one TaskList chain, zero hardcoded values. Per-theme single-state mocks, governed by deterministic tooling.
 
@@ -121,6 +121,8 @@ STAGED TOOLING (orchestrator copies assets/tooling/* into <output>/ at run start
   _audit.mjs               token-purity + link-resolution gate (recursive)
   _sanity.py               render-sanity: dark PNG reads dark, light reads light (recursive)
   _coverage.mjs            inventory × manifest coverage gate (--views-from), claims verified on disk
+  _build-catalog.mjs       scan layers → browse/catalog.json for the Design Review Browser
+  browse/                  Design Review Browser shell (index.html + css + js); load after catalog build
 
 PER-PHASE AGENT:
   Skill("frontend-design:frontend-design", "{phase}-layer brief for {component}")
@@ -264,12 +266,15 @@ SUBAGENT RETURN (docs/OUTPUT-SCHEMA.md § ReturnEnvelope):
     Update views/README.md (route → state tree + dark/light convention).
     WITH --views-from: node _coverage.mjs <inventory>   → gate; any missing/broken
       variant → mock it, defer it with a reason, or surface to the user.
+    DETERMINISTIC review catalog:
+      • node _build-catalog.mjs   → browse/catalog.json (views + atoms/molecules/organisms)
     TaskUpdate T5 → completed.
 
 [9] FINAL AUDIT (deterministic axes, recursive, all layers)
     node _audit.mjs {atoms,molecules,organisms,views}   token-purity + link-resolution
     python3 _sanity.py {atoms,molecules,organisms,views} render-sanity (theme correctness)
     WITH --views-from: node _coverage.mjs <inventory>    coverage (mocked/deferred/missing)
+    node _build-catalog.mjs                              refresh Design Review catalog
     Confirm no file contains both themes; confirm token round-trip (build-tokens re-run
       produces no drift). Any violation → re-dispatch offending component (cap 2);
       log unresolved to <output>/manifest.json "gaps".
@@ -286,6 +291,10 @@ SUBAGENT RETURN (docs/OUTPUT-SCHEMA.md § ReturnEnvelope):
       <output>/tokens/TOKEN-MAP.md          semantic ⇄ concept round-trip
       <output>/{layer}/README.md            per-layer index
       <output>/manifest.json                run metadata + coverage + gaps
+      <output>/browse/                      Design Review Browser
+    Always print how to review (http only — not file://):
+      cd <output> && python3 -m http.server 8765
+      open http://localhost:8765/browse/
 ```
 
 ## AGENT DISPATCH RULES
@@ -362,11 +371,17 @@ See **`docs/REGEN-CASCADE.md`** for depth cap (3), cycle detection, edited-artif
 10. `theme.dark.json` / `theme.light.json` validate identically against `theme.schema.json`.
 11. Every layer's `README.md` has a composition matrix; views/README documents the route→state tree.
 12. All `VARIANT_REQUEST` cascades left no stale artifacts (touched components re-processed + re-bundled).
+13. **Design Review Browser** — `browse/index.html` is staged, `browse/catalog.json` exists, and
+    `counts.views` matches `find views -name dark.html`. Human review is via the browser, not
+    filesystem click-through.
 
 ## EXAMPLES
 
 ```bash
-# Full deconstruction from a single concept file
+# Preferred: via pixel-perfect command
+/pixel-perfect:design-deconstruct .spec/design/concepts.html
+
+# Full deconstruction from a single concept file (engine-direct)
 /design-deconstruct .spec/design/concepts.html
 
 # Two decks + external view inventory + project doctrine (the real-project shape)
