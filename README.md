@@ -213,7 +213,7 @@ It normalizes the source into a concept HTML, then deconstructs it into a **toke
 - the **inventory** pre-fills the atom / molecule / screen build lists
 - each **view mockup** becomes a pixel-perfect *target* the real component is built to match
 
-**This does not contradict "skip the mockup abstraction."** The deconstructed HTML is a precise, token-governed *reference spec* — clean markup the AI reads perfectly — not a lossy hand-drawn mock, and never the deliverable. The real components in your framework's native sandbox still supersede it. When the standalone `design-deconstruct` skill is installed, pixel-perfect delegates to it; otherwise a lighter built-in path runs.
+**This does not contradict "skip the mockup abstraction."** The deconstructed HTML is a precise, token-governed *reference spec* — clean markup the AI reads perfectly — not a lossy hand-drawn mock, and never the deliverable. The real components in your framework's native sandbox still supersede it. The deconstruction engine ships with the plugin — it takes your mockup and extracts every UI concept and token from it into a governed design system. Nothing extra to install.
 
 ### Wireframe first (the low-fi rung)
 
