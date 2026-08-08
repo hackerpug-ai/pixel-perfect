@@ -1,0 +1,15 @@
+---
+description: "Build a Pixel Perfect project through planning, atoms, molecules, organisms, screens, and integration using real components and required verification gates."
+---
+
+# Pixel Perfect: Build
+
+Invocation input: `$ARGUMENTS`
+
+Resolve the Pixel Perfect plugin root: Claude Code substitutes `${CLAUDE_PLUGIN_ROOT}`; Grok uses the enabled Claude-compatible plugin root; OpenCode uses `.pixel-perfect/plugins/pixel-perfect` from the project root.
+
+Read `<plugin-root>/workflows/RUNTIME-CONTRACT.md`. If `design/manifest.json` or `design/manifest.yaml` exists, read `<plugin-root>/skills/process-context/SKILL.md`. Then read `<plugin-root>/workflows/build.md` and execute it as the authoritative workflow with the invocation input.
+
+Do not summarize, replace, or stub any implementation, test, sandbox, or gate. Translate only the neutral runtime primitives for the active harness.
+
+Collect every decision through the harness's structured question mechanism as the runtime contract's user choice protocol specifies — `AskUserQuestion` in Claude Code, one call per declared batch. Never print a decision as prose and end the turn.

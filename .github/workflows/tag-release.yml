@@ -1,0 +1,35 @@
+name: Tag release gate
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out tagged commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Assert tag equals release authority
+        run: >-
+          node -e "const release = require('./plugin-release.json');
+          const expected = 'v' + release.version;
+          if (process.env.GITHUB_REF_NAME !== expected) {
+            console.error('tag ' + process.env.GITHUB_REF_NAME + ' does not equal ' + expected);
+            process.exit(1);
+          }"
+
+      - name: Recheck every release channel and package gate
+        run: npm run ci

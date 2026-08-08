@@ -1,0 +1,271 @@
+---
+name: process-context
+description: "Manifest-aware context for Pixel Perfect projects. Entry adapters load it explicitly to apply phase awareness, migrations, and adapter conventions."
+---
+
+# pixel-perfect Process Context
+
+You are working in a project managed by **pixel-perfect**, a 6-phase build process orchestrator that produces real code in the target framework, browsable in a **sandbox** — a `custom` native component browser by default (see `docs/sandbox-spec.md`), or Storybook only if `tools.sandbox` says so. An entry adapter loaded this context because a Pixel Perfect manifest exists in the project.
+
+## Legacy YAML Migration
+
+If `design/manifest.yaml` exists but `design/manifest.json` does not, **auto-migrate** before proceeding:
+
+1. Read `design/manifest.yaml`
+2. Parse the YAML content into a JSON structure
+3. Write the equivalent `design/manifest.json`
+4. Delete `design/manifest.yaml`
+5. Inform the user:
+
+```
+Migrated design/manifest.yaml → design/manifest.json
+  All data preserved. YAML file removed.
+```
+
+This migration is automatic and transparent. No user confirmation needed — JSON is the canonical format going forward.
+
+## Legacy v4.x Manifest Migration
+
+If `design/manifest.json` exists and its `platforms` field is an **array** (v4.x format), auto-migrate to v5.0 object format before proceeding:
+
+1. Read the existing manifest
+2. Create a `platforms` object. For each platform name in the array, create a key with:
+   - `tools`: copy from the top-level `tools` object
+   - `phase`: copy from the top-level `phase`
+   - `gates`: copy scaffold, plan, atoms, molecules, compose from top-level `gates`
+   - `atoms`: copy from top-level `atoms` (or `[]` if missing)
+   - `molecules`: copy from top-level `molecules` (or `[]` if missing)
+   - `screens`: copy from top-level `screens` (or `[]` if missing)
+3. Keep top-level `gates` with only: discover, target, equip
+4. Remove top-level `tools`, `phase`, `atoms`, `molecules`, `screens`
+5. Set `version` to `5.0.0`
+6. Write back `design/manifest.json`
+7. Inform user:
+
+```
+Migrated manifest to v5.0.0 (multi-platform format).
+  Platforms: {list of platform keys}
+  All data preserved.
+```
+
+This migration is automatic and transparent. No user confirmation needed.
+
+## Your Responsibilities
+
+1. **Respect the current phase** - Don't skip ahead. If the project is in ATOMS, build atoms before composing screens.
+2. **Follow adapter conventions** - Components should match the tool stack's patterns.
+3. **Use the theme** - Never hardcode colors, fonts, or spacing. Always reference theme tokens.
+4. **Track in manifest** - When you create or modify components/screens, update `design/manifest.json`.
+5. **Wire controls** - Every component prop must be exposed to the sandbox's controls (Storybook `argType`, or a labeled variant in a `custom` sandbox).
+6. **Organize by layer** - Register each component under the correct sandbox layer (`Tokens`/`Design System`, `Components`, `Molecules`, `Organisms`, `Screens`).
+7. **Respect state levels** - Atoms are stateless (pure render from props). Molecules may be stateful (manage interaction state). Organisms and screens are stateful (manage complex domain/UI state). Follow `docs/state-patterns.md` for framework-specific state idioms.
+8. **Plan screens as route + states** - A screen is keyed by its `route`, not by visual state. Collapse views that differ only by state (default/empty/loading/error, or different tabs of one page) into ONE screen carrying a `states` list; each state becomes its own sandbox story. The screen owns internal state and must be drivable into each listed state for those stories (the mechanism is an implementation/adapter detail). When the route/page layout is uncertain, ask the user. See `docs/state-patterns.md` ([Screens: Route + States](../../docs/state-patterns.md)) for the state-vs-route decision rule.
+
+## Read the Manifest
+
+Before doing any component or screen work, read `design/manifest.json` to understand:
+
+- **Project-level**: `goal`, `vibe`, `spec`, `references` (shared across all platforms)
+- **Shared gates**: discover, target, equip (top-level `gates`)
+- **Platforms**: `platforms` object — each key is a platform name containing:
+  - `tools`: framework, style, components, icons, sandbox for this platform
+  - `phase`: current active phase for this platform
+  - `gates`: scaffold through compose gate status for this platform
+  - `atoms`, `molecules`, `screens`: component inventory for this platform. Each `screens[]` entry is keyed by `route` (the page identity / dedup key) and carries a `states` list (the named states for that route — each maps to one sandbox story). See `docs/state-patterns.md`.
+
+When a command operates on a specific platform, read `platforms[platformName]` for all platform-specific state.
+
+## Phase Awareness
+
+Commands that operate on build phases (scaffold, build, verify, refine) are **platform-scoped**:
+
+- If only one platform exists in the manifest, it is auto-selected
+- If multiple platforms exist and no `--platform` flag is provided, prompt the user to choose
+- The `--platform` flag explicitly selects which platform to operate on
+
+| Current Phase | What You Should Do | What You Should NOT Do |
+|---------------|-------------------|----------------------|
+| discover | Help define goal and vibe | Write any code |
+| target | Help select platforms, framework, style, components | Write any code |
+| equip | Help confirm tool selections | Write any code |
+| scaffold | Set up project, create theme, generate token stories **for the selected platform** | Build feature components |
+| plan | Review the BUILD PLAN for the selected platform | Write component code |
+| atoms | Build individual components for the selected platform | Skip to molecules or compose directly |
+| molecules | Build functional atom compositions for the selected platform | Compose screens before molecules are verified |
+| organisms | Build complex stateful compositions of molecules + atoms for the selected platform | Compose screens before organisms are verified |
+| compose | Assemble screens from organisms, molecules, and atoms for the selected platform | Skip molecule/organism verification, wire data |
+
+**Important:** Each platform progresses independently. One platform may be at `compose: passed` while another is at `scaffold: in-progress`. Always check the selected platform's gates, not another platform's.
+
+## Adapter Conventions
+
+A **framework adapter** (`docs/adapters/{framework}.md`) is loaded first when one exists for `platforms[name].tools.framework` (e.g. `sveltekit`); it governs project structure, Storybook setup, and story format. React/Next/Vite have no framework adapter and use the default React path in `docs/adapters/storybook.md`.
+
+Based on the tools in the manifest, follow these conventions:
+
+### When `platforms[name].tools.framework` is sveltekit:
+- Components are `.svelte` files authored with Svelte 5 runes (`$props()`, `$state()`, `$derived()`); use snippet children, not legacy slots
+- Stories are `.stories.svelte` (native CSF via `@storybook/addon-svelte-csf` — `defineMeta` + `<Story>`) or `.stories.ts` (`@storybook/svelte`)
+- Import shared code via the `$lib` alias; supply SvelteKit `load`/route data through props (mock with `parameters.sveltekit_experimental` in stories)
+- Storybook framework is `@storybook/sveltekit`; see `docs/adapters/sveltekit.md`
+
+### When `platforms[name].tools.style` is tailwind/nativewind:
+- Use utility classes, not inline styles
+- Reference theme colors as `text-primary`, `bg-secondary`, etc.
+- Use the spacing scale (`p-4`, `gap-6`), not arbitrary values
+- Apply responsive variants (`sm:`, `md:`, `lg:`) where needed
+
+### When `platforms[name].tools.components` is shadcn:
+- Import primitives from `@/components/ui/`
+- Use `cn()` for conditional class merging
+- Follow shadcn's CSS variable theming
+- Compose from shadcn primitives, don't rebuild them
+
+### When `platforms[name].tools.components` is shadcn-svelte / bits-ui / skeleton:
+- **shadcn-svelte**: import primitives from `$lib/components/ui/`, use `cn()` from `$lib/utils`, follow the CSS-variable theme (same tokens as shadcn)
+- **bits-ui**: wrap headless primitives in styled atoms; all styling comes from the project theme (no built-in styles)
+- **skeleton**: use `@skeletonlabs/skeleton-svelte` components + Skeleton theme tokens; select the theme via `data-theme`
+- See `docs/adapters/{components}.md`
+
+### When `platforms[name].tools.components` is react-native-paper:
+- Use `useTheme()` for dynamic values
+- Wrap with `PaperProvider` at app root
+- Follow Material Design 3 patterns
+- Minimum 44x44pt touch targets
+- In web Storybook, components render via `react-native-web` polyfill
+
+### When `platforms[name].tools.sandbox` is custom (default):
+- Implement `docs/sandbox-spec.md` natively in the target framework (see `docs/adapters/custom-sandbox.md`): a layer-keyed story registry, a two-pane navigator, token codegen from `theme.*.json`, one run command.
+- Register each component under its layer; render it in isolation; show variants × states together.
+- Codegen tokens (build.rs / CSS vars / `Palette`) — components reference tokens, never hardcode.
+- Each story names its pixel-target (`// Target: design/system/{layer}/{name}/dark.png`).
+
+### When `platforms[name].tools.sandbox` is storybook:
+- Co-locate stories with components — `ComponentName.stories.tsx` (React) or `ComponentName.stories.svelte` / `.stories.ts` (SvelteKit; follow the framework adapter)
+- Use CSF3 (React) or Svelte CSF (SvelteKit) format
+- Every component gets at least a Default story
+- Interactive components get variant stories
+
+For full argTypes control conventions, see `docs/storybook-conventions.md`.
+
+### When `platforms[name].tools.sandbox` is tui-sandbox:
+- Stories use `.story.ts` format (not CSF3)
+- Co-locate stories in `stories/` directory (not with components)
+- Stories have `StoryMeta` default export with `title`, `adapter`, `terminal` dimensions
+- Stories use declarative `mount` or imperative `run` functions
+- Terminal output is captured as frames, not browser DOM
+- Use `createTestHarness()` for automated testing
+- ANSI codes must be stripped for text assertions
+
+## Story Organization Convention
+
+Stories must use the correct hierarchy prefix:
+
+| Category | Prefix | Example |
+|----------|--------|---------|
+| Design tokens | `Design System/` | `title: 'Design System/Colors'` |
+| Atomic components | `Components/` | `title: 'Components/StatusBadge'` |
+| Molecule compositions | `Molecules/` | `title: 'Molecules/JobRow'` |
+| Organism compositions | `Organisms/` | `title: 'Organisms/DataTable'` |
+| Composed screens | `Screens/` | `title: 'Screens/TodayFeed'` |
+
+**Note for TUI projects:** Stories use the `.story.ts` format with `StoryMeta` in the default export, not CSF3. The hierarchy prefixes are the same, but the story file format differs.
+
+## State Pattern Convention
+
+Based on the project's framework, use the appropriate state pattern for molecules and organisms:
+
+| Framework | Atom State | Molecule/Organism State | Reference |
+|-----------|-----------|------------------------|-----------|
+| React/Vite/Next | None (props only) | `useState` / `useReducer` | `docs/state-patterns.md` |
+| SvelteKit | None (props via `$props()`) | `$state()` / `$derived()` runes | `docs/state-patterns.md` |
+| React Native/Expo | None (props only) | `useState` / `useReducer` | `docs/state-patterns.md` |
+| SwiftUI | None (props) | `@State` / `@Observable` | `docs/state-patterns.md` |
+| GPUI | None | `Entity<T>` + `update()` | `docs/state-patterns.md` |
+| Bubbletea | None (functional params) | Model struct + `Update()` method | `docs/state-patterns.md` |
+| Textual | None (functional params) | `reactive()` / `@on` | `docs/state-patterns.md` |
+| Ink | None (props) | `useState` / `useReducer` (same as React) | `docs/state-patterns.md` |
+
+Atoms must NEVER manage internal state. If state is needed, promote to a molecule or organism.
+
+**Screens** are the top-level stateful level, planned as a **route + a list of states** (not one screen per state). The screen owns internal state to switch between its listed states and must be drivable into any listed state for its sandbox stories — the override mechanism (controlled/uncontrolled props, naming, precedence) is an implementation/adapter detail, not prescribed here. Use the same framework idiom above to own the internal state. To decide whether a tab/sub-view is a state of one route or a separate route, follow the **state-vs-route decision rule** in `docs/state-patterns.md`.
+
+## Library Research Convention
+
+When building components that match complex UI patterns (data tables, date pickers, rich text editors, drag-and-drop, charts, etc.), the Ecosystem Scan during BUILD PLAN may recommend ecosystem libraries.
+
+**How library research works:**
+
+1. **During build** (Phase 4b Step 2b): The Ecosystem Scan automatically evaluates complex patterns against `docs/library-vetting-rubric.md` and recommends well-scored libraries (≥5/8).
+
+2. **Before build** (standalone): `pixel-perfect:research --libraries "{pattern}"` pre-researches libraries, saving scored results to `design/research/libraries/`.
+
+3. **Vetting**: Every recommended library is scored on 8 criteria (maintenance, popularity, compatibility, bundle, a11y, license, tests, community). Score ≥5/8 required for recommendation.
+
+4. **Validation**: Before building a wrapper, verify the package exists on npm (or equivalent registry), has no peer dependency conflicts, and imports successfully.
+
+5. **Manifest trail**: Every used library records package, version, vetting score, research date, and tradeoffs in the manifest's `ecosystemLibs`.
+
+**When to research independently:**
+- User asks "what library should I use for X?"
+- You encounter a complex UI pattern not in `docs/ecosystem-patterns.md`
+- An existing library in the project may be stale
+
+**Respecting ecosystemMode:**
+
+Check `manifest.ecosystemMode` before running the Ecosystem Scan during BUILD PLAN:
+- `suggest` (default): Run the scan, present suggestions, but never block the plan.
+- `off`: Skip the scan entirely. No library suggestions anywhere.
+- `required`: Run the scan and block until every complex pattern has a resolved decision.
+
+Individual categories can override the global mode via `manifest.librarySuggestions.categories`.
+
+## AI Chat Pattern Convention
+
+**When building AI chat components** (chatbot UI, AI assistant surface, conversational form, anything rendering streamed LLM output, model reasoning, or tool-call results), **consult [`docs/ai-chat-patterns.md`](docs/ai-chat-patterns.md)** before writing code. That doc covers 16 replicable patterns distilled from assimilating vercel/ai-elements:
+
+- Compound component convention (`<Parent>` + `<ParentChild>` named exports)
+- Context + throw-on-missing hook
+- Dual-mode provider (standalone OR lifted state)
+- Controlled/uncontrolled triple via Radix `useControllableState`
+- Discriminated-union props for polymorphic components
+- Streaming markdown + memo with custom comparator
+- Autoscroll via `use-stick-to-bottom`
+- Reasoning disclosure lifecycle state machine (auto-open on stream start, auto-close 1s after stream ends, once)
+- Tool-call rendering with polymorphic output (`ReactElement | object | string`)
+- Shimmer loading (motion text-clip gradient)
+- Async-with-sync-fallback render pattern (shiki-style)
+- CSS counters for line numbers (a11y-friendly)
+- Group-based parent-state styling (`group-[.is-user]:` variants)
+- `cn()` className-last discipline
+- Derived-state sync pattern (sparingly)
+- Skill-generation pipeline (if you ship a sandbox)
+
+**Auto-detection:** The BUILD PLAN Ecosystem Scan flags the "AI Chat Surface" pattern (`docs/ecosystem-patterns.md`) when any planned component matches the categories in `docs/ai-chat-patterns.md` §"When to apply". When detected, load:
+- `docs/ai-chat-patterns.md` (the 16 patterns — primary reference)
+- `docs/styling-contracts/ai-chat-tailwind-web.md` (if platform uses shadcn + Tailwind)
+- `docs/state-patterns.md` §"Streaming-aware state" (the state-specific subset)
+- `docs/sandbox-spec.md` §"AI Chat State Scenarios" (the 9 required sandbox states)
+
+**Pre-declared stack:** If the manifest carries `ecosystemLibs.aiChat` (see `workflows/init.md`), the BUILD PLAN honors it without re-research and loads the AI chat docs automatically. AI SDK integration adds an `aiSdk` sub-block to the vetting record (`docs/library-vetting-rubric.md` §"AI SDK Dependency Vetting").
+
+**Accessibility override:** AI chat components have specific a11y requirements that ai-elements (the source of these patterns) gets wrong. The pixel-perfect version requires: `role="log"` + `aria-live="polite"` on streaming containers, `aria-busy` on reasoning triggers during stream, `aria-label` on tool-call status badges, and `aria-hidden` toggling (not unmount) on conditional scroll buttons. See `docs/ai-chat-patterns.md` §"Accessibility".
+
+For design token story regeneration and the polyfill disclaimer pattern (required for React Native web Storybook), see `docs/storybook-conventions.md` and `docs/adapters/react-native-web.md`.
+
+## Commands Reference
+
+| Command | What It Does |
+|---------|-------------|
+| `pixel-perfect:wireframe` | Phase 0 (optional, low-fi): ASCII wireframes from plans/targets into `design/wireframes/` — a pre-step to design-deconstruct |
+| `pixel-perfect:design-deconstruct` | Phase 0 (optional): deconstruct existing UI/concepts into HTML mockups that seed the build — engine ships in-plugin (`skills/deconstruct-engine`) |
+| `pixel-perfect:init` | Phases 1-3: discover + target + equip |
+| `pixel-perfect:add-platform` | Add a new platform to an existing project (post-init) |
+| `pixel-perfect:scaffold` | Phase 4: set up project structure, theme, token stories |
+| `pixel-perfect:build` | Phases 4b-6: plan → atoms → molecules → compose |
+| `pixel-perfect:verify` | Run gate checks for current phase |
+| `pixel-perfect:status` | Show progress |
+| `pixel-perfect:research` | Design research |
+| `pixel-perfect:refine` | Iterate on code |
+
+**Fidelity ladder.** When `design/wireframes/` (structural ASCII) or `design/system/` (high-fi HTML mockups) exist, build each screen/component to match the **highest-fidelity target available** (mockup > wireframe). These are targets/specs — the real components supersede them.
