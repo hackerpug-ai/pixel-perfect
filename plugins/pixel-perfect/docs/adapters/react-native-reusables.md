@@ -155,6 +155,51 @@ src/
     └── _layout.tsx            # PortalHost setup
 ```
 
+## Compose
+
+Scaffold installs the library. This section is what to do with it — the part that decides whether the project actually uses RNR or merely has it installed.
+
+**The import root is `@/components/ui/`.** Everything the CLI pulled is real source in the repo, owned by the project and already wired to the theme, to `TextClassContext`, to `cva` variants, and to accessibility props. A project atom is a **themed configuration of a vendored component**, not a fresh build alongside it.
+
+```tsx
+// ✓ the atom configures the vendored primitive
+import { Button } from '@/components/ui/button';
+import { Text } from '@/components/ui/text';
+
+export function PillButton({ children, variant = 'quiet', ...rest }) {
+  return (
+    <Button variant={variant === 'primary' ? 'default' : 'outline'} className="rounded-none" {...rest}>
+      <Text className="font-sans-semibold">{children}</Text>
+    </Button>
+  );
+}
+```
+
+```tsx
+// ✗ re-implements ui/button from raw primitives — blocked by the component contract
+import { Pressable, Text } from 'react-native';
+```
+
+Both versions style correctly and hardcode nothing, so every styling check passes either way. The difference is invisible to a styling gate and obvious in the running app.
+
+### What maps to what
+
+| Need | Use | Not |
+|------|-----|-----|
+| any text | `Text` from `@/components/ui/text` | `Text` from `react-native` |
+| a tap target | `Button` from `@/components/ui/button` | `Pressable`, `TouchableOpacity` |
+| text entry | `Input`, `Textarea` | `TextInput` |
+| a rule | `Separator` | a 1px `View` (acceptable, but prefer the vendored one) |
+| layout, scrolling, lists | `View`, `ScrollView`, `FlatList`, `SafeAreaView` | — these stay raw, always |
+
+### Before deciding something is unavailable
+
+`manifest.platforms[platform].scaffold.components[]` records exactly what the CLI pulled. Read it. If the primitive is missing, pull it — `npx @react-native-reusables/cli@latest add switch` — rather than hand-rolling a replacement. If the project deliberately banned a component, that belongs in the manifest's build rules and takes a recorded override, not a silent hand-roll.
+
+### Building from a design reference
+
+A mockup tells you what the component must **look like**. It does not tell you what to build it **on**. Read the target for its visual contract — spacing, type scale, states, borders — then express that contract by configuring the vendored component. Translating the mockup's DOM straight into `View`/`Text`/`Pressable` is the single most common way an RNR project ends up not using RNR.
+
 ## Theme Integration
 
 React Native Reusables uses shadcn/ui's CSS variable-based theming, adapted for NativeWind. Map the project vibe to theme values:

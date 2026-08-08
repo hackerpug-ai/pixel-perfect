@@ -68,7 +68,7 @@ Before doing any component or screen work, read `design/manifest.json` to unders
 - **Project-level**: `goal`, `vibe`, `spec`, `references` (shared across all platforms)
 - **Shared gates**: discover, target, equip (top-level `gates`)
 - **Platforms**: `platforms` object — each key is a platform name containing:
-  - `tools`: framework, style, components, icons, sandbox for this platform
+  - `tools`: framework, style, components, icons, sandbox for this platform — plus the two enforced contracts, `style_contract*` (how styles are emitted) and `component_contract*` (what components are built on). Both are hard constraints during build; a `component_contract_source` of `"none"` means the project has no component library and the component gate does not run
   - `phase`: current active phase for this platform
   - `gates`: scaffold through compose gate status for this platform
   - `atoms`, `molecules`, `screens`: component inventory for this platform. Each `screens[]` entry is keyed by `route` (the page identity / dedup key) and carries a `states` list (the named states for that route — each maps to one sandbox story). See `docs/state-patterns.md`.
@@ -126,6 +126,15 @@ Based on the tools in the manifest, follow these conventions:
 - **bits-ui**: wrap headless primitives in styled atoms; all styling comes from the project theme (no built-in styles)
 - **skeleton**: use `@skeletonlabs/skeleton-svelte` components + Skeleton theme tokens; select the theme via `data-theme`
 - See `docs/adapters/{components}.md`
+
+### When `platforms[name].tools.components` is react-native-reusables:
+- Import every text and interactive primitive from `@/components/ui/` — `Text`, `Button`, `Input`, `Textarea`, `Badge`, `Separator`. **Never** import `Text`, `TextInput`, `Pressable`, or `TouchableOpacity` from `react-native` in a project component; the CLI already vendored an equivalent into the repo at scaffold time
+- Render all text through the vendored `Text` so `TextClassContext` cascades — a raw `<Text>` breaks the inherited class chain
+- `View`, `ScrollView`, `FlatList`, and `SafeAreaView` stay raw from `react-native`; RNR replaces no layout primitive
+- Check `platforms[name].scaffold.components[]` before concluding a primitive is unavailable — it lists exactly what the CLI pulled. If it is genuinely missing, pull it (`npx @react-native-reusables/cli@latest add switch`) rather than hand-rolling it
+- Mount `PortalHost` from `@rn-primitives/portal` in the root layout; that direct import is RNR's prescribed setup, not a bypass
+- Use `cn()` for conditional class merging, and configure the vendored component's `cva` variants rather than re-deriving its styles
+- Compose from RNR primitives, don't rebuild them — this is enforced by `docs/component-contracts/README.md` and blocks the build layer
 
 ### When `platforms[name].tools.components` is react-native-paper:
 - Use `useTheme()` for dynamic values

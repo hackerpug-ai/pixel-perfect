@@ -363,8 +363,20 @@ Update manifest with the component list (all `status: pending`).
 For each component, in order:
 
 1. **Load context:**
-   - Adapter docs for the chosen tools, including the **framework adapter** if one exists (e.g. `docs/adapters/sveltekit.md`) — it defines the component file extension and story format
+
+   Resolve every adapter from the manifest by field — do not infer which file to read. Same table `scaffold` uses:
+
+   | Manifest field | Adapter to load |
+   |----------------|-----------------|
+   | `platforms[platform].tools.framework` | `docs/adapters/{framework}.md` (optional — load only if it exists; React/Next/Vite have none, which is expected) |
+   | `platforms[platform].tools.style` | `docs/adapters/{style}.md` |
+   | `platforms[platform].tools.components` | `docs/adapters/{components}.md` — defines the composition patterns for the chosen component library |
+   | `platforms[platform].tools.sandbox` | `docs/adapters/{sandbox}.md` |
+
+   The framework adapter defines the component file extension and story format. If no adapter exists for a style, components, or sandbox tool, load `docs/adapters/generic.md`.
+
    - **Styling contract** for this platform's style system (`manifest.platforms[platform].tools.style_contract`). Load `docs/styling-contracts/{id}.md` when `style_contract_source` is `builtin`/`manual`, or `design/research/styling/{id}.md` when `researched`. This is a **hard constraint** on how styles are emitted (Step 1b) — not optional guidance. If `style_contract_source: "none"`, no contract is loaded (styles are unenforced; flag this to the user).
+   - **Component contract** for this platform's component library (`manifest.platforms[platform].tools.component_contract`). Load `docs/component-contracts/{id}.md` when `component_contract_source` is `builtin`/`manual`, or `design/research/libraries/{id}.md` when `researched`. This is a **hard constraint** on what the component is built on (Step 1c) — not optional guidance. If `component_contract_source` is `"none"` or absent, **no contract is loaded and nothing is printed** — a project with no component library is a normal project, and Step 1c and its gate are skipped entirely.
    - Project theme file
    - The bundled design contract (`docs/DESIGN-CONTRACT.md`) and the result of `DESIGN_EXECUTE` for this atom
    - **Deconstruction target** (if `design/deconstruction.json` exists): the matching mockup for this atom (its `inventory.atoms[].html` / `.png`) — build the real component to match the mockup's structure, tokens, and states
@@ -384,15 +396,34 @@ You MUST NOT:
 - Use any **forbidden pattern** in the contract's `checks` block (e.g. global custom-class CSS, inline `style={{}}` for static values, hardcoded color literals). These are blocking — Step 4's gate fails the layer on any.
 - **Port a mockup's `<style>` block verbatim into the project.** A deconstruction target's CSS is a *pixel reference only*; translate every style into the contract's emit method. (The gate would block the verbatim port anyway.)
 
-The contract governs the **styling mechanism**; the adapter doc governs **component-library patterns** (shadcn's `cn()`/`@/components/ui/`, Paper's themed components). Both apply.
+The styling contract governs the **styling mechanism**. What the component is *built on* is governed by the component contract — Step 1c. Both apply, and neither can catch the other's failure.
+
+### Step 1c: Apply Component Contract
+
+**Skip this step entirely when `component_contract_source` is `"none"` or absent.** No contract, no constraint, no output. Building every primitive by hand is the correct behavior for a project with no component library.
+
+Otherwise: read the loaded component contract and treat it as a **hard constraint**, not a suggestion. This is what prevents the drift where a build declares a component library, lets `scaffold` install it, and then hand-rolls every primitive anyway — emitting correct-looking styled code that composes none of the library. That drift passes every styling contract, because styled-but-hand-rolled markup is still correctly styled.
+
+**If a contract should apply but failed to load** (`tools.components` names a library but no `component_contract` is recorded, or the contract file is missing/malformed): STOP and report to the user — do not build the component against an unknown composition basis. Re-run the EQUIP "Resolve Component Contract" step (built-in / research / manual) or proceed only if the user explicitly set `component_contract_enforcement: "off"`.
+
+From the contract, you MUST:
+- **Compose the library's primitive** for anything in its inventory. A `vendored` library was copied into the repo by the CLI at scaffold time — those files are the project's primitive layer, already wired to the theme, to variants, and to accessibility. A `package` library is imported from `importRoot`. Either way the library's component is the basis; your atom configures it.
+- **Check what scaffold actually installed** before deciding something is unavailable. `manifest.platforms[platform].scaffold.components[]` is the inventory the CLI pulled. If the primitive you need is missing from it, pull it with the library's CLI rather than hand-rolling a replacement.
+
+You MUST NOT:
+- **Re-implement a primitive the library already provides.** Importing `Pressable` and `Text` from `react-native` to build a button, when `components/ui/button.tsx` is sitting in the tree, is the exact defect this contract exists to stop. These are blocking — Step 4's gate fails the layer on any.
+- **Translate a mockup's DOM structure straight into framework primitives.** A design reference tells you what the component must *look like*; it does not tell you what to build it *on*. Read the target for its visual contract, then express that contract by configuring the library's component — the two are not in tension, and a faithful rebuild on the library's primitive is the deliverable.
+
+The contract's `Free primitives` section is as binding as its ban list: layout and platform primitives (`View`, `ScrollView`, `<div>`, `<span>`) are always yours to use directly. A genuine exception to the ban list is recorded in `tools.component_contract_overrides` as `{ComponentName: "reason"}` — a decision on the record, not an invisible default.
 
 ### Step 2: Build Each Atom (continued)
 
 2. **Write component file:**
    - Real component code (`.tsx`, `.vue`, `.svelte`, etc.)
    - **Emits styles exactly per the styling contract (Step 1b)** — emit method, file placement, token binding, and no forbidden patterns
+   - **Composes the component library exactly per the component contract (Step 1c)** — the library's primitive is the basis; this component configures it rather than re-deriving it. Skip when no component contract is in force.
    - Uses theme tokens (not hardcoded values)
-   - Follows adapter conventions (shadcn patterns, Paper patterns, etc.)
+   - Follows the composition patterns in `docs/adapters/{components}.md`
    - Applies the `DESIGN_EXECUTE` decisions for distinctive typography, intentional color hierarchy, and considered motion
    - **If an ecosystem library was approved** (the atom has an `ecosystemLibs` entry in the build plan):
      1. Install the package: `npm install {package}@{version}` (or pnpm/yarn as appropriate)
@@ -507,6 +538,12 @@ The contract governs the **styling mechanism**; the adapter doc governs **compon
      - `hard-fail` (default): **block this atom** — print the violations (file, line, pattern, rationale) and fix the component to comply before continuing. Do NOT mark the atom verified. (Exit `2` = malformed/missing contract; exit `3` = wrong source-root — stop and fix the cause before building.)
      - `warn`: print the violations and continue (the atom is still verified).
      - Non-Node target, or the script path unresolvable: run the contract's `checks` block detections directly with `grep`/`glob` against `<project-root>` and apply the same pass/fail rule. The decision is deterministic either way — the LLM only formats the report.
+   - **Component contract gate** — skip entirely when `component_contract_source` is `"none"`/absent or `component_contract_enforcement: "off"`. Otherwise run the **same script** against the component contract:
+     `node {plugin}/scripts/verify-styling-contract.mjs <component-contract.md> <project-root> [--allow GLOB ...]`
+     where `<component-contract.md>` is the resolved component-contract path. The `<project-root>` rule is identical — pass the project root, never `src/`, or the globs match nothing and the run fails as a vacuous scan. Pass one `--allow <glob>` per active override in `tools.component_contract_overrides`. Exit codes and handling match the styling gate exactly (`1` = violations, `2` = contract/usage error, `3` = vacuous scan — all blocking):
+     - `hard-fail` (default): **block this atom** — print the violations (file, pattern, rationale) and rebuild the component on the library's primitive before continuing. Do NOT mark the atom verified.
+     - `warn`: print the violations and continue (the atom is still verified).
+     - The two gates are independent and both must pass. A styling-contract pass says nothing about composition: hand-rolled markup with correct utility classes satisfies every styling contract in the repo. This is the gate that would have caught a component library declared, installed, and then ignored.
    - If a deconstruction `target` exists for this atom: the rendered component matches the mockup's structure, tokens, and states (the literal pixel-perfect goal)
 
 5. **Aesthetic gate** (always active through the bundled design contract):
@@ -568,19 +605,24 @@ Atoms 3/5 — StatusBadge, JobCard, DateChip verified. Building SectionHeader.
 
 ### Phase 5 Exit Gate
 
-All atoms in the manifest have `status: verified` and `controls: true`, AND the styling contract gate passes for the atom files (or `style_contract_enforcement` is `"off"`/`"warn"`). Update manifest:
+All atoms in the manifest have `status: verified` and `controls: true`, AND both contract gates pass for the atom files (or the corresponding enforcement is `"off"`/`"warn"`, or no contract of that kind is in force). Update manifest:
 ```json
 {
   "phase": "atoms",
   "gates": {
     "plan": "passed",
     "atoms": "passed",
-    "atoms_styling_contract": "passed"
+    "atoms_styling_contract": "passed",
+    "atoms_component_contract": "passed"
   }
 }
 ```
 
-> **The styling-contract gate (Step 4) runs for every layer.** Molecules (5b), organisms (5c), and compose (6) each load the same contract (their Step 1), apply it (Step 1b), and run the same `verify-styling-contract.mjs` gate before their exit gate opens. Each layer records `{layer}_styling_contract: "passed"`. When `style_contract_enforcement` is `hard-fail` (default), a layer whose emitted files violate the contract is **blocked** until fixed or a per-component override is recorded in `tools.style_contract_overrides`. This is the gate that would have caught a parallel global-CSS system before it shipped.
+Record `atoms_component_contract: "n/a"` when `component_contract_source` is `"none"`/absent — the key is always written so a later reader can tell "no library" apart from "gate skipped".
+
+> **Both contract gates (Step 4) run for every layer.** Molecules (5b), organisms (5c), and compose (6) each load the same two contracts (their Step 1), apply them (Steps 1b and 1c), and run the same `verify-styling-contract.mjs` gate against each before their exit gate opens. Each layer records `{layer}_styling_contract` and `{layer}_component_contract`. When enforcement is `hard-fail` (default), a layer whose emitted files violate either contract is **blocked** until fixed or a per-component override is recorded in `tools.style_contract_overrides` / `tools.component_contract_overrides`.
+>
+> The two catch different failures and neither substitutes for the other. The styling gate would have caught a parallel global-CSS system before it shipped. The component gate would have caught a component library that was chosen, installed, and then never composed — 18 atoms built from raw framework primitives while the vendored library sat unused in the same tree, every styling check green.
 
 ---
 
@@ -688,7 +730,8 @@ For each molecule, in order:
 1. **Load context:**
    - Atom files this molecule composes
    - Project theme file
-   - Adapter docs for the chosen tools
+   - **Adapter docs for the chosen tools**, resolved by manifest field per the table in Phase 5 Step 1 — including `docs/adapters/{components}.md` for `tools.components`
+   - **Styling contract and component contract** — the same two resolved in Phase 5 Step 1 (`tools.style_contract`, `tools.component_contract`). Both remain hard constraints at this layer: apply them per Steps 1b and 1c, and both gates run at Step 4. A component contract that is `"none"`/absent stays silent here too.
    - **If molecule has declared state:** Read `docs/state-patterns.md` for the project's framework. Apply the appropriate state pattern (useState, $state, @State, Entity, Model+Update, etc.)
 
 2. **Write molecule file:**
@@ -813,6 +856,7 @@ For each molecule, in order:
    - Constituent atoms are composed (not re-implemented)
    - Registered in the sandbox under the `Molecules/` layer
    - All props wired to argTypes controls
+   - **Both contract gates** pass for the molecule files — same script, same invocation, same exit-code handling as Phase 5 Step 4. The component gate is skipped when no component contract is in force.
 
 5. **Update manifest:**
    ```json
@@ -838,13 +882,14 @@ Molecules 1/2 — JobRow verified. Building ActionPanel (ActionButton + StatusBa
 
 ### Phase 5b Exit Gate
 
-All molecules in the manifest have `status: verified`, AND the styling-contract gate passes for the molecule files (Step 4 gate; `hard-fail` blocks). Update manifest:
+All molecules in the manifest have `status: verified`, AND both contract gates pass for the molecule files (Step 4 gates; `hard-fail` blocks). Update manifest:
 ```json
 {
   "phase": "molecules",
   "gates": {
     "molecules": "passed",
-    "molecules_styling_contract": "passed"
+    "molecules_styling_contract": "passed",
+    "molecules_component_contract": "passed"
   }
 }
 ```
@@ -927,14 +972,15 @@ For each organism, in order:
 1. **Load context:**
    - Molecule and atom files this organism composes
    - Project theme file
-   - Adapter docs for the chosen tools
+   - **Adapter docs for the chosen tools**, resolved by manifest field per the table in Phase 5 Step 1 — including `docs/adapters/{components}.md` for `tools.components`
+   - **Styling contract and component contract** — the same two resolved in Phase 5 Step 1 (`tools.style_contract`, `tools.component_contract`). Both remain hard constraints at this layer: apply them per Steps 1b and 1c, and both gates run at Step 4. A component contract that is `"none"`/absent stays silent here too.
    - `docs/state-patterns.md` for the project's framework
 
 2. **Write organism file:**
    - Composes molecules and atoms — does NOT re-implement internals
    - Manages declared internal state using the framework-appropriate pattern from `docs/state-patterns.md`
    - Accepts props for configuration and callback events (onSortChange, onRowSelect, etc.)
-   - Uses theme tokens and adapter conventions
+   - Uses theme tokens, and composes the component library per the component contract (Step 1c) rather than re-deriving its primitives
    - File location: `src/organisms/OrganismName.tsx` (or equivalent per framework)
    - **If an ecosystem library was approved** (the organism has an `ecosystemLibs` entry): install the package and build a wrapper, same pattern as atoms
 
@@ -949,6 +995,7 @@ For each organism, in order:
 4. **Verify:**
    - Organism renders without errors
    - Constituent molecules/atoms are composed (not re-implemented)
+   - **Both contract gates** pass for the organism files — same script, same invocation, same exit-code handling as Phase 5 Step 4. The component gate is skipped when no component contract is in force.
    - Registered in the sandbox under `Organisms/` layer
    - All declared state scenarios have corresponding named story exports
    - All props wired to argTypes controls
@@ -988,13 +1035,14 @@ Organisms 1/2 — DataTable verified (6 state scenarios). Building CommandPalett
 
 ### Phase 5c Exit Gate
 
-All organisms in the manifest have `status: verified` AND all declared state scenarios have corresponding stories, AND the styling-contract gate passes for the organism files (Step 4 gate; `hard-fail` blocks). Update manifest:
+All organisms in the manifest have `status: verified` AND all declared state scenarios have corresponding stories, AND both contract gates pass for the organism files (Step 4 gates; `hard-fail` blocks). Update manifest:
 ```json
 {
   "phase": "organisms",
   "gates": {
     "organisms": "passed",
-    "organisms_styling_contract": "passed"
+    "organisms_styling_contract": "passed",
+    "organisms_component_contract": "passed"
   }
 }
 ```
@@ -1078,7 +1126,8 @@ For each screen:
    - All atom files this screen composes
    - All molecule files this screen composes (if applicable)
    - All organism files this screen composes (if applicable)
-   - Adapter docs
+   - **Adapter docs for the chosen tools**, resolved by manifest field per the table in Phase 5 Step 1 — including `docs/adapters/{components}.md` for `tools.components`
+   - **Styling contract and component contract** — the same two resolved in Phase 5 Step 1 (`tools.style_contract`, `tools.component_contract`). Both remain hard constraints at this layer: apply them per Steps 1b and 1c, and both gates run at Step 4. A component contract that is `"none"`/absent stays silent here too.
    - Theme file
    - The bundled design contract and the result of `DESIGN_EXECUTE` for this screen
    - **Target (fidelity precedence)** — build the screen to match the highest-fidelity reference available: a **deconstruction mockup** (`design/deconstruction.json` → `inventory.views[].html`/`.png`, high-fi) if present; otherwise the screen's **wireframe** (`design/wireframes/{screen}.md`, structural — match its layout/IA/regions). If both exist, the mockup governs pixels while the wireframe still informs structure.
@@ -1148,6 +1197,7 @@ For each screen:
    - All listed atoms are used correctly
    - Layout responds to viewport changes (if applicable)
    - No hardcoded spacing or colors (uses theme)
+   - **Both contract gates** pass across the built component/screen files — same script, same invocation, same exit-code handling as Phase 5 Step 4. The component gate is skipped when no component contract is in force.
    - If a `target` exists for this screen (a deconstruction mockup, or else the wireframe): the layout matches it — structure, spacing rhythm, responsive behavior (and pixels too when the target is a high-fi mockup)
 
 5. **Aesthetic gate** (always active through the bundled design contract):
@@ -1178,13 +1228,14 @@ For each screen:
 
 ### Phase 6 Exit Gate
 
-All screens have `status: verified`, **and** every screen has one sandbox story per entry in its `states` list (each driving the screen into that state), **and** the styling-contract gate passes across all built component/screen files (Step 4 gate; `hard-fail` blocks). Update manifest:
+All screens have `status: verified`, **and** every screen has one sandbox story per entry in its `states` list (each driving the screen into that state), **and** both contract gates pass across all built component/screen files (Step 4 gates; `hard-fail` blocks). Update manifest:
 ```json
 {
   "phase": "compose",
   "gates": {
     "compose": "passed",
-    "compose_styling_contract": "passed"
+    "compose_styling_contract": "passed",
+    "compose_component_contract": "passed"
   }
 }
 ```

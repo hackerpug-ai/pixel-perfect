@@ -39,6 +39,43 @@ src/
 │   └── TodayFeed.tsx
 ```
 
+## Compose
+
+Scaffold installs the library. This section is what to do with it — the part that decides whether the project actually uses shadcn or merely has it installed.
+
+**The import root is `@/components/ui/`.** Everything the CLI pulled is real source in the repo, owned by the project and already wired to the CSS-variable theme, to `cva` variants, to `cn()` merging, and to Radix behavior underneath. A project atom is a **themed configuration of a vendored component**, not a fresh build alongside it.
+
+```tsx
+// ✓ the atom configures the vendored primitive
+import { Button } from '@/components/ui/button';
+
+export function SubmitAction({ children, ...rest }) {
+  return <Button variant="default" size="sm" {...rest}>{children}</Button>;
+}
+```
+
+```tsx
+// ✗ re-implements ui/button — blocked by the component contract
+<button className="inline-flex items-center rounded-md bg-primary px-4 py-2">Save</button>
+```
+
+Both use Tailwind utilities and hardcode nothing, so the styling contract passes either way. Only the component contract can tell them apart.
+
+### What maps to what
+
+| Need | Use | Not |
+|------|-----|-----|
+| a button | `Button` from `@/components/ui/button` | `<button>` |
+| text entry | `Input`, `Textarea` | `<input>`, `<textarea>` |
+| a picker | `Select` | `<select>` |
+| structure and text | `<div>`, `<span>`, `<p>`, `<a>`, headings | — these stay raw, always |
+
+If the primitive is missing, pull it — `npx shadcn@latest add checkbox` — rather than hand-rolling a replacement.
+
+### Building from a design reference
+
+A mockup tells you what the component must **look like**. It does not tell you what to build it **on**. Read the target for its visual contract, then express that contract by configuring the vendored component. Translating the mockup's markup straight into raw HTML elements is how a shadcn project ends up not using shadcn.
+
 ## Theme Integration
 
 shadcn uses CSS custom properties for theming. Map the project vibe to these variables in `globals.css`:
