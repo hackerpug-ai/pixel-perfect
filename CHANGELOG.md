@@ -4,6 +4,8 @@ All notable changes to Pixel Perfect are documented here.
 
 ## [Unreleased]
 
+## [7.2.0] - 2026-08-08
+
 ### Added
 
 - Added a binding turn shape to the runtime contract: every turn is a twelve-line digest plus either a question or finished work; longer analysis goes to a named artifact; expensive work waits for the decision that authorizes it; unresolved input is asked rather than guessed.

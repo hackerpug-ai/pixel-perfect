@@ -1,6 +1,6 @@
 {
   "name": "pixel-perfect",
-  "version": "7.1.0",
+  "version": "7.2.0",
   "description": "Process orchestrator for building real, verified UI components in a target framework from a PRD, wireframes, or an existing design.",
   "author": {
     "name": "Justin Rich",
