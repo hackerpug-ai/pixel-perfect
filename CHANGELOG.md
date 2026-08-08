@@ -4,6 +4,8 @@ All notable changes to Pixel Perfect are documented here.
 
 ## [Unreleased]
 
+## [7.3.0] - 2026-08-08
+
 ### Added
 
 - Added **component contracts** — a second machine-checked contract kind that enforces *what a component is built on*, alongside the styling contract that enforces *how it is styled*. A project could declare a component library at init, let scaffold install it, and then hand-roll every primitive from raw framework elements: the result passed every gate, because hand-rolled markup with correct utility classes satisfies a styling contract completely. Ships five built-ins — `react-native-reusables`, `shadcn`, `shadcn-svelte` (vendored copy-in) and `react-native-paper`, `mantine` (package import) — resolved at init EQUIP from `tools.components` and enforced at every build layer by the existing gate script.
