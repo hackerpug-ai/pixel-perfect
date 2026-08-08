@@ -77,10 +77,14 @@ Verifies all atomic components with sandbox controls.
 | Controls wired | All component props exposed to sandbox controls (`argTypes` or labeled variants) |
 | Story organization | Registered under `Components/` layer (or `Components/` prefix in Storybook) |
 | Polyfill disclaimer | (React Native + Storybook only) Stories include polyfill notice decorator |
+| **Styling contract** | **Deterministic. `verify-styling-contract.mjs` against the resolved `tools.style_contract`, exit 0 required** |
+| **Component contract** | **Deterministic. The same script against the resolved `tools.component_contract`, exit 0 required. Skipped when `component_contract_source` is `"none"`/absent** |
 | **Ecosystem lib validated** | **If `ecosystemLib` exists, package is installed, importable, and vetting matches manifest** |
 | Aesthetic* | Font pairing, color hierarchy, intentional motion |
 
 *Aesthetic checks always run through `docs/DESIGN-CONTRACT.md`; `DESIGN_EXECUTE` uses `frontend-designer` when available and otherwise performs the same review directly.
+
+The two contract rows are the only checks here whose verdict is not the reviewing agent's opinion — run the script and report its exit code. Note that `ecosystemLib` covers only packages approved by the Phase 4b ecosystem scan (TanStack Table and the like); the project's own component library from `tools.components` never produces an `ecosystemLib` entry, which is why it needs its own row.
 
 ```
 Atoms verification (5 components):

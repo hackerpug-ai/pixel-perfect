@@ -150,7 +150,15 @@ Add the new platform entry to `manifest.platforms`:
         "style": "tailwind",
         "components": "shadcn",
         "icons": "lucide-react",
-        "sandbox": "custom"
+        "sandbox": "custom",
+        "style_contract": "shadcn-tailwind-web",
+        "style_contract_source": "builtin",
+        "style_contract_enforcement": "hard-fail",
+        "style_contract_overrides": {},
+        "component_contract": "shadcn",
+        "component_contract_source": "builtin",
+        "component_contract_enforcement": "hard-fail",
+        "component_contract_overrides": {}
       },
       "phase": "equip",
       "gates": {
@@ -164,6 +172,8 @@ Add the new platform entry to `manifest.platforms`:
   }
 }
 ```
+
+Both contracts are resolved for the new platform exactly as init EQUIP resolves them — the styling contract from the `(platform, framework, style, components)` tuple, the component contract from `tools.components`. A platform whose `tools.components` is absent, `none`, or `custom` records `component_contract_source: "none"` and omits the other three fields; nothing is printed and no gate runs for it. A platform added without contracts builds unenforced, which is the drift both contracts exist to prevent.
 
 **Do not modify** any existing platform entries or top-level fields.
 

@@ -548,7 +548,43 @@ batch: B5 — lock it in
 
 **Staleness nudge.** When a built-in's `lastUpdated` is older than ~90 days, offer: "Built-in contract `<id>` was last reviewed `<date>`. Re-run `pixel-perfect:research --styling` to refresh?" Re-research writes to `design/research/styling/` (it does not overwrite the shipped built-in).
 
-**Exit gate:** All tool categories have a selection AND a styling contract is resolved (or the user explicitly chose proceed-without, recorded as `style_contract_source: "none"`). Manifest has `equip: passed`.
+### Resolve Component Contract
+
+The styling contract governs *how styles are emitted*. It says nothing about *what components are built on* — a hand-rolled button with perfect utility classes satisfies it completely. The **component contract** closes that second gap (see `docs/component-contracts/README.md`), and BUILD runs both.
+
+**Step 0 — No library, no contract.** If `tools.components` is absent, `none`, or `custom`, record `component_contract_source: "none"` and **stop here silently**. Print nothing, ask nothing. Hand-building every primitive is the correct and complete behavior for a project with no component library, and it must not be framed as a gap.
+
+**Step 1 — Built-in match (fast path).** Otherwise, if `tools.components` matches a shipped built-in, use it automatically. The contract id is the library name:
+
+| `tools.components` | Contract ID | Distribution |
+|--------------------|-------------|--------------|
+| `react-native-reusables` | `react-native-reusables` | vendored (CLI copies into `components/ui/`) |
+| `shadcn` | `shadcn` | vendored |
+| `shadcn-svelte` | `shadcn-svelte` | vendored |
+| `react-native-paper` | `react-native-paper` | package |
+| `mantine` | `mantine` | package |
+
+Fold the match into the same line the styling contract reports:
+```
+Component contract: react-native-reusables (built-in)
+  compose: @/components/ui/* · forbids re-implementing vendored primitives
+```
+
+**Step 2 — Research (no built-in).** If the library has no built-in contract, trigger `pixel-perfect:research --libraries <library> --framework <framework>` and synthesize one to the same schema, cached at `design/research/libraries/{id}.md`. Record `component_contract_source: "researched"`. **Do not ask first** — this is a background resolution, not a decision the user needs to make.
+
+**Step 3 — Fail open, but say so once.** If research cannot produce a usable contract, do not fabricate one. Record `component_contract_source: "none"` and print exactly one line:
+```
+Component contract: none for {library} — composition is unenforced. Author docs/component-contracts/{id}.md to enforce it.
+```
+This is a notice, not a question. It differs from the styling path deliberately: a styling contract is always applicable, so proceeding without one is a real decision worth a prompt. A component library that has no contract yet is a gap in this plugin's coverage, not a choice the user made.
+
+**Step 4 — Record.** Write the resolution into the manifest under `platforms[platform].tools`, mirroring the styling four:
+- `component_contract` — the contract id (omit when `none`).
+- `component_contract_source` — `builtin` | `researched` | `manual` | `none`.
+- `component_contract_enforcement` — `hard-fail` (default) | `warn` | `off`. Hard-fail blocks the BUILD layer when a component re-implements a primitive the library provides.
+- `component_contract_overrides` — `{}` initially; per-component justified exceptions added during BUILD (`{componentName: reason}`).
+
+**Exit gate:** All tool categories have a selection AND a styling contract is resolved (or the user explicitly chose proceed-without, recorded as `style_contract_source: "none"`) AND the component contract is resolved or explicitly `"none"`. Manifest has `equip: passed`.
 
 ---
 
@@ -583,7 +619,11 @@ Creates `{directory}/design/manifest.json`:
         "style_contract": "shadcn-tailwind-web",
         "style_contract_source": "builtin",
         "style_contract_enforcement": "hard-fail",
-        "style_contract_overrides": {}
+        "style_contract_overrides": {},
+        "component_contract": "shadcn",
+        "component_contract_source": "builtin",
+        "component_contract_enforcement": "hard-fail",
+        "component_contract_overrides": {}
       },
       "phase": "equip",
       "gates": {
@@ -625,7 +665,11 @@ Creates `{directory}/design/manifest.json`:
         "style_contract": "nativewind-mobile",
         "style_contract_source": "builtin",
         "style_contract_enforcement": "hard-fail",
-        "style_contract_overrides": {}
+        "style_contract_overrides": {},
+        "component_contract": "react-native-reusables",
+        "component_contract_source": "builtin",
+        "component_contract_enforcement": "hard-fail",
+        "component_contract_overrides": {}
       },
       "phase": "equip",
       "gates": {
@@ -646,7 +690,11 @@ Creates `{directory}/design/manifest.json`:
         "style_contract": "nativewind-mobile",
         "style_contract_source": "builtin",
         "style_contract_enforcement": "hard-fail",
-        "style_contract_overrides": {}
+        "style_contract_overrides": {},
+        "component_contract": "react-native-reusables",
+        "component_contract_source": "builtin",
+        "component_contract_enforcement": "hard-fail",
+        "component_contract_overrides": {}
       },
       "phase": "equip",
       "gates": {
@@ -745,7 +793,11 @@ When `ecosystemLibs.aiChat` (or any AI chat category entry) is present, the BUIL
         "style_contract": "swiftui-view-modifiers",
         "style_contract_source": "researched",
         "style_contract_enforcement": "hard-fail",
-        "style_contract_overrides": {}
+        "style_contract_overrides": {},
+        "component_contract": "react-native-paper",
+        "component_contract_source": "builtin",
+        "component_contract_enforcement": "hard-fail",
+        "component_contract_overrides": {}
       }
     }
   }
