@@ -15,22 +15,59 @@ pixel-perfect:build [directory] [options]
 ## Options
 
 - `--platform <name>`: Target platform to build (e.g., `mobile-ios`, `web-desktop`). Required when multiple platforms exist. Auto-selected when only one platform is configured.
-- `--phase <name>`: Start from a specific phase (atoms, molecules, compose). Default: resume from current phase.
+- `--phase <name>`: Start from a specific phase (atoms, molecules, organisms, compose). Default: resume from current phase.
 - `--component <name>`: Build or rebuild a specific component
 - `--screen <name>`: Build or rebuild a specific screen
+
+### Resolving free-form input
+
+The invocation input is frequently a bare word rather than a flag — `build molecules`, `build StatusBadge`, `build the feed screen`, `build moleclues`. Resolve it against what the manifest actually holds, in this order: a phase name (`tokens`, `atoms`, `molecules`, `organisms`, `screens`/`compose`), a component name in `atoms`/`molecules`/`organisms`, a screen name or route, a platform name, a directory that exists.
+
+Resolve it silently only on an **exact, unique** match. Anything else — a near-match, a match in two categories, a name that is not in the manifest at all — is asked as **B-arg**, the first thing the turn does. Option 1 is the nearest match with what it would do in the description; options 2–4 are the other plausible readings and the full run. Never treat a misspelling as its nearest neighbour without asking, and never silently widen a narrow request into a full build.
+
+```user_choice
+batch: B-arg — what was meant by the input
+- header: Target
+  question: That input does not match anything in the manifest exactly. Which did you mean?
+  options:
+    - label: The molecules phase (Recommended)
+      description: Closest match to what was typed. Builds every molecule the plan lists that is not yet verified, then stops before organisms, leaving the levels above untouched.
+    - label: One named component
+      description: Choose Other and give the exact component name. Only that component and its story are rebuilt, and only the screens composing it are re-verified afterward.
+    - label: Resume the whole build
+      description: Ignores the input and picks up wherever the manifest says the project stopped, running each remaining level bottom-up. This is what a bare pixel-perfect:build does.
+```
 
 ## Gate Check
 
 **Requires:** `design/manifest.json` with the selected platform's `scaffold: passed`.
 
-**Platform selection:**
-- If only one platform exists, auto-selected.
-- If multiple platforms exist and `--platform` is not provided, prompt the user to choose.
-- If the selected platform's scaffold gate is not passed:
-  ```
-  Cannot build: scaffold not complete for "{platform}".
-  Run pixel-perfect:scaffold --platform {platform} first.
-  ```
+Only one platform in the manifest means it is auto-selected and reported as settled. Several platforms with no `--platform` flag means the platform is asked as part of the opening batch, one option per platform carrying its current gate state. A selected platform whose scaffold gate has not passed stops the run and names `pixel-perfect:scaffold --platform {platform}` as the fix.
+
+## How this workflow asks
+
+Every decision below is collected with `USER_CHOICE` — see `workflows/RUNTIME-CONTRACT.md`, "User choice protocol" and "Turn shape". The `user_choice` blocks in this file are the wording and options to use with the harness's question mechanism; they are never printed.
+
+Build analyzes a whole codebase against a whole spec, so it has more to say than a digest holds. **The analysis goes in a file, not in the chat:**
+
+1. Write `design/build-plan.md` — what exists on disk, what the spec demands, the delta per level, and the reasoning behind each SKIP. Advisory only; `design/manifest.json` stays the durable record.
+2. Say in twelve lines or fewer what the delta is per level, what the next move is, and name the brief's path.
+3. Fire `B-plan` **in the same turn**. Each option stands on its own, so the user can answer without opening the brief.
+
+**No web search, no package install, and no generated file happens before `B-plan` is answered.** The plan is derived from the manifest, the spec, and the files already on disk — all of it cheap. Library research is execution, so it runs after the plan is approved and only for the components that survived it.
+
+| Batch | Phase | Decisions | Fires |
+|-------|-------|-----------|-------|
+| B-arg | entry | what the free-form input meant | only when the input does not resolve to exactly one thing |
+| B-plan | 4b | the level plan · the platform | always. Platform joins it only when several are configured and no `--platform` was passed |
+| B-eco | 4b | which complex components take a library | after B-plan, only when the plan left components that match a library pattern and `ecosystemMode` is not `off` |
+| B-val | 4b | how to handle a library that failed validation | only when a chosen library fails its install or peer-dependency check |
+| B-atoms | 5 | the atom list | only when the plan's atom list changed during B-plan, or the list is being derived rather than read |
+| B-mol | 5b | the molecule list · their state declarations | only when MOLECULES is ACTIVE |
+| B-org | 5c | the organism list | only when ORGANISMS is ACTIVE |
+| B-screens | 6 | the route map | only when the collapse is significant or a route is ambiguous |
+
+Worst case is eight calls across a greenfield multi-platform build with libraries; the common case on a scaffolded single-platform project is two — `B-plan`, then `B-screens`. A level whose list the plan already settled spends no call on re-confirming it.
 
 ## Overview
 
@@ -78,239 +115,191 @@ The build system works bottom-up across four levels:
 
 **Bottom-up rule:** A lower-level change propagates upward. If atoms change, molecules must be re-evaluated. If molecules change, screens must be re-evaluated. You cannot mark a higher level as SKIP if a lower level was ACTIVE — the propagation is automatic.
 
-### Step 1: Analyze Existing Codebase
+### Step 1: Audit what exists
 
-Before reading requirements, audit what already exists:
-
-```
-Auditing codebase...
-
-Tokens:    design/tokens.ts found (24 color tokens, 6 type sizes, 8 spacing steps)
-Atoms:     src/components/ — 3 files found (StatusBadge, JobCard, DateChip)
-Molecules: src/molecules/ — 0 files found
-Screens:   src/screens/ — 0 files found
-```
-
-If `design/tokens.ts` (or equivalent per framework) does not exist, the Tokens level is automatically ACTIVE (greenfield token setup needed).
-
-If `src/components/` (or equivalent) does not exist or is empty, Atoms is automatically ACTIVE.
-
-### Step 2: Analyze Requirements
-
-Read the requirements document (from `manifest.spec`). For each build level, identify what the spec demands:
+Read what is already on disk. This is a file listing and a manifest read — no search, no install, no generation.
 
 ```
-Analyzing requirements (PRD.md)...
-
-Tokens required:    existing palette matches spec (no new colors mentioned)
-Atoms required:     StatusBadge ✓, JobCard ✓, DateChip ✓, ActionButton ✗ (missing)
-Molecules required: JobRow (StatusBadge + DateChip) — pattern repeated in 3 screens
-Organisms required: DataTable (SearchBar + Pagination + TableRow) — used in 3 screens
-Screens required:   grouped by route — state-variants collapse into one screen per route:
-  /today      → TodayFeed  [default, empty, loading]   (missing)
-  /jobs/:id   → JobDetail  [default, loading]           (missing)
+Tokens     design/tokens.ts — 24 colors, 6 type sizes, 8 spacing steps
+Atoms      src/components/ — 3 (StatusBadge, JobCard, DateChip)
+Molecules  src/molecules/ — none
+Screens    src/screens/ — none
 ```
 
-Screens are counted by **route**, not by visual state. Views that differ only by state (default/empty/loading/error, or different tabs of one page) are one screen with a `states` list — see Phase 6 Step 1 for the collapse + the state-vs-route rule.
+A missing token file makes Tokens ACTIVE (greenfield token setup). A missing or empty `src/components/` makes Atoms ACTIVE.
 
-### Step 2b: Ecosystem Scan (Component Library Recommendations)
+### Step 2: Read the spec and compute the delta
 
-Before committing to building custom components, scan the planned atom/molecule list against well-supported ecosystem libraries. Many UI patterns — tables, calendars, charts, date pickers, command palettes, rich-text editors, drag-and-drop, carousels — have mature, battle-tested libraries that are almost always a better choice than rolling your own.
+Read the requirements document (from `manifest.spec`). For each level, **delta = required by spec − already verified in the codebase**. A level is ACTIVE when its delta is above zero, SKIP when the delta is zero and no lower level is ACTIVE.
 
-**Purpose:** Catch opportunities where a popular, well-maintained library can replace a planned custom build — saving time, reducing bugs, and giving the user a richer feature set out of the box.
+**Bottom-up propagation is automatic.** A lower ACTIVE level forces every higher level to be re-evaluated, even when its own delta is zero — changed atoms mean the molecules composing them need re-checking. A level cannot be SKIP while something below it is ACTIVE.
 
-#### When to Scan
+What opens each level:
 
-This step runs for every component in the ACTIVE atoms, molecules, and organisms lists. It is controlled by `ecosystemMode` in `design/manifest.json`:
+| Level | Opens when |
+|-------|-----------|
+| Tokens | No token file; or the spec names new colors, fonts, or a spacing system; or it calls for a new theme variant; or a component-library version change moved the tokens |
+| Atoms | Tokens is ACTIVE; or the spec names a UI element absent from the atom inventory; or it describes a new state or variant on an existing atom; or a screen references a component that does not exist |
+| Molecules | Atoms is ACTIVE; or the same two-to-three atom combination appears in two or more spec screens; or no molecules exist and the spec's complexity warrants them |
+| Organisms | Atoms or Molecules is ACTIVE; or a complex composition of molecules and atoms appears in two or more screens; or a composition manages real internal state (sort, pagination, selection, toggles) |
+| Screens | Always, unless every lower level is SKIP and the spec describes no new or changed screens |
+
+Screens are counted by **route**, not by visual state. Views differing only by state — default, empty, loading, error, or the tabs of one page — are one screen carrying a `states` list. Phase 6 Step 1 holds the collapse and the state-vs-route rule.
+
+**Greenfield** (no existing components) skips delta computation: every level is ACTIVE and the plan proposes creating everything the spec describes. **Brownfield** runs the delta per level and proposes only what is missing or changed. Say which mode ran in the digest.
+
+### Step 3: Write the brief, digest it, and confirm the plan
+
+This is the workflow's first turn and it ends on a question.
+
+1. **Write `design/build-plan.md`** — what the audit found, what the spec demands, the per-level delta, and the reasoning behind every SKIP. This is where the analysis lives.
+2. **Digest it in twelve lines or fewer**, naming the brief's path:
+
+```
+BUILD PLAN — web-desktop · brownfield · design/build-plan.md
+
+  TOKENS     skip    token file matches spec
+  ATOMS      build   1 new (ActionButton); 3 already verified
+  MOLECULES  build   1 new (JobRow) — triggered by the atoms change
+  ORGANISMS  build   1 new (DataTable) — used by 3 screens
+  SCREENS    build   2 routes: /today [3 states], /jobs/:id [2 states]
+
+  Next: build ActionButton, then JobRow, then DataTable, then the 2 screens.
+```
+
+3. **Fire `B-plan` in the same turn.** When several platforms are configured and no `--platform` was passed, the platform is the batch's second question — one option per platform carrying its gate state, the first with a pending scaffold gate recommended.
+
+```user_choice
+batch: B-plan — the build plan
+- header: Plan
+  question: Proceed with this build plan?
+  options:
+    - label: Build this plan (Recommended)
+      description: Builds every listed item bottom-up — atoms, then the molecules composing them, then organisms, then screens — verifying each level before the next starts. Nothing above a failing level is attempted.
+    - label: Change what gets built
+      description: Reopens the plan so you can add or remove items at a level, or flip a level between SKIP and BUILD. Choose this when the analysis missed context you have, such as a component you know is already correct.
+    - label: Cancel
+      description: Exits build without writing anything. The manifest plan gate stays pending, so re-running build later re-derives the plan from whatever the codebase looks like then.
+```
+
+**Change what gets built** reopens the plan as a follow-up call scoped to one level at a time: add items, remove items, or flip a level between SKIP and BUILD. **Cancel** exits cleanly with the `plan` gate still `pending` and nothing written.
+
+### Step 4: Write the plan to the manifest
+
+```json
+{
+  "build_plan": {
+    "tokens": "skip",
+    "atoms": { "status": "build", "create": ["ActionButton"], "existing_verified": ["StatusBadge", "JobCard", "DateChip"] },
+    "molecules": { "status": "build", "create": ["JobRow"] },
+    "organisms": { "status": "build", "create": ["DataTable"] },
+    "screens": { "status": "build", "create": ["TodayFeed", "JobDetail"] },
+    "ecosystemLibs": {}
+  },
+  "gates": { "plan": "passed" }
+}
+```
+
+`ecosystemLibs` stays empty until Step 5 fills it.
+
+### Step 5: Ecosystem Scan (component library recommendations)
+
+**This step runs after `B-plan` is answered, never before it.** Searching the web for a library that covers a component the user has not yet agreed to build is work spent on nothing. The plan is approved first; then the surviving list is scanned.
+
+Many UI patterns — tables, calendars, charts, date pickers, command palettes, rich-text editors, drag-and-drop, carousels — have mature libraries that beat rolling your own. This step catches those cases.
+
+#### Scope: only what warrants it
+
+Scan **only** the components the approved plan will actually create, and only those matching a complex-pattern category in `docs/ecosystem-patterns.md`. Skip the rest without comment. Do not scan:
+
+- Simple components where a library costs more than it saves — a badge, a button, a label
+- **Domain-specific** components — StatusBadge, JobCard, UserCard are *your product*, not generic UI
+- Anything the project's component adapter already provides well (shadcn/ui ships a Data Table on TanStack Table — note the coverage and move on)
+
+If nothing survives that filter, say so in one line and go straight to Phase 5. Most projects land here.
+
+#### Mode
+
+`ecosystemMode` in `design/manifest.json` controls the step. Absent, it defaults to `suggest`.
 
 | `ecosystemMode` | Behavior |
 |-----------------|----------|
-| `suggest` (default) | Runs the scan. Presents library suggestions but **never blocks** the BUILD PLAN. User can ignore all suggestions and proceed with custom builds. |
-| `off` | Skips the scan entirely. No library suggestions appear. The agent builds everything custom. |
-| `required` | Runs the scan and **blocks** the BUILD PLAN until every complex pattern has a resolved library choice ("use X" or "build custom confirmed"). |
+| `suggest` (default) | Scans and recommends; never blocks. Ignoring every suggestion and building custom is a valid answer. |
+| `off` | Skips this step entirely. Output one line and continue to Phase 5. |
+| `required` | Blocks Phase 5 until every complex pattern has a resolved choice — a named library or a confirmed custom build. |
 
-If `ecosystemMode` is not set in the manifest, default to `suggest`. The scan also respects per-category overrides in `manifest.librarySuggestions.categories` (each category can independently be `off`, `suggest`, or `required`).
+Per-category overrides in `manifest.librarySuggestions.categories` apply independently, each `off`, `suggest`, or `required`. A pre-declared entry under `manifest.ecosystemLibs` is honored as-is and re-verified only if older than 30 days.
 
-When `ecosystemMode` is `off`: output a brief note and skip directly to Step 2c (skip Steps 2a and 2b entirely).
+#### Research
 
-#### How It Works
+`docs/ecosystem-patterns.md` supplies the Category → Pattern map (19 categories and their historically dominant libraries); `docs/library-vetting-rubric.md` supplies the scoring. The map is a starting point — every match is verified against the current ecosystem before it is offered.
 
-For each planned component, evaluate whether it matches a known "complex UI pattern" category from `docs/ecosystem-patterns.md`. These are patterns where the ecosystem consensus is strong and the build-vs-adopt calculus favors adopting.
+**Reuse cached research first.** If `design/research/libraries/{pattern}.md` exists from a prior `pixel-perfect:research --libraries` run and is under 30 days old, use it and search nothing. Nothing is cached outside the project directory.
 
-The **Category → Pattern Map** lives in `docs/ecosystem-patterns.md` — a reference document with 19 pattern categories and their historically dominant libraries. This is a starting point; the scan verifies every match against the current ecosystem using the search guardrails below.
+**Search tools, in order of availability.** The harness's built-in web search is always present and is sufficient on its own. Jina Reader (`jina_read_url`) deep-reads npm and GitHub pages, Exa (`exa_web_search_exa`) finds current alternatives semantically, and Firecrawl scrapes changelogs — each only when provisioned. Check what the harness exposes; never assume a tool exists.
 
-#### Research-Enhanced Scan
+For each surviving match: confirm the pattern's dominant library is still current (`best {framework} {pattern} library 2026`), then check four objective signals — GitHub stars, npm weekly downloads, last release date, and rating. These feed the rubric (`maintenance` ← last release, `popularity` ← stars + downloads, `community` ← rating + stars). A library with no release in over 12 months is flagged and its alternatives searched. Prefer libraries that are actively maintained (released within 6 months), well-adopted, framework-native, and compatible with the project's component adapter. Score ≥5/8 to be recommendable.
 
-The scan uses `docs/ecosystem-patterns.md` for pattern matching and `docs/library-vetting-rubric.md` for scoring. Every library recommendation is verified against the current ecosystem state before being presented.
+#### Present and ask
 
-**Search guardrails — preferred tools in order of availability:**
-
-| Tool | Priority | Use Case |
-|------|----------|----------|
-| **Default harness search** (built-in WebSearch) | **First** — always available, zero setup | Broad queries, npm package existence, GitHub repo lookups |
-| **Jina Reader** (`jina_read_url`) | Use when provisioned | Deep-read npm package pages, GitHub READMEs, library docs |
-| **Exa** (`exa_web_search_exa`) | Use when provisioned | Semantic search for current alternatives, design research |
-| **Firecrawl MCP** (`firecrawl` tools) | Use when provisioned | Scraping changelogs, release pages, structured data extraction |
-
-**Fallback:** Default harness search is sufficient for all queries. The other tools enrich the research but are not required. Never assume a tool is available — check the harness's available tools before referencing them.
-
-**Reputational signals — objective metrics for library quality:**
-
-| Signal | Source | How to Check |
-|--------|--------|---------------|
-| **Stars** | GitHub | Search `"{library-name} github stars"` |
-| **Weekly Downloads** | npm registry | Search `"{library-name} weekly downloads npm"` or `npm view {library-name}` |
-| **Last Release** | npm / GitHub | Search `"{library-name} latest release"` or `npm view {library-name} time` |
-| **Rating (if available)** | npm search | Search `"{library-name} rating"` or check npm page |
-
-These signals feed into the vetting rubric (`maintenance` ← Last Release, `popularity` ← Stars + Downloads, `community` ← Rating + Stars). Libraries with STRONG downloads + ACTIVE releases + HIGH rating are top-tier recommendations.
-
-**Scan steps:**
-
-1. **Start from the pattern map.** Match each planned component against categories in `docs/ecosystem-patterns.md`.
-2. **Verify current state.** For each match, search framework-specifically:
-   ```
-   "best {framework} {pattern} library 2026"
-   "{library-name} npm downloads stars 2026"
-   "{library-name} latest release date"
-   ```
-3. **Check reputation.** Verify the four reputational signals (stars, downloads, last release, rating). A library stale for >12 months is automatically flagged and alternatives are searched.
-4. **Check for stale entries.** If a table entry has no recent release, search:
-   ```
-   "{stale-library} alternative {framework} 2026"
-   "best {framework} {pattern} library 2026"
-   ```
-5. **Apply the vetting rubric.** Score each candidate against `docs/library-vetting-rubric.md`. Library scoring ≥5/8 is recommended.
-6. **Present with scores.** Show ranked recommendations with vetting scores, reputational signals, and tradeoffs.
-
-**Pre-research caching:** If `design/research/libraries/{pattern}.md` exists from a prior `pixel-perfect:research --libraries` run and was researched within the last 30 days, reuse those findings. Search fresh only if cached research is stale or absent. No libraries are cached outside the project directory.
-
-#### The Scan Process
-
-1. **Categorize:** For each planned atom/molecule/organism, determine if it falls into one of the pattern categories in `docs/ecosystem-patterns.md` (or seems like it *might* benefit from an ecosystem library).
-
-2. **Check existing tools:** If the user's chosen component adapter already provides this component (e.g., shadcn/ui has a Data Table built on TanStack Table), note that the adapter covers it and move on — no recommendation needed.
-
-3. **Verify via web search:** For each match, verify the pattern map's recommendation against the current ecosystem using the search guardrails documented above. Search:
-   ```
-   "best {framework} {pattern} library 2026"
-   "{framework} {pattern} component npm stars downloads"
-   ```
-   Verify reputational signals (stars, weekly downloads, last release date, rating). Apply `docs/library-vetting-rubric.md` to each candidate. Prefer libraries that are:
-   - **Actively maintained** (LAST RELEASE ≤ 6 months)
-   - **Well-adopted** (STARS + DOWNLOADS both STRONG or MODERATE)
-   - **Framework-native** (React lib for React, Svelte lib for Svelte, etc.)
-   - **Compatible** with the project's existing component adapter where possible
-
-4. **Present ranked recommendations:** For each component where a library match was found, present scored recommendations to the user **before** the BUILD PLAN is finalized:
-
-   ```
-   ECOSYSTEM SCAN
-   ==============
-   Scanning planned components for ecosystem library opportunities...
-
-   ✓ ActionButton         — Custom build (simple button, covered by component adapter)
-   ✓ StatusBadge          — Custom build (simple, domain-specific)
-   ✓ JobCard              — Custom build (domain-specific composition)
-   ⚠ DataTable            — Library recommended!
-
-     → TanStack Table (@tanstack/react-table) — 8/8
-       Maintenance: PASS | Popularity: STRONG | Compat: PASS | Bundle: SMALL
-       A11y: YES | License: MIT | Tests: HIGH | Community: ACTIVE
-       Tradeoff: Headless — requires UI wrapper. shadcn/ui provides a built-in wrapper.
-
-     → AG Grid (ag-grid-react) — 7/8
-       Maintenance: PASS | Popularity: STRONG | Compat: PASS | Bundle: LARGE
-       A11y: YES | License: MIT | Tests: HIGH | Community: ACTIVE
-       Tradeoff: ~200KB gzipped. Enterprise features require paid license.
-
-   ⚠ DateRangePicker      — Library recommended!
-
-     → react-day-picker — 7/8
-       Maintenance: PASS | Popularity: MODERATE | Compat: PASS | Bundle: SMALL
-       A11y: YES | License: MIT | Tests: HIGH | Community: ACTIVE
-       Tradeoff: Build custom only if a simple native <input type="date"> suffices.
-
-   ```
-
-   Then ask, naming the actual libraries and their scores:
-
-   ```user_choice
-   batch: B-eco — the ecosystem libraries
-   - header: Libraries
-     question: Two components would be better served by an existing library than by building from scratch. How should they be handled?
-     options:
-       - label: Use both libraries (Recommended)
-         description: Installs AG Grid and react-day-picker and wraps each as a project component, so your code still owns the API. Both scored 7 of 8 on the vetting rubric; the manifest records the dependency and the score.
-       - label: Build them from scratch
-         description: Implements both by hand against the style system. No dependency and total control, at the cost of writing the keyboard handling, virtualization, and accessibility these libraries already solved.
-       - label: Pick per component
-         description: Choose Other and say which to take as a library and which to build. Common when a date picker is simple enough to hand-roll but a data grid is not.
-       - label: Use different libraries
-         description: Choose Other and name the packages you prefer. Each is put through the same vetting rubric before it is installed, and rejected if it fails.
-   ```
-
-5. **User decision is final.** Respect the user's choice:
-   - **"Use top-ranked libraries"** → The atom/molecule/organism is still built, but it wraps the ecosystem library rather than implementing from scratch. The manifest records the dependency and vetting score:
-     ```json
-     {
-       "name": "DataTable",
-       "file": "src/components/DataTable.tsx",
-       "status": "pending",
-       "ecosystemLib": {
-         "package": "@tanstack/react-table",
-         "version": "^8.x",
-         "purpose": "Headless table logic (sorting, filtering, pagination)",
-         "vetting": {
-           "maintenance": "PASS",
-           "popularity": "STRONG",
-           "compatibility": "PASS",
-           "bundleSize": "SMALL",
-           "accessibility": "YES",
-           "license": "COMPATIBLE",
-           "tests": "HIGH",
-           "community": "ACTIVE",
-           "score": "8/8",
-           "researchDate": "2026-06-04"
-         },
-         "tradeoffs": "Headless — requires UI wrapper. shadcn/ui provides a built-in wrapper."
-       }
-     }
-     ```
-   - **"Build custom"** → Proceed as a normal custom build. No ecosystem entry.
-   - **"Different library"** → Record the user's choice in the manifest with `"userChoice": true` and build the wrapper for their preferred library. Include a note about which library was the top recommendation.
-
-#### When NOT to Recommend
-
-Do **not** recommend a library when:
-- The component is simple enough that a library adds more complexity than value (a basic badge, a single button, a label)
-- The component is **domain-specific** (StatusBadge, JobCard, UserCard — these are *your* product, not generic UI)
-- The project's existing component adapter already provides a good implementation
-- The user has set `ecosystemMode: "off"` (or set the specific category to `"off"` in `librarySuggestions.categories`)
-
-#### Step 2c: Library Validation (after user accepts)
-
-Before the BUILD PLAN is finalized, validate each accepted library:
-
-1. **Package exists:** Run `npm view {package}@{version}` (or equivalent for the project's package manager). Confirm the package resolves.
-2. **No version clash:** Check against existing `package.json` dependencies for conflicting peer deps (e.g., library requires React 18 but project uses React 19).
-3. **Framework compatibility check:** If the library has `peerDependencies`, verify they match the project's framework version.
-4. **Import smoke test:** Install the package temporarily and verify the import resolves:
-   ```bash
-   npm install --save-dev {package}@{version}
-   # Agent verifies: import { X } from '{package}' resolves without errors
-   ```
-
-If validation fails for any library:
+Report only the components with a match, at one line each plus their candidates:
 
 ```
-LIBRARY VALIDATION
-==================
-  ✗ DataTable → @tanstack/react-table@^8.20.0
-    Failed: peerDependency conflict
-      Requires: react@^18.0.0
-      Project has: react@^19.0.0
-    → This may still work. Accept with caution, or choose an alternative.
+ECOSYSTEM SCAN — 2 of 5 components matched a library pattern
+
+  DataTable       → TanStack Table (@tanstack/react-table)  8/8   headless; shadcn ships a wrapper
+                    AG Grid (ag-grid-react)                 7/8   ~200KB gzipped; enterprise tier is paid
+  DateRangePicker → react-day-picker                        7/8   skip if <input type="date"> is enough
+
+  Full scores in design/build-plan.md.
+```
+
+Then ask, naming the actual libraries and scores:
+
+```user_choice
+batch: B-eco — the ecosystem libraries
+- header: Libraries
+  question: Two components would be better served by an existing library than by building from scratch. How should they be handled?
+  options:
+    - label: Use both libraries (Recommended)
+      description: Installs AG Grid and react-day-picker and wraps each as a project component, so your code still owns the API. Both scored 7 of 8 on the vetting rubric; the manifest records the dependency and the score.
+    - label: Build them from scratch
+      description: Implements both by hand against the style system. No dependency and total control, at the cost of writing the keyboard handling, virtualization, and accessibility these libraries already solved.
+    - label: Pick per component
+      description: Choose Other and say which to take as a library and which to build. Common when a date picker is simple enough to hand-roll but a data grid is not.
+    - label: Use different libraries
+      description: Choose Other and name the packages you prefer. Each is put through the same vetting rubric before it is installed, and rejected if it fails.
+```
+
+The answer is final. A library choice means the component is still built — as a wrapper owning the project's API, theme tokens, and adapter conventions, with the library as an implementation detail rather than a leaky abstraction. A custom choice proceeds as a normal build with no ecosystem entry. A different library is recorded with `"userChoice": true` and a note naming the top recommendation.
+
+Record each accepted library on its component in `build_plan.{level}.ecosystemLibs`:
+
+```json
+{
+  "DataTable": {
+    "package": "@tanstack/react-table",
+    "version": "^8.x",
+    "purpose": "Headless table logic (sorting, filtering, pagination)",
+    "vetting": {
+      "maintenance": "PASS", "popularity": "STRONG", "compatibility": "PASS", "bundleSize": "SMALL",
+      "accessibility": "YES", "license": "COMPATIBLE", "tests": "HIGH", "community": "ACTIVE",
+      "score": "8/8", "researchDate": "2026-06-04"
+    },
+    "tradeoffs": "Headless — requires UI wrapper. shadcn/ui provides a built-in wrapper."
+  }
+}
+```
+
+### Step 6: Validate accepted libraries
+
+For each library the user accepted: confirm the package resolves (`npm view {package}@{version}`, or the project's package manager equivalent), check its peer dependencies against `package.json` for a version clash, and install it and verify the import resolves.
+
+Report validation as one line per library. On failure, name the conflict and ask:
+
+```
+  ✗ DataTable → @tanstack/react-table@^8.20.0 — peer dependency conflict
+      requires react@^18.0.0 · project has react@^19.0.0
 ```
 
 ```user_choice
@@ -326,218 +315,19 @@ batch: B-val — the failed validation
       description: Implements the component by hand against the style system. No dependency and no conflict, at the cost of writing behavior the library already solved.
 ```
 
-If all libraries validate:
+### Resuming the build
+
+After the plan gate passes, build runs the ACTIVE levels bottom-up — Tokens, Atoms, Molecules, Organisms, Screens — skipping the rest. A build re-entered later reads the plan from the manifest and picks up at the first unfinished item. Report the level and the count, then continue:
 
 ```
-LIBRARY VALIDATION
-==================
-  ✓ DataTable → @tanstack/react-table@^8.20.0 — installed, imports verified
-  ✓ DateRangePicker → react-day-picker@^9.0.0 — installed, imports verified
-
-All ecosystem libraries validated.
+Resuming: ATOMS 0/1 — building ActionButton. Then JobRow, DataTable, 2 screens.
 ```
 
-#### Ecosystem Scan Output in the Build Plan
-
-The BUILD PLAN output (Step 4) now includes an ecosystem scan summary:
-
-```
-BUILD PLAN
-==========
-Analyzing: PRD.md vs current codebase (scaffold: passed)
-Mode: brownfield (existing components found)
-
-ECOSYSTEM SCAN:
-  ✓ ActionButton, StatusBadge, JobCard, DateChip — custom build
-  📦 DataTable → @tanstack/react-table 8/8 (user approved)
-
-TOKENS    [ SKIP ]   — ...
-ATOMS     [ BUILD ]  — Need: DataTable (wrapping @tanstack/react-table), ActionButton, ...
-MOLECULES [ BUILD ]  — ...
-ORGANISMS [ BUILD ]  — Need: DataTable (complex stateful composition)
-SCREENS   [ BUILD ]  — ...
-
-Planned work:
-  - 1 atom wrapping ecosystem library: DataTable (@tanstack/react-table)
-  - 2 atoms to create custom: ActionButton, StatusBadge
-  ...
-```
-
-Then fire the **plan gate** below. This is the same decision in both branches of this step — define it once and reuse it, filling the counts from the actual plan.
-
-<a id="plan-gate"></a>
-
-```user_choice
-batch: B-plan — the build plan
-- header: Plan
-  question: Proceed with this build plan?
-  options:
-    - label: Build this plan (Recommended)
-      description: Builds every listed item bottom-up — atoms, then the molecules composing them, then organisms, then screens — verifying each level before the next starts. Nothing above a failing level is attempted.
-    - label: Change what gets built
-      description: Reopens the plan so you can add or remove items at a level, or flip a level between SKIP and BUILD. Choose this when the analysis missed context you have, such as a component you know is already correct.
-    - label: Cancel
-      description: Exits build without writing anything. The manifest plan gate stays pending, so re-running build later re-derives the plan from whatever the codebase looks like then.
-```
-
-### Step 3: Compute Delta and Apply Gate Logic
-
-For each level:
-- **Delta = required by spec − already verified in codebase**
-- A level is **ACTIVE** if delta > 0
-- A level is **SKIP** if delta = 0 AND no lower level is ACTIVE
-- A lower-level ACTIVE status forces re-evaluation of all higher levels (even if their own delta is 0)
-
-Gate-opening factors per level:
-
-**Tokens gate opens when:**
-- No existing token file (`design/tokens.ts` or equivalent)
-- Spec mentions new colors, fonts, or spacing system
-- Spec references a new theme variant (dark mode, rebrand)
-- Component library version change that alters design tokens
-
-**Atoms gate opens when:**
-- Tokens gate is ACTIVE (new tokens → atoms must use them)
-- Spec names a UI element not in the existing atom inventory
-- Spec describes a new interactive state or variant on an existing atom
-- A screen references a component that doesn't exist in codebase
-
-**Molecules gate opens when:**
-- Atoms gate is ACTIVE (changed atoms → compositions need re-evaluation)
-- The same 2-3 atom combination appears in ≥2 spec screens
-- No molecules exist and spec complexity warrants them
-
-**Organisms gate opens when:**
-- Molecules or atoms gate is ACTIVE (changed lower levels → organisms need re-evaluation)
-- A complex composition of molecules + atoms appears in ≥2 spec screens
-- The composition manages significant internal state (sort/pagination/selection/toggles)
-
-**Screens gate:**
-- Never SKIP if any lower level is ACTIVE
-- Always ACTIVE if spec describes new or changed screens
-
-### Step 4: Output BUILD PLAN
-
-Present the plan for user confirmation before writing any code:
-
-```
-BUILD PLAN
-==========
-Analyzing: PRD.md vs current codebase (scaffold: passed)
-
-Mode: brownfield (existing components found)
-
-TOKENS    [ SKIP ]   — Existing token file matches spec. No new colors or fonts required.
-ATOMS     [ BUILD ]  — Need: ActionButton (missing). StatusBadge, JobCard, DateChip already verified.
-MOLECULES [ BUILD ]  — Need: JobRow (StatusBadge + DateChip). Triggered by atoms change.
-ORGANISMS [ BUILD ]  — Need: DataTable (SearchBar + Pagination + TableRow). Used in 3 screens.
-SCREENS   [ BUILD ]  — 2 routes (state-variants collapsed): /today → TodayFeed [3 states], /jobs/:id → JobDetail [2 states].
-
-Planned work:
-  - 1 atom to create: ActionButton
-  - 1 molecule to create: JobRow
-  - 1 organism to create: DataTable
-  - 2 screens to create across 2 routes: TodayFeed (/today, 3 states), JobDetail (/jobs/:id, 2 states)
-```
-
-Then fire the [plan gate](#plan-gate) defined above — the same batch, with these counts.
-
-**Modification flow:** If the user chooses "Change what gets built", ask which level to adjust:
-- Add items to a level
-- Remove items from a level
-- Change a SKIP to BUILD or vice versa (user may have context the analysis missed)
-
-**Cancellation:** If "Cancel", exit build cleanly. Manifest `plan` gate remains `pending`.
-
-### Step 5: Write Plan to Manifest
-
-After user confirms, write the plan to manifest. If any ecosystem library recommendations were accepted in Step 2b, include the `ecosystemLibs` record:
-
-```json
-{
-  "build_plan": {
-    "tokens": "skip",
-    "atoms": {
-      "status": "build",
-      "create": ["ActionButton"],
-      "existing_verified": ["StatusBadge", "JobCard", "DateChip"]
-    },
-    "molecules": {
-      "status": "build",
-      "create": ["JobRow"]
-    },
-    "organisms": {
-      "status": "build",
-      "create": ["DataTable"]
-    },
-    "screens": {
-      "status": "build",
-      "create": ["TodayFeed", "JobDetail"]
-    },
-    "ecosystemLibs": {}
-  },
-  "gates": {
-    "plan": "passed"
-  }
-}
-```
-
-If ecosystem libraries were accepted:
-
-```json
-{
-  "build_plan": {
-    "atoms": {
-      "status": "build",
-      "create": ["DataTable", "ActionButton"],
-      "ecosystemLibs": {
-        "DataTable": {
-          "package": "@tanstack/react-table",
-          "version": "^8.x",
-          "purpose": "Headless table logic (sorting, filtering, pagination)"
-        }
-      }
-    }
-  }
-}
-```
-
-When building an atom that has an `ecosystemLibs` entry, the build process installs the package and wraps it as a project component (using theme tokens and adapter conventions) rather than implementing the logic from scratch.
-
-### Greenfield vs. Brownfield
-
-**Greenfield** (no existing components):
-- All levels are ACTIVE by default (everything needs creation)
-- No delta computation needed — BUILD PLAN immediately proposes creating everything from spec
-- Plan output shows: `Mode: greenfield (no existing components)`
-
-**Brownfield** (existing components found):
-- Delta computation runs per level
-- Plan proposes only what's missing or changed
-- Plan output shows: `Mode: brownfield (N existing components found)`
-
-### Resuming the Build
-
-After PLAN is confirmed, `pixel-perfect:build` resumes from the first ACTIVE level in order (Tokens → Atoms → Molecules → Organisms → Screens), executing only ACTIVE levels.
-
-If build is interrupted and resumed later, the plan in the manifest drives where to pick up:
-
-```
-> pixel-perfect:build
-
-Resuming from BUILD PLAN:
-  [x] Tokens    — skipped (no changes)
-  [~] Atoms     — 0/1 built (ActionButton pending)
-  [ ] Molecules — pending (JobRow)
-  [ ] Organisms  — pending (DataTable)
-  [ ] Screens   — pending (TodayFeed, JobDetail)
-
-Building: ActionButton...
-```
+Do not re-derive or re-present the plan the manifest already holds.
 
 ### Phase 4b Exit Gate
 
-BUILD PLAN is confirmed by user. Manifest has `"plan": "passed"`. Subsequent build phases execute only ACTIVE levels from the plan.
+BUILD PLAN is confirmed by the user. Manifest has `"plan": "passed"`. Subsequent build phases execute only ACTIVE levels from the plan.
 
 ---
 
@@ -547,17 +337,12 @@ Build individual, reusable components.
 
 ### Step 1: Identify Components
 
-Read requirements (PRD, user input) and break into an atomic component list:
+**The approved plan already carries the atom list.** When `build_plan.atoms.create` came through `B-plan` unchanged, that list is settled — report it in one line and start building. Do not re-confirm a list the user just approved.
+
+Fire `B-atoms` only when the list is genuinely open: the user chose "Change what gets built" at the plan gate, or the atoms are being derived here for the first time because the plan was seeded without them.
 
 ```
-Analyzing requirements for components...
-
-Proposed atoms:
-  1. StatusBadge    — Colored badge showing job status (open, in-progress, complete)
-  2. JobCard        — Summary card for a single job
-  3. DateChip       — Date display chip with relative time
-  4. SectionHeader  — Section title with optional action button
-  5. ActionButton   — Primary action button with loading state
+ATOMS 0/5 — StatusBadge, JobCard, DateChip, SectionHeader, ActionButton. Building StatusBadge.
 ```
 
 ```user_choice
@@ -775,14 +560,10 @@ For atoms wrapping an ecosystem library, the entry includes the `ecosystemLib` r
 
 ### Progress Tracking
 
-After each atom:
+One line after each atom — the count, and what is next. Not a re-listing of what is already done.
+
 ```
-Atoms: 3/5 verified
-  [x] StatusBadge     (controls: yes)
-  [x] JobCard         (controls: yes)
-  [x] DateChip        (controls: yes)
-  [~] SectionHeader   (building...)
-  [ ] ActionButton
+Atoms 3/5 — StatusBadge, JobCard, DateChip verified. Building SectionHeader.
 ```
 
 ### Phase 5 Exit Gate
@@ -818,14 +599,12 @@ If none of these conditions apply, skip Phase 5b and proceed to Phase 6.
 
 ### Step 1: Identify Molecules
 
-Review the atom list from Phase 5 and the requirements spec. Look for repeated atom groupings:
+Review the verified atoms and the spec for repeated atom groupings, then digest the candidates with the screens that justify each one:
 
 ```
-Analyzing atoms and spec for molecule candidates...
-
-Proposed molecules:
-  1. JobRow       — StatusBadge + DateChip (appears on TodayFeed, JobList, SearchResults)
-  2. ActionPanel  — ActionButton + StatusBadge (appears on JobDetail, QuickActions)
+Proposed molecules
+  JobRow       StatusBadge + DateChip     — TodayFeed, JobList, SearchResults
+  ActionPanel  ActionButton + StatusBadge — JobDetail, QuickActions
 ```
 
 The molecule list and its state declarations are one call — the state answer only makes sense against the list it describes:
@@ -856,35 +635,15 @@ Update manifest with the molecule list (all `status: pending`).
 
 For each proposed molecule, identify whether it needs internal state. Molecules that only compose atoms visually (layout + prop delegation) are **stateless**. Molecules that manage interaction state (input tracking, toggles, validation, debouncing) are **stateful**.
 
-Present state declarations for confirmation:
+Digest the declarations as one line per molecule — its state variables and the scenarios they produce. A stateless molecule is one word.
 
 ```
-Analyzing molecules for state requirements...
-
-  JobRow (StatusBadge + DateChip):
-    State: NONE — pure composition, all data from props
-
-  SearchBar (Input + Button + SuggestionList):
-    State: DECLARED
-      - query (string) — current input value, debounced for callbacks
-      - isFocused (boolean) — controls suggestion visibility
-      - showSuggestions (boolean) — derived from query + isFocused
-    Scenarios: empty, typing, results-visible, no-results, error
-
-  FormField (Label + Input + ErrorMessage):
-    State: DECLARED
-      - isTouched (boolean) — tracks whether user has interacted
-      - error (string | null) — validation error message
-    Scenarios: pristine, focused, invalid, valid
-
-  ToggleGroup (N × ToggleButton atoms):
-    State: DECLARED
-      - selectedIndex (number) — currently active toggle
-    Scenarios: none-selected, first-selected, last-selected
-
+  JobRow     none — pure composition, all data from props
+  SearchBar  query · isFocused · showSuggestions  → empty, typing, results-visible, no-results, error
+  FormField  isTouched · error                    → pristine, focused, invalid, valid
 ```
 
-The state answer above is the second question of the `B-mol` batch — it is not asked separately.
+The state answer is the second question of the `B-mol` batch — it is not asked separately.
 
 **Rules:**
 - If a molecule has NO declared state, it is a **pure composition** (`"state": null`).
@@ -1072,11 +831,9 @@ For each molecule, in order:
 
 ### Progress Tracking
 
-After each molecule:
+One line after each molecule — the count, and what is next.
 ```
-Molecules: 1/2 verified
-  [x] JobRow        (atoms: StatusBadge + DateChip)
-  [ ] ActionPanel   (atoms: ActionButton + StatusBadge)
+Molecules 1/2 — JobRow verified. Building ActionPanel (ActionButton + StatusBadge).
 ```
 
 ### Phase 5b Exit Gate
@@ -1109,18 +866,14 @@ If no patterns meet these criteria, skip Phase 5c and proceed to Phase 6. This p
 
 ### Step 1: Identify Organisms
 
-Review molecules, atoms, and the spec for complex compositions that span multiple screens:
+Review molecules, atoms, and the spec for complex compositions spanning multiple screens. Digest each candidate as one line — what it composes, what state it owns, and where it is reused:
 
 ```
-Analyzing for organism candidates...
-
-Proposed organisms:
-  1. DataTable      — Molecule: SearchBar + Atoms: Pagination, TableRow × N
-     State: sortColumn, sortDirection, currentPage, selectedRows, filterQuery
-     Appears in: AdminDashboard, ReportsView, UserList
-  2. CommandPalette  — Atoms: TextInput + SuggestionList + KeyboardHint
-     State: isOpen, query, selectedIndex, results
-     Appears in: global overlay (app-level)
+Proposed organisms
+  DataTable       SearchBar + Pagination + TableRow  · sort, page, selection, filter
+                  → AdminDashboard, ReportsView, UserList
+  CommandPalette  TextInput + SuggestionList + KeyboardHint · isOpen, query, selection
+                  → global overlay
 ```
 
 ```user_choice
@@ -1228,11 +981,9 @@ For each organism, in order:
 
 ### Progress Tracking
 
-After each organism:
+One line after each organism — the count, and what is next.
 ```
-Organisms: 1/2 verified
-  [x] DataTable     (molecules: SearchBar, atoms: Pagination + TableRow, state: 5 variables, 6 scenarios)
-  [ ] CommandPalette (atoms: TextInput + SuggestionList, state: 4 variables, 3 scenarios)
+Organisms 1/2 — DataTable verified (6 state scenarios). Building CommandPalette.
 ```
 
 ### Phase 5c Exit Gate
@@ -1284,20 +1035,16 @@ Group candidates by route. Within each route group, apply the **state-vs-route d
 
 #### Step 1d: Propose the route map and confirm
 
+One line per route — the route, its screen, and its states. The components each screen composes go in `design/build-plan.md`, not the digest.
+
 ```
-Analyzing requirements for screens...
+Route map — 6 candidate views → 3 screens
 
-Proposed screens (grouped by route — state-variants collapsed):
+  /feed      Feed            default · empty · loading
+  /jobs/:id  JobDetail       default · loading
+  /admin     AdminDashboard  default
 
-  /feed       → Feed        3 states  [default · empty · loading]
-      atoms: StatusBadge, DateChip, SectionHeader   molecules: JobRow
-  /jobs/:id   → JobDetail   2 states  [default · loading]
-      atoms: StatusBadge, ActionButton, SectionHeader
-  /admin      → AdminDashboard  1 state  [default]
-      atoms: SectionHeader, ActionButton   organisms: DataTable
-
-  Collapsed 6 candidate views → 3 screens. Each state becomes its own sandbox
-  story — no visual coverage is lost.
+  Every state still gets its own sandbox story; no visual coverage is lost.
 ```
 
 ```user_choice
@@ -1448,15 +1195,10 @@ All screens have `status: verified`, **and** every screen has one sandbox story 
 
 If BUILD PLAN has not been confirmed (plan gate is `pending`), `pixel-perfect:build` runs Phase 4b first before resuming any other phase.
 
-Build automatically resumes from the current phase. If you stopped mid-atoms:
+Otherwise build resumes from the current phase in one line and keeps going. It does not re-audit the codebase, re-read the spec, or re-present a plan the manifest already holds.
 
 ```
-> pixel-perfect:build
-
-Resuming from: ATOMS (3/5 verified)
-Remaining: SectionHeader, ActionButton
-
-Building SectionHeader...
+Resuming: ATOMS 3/5 — building SectionHeader, then ActionButton.
 ```
 
 ## Building Specific Items
@@ -1472,21 +1214,14 @@ This re-generates the specified item while preserving everything else.
 
 ## Completion
 
+Report the counts and the next command. Omit any level the plan skipped.
+
 ```
-Build complete for {platform}!
+Build complete — {platform}
 
-  Atoms:    5/5 verified (all controls wired)
-  Molecules: verified (if applicable)
-  Organisms: verified (if applicable)
-  Screens:  2/2 verified
+  Atoms 5/5 · Molecules 2/2 · Organisms 1/1 · Screens 2/2 (5 state stories)
+  All registered in the sandbox with controls wired.
 
-All phases passed for {platform}. Your project has running code with:
-  - 5 themed components registered in the sandbox with full controls
-  - Functional molecule compositions in the sandbox
-  - Complex stateful organisms in the sandbox
-  - 2 composed screens at target viewport
-
-To iterate: pixel-perfect:refine --platform {platform}
-To verify:  pixel-perfect:verify --platform {platform}
-To check:   pixel-perfect:status
+  Next: pixel-perfect:verify --platform {platform}
+        pixel-perfect:refine --platform {platform} to iterate
 ```

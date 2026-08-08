@@ -35,7 +35,7 @@ Output: `design/manifest.json` with gates discover/target/equip = passed.
 
 ## How this workflow asks
 
-Every decision below is collected with `USER_CHOICE` — see `workflows/RUNTIME-CONTRACT.md`, "User choice protocol". The `user_choice` blocks in this file are the wording and options to use with the harness's question mechanism; they are never printed.
+Every decision below is collected with `USER_CHOICE` — see `workflows/RUNTIME-CONTRACT.md`, "User choice protocol" and "Turn shape". The `user_choice` blocks in this file are the wording and options to use with the harness's question mechanism; they are never printed.
 
 On a repository that already carries planning artifacts, init produces a lot of analysis. **The analysis goes in a file, not in the chat:**
 
@@ -111,21 +111,15 @@ If a spec is provided, record its path in the manifest under `spec`. This spec i
 
 4. **Derive a route map**: From the spec's information architecture / navigation, list the distinct **routes** (pages) — not states. A screen is keyed by its route and carries a **list of states**; views that differ only by state (default/empty/loading/error, or different tabs of one page) are ONE route with a states list, not separate screens. A login page with an error state is `/login` with `[default, error]`; a settings page with three tabs is `/settings` with `[account, billing, team]`. Use the **state-vs-route decision rule** in `docs/state-patterns.md` to decide whether a tab/sub-view is a state or its own route.
 
-```
-Component Hierarchy (from spec):
+The hierarchy goes in `design/init-brief.md`. The digest carries the route map only — one line per route:
 
-  Components (atoms):     Button, Badge, Avatar, TextField, Icon
-                              ↓ compose into
-  Molecules:              SearchBar (TextField + Icon + Button)
-                          UserCard (Avatar + Badge + Text)
-                          NavItem (Icon + Text + Badge)
-                              ↓ compose into
-  Routes (screens):       /dashboard → Dashboard  [default · empty · loading]
-                          /profile   → Profile    [view · edit]
-                          /settings  → Settings   [account · billing · team]
+```
+  /dashboard  Dashboard  default · empty · loading
+  /profile    Profile    view · edit
+  /settings   Settings   account · billing · team
 ```
 
-This hierarchy is recorded in the manifest (each screen carries a `route` + `states` list) and drives the build phase ordering.
+The full hierarchy is recorded in the manifest (each screen carries a `route` + `states` list) and drives the build phase ordering.
 
 The derived route map is confirmed in **B2 Q1**:
 
@@ -465,20 +459,12 @@ Record the choice in `platforms[platform].tools.sandbox` (default `"custom"`).
 
 ### Confirmation Summary
 
-Present the full tool selection for confirmation before writing the manifest. Use the **actual selected values** (not hardcoded examples):
+Digest the full tool selection on one or two lines using the **actual selected values**, then fire **B5 Q2** in the same turn. Each "change" option reopens exactly that batch — never the whole interview.
 
 ```
-Your configuration:
-
-  Platforms:   {selected_platforms}
-  Framework:   {selected_framework}
-  Style:       {selected_style}
-  Components:  {selected_components}
-  Icons:       {selected_icons}
-  Sandbox:     {selected_sandbox}   (default: custom — native browser)
+Configuration — mobile-ios, mobile-android
+  Expo + Tamagui + React Native Reusables + Lucide React Native → custom sandbox
 ```
-
-Then fire **B5 Q2**. Each "change" option reopens exactly that batch — never the whole interview:
 
 ```user_choice
 batch: B5 — lock it in
@@ -495,77 +481,20 @@ batch: B5 — lock it in
       description: Writes nothing and exits. The brief at design/init-brief.md is left in place, so re-running init later starts from the same analysis rather than redoing it.
 ```
 
-**Mobile example:**
-```
-Your configuration:
-
-  Platforms:   mobile-ios, mobile-android
-  Framework:   Expo
-  Style:       Tamagui
-  Components:  React Native Reusables
-  Icons:       Lucide React Native
-  Sandbox:     custom (native Expo component browser)
-```
-
-**Web example:**
-```
-Your configuration:
-
-  Platforms:   web-desktop, web-mobile
-  Framework:   Next.js
-  Style:       Tailwind CSS
-  Components:  shadcn/ui
-  Icons:       Lucide React
-  Sandbox:     custom (native Next.js component browser)
-```
-
-If the user wants to change something, loop back to the relevant step.
+A web project reads the same way — `web-desktop, web-mobile · Next.js + Tailwind CSS + shadcn/ui + Lucide React → custom sandbox`. If the user wants to change something, loop back to that batch alone.
 
 ### Adapter Validation
 
-After confirmation, verify adapter docs exist for chosen tools:
-- If adapter exists in `docs/adapters/`: note it will be loaded during scaffold
-- If no adapter exists: inform user the generic adapter will be used (process enforcement only, no tool-specific guidance)
+After confirmation, verify adapter docs exist for the chosen tools. Every tool with an adapter in `docs/adapters/` loads it during scaffold; a tool without one falls back to `generic.md` — process enforcement only, no tool-specific guidance.
 
-**Mobile project example (with React Native Reusables):**
+Report this as one line. **Name only what is missing**, because that is the part with a consequence:
+
 ```
-Adapter check:
-  [x] custom-sandbox   → docs/adapters/custom-sandbox.md (default for all platforms)
-  [x] tailwind         → docs/adapters/tailwind.md
-  [x] react-native-reusables → docs/adapters/react-native-reusables.md
+Adapters: tailwind, shadcn-svelte, custom-sandbox, sveltekit — all found.
+Adapters: tailwind, custom-sandbox found. mantine has none → generic adapter.
 ```
 
-**Mobile project example (with React Native Paper):**
-```
-Adapter check:
-  [x] custom-sandbox   → docs/adapters/custom-sandbox.md (default for all platforms)
-  [x] tailwind         → docs/adapters/tailwind.md
-  [x] react-native-paper → docs/adapters/react-native-paper.md
-```
-
-**Web project example (React):**
-```
-Adapter check:
-  [x] custom-sandbox   → docs/adapters/custom-sandbox.md (default for all platforms)
-  [x] tailwind         → docs/adapters/tailwind.md
-  [ ] mantine          → No adapter found. Generic adapter will be used.
-```
-
-**Web project example (SvelteKit):**
-```
-Adapter check:
-  [x] sveltekit        → docs/adapters/sveltekit.md (framework adapter)
-  [x] custom-sandbox   → docs/adapters/custom-sandbox.md (default for all platforms)
-  [x] tailwind         → docs/adapters/tailwind.md
-  [x] shadcn-svelte    → docs/adapters/shadcn-svelte.md
-```
-
-The framework adapter is optional and only listed when one exists (e.g. `sveltekit`); React/Next/Vite show no framework-adapter row.
-
-For tools selected as "Other" with a docs URL provided, inform the user:
-```
-  [ ] custom-style → No adapter. AI will reference provided docs URL during scaffold.
-```
+The framework adapter is optional and only named when one exists (`sveltekit` has one; React, Next.js, and Vite do not, and finding none is expected, not a warning). A tool selected through Other with a docs URL has no adapter either — say that scaffold will read the supplied URL instead.
 
 ### Resolve Styling Contract
 
@@ -736,7 +665,7 @@ The `spec` field is the path to the spec/PRD document (relative to the project r
 
 **Deconstruction fields (optional).** When the project was seeded by `pixel-perfect:design-deconstruct`, the manifest also carries top-level `"deconstructed": true` and `"design_system": "design/system"`, and seeded `atoms`/`molecules`/`screens` entries include a `"target"` (the mockup the real component is built to match), e.g. `"target": "design/system/views/feed/feed.html"`. These are additive and ignored by projects that never ran deconstruct.
 
-**Ecosystem mode (optional, top-level).** Controls how the BUILD PLAN Ecosystem Scan (Phase 4b Step 2b) behaves. See `docs/ecosystem-patterns.md` for the full matrix. Omitting it defaults to `"suggest"`.
+**Ecosystem mode (optional, top-level).** Controls how the BUILD PLAN Ecosystem Scan (Phase 4b Step 5) behaves. See `docs/ecosystem-patterns.md` for the full matrix. Omitting it defaults to `"suggest"`.
 
 ```json
 {

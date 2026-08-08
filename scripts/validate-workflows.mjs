@@ -14,7 +14,15 @@ const INTERACTIVE_WORKFLOWS = ["add-platform", "build", "init", "refine", "scaff
 const SILENT_WORKFLOWS = ["design-deconstruct", "research", "status", "verify"];
 const INTERNAL_SKILLS = ["deconstruct-engine", "process-context"];
 
-const CONTRACT_REQUIREMENTS = ["USER_CHOICE", "user_choice", "multiSelect", "self-contained"];
+const CONTRACT_REQUIREMENTS = [
+  "USER_CHOICE",
+  "user_choice",
+  "multiSelect",
+  "self-contained",
+  "Turn shape",
+  "DIGEST",
+  "How this workflow asks",
+];
 
 const PROSE_DECISION = /^\s*\?\s+\S/;
 const STALE_ROUND_TRIP = /\[Yes \/ No, choose different\]/;
@@ -29,6 +37,19 @@ const MAX_OPTIONS = 4;
 // A description shorter than this cannot carry what an option is, what it means, and its
 // trade-off. Length is a proxy for "self-contained"; it catches bare product names.
 const MIN_DESCRIPTION_LENGTH = 40;
+
+// The section every interactive workflow uses to declare its round-trip cost up front.
+const ASKS_HEADING = /^##\s+How this workflow asks\s*$/;
+const BATCH_TABLE_ROW = /^\|\s*Batch\s*\|/;
+const BATCH_DECLARATION = /^batch:\s*([^\s—-]+(?:-[^\s—]+)*)/;
+
+// An unlabeled fenced block is an illustrative output the agent will imitate. Past this many
+// lines it stops being a digest and becomes the wall of text that made build unusable.
+const DIGEST_MAX_LINES = 12;
+// Only blocks a workflow tells the agent to emit are capped. A file-format sample, a command
+// to run, or a JSON schema is reference material and may be as long as it needs to be.
+const PRESENTATION_CUE = /\b(present|presents|output|outputs|report|reports|display|displays|show|shows|print|prints|digest|digests)\b/i;
+const FENCE_DELIMITER = /^(\s*)(`{3,})\s*(\S*)\s*$/;
 
 class WorkflowValidationError extends Error {
   constructor(details) {
@@ -216,16 +237,89 @@ function lintFence(fence, relativePath, errors) {
   }
 }
 
+// Walks every fenced block in a document, closing on a delimiter of at least the opening
+// length so a ````markdown sample containing ``` blocks is read as one fence, not three.
+function collectAllFences(lines) {
+  const fences = [];
+  let open = null;
+  for (const [index, line] of lines.entries()) {
+    const match = FENCE_DELIMITER.exec(line);
+    if (open === null) {
+      if (match) open = { startLine: index + 1, ticks: match[2].length, info: match[3], body: [] };
+      continue;
+    }
+    if (match && match[2].length >= open.ticks && !match[3]) {
+      fences.push(open);
+      open = null;
+      continue;
+    }
+    open.body.push(line);
+  }
+  if (open !== null) fences.push(open);
+  return fences;
+}
+
+// Flags illustrative output blocks that a workflow tells the agent to emit and that run past
+// the digest budget. This is the rule that keeps a build plan from growing back into a report.
+function lintDigestBudget(lines, relativePath, errors) {
+  for (const fence of collectAllFences(lines)) {
+    if (fence.info) continue;
+    if (fence.body.length <= DIGEST_MAX_LINES) continue;
+
+    // The two nearest non-blank lines above the fence say what the block is for.
+    const preceding = lines
+      .slice(0, fence.startLine - 1)
+      .filter((line) => line.trim())
+      .slice(-2)
+      .join(" ");
+    if (!PRESENTATION_CUE.test(preceding)) continue;
+
+    errors.push(
+      `${relativePath}:${fence.startLine} printed output is ${fence.body.length} lines (max ${DIGEST_MAX_LINES}) — digest it and put the detail in the workflow's brief`,
+    );
+  }
+}
+
+// Every interactive workflow declares its batches in one table, so its round-trip cost is
+// reviewable rather than emergent, and no batch can be added without accounting for it.
+function lintAsksSection(lines, relativePath, errors) {
+  const headingIndex = lines.findIndex((line) => ASKS_HEADING.test(line));
+  if (headingIndex === -1) {
+    errors.push(`${relativePath} has no "## How this workflow asks" section declaring its batches`);
+    return;
+  }
+
+  const nextHeading = lines.findIndex((line, index) => index > headingIndex && /^##\s+\S/.test(line));
+  const section = lines.slice(headingIndex, nextHeading === -1 ? lines.length : nextHeading);
+  if (!section.some((line) => BATCH_TABLE_ROW.test(line.trim()))) {
+    errors.push(`${relativePath}:${headingIndex + 1} "How this workflow asks" needs a table whose first column is Batch`);
+    return;
+  }
+
+  const table = section.join("\n");
+  const declared = new Set();
+  for (const line of lines) {
+    const match = BATCH_DECLARATION.exec(line.trim());
+    if (match) declared.add(match[1]);
+  }
+  for (const id of declared) {
+    if (!new RegExp(`\\|\\s*${id.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}\\s*\\|`).test(table)) {
+      errors.push(`${relativePath} batch "${id}" is asked but missing from the "How this workflow asks" table`);
+    }
+  }
+}
+
 /**
  * Lints one workflow document. Pure: takes text, returns `file:line` errors.
  *
  * @param {string} text document contents
  * @param {string} relativePath path used in error messages
- * @param {{ structural?: boolean }} [options] structural checks apply to canonical workflows
+ * @param {{ structural?: boolean, interactive?: boolean }} [options] structural checks apply to
+ *   canonical workflows; the asks-section check applies to the interactive ones
  * @returns {string[]}
  */
 export function lintWorkflowText(text, relativePath, options = {}) {
-  const { structural = true } = options;
+  const { structural = true, interactive = false } = options;
   const errors = [];
   const lines = text.split("\n");
 
@@ -239,6 +333,12 @@ export function lintWorkflowText(text, relativePath, options = {}) {
   }
 
   if (!structural) return errors;
+  // Only workflows that ask are budgeted. A workflow whose deliverable IS a report — status,
+  // research, design-deconstruct — is doing exactly what it was invoked to do at any length.
+  if (interactive) {
+    lintDigestBudget(lines, relativePath, errors);
+    lintAsksSection(lines, relativePath, errors);
+  }
   for (const fence of collectFences(lines)) lintFence(fence, relativePath, errors);
   return errors;
 }
@@ -265,7 +365,7 @@ export async function validateWorkflows(root = REPOSITORY_ROOT) {
         errors.push(`${relativePath}: ${error.message}`);
         return;
       }
-      errors.push(...lintWorkflowText(content, relativePath, { structural }));
+      errors.push(...lintWorkflowText(content, relativePath, { structural, interactive }));
       if (interactive && !content.split("\n").some((line) => FENCE_OPEN.test(line))) {
         errors.push(`${relativePath} collects decisions but declares no user_choice batch`);
       }

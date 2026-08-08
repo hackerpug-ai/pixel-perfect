@@ -2,7 +2,7 @@
 
 A **styling contract** is the canonical, machine-checked statement of *how styles must be expressed* for a chosen (platform × framework × style system × component library) combination. It is the single artifact that closes the gap between *declaring* a style system at EQUIP time and actually *emitting* components in that system at BUILD time.
 
-> **Why this exists.** Before styling contracts, pixel-perfect recorded `tools.style = "tailwind"` in the manifest but never enforced *how* styles were written. Left to "follow adapter conventions," the build could — and once did (the `fabrio` project) — invent a parallel global-CSS system (custom `.atom-*` / `.mol-*` classes ported verbatim from HTML mockup `<style>` blocks into a `styles/` folder), bypassing the declared Tailwind system entirely. A styling contract makes the idiomatic structure explicit and a **deterministic verify gate** blocks any drift. See `workflows/build.md` Phase 5 Step 2c.
+> **Why this exists.** Before styling contracts, pixel-perfect recorded `tools.style = "tailwind"` in the manifest but never enforced *how* styles were written. Left to "follow adapter conventions," the build could — and once did (the `fabrio` project) — invent a parallel global-CSS system (custom `.atom-*` / `.mol-*` classes ported verbatim from HTML mockup `<style>` blocks into a `styles/` folder), bypassing the declared Tailwind system entirely. A styling contract makes the idiomatic structure explicit and a **deterministic verify gate** blocks any drift. See `workflows/build.md` Phase 5 Step 1b (apply) and Step 2 item 4 (the verify gate).
 
 ## Mental model
 

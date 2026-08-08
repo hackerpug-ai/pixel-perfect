@@ -163,3 +163,90 @@ test("structural checks can be disabled for pseudocode skills", () => {
   assert.equal(lintWorkflowText(text, "skill.md").length, 1);
   assert.deepEqual(lintWorkflowText(text, "skill.md", { structural: false }), []);
 });
+
+// --- Turn shape: the digest budget and the batch table ---
+
+const ASKS_SECTION = [
+  "## How this workflow asks",
+  "",
+  "| Batch | Phase | Decisions | Fires |",
+  "|-------|-------|-----------|-------|",
+  "| B1 | discover | the framework | always |",
+  "",
+].join("\n");
+
+const INTERACTIVE = { interactive: true };
+const report = (lines) => ["Present the plan for confirmation:", "", "```", ...lines, "```", ""].join("\n");
+const filler = (count) => Array.from({ length: count }, (_, index) => `  line ${index + 1}`);
+
+test("an interactive workflow declaring its batches in a table passes", () => {
+  const text = `# Example\n\n${ASKS_SECTION}\n${VALID_BATCH}`;
+  assert.deepEqual(lintWorkflowText(text, "example.md", INTERACTIVE), []);
+});
+
+test("an interactive workflow with no asks section is rejected", () => {
+  const errors = lintWorkflowText(`# Example\n\n${VALID_BATCH}`, "example.md", INTERACTIVE);
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /no "## How this workflow asks" section/);
+});
+
+test("an asks section without a batch table is rejected", () => {
+  const text = `# Example\n\n## How this workflow asks\n\nIt asks some things.\n\n${VALID_BATCH}`;
+  const errors = lintWorkflowText(text, "example.md", INTERACTIVE);
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /needs a table whose first column is Batch/);
+});
+
+test("a batch that is asked but missing from the table is rejected", () => {
+  const extra = VALID_BATCH.replace("batch: B1 — what this project is", "batch: B-eco — the libraries");
+  const text = `# Example\n\n${ASKS_SECTION}\n${VALID_BATCH}\n${extra}`;
+  const errors = lintWorkflowText(text, "example.md", INTERACTIVE);
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /batch "B-eco" is asked but missing from/);
+});
+
+test("a printed output past the digest budget is rejected with its length", () => {
+  const text = `# Example\n\n${ASKS_SECTION}\n${report(filler(20))}\n${VALID_BATCH}`;
+  const errors = lintWorkflowText(text, "example.md", INTERACTIVE);
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /printed output is 20 lines \(max 12\)/);
+});
+
+test("a printed output within the digest budget passes", () => {
+  const text = `# Example\n\n${ASKS_SECTION}\n${report(filler(12))}\n${VALID_BATCH}`;
+  assert.deepEqual(lintWorkflowText(text, "example.md", INTERACTIVE), []);
+});
+
+test("a long block the workflow never tells the agent to print is not budgeted", () => {
+  const sample = ["Write one file per screen in this format:", "", "```", ...filler(30), "```", ""].join("\n");
+  const text = `# Example\n\n${ASKS_SECTION}\n${sample}\n${VALID_BATCH}`;
+  assert.deepEqual(lintWorkflowText(text, "example.md", INTERACTIVE), []);
+});
+
+test("a long labeled code block is not budgeted", () => {
+  const json = ["Report the result:", "", "```json", ...filler(30), "```", ""].join("\n");
+  const text = `# Example\n\n${ASKS_SECTION}\n${json}\n${VALID_BATCH}`;
+  assert.deepEqual(lintWorkflowText(text, "example.md", INTERACTIVE), []);
+});
+
+test("a four-tick sample containing fences is read as one block, not three", () => {
+  const nested = [
+    "Show the file format:",
+    "",
+    "````markdown",
+    ...filler(4),
+    "```",
+    ...filler(4),
+    "```",
+    ...filler(4),
+    "````",
+    "",
+  ].join("\n");
+  const text = `# Example\n\n${ASKS_SECTION}\n${nested}\n${VALID_BATCH}`;
+  assert.deepEqual(lintWorkflowText(text, "example.md", INTERACTIVE), []);
+});
+
+test("a report-producing workflow is not budgeted and needs no batch table", () => {
+  const text = `# Status\n\n${report(filler(59))}`;
+  assert.deepEqual(lintWorkflowText(text, "status.md"), []);
+});

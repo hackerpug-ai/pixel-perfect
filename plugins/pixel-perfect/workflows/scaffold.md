@@ -63,6 +63,29 @@ Run pixel-perfect:init to complete project setup.
 9. **Verify** - Confirm sandbox runs, token stories render, and hello-world component renders
 10. **Update manifest** - Set `scaffold: passed`
 
+## How this workflow asks
+
+Every decision below is collected with `USER_CHOICE` — see `workflows/RUNTIME-CONTRACT.md`, "User choice protocol" and "Turn shape". The `user_choice` blocks in this file are the wording and options to use with the harness's question mechanism; they are never printed.
+
+Scaffold is mostly execution: it installs, configures, and generates. Its output is therefore **progress, not analysis** — one line per step naming what ran and what it produced. Adapter tables, install logs, and file inventories go nowhere; the artifacts on disk are the evidence.
+
+Open with a digest of what is about to be installed, in twelve lines or fewer:
+
+```
+SCAFFOLD — web-desktop · vite + tailwind + shadcn/ui + lucide-react → custom sandbox
+  Adapters: tailwind, shadcn, custom-sandbox   Theme: from vibe "clean, high-contrast"
+  10 steps. Nothing installed yet.
+```
+
+| Batch | Step | Decisions | Fires |
+|-------|------|-----------|-------|
+| S1 | entry | which platform to scaffold | only when several platforms are configured and no `--platform` was passed |
+| S2 | 3b | reuse or regenerate the theme | only when a sibling platform already has a passing scaffold gate |
+| S3 | 4b | migrate non-semantic color names | only when the generated theme contains colors named for what they look like |
+| S4 | 4b | the color gate | always — this is the human check that the palette renders |
+
+Worst case is four calls; the common case on a single-platform project is one — the color gate.
+
 ---
 
 ## Task-Based Execution
@@ -223,17 +246,11 @@ If "Yes, migrate now": present the proposed semantic mapping table (non-semantic
 
 #### Sandbox Verification Gate
 
-**CRITICAL:** After semantic colors are applied, verify in the sandbox before continuing:
+**CRITICAL:** After semantic colors are applied, the user verifies them in the sandbox before scaffold continues. Give them the two steps and nothing else:
 
 ```
-## Sandbox Color Verification
-
-Run the sandbox and verify the Colors story:
-  → Run: npm run sandbox (or make sandbox / pnpm storybook)
-  → Navigate to: Design System > Colors
-  → Check all color swatches render correctly
-  → Verify contrast ratios are acceptable
-
+Run: npm run sandbox   (or make sandbox / pnpm storybook)
+Open: Design System → Colors — check the swatches render and the contrast holds.
 ```
 
 Then ask. This is a **gate** — scaffold cannot complete until the user confirms the colors render acceptably:
@@ -271,20 +288,13 @@ The hello-world story is a **reference example** for all future component storie
 
 ### Step 7: Verify
 
-```
-Verification:
-  [x] Sandbox runs (`npm run sandbox` / `make sandbox` / Storybook)
-  [x] Design System/Colors renders palette
-  [x] Design System/Typography renders font scale
-  [x] Design System/Spacing renders spacing boxes
-  [x] Design System/Icons renders gallery (if icon lib selected)
-  [x] HelloWorld (or all CLI-library components) renders with controls
-  [x] Theme colors applied correctly
+Confirm every one of these before the gate advances: the sandbox runs; Colors, Typography, Spacing (and Icons, when an icon library was selected) each render; HelloWorld — or every pulled CLI-library component — renders with its controls wired; and the theme colors are actually applied.
 
-Scaffold complete!
-```
+Report a pass as one line. Report a failure by naming the specific check and the error, and do **not** advance the gate — the user runs `pixel-perfect:verify` to retry after fixing.
 
-If any check fails, report the specific error and do not advance the gate. User must run `pixel-perfect:verify` to retry after fixing.
+```
+Verified: sandbox runs · 4 token stories render · HelloWorld renders with controls.
+```
 
 ### Step 8: Update Manifest
 
@@ -326,12 +336,10 @@ Screens/
 ## Completion Output
 
 ```
-Scaffold complete for: [project name] ({platform})
+Scaffold complete — {platform}
 
-Tools configured: [framework] / [style] / [components] / [sandbox]
-Theme created: [files] — [font pairing], [primary color]
-[Component library pulled: N components (if CLI-based)]
-Design token stories: Colors, Typography, Spacing[, Icons]
+  vite + tailwind + shadcn/ui → custom sandbox   ·   47 components pulled
+  Theme: Space Grotesk / Inter, primary #D97706   ·   4 token stories
 
-Next: pixel-perfect:build --platform {platform}
+  Next: pixel-perfect:build --platform {platform}
 ```

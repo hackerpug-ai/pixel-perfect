@@ -33,15 +33,27 @@ Run pixel-perfect:init first.
 7. Add platform entry to manifest
 8. Inform user of next step
 
+## How this workflow asks
+
+Every decision below is collected with `USER_CHOICE` — see `workflows/RUNTIME-CONTRACT.md`, "User choice protocol" and "Turn shape". The `user_choice` blocks in this file are the wording and options to use with the harness's question mechanism; they are never printed.
+
+This workflow writes one manifest entry. It installs nothing, generates nothing, and researches nothing — scaffold does all of that afterward. Its entire output is two digests: what exists now, and what is about to be added.
+
+| Batch | Step | Decisions | Fires |
+|-------|------|-----------|-------|
+| A1 | 2 | which platform to add | unless a valid `[platform]` argument was passed |
+| A2 | 4 | the new platform's toolchain, confirmed | always — this is what writes the manifest |
+
+Two calls, or one when the platform came in as an argument. The framework, style, component, and icon questions reuse init's batching: they ride in the same call as the confirmation whenever detection has already settled them.
+
 ---
 
 ## Step 1: Show Current Platforms
 
-Display what's already configured:
+One line per configured platform — its name, its furthest passing gate, and its toolchain:
 
 ```
-Current platforms:
-  web-desktop  [compose passed]   vite + tailwind + shadcn -> custom sandbox
+Configured: web-desktop [compose passed] vite + tailwind + shadcn → custom sandbox
 ```
 
 ## Step 2: Platform Selection
@@ -97,19 +109,13 @@ The **sandbox defaults to `custom`** for all platforms (a native component brows
 |----------|---------|
 | all platforms | `custom` (native browser generated in the framework) |
 
-Present confirmation summary:
+Digest what is about to be written, then ask in the same turn:
 
 ```
-Adding platform "web-mobile":
-
-  Framework:   Next.js
-  Style:       Tailwind CSS
-  Components:  shadcn/ui
-  Icons:       Lucide React
-  Sandbox:     custom (native Next.js component browser)
+Adding web-mobile — Next.js + Tailwind CSS + shadcn/ui + Lucide React → custom sandbox
 ```
 
-Then ask, naming the actual platform and tools:
+Ask naming the actual platform and tools:
 
 ```user_choice
 batch: A2 — lock in the new platform
@@ -124,13 +130,10 @@ batch: A2 — lock in the new platform
       description: Writes nothing and exits. The manifest keeps exactly the platforms it already had.
 ```
 
-Validate adapter availability (include the framework adapter when one exists, e.g. `sveltekit`; omit the row for React/Next/Vite):
+Validate adapter availability. Report it as one line naming the adapters found, and call out only what is **missing** — a tool with no adapter falls back to `generic.md` and that is the part worth saying. Include the framework adapter only when one exists (`sveltekit` has one; React, Next.js, and Vite do not, and their absence is not a warning).
+
 ```
-Adapter check:
-  [x] sveltekit      -> docs/adapters/sveltekit.md   (framework adapter)
-  [x] custom-sandbox -> docs/adapters/custom-sandbox.md (default)
-  [x] tailwind       -> docs/adapters/tailwind.md
-  [x] shadcn-svelte  -> docs/adapters/shadcn-svelte.md
+Adapters: sveltekit, tailwind, shadcn-svelte, custom-sandbox — all found.
 ```
 
 ## Step 5: Update Manifest
@@ -167,16 +170,10 @@ Add the new platform entry to `manifest.platforms`:
 ## Completion Output
 
 ```
-Platform "web-mobile" added successfully.
+Added web-mobile — Next.js + Tailwind CSS + shadcn/ui + Lucide React → custom sandbox
+  All gates pending. Existing platforms untouched.
 
-  Framework:   Next.js
-  Style:       Tailwind CSS
-  Components:  shadcn/ui
-  Icons:       Lucide React
-  Sandbox:     custom (native Next.js component browser)
-
-Next: pixel-perfect:scaffold --platform web-mobile
-  This will set up the web-mobile project with Tailwind CSS + shadcn/ui + custom sandbox
+  Next: pixel-perfect:scaffold --platform web-mobile
 ```
 
 ## What It Does NOT Do
