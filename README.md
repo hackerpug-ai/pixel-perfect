@@ -4,24 +4,47 @@
 
 # pixel-perfect
 
-A version-locked plugin for Claude Code, Codex, Grok, and OpenCode that skips the mockup abstraction entirely. Instead of generating designs that get "lost in translation," it builds the **real components in your target framework** during design ideation — browsable in a **native sandbox** it generates from scratch (Storybook optional).
+A version-locked plugin for Claude Code, Codex, Grok, and OpenCode that generates and maintains a **high-fidelity production design system** — semantic tokens, atoms, molecules, organisms, screens — as real code in your target framework, browsable in a **native sandbox** it builds from scratch.
+
+It exists to close one gap: the one between a beautiful AI-generated design and UI code you can actually ship.
 
 ---
 
-## Why Skip the Abstraction?
+## The Gap
 
-Your Figma mock is not your product. And AI just made that abstraction obsolete.
+AI has gotten very good at producing designs. Ask for a dashboard and you get a gorgeous one — a Figma frame, an HTML export, a screenshot, an image.
 
-**AI reads code better than it reads pixels.** That insight flipped everything. Why mock when you can just… make the thing?
+None of it is your product. Someone still has to read that picture and write the code, and the translation is where the design dies. Spacing gets eyeballed. Colors get hardcoded. The same card is re-implemented four times with four different paddings. Six weeks later nothing on screen matches what was approved, and there is no way to say what "correct" would even mean — because there was never a system, only a picture of one.
 
-The unlock was the **sandbox** — a tiny component browser. Storybook is one web version of it; but the AI can generate one from scratch in *any* framework. Turns out when the sandbox builds itself, every stack gets one.
+The generation half is solved. The **systematization** half is not, and that is the half that decides whether a design survives contact with a codebase.
 
-pixel-perfect follows the organic design process:
-1. Define theme tokens
-2. Build atomic components
-3. Scaffold entire views
+pixel-perfect makes the design system the artifact instead of the picture.
 
-All in a sandbox — native to your framework (or Storybook, if you prefer). All production-ready from the start. No more pointing at the moon — you just go there.
+## Atomic Design as the Execution Order
+
+Atomic design here is not a diagram in a slide deck. It is the order the work happens in, and the order the gates fire in:
+
+**tokens → atoms → molecules → organisms → screens**
+
+Every level is real code in your framework. Every component gets a sandbox story with each prop wired to a live control. Every level has a gate that must pass before the next one starts, so a screen is never built on an atom that does not render.
+
+That ordering is what makes the output a *system* rather than a pile of components. Nothing above a level can drift from it: change a token and it propagates; change an atom and every molecule and screen composing it is re-verified. A styling contract makes it stricter still — the declared style system is enforced by a deterministic gate, so a build cannot quietly invent a parallel one.
+
+## Generating Is the Easy Part; Maintaining Is the Point
+
+A design system that is generated once and then hand-edited is just a slower way to arrive at drift. `design/manifest.json` holds the state — what exists, what is verified, which gates have passed, which library each component wraps and why. Refinement flows back through the same levels with the same gates, so an iteration re-verifies what it touched instead of leaving it to rot.
+
+## Designs Are Inputs, Not Deliverables
+
+Bringing a design *in* is a first-class path, not a compromise. Point `design-deconstruct` at a URL, a screenshot, an HTML export, a competitor's app, or a written concept, and it extracts a token-governed atomic system from it — semantic tokens plus atom, molecule, organism, and view mockups. Those become **targets** the real components are built to match, pixel for pixel.
+
+The mockup is a precise reference spec that AI reads perfectly. It is never what ships. The components in your framework's sandbox supersede it.
+
+## Why a Sandbox Makes This Work
+
+The unlock is the **sandbox** — a small component browser that renders each piece in isolation, themed, with its props exposed. It is what turns "a design system exists" from a claim into something you can look at.
+
+Storybook is one web implementation of that idea, not the idea itself. An AI agent can generate one from scratch in *any* framework — React, SvelteKit, Expo, GPUI, Ratatui, SwiftUI — which is why every stack gets one here, not just the web.
 
 ---
 
@@ -248,7 +271,7 @@ It normalizes the source into a concept HTML, then deconstructs it into a **toke
 - the **inventory** pre-fills the atom / molecule / screen build lists
 - each **view mockup** becomes a pixel-perfect *target* the real component is built to match
 
-**This does not contradict "skip the mockup abstraction."** The deconstructed HTML is a precise, token-governed *reference spec* — clean markup the AI reads perfectly — not a lossy hand-drawn mock, and never the deliverable. The real components in your framework's native sandbox still supersede it. The deconstruction engine ships with the plugin — it takes your mockup and extracts every UI concept and token from it into a governed design system. Nothing extra to install.
+The deconstructed HTML is a precise, token-governed *reference spec* — clean markup the AI reads perfectly — not a lossy hand-drawn mock, and never the deliverable. The real components in your framework's native sandbox supersede it. The deconstruction engine ships with the plugin; it extracts every UI concept and token from your design into a governed system. Nothing extra to install.
 
 ### Wireframe first (the low-fi rung)
 
