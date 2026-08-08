@@ -1,0 +1,8 @@
+{
+  "name": "pixel-perfect-opencode-adapter",
+  "version": "7.1.0",
+  "private": true,
+  "dependencies": {
+    "@opencode-ai/plugin": "1.16.2"
+  }
+}

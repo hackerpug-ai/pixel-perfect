@@ -1,0 +1,30 @@
+{
+  "name": "pixel-perfect",
+  "description": "Process orchestrator for building real UIs in your target framework, browsable in a native sandbox built from scratch (Storybook optional). Start from a PRD, ASCII wireframes, or deconstruct an existing design straight into native components. Web (React, Next.js, Vite, SvelteKit), mobile (React Native, Expo), and any framework via a custom sandbox.",
+  "version": "7.1.0",
+  "author": {
+    "name": "Justin Rich"
+  },
+  "homepage": "https://github.com/hackerpug-ai/pixel-perfect",
+  "repository": "https://github.com/hackerpug-ai/pixel-perfect",
+  "license": "MIT",
+  "keywords": [
+    "design",
+    "ux",
+    "ui",
+    "process",
+    "orchestrator",
+    "scaffolding",
+    "components",
+    "storybook",
+    "multi-platform",
+    "sveltekit",
+    "svelte",
+    "design-deconstruct",
+    "deconstruct",
+    "design-tokens",
+    "wireframe",
+    "sandbox",
+    "native"
+  ]
+}

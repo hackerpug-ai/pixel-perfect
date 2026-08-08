@@ -1,0 +1,15 @@
+---
+description: "Generate low-fidelity ASCII wireframes from plans, targets, specs, or concepts as governed structural input to higher-fidelity work."
+---
+
+# Pixel Perfect: Wireframe
+
+Invocation input: `$ARGUMENTS`
+
+Resolve the Pixel Perfect plugin root: Claude Code substitutes `${CLAUDE_PLUGIN_ROOT}`; Grok uses the enabled Claude-compatible plugin root; OpenCode uses `.pixel-perfect/plugins/pixel-perfect` from the project root.
+
+Read `<plugin-root>/workflows/RUNTIME-CONTRACT.md`. If `design/manifest.json` or `design/manifest.yaml` exists, read `<plugin-root>/skills/process-context/SKILL.md`. Then read `<plugin-root>/workflows/wireframe.md` and execute it as the authoritative workflow with the invocation input.
+
+Produce the complete required wireframe set, states, annotations, and mappings. Translate only the neutral runtime primitives for the active harness.
+
+Collect every decision through the harness's structured question mechanism as the runtime contract's user choice protocol specifies — `AskUserQuestion` in Claude Code, one call per declared batch. Never print a decision as prose and end the turn.

@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="assets/banner.png" alt="pixel-perfect banner" width="100%">
+  <img src="plugins/pixel-perfect/assets/banner.png" alt="pixel-perfect banner" width="100%">
 </p>
 
 # pixel-perfect
 
-A Claude Code and OpenCode plugin that skips the mockup abstraction entirely. Instead of generating designs that get "lost in translation," it builds the **real components in your target framework** during design ideation — browsable in a **native sandbox** it generates from scratch (Storybook optional).
+A version-locked plugin for Claude Code, Codex, Grok, and OpenCode that skips the mockup abstraction entirely. Instead of generating designs that get "lost in translation," it builds the **real components in your target framework** during design ideation — browsable in a **native sandbox** it generates from scratch (Storybook optional).
 
 ---
 
@@ -45,39 +45,71 @@ Each phase has a **gate** that must pass before you proceed. The plugin tracks s
 
 ## Quick Start
 
-### Installation
+Version 7.1.0 projects the same runtime into all four harnesses.
 
-#### Claude Code
+### Claude Code
 
-```
-/plugin marketplace add https://github.com/hackerpug-ai/pixel-perfect
+```text
+/plugin marketplace add hackerpug-ai/pixel-perfect
 /plugin install pixel-perfect@pixel-perfect
 ```
 
-#### OpenCode
+Invoke capabilities as `/pixel-perfect:init`, `/pixel-perfect:build`, and so on. Upgrade with:
 
-Clone the repo into your project (or a shared location) and create symlinks:
-
-```bash
-# Option A: Clone into your project
-git clone https://github.com/hackerpug-ai/pixel-perfect.git .pixel-perfect
-ln -sf .pixel-perfect/.opencode/commands .opencode/commands
-ln -sf .pixel-perfect/.opencode/skills .opencode/skills
-
-# Option B: Clone to a shared location and symlink per-project
-git clone https://github.com/hackerpug-ai/pixel-perfect.git ~/pixel-perfect
-ln -sf ~/pixel-perfect/.opencode/commands .opencode/commands
-ln -sf ~/pixel-perfect/.opencode/skills .opencode/skills
+```text
+/plugin marketplace update pixel-perfect
+/plugin update pixel-perfect@pixel-perfect
 ```
 
-Commands appear as `/init`, `/build`, etc. (without the `pixel-perfect:` prefix).
+### Codex
+
+```bash
+codex plugin marketplace add hackerpug-ai/pixel-perfect
+codex plugin add pixel-perfect@pixel-perfect
+```
+
+Invoke capabilities as `$pixel-perfect:init`, `$pixel-perfect:build`, and so on. Upgrade with:
+
+```bash
+codex plugin marketplace upgrade pixel-perfect
+codex plugin add pixel-perfect@pixel-perfect
+```
+
+If the older personal installation is enabled, remove it before installing the Git marketplace version:
+
+```bash
+codex plugin remove pixel-perfect@personal
+codex plugin add pixel-perfect@pixel-perfect
+```
+
+Keep the personal marketplace itself if it contains other plugins. `codex plugin list` should show only one installed Pixel Perfect source; two enabled sources create duplicate `$pixel-perfect:*` namespaces.
+
+### Grok
+
+Install Pixel Perfect through the Claude marketplace steps above, then open Grok's `/plugins` extension view and enable it if needed. Grok natively reads Claude Code marketplaces and plugins, so it uses the Claude manifest and marketplace version; there is intentionally no second Grok catalog or version field.
+
+Invoke capabilities as `/pixel-perfect:init`, `/pixel-perfect:build`, and so on. Upgrading the Claude marketplace installation upgrades the version Grok consumes.
+
+### OpenCode
+
+OpenCode consumes the tagged Git checkout and its versioned adapter package. From the target project:
+
+```bash
+git clone --branch v7.1.0 --depth 1 https://github.com/hackerpug-ai/pixel-perfect.git .pixel-perfect
+mkdir -p .opencode
+ln -s ../.pixel-perfect/plugins/pixel-perfect/.opencode/commands .opencode/commands
+ln -s ../.pixel-perfect/plugins/pixel-perfect/.opencode/skills .opencode/skills
+```
+
+Invoke capabilities as `/init`, `/build`, `/status`, and so on. To upgrade to a later release, fetch tags in `.pixel-perfect`, check out the desired `v<version>` tag, and restart OpenCode. The Pixel Perfect product version is in `plugins/pixel-perfect/.opencode/package.json`; the `@opencode-ai/plugin` dependency version is independent.
 
 ### First Project
 
 ```bash
 # 0. (Optional) Start from an existing design instead of a blank PRD
-/pixel-perfect:design-deconstruct https://example.com   # Claude Code
-# or:  /design-deconstruct https://example.com          # OpenCode
+/pixel-perfect:design-deconstruct https://example.com   # Claude Code or Grok
+# $pixel-perfect:design-deconstruct https://example.com # Codex
+# /design-deconstruct https://example.com               # OpenCode
 
 # 1. Set up your project (phases 1-3)
 /pixel-perfect:init
@@ -94,6 +126,8 @@ Commands appear as `/init`, `/build`, etc. (without the `pixel-perfect:` prefix)
 
 > **OpenCode users**: commands are available without the `pixel-perfect:` prefix (e.g., `/init`, `/build`, `/status`).
 
+> **Codex users**: replace the leading slash form with `$pixel-perfect:<name>`.
+
 Init walks you through:
 1. **Where are your requirements?** (auto-detects PRD.md)
 2. **What's the goal?** (one sentence)
@@ -103,13 +137,13 @@ Init walks you through:
 6. **What style system?** (Tailwind, NativeWind, CSS Modules, or provide docs URL)
 7. **What component library?** (shadcn, shadcn-svelte, Bits UI, Skeleton, Paper, Mantine, none, or provide docs URL)
 
-The UI library is completely flexible — use whatever you want or build from scratch. pixel-perfect uses `AskUserQuestion` to follow your lead.
+The UI library is completely flexible — use whatever you want or build from scratch. Pixel Perfect uses each harness's native input mechanism to follow your lead.
 
 ---
 
 ## The Sandbox — a spec, not a tool
 
-A **sandbox** is just a component browser: it catalogs your components by layer and renders each one in isolation, themed. Storybook is *one* implementation of that idea (for the web) — not the idea. So pixel-perfect treats the sandbox as a **spec** ([`docs/sandbox-spec.md`](docs/sandbox-spec.md)) and, by default, **builds one from scratch in your target framework** — rendering the *real* components, nothing extra to install. An off-the-shelf tool is used only if you ask.
+A **sandbox** is just a component browser: it catalogs your components by layer and renders each one in isolation, themed. Storybook is *one* implementation of that idea (for the web) — not the idea. So pixel-perfect treats the sandbox as a **spec** ([`plugins/pixel-perfect/docs/sandbox-spec.md`](plugins/pixel-perfect/docs/sandbox-spec.md)) and, by default, **builds one from scratch in your target framework** — rendering the *real* components, nothing extra to install. An off-the-shelf tool is used only if you ask.
 
 The spec is ~7 small pieces (a layer-keyed story registry · isolated render · a two-pane navigator · token codegen from `theme.*.json` · a run command · pixel-target refs). It's derived from two real, running sandboxes built from scratch in Rust — a GPUI desktop one and a Ratatui TUI one — the same concept in totally different paradigms.
 
@@ -131,7 +165,7 @@ The agentic development model changes the calculus. An AI agent can generate a s
 | Maintenance burden | Storybook upgrades, addon compat, version pinning | ~60 lines you own; agent can regenerate anytime |
 | Install footprint | ~200 deps, 30s+ cold start | ~0 deps, instant |
 
-The agent **generates the sandbox during scaffold** — it's not a manual step. The spec (`docs/sandbox-spec.md`) is small and stable; the implementation varies by framework. Two real sandboxes (GPUI + Ratatui) prove the spec works across entirely different rendering paradigms.
+The agent **generates the sandbox during scaffold** — it's not a manual step. The spec (`plugins/pixel-perfect/docs/sandbox-spec.md`) is small and stable; the implementation varies by framework. Two real sandboxes (GPUI + Ratatui) prove the spec works across entirely different rendering paradigms.
 
 Storybook remains a **first-class opt-in** for web projects that want it. Set `"sandbox": "storybook"` in the manifest and the scaffold step installs and configures it normally. But it's no longer the default — because the default should work for *every* platform.
 
@@ -181,6 +215,7 @@ Every component prop is wired to sandbox controls (`argTypes` in Storybook; labe
 | `/pixel-perfect:status` | any | Show phase progress, controls coverage, and component tracking |
 | `/pixel-perfect:research` | any | Research design patterns, competitors, and ecosystem libraries (`--libraries`) |
 | `/pixel-perfect:refine` | 5+ | Iterate on components/screens with feedback |
+| `/pixel-perfect:add-platform` | 1-3 | Add and equip another target platform without resetting existing platform progress |
 
 ### Command Flow
 
@@ -346,45 +381,46 @@ No specific library is required. Select "None" or "Other" with a docs URL, and t
 
 ---
 
-## frontend-design Integration
+## Design Execution
 
-pixel-perfect handles the **process**. The optional `frontend-design` plugin handles **aesthetics**.
-
-When frontend-design is installed:
-- **Scaffold**: Vibe is translated into concrete font pairings, color palettes, and motion philosophy
-- **Atoms**: Components get distinctive typography, intentional color hierarchy, and considered motion
-- **Compose**: Screens get spatial composition rules -- asymmetry, visual flow, intentional negative space
-- **Verify**: Gate checks include aesthetic review, not just "does it render"
-
-When frontend-design is NOT installed:
-- Process gates still enforce (files exist, tests pass, theme is used)
-- Theme generation uses keyword-to-value mapping (functional but potentially generic)
-- A warning is shown recommending the plugin
+Pixel Perfect bundles one design contract for every harness. When the named `frontend-designer` agent is available, it executes that contract. Otherwise the primary agent executes the same contract directly. Pixel Perfect never substitutes a generic design subagent, and aesthetic review never replaces compilation, rendering, tests, or deterministic gates.
 
 ---
 
-## Auto-Activating Skill
+## Manifest-Aware Process Context
 
-When you work in a project that has `design/manifest.json`, the **process-context** skill auto-activates. Even without running pixel-perfect commands explicitly, the AI will:
+Unsupported `autoActivate` metadata is not used. Every public entry adapter checks for `design/manifest.json` or legacy `design/manifest.yaml` and explicitly loads the bundled **process-context** skill before executing. It then:
 
-- Know the current build phase
-- Follow adapter conventions for the chosen tools
-- Use theme tokens instead of hardcoded values
-- Wire all props to sandbox controls (Storybook `argTypes` or custom sandbox variants)
-- Respect gate requirements before advancing phases
+- Knows the current build phase
+- Follows adapter conventions for the chosen tools
+- Uses theme tokens instead of hardcoded values
+- Wires all props to sandbox controls (Storybook `argTypes` or custom sandbox variants)
+- Respects gate requirements before advancing phases
+
+## Releasing
+
+`plugin-release.json` is the only manually selected product version. All releases must use:
+
+```bash
+node scripts/release.mjs prepare 7.1.0
+node scripts/release.mjs verify 7.1.0
+node scripts/release.mjs publish 7.1.0
+```
+
+Direct version edits, hand-created tags, and manual GitHub releases are unsupported. `prepare` synchronizes product-version fields without changing OpenCode dependency versions. `verify` is read-only. `publish` requires clean `main`, `HEAD === origin/main`, a matching non-empty changelog section, valid package content, an absent tag, and authenticated `gh` before creating an annotated tag or GitHub release.
 
 ---
 
 ## Documentation
 
-- [Adapter System](docs/adapters/README.md) - How adapters work and compose
-- [State Patterns](docs/state-patterns.md) - Framework-by-framework state patterns for molecules and organisms
-- [Storybook Conventions](docs/storybook-conventions.md) - Controls, token stories, organization (Storybook opt-in)
-- [Sandbox Spec](docs/sandbox-spec.md) - The seven-piece spec every sandbox implements (custom default)
-- [Library Vetting Rubric](docs/library-vetting-rubric.md) - 8-criteria rubric for evaluating ecosystem libraries
-- [Ecosystem Patterns](docs/ecosystem-patterns.md) - Pattern map, search guardrails, and reputational scoring for library recommendations
-- [Design Systems](docs/design-systems/README.md) - Supported design system references
-- [Icon Libraries](docs/icon-libraries/README.md) - Supported icon library references
+- [Adapter System](plugins/pixel-perfect/docs/adapters/README.md) - How adapters work and compose
+- [State Patterns](plugins/pixel-perfect/docs/state-patterns.md) - Framework-by-framework state patterns for molecules and organisms
+- [Storybook Conventions](plugins/pixel-perfect/docs/storybook-conventions.md) - Controls, token stories, organization (Storybook opt-in)
+- [Sandbox Spec](plugins/pixel-perfect/docs/sandbox-spec.md) - The seven-piece spec every sandbox implements (custom default)
+- [Library Vetting Rubric](plugins/pixel-perfect/docs/library-vetting-rubric.md) - 8-criteria rubric for evaluating ecosystem libraries
+- [Ecosystem Patterns](plugins/pixel-perfect/docs/ecosystem-patterns.md) - Pattern map, search guardrails, and reputational scoring for library recommendations
+- [Design Systems](plugins/pixel-perfect/docs/design-systems/README.md) - Supported design system references
+- [Icon Libraries](plugins/pixel-perfect/docs/icon-libraries/README.md) - Supported icon library references
 
 ---
 
@@ -400,7 +436,7 @@ v4 is a clean break from v2. There is no incremental migration path.
 
 ## Requirements
 
-- **Claude Code** with plugin support, **or** **OpenCode** with command/skill support
+- **Claude Code**, **Codex**, or **Grok** with plugin support, or **OpenCode** with command/skill support
 - A project directory with requirements (PRD.md or similar)
 
 ---
