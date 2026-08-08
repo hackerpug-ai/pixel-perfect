@@ -2,7 +2,7 @@
 
 A reference table of common UI patterns and their historically dominant libraries. This is a **starting point for research**, not a static recommendation. Every entry must be verified via web search at scan time — libraries go stale, and the current best-in-class for each pattern shifts.
 
-Used by: Phase 4b Step 2b of `pixel-perfect:build` (Ecosystem Scan). Also referenced by `pixel-perfect:research --libraries`.
+Used by: Phase 4b Step 5 of `pixel-perfect:build` (Ecosystem Scan, which runs after the plan gate). Also referenced by `pixel-perfect:research --libraries`.
 
 ---
 
@@ -192,5 +192,5 @@ Queries include the project's framework. The same pattern maps to different libr
 ## References
 
 - `docs/library-vetting-rubric.md` — 8-criteria scoring rubric
-- `workflows/build.md` — Phase 4b Step 2b (Ecosystem Scan)
+- `workflows/build.md` — Phase 4b Step 5 (Ecosystem Scan)
 - `workflows/research.md` — Standalone library research workflow

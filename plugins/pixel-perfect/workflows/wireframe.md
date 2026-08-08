@@ -39,6 +39,18 @@ pixel-perfect:wireframe [<target>] [options]
 
 **No gate required** — this runs before `init`. If a `design/manifest.json` exists, the seed step (Step 3) updates it in place; otherwise the artifacts are left for `init` to detect.
 
+## How this workflow asks
+
+The one decision below is collected with `USER_CHOICE` — see `workflows/RUNTIME-CONTRACT.md`, "User choice protocol" and "Turn shape". The `user_choice` block in this file is the wording and options to use with the harness's question mechanism; it is never printed.
+
+The wireframes themselves are the output. **They go in files, not in the chat.** Generating a screen prints one line naming the file; the ASCII is read in `design/wireframes/`, where it is diff-able and re-readable, not scrolled past once in a terminal. The gold-standard block further down is the file format, not something to echo back.
+
+| Batch | Step | Decisions | Fires |
+|-------|------|-----------|-------|
+| W1 | 1 | the screen list | always, before any generation — one wireframe becomes one route |
+
+One call. Generation follows the answer; nothing is written before it.
+
 ---
 
 ## Workflow
@@ -49,7 +61,7 @@ Check whether the **`frontend-designer`** agent is available.
 - **Available** → delegate generation to it (Step 2A) with a strict ASCII override brief.
 - **Not available** → run the **built-in inline generator** (Step 2B).
 
-Report which engine will run. No renderer is needed — ASCII is plain text. Never silently substitute a stub.
+Name the engine in the opening digest — one clause, not a section. No renderer is needed; ASCII is plain text. Never silently substitute a stub.
 
 > The `frontend-designer` agent normally produces high-fidelity UI. For wireframes its brief must **force low-fidelity ASCII** (Step 2A). The inline generator (Step 2B) applies the same bundled contract whenever the agent is absent **or** returns non-ASCII output.
 
@@ -57,14 +69,17 @@ Report which engine will run. No renderer is needed — ASCII is plain text. Nev
 
 1. Resolve `<target>` (or auto-detect). Read the plan/spec. If `design/deconstruction.json` or a manifest screen list already exists, reuse that inventory rather than re-deriving.
 2. For **each screen/view**, extract: its regions/sections, the components each region implies, the **states** (default / empty / loading / error), key interactions, and representative data.
-3. **Confirm the screen list with the user** before generating (as `init` and `build` do):
+3. **Confirm the screen list with the user** before generating (as `init` and `build` do). Digest it as one line per screen — its name and its purpose — and fire `W1` in the same turn:
+
    ```
-   Screens derived from PRD.md:
-     1. TodayFeed   — job list for today, status, quick actions
-     2. JobDetail   — single job, actions, history
-     3. Settings    — profile, preferences
+   Screens from PRD.md — engine: frontend-designer
+
+     TodayFeed   job list for today, status, quick actions
+     JobDetail   single job, actions, history
+     Settings    profile, preferences
    ```
-   Then ask, naming the actual screens in the question:
+
+   Ask naming the actual screens in the question:
 
    ```user_choice
    batch: W1 — the screen list
@@ -194,20 +209,15 @@ Also write `design/wireframes/index.md` — a legend (box-drawing key) + a galle
 
 ### Step 4: Report + next step
 
+Name what was written and what comes next. The wireframes are in the files; do not reproduce them here. Say which screens fell back to the inline generator, if any — that is the part the user cannot see from the file list.
+
 ```
-Wireframed: <target>  (engine: frontend-designer | builtin[; N screens fell back])
+Wireframed PRD.md — 3 screens, engine: frontend-designer
 
-  design/wireframes/{screen}.md   desktop + mobile ASCII + annotations + build mapping
-  design/wireframes/index.md      legend + gallery
-  design/wireframes.json          inventory + build mapping
+  design/wireframes/{TodayFeed,JobDetail,Settings}.md + index.md + wireframes.json
 
-  Screens: TodayFeed, JobDetail, Settings
-
-These wireframes are structural TARGETS for the next, higher-fidelity step.
-
-Next:
-  • pixel-perfect:design-deconstruct design/wireframes   → turn them into HTML mockups + tokens
-  • or pixel-perfect:init                                 → it detects the wireframes and pre-seeds your screens
+  Next: pixel-perfect:design-deconstruct design/wireframes  → HTML mockups + tokens
+        or pixel-perfect:init                               → seeds these screens
 ```
 
 ---

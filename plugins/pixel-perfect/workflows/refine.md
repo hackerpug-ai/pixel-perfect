@@ -27,6 +27,29 @@ pixel-perfect:refine --screen <name> [feedback]
 
 **Requires:** `design/manifest.json` exists with at least `scaffold: passed`.
 
+## How this workflow asks
+
+Every decision below is collected with `USER_CHOICE` — see `workflows/RUNTIME-CONTRACT.md`, "User choice protocol" and "Turn shape". The `user_choice` blocks in this file are the wording and options to use with the harness's question mechanism; they are never printed.
+
+Refine is the shortest loop in the plugin and should stay that way. **Feedback that names its own target is executed, not analyzed.** `refine --component StatusBadge "more rounded"` asks nothing: it regenerates, re-verifies, and reports in three lines. Only when the target is ambiguous or absent does a question fire.
+
+Open with a digest naming what will change and what it cascades into:
+
+```
+REFINE — StatusBadge (atom) · used by TodayFeed, JobDetail
+  "Make the badge more rounded, use a subtle gradient background"
+```
+
+| Batch | Mode | Decisions | Fires |
+|-------|------|-----------|-------|
+| R1 | 2 | which detected targets the feedback touches | only when free-form feedback resolves to more than one target |
+| R2 | 3 | the area to refine · which items within it | only when refine was invoked with no target and no feedback |
+| R2b | 3 | the change for each selected item | after R2, one question per item, at most four per call |
+| R3 | vibe | propagate the new vibe to other platforms | only when another platform has a theme already |
+| R4 | any | update the screens a change cascades into | only when the refined item is composed by a screen |
+
+Worst case is four calls for an open-ended interactive session; a targeted refinement with explicit feedback is zero.
+
 ## Workflow
 
 ### Mode 1: Targeted (component or screen specified)
@@ -43,25 +66,14 @@ pixel-perfect:refine --component StatusBadge "Make the badge more rounded, use a
 6. Run verification for the affected component (compile, render, controls check)
 7. If this component is used in screens, note which screens may need updates
 
+Report it in three lines — what changed, that it verified, and what it cascades into:
+
 ```
-Refining: StatusBadge
-
-Applied changes:
-  - Increased border radius to pill shape
-  - Added subtle gradient background using theme primary colors
-
-Verification:
-  [x] StatusBadge compiles
-  [x] StatusBadge renders in sandbox
-  [x] Story updated with new appearance
-  [x] All props wired to argTypes controls
-
-Note: StatusBadge is used in these screens (may need re-compose):
-  - TodayFeed
-  - JobDetail
-
-Run pixel-perfect:refine --screen TodayFeed to update if needed.
+StatusBadge — pill radius, gradient from theme primary. Compiles, renders, controls wired.
+Cascades into: TodayFeed, JobDetail.
 ```
+
+The cascade line is what fires `R4`. Do not list verification checks that passed; a failure gets named, a pass gets a word.
 
 ### Mode 2: Smart Detection (feedback only)
 
@@ -81,11 +93,10 @@ Analyzes feedback to detect affected items:
 | "vibe", "feel", "aesthetic" | Theme + token stories + potentially all components |
 | "controls", "props" | Story argTypes for named component |
 
+**One resolved target is executed, not asked.** When the feedback maps to exactly one item, refine it and report — `R1` does not fire. Only a multi-target match needs confirming, because the user may have meant one of them:
+
 ```
-Detected refinement targets:
-  - Theme (color palette)
-  - Design System/Colors token story
-  - JobCard component (visual weight)
+Feedback touches: theme (palette) · Colors token story · JobCard (visual weight)
 ```
 
 Then confirm, naming the actual detected targets:
@@ -167,15 +178,9 @@ pixel-perfect:refine --vibe "More industrial, less corporate. Think construction
 7. If multiple platforms exist, ask: propagate vibe to other platforms too?
 
 ```
-Vibe updated: "More industrial, less corporate"
-
-Theme regenerated for web-desktop:
-  - Primary: #1E3A5F -> #D97706 (amber/orange)
-  - Font: Inter -> Space Mono
-  - Border radius: rounded -> sharp
-
-Other platforms with existing themes:
-  - mobile-ios (scaffold: passed)
+Vibe: "More industrial, less corporate" — web-desktop theme regenerated
+  primary #1E3A5F → #D97706 · Inter → Space Mono · rounded → sharp
+  mobile-ios also has a theme.
 ```
 
 ```user_choice
@@ -197,23 +202,14 @@ When refining a component that has new or changed props, the story must be updat
 - **Prop type changed** → Update `argType` control type (e.g., string → select)
 - **Prop removed** → Remove `argType` entry
 
-After refinement, verification confirms:
-```
-Controls check:
-  [x] All component props have matching argTypes
-  [x] Control types match prop types
-  [x] Default args are set for required props
-```
+After refinement, verify that every prop has a matching `argType`, that each control type matches its prop type, and that required props carry default args. Report a pass in a clause; report a failure by naming the prop and what is wrong with its control.
 
 ## Cascade Handling
 
-When a refinement affects upstream items, downstream items may need updates:
+A change at one level propagates upward: a theme change moves every component that reads tokens and forces the token stories to regenerate; a changed atom moves every screen composing it. Name the affected items in one line, then ask.
 
 ```
-Refinement cascade:
-  Theme changed → All components use theme tokens → Visual change expected
-  Theme changed → Design Token stories → Must regenerate
-  StatusBadge changed → Used in TodayFeed, JobDetail → Screens may need re-compose
+Cascade: StatusBadge → TodayFeed, JobDetail may need re-compose.
 ```
 
 ```user_choice

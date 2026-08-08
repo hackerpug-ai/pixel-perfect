@@ -72,7 +72,7 @@ design/
 
 ## Library Research Mode
 
-Research ecosystem libraries for a specific UI pattern, scored against the vetting rubric in `docs/library-vetting-rubric.md`. Results are saved to `design/research/libraries/` and reused by the Ecosystem Scan (Phase 4b Step 2b of `pixel-perfect:build`) for 30 days.
+Research ecosystem libraries for a specific UI pattern, scored against the vetting rubric in `docs/library-vetting-rubric.md`. Results are saved to `design/research/libraries/` and reused by the Ecosystem Scan (Phase 4b Step 5 of `pixel-perfect:build`) for 30 days.
 
 ### When to Use
 
@@ -184,11 +184,11 @@ Research ecosystem libraries for a specific UI pattern, scored against the vetti
 
 ### Integration with Build Flow
 
-When a BUILD PLAN is generated (Phase 4b), the Ecosystem Scan (Step 2b) uses this same research process. Cached research artifacts in `design/research/libraries/` from the last 30 days are reused — the scan only searches fresh when cached research is stale or absent.
+When a BUILD PLAN is generated (Phase 4b), the Ecosystem Scan (Step 5, which runs after the plan gate) uses this same research process. Cached research artifacts in `design/research/libraries/` from the last 30 days are reused — the scan only searches fresh when cached research is stale or absent.
 
 ### Fallback Mode
 
-When web search is unavailable, research runs in offline mode using the built-in Category → Library Map from `workflows/build.md` Step 2b. Results are marked `"researchMethod": "lookup-table"` and show a warning:
+When web search is unavailable, research runs in offline mode using the built-in Category → Library Map from `docs/ecosystem-patterns.md`. Results are marked `"researchMethod": "lookup-table"` and show a warning:
 
 ```
 Library research ran in offline mode. Recommendations are from the built-in

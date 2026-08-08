@@ -196,7 +196,7 @@ When building components that match complex UI patterns (data tables, date picke
 
 **How library research works:**
 
-1. **During build** (Phase 4b Step 2b): The Ecosystem Scan automatically evaluates complex patterns against `docs/library-vetting-rubric.md` and recommends well-scored libraries (≥5/8).
+1. **During build** (Phase 4b Step 5, after the plan gate): The Ecosystem Scan automatically evaluates complex patterns against `docs/library-vetting-rubric.md` and recommends well-scored libraries (≥5/8).
 
 2. **Before build** (standalone): `pixel-perfect:research --libraries "{pattern}"` pre-researches libraries, saving scored results to `design/research/libraries/`.
 

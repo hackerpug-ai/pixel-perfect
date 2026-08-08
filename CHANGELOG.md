@@ -4,6 +4,22 @@ All notable changes to Pixel Perfect are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- Added a binding turn shape to the runtime contract: every turn is a twelve-line digest plus either a question or finished work; longer analysis goes to a named artifact; expensive work waits for the decision that authorizes it; unresolved input is asked rather than guessed.
+- Added a `## How this workflow asks` section to all six interactive workflows, declaring every batch, what it decides, and when it fires — so a workflow's round-trip cost is reviewable up front.
+- Added `B-arg` to `build`: free-form input that does not resolve to exactly one phase, component, screen, or platform now opens a question instead of a guess. `build molicules` asks; it no longer picks.
+- Added two validator rules with ten tests: interactive workflows must declare their batches in a table that accounts for every batch they ask, and an illustrative output block a workflow tells the agent to print may not exceed twelve lines.
+
+### Changed
+
+- `build` no longer researches before it asks. The Ecosystem Scan — web searches, star and download lookups, rubric scoring, and trial installs for every planned component — moved from Phase 4b Step 2b to Step 5, behind the plan gate, and now scans only the components the approved plan will create that match a complex-pattern category. The first question fires after a codebase audit and a spec read, both cheap.
+- `build` drops from 1,492 to 1,227 lines, and its four wall-of-text report templates become digests. Phase-level progress is one line naming the count and the next item, not a re-listing of everything already done.
+- `build` no longer re-confirms an atom list the user just approved at the plan gate; `B-atoms` fires only when the list is genuinely open.
+- `refine` executes feedback that names its own target instead of confirming it, and `R1` fires only on a multi-target match.
+- `init`, `scaffold`, `add-platform`, and `wireframe` replaced their repeated adapter-check, configuration, and verification templates with single-line digests. Four near-identical adapter-check examples in `init` become one rule: name only what is missing.
+- `status`, `research`, and `design-deconstruct` are exempt from the digest budget — a workflow whose deliverable is a report is doing what it was invoked to do at any length.
+
 ## [7.1.0] - 2026-08-07
 
 ### Added

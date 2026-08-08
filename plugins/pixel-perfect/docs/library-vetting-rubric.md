@@ -1,6 +1,6 @@
 # Library Vetting Rubric
 
-The canonical rubric for evaluating ecosystem libraries in pixel-perfect projects. Applied during the Ecosystem Scan (Phase 4b, Step 2b of `pixel-perfect:build`) and standalone library research (`pixel-perfect:research --libraries`).
+The canonical rubric for evaluating ecosystem libraries in pixel-perfect projects. Applied during the Ecosystem Scan (Phase 4b, Step 5 of `pixel-perfect:build`) and standalone library research (`pixel-perfect:research --libraries`).
 
 A library scoring **≥5/8** is recommended. A library scoring **<4/8** needs explicit justification from the user before adoption.
 
@@ -124,7 +124,7 @@ A library scoring **≥5/8** is recommended. A library scoring **<4/8** needs ex
 
 ## How to Apply
 
-1. **Start from the lookup table.** `workflows/build.md` Phase 4b Step 2b has a Category → Library Map. Check matches first.
+1. **Start from the lookup table.** `docs/ecosystem-patterns.md` has the Category → Library Map. Check matches first.
 
 2. **Verify via web search.** Libraries go stale. For every match, search:
    ```

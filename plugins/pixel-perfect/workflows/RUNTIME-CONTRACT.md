@@ -11,10 +11,25 @@ Never stub product logic, invent render or test evidence, substitute placeholder
 ## Neutral primitives
 
 - `pixel-perfect:<name>` means invoke the named public capability in the active harness.
+- `DIGEST` means the short status the user reads in the chat — twelve lines or fewer. See "Turn shape" below.
 - `USER_CHOICE(batch)` means present a batch of related decisions through the harness's structured input mechanism and wait for the answer. A workflow never prints a decision as prose and never ends a turn on analysis. See "User choice protocol" below — it binds every workflow and every adapter.
 - `TASK_CREATE`, `TASK_UPDATE`, `TASK_LIST`, and `TASK_RESET` mean use the harness's transient planning surface. Preserve the workflow's dependencies and statuses; do not write a second durable state file.
 - `LOAD_SKILL(name, input)` means load the bundled skill from this plugin and pass the stated input.
 - `DESIGN_EXECUTE(brief)` means follow the design execution rule below.
+
+## Turn shape
+
+A workflow's job is to move the project forward, not to demonstrate how much it looked at. Every turn is a `DIGEST` plus either a `USER_CHOICE` or completed work. Analysis that does not fit the digest goes in a file.
+
+**The digest.** Twelve lines or fewer, and it answers exactly three things: where the project stands, what the next move is, and what is being asked. It names paths for anything written. It is prose or a short list, never a full-width report, never a table of findings, never a per-item scorecard. A workflow that has more to say writes the rest to the artifact it names and says where it went.
+
+**Expensive work waits for the gate that authorizes it.** Web search, package installation, subagent dispatch, rendering, and generating more than one file are all *execution*. None of them may run before the `USER_CHOICE` that approves the work they belong to. Auditing what is already on disk and reading the spec are cheap and come first, because they are what the digest reports. A workflow that researches before asking has spent the user's time on work they never approved.
+
+**Uncertainty is asked, not guessed.** When the invocation input does not resolve — an unrecognized argument, a misspelled phase or component name, a flag whose value is missing, two readings of the same request — the workflow opens with a `USER_CHOICE` whose option 1 is the nearest match and whose alternatives are the other plausible readings. It never picks silently and it never proceeds on the assumption that the closest match was meant. The same applies mid-run: a step that cannot be completed without an assumption that changes the output asks instead of assuming.
+
+**Fenced blocks are shapes, not scripts.** Every example block in a workflow shows the *structure* of an output filled with placeholder values from a fictional field-service app. It is filled from the real project and trimmed to what that project actually has. It is never reproduced verbatim, never padded back to the example's length, and never treated as a minimum.
+
+**Resuming says less, not more.** A workflow re-entered mid-run reports the level it stopped at, the count remaining, and the next item — then continues or asks. It does not re-derive or re-present analysis the manifest already records.
 
 ## User choice protocol
 
@@ -59,6 +74,8 @@ batch: B3 — where it runs and what it is built on
 **A settled decision is shown, not asked.** A decision fixed by durable evidence — a value passed as an invocation option, exactly one candidate present in the repository, a value already recorded in `design/manifest.json` — is reported in the summary as a settled fact with its evidence, and consumes no question slot. Only genuine forks are asked. If the user disagrees they say so, and the workflow reopens that one decision as its own call.
 
 **Analysis is an artifact; the question is how the turn ends.** When a decision needs more explanation than the option descriptions carry, write the explanation to the artifact the workflow names, state in the turn where it was written and summarize it in a few lines, then fire `USER_CHOICE` in that same turn. The explanation is durable, re-readable, and cannot be lost to a rendering quirk, and the options stand alone, so the user is never left holding prose with no way to answer. A general convention that an explanation must occupy a turn of its own does not apply here: that convention exists to guarantee the explanation is delivered, and the artifact delivers it more reliably than a turn boundary does.
+
+**Every interactive workflow declares its batches up front.** A `## How this workflow asks` section near the top lists every batch in a table — id, phase, the decisions it carries, and when it fires — followed by the worst-case and common-case call counts. This is what makes the round-trip cost of a workflow visible and reviewable rather than emergent. A workflow whose table shows more calls than it can justify is a workflow to re-batch.
 
 **Degradation.** If the harness exposes no structured input, ask the batch as a numbered plain-text list as the last thing in the turn, and wait. Never assume an answer to a decision that changes product behavior.
 
