@@ -5,7 +5,7 @@
   "scripts": {
     "test": "node --test test/*.test.mjs",
     "verify": "node scripts/release.mjs verify",
-    "validate": "node scripts/validate-plugin.mjs && node scripts/validate-skills.mjs && node scripts/check-runtime-paths.mjs && node scripts/validate-workflows.mjs && node scripts/validate-package.mjs",
+    "validate": "node scripts/validate-plugin.mjs && node scripts/validate-skills.mjs && node scripts/check-runtime-paths.mjs && node scripts/validate-workflows.mjs && node scripts/validate-contracts.mjs && node scripts/validate-package.mjs",
     "ci": "npm run verify && npm run validate && npm test"
   }
 }
