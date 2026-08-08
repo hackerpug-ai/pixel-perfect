@@ -4,6 +4,25 @@ All notable changes to Pixel Perfect are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- Added **component contracts** — a second machine-checked contract kind that enforces *what a component is built on*, alongside the styling contract that enforces *how it is styled*. A project could declare a component library at init, let scaffold install it, and then hand-roll every primitive from raw framework elements: the result passed every gate, because hand-rolled markup with correct utility classes satisfies a styling contract completely. Ships five built-ins — `react-native-reusables`, `shadcn`, `shadcn-svelte` (vendored copy-in) and `react-native-paper`, `mantine` (package import) — resolved at init EQUIP from `tools.components` and enforced at every build layer by the existing gate script.
+- Added four manifest fields mirroring the styling four: `component_contract`, `component_contract_source`, `component_contract_enforcement`, `component_contract_overrides`.
+- Added `Step 1c: Apply Component Contract` to `build`, structurally identical to the styling step including its fail-closed STOP clause, and explicit that a design reference tells you what a component must look like, never what to build it on.
+- Added `mode: "file"` to the gate script — the regex runs against whole file content instead of per line. Import statements are the signal for a component contract, and a formatter wraps a long import list across lines the moment it exceeds the print width, which a per-line scan structurally cannot see. Without it the gate is defeated by running prettier.
+- Added a `## Compose` section to the `react-native-reusables` and `shadcn` adapters. Adapter docs were install guides — Scaffold, Theme, Verify, Sandbox — and said nothing about how to build a component on the library once installed.
+- Added `validate-contracts.mjs` to CI: every build layer must name both contracts in its load context and record both exit-gate keys, the no-library skip must stay stated, and shipped contracts must agree with init's resolution table in both directions. Verified against five mutations, including a revert of `build.md` to the exact prose that allowed the original drift.
+- Added tests where there were none: nothing previously exercised the gate script and nothing validated the contract corpus, so a typo in a contract regex shipped green and surfaced only inside a user's project. Adds corpus tests over all twelve contracts and behavioral tests against a two-variant fixture.
+
+### Changed
+
+- `build` now names `tools.components` and resolves `docs/adapters/{components}.md` by manifest field. It previously never mentioned `tools.components` at all, saying only "Adapter docs for the chosen tools" — degrading to the literal words "Adapter docs" by the screens phase.
+- All four build layers now carry identical contract wiring. Previously atoms received the full treatment and molecules, organisms, and compose received a noun phrase.
+- `DESIGN-CONTRACT.md` no longer tells the designer to avoid "a familiar component-library arrangement" without qualification — read literally, an argument for the drift. The constraint is now scoped to visual genericism, with the structural case stated.
+- `process-context` gained the missing `react-native-reusables` conventions block. It went straight from shadcn-svelte to react-native-paper, so an RNR project received no library conventions from the skill meant to carry them.
+- `verify`'s Atoms Gate replaces a row that was permanently `n/a` for the chosen component library with real styling and component contract rows.
+- A project with **no** component library is unaffected: no contract, no gate, no prompt, no notice. This is enforced by the validator, not merely intended.
+
 ## [7.2.0] - 2026-08-08
 
 ### Added

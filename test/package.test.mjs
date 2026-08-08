@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { checkRuntimePaths } from "../scripts/check-runtime-paths.mjs";
+import { validateContracts } from "../scripts/validate-contracts.mjs";
 import { validatePackage } from "../scripts/validate-package.mjs";
 import { validatePlugin } from "../scripts/validate-plugin.mjs";
 import { validateSkills } from "../scripts/validate-skills.mjs";
@@ -12,13 +13,14 @@ import { verifyRelease } from "../scripts/release.mjs";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 test("repository release and package gates pass together", async () => {
-  const [release, packageResult, plugin, skills, runtimePaths, workflows] = await Promise.all([
+  const [release, packageResult, plugin, skills, runtimePaths, workflows, contracts] = await Promise.all([
     verifyRelease(ROOT, "7.2.0", { environment: {} }),
     validatePackage(ROOT),
     validatePlugin(ROOT),
     validateSkills(ROOT),
     checkRuntimePaths(ROOT),
     validateWorkflows(ROOT),
+    validateContracts(ROOT),
   ]);
 
   assert.deepEqual(release.channels, {
@@ -33,4 +35,6 @@ test("repository release and package gates pass together", async () => {
   assert.equal(skills.publicCapabilities, 10);
   assert.equal(runtimePaths.checkedCapabilities, 10);
   assert.equal(workflows.interactive, 6);
+  assert.equal(contracts.layers, 4);
+  assert.equal(contracts.builtinComponentContracts, 5);
 });
