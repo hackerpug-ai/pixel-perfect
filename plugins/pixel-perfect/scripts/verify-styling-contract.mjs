@@ -189,6 +189,26 @@ function detect(contractPath, sourceRoot, allowGlobs) {
       }
       continue;
     }
+    if (c.mode === "file") {
+      // Whole-file mode: the regex is tested against the entire file content, so
+      // it can span newlines. Required for constructs a per-line scan structurally
+      // cannot see — chiefly a multi-line import list, which is what a formatter
+      // produces as soon as the specifiers exceed the print width:
+      //   import {
+      //     Pressable,
+      //   } from "react-native";
+      // Reported without a line number (the match may cover many).
+      for (const file of allFiles) {
+        if (!inScope(file, c)) continue;
+        scoped.add(file);
+        let content;
+        try { content = readFileSync(join(sourceRoot, file), "utf8"); } catch { continue; }
+        if (c._re.test(content)) {
+          violations.push({ type: "forbidden", checkId: c.id, file, rationale: c.rationale || "" });
+        }
+      }
+      continue;
+    }
     // content mode: scan lines
     for (const file of allFiles) {
       if (!inScope(file, c)) continue;
