@@ -13,11 +13,7 @@
       "name": "pixel-perfect",
       "source": "./plugins/pixel-perfect",
       "description": "6-phase build process → real components in your target framework, browsable in a native sandbox built from scratch (Storybook optional). Start from a PRD, ASCII wireframes, or deconstruct an existing design straight into native components. Includes the deconstruction engine — extracts UI concepts and design tokens from any mockup.",
-      "version": "7.4.0",
-      "author": {
-        "name": "Justin Rich"
-      },
-      "homepage": "https://github.com/hackerpug-ai/pixel-perfect",
+      "category": "design",
       "keywords": [
         "design",
         "ux",
@@ -33,7 +29,7 @@
         "sandbox",
         "native"
       ],
-      "category": "design"
+      "logo": "./plugins/pixel-perfect/assets/icon.png"
     }
   ]
 }

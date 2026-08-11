@@ -74,6 +74,7 @@ export async function validatePackage(root = REPOSITORY_ROOT) {
   const required = [
     ".claude-plugin/plugin.json",
     ".codex-plugin/plugin.json",
+    ".cursor-plugin/plugin.json",
     ".opencode/package.json",
     ".opencode/package-lock.json",
     "assets/icon.png",

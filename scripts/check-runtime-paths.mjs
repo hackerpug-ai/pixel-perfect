@@ -49,10 +49,12 @@ export async function checkRuntimePaths(root = REPOSITORY_ROOT) {
     const workflowPath = path.join(packageRoot, `workflows/${capability}.md`);
 
     try {
-      const resolved = await realpath(opencodePath);
-      if (resolved !== commandPath) errors.push(`OpenCode ${capability} adapter must resolve to commands/${capability}.md`);
+      const [opencode, command] = await Promise.all([readFile(opencodePath, "utf8"), readFile(commandPath, "utf8")]);
+      if (opencode !== command) {
+        errors.push(`OpenCode ${capability} adapter must be byte-identical to commands/${capability}.md`);
+      }
     } catch (error) {
-      errors.push(`cannot resolve OpenCode ${capability} adapter: ${error.message}`);
+      errors.push(`cannot compare OpenCode ${capability} adapter: ${error.message}`);
     }
 
     try {

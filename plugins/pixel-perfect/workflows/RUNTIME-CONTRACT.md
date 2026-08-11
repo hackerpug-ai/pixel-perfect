@@ -111,6 +111,13 @@ Always load `docs/DESIGN-CONTRACT.md` for design authoring or design review. If 
 - User choices and task tracking: OpenCode's native question and todo/planning mechanisms, one call per declared batch; otherwise a numbered plain-text batch as the last thing in the turn. Never a printed question followed by an ended turn.
 - Plugin paths: adapters include canonical files from `.pixel-perfect/plugins/pixel-perfect/`.
 
+### Cursor
+
+- Invocation: `/<name>` (slash command from the installed plugin) or the skill name when skills are discovered by convention.
+- User choices: Cursor's native structured input when available, one call per declared batch; otherwise a numbered plain-text batch as the last thing in the turn. Never a printed question followed by an ended turn.
+- Task tracking: Cursor's native task/todo tools when available.
+- Plugin paths: resolve from the plugin directory that contains the loaded command or skill under `~/.cursor/plugins/` (marketplace) or `~/.cursor/plugins/local/` (local install). There is no `CLAUDE_PLUGIN_ROOT` equivalent — locate the plugin root by the directory that holds `.cursor-plugin/plugin.json`.
+
 ## Process context
 
 Before executing an entry workflow, check for `design/manifest.json` or legacy `design/manifest.yaml`. If either exists, load `skills/process-context/SKILL.md` and perform its required migrations before continuing. There is no implicit auto-activation metadata.

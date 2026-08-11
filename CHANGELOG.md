@@ -4,6 +4,20 @@ All notable changes to Pixel Perfect are documented here.
 
 ## [Unreleased]
 
+## [7.4.0] - 2026-08-11
+
+### Added
+
+- Added **Cursor** as a first-class release channel with `.cursor-plugin/plugin.json`, root marketplace metadata, README install path (`~/.cursor/plugins/local/`), and version lockstep alongside Claude, Codex, Grok, and OpenCode.
+- Added a single adapter generator (`scripts/build-adapters.mjs` + `scripts/adapters/`) that emits all ten public capabilities to commands, skills, and OpenCode command files from one capability source, with a `--check` drift gate wired into `npm run validate`.
+- Added a `### Cursor` harness mapping in `workflows/RUNTIME-CONTRACT.md` covering invocation, user choice, task tracking, and plugin-root location under `~/.cursor/plugins/` / `~/.cursor/plugins/local/`.
+
+### Changed
+
+- OpenCode command adapters are generated real files (byte-identical to `commands/`) instead of symlinks, so packaging and Windows installs no longer depend on symlink support.
+- Command adapters document Cursor plugin-root resolution; skill adapters no longer hard-code Codex-only invocation wording and instead defer to the harness mappings table.
+- Release verification and package validation require the Cursor manifest and marketplace surfaces.
+
 ## [7.3.0] - 2026-08-08
 
 ### Added

@@ -21,6 +21,7 @@ const OPENCODE_DEPENDENCY_VERSION = "1.16.2";
 const CHANNELS = {
   claude: "claude-marketplace",
   codex: "codex-marketplace",
+  cursor: "cursor-marketplace",
   grok: "claude-marketplace",
   opencode: "opencode-adapter",
 };
@@ -30,6 +31,8 @@ export const RELEASE_PATHS = {
   codexManifest: "plugins/pixel-perfect/.codex-plugin/plugin.json",
   claudeManifest: "plugins/pixel-perfect/.claude-plugin/plugin.json",
   claudeMarketplace: ".claude-plugin/marketplace.json",
+  cursorManifest: "plugins/pixel-perfect/.cursor-plugin/plugin.json",
+  cursorMarketplace: ".cursor-plugin/marketplace.json",
   opencodePackage: "plugins/pixel-perfect/.opencode/package.json",
   opencodeLock: "plugins/pixel-perfect/.opencode/package-lock.json",
   changelog: "CHANGELOG.md",
@@ -131,11 +134,23 @@ function findPlugin(marketplace, relativePath) {
 }
 
 export async function readReleaseDocuments(root = REPOSITORY_ROOT) {
-  const [authority, codexManifest, claudeManifest, claudeMarketplace, opencodePackage, opencodeLock, changelog] = await Promise.all([
+  const [
+    authority,
+    codexManifest,
+    claudeManifest,
+    claudeMarketplace,
+    cursorManifest,
+    cursorMarketplace,
+    opencodePackage,
+    opencodeLock,
+    changelog,
+  ] = await Promise.all([
     readJson(root, RELEASE_PATHS.authority),
     readJson(root, RELEASE_PATHS.codexManifest),
     readJson(root, RELEASE_PATHS.claudeManifest),
     readJson(root, RELEASE_PATHS.claudeMarketplace),
+    readJson(root, RELEASE_PATHS.cursorManifest),
+    readJson(root, RELEASE_PATHS.cursorMarketplace),
     readJson(root, RELEASE_PATHS.opencodePackage),
     readJson(root, RELEASE_PATHS.opencodeLock),
     readText(root, RELEASE_PATHS.changelog),
@@ -146,6 +161,9 @@ export async function readReleaseDocuments(root = REPOSITORY_ROOT) {
   requireObject(claudeManifest, RELEASE_PATHS.claudeManifest);
   requireObject(claudeMarketplace, RELEASE_PATHS.claudeMarketplace);
   requireObject(claudeMarketplace.metadata, `${RELEASE_PATHS.claudeMarketplace}.metadata`);
+  requireObject(cursorManifest, RELEASE_PATHS.cursorManifest);
+  requireObject(cursorMarketplace, RELEASE_PATHS.cursorMarketplace);
+  requireObject(cursorMarketplace.metadata, `${RELEASE_PATHS.cursorMarketplace}.metadata`);
   requireObject(opencodePackage, RELEASE_PATHS.opencodePackage);
   requireObject(opencodePackage.dependencies, `${RELEASE_PATHS.opencodePackage}.dependencies`);
   requireObject(opencodeLock, RELEASE_PATHS.opencodeLock);
@@ -163,6 +181,9 @@ export async function readReleaseDocuments(root = REPOSITORY_ROOT) {
     claudeManifest,
     claudeMarketplace,
     claudeMarketplacePlugin: findPlugin(claudeMarketplace, RELEASE_PATHS.claudeMarketplace),
+    cursorManifest,
+    cursorMarketplace,
+    cursorMarketplacePlugin: findPlugin(cursorMarketplace, RELEASE_PATHS.cursorMarketplace),
     opencodePackage,
     opencodeLock,
     changelog,
@@ -188,6 +209,8 @@ function collectStateErrors(documents, expectedVersion, tagName) {
     ["Claude manifest", RELEASE_PATHS.claudeManifest, documents.claudeManifest.version],
     ["Claude marketplace metadata", `${RELEASE_PATHS.claudeMarketplace} metadata.version`, documents.claudeMarketplace.metadata.version],
     ["Claude marketplace plugin", `${RELEASE_PATHS.claudeMarketplace} plugin.version`, documents.claudeMarketplacePlugin.version],
+    ["Cursor manifest", RELEASE_PATHS.cursorManifest, documents.cursorManifest.version],
+    ["Cursor marketplace metadata", `${RELEASE_PATHS.cursorMarketplace} metadata.version`, documents.cursorMarketplace.metadata.version],
     ["OpenCode package", RELEASE_PATHS.opencodePackage, documents.opencodePackage.version],
     ["OpenCode lockfile", RELEASE_PATHS.opencodeLock, documents.opencodeLock.version],
     ["OpenCode lock root package", `${RELEASE_PATHS.opencodeLock} packages[\"\"].version`, documents.opencodeLock.packages[""].version],
@@ -227,6 +250,9 @@ function collectStateErrors(documents, expectedVersion, tagName) {
   }
   if (documents.claudeManifest.name !== PRODUCT_NAME) {
     errors.push(`${RELEASE_PATHS.claudeManifest}.name must be ${PRODUCT_NAME}`);
+  }
+  if (documents.cursorManifest.name !== PRODUCT_NAME) {
+    errors.push(`${RELEASE_PATHS.cursorManifest}.name must be ${PRODUCT_NAME}`);
   }
   if (documents.opencodePackage.name !== OPENCODE_PACKAGE_NAME) {
     errors.push(`${RELEASE_PATHS.opencodePackage}.name must be ${OPENCODE_PACKAGE_NAME}`);
@@ -298,6 +324,7 @@ export async function verifyVersionState(root = REPOSITORY_ROOT, expectedVersion
     channels: {
       claude: documents.claudeManifest.version,
       codex: documents.codexManifest.version,
+      cursor: documents.cursorManifest.version,
       grok: documents.claudeManifest.version,
       opencode: documents.opencodePackage.version,
     },
@@ -412,6 +439,8 @@ export async function prepareRelease(root = REPOSITORY_ROOT, targetVersion, opti
   const claudeManifest = cloneJson(documents.claudeManifest);
   const claudeMarketplace = cloneJson(documents.claudeMarketplace);
   const claudeMarketplacePlugin = findPlugin(claudeMarketplace, RELEASE_PATHS.claudeMarketplace);
+  const cursorManifest = cloneJson(documents.cursorManifest);
+  const cursorMarketplace = cloneJson(documents.cursorMarketplace);
   const opencodePackage = cloneJson(documents.opencodePackage);
   const opencodeLock = cloneJson(documents.opencodeLock);
 
@@ -420,6 +449,8 @@ export async function prepareRelease(root = REPOSITORY_ROOT, targetVersion, opti
   claudeManifest.version = targetVersion;
   claudeMarketplace.metadata.version = targetVersion;
   claudeMarketplacePlugin.version = targetVersion;
+  cursorManifest.version = targetVersion;
+  cursorMarketplace.metadata.version = targetVersion;
   opencodePackage.version = targetVersion;
   opencodeLock.version = targetVersion;
   opencodeLock.packages[""].version = targetVersion;
@@ -433,6 +464,9 @@ export async function prepareRelease(root = REPOSITORY_ROOT, targetVersion, opti
     claudeManifest,
     claudeMarketplace,
     claudeMarketplacePlugin,
+    cursorManifest,
+    cursorMarketplace,
+    cursorMarketplacePlugin: findPlugin(cursorMarketplace, RELEASE_PATHS.cursorMarketplace),
     opencodePackage,
     opencodeLock,
     changelog,
@@ -447,6 +481,8 @@ export async function prepareRelease(root = REPOSITORY_ROOT, targetVersion, opti
     [RELEASE_PATHS.codexManifest, jsonText(codexManifest)],
     [RELEASE_PATHS.claudeManifest, jsonText(claudeManifest)],
     [RELEASE_PATHS.claudeMarketplace, jsonText(claudeMarketplace)],
+    [RELEASE_PATHS.cursorManifest, jsonText(cursorManifest)],
+    [RELEASE_PATHS.cursorMarketplace, jsonText(cursorMarketplace)],
     [RELEASE_PATHS.opencodePackage, jsonText(opencodePackage)],
     [RELEASE_PATHS.opencodeLock, jsonText(opencodeLock)],
     [RELEASE_PATHS.changelog, changelog],
@@ -520,6 +556,7 @@ export function formatVerification(state) {
     `Pixel Perfect ${state.version} verified`,
     `  claude:   ${state.channels.claude} (Claude manifest + marketplace)`,
     `  codex:    ${state.channels.codex} (Codex plugin manifest)`,
+    `  cursor:   ${state.channels.cursor} (Cursor plugin manifest + marketplace)`,
     `  grok:     ${state.channels.grok} (shared Claude marketplace)`,
     `  opencode: ${state.channels.opencode} (adapter package + lockfile)`,
   ].join("\n");

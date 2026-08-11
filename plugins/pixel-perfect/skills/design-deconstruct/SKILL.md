@@ -9,4 +9,4 @@ Read [the runtime contract](../../workflows/RUNTIME-CONTRACT.md). If `design/man
 
 Load the bundled deconstruct-engine and preserve every preflight, render, token, coverage, and audit gate.
 
-Use `$pixel-perfect:design-deconstruct` as the Codex invocation, treat the user's remaining text as its input, collect choices through the available Codex input mechanism, and represent transient workflow tasks with Codex planning. Durable completion comes only from the manifest and required evidence.
+Invoke with the active harness's syntax from the harness mappings table in the runtime contract, treat the user's remaining text as input, collect choices through that harness's input mechanism, and represent transient workflow tasks with its planning tools. Durable completion comes only from the manifest and required evidence.

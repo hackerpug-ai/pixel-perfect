@@ -4,7 +4,7 @@
 
 # pixel-perfect
 
-A version-locked plugin for Claude Code, Codex, Grok, and OpenCode that generates and maintains a **high-fidelity production design system** — semantic tokens, atoms, molecules, organisms, screens — as real code in your target framework, browsable in a **native sandbox** it builds from scratch.
+A version-locked plugin for Claude Code, Codex, Cursor, Grok, and OpenCode that generates and maintains a **high-fidelity production design system** — semantic tokens, atoms, molecules, organisms, screens — as real code in your target framework, browsable in a **native sandbox** it builds from scratch.
 
 It exists to close one gap: the one between a beautiful AI-generated design and UI code you can actually ship.
 
@@ -68,7 +68,7 @@ Each phase has a **gate** that must pass before you proceed. The plugin tracks s
 
 ## Quick Start
 
-Version 7.1.0 projects the same runtime into all four harnesses.
+Version 7.4.0 projects the same runtime into all five harnesses.
 
 ### Claude Code
 
@@ -107,6 +107,21 @@ codex plugin add pixel-perfect@pixel-perfect
 
 Keep the personal marketplace itself if it contains other plugins. `codex plugin list` should show only one installed Pixel Perfect source; two enabled sources create duplicate `$pixel-perfect:*` namespaces.
 
+### Cursor
+
+Cursor loads local plugins from `~/.cursor/plugins/local/`. **Copy** the package (do not symlink — Cursor has known failures loading symlinked local plugins):
+
+```bash
+git clone --branch v7.4.0 --depth 1 https://github.com/hackerpug-ai/pixel-perfect.git /tmp/pixel-perfect
+mkdir -p ~/.cursor/plugins/local
+rm -rf ~/.cursor/plugins/local/pixel-perfect
+cp -R /tmp/pixel-perfect/plugins/pixel-perfect ~/.cursor/plugins/local/pixel-perfect
+```
+
+Reload Cursor (Command Palette → “Developer: Reload Window”). Invoke capabilities as slash commands (`/init`, `/build`, `/status`, …) from the installed plugin. Skills under `skills/` are also declared for convention discovery.
+
+To upgrade, check out a newer `v*` tag in the clone and re-copy into `~/.cursor/plugins/local/pixel-perfect`. Marketplace submission at [cursor.com/marketplace/publish](https://cursor.com/marketplace/publish) is a separate manual step when you are ready — the manifests in this repo are submission-ready.
+
 ### Grok
 
 Install Pixel Perfect through the Claude marketplace steps above, then open Grok's `/plugins` extension view and enable it if needed. Grok natively reads Claude Code marketplaces and plugins, so it uses the Claude manifest and marketplace version; there is intentionally no second Grok catalog or version field.
@@ -132,7 +147,7 @@ Invoke capabilities as `/init`, `/build`, `/status`, and so on. To upgrade to a 
 # 0. (Optional) Start from an existing design instead of a blank PRD
 /pixel-perfect:design-deconstruct https://example.com   # Claude Code or Grok
 # $pixel-perfect:design-deconstruct https://example.com # Codex
-# /design-deconstruct https://example.com               # OpenCode
+# /design-deconstruct https://example.com               # OpenCode or Cursor
 
 # 1. Set up your project (phases 1-3)
 /pixel-perfect:init
@@ -148,6 +163,8 @@ Invoke capabilities as `/init`, `/build`, `/status`, and so on. To upgrade to a 
 ```
 
 > **OpenCode users**: commands are available without the `pixel-perfect:` prefix (e.g., `/init`, `/build`, `/status`).
+
+> **Cursor users**: slash commands from the local plugin use the short form (e.g., `/init`, `/build`, `/status`).
 
 > **Codex users**: replace the leading slash form with `$pixel-perfect:<name>`.
 
@@ -422,15 +439,15 @@ Unsupported `autoActivate` metadata is not used. Every public entry adapter chec
 
 ## Releasing
 
-`plugin-release.json` is the only manually selected product version. All releases must use:
+`plugin-release.json` is the only manually selected product version. Product version lockstep covers Claude, Codex, Cursor, Grok (via Claude marketplace), and OpenCode. All releases must use:
 
 ```bash
-node scripts/release.mjs prepare 7.1.0
-node scripts/release.mjs verify 7.1.0
-node scripts/release.mjs publish 7.1.0
+node scripts/release.mjs prepare 7.4.0
+node scripts/release.mjs verify 7.4.0
+node scripts/release.mjs publish 7.4.0
 ```
 
-Direct version edits, hand-created tags, and manual GitHub releases are unsupported. `prepare` synchronizes product-version fields without changing OpenCode dependency versions. `verify` is read-only. `publish` requires clean `main`, `HEAD === origin/main`, a matching non-empty changelog section, valid package content, an absent tag, and authenticated `gh` before creating an annotated tag or GitHub release.
+Direct version edits, hand-created tags, and manual GitHub releases are unsupported. `prepare` synchronizes product-version fields (including Cursor manifest + marketplace metadata) without changing OpenCode dependency versions. `verify` is read-only. `publish` requires clean `main`, `HEAD === origin/main`, a matching non-empty changelog section, valid package content, an absent tag, and authenticated `gh` before creating an annotated tag or GitHub release.
 
 ---
 
@@ -459,7 +476,7 @@ v4 is a clean break from v2. There is no incremental migration path.
 
 ## Requirements
 
-- **Claude Code**, **Codex**, or **Grok** with plugin support, or **OpenCode** with command/skill support
+- **Claude Code**, **Codex**, **Cursor**, or **Grok** with plugin support, or **OpenCode** with command/skill support
 - A project directory with requirements (PRD.md or similar)
 
 ---

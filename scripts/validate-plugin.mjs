@@ -46,16 +46,19 @@ function onePlugin(marketplace, label, errors) {
 
 export async function validatePlugin(root = REPOSITORY_ROOT) {
   const errors = [];
-  const [codex, claude, codexMarketplace, claudeMarketplace] = await Promise.all([
+  const [codex, claude, cursor, codexMarketplace, claudeMarketplace, cursorMarketplace] = await Promise.all([
     json(root, `${PLUGIN_ROOT}/.codex-plugin/plugin.json`, errors),
     json(root, `${PLUGIN_ROOT}/.claude-plugin/plugin.json`, errors),
+    json(root, `${PLUGIN_ROOT}/.cursor-plugin/plugin.json`, errors),
     json(root, ".agents/plugins/marketplace.json", errors),
     json(root, ".claude-plugin/marketplace.json", errors),
+    json(root, ".cursor-plugin/marketplace.json", errors),
   ]);
 
   for (const [label, manifest] of [
     ["Codex manifest", codex],
     ["Claude manifest", claude],
+    ["Cursor manifest", cursor],
   ]) {
     if (manifest.name !== "pixel-perfect") errors.push(`${label} name must be pixel-perfect`);
     if (!SEMVER.test(manifest.version ?? "")) errors.push(`${label} version must be strict semver`);
@@ -119,17 +122,42 @@ export async function validatePlugin(root = REPOSITORY_ROOT) {
   if (claudeEntry.source !== "./plugins/pixel-perfect") {
     errors.push("Claude marketplace source must be ./plugins/pixel-perfect");
   }
+
+  for (const urlField of ["homepage", "repository"]) {
+    if (!/^https:\/\//.test(cursor[urlField] ?? "")) errors.push(`Cursor manifest ${urlField} must be an HTTPS URL`);
+  }
+  if (cursor.logo) {
+    await requireFile(root, `${PLUGIN_ROOT}/${String(cursor.logo).replace(/^\.\//, "")}`, errors);
+  } else {
+    errors.push("Cursor manifest logo is required");
+  }
+
+  const cursorEntry = onePlugin(cursorMarketplace, "Cursor marketplace", errors);
+  if (cursorMarketplace.name !== "pixel-perfect") errors.push("Cursor marketplace name must be pixel-perfect");
+  if (!cursorMarketplace.owner?.name) errors.push("Cursor marketplace needs owner.name");
+  if (cursorEntry.source !== "./plugins/pixel-perfect") {
+    errors.push("Cursor marketplace source must be ./plugins/pixel-perfect");
+  }
+  if (Object.hasOwn(cursorEntry, "version")) {
+    errors.push("Cursor marketplace entry must not duplicate the manifest version");
+  }
+
   await requireFile(root, `${PLUGIN_ROOT}/.claude-plugin/plugin.json`, errors);
   await requireFile(root, `${PLUGIN_ROOT}/.codex-plugin/plugin.json`, errors);
+  await requireFile(root, `${PLUGIN_ROOT}/.cursor-plugin/plugin.json`, errors);
 
   if (errors.length) throw new PluginValidationError([...new Set(errors)]);
-  return { codexVersion: codex.version, claudeVersion: claude.version };
+  return { codexVersion: codex.version, claudeVersion: claude.version, cursorVersion: cursor.version };
 }
 
 const isMain = process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
 if (isMain) {
   validatePlugin()
-    .then((result) => process.stdout.write(`plugin manifests valid: codex ${result.codexVersion}, claude ${result.claudeVersion}\n`))
+    .then((result) =>
+      process.stdout.write(
+        `plugin manifests valid: codex ${result.codexVersion}, claude ${result.claudeVersion}, cursor ${result.cursorVersion}\n`,
+      ),
+    )
     .catch((error) => {
       process.stderr.write(`${error.message}\n`);
       for (const detail of error.details ?? []) process.stderr.write(`- ${detail}\n`);
