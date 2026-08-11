@@ -1,0 +1,72 @@
+[
+  {
+    "name": "add-platform",
+    "title": "Add Platform",
+    "description": "Add a platform to an existing Pixel Perfect project by running TARGET and EQUIP for that platform and recording its gated build state.",
+    "preservation": "Preserve every selection, validation, and manifest gate",
+    "interactive": true
+  },
+  {
+    "name": "build",
+    "title": "Build",
+    "description": "Build a Pixel Perfect project through planning, atoms, molecules, organisms, screens, and integration using real components and required verification gates.",
+    "preservation": "Do not summarize, replace, or stub any implementation, test, sandbox, or gate",
+    "interactive": true
+  },
+  {
+    "name": "design-deconstruct",
+    "title": "Design Deconstruct",
+    "description": "Deconstruct UI code, URLs, screenshots, concepts, or HTML into a token-governed atomic design system and real target-framework components when configured.",
+    "preservation": "Load the bundled deconstruct-engine and preserve every preflight, render, token, coverage, and audit gate",
+    "interactive": false
+  },
+  {
+    "name": "init",
+    "title": "Init",
+    "description": "Initialize a Pixel Perfect project through DISCOVER, TARGET, and EQUIP, capturing goal, platforms, framework, styling, libraries, and sandbox choices.",
+    "preservation": "Preserve every discovery, selection, validation, and manifest gate",
+    "interactive": true
+  },
+  {
+    "name": "refine",
+    "title": "Refine",
+    "description": "Refine Pixel Perfect components, screens, or theme from targeted feedback, update real code, and rerun the affected verification gates.",
+    "preservation": "Do not substitute mockups or placeholders for requested product changes",
+    "interactive": true
+  },
+  {
+    "name": "research",
+    "title": "Research",
+    "description": "Research UI patterns, competitors, trends, or ecosystem libraries and save evidence-backed findings into the project's design research library.",
+    "preservation": "Use current sources and preserve every required evidence field and output",
+    "interactive": false
+  },
+  {
+    "name": "scaffold",
+    "title": "Scaffold",
+    "description": "Scaffold a Pixel Perfect project by installing selected tools, creating the theme and sandbox, generating token stories, and verifying a real hello-world component.",
+    "preservation": "Preserve every installation, render, and verification gate",
+    "interactive": true
+  },
+  {
+    "name": "status",
+    "title": "Status",
+    "description": "Inspect and report a Pixel Perfect project's current phase, gate status, component coverage, sandbox state, and next required action.",
+    "preservation": "Report actual state without inventing progress",
+    "interactive": false
+  },
+  {
+    "name": "verify",
+    "title": "Verify",
+    "description": "Run Pixel Perfect verification gates for the current phase, report concrete evidence, and advance only when every required check passes.",
+    "preservation": "Never fake evidence, weaken a gate, or report a partial check as complete",
+    "interactive": false
+  },
+  {
+    "name": "wireframe",
+    "title": "Wireframe",
+    "description": "Generate low-fidelity ASCII wireframes from plans, targets, specs, or concepts as governed structural input to higher-fidelity work.",
+    "preservation": "Produce the complete required wireframe set, states, annotations, and mappings",
+    "interactive": true
+  }
+]

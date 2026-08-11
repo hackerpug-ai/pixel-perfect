@@ -17,6 +17,7 @@ const execFile = promisify(execFileCallback);
 const CHANNELS = {
   claude: "claude-marketplace",
   codex: "codex-marketplace",
+  cursor: "cursor-marketplace",
   grok: "claude-marketplace",
   opencode: "opencode-adapter",
 };
@@ -37,6 +38,8 @@ async function makeFixture(options = {}) {
     claude: version,
     marketplaceMetadata: version,
     marketplacePlugin: version,
+    cursor: version,
+    cursorMarketplaceMetadata: version,
     opencodePackage: version,
     opencodeLock: version,
     opencodeLockRoot: version,
@@ -71,6 +74,24 @@ async function makeFixture(options = {}) {
           version: versions.marketplacePlugin,
           source: "./plugins/pixel-perfect",
           preserved: { marketplace: true },
+        },
+      ],
+    }),
+    writeJson(root, RELEASE_PATHS.cursorManifest, {
+      name: "pixel-perfect",
+      version: versions.cursor,
+      description: "cursor",
+      preserved: { cursor: true },
+    }),
+    writeJson(root, RELEASE_PATHS.cursorMarketplace, {
+      name: "pixel-perfect",
+      owner: { name: "Justin Rich", email: "justin@hackerpug.com" },
+      metadata: { version: versions.cursorMarketplaceMetadata, preserved: true },
+      plugins: [
+        {
+          name: "pixel-perfect",
+          source: "./plugins/pixel-perfect",
+          preserved: { cursorMarketplace: true },
         },
       ],
     }),
@@ -143,11 +164,27 @@ test("prepare repairs divergent product versions and no other JSON fields", asyn
   });
 
   try {
-    const before = await Promise.all(Object.values(RELEASE_PATHS).slice(0, 6).map((relativePath) => json(root, relativePath)));
+    const jsonPaths = [
+      RELEASE_PATHS.authority,
+      RELEASE_PATHS.codexManifest,
+      RELEASE_PATHS.claudeManifest,
+      RELEASE_PATHS.claudeMarketplace,
+      RELEASE_PATHS.cursorManifest,
+      RELEASE_PATHS.cursorMarketplace,
+      RELEASE_PATHS.opencodePackage,
+      RELEASE_PATHS.opencodeLock,
+    ];
+    const before = await Promise.all(jsonPaths.map((relativePath) => json(root, relativePath)));
     const state = await prepareRelease(root, "7.1.0", { date: "2026-08-07" });
-    assert.deepEqual(state.channels, { claude: "7.1.0", codex: "7.1.0", grok: "7.1.0", opencode: "7.1.0" });
+    assert.deepEqual(state.channels, {
+      claude: "7.1.0",
+      codex: "7.1.0",
+      cursor: "7.1.0",
+      grok: "7.1.0",
+      opencode: "7.1.0",
+    });
 
-    const after = await Promise.all(Object.values(RELEASE_PATHS).slice(0, 6).map((relativePath) => json(root, relativePath)));
+    const after = await Promise.all(jsonPaths.map((relativePath) => json(root, relativePath)));
     const versionPaths = [
       [0, ["version"]],
       [1, ["version"]],
@@ -155,8 +192,10 @@ test("prepare repairs divergent product versions and no other JSON fields", asyn
       [3, ["metadata", "version"]],
       [3, ["plugins", 0, "version"]],
       [4, ["version"]],
-      [5, ["version"]],
-      [5, ["packages", "", "version"]],
+      [5, ["metadata", "version"]],
+      [6, ["version"]],
+      [7, ["version"]],
+      [7, ["packages", "", "version"]],
     ];
     for (const [index, keys] of versionPaths) {
       let cursor = after[index];
@@ -169,8 +208,8 @@ test("prepare repairs divergent product versions and no other JSON fields", asyn
       cursor[keys.at(-1)] = "<version>";
     }
     assert.deepEqual(after, before);
-    assert.equal(after[4].dependencies["@opencode-ai/plugin"], "1.16.2");
-    assert.equal(after[5].packages["node_modules/@opencode-ai/plugin"].version, "1.16.2");
+    assert.equal(after[6].dependencies["@opencode-ai/plugin"], "1.16.2");
+    assert.equal(after[7].packages["node_modules/@opencode-ai/plugin"].version, "1.16.2");
 
     const changelog = await readFile(path.join(root, RELEASE_PATHS.changelog), "utf8");
     assert.match(changelog, /^## \[7\.1\.0\] - 2026-08-07$/m);
@@ -223,6 +262,16 @@ for (const scenario of [
     name: "stale OpenCode lock root package",
     options: { versions: { opencodeLockRoot: "7.0.9" } },
     pattern: /packages\[""\]\.version is 7\.0\.9/,
+  },
+  {
+    name: "stale Cursor manifest",
+    options: { versions: { cursor: "7.0.9" } },
+    pattern: /cursor-plugin\/plugin\.json is 7\.0\.9/,
+  },
+  {
+    name: "stale Cursor marketplace metadata",
+    options: { versions: { cursorMarketplaceMetadata: "7.0.9" } },
+    pattern: /cursor-plugin\/marketplace\.json metadata\.version is 7\.0\.9/,
   },
 ]) {
   test(`verify rejects ${scenario.name}`, async () => {
