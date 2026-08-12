@@ -73,6 +73,24 @@ pixel-perfect:refine --component StatusBadge "Make the badge more rounded, use a
 
 **Inventory-level requests route to `evolve`.** If the feedback adds, removes, promotes, or variants an entity (changes *what exists* rather than *how one entity looks*), stop and hand off to `pixel-perfect:evolve`. Refine does not grow its own add/remove path.
 
+### Token change recipe (refine / theme)
+
+When feedback is a **token** change (not a new component):
+
+1. Edit the token source (`design/system/tokens/theme.*.json` or the theme file).
+2. Append an entry to `design/system/tokens/CHANGELOG.json`:
+   - **value change**: `{ "kind": "value", "path": "color.primary", "from": "#…", "to": "#…" }`
+   - **rename**: `{ "kind": "rename", "path": "color.brand", "from": "color.primary", "to": "color.brand" }` then **codemod** every emit site (utility classes, `var(--…)`, token imports) so the old name is gone.
+   - **add**: `{ "kind": "add", "path": "…" }` — no cascade required.
+   - **remove**: `{ "kind": "remove", "path": "…" }` — blocked unless re-capture shows zero stories moved and the project still builds.
+3. Re-capture and prove:
+   ```
+   node {plugin}/scripts/verify-catalog.mjs --check <project-root> --platform {platform}
+   ```
+   - **value**: stories that moved are the visual consumers to review; `--accept` after intentional review.
+   - **rename**: `--check` must show **zero** drifted stories (a rename that changes rendering is not a rename — fix the codemod).
+   - **remove**: blocked if anything moves or fails to build.
+
 Report it in three lines — what changed, that it verified, and what it cascades into:
 
 ```

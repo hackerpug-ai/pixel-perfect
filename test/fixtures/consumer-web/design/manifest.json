@@ -1,0 +1,33 @@
+{
+  "goal": "Consumer-style catalog capture fixture",
+  "version": "8.0.0",
+  "platforms": {
+    "web-desktop": {
+      "phase": "atoms",
+      "tools": {
+        "framework": "vite",
+        "sandbox": "custom"
+      },
+      "capture": {
+        "command": "npm run sandbox:capture",
+        "medium": "text",
+        "goldens": "design/goldens/web-desktop",
+        "catalog": "sandbox/stories",
+        "staging": "design/.captures/web-desktop"
+      },
+      "pinned": ["Button"],
+      "deprecations": {},
+      "atoms": [
+        { "name": "Button", "status": "verified" },
+        { "name": "Badge", "status": "verified" },
+        { "name": "UnusedChip", "status": "verified" }
+      ],
+      "molecules": [
+        { "name": "Card", "status": "verified" }
+      ],
+      "screens": [
+        { "name": "Home", "route": "/", "states": ["default"], "status": "verified" }
+      ]
+    }
+  }
+}

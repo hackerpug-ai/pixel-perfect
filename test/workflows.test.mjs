@@ -307,3 +307,30 @@ test("manifest schema examples prefer capture/pinned/deprecations over controls 
   const refine = readPlugin("workflows/refine.md");
   assert.doesNotMatch(refine, /"controls": true/);
 });
+
+test("process-context teaches v8 capture/pinned/deprecations and evolve", () => {
+  const pc = readPlugin("skills/process-context/SKILL.md");
+  assert.match(pc, /Legacy pre-8\.0 Manifest Migration|living design system/i);
+  assert.match(pc, /"capture"/);
+  assert.match(pc, /pinned/);
+  assert.match(pc, /deprecations/);
+  assert.match(pc, /pixel-perfect:evolve/);
+  assert.match(pc, /composition-edge/);
+});
+
+test("scaffold/refine document token CHANGELOG and rename recapture recipe", () => {
+  assert.match(readPlugin("workflows/scaffold.md"), /CHANGELOG\.json/);
+  const refine = readPlugin("workflows/refine.md");
+  assert.match(refine, /Token change recipe/);
+  assert.match(refine, /kind": "rename"|kind.*rename/);
+  assert.match(refine, /zero.*drift|zero stories/i);
+});
+
+test("upgrade to 8.0 migration note exists", () => {
+  const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+  const up = readFileSync(path.join(root, "plugins/pixel-perfect/docs/UPGRADING-8.0.md"), "utf8");
+  assert.match(up, /--baseline/);
+  assert.match(up, /capture/);
+  assert.match(up, /controls/);
+  assert.match(up, /evolve/);
+});

@@ -22,3 +22,6 @@ CLAUDE.md
 
 # Local operational handoffs — never published
 .handoff/
+
+# Catalog capture staging (never commit)
+**/design/.captures/
