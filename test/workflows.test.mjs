@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { lintWorkflowText } from "../scripts/validate-workflows.mjs";
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const PLUGIN = path.join(ROOT, "plugins/pixel-perfect");
+const readPlugin = (rel) => readFileSync(path.join(PLUGIN, rel), "utf8");
 
 const VALID_BATCH = `# Example
 
@@ -249,4 +256,54 @@ test("a four-tick sample containing fences is read as one block, not three", () 
 test("a report-producing workflow is not budgeted and needs no batch table", () => {
   const text = `# Status\n\n${report(filler(59))}`;
   assert.deepEqual(lintWorkflowText(text, "status.md"), []);
+});
+
+// --- Living design system (v8) structural contracts ---
+
+test("sandbox-spec documents piece #8 catalog capture with medium table and determinism", () => {
+  const spec = readPlugin("docs/sandbox-spec.md");
+  assert.match(spec, /### 8\. Catalog capture/);
+  assert.match(spec, /Structural artifact/);
+  assert.match(spec, /Determinism requirements/);
+  assert.match(spec, /verify-catalog\.mjs/);
+  assert.match(spec, /design\/goldens\//);
+});
+
+test("evolve workflow covers E1–E6, confirm-before-write, and prove matrix", () => {
+  const wf = readPlugin("workflows/evolve.md");
+  assert.match(wf, /## How this workflow asks/);
+  assert.match(wf, /### E1 — ACQUIRE/);
+  assert.match(wf, /### E2 — CLASSIFY/);
+  assert.match(wf, /### E3 — REACH/);
+  assert.match(wf, /### E4 — CONFIRM/);
+  assert.match(wf, /### E5 — APPLY/);
+  assert.match(wf, /### E6 — PROVE/);
+  assert.match(wf, /batch: E4/);
+  assert.match(wf, /Nothing is written, installed, or deleted before this gate/);
+  assert.match(wf, /non-disturbance|Every pre-existing golden is unchanged/);
+  assert.match(wf, /no remaining story moved/i);
+  assert.ok(existsSync(path.join(PLUGIN, "commands/evolve.md")));
+  assert.ok(existsSync(path.join(PLUGIN, "skills/evolve/SKILL.md")));
+});
+
+test("scaffold, build, verify, refine, status, custom-sandbox wire capture", () => {
+  assert.match(readPlugin("workflows/scaffold.md"), /verify-catalog\.mjs --baseline/);
+  assert.match(readPlugin("workflows/build.md"), /atoms_capture/);
+  assert.match(readPlugin("workflows/build.md"), /Composition mutation check/);
+  assert.match(readPlugin("workflows/verify.md"), /verify-catalog\.mjs --check/);
+  assert.match(readPlugin("workflows/refine.md"), /pixel-perfect:evolve/);
+  assert.match(readPlugin("workflows/status.md"), /Dead inventory/);
+  assert.match(readPlugin("docs/adapters/custom-sandbox.md"), /sandbox:capture/);
+  assert.match(readPlugin("docs/adapters/custom-sandbox.md"), /Catalog capture \(piece #8/);
+});
+
+test("manifest schema examples prefer capture/pinned/deprecations over controls authority", () => {
+  const init = readPlugin("workflows/init.md");
+  assert.match(init, /"capture"/);
+  assert.match(init, /"pinned"/);
+  assert.match(init, /"deprecations"/);
+  assert.match(init, /Do \*\*not\*\* author composition-edge arrays/);
+  // refine should not require controls: true as authority after verification
+  const refine = readPlugin("workflows/refine.md");
+  assert.doesNotMatch(refine, /"controls": true/);
 });

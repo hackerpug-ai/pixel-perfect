@@ -68,7 +68,7 @@ Each phase has a **gate** that must pass before you proceed. The plugin tracks s
 
 ## Quick Start
 
-Version 7.4.0 projects the same runtime into all five harnesses.
+Version 8.0.0 projects the same runtime into all five harnesses.
 
 ### Claude Code
 
@@ -112,7 +112,7 @@ Keep the personal marketplace itself if it contains other plugins. `codex plugin
 Cursor loads local plugins from `~/.cursor/plugins/local/`. **Copy** the package (do not symlink — Cursor has known failures loading symlinked local plugins):
 
 ```bash
-git clone --branch v7.4.0 --depth 1 https://github.com/hackerpug-ai/pixel-perfect.git /tmp/pixel-perfect
+git clone --branch v8.0.0 --depth 1 https://github.com/hackerpug-ai/pixel-perfect.git /tmp/pixel-perfect
 mkdir -p ~/.cursor/plugins/local
 rm -rf ~/.cursor/plugins/local/pixel-perfect
 cp -R /tmp/pixel-perfect/plugins/pixel-perfect ~/.cursor/plugins/local/pixel-perfect
@@ -249,12 +249,13 @@ Every component prop is wired to sandbox controls (`argTypes` in Storybook; labe
 | `/pixel-perfect:wireframe` | 0 (optional) | Low-fi: ASCII wireframes from plans/targets into `design/wireframes/` — a pre-step to design-deconstruct |
 | `/pixel-perfect:design-deconstruct` | 0 (optional) | Deconstruct existing UI (code, URL, screenshot, concept) into token-governed HTML mockups that seed the build |
 | `/pixel-perfect:init` | 1-3 | DISCOVER goal + vibe, TARGET platforms + framework + tools, EQUIP |
-| `/pixel-perfect:scaffold` | 4 | Install tools, create theme, generate design token stories, verify hello-world |
-| `/pixel-perfect:build` | 5-7 | Build atoms, compose screens, wire integration |
-| `/pixel-perfect:verify` | any | Run gate checks for current phase |
-| `/pixel-perfect:status` | any | Show phase progress, controls coverage, and component tracking |
+| `/pixel-perfect:scaffold` | 4 | Install tools, create theme, generate design token stories, verify hello-world, write first catalog golden |
+| `/pixel-perfect:build` | 5-7 | Build atoms, compose screens, wire integration (layer goldens + composition mutation check) |
+| `/pixel-perfect:verify` | any | Run gate checks for current phase (contracts + catalog capture) |
+| `/pixel-perfect:status` | any | Show phase progress, catalog drift, dead inventory, and component tracking |
 | `/pixel-perfect:research` | any | Research design patterns, competitors, and ecosystem libraries (`--libraries`) |
-| `/pixel-perfect:refine` | 5+ | Iterate on components/screens with feedback |
+| `/pixel-perfect:refine` | 5+ | Iterate on an existing entity's implementation (not inventory) |
+| `/pixel-perfect:evolve` | 5+ | Change inventory — absorb a screen/mock, promote a pattern, or shed a screen with orphan sweep |
 | `/pixel-perfect:add-platform` | 1-3 | Add and equip another target platform without resetting existing platform progress |
 
 ### Command Flow
@@ -268,8 +269,10 @@ wireframe ─▶ design-deconstruct      research (optional)
         init  ──▶  scaffold  ──▶  build  ──▶  verify
         (1-3)      (4)           (5-7)       (gates)
                                   |
-                                  v
-                               refine (iterate)
+                    ┌─────────────┼─────────────┐
+                    v             v             v
+                 refine        evolve        status
+              (implement)   (inventory)   (drift/dead)
 ```
 
 ---
@@ -364,15 +367,13 @@ No specific library is required. Select "None" or "Other" with a docs URL, and t
       "name": "StatusBadge",
       "file": "src/components/StatusBadge.tsx",
       "story": "src/components/StatusBadge.stories.tsx",
-      "status": "verified",
-      "controls": true
+      "status": "verified"
     },
     {
       "name": "DataTable",
       "file": "src/components/DataTable.tsx",
       "story": "src/components/DataTable.stories.tsx",
       "status": "verified",
-      "controls": true,
       "ecosystemLib": {
         "package": "@tanstack/react-table",
         "version": "^8.20.0",
@@ -442,9 +443,9 @@ Unsupported `autoActivate` metadata is not used. Every public entry adapter chec
 `plugin-release.json` is the only manually selected product version. Product version lockstep covers Claude, Codex, Cursor, Grok (via Claude marketplace), and OpenCode. All releases must use:
 
 ```bash
-node scripts/release.mjs prepare 7.4.0
-node scripts/release.mjs verify 7.4.0
-node scripts/release.mjs publish 7.4.0
+node scripts/release.mjs prepare 8.0.0
+node scripts/release.mjs verify 8.0.0
+node scripts/release.mjs publish 8.0.0
 ```
 
 Direct version edits, hand-created tags, and manual GitHub releases are unsupported. `prepare` synchronizes product-version fields (including Cursor manifest + marketplace metadata) without changing OpenCode dependency versions. `verify` is read-only. `publish` requires clean `main`, `HEAD === origin/main`, a matching non-empty changelog section, valid package content, an absent tag, and authenticated `gh` before creating an annotated tag or GitHub release.

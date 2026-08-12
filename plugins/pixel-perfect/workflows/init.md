@@ -632,11 +632,20 @@ Creates `{directory}/design/manifest.json`:
         "atoms": "pending",
         "molecules": "pending",
         "compose": "pending"
-      }
+      },
+      "capture": {
+        "command": "npm run sandbox:capture",
+        "medium": "dom+png",
+        "goldens": "design/goldens/web-desktop"
+      },
+      "pinned": [],
+      "deprecations": {}
     }
   }
 }
 ```
+
+**Capture, pinned, deprecations (per platform, v8+).** The manifest stores **decisions and receipts**, never derivables. `capture` records how goldens are produced (`verify-catalog.mjs`); `pinned` exempts entities from orphan sweep; `deprecations` marks entities migrating away. Do **not** author composition-edge arrays (`molecules[].atoms`, `screens[].organisms`, …) or `controls: true` as authority — catalog capture is the dependency and controls oracle.
 
 **Multi-platform example (mobile):**
 ```json

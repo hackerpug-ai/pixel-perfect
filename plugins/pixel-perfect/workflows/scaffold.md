@@ -288,7 +288,25 @@ The hello-world story is a **reference example** for all future component storie
 
 ### Step 7: Verify
 
-Confirm every one of these before the gate advances: the sandbox runs; Colors, Typography, Spacing (and Icons, when an icon library was selected) each render; HelloWorld — or every pulled CLI-library component — renders with its controls wired; and the theme colors are actually applied.
+Confirm every one of these before the gate advances: the sandbox runs; Colors, Typography, Spacing (and Icons, when an icon library was selected) each render; HelloWorld — or every pulled CLI-library component — renders with its controls wired; the theme colors are actually applied; **and the catalog capture command exists and has produced a hello-world golden** (sandbox-spec piece #8).
+
+**Catalog capture (piece #8).** Generate `sandbox:capture` (or the platform equivalent) per `docs/adapters/custom-sandbox.md` / the sandbox adapter. Record on the platform:
+
+```json
+"capture": {
+  "command": "npm run sandbox:capture",
+  "medium": "dom+png",
+  "goldens": "design/goldens/{platform}"
+}
+```
+
+Then run the deterministic gate so the first golden exists before the first atom:
+
+```
+node {plugin}/scripts/verify-catalog.mjs --baseline <project-root> --platform {platform}
+```
+
+Exit `0` required. Exit `3` (zero stories) means the capture command is not producing artifacts — fix it before advancing scaffold. Goldens commit under `design/goldens/{platform}/…`.
 
 Report a pass as one line. Report a failure by naming the specific check and the error, and do **not** advance the gate — the user runs `pixel-perfect:verify` to retry after fixing.
 

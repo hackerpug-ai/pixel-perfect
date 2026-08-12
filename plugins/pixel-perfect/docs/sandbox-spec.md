@@ -23,7 +23,7 @@ A custom sandbox is generated *in the target framework*. A React project gets a 
 
 ### 2. Agentic generation is cheap
 
-The seven pieces of this spec are small — a registry, a two-pane shell, token codegen, a run command. An AI agent generates this in ~60 lines of code during scaffold. That's cheaper than:
+The eight pieces of this spec are small — a registry, a two-pane shell, token codegen, a run command, a catalog capture. An AI agent generates this in ~60 lines of code during scaffold. That's cheaper than:
 
 - Installing Storybook (~200 transitive dependencies)
 - Configuring it for a non-standard framework
@@ -48,13 +48,15 @@ The point is: **the default should work for every platform**. Storybook doesn't.
 > - **`../mega-button`** — a from-scratch **GPUI** (Rust desktop/GPU) sandbox (`sandbox/crates/sandbox`, `make sandbox-run`). *Verified: `make sandbox-build` compiles clean.*
 > - **`../get-spoke`** — a from-scratch **TUI** (Rust/Ratatui) sandbox (`.tui-storybook/`, `make sandbox`). *Verified: `make sandbox-check` renders the full catalog headless to stdout.*
 >
-> Two completely different paradigms (GPU windows vs. terminal cells), the **same seven pieces**. That invariance is the spec.
+> Two completely different paradigms (GPU windows vs. terminal cells), the **same core pieces** (now eight with catalog capture). That invariance is the spec.
 
 ---
 
-## The seven pieces
+## The eight pieces
 
-Every sandbox — in any language/framework — is these seven things. A `custom` sandbox implements all of #1–#6 (#7 is recommended); Storybook/`tui-sandbox` implement them too, just with their own machinery.
+Every sandbox — in any language/framework — is these eight things. A `custom` sandbox implements all of #1–#6 and **#8** (#7 is recommended); Storybook/`tui-sandbox` implement them too, just with their own machinery.
+
+> **v8 note.** Pieces #1–#7 are unchanged from v6/v7. **Piece #8 (catalog capture)** is the load-bearing substrate for drift detection, blast radius, and the `evolve` capability. Headless check (#5) and per-story snapshots (#7) are no longer optional where the platform can produce a structural artifact — they feed #8.
 
 ### 1. Story registry (explicit, layer-keyed)
 A flat, explicitly-built catalog of stories, each tagged with its atomic **layer** (`Tokens · Atoms · Molecules · Organisms · Views`). No auto-discovery magic — one place lists every story.
@@ -86,12 +88,12 @@ Design tokens live in `design/system/tokens/theme.*.json`. The sandbox turns the
 
 Theme is applied **once** (GPUI `theme::apply(cx)`) or threaded as render context (TUI `RenderCtx{theme}`), enabling **live theme/palette switching** (get-spoke `p` cycles warm→slate→earth without re-instantiating components).
 
-### 5. One run command (+ optional headless check)
-A single command launches the browser, encoded in a `Makefile`/script target.
+### 5. One run command (+ headless check)
+A single command launches the browser, encoded in a `Makefile`/script target. A **headless check** is required when the platform can produce a structural render (it is the input to piece #8).
 
 - **GPUI**: `make sandbox-run` → `cd sandbox && cargo run` (opens a window).
 - **TUI**: `make sandbox` → `cargo run --bin tui-storybook`; **`make sandbox-check`** → `… -- --check` renders to a `TestBackend` and prints the catalog to stdout (CI/headless parity).
-- **Web (custom)**: `npm run sandbox` → a dev server. **Storybook**: `storybook dev -p 6006`.
+- **Web (custom)**: `npm run sandbox` → a dev server; **`npm run sandbox:capture`** → headless structural dump per story (see #8). **Storybook**: `storybook dev -p 6006` + a capture script that walks stories.
 
 ### 6. Design ↔ code mapping (the pixel-target)
 Each story names the design mock it was built to match, as a comment/annotation. The HTML/PNG in `design/system/` is the **spec**; the component code is the **real thing**.
@@ -104,7 +106,63 @@ A story shows a component's variants and states **together** (a static catalog),
 
 - GPUI `atom_status_dot::story` renders all 5 statuses × sizes × hollow in labeled cells.
 - TUI registers `Meter · 8/12`, `· 14/14 ok`, `· 2/10 bad`, `· 0/6 empty`, `· no label` as sibling stories.
-- Optional: per-story **snapshots** (get-spoke `tests/snapshots.rs` via `insta` + `TestBackend`) for regression.
+- Per-story **snapshots** (get-spoke `tests/snapshots.rs` via `insta` + `TestBackend`) feed piece #8 when the platform has no separate capture command.
+
+### 8. Catalog capture (required — durable truth)
+The sandbox emits a **deterministic structural artifact per story**, headless, from one command. Those artifacts are committed as goldens under `design/goldens/{platform}/{layer}/{name}/{state}.{ext}`. Everything else — drift, blast radius, dead inventory, the composition mutation check — is a diff against them.
+
+This is the mechanism that makes the design system *living*: the real rendered system is the source of truth, not a hand-maintained dependency graph or a stored `stale` flag.
+
+#### Capture medium per platform
+
+The contract is identical everywhere; the medium follows the platform.
+
+| Platform | Structural artifact (authoritative gate) | Visual artifact (review only) |
+|---|---|---|
+| Web (custom / Storybook) | normalized serialized DOM | PNG via headless Chrome |
+| TUI (Ratatui / Bubbletea / Textual) | `TestBackend` text buffer — exact, no tolerance | none needed |
+| Native mobile (Expo / SwiftUI / Compose) | view-tree dump | simulator screenshot |
+| GPUI / desktop | element-tree dump | window screenshot when available |
+
+The **structural** artifact is the gate. The **visual** artifact is for human review and design-target comparison. A platform that can produce neither declares the degradation explicitly — it never silently passes.
+
+#### Determinism requirements
+
+Capture is worthless if it is noisy. The generated capture command must:
+
+- disable animation and transitions, and settle before capture;
+- use fixed mock data (no `Math.random`, no `Date.now` in fixtures — story fixtures are already required to be realistic; they must also be constant);
+- normalize volatile output before writing: framework-generated ids, hash-suffixed class names, absolute paths, timestamps;
+- render at the story's canonical size (piece #2).
+
+#### Plugin gate script
+
+```
+node {plugin}/scripts/verify-catalog.mjs <mode> <project-root> [options]
+
+  --baseline            capture → write goldens (after a layer is approved)
+  --check               capture → diff vs goldens; non-zero on unreviewed drift
+  --blast <name>        perturb <name>, report which stories move        (downstream)
+  --reach <name...>     report which live roots each name reaches         (upstream)
+  --accept <glob>       promote drifted captures to goldens (intentional change)
+```
+
+Exit codes match `verify-styling-contract.mjs`: `0` pass, `1` drift/violations, `2` config/usage error, `3` vacuous scan (zero stories captured — never a pass).
+
+Manifest per platform records the capture *decision*, not derivables:
+
+```json
+"capture": {
+  "command": "npm run sandbox:capture",
+  "medium": "dom+png",
+  "goldens": "design/goldens/web-desktop",
+  "captured_at": "2026-08-11T00:00:00Z"
+}
+```
+
+#### Composition mutation check
+
+A molecule that *claims* to compose `StatusBadge` but re-implemented its internals will not move when `StatusBadge` moves. So: perturb an atom (`--blast StatusBadge`), re-capture, and assert its declared dependents changed. A dependent that does not move is not composing — it is a copy.
 
 ### State Scenarios for Molecules, Organisms, and Screens
 
@@ -199,10 +257,11 @@ export function useStreamingMock(fullText: string, intervalMs = 50) {
 | 2 Isolation | preview pane / render root | iframe per story | terminal frame |
 | 3 Two-pane nav | hand-built sidebar+preview | Storybook UI | `tsbx` TUI |
 | 4 Token codegen | build.rs / Palette / CSS vars | CSS vars in `preview` | tokens module |
-| 5 Run | `make sandbox` / `npm run sandbox` | `storybook dev` | `tsbx dev` |
+| 5 Run + headless | `npm run sandbox` + `sandbox:capture` | `storybook dev` + capture walk | `tsbx dev` + check |
 | 6 Pixel-target | `//! Target:` ref | story `parameters` / comment | story note |
+| 8 Catalog capture | structural dump → `design/goldens/…` | same goldens layout | `TestBackend` text goldens |
 
-A `custom` sandbox is small — a registry + a two-pane shell + token codegen + a run target. That's why building it from scratch (in any framework) is cheap, and why pixel-perfect makes it the **default**.
+A `custom` sandbox is small — a registry + a two-pane shell + token codegen + a run target + a capture command. That's why building it from scratch (in any framework) is cheap, and why pixel-perfect makes it the **default**.
 
 ---
 
@@ -212,7 +271,8 @@ A sandbox is "done" for a pixel-perfect project when:
 - [ ] Every built component is **registered** under its layer (#1) and **renders in isolation** (#2).
 - [ ] The catalog is **navigable** with a layer/name breadcrumb (#3).
 - [ ] Tokens are **codegenned from `theme.*.json`**; no hardcoded colors/spacing in components (#4).
-- [ ] One **run command** launches it (#5); a headless **check** exists if the platform supports it.
+- [ ] One **run command** launches it (#5); a headless **check** exists when the platform can produce structure.
 - [ ] Each story names its **pixel-target** (#6).
+- [ ] A **catalog capture** command exists (#8); `verify-catalog.mjs --baseline` has written at least the hello-world golden; `--check` is the drift gate.
 
 `docs/adapters/custom-sandbox.md` is the recipe to generate this from scratch per target framework. `docs/adapters/storybook.md` / `tui-sandbox.md` are opt-in implementations chosen via `tools.sandbox`.

@@ -49,13 +49,15 @@ Create a small sandbox project that imports the project's components and renders
      tokens.css          # GENERATED from design/system/tokens/theme.*.json
      gen-tokens.mjs      # codegen script (theme.json → tokens.css)
    ```
-2. Add scripts to `package.json`:
+2. Add scripts to `package.json` — **run**, **tokens**, and **capture** (piece #8):
    ```json
    { "scripts": {
        "sandbox:tokens": "node sandbox/gen-tokens.mjs",
-       "sandbox": "npm run sandbox:tokens && vite --config sandbox/vite.config.ts"
+       "sandbox": "npm run sandbox:tokens && vite --config sandbox/vite.config.ts",
+       "sandbox:capture": "node sandbox/capture.mjs"
    } }
    ```
+   `sandbox:capture` walks the registry headless, disables animation, settles, serializes each story's structural artifact (normalized DOM or framework equivalent), and writes `design/.captures/{platform}/{layer}/{name}/{state}.txt` (PNG optional for review). Record the command on the platform as `capture.command`.
 3. The shell (`main.tsx`, React example — adapt to the framework) keeps `selected` state, lists `registry` grouped by `layer` in a sidebar, and renders the selected story's `render()` in the preview with a `{layer} / {name}` breadcrumb. ~60 lines.
 4. Import `tokens.css` so components render themed.
 
@@ -102,11 +104,34 @@ Left: sections per layer with their stories (click / keyboard-select). Right: br
 - Web: `npm run sandbox` (dev server). Rust: `make sandbox-run` / `make sandbox`. Mobile: the Sandbox scheme/target.
 - Provide a **headless check** where feasible (TUI `--check`; web: a build + a smoke render) for CI parity.
 
+## Catalog capture (piece #8 — required)
+Generate a capture command alongside the run command. The plugin gate is:
+
+```
+node {plugin}/scripts/verify-catalog.mjs --baseline <project-root>   # write goldens
+node {plugin}/scripts/verify-catalog.mjs --check <project-root>      # drift gate
+node {plugin}/scripts/verify-catalog.mjs --blast <Name> <project-root>
+node {plugin}/scripts/verify-catalog.mjs --reach <Name...> <project-root>
+```
+
+Goldens land at `design/goldens/{platform}/{layer}/{name}/{state}.{ext}` and are committed. Manifest:
+
+```json
+"capture": {
+  "command": "npm run sandbox:capture",
+  "medium": "dom+png",
+  "goldens": "design/goldens/web-desktop"
+}
+```
+
+Determinism: fixed fixtures, no animation, normalize ids/hashes/paths/timestamps before write. Structural artifact is the gate; PNG is review-only. A platform that cannot capture must declare the degradation — never silent-pass.
+
 ## Verify (the minimum bar — see `docs/sandbox-spec.md`)
 - Each built component is **registered under its layer** and **renders in isolation**.
 - The catalog is **navigable** with a `{layer}/{name}` breadcrumb.
 - Tokens are **codegenned from `theme.*.json`** — no hardcoded colors/spacing in components.
 - One **run command** launches it; each story names its **pixel-target** (`design/system/.../dark.png`).
+- A **capture command** exists; hello-world has a golden; `--check` is wired into verify.
 
 ## When to use a named tool instead
 If the user asks for Storybook (web), on-device Storybook (mobile), or `tsbx` (TUI), set `tools.sandbox` accordingly and follow that adapter. The custom sandbox is the default because it's small, framework-native, and renders the real components.
