@@ -50,16 +50,38 @@ Migrated manifest to v5.0.0 (multi-platform format).
 
 This migration is automatic and transparent. No user confirmation needed.
 
+## Legacy pre-8.0 Manifest Migration (living design system)
+
+If `design/manifest.json` exists and any platform **lacks** a `capture` object while components already have sandbox stories (post-scaffold), migrate for v8 catalog capture before trusting status/verify:
+
+1. Ensure a capture command exists (`npm run sandbox:capture` or platform equivalent) per `docs/sandbox-spec.md` piece #8 and `docs/adapters/custom-sandbox.md`.
+2. Write per platform:
+   ```json
+   "capture": {
+     "command": "npm run sandbox:capture",
+     "medium": "dom+png",
+     "goldens": "design/goldens/{platform}"
+   },
+   "pinned": [],
+   "deprecations": {}
+   ```
+3. Run once: `node {plugin}/scripts/verify-catalog.mjs --baseline <project-root> --platform {platform}`.
+4. **Stop treating authored composition edges as authority.** Fields like `molecules[].atoms`, `screens[].organisms`, and `controls: true` are **not** gates. Dependencies and controls coverage come from catalog capture (`--blast` / `--reach` / structural artifacts). Optional inventory hints may remain for humans but never block or pass a gate.
+5. Inform the user that inventory changes go through `pixel-perfect:evolve`; implementation-only tweaks stay on `pixel-perfect:refine`.
+
+See **Upgrading to 8.0** in the plugin README / `docs/UPGRADING-8.0.md`.
+
 ## Your Responsibilities
 
 1. **Respect the current phase** - Don't skip ahead. If the project is in ATOMS, build atoms before composing screens.
 2. **Follow adapter conventions** - Components should match the tool stack's patterns.
 3. **Use the theme** - Never hardcode colors, fonts, or spacing. Always reference theme tokens.
-4. **Track in manifest** - When you create or modify components/screens, update `design/manifest.json`.
-5. **Wire controls** - Every component prop must be exposed to the sandbox's controls (Storybook `argType`, or a labeled variant in a `custom` sandbox).
+4. **Track in manifest** - When you create or modify components/screens, update `design/manifest.json` with **decisions and receipts only** (`status`, `file`, `story`, `capture`, `pinned`, `deprecations`, gate keys). Do **not** author composition-edge arrays or `controls: true` as gate authority.
+5. **Wire controls in the sandbox** - Every component prop must be exposed to the sandbox's controls (Storybook `argType`, or a labeled variant in a `custom` sandbox). Coverage is **verified by catalog capture**, not a stored `controls` flag.
 6. **Organize by layer** - Register each component under the correct sandbox layer (`Tokens`/`Design System`, `Components`, `Molecules`, `Organisms`, `Screens`).
 7. **Respect state levels** - Atoms are stateless (pure render from props). Molecules may be stateful (manage interaction state). Organisms and screens are stateful (manage complex domain/UI state). Follow `docs/state-patterns.md` for framework-specific state idioms.
 8. **Plan screens as route + states** - A screen is keyed by its `route`, not by visual state. Collapse views that differ only by state (default/empty/loading/error, or different tabs of one page) into ONE screen carrying a `states` list; each state becomes its own sandbox story. The screen owns internal state and must be drivable into each listed state for those stories (the mechanism is an implementation/adapter detail). When the route/page layout is uncertain, ask the user. See `docs/state-patterns.md` ([Screens: Route + States](../../docs/state-patterns.md)) for the state-vs-route decision rule.
+9. **Catalog capture is durable truth** - After scaffold and each layer, goldens under `design/goldens/` fingerprint the real system. Status/verify report drift from `--check`, not manifest archaeology. Use `pixel-perfect:evolve` for inventory changes (add/remove/promote/deprecate).
 
 ## Read the Manifest
 
@@ -71,7 +93,10 @@ Before doing any component or screen work, read `design/manifest.json` to unders
   - `tools`: framework, style, components, icons, sandbox for this platform — plus the two enforced contracts, `style_contract*` (how styles are emitted) and `component_contract*` (what components are built on). Both are hard constraints during build; a `component_contract_source` of `"none"` means the project has no component library and the component gate does not run
   - `phase`: current active phase for this platform
   - `gates`: scaffold through compose gate status for this platform
-  - `atoms`, `molecules`, `screens`: component inventory for this platform. Each `screens[]` entry is keyed by `route` (the page identity / dedup key) and carries a `states` list (the named states for that route — each maps to one sandbox story). See `docs/state-patterns.md`.
+  - `atoms`, `molecules`, `screens`: component inventory for this platform (name, file, story, status, optional `state`/`route`/`states`). Each `screens[]` entry is keyed by `route` and carries a `states` list. See `docs/state-patterns.md`.
+  - **`capture`** (v8+): how goldens are produced — `{ command, medium, goldens, captured_at? }`
+  - **`pinned`**: entity names exempt from orphan sweep
+  - **`deprecations`**: map of deprecated name → `{ since, replacement?, reason? }`; composing a deprecated name fails `verify-catalog.mjs --check`
 
 When a command operates on a specific platform, read `platforms[platformName]` for all platform-specific state.
 
@@ -144,10 +169,11 @@ Based on the tools in the manifest, follow these conventions:
 - In web Storybook, components render via `react-native-web` polyfill
 
 ### When `platforms[name].tools.sandbox` is custom (default):
-- Implement `docs/sandbox-spec.md` natively in the target framework (see `docs/adapters/custom-sandbox.md`): a layer-keyed story registry, a two-pane navigator, token codegen from `theme.*.json`, one run command.
+- Implement `docs/sandbox-spec.md` natively in the target framework (see `docs/adapters/custom-sandbox.md`): a layer-keyed story registry, a two-pane navigator, token codegen from `theme.*.json`, one run command, **and a catalog capture command** (piece #8).
 - Register each component under its layer; render it in isolation; show variants × states together.
 - Codegen tokens (build.rs / CSS vars / `Palette`) — components reference tokens, never hardcode.
 - Each story names its pixel-target (`// Target: design/system/{layer}/{name}/dark.png`).
+- Record `platforms[name].capture` and keep goldens under `design/goldens/{platform}/` current via `verify-catalog.mjs`.
 
 ### When `platforms[name].tools.sandbox` is storybook:
 - Co-locate stories with components — `ComponentName.stories.tsx` (React) or `ComponentName.stories.svelte` / `.stories.ts` (SvelteKit; follow the framework adapter)
@@ -270,11 +296,12 @@ For design token story regeneration and the polyfill disclaimer pattern (require
 | `pixel-perfect:design-deconstruct` | Phase 0 (optional): deconstruct existing UI/concepts into HTML mockups that seed the build — engine ships in-plugin (`skills/deconstruct-engine`) |
 | `pixel-perfect:init` | Phases 1-3: discover + target + equip |
 | `pixel-perfect:add-platform` | Add a new platform to an existing project (post-init) |
-| `pixel-perfect:scaffold` | Phase 4: set up project structure, theme, token stories |
-| `pixel-perfect:build` | Phases 4b-6: plan → atoms → molecules → compose |
-| `pixel-perfect:verify` | Run gate checks for current phase |
-| `pixel-perfect:status` | Show progress |
+| `pixel-perfect:scaffold` | Phase 4: set up project structure, theme, token stories, catalog capture + first golden |
+| `pixel-perfect:build` | Phases 4b-6: plan → atoms → molecules → compose (layer goldens + composition mutation check) |
+| `pixel-perfect:verify` | Run gate checks for current phase (contracts + catalog capture) |
+| `pixel-perfect:status` | Show progress, catalog drift, dead inventory |
 | `pixel-perfect:research` | Design research |
-| `pixel-perfect:refine` | Iterate on code |
+| `pixel-perfect:refine` | Iterate on an existing entity's **implementation** (not inventory) |
+| `pixel-perfect:evolve` | Change **inventory** — add/promote/remove/deprecate, proved by re-capture |
 
 **Fidelity ladder.** When `design/wireframes/` (structural ASCII) or `design/system/` (high-fi HTML mockups) exist, build each screen/component to match the **highest-fidelity target available** (mockup > wireframe). These are targets/specs — the real components supersede them.

@@ -397,18 +397,61 @@ function runCaptureCommand(projectRoot, command, stagingRel) {
 }
 
 export function runCapture(projectRoot, captureCfg, layerFilter = null) {
-  // Prefer catalog walk when catalog dir exists (deterministic, no shell).
-  // Fall back to capture.command when catalog is absent.
+  // Prefer an explicit capture.command when present (real consumer sandboxes).
+  // Fall back to structural catalog walk for fixtures without a shell command.
+  if (captureCfg.command) {
+    return runCaptureCommand(projectRoot, captureCfg.command, captureCfg.staging);
+  }
   const catalogAbs = join(projectRoot, captureCfg.catalogDir);
   if (existsSync(catalogAbs)) {
     return captureFromCatalog(projectRoot, captureCfg.catalogDir, captureCfg.staging, layerFilter);
   }
-  if (captureCfg.command) {
-    return runCaptureCommand(projectRoot, captureCfg.command, captureCfg.staging);
-  }
   throw new Error(
-    `No catalog at ${captureCfg.catalogDir} and no capture.command in manifest — cannot capture`,
+    `No capture.command in manifest and no catalog at ${captureCfg.catalogDir} — cannot capture`,
   );
+}
+
+/**
+ * Detect composition of deprecated entities (imports / compose markers).
+ * The deprecated entity's own files are exempt; dependents are violations.
+ */
+export function detectDeprecatedComposition(projectRoot, deprecations) {
+  const names = Object.keys(deprecations || {});
+  if (names.length === 0) return [];
+  const violations = [];
+  const roots = ["src", "sandbox"].map((r) => join(projectRoot, r)).filter(existsSync);
+  for (const root of roots) {
+    for (const full of walkFiles(root)) {
+      const rel = relPosix(projectRoot, full);
+      let content;
+      try {
+        content = readFileSync(full, "utf8");
+      } catch {
+        continue;
+      }
+      for (const name of names) {
+        const isSelf =
+          rel.includes(`/${name}/`) ||
+          new RegExp(`(^|/)${name}\\.[^/]+$`).test(rel);
+        if (isSelf) continue;
+        const strong =
+          new RegExp(`---\\s*composed:${name}\\s*---`).test(content) ||
+          new RegExp(`@compose\\s+${name}\\b`).test(content) ||
+          new RegExp(`from\\s+['"][^'"]*${name}['"]`).test(content) ||
+          new RegExp(`import\\s*\\{[^}]*\\b${name}\\b`).test(content) ||
+          new RegExp(`<${name}[\\s/>]`).test(content);
+        if (strong) {
+          violations.push({
+            file: rel,
+            deprecated: name,
+            replacement: deprecations[name]?.replacement || null,
+            reason: deprecations[name]?.reason || "",
+          });
+        }
+      }
+    }
+  }
+  return violations;
 }
 
 // ---------------------------------------------------------------------------
@@ -488,7 +531,7 @@ function modeBaseline(projectRoot, captureCfg, layerFilter) {
   };
 }
 
-function modeCheck(projectRoot, captureCfg, layerFilter) {
+function modeCheck(projectRoot, captureCfg, layerFilter, deprecations = {}) {
   const capture = runCapture(projectRoot, captureCfg, layerFilter);
   if (capture.count === 0) {
     return {
@@ -500,6 +543,7 @@ function modeCheck(projectRoot, captureCfg, layerFilter) {
       drifted: [],
       missing: [],
       extra: [],
+      deprecatedUsage: [],
     };
   }
   const goldens = inventoryDir(projectRoot, captureCfg.goldens);
@@ -527,7 +571,13 @@ function modeCheck(projectRoot, captureCfg, layerFilter) {
     }
   }
 
-  const violations = drifted.length + missing.length + extra.length;
+  const deprecatedUsage = detectDeprecatedComposition(projectRoot, deprecations);
+  const violations = drifted.length + missing.length + extra.length + deprecatedUsage.length;
+  const parts = [];
+  if (drifted.length) parts.push(`${drifted.length} changed`);
+  if (missing.length) parts.push(`${missing.length} missing goldens`);
+  if (extra.length) parts.push(`${extra.length} new stories`);
+  if (deprecatedUsage.length) parts.push(`${deprecatedUsage.length} deprecated composition(s)`);
   return {
     mode: "check",
     exit: violations === 0 ? 0 : 1,
@@ -535,11 +585,12 @@ function modeCheck(projectRoot, captureCfg, layerFilter) {
     message:
       violations === 0
         ? `Catalog matches goldens (${capture.count} stor${capture.count === 1 ? "y" : "ies"})`
-        : `Drift: ${drifted.length} changed, ${missing.length} missing goldens, ${extra.length} new stories`,
+        : `Drift: ${parts.join(", ")}`,
     stories: capture.stories,
     drifted,
     missing,
     extra,
+    deprecatedUsage,
   };
 }
 
@@ -816,12 +867,13 @@ export function main(argv) {
     const { id: platformId, config: platformConfig } = resolvePlatform(manifest, parsed.platform);
     const captureCfg = resolveCaptureConfig(platformConfig, platformId);
 
+    const deprecations = platformConfig.deprecations || {};
     switch (parsed.mode) {
       case "baseline":
         report = modeBaseline(projectRoot, captureCfg, parsed.layer);
         break;
       case "check":
-        report = modeCheck(projectRoot, captureCfg, parsed.layer);
+        report = modeCheck(projectRoot, captureCfg, parsed.layer, deprecations);
         break;
       case "accept":
         report = modeAccept(projectRoot, captureCfg, parsed.acceptGlob, parsed.layer);
@@ -858,6 +910,11 @@ export function main(argv) {
     }
     if (report.moved?.length) {
       for (const m of report.moved) process.stderr.write(`  moved  ${m.key}\n`);
+    }
+    if (report.deprecatedUsage?.length) {
+      for (const d of report.deprecatedUsage) {
+        process.stderr.write(`  deprecated  ${d.file} composes ${d.deprecated}\n`);
+      }
     }
     if (report.results) {
       for (const r of report.results) {

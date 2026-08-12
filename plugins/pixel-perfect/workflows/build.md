@@ -711,7 +711,7 @@ The state answer is the second question of the `B-mol` batch — it is not asked
 - If a molecule HAS declared state, it must have at least one **state scenario** beyond "default" for sandbox stories.
 - Atoms are NEVER stateful. If a state need is identified at the atom level, promote it to a molecule or move the state to the consuming screen.
 
-Write state declarations into the manifest:
+Write state declarations into the manifest (**no authored composition-edge authority** — do not gate on `atoms: [...]`; composition is proved by `--blast`):
 ```json
 {
   "molecules": [
@@ -720,7 +720,6 @@ Write state declarations into the manifest:
       "file": "src/molecules/JobRow.tsx",
       "story": "src/molecules/JobRow.stories.tsx",
       "status": "pending",
-      "atoms": ["StatusBadge", "DateChip"],
       "state": null
     },
     {
@@ -728,7 +727,6 @@ Write state declarations into the manifest:
       "file": "src/molecules/SearchBar.tsx",
       "story": "src/molecules/SearchBar.stories.tsx",
       "status": "pending",
-      "atoms": ["Input", "Button"],
       "state": {
         "declared": [
           { "name": "query", "type": "string", "initial": "''" },
@@ -885,8 +883,7 @@ For each molecule, in order:
          "name": "JobRow",
          "file": "src/molecules/JobRow.tsx",
          "story": "src/molecules/JobRow.stories.tsx",
-         "status": "verified",
-         "atoms": ["StatusBadge", "DateChip"]
+         "status": "verified"
        }
      ]
    }
@@ -974,8 +971,6 @@ Update manifest with organism list (all `status: pending`):
       "file": "src/organisms/DataTable.tsx",
       "story": "src/organisms/DataTable.stories.tsx",
       "status": "pending",
-      "molecules": ["SearchBar"],
-      "atoms": ["Pagination", "TableRow"],
       "state": {
         "declared": [
           { "name": "sortColumn", "type": "string | null", "initial": "null" },
@@ -1035,8 +1030,6 @@ For each organism, in order:
          "file": "src/organisms/DataTable.tsx",
          "story": "src/organisms/DataTable.stories.tsx",
          "status": "verified",
-         "molecules": ["SearchBar"],
-         "atoms": ["Pagination", "TableRow"],
          "state": {
            "declared": [
              { "name": "sortColumn", "type": "string | null", "initial": "null" },
@@ -1249,15 +1242,12 @@ For each screen:
       "states": ["default", "empty", "loading"],
       "file": "src/screens/TodayFeed.tsx",
       "story": "src/screens/TodayFeed.stories.tsx",
-      "status": "verified",
-      "atoms": ["StatusBadge", "JobCard", "DateChip", "SectionHeader"],
-      "molecules": [],
-      "organisms": []
+      "status": "verified"
     }
   ]
    }
    ```
-   `route` is the page identity / dedup key; `states` lists the named states for that route (one sandbox story each). See `docs/state-patterns.md`.
+   `route` is the page identity / dedup key; `states` lists the named states for that route (one sandbox story each). See `docs/state-patterns.md`. Do not author composition-edge arrays as authority.
 
 ### Phase 6 Exit Gate
 

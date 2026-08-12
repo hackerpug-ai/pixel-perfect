@@ -308,6 +308,17 @@ node {plugin}/scripts/verify-catalog.mjs --baseline <project-root> --platform {p
 
 Exit `0` required. Exit `3` (zero stories) means the capture command is not producing artifacts — fix it before advancing scaffold. Goldens commit under `design/goldens/{platform}/…`.
 
+**Token changelog template.** Create `design/system/tokens/CHANGELOG.json` if missing (scaffold template):
+
+```json
+{
+  "version": 1,
+  "entries": []
+}
+```
+
+Each later token change appends `{ "date", "kind": "value"|"add"|"rename"|"remove", "path", "from"?, "to"?, "note"? }`. Value/rename/remove **must** end with re-capture prove (see build/refine token recipe).
+
 Report a pass as one line. Report a failure by naming the specific check and the error, and do **not** advance the gate — the user runs `pixel-perfect:verify` to retry after fixing.
 
 ```

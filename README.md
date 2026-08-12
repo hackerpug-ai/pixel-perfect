@@ -70,6 +70,8 @@ Each phase has a **gate** that must pass before you proceed. The plugin tracks s
 
 Version 8.0.0 projects the same runtime into all five harnesses.
 
+**Upgrading from 7.x:** see [`plugins/pixel-perfect/docs/UPGRADING-8.0.md`](plugins/pixel-perfect/docs/UPGRADING-8.0.md) — add a capture command, run `--baseline` once, drop composition-edge/`controls` authority; inventory changes use `evolve`.
+
 ### Claude Code
 
 ```text

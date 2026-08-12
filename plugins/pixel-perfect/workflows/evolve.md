@@ -183,7 +183,21 @@ batch: E4 — confirm the inventory delta
 - the manifest entry
 - the route from navigation, when a screen
 
-**Deprecate mode** (`--deprecate <name>`): does not delete. Marks the entity in `platforms[platform].deprecations`, badges its story, and appends the name to a **deprecated inventory** section of the component contract so composing it becomes a gate violation via existing `verify-styling-contract.mjs` machinery. Removal later runs the normal path.
+**Deprecate mode** (`--deprecate <name>`): does not delete. Apply with the deterministic helper (or equivalent steps):
+
+```
+// after E4 confirm
+import { applyDeprecation } from "{plugin}/scripts/evolve-lib.mjs";
+applyDeprecation(projectRoot, platform, name, { replacement, reason });
+```
+
+That **writes** `platforms[platform].deprecations[name]`, **badges** the entity's story source with `[deprecated]`, and makes composing it fail on the next:
+
+```
+node {plugin}/scripts/verify-catalog.mjs --check <project-root> --platform {platform}
+```
+
+(`deprecatedUsage` in the report — dependents that still import / `--- composed:Name ---` the deprecated entity). Removal later runs the normal path.
 
 ### E6 — PROVE
 
