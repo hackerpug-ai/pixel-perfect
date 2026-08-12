@@ -4,6 +4,26 @@ All notable changes to Pixel Perfect are documented here.
 
 ## [Unreleased]
 
+## [8.0.0] - 2026-08-12
+
+### Added
+
+- Added **catalog capture** as sandbox-spec piece #8 and the second deterministic plugin gate script (`plugins/pixel-perfect/scripts/verify-catalog.mjs`) with modes `--baseline`, `--check`, `--blast`, `--reach`, and `--accept`. Exit codes match the styling gate (`0` pass, `1` drift, `2` config/usage, `3` vacuous). Goldens live at `design/goldens/{platform}/{layer}/{name}/{state}.{ext}` and are the fingerprint of the real system.
+- Added the composition mutation check: perturb an atom with `--blast` and assert declared dependents move — a non-moving dependent is a copy, not a composition.
+- Added public capability **`evolve`** (interactive workflow + generated command/skill/OpenCode surfaces) covering inventory change E1–E6: acquire, classify against the golden catalog (reuse|variant|new|promote|remove|token-change), reach/blast, one confirm gate before writes, apply adds via `build` / atomic removals, prove with re-capture (non-disturbance on add; nothing-else-moved on remove). Supports `--deprecate` and token changelog handling.
+- Added fixture-driven tests under `test/catalog.test.mjs` that drive the real catalog script (baseline/check/accept/vacuous/blast/reach).
+
+### Changed
+
+- **Breaking:** Manifest stores decisions and receipts only. Authored composition-edge arrays (`molecules[].atoms`, `screens[].organisms`, …) and `controls: true` are no longer authority. Dependencies and controls coverage come from catalog capture. Per-platform fields: `capture`, `pinned`, `deprecations`.
+- Scaffold generates a capture command and requires a hello-world golden before the scaffold gate advances.
+- Build layer exit gates write goldens and record `{layer}_capture` beside the contract gate keys.
+- Verify requires catalog capture (`--check`) per layer alongside styling and component contracts.
+- Refine re-captures after change so R4 cascade options come from the diff; inventory-level requests route to `evolve`. Staleness is computed at read time (no stored `stale` field).
+- Status reports catalog drift, missing goldens, deprecated-with-live-dependents, and dead inventory from capture — not manifest archaeology.
+- Design-deconstruct Step 2.5 captures goldens per layer so a deconstruct-seeded project arrives at build already fingerprinted.
+- Custom-sandbox adapter documents `sandbox:capture` generation alongside the run command.
+
 ## [7.4.0] - 2026-08-11
 
 ### Added

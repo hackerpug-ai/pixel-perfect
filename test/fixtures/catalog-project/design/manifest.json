@@ -1,0 +1,32 @@
+{
+  "goal": "Catalog fixture for verify-catalog.mjs",
+  "platforms": {
+    "web-desktop": {
+      "phase": "atoms",
+      "tools": {
+        "framework": "vite",
+        "sandbox": "custom"
+      },
+      "capture": {
+        "command": "node sandbox/capture.mjs",
+        "medium": "text",
+        "goldens": "design/goldens/web-desktop",
+        "catalog": "sandbox/catalog",
+        "staging": "design/.captures/web-desktop"
+      },
+      "pinned": ["Button"],
+      "deprecations": {},
+      "atoms": [
+        { "name": "Button", "status": "verified" },
+        { "name": "Badge", "status": "verified" },
+        { "name": "UnusedChip", "status": "verified" }
+      ],
+      "molecules": [
+        { "name": "Card", "status": "verified" }
+      ],
+      "screens": [
+        { "name": "Home", "route": "/", "states": ["default"], "status": "verified" }
+      ]
+    }
+  }
+}

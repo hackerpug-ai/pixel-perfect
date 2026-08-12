@@ -9,6 +9,7 @@ const PUBLIC_CAPABILITIES = [
   "add-platform",
   "build",
   "design-deconstruct",
+  "evolve",
   "init",
   "refine",
   "research",

@@ -74,17 +74,24 @@ Verifies all atomic components with sandbox controls.
 | Compiles | No type errors or import errors |
 | Renders | Component visible in the sandbox |
 | Uses theme | Theme tokens used (not hardcoded values) |
-| Controls wired | All component props exposed to sandbox controls (`argTypes` or labeled variants) |
+| Controls / variants | Props and variants appear in the catalog capture (derived from the structural artifact — not a stored `controls: true` field) |
 | Story organization | Registered under `Components/` layer (or `Components/` prefix in Storybook) |
 | Polyfill disclaimer | (React Native + Storybook only) Stories include polyfill notice decorator |
 | **Styling contract** | **Deterministic. `verify-styling-contract.mjs` against the resolved `tools.style_contract`, exit 0 required** |
 | **Component contract** | **Deterministic. The same script against the resolved `tools.component_contract`, exit 0 required. Skipped when `component_contract_source` is `"none"`/absent** |
+| **Catalog capture** | **Deterministic. `verify-catalog.mjs --check` against the project root, exit 0 required. Exit 1 = unreviewed drift; exit 3 = vacuous (zero stories) — both block** |
 | **Ecosystem lib validated** | **If `ecosystemLib` exists, package is installed, importable, and vetting matches manifest** |
 | Aesthetic* | Font pairing, color hierarchy, intentional motion |
 
 *Aesthetic checks always run through `docs/DESIGN-CONTRACT.md`; `DESIGN_EXECUTE` uses `frontend-designer` when available and otherwise performs the same review directly.
 
-The two contract rows are the only checks here whose verdict is not the reviewing agent's opinion — run the script and report its exit code. Note that `ecosystemLib` covers only packages approved by the Phase 4b ecosystem scan (TanStack Table and the like); the project's own component library from `tools.components` never produces an `ecosystemLib` entry, which is why it needs its own row.
+The **styling contract, component contract, and catalog capture** rows are the checks whose verdict is not the reviewing agent's opinion — run the script and report its exit code. Catalog capture:
+
+```
+node {plugin}/scripts/verify-catalog.mjs --check <project-root> --platform {platform} --layer atoms
+```
+
+Note that `ecosystemLib` covers only packages approved by the Phase 4b ecosystem scan (TanStack Table and the like); the project's own component library from `tools.components` never produces an `ecosystemLib` entry, which is why it needs its own row.
 
 ```
 Atoms verification (5 components):
@@ -128,8 +135,9 @@ Verifies all molecule compositions including state coverage for stateful molecul
 | Story exists | Companion story file alongside molecule |
 | Compiles | No type errors or import errors |
 | Renders | Molecule renders in the sandbox |
-| Atoms composed (not re-implemented) | Constituent atoms are imported and used, not re-created |
-| Controls wired | All molecule-level props exposed to sandbox controls |
+| Atoms composed (not re-implemented) | **Deterministic composition mutation check:** `verify-catalog.mjs --blast <AtomName>` — declared dependents must move. A non-moving dependent is a copy. |
+| Controls / variants | Present in catalog capture (not a stored `controls` field) |
+| **Catalog capture** | **Deterministic. `verify-catalog.mjs --check --layer molecules`, exit 0 required** |
 | Story organization | Registered under `Molecules/` layer |
 | **State scenarios** | **Every declared state scenario has a corresponding named story export** |
 | **State isolation** | **Each scenario exercises a distinct internal state (not just prop variants)** |

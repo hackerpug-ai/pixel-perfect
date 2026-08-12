@@ -552,7 +552,7 @@ The contract's `Free primitives` section is as binding as its ban list: layout a
    - Interactive components have intentional motion (not default browser transitions)
    - Spacing uses the theme scale
 
-6. **Update manifest:**
+6. **Update manifest** (decisions and receipts only — no authored composition-edge arrays, no `controls` authority field; controls coverage comes from catalog capture):
    ```json
    {
      "atoms": [
@@ -560,8 +560,7 @@ The contract's `Free primitives` section is as binding as its ban list: layout a
          "name": "StatusBadge",
          "file": "src/components/StatusBadge.tsx",
          "story": "src/components/StatusBadge.stories.tsx",
-         "status": "verified",
-         "controls": true
+         "status": "verified"
        }
      ]
    }
@@ -573,7 +572,6 @@ For atoms wrapping an ecosystem library, the entry includes the `ecosystemLib` r
       "file": "src/components/DataTable.tsx",
       "story": "src/components/DataTable.stories.tsx",
       "status": "verified",
-      "controls": true,
       "ecosystemLib": {
         "package": "@tanstack/react-table",
         "version": "^8.20.0",
@@ -605,7 +603,21 @@ Atoms 3/5 — StatusBadge, JobCard, DateChip verified. Building SectionHeader.
 
 ### Phase 5 Exit Gate
 
-All atoms in the manifest have `status: verified` and `controls: true`, AND both contract gates pass for the atom files (or the corresponding enforcement is `"off"`/`"warn"`, or no contract of that kind is in force). Update manifest:
+All atoms in the manifest have `status: verified`, both contract gates pass for the atom files (or the corresponding enforcement is `"off"`/`"warn"`, or no contract of that kind is in force), **and catalog capture is green**. Controls coverage is derived from the capture (props/variants present in the structural artifact), not a stored `controls: true` field.
+
+**Catalog capture gate (deterministic):**
+```
+node {plugin}/scripts/verify-catalog.mjs --baseline <project-root> --platform {platform} --layer atoms
+```
+Writes goldens under `design/goldens/{platform}/atoms/…`. Record `atoms_capture: "passed"` beside the contract gate keys.
+
+**Composition mutation check** (replaces the "composed, not re-implemented" LLM judgment): for any atom that molecules claim to compose, run
+```
+node {plugin}/scripts/verify-catalog.mjs --blast <AtomName> <project-root> --platform {platform}
+```
+Every declared dependent must appear in `moved`. A dependent that does not move is a copy, not a composition — rebuild it to compose the atom before the layer gate opens.
+
+Update manifest:
 ```json
 {
   "phase": "atoms",
@@ -613,7 +625,14 @@ All atoms in the manifest have `status: verified` and `controls: true`, AND both
     "plan": "passed",
     "atoms": "passed",
     "atoms_styling_contract": "passed",
-    "atoms_component_contract": "passed"
+    "atoms_component_contract": "passed",
+    "atoms_capture": "passed"
+  },
+  "capture": {
+    "command": "npm run sandbox:capture",
+    "medium": "dom+png",
+    "goldens": "design/goldens/{platform}",
+    "captured_at": "<ISO-8601>"
   }
 }
 ```
@@ -882,14 +901,21 @@ Molecules 1/2 — JobRow verified. Building ActionPanel (ActionButton + StatusBa
 
 ### Phase 5b Exit Gate
 
-All molecules in the manifest have `status: verified`, AND both contract gates pass for the molecule files (Step 4 gates; `hard-fail` blocks). Update manifest:
+All molecules in the manifest have `status: verified`, both contract gates pass for the molecule files (Step 4 gates; `hard-fail` blocks), **and catalog capture is green**. Composition is proved by the mutation check (`--blast` each composed atom; dependents must move) — not by authored `molecules[].atoms` arrays.
+
+```
+node {plugin}/scripts/verify-catalog.mjs --baseline <project-root> --platform {platform} --layer molecules
+```
+
+Update manifest:
 ```json
 {
   "phase": "molecules",
   "gates": {
     "molecules": "passed",
     "molecules_styling_contract": "passed",
-    "molecules_component_contract": "passed"
+    "molecules_component_contract": "passed",
+    "molecules_capture": "passed"
   }
 }
 ```
@@ -1035,14 +1061,21 @@ Organisms 1/2 — DataTable verified (6 state scenarios). Building CommandPalett
 
 ### Phase 5c Exit Gate
 
-All organisms in the manifest have `status: verified` AND all declared state scenarios have corresponding stories, AND both contract gates pass for the organism files (Step 4 gates; `hard-fail` blocks). Update manifest:
+All organisms in the manifest have `status: verified` AND all declared state scenarios have corresponding stories, AND both contract gates pass for the organism files (Step 4 gates; `hard-fail` blocks), **and catalog capture is green** (`organisms_capture`).
+
+```
+node {plugin}/scripts/verify-catalog.mjs --baseline <project-root> --platform {platform} --layer organisms
+```
+
+Update manifest:
 ```json
 {
   "phase": "organisms",
   "gates": {
     "organisms": "passed",
     "organisms_styling_contract": "passed",
-    "organisms_component_contract": "passed"
+    "organisms_component_contract": "passed",
+    "organisms_capture": "passed"
   }
 }
 ```
@@ -1228,14 +1261,23 @@ For each screen:
 
 ### Phase 6 Exit Gate
 
-All screens have `status: verified`, **and** every screen has one sandbox story per entry in its `states` list (each driving the screen into that state), **and** both contract gates pass across all built component/screen files (Step 4 gates; `hard-fail` blocks). Update manifest:
+All screens have `status: verified`, **and** every screen has one sandbox story per entry in its `states` list (each driving the screen into that state), **and** both contract gates pass across all built component/screen files (Step 4 gates; `hard-fail` blocks), **and catalog capture is green** (`compose_capture` / screens layer).
+
+```
+node {plugin}/scripts/verify-catalog.mjs --baseline <project-root> --platform {platform} --layer screens
+```
+
+Do not author `screens[].atoms` / `screens[].molecules` / `screens[].organisms` composition edges as authority — blast/reach from capture is the dependency oracle. Optional inventory hints may remain for human readability but are never the gate.
+
+Update manifest:
 ```json
 {
   "phase": "compose",
   "gates": {
     "compose": "passed",
     "compose_styling_contract": "passed",
-    "compose_component_contract": "passed"
+    "compose_component_contract": "passed",
+    "compose_capture": "passed"
   }
 }
 ```

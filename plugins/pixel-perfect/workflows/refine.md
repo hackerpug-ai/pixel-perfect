@@ -64,13 +64,20 @@ pixel-perfect:refine --component StatusBadge "Make the badge more rounded, use a
 4. Regenerate the component with the resulting decisions applied
 5. Regenerate the story — ensure all props remain wired to `argTypes` controls
 6. Run verification for the affected component (compile, render, controls check)
-7. If this component is used in screens, note which screens may need updates
+7. **Re-capture** so drift and cascade are measured, not guessed:
+   ```
+   node {plugin}/scripts/verify-catalog.mjs --check <project-root> --platform {platform}
+   ```
+   Stories that moved are the cascade set for `R4`. Intentional change: `--accept` the refined entity's golden after review.
+8. If this component is used in screens, note which screens may need updates (prefer the capture diff over manifest archaeology)
+
+**Inventory-level requests route to `evolve`.** If the feedback adds, removes, promotes, or variants an entity (changes *what exists* rather than *how one entity looks*), stop and hand off to `pixel-perfect:evolve`. Refine does not grow its own add/remove path.
 
 Report it in three lines — what changed, that it verified, and what it cascades into:
 
 ```
-StatusBadge — pill radius, gradient from theme primary. Compiles, renders, controls wired.
-Cascades into: TodayFeed, JobDetail.
+StatusBadge — pill radius, gradient from theme primary. Compiles, renders, capture updated.
+Cascades into: TodayFeed, JobDetail (from catalog --check diff).
 ```
 
 The cascade line is what fires `R4`. Do not list verification checks that passed; a failure gets named, a pass gets a word.
@@ -220,12 +227,12 @@ batch: R4 — the cascade
     - label: Update them now (Recommended)
       description: Re-composes TodayFeed and JobDetail against the changed components and re-verifies both. Skipping this leaves screens rendering against components that no longer look the way the screens assume.
     - label: I will handle the screens
-      description: Refines only what you selected and leaves the screens as they are. Their gates are marked stale so the next verify reports them, rather than letting the drift go unnoticed.
+      description: Refines only what you selected and leaves the screens as they are. Catalog capture will show them as drifted on the next verify-catalog --check (staleness is computed at read time — nothing stores a stale flag), so the drift cannot go unnoticed.
 ```
 
 ## Manifest Updates
 
-Refine updates the manifest to reflect changed items:
+Refine updates the manifest to reflect changed items. Manifest stores decisions and receipts only — **no `controls` authority field**, no authored composition edges. After a successful refine, re-baseline or `--accept` the refined story's golden.
 
 ```json
 {
@@ -234,18 +241,19 @@ Refine updates the manifest to reflect changed items:
       "name": "StatusBadge",
       "file": "src/components/StatusBadge.tsx",
       "story": "src/components/StatusBadge.stories.tsx",
-      "status": "verified",
-      "controls": true
+      "status": "verified"
     }
-  ]
+  ],
+  "capture": {
+    "captured_at": "<ISO-8601 after re-capture>"
+  }
 }
 ```
 
 If verification fails after refinement, status reverts to `in-progress`:
 ```json
 {
-  "status": "in-progress",
-  "controls": false
+  "status": "in-progress"
 }
 ```
 

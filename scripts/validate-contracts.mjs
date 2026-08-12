@@ -80,11 +80,19 @@ export async function validateContracts(root = REPOSITORY_ROOT) {
     }
   });
 
-  // 2. Every layer records both gate results, so a reader can tell a passing gate
-  //    from a gate that was never run.
+  // 2. Every layer records both contract gate results, so a reader can tell a
+  //    passing gate from a gate that was never run. Catalog capture is a third
+  //    deterministic gate (v8 living design system) recorded beside them.
   for (const layer of LAYERS) {
     if (!build.includes(`${layer}_styling_contract`)) errors.push(`build.md exit gates never record ${layer}_styling_contract`);
     if (!build.includes(`${layer}_component_contract`)) errors.push(`build.md exit gates never record ${layer}_component_contract`);
+    if (!build.includes(`${layer}_capture`)) errors.push(`build.md exit gates never record ${layer}_capture`);
+  }
+  if (!build.includes("verify-catalog.mjs")) {
+    errors.push("build.md never invokes verify-catalog.mjs for catalog capture");
+  }
+  if (!build.includes("Composition mutation check") && !build.includes("composition mutation")) {
+    errors.push("build.md never names the composition mutation check (--blast)");
   }
 
   // 3. The component gate is actually invoked and its enforcement level honored.

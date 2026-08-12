@@ -10,6 +10,7 @@ const PUBLIC_CAPABILITIES = [
   "add-platform",
   "build",
   "design-deconstruct",
+  "evolve",
   "init",
   "refine",
   "research",
@@ -108,14 +109,14 @@ export async function validateSkills(root = REPOSITORY_ROOT) {
       continue;
     }
     if (JSON.stringify(names) !== JSON.stringify([...PUBLIC_CAPABILITIES].sort())) {
-      errors.push(`${adapterDirectory} does not expose exactly the ten public capabilities`);
+      errors.push(`${adapterDirectory} does not expose exactly the ${PUBLIC_CAPABILITIES.length} public capabilities`);
     }
   }
   try {
     const rootSkillNames = await readdir(path.join(root, `${PLUGIN_ROOT}/skills`));
     const publicSkillNames = rootSkillNames.filter((name) => PUBLIC_CAPABILITIES.includes(name)).sort();
     if (JSON.stringify(publicSkillNames) !== JSON.stringify([...PUBLIC_CAPABILITIES].sort())) {
-      errors.push(`${PLUGIN_ROOT}/skills does not expose exactly the ten public capabilities`);
+      errors.push(`${PLUGIN_ROOT}/skills does not expose exactly the ${PUBLIC_CAPABILITIES.length} public capabilities`);
     }
   } catch (error) {
     errors.push(`${PLUGIN_ROOT}/skills: ${error.message}`);

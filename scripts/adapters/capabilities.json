@@ -21,6 +21,13 @@
     "interactive": false
   },
   {
+    "name": "evolve",
+    "title": "Evolve",
+    "description": "Evolve a Pixel Perfect design system inventory — absorb a new screen or mock, extend an entity, promote a repeated pattern, or shed a screen with an orphan sweep, proved by catalog capture.",
+    "preservation": "Confirm the full delta before any write or delete; hand additions to build; prove with re-capture; never silent-duplicate or silent-sweep",
+    "interactive": true
+  },
+  {
     "name": "init",
     "title": "Init",
     "description": "Initialize a Pixel Perfect project through DISCOVER, TARGET, and EQUIP, capturing goal, platforms, framework, styling, libraries, and sandbox choices.",
