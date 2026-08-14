@@ -147,7 +147,7 @@ function slug(value) {
     .replace(/^-|-$/g, "") || "item";
 }
 
-function startStaticServer(root, brokenRoutes = new Set(["/broken"])) {
+function startStaticServer(root) {
   const types = {
     ".html": "text/html; charset=utf-8",
     ".js": "text/javascript; charset=utf-8",
@@ -159,11 +159,6 @@ function startStaticServer(root, brokenRoutes = new Set(["/broken"])) {
   const server = createServer((req, res) => {
     const url = new URL(req.url, "http://127.0.0.1");
     const pathname = url.pathname;
-    if ([...brokenRoutes].some((b) => pathname === b || pathname.startsWith(`${b}/`))) {
-      res.writeHead(500, { "content-type": "text/html; charset=utf-8" });
-      res.end("<!doctype html><html><head><title>Broken</title></head><body></body></html>");
-      return;
-    }
     let rel = decodeURIComponent(pathname);
     if (rel === "/") rel = "/index.html";
     const file = join(root, rel);
@@ -382,12 +377,7 @@ export async function captureProject(projectRoot, { platform = null, runId = nul
   ensureDir(axDir);
   ensureDir(consoleDir);
 
-  const brokenRoutes = new Set(
-    (config.screens || []).filter((s) => /broken/i.test(s.name) || s.route === "/broken").map((s) => s.route || "/broken"),
-  );
-  if (brokenRoutes.size === 0) brokenRoutes.add("/broken");
-
-  const { server, port } = await startStaticServer(appRoot, brokenRoutes);
+  const { server, port } = await startStaticServer(appRoot);
   let session;
   try {
     session = await launchChrome();

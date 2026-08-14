@@ -123,6 +123,11 @@ async function assertCaptureRun(dir, runId) {
     assert.equal(validateFinding(finding).ok, true, validateFinding(finding).errors.join("; "));
     assert.equal(finding.evidence.shot, null);
   }
+  const brokenAx = JSON.parse(readFileSync(path.join(runDir, "ax", "broken.default.json"), "utf8"));
+  assert.equal(brokenAx.ready, false, "RENDER must come from a live page that never painted [data-screen]");
+  assert.equal(brokenAx.screen, null, "unpainted /broken must not mount a screen root");
+  assert.match(brokenAx.html, /id="root"/, "broken route must load the real app document, not a server stub");
+  assert.doesNotMatch(brokenAx.html, /<title>Broken<\/title>/);
   const judgedSlugs = report.judged.map((p) => path.basename(p, ".png"));
   assert.equal(judgedSlugs.includes("broken.default"), false, "broken shot must not be judged");
   for (const shot of report.judged) {
