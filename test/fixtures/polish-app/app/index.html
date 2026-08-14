@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dispatch board</title>
+  <style>
+    :root {
+      --surface-page: #F7F5F2;
+      --surface-raised: #FFFFFF;
+      --text-heading: #1A1C1E;
+      --text-body: #3D4145;
+      --text-muted: #5C6166;
+      --text-inverse: #F7F5F2;
+      --accent-primary: #1A1C1E;
+      --accent-cta: #8B2E1F;
+      --border: #C4BFB6;
+      --space-micro: 4px;
+      --space-internal: 12px;
+      --space-between: 16px;
+      --space-section: 32px;
+      --radius: 8px;
+      --font: "Public Sans", "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: var(--surface-page);
+      color: var(--text-body);
+      min-height: 100vh;
+    }
+    .shell { max-width: 960px; margin: 0 auto; padding: var(--space-section) var(--space-between); }
+    header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-between); margin-bottom: var(--space-section); }
+    h1 { font-size: 32px; line-height: 1.2; color: var(--text-heading); margin: 0; }
+    nav { display: flex; gap: var(--space-between); }
+    nav a { color: var(--text-heading); text-decoration: none; font-weight: 600; }
+    nav a[aria-current="page"] { border-bottom: 2px solid var(--accent-cta); }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 40px; padding: 0 16px; border-radius: var(--radius);
+      background: var(--accent-primary); color: var(--text-inverse);
+      border: 0; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none;
+    }
+    .btn:focus-visible { outline: 2px solid var(--accent-cta); outline-offset: 2px; }
+    .card {
+      background: var(--surface-raised); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: var(--space-internal);
+    }
+    .row { display: flex; justify-content: space-between; gap: var(--space-between); padding: var(--space-internal) 0; border-bottom: 1px solid var(--border); }
+    .muted { color: var(--text-muted); font-size: 12px; }
+    .error { color: var(--accent-cta); }
+    label { display: block; font-weight: 600; margin-bottom: var(--space-micro); }
+    input {
+      width: 100%; min-height: 40px; padding: 8px 12px; border: 1px solid var(--border);
+      border-radius: var(--radius); font: inherit; background: var(--surface-raised);
+    }
+    .field { margin-bottom: var(--space-between); }
+    .banner { padding: var(--space-internal); background: #EFECE6; border-radius: var(--radius); margin-bottom: var(--space-between); }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const state = params.get("state") || "default";
+    const variant = params.get("variant") || "";
+    const path = location.pathname.replace(/\/$/, "") || "/";
+
+    const longName = "North-west rooftop condenser replacement for the Riverside Medical annex building phase two";
+    const wrappedHeading = "Today's board for technicians working glare, gloves, and a radio that only half-works";
+    const i18n = variant === "localized";
+    const t = {
+      home: i18n ? "Heute" : "Today",
+      orders: i18n ? "Aufträge" : "Orders",
+      checkout: i18n ? "Abschluss" : "Checkout",
+      create: i18n ? "Auftrag anlegen" : "Create order",
+      pay: i18n ? "Jetzt zahlen" : "Pay now",
+      emptyHome: i18n ? "Keine Schichten heute." : "No shifts on the board today.",
+      emptyOrders: i18n ? "Keine offenen Aufträge." : "No open orders.",
+    };
+
+    function screenName() {
+      if (path.startsWith("/orders")) return "orders";
+      if (path.startsWith("/checkout")) return "checkout";
+      return "home";
+    }
+
+    const screen = screenName();
+    const jobs = [
+      { id: "job-1042", name: variant === "long-names" ? longName : "1042 · Rooftop unit", meta: "Open · 2:40p" },
+      { id: "job-1043", name: "1043 · Boiler bleed", meta: "En route · 3:10p" },
+    ];
+
+    function nav(current) {
+      return `<nav aria-label="Primary">
+        <a data-testid="nav-home" href="/?state=${state}" ${current === "home" ? 'aria-current="page"' : ""}>${t.home}</a>
+        <a data-testid="nav-orders" href="/orders?state=${state}" ${current === "orders" ? 'aria-current="page"' : ""}>${t.orders}</a>
+        <a data-testid="nav-checkout" href="/checkout?state=${state}" ${current === "checkout" ? 'aria-current="page"' : ""}>${t.checkout}</a>
+      </nav>`;
+    }
+
+    let html = "";
+    if (screen === "home") {
+      const heading = variant === "wrapped-headings" ? wrappedHeading : t.home;
+      html = `<main class="shell" data-screen="home" data-state="${state}" data-testid="home-main">
+        <header>
+          <h1 data-testid="home-heading">${heading}</h1>
+          ${nav("home")}
+        </header>
+        ${state === "empty"
+          ? `<section class="card" data-testid="home-empty">
+               <p>${t.emptyHome}</p>
+               <a class="btn" data-testid="create-order" href="/checkout">${t.create}</a>
+             </section>`
+          : `<section class="card" data-testid="metrics-row">
+               <div class="row"><span>Open</span><strong>2</strong></div>
+               <div class="row"><span>En route</span><strong>1</strong></div>
+               <div class="row"><span>Done</span><strong>6</strong></div>
+             </section>`}
+      </main>`;
+    } else if (screen === "orders") {
+      html = `<main class="shell" data-screen="orders" data-state="${state}" data-testid="orders-main">
+        <header>
+          <h1 data-testid="orders-heading">${t.orders}</h1>
+          ${nav("orders")}
+          <a class="btn" data-testid="create-order" href="/checkout">${t.create}</a>
+        </header>
+        ${state === "error"
+          ? `<section class="card error" data-testid="orders-error" role="alert">
+               <p>Dispatch feed failed to refresh.</p>
+               <button class="btn" data-testid="retry" type="button">Retry</button>
+             </section>`
+          : `<section class="card" data-testid="orders-list">
+               ${jobs.map((j) => `<article class="row" data-testid="${j.id}">
+                 <div>
+                   <strong>${j.name}</strong>
+                   <div class="muted">${j.meta}</div>
+                 </div>
+                 <a href="/checkout">Open</a>
+               </article>`).join("")}
+             </section>`}
+      </main>`;
+    } else if (screen === "checkout") {
+      const invalid = state === "invalid" || variant === "validation-errors";
+      html = `<main class="shell" data-screen="checkout" data-state="${state}" data-testid="checkout-main">
+        <header>
+          <h1 data-testid="checkout-heading">${t.checkout}</h1>
+          ${nav("checkout")}
+        </header>
+        <form class="card" data-testid="checkout-form">
+          <div class="field">
+            <label for="po">PO number</label>
+            <input id="po" name="po" data-testid="po" value="${invalid ? "" : "PO-4412"}" aria-invalid="${invalid}" />
+            ${invalid ? `<p class="error" data-testid="po-error">PO number is required.</p>` : ""}
+          </div>
+          <button class="btn" data-testid="pay-now" type="submit">${t.pay}</button>
+        </form>
+      </main>`;
+    }
+
+    document.getElementById("root").innerHTML = html;
+    document.title = `${screen} · ${state}`;
+
+    if (state === "error") {
+      console.error("dispatch feed failed: upstream 503");
+    }
+  </script>
+</body>
+</html>
