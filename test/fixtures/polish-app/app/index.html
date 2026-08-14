@@ -81,12 +81,18 @@
     };
 
     function screenName() {
+      if (path.startsWith("/broken")) return null;
       if (path.startsWith("/orders")) return "orders";
       if (path.startsWith("/checkout")) return "checkout";
       return "home";
     }
 
     const screen = screenName();
+    if (!screen) {
+      // Live failed paint: the document loads, but nothing is mounted.
+      document.title = "";
+      document.getElementById("root").replaceChildren();
+    } else {
     const jobs = [
       { id: "job-1042", name: variant === "long-names" ? longName : "1042 · Rooftop unit", meta: "Open · 2:40p" },
       { id: "job-1043", name: "1043 · Boiler bleed", meta: "En route · 3:10p" },
@@ -164,6 +170,7 @@
 
     if (state === "error") {
       console.error("dispatch feed failed: upstream 503");
+    }
     }
   </script>
 </body>
