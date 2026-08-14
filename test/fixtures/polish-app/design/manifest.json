@@ -1,0 +1,30 @@
+{
+  "goal": "Field dispatch board for HVAC technicians",
+  "vibe": "clean, professional, high-contrast for outdoor use",
+  "version": "8.0.0",
+  "platforms": {
+    "web-desktop": {
+      "phase": "compose",
+      "tools": {
+        "framework": "vite",
+        "style": "css",
+        "sandbox": "custom"
+      },
+      "capture": {
+        "command": "node app/serve.mjs --dry",
+        "medium": "png+ax",
+        "goldens": "design/goldens/web-desktop"
+      },
+      "pinned": [],
+      "deprecations": {},
+      "atoms": [],
+      "molecules": [],
+      "screens": [
+        { "name": "Home", "route": "/", "states": ["default", "empty"], "status": "verified" },
+        { "name": "Orders", "route": "/orders", "states": ["default", "error"], "status": "verified" },
+        { "name": "Checkout", "route": "/checkout", "states": ["default", "invalid"], "status": "verified" },
+        { "name": "Broken", "route": "/broken", "states": ["default"], "status": "verified" }
+      ]
+    }
+  }
+}

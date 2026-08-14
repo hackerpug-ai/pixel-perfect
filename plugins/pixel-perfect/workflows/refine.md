@@ -90,6 +90,11 @@ When feedback is a **token** change (not a new component):
    - **value**: stories that moved are the visual consumers to review; `--accept` after intentional review.
    - **rename**: `--check` must show **zero** drifted stories (a rename that changes rendering is not a rename — fix the codemod).
    - **remove**: blocked if anything moves or fails to build.
+4. Regenerate the project-root `DESIGN.md` (generated, never hand-authored) and keep a `--diff` drift receipt at `design/design-md-diff.json`:
+   ```
+   node {plugin}/scripts/design-md.mjs --generate <project-root>
+   node {plugin}/scripts/design-md.mjs --diff <project-root>
+   ```
 
 Report it in three lines — what changed, that it verified, and what it cascades into:
 
@@ -201,6 +206,11 @@ pixel-perfect:refine --vibe "More industrial, less corporate. Think construction
 5. List components on the selected platform that may look different with the new theme
 6. Prompt: regenerate all components with new theme, or one at a time?
 7. If multiple platforms exist, ask: propagate vibe to other platforms too?
+8. After the theme file is rewritten, regenerate `DESIGN.md` and keep a `--diff` drift receipt:
+   ```
+   node {plugin}/scripts/design-md.mjs --generate <project-root>
+   node {plugin}/scripts/design-md.mjs --diff <project-root>
+   ```
 
 ```
 Vibe: "More industrial, less corporate" — web-desktop theme regenerated

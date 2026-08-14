@@ -1,0 +1,42 @@
+{
+  "$theme": "light",
+  "$generated": "fixture",
+  "surface": {
+    "page": "#F7F5F2",
+    "raised": "#FFFFFF",
+    "sunken": "#EFECE6"
+  },
+  "text": {
+    "heading": "#1A1C1E",
+    "body": "#3D4145",
+    "muted": "#5C6166",
+    "inverse": "#F7F5F2"
+  },
+  "accent": {
+    "primary": "#1A1C1E",
+    "primary-fg": "#F7F5F2",
+    "cta": "#8B2E1F"
+  },
+  "border": {
+    "default": "#C4BFB6",
+    "focus": "#1A1C1E"
+  },
+  "spacing": {
+    "micro": "4px",
+    "internal": "12px",
+    "between": "16px",
+    "section": "32px"
+  },
+  "type": {
+    "font-body": "Public Sans",
+    "page-title": "32px",
+    "section-title": "20px",
+    "body": "16px",
+    "meta": "12px"
+  },
+  "radius": {
+    "subtle": "4px",
+    "default": "8px",
+    "pill": "999px"
+  }
+}

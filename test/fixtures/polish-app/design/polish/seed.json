@@ -1,0 +1,8 @@
+{
+  "adversarial": {
+    "long-names": { "screen": "Orders", "state": "default" },
+    "wrapped-headings": { "screen": "Home", "state": "default" },
+    "validation-errors": { "screen": "Checkout", "state": "invalid" },
+    "localized": { "screen": "Home", "state": "default" }
+  }
+}

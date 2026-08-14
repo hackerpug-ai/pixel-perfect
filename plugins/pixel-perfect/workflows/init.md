@@ -722,6 +722,17 @@ The `spec` field is the path to the spec/PRD document (relative to the project r
 
 **Deconstruction fields (optional).** When the project was seeded by `pixel-perfect:design-deconstruct`, the manifest also carries top-level `"deconstructed": true` and `"design_system": "design/system"`, and seeded `atoms`/`molecules`/`screens` entries include a `"target"` (the mockup the real component is built to match), e.g. `"target": "design/system/views/feed/feed.html"`. These are additive and ignored by projects that never ran deconstruct.
 
+### DESIGN.md pin (when tokens exist)
+
+`DESIGN.md` at the project root is **generated**, never hand-authored. After the manifest is written, if design tokens already exist (`design/system/tokens/theme.*.json`, `design/theme-seed.json`, or a theme file), regenerate and keep a `--diff` drift receipt:
+
+```
+node {plugin}/scripts/design-md.mjs --generate <project-root>
+node {plugin}/scripts/design-md.mjs --diff <project-root>
+```
+
+The receipt lands at `design/design-md-diff.json`. Name the path in the digest; do not print the file. If no tokens exist yet, skip — scaffold will create the theme, and refine re-runs this pair after token/theme changes.
+
 **Ecosystem mode (optional, top-level).** Controls how the BUILD PLAN Ecosystem Scan (Phase 4b Step 5) behaves. See `docs/ecosystem-patterns.md` for the full matrix. Omitting it defaults to `"suggest"`.
 
 ```json
