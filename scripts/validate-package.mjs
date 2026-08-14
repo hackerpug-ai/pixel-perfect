@@ -19,6 +19,10 @@ const PUBLIC_CAPABILITIES = [
   "wireframe",
 ];
 const INTERNAL_SKILLS = ["deconstruct-engine", "process-context"];
+// Support dirs under skills/ that are not public capabilities and do not
+// require OpenCode adapters. `polish` holds the lens pack + findings schema
+// (P2); the public polish command/workflow is P6 and must not appear here.
+const SUPPORT_SKILL_DIRS = ["polish"];
 const PROHIBITED_SEGMENTS = new Set([".git", ".handoff", ".tmp", "node_modules", "planning"]);
 const PROHIBITED_ROOT_FILES = new Set([
   "CHANGELOG.md",
@@ -142,7 +146,7 @@ export async function validatePackage(root = REPOSITORY_ROOT) {
     compareNames(await namesIn(path.join(packageRoot, ".opencode/commands"), ".md"), PUBLIC_CAPABILITIES, "OpenCode command adapters", errors);
     compareNames(
       await namesIn(path.join(packageRoot, "skills")),
-      [...PUBLIC_CAPABILITIES, ...INTERNAL_SKILLS],
+      [...PUBLIC_CAPABILITIES, ...INTERNAL_SKILLS, ...SUPPORT_SKILL_DIRS],
       "Codex and internal skills",
       errors,
     );

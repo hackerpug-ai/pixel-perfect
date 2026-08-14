@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pixel-perfect.local/polish/findings-schema.json",
+  "title": "Pixel Perfect polish finding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "screen",
+    "state",
+    "platform",
+    "lens",
+    "principle",
+    "tier",
+    "severity",
+    "observed",
+    "proposal",
+    "element",
+    "evidence",
+    "fingerprint"
+  ],
+  "properties": {
+    "screen": { "type": "string", "minLength": 1 },
+    "state": { "type": "string", "minLength": 1 },
+    "platform": { "type": "string", "minLength": 1 },
+    "lens": { "type": "string", "minLength": 1 },
+    "principle": { "type": "string", "minLength": 1 },
+    "tier": { "type": "string", "enum": ["T1", "T2", "T3"] },
+    "severity": { "type": "string", "enum": ["BLOCKER", "MAJOR", "MINOR", "POLISH"] },
+    "observed": { "type": "string", "minLength": 1 },
+    "proposal": { "type": "string", "minLength": 1 },
+    "element": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ax_ref", "bbox"],
+      "properties": {
+        "ax_ref": { "type": ["string", "null"] },
+        "testID": { "type": ["string", "null"] },
+        "bbox": {
+          "anyOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["x", "y", "width", "height"],
+              "properties": {
+                "x": { "type": "number" },
+                "y": { "type": "number" },
+                "width": { "type": "number" },
+                "height": { "type": "number" }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["shot"],
+      "properties": {
+        "shot": { "type": ["string", "null"] }
+      }
+    },
+    "fingerprint": { "type": "string", "minLength": 1 }
+  }
+}
