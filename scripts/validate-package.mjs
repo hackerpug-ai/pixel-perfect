@@ -89,6 +89,7 @@ export async function validatePackage(root = REPOSITORY_ROOT) {
     "docs/styling-contracts/README.md",
     "LICENSE",
     "scripts/verify-styling-contract.mjs",
+    "scripts/verify-inventory.mjs",
     "skills/deconstruct-engine/SKILL.md",
     "skills/process-context/SKILL.md",
     "workflows/RUNTIME-CONTRACT.md",

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "status": "complete",
+  "sources": [{ "ref": "test.dc.html", "kind": "html-deck", "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000001", "slug": "test", "frames": ["test/01"] }],
+  "frames": [{ "id": "test/01", "png": "test/01.png", "source": "test.dc.html", "shows": ["Atom1"] }],
+  "screens": [{ "name": "Home", "route": "/", "states": [{ "name": "default", "frames": ["test/01"] }], "composes": ["Atom1"] }],
+  "organisms": [],
+  "molecules": [],
+  "atoms": [
+    { "name": "Atom1", "composes": ["Atom2"], "appears_on": ["test/01"] },
+    { "name": "Atom2", "appears_on": [] }
+  ]
+}
