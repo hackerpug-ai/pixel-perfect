@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/hackerpug-ai/pixel-perfect/docs/inventory.schema.json",
+  "title": "Pixel Perfect design inventory (design/inventory.json) v1",
+  "description": "The whole-design inventory produced by build Phase 4a — every rendered frame accounted for, and every real component/composition to make, tied to the frames that justify it. Frames are the checklist; components are the deliverable list. Never HTML.",
+  "type": "object",
+  "required": ["version", "status", "sources", "frames", "screens", "organisms", "molecules", "atoms"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": 1 },
+    "status": { "enum": ["complete", "blocked"] },
+    "blocked": {
+      "type": "array",
+      "description": "Frame ids or source refs that could not be read. Present only when status is blocked.",
+      "items": { "type": "string" }
+    },
+    "notes": { "type": "string", "description": "≤3 sentences for the orchestrator to raise with the user." },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["ref", "kind", "hash"],
+        "additionalProperties": false,
+        "properties": {
+          "ref": { "type": "string", "description": "Path or URL exactly as listed in manifest.references." },
+          "kind": { "enum": ["html-deck", "url", "image", "wireframes", "code"] },
+          "hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+          "slug": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "frame_selector": { "type": ["string", "null"] },
+          "frames": { "type": "array", "items": { "$ref": "#/$defs/frameId" } }
+        }
+      }
+    },
+    "frames": {
+      "type": "array",
+      "description": "Every rendered frame from design/reference/frames.json, annotated by the read.",
+      "items": {
+        "type": "object",
+        "required": ["id", "png", "source"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/frameId" },
+          "png": { "type": "string" },
+          "source": { "type": "string" },
+          "label": { "type": ["string", "null"] },
+          "viewport": { "type": ["string", "null"], "description": "WxH as rendered, e.g. 1440x900 or 390x844." },
+          "route": { "type": ["string", "null"] },
+          "state": { "type": ["string", "null"] },
+          "shows": { "type": "array", "items": { "$ref": "#/$defs/name" }, "description": "Every composition visible in the frame, by inventory name." }
+        }
+      }
+    },
+    "unclaimed_frames": {
+      "type": "array",
+      "description": "Frames that are not product screens (palette sheets, type ramps, decision pages, variant sticker sheets). Each needs a reason.",
+      "items": {
+        "type": "object",
+        "required": ["id", "reason"],
+        "additionalProperties": false,
+        "properties": { "id": { "$ref": "#/$defs/frameId" }, "reason": { "type": "string", "minLength": 3 } }
+      }
+    },
+    "screens": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "route", "states"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "$ref": "#/$defs/name" },
+          "route": { "type": "string", "minLength": 1 },
+          "states": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["name"],
+              "additionalProperties": false,
+              "properties": {
+                "name": { "type": "string", "minLength": 1 },
+                "frames": { "type": "array", "items": { "$ref": "#/$defs/frameId" } },
+                "undrawn": { "type": "string", "minLength": 3, "description": "Why no frame draws this state (spec-only)." },
+                "note": { "type": "string" }
+              }
+            }
+          },
+          "composes": { "type": "array", "items": { "$ref": "#/$defs/name" } },
+          "evidence": { "type": "string" },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "organisms": { "type": "array", "items": { "$ref": "#/$defs/composition" } },
+    "molecules": { "type": "array", "items": { "$ref": "#/$defs/composition" } },
+    "atoms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "$ref": "#/$defs/name" },
+          "states": { "type": "array", "items": { "type": "string" } },
+          "variants": { "type": "array", "items": { "type": "string" } },
+          "appears_on": { "type": "array", "items": { "$ref": "#/$defs/frameId" } },
+          "undrawn": { "type": "string", "minLength": 3 },
+          "library_primitive": { "type": ["string", "null"], "description": "e.g. shadcn/badge when the component library already provides it." },
+          "evidence": { "type": "string" },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "tokens_observed": {
+      "type": "object",
+      "description": "Evidence only — never a theme. Feeds scaffold when no token table exists.",
+      "additionalProperties": true,
+      "properties": {
+        "colors": { "type": "array", "items": { "type": "string" } },
+        "fonts": { "type": "array", "items": { "type": "string" } },
+        "note": { "type": "string" }
+      }
+    },
+    "confirmed": { "type": "string", "format": "date-time", "description": "Written by the orchestrator when the user accepts B-inv." }
+  },
+  "$defs": {
+    "frameId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*/[0-9]{2,}$", "description": "{source-slug}/{NN} in reading order." },
+    "name": { "type": "string", "pattern": "^[A-Z][A-Za-z0-9]*$", "description": "PascalCase component or screen name." },
+    "composition": {
+      "type": "object",
+      "required": ["name", "composes"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "composes": { "type": "array", "items": { "$ref": "#/$defs/name" } },
+        "states": { "type": "array", "items": { "type": "string" } },
+        "variants": { "type": "array", "items": { "type": "string" } },
+        "appears_on": { "type": "array", "items": { "$ref": "#/$defs/frameId" } },
+        "undrawn": { "type": "string", "minLength": 3 },
+        "evidence": { "type": "string" },
+        "note": { "type": "string" }
+      }
+    }
+  }
+}
