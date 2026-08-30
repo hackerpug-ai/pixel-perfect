@@ -117,9 +117,10 @@ describe("render-frames", () => {
       assert.equal(frame3.route, "/library", "Frame 3 should have route");
       assert.equal(frame3.state, "empty", "Frame 3 should have state");
 
-      // Verify that the frame 3 content contains the text injected by support.js
-      // We can't directly inspect the PNG, but we can check it was processed
-      assert.ok(frame3.label === "with-route", "Frame 3 should have correct label");
+      // support.js fetch()ed a sibling file and rewrote frame 3's data-label with its
+      // content — passes only when the deck is served over HTTP (file:// blocks fetch),
+      // which is what keeps <dc-import>-style partials from rendering blank.
+      assert.equal(frame3.label, "sibling-fetched-ok", "sibling fetch must resolve — deck served over HTTP");
     } finally {
       rmSync(tmpDir, { recursive: true, force: true });
     }

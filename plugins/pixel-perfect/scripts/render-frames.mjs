@@ -96,9 +96,8 @@ function detectRefKind(ref) {
   throw new Error(`Cannot detect ref kind for: ${ref}`);
 }
 
-async function renderHtmlDeck(cdp, ref, selector, settleMs, width) {
-  const fileUrl = pathToFileURL(resolve(ref)).href;
-  await cdp.send("Page.navigate", { url: fileUrl });
+async function renderHtmlDeck(cdp, url, selector, settleMs, width) {
+  await cdp.send("Page.navigate", { url });
   await cdp.waitFor("Page.loadEventFired");
 
   // Settle: poll innerText length and element count until stable
@@ -370,6 +369,17 @@ export async function main(args = process.argv.slice(2)) {
   let hasError = false;
   let hasUnreadable = false;
 
+  // Local HTML decks are served over HTTP from their own directory — never copied.
+  // file:// navigation would load, but Chrome blocks fetch() between file:// URLs, so a
+  // deck runtime that resolves sibling partials (Claude Design <dc-import>) renders them
+  // as blank panels. One server per deck directory, closed at the end of the run.
+  const deckServers = new Map();
+  const serveDeck = async (ref) => {
+    const dir = dirname(resolve(ref));
+    if (!deckServers.has(dir)) deckServers.set(dir, await startStaticServer(dir));
+    return `http://127.0.0.1:${deckServers.get(dir).port}/${encodeURIComponent(basename(ref))}`;
+  };
+
   // Launch Chrome once
   let session;
   try {
@@ -417,7 +427,7 @@ export async function main(args = process.argv.slice(2)) {
 
           let result;
           try {
-            result = await renderHtmlDeck(session.cdp, ref, selector, settleMs, width);
+            result = await renderHtmlDeck(session.cdp, await serveDeck(ref), selector, settleMs, width);
           } catch (renderErr) {
             throw new Error(`renderHtmlDeck failed: ${renderErr.message}`);
           }
@@ -557,6 +567,9 @@ export async function main(args = process.argv.slice(2)) {
     if (newFrames.length === 0) return 3;
     return 0;
   } finally {
+    for (const { server } of deckServers.values()) {
+      try { server.close(); } catch {}
+    }
     // Cleanup Chrome
     try {
       session.ws.close();
