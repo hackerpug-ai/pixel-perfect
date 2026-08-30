@@ -60,7 +60,8 @@ INPUTS
 
 PROCEDURE (in this order — the order is what prevents undercounting)
   1. Count the frames in the index. Your inventory must account for every one of them
-     (claimed by a screen state, or listed as unclaimed with a reason). Frames you never
+     (claimed by a screen state or a component's appears_on, or listed as unclaimed with
+     a reason). Frames you never
      opened are the single most expensive omission this workflow has.
   2. For EACH frame, look at the image and read its source region. Record on the frame:
        route   — the page identity, stripped of state (web: the URL path from the spec's
