@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test Frames Deck</title>
+  <style>
+    body { font-family: system-ui; margin: 0; padding: 20px; background: #f5f5f5; }
+    .fr {
+      border: 1px solid #ccc;
+      padding: 20px;
+      margin-bottom: 30px;
+      background: white;
+      display: inline-block;
+      min-width: 300px;
+    }
+    h2 { margin-top: 0; }
+  </style>
+</head>
+<body>
+  <h1>Frames Deck</h1>
+
+  <div class="fr" style="width: 400px; height: 250px;">
+    <h2>Frame One</h2>
+    <p>This is the first frame.</p>
+  </div>
+
+  <div class="fr" data-label="Labeled Frame" style="width: 350px; height: 200px;">
+    <p>This frame has an explicit data-label attribute.</p>
+    <button>Action</button>
+  </div>
+
+  <div class="fr" data-label="with-route" data-route="/library" data-state="empty" style="width: 300px; height: 300px;">
+    <h2>Frame Three</h2>
+    <p>This frame has route and state attributes.</p>
+  </div>
+
+  <script src="./support.js"></script>
+</body>
+</html>
