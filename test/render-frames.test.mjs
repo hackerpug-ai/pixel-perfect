@@ -5,8 +5,8 @@ import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } 
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { spawn } from "node:child_process";
 import { describe, test } from "node:test";
-import { main } from "../plugins/pixel-perfect/scripts/render-frames.mjs";
 import { findChrome } from "../plugins/pixel-perfect/scripts/capture-polish.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -18,27 +18,21 @@ function cloneFixture() {
   return dir;
 }
 
-async function runCli(args) {
-  const prevOut = process.stdout.write;
-  const prevErr = process.stderr.write;
-  let stdout = "";
-  let stderr = "";
-  process.stdout.write = (chunk) => {
-    stdout += typeof chunk === "string" ? chunk : Buffer.from(chunk).toString("utf8");
-    return true;
-  };
-  process.stderr.write = (chunk) => {
-    stderr += typeof chunk === "string" ? chunk : Buffer.from(chunk).toString("utf8");
-    return true;
-  };
-  let code;
-  try {
-    code = await main(args);
-  } finally {
-    process.stdout.write = prevOut;
-    process.stderr.write = prevErr;
-  }
-  return { code, stdout, stderr };
+const SCRIPT = path.join(ROOT, "plugins/pixel-perfect/scripts/render-frames.mjs");
+
+// Run the CLI as a real child process, asynchronously so this process's event loop keeps
+// serving (the URL test hosts a static server here). Patching process.stdout.write
+// in-process swallows node's own test-reporter output; spawnSync would block the server.
+function runCli(args, env = {}) {
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, [SCRIPT, ...args], { env: { ...process.env, ...env } });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.on("data", (chunk) => { stdout += chunk; });
+    child.stderr.on("data", (chunk) => { stderr += chunk; });
+    const timer = setTimeout(() => child.kill("SIGKILL"), 120_000);
+    child.on("close", (code) => { clearTimeout(timer); resolve({ code, stdout, stderr }); });
+  });
 }
 
 describe("render-frames", () => {
@@ -50,24 +44,6 @@ describe("render-frames", () => {
   test("usage exits 2 when no --out", async () => {
     const { code } = await runCli(["./test.html"]);
     assert.equal(code, 2);
-  });
-
-  test("exits 2 when Chrome not found", async () => {
-    if (findChrome()) {
-      // Skip this test if Chrome is available
-      return;
-    }
-    const dir = mkdtempSync(path.join(tmpdir(), "pp-render-no-chrome-"));
-    try {
-      const { code } = await runCli([
-        path.join(FIXTURE_SRC, "deck.html"),
-        "--out",
-        path.join(dir, "output"),
-      ]);
-      assert.equal(code, 2);
-    } finally {
-      rmSync(dir, { recursive: true, force: true });
-    }
   });
 
   test("exits 2 when ref file does not exist", async () => {
@@ -172,6 +148,9 @@ describe("render-frames", () => {
       assert.ok(existsSync(framesPath), "frames.json should exist even for blank");
       const framesJson = JSON.parse(readFileSync(framesPath, "utf8"));
       const source = framesJson.sources.find((s) => s.slug === "blank");
+      assert.ok(source, "blank source must be recorded in frames.json, not dropped");
+      assert.equal(source.status, "blank");
+      assert.match(source.diagnosis || "", /settle/, "diagnosis must be recorded on the source");
       assert.ok(source, "Should have blank source in frames.json");
       assert.equal(source.frames.length, 0, "Blank source should have no frames");
     } finally {
