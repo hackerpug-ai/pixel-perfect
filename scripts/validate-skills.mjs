@@ -9,7 +9,6 @@ const PLUGIN_ROOT = "plugins/pixel-perfect";
 const PUBLIC_CAPABILITIES = [
   "add-platform",
   "build",
-  "design-deconstruct",
   "evolve",
   "init",
   "refine",
@@ -90,9 +89,7 @@ async function validateSkill(root, relativePath, errors) {
 export async function validateSkills(root = REPOSITORY_ROOT) {
   const errors = [];
   const paths = [
-    `${PLUGIN_ROOT}/skills/deconstruct-engine/SKILL.md`,
     `${PLUGIN_ROOT}/skills/process-context/SKILL.md`,
-    `${PLUGIN_ROOT}/.opencode/skills/deconstruct-engine/SKILL.md`,
     `${PLUGIN_ROOT}/.opencode/skills/process-context/SKILL.md`,
     ...PUBLIC_CAPABILITIES.map((name) => `${PLUGIN_ROOT}/skills/${name}/SKILL.md`),
   ];

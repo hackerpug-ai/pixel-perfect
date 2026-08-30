@@ -1,6 +1,6 @@
 {
   "name": "pixel-perfect",
-  "version": "8.0.0",
+  "version": "9.0.0",
   "description": "Process orchestrator for building real, verified UI components in a target framework from a PRD, wireframes, or an existing design.",
   "author": {
     "name": "Justin Rich",
@@ -16,7 +16,7 @@
     "components",
     "wireframe",
     "sandbox",
-    "deconstruction"
+    "design-inventory"
   ],
   "skills": "./skills/",
   "interface": {
@@ -33,7 +33,7 @@
     "websiteURL": "https://github.com/hackerpug-ai/pixel-perfect",
     "defaultPrompt": [
       "Use Pixel Perfect to initialize this UI project",
-      "Deconstruct this design into a governed component system",
+      "Inventory these design frames and build the components they need",
       "Show the current Pixel Perfect phase and gate status"
     ],
     "brandColor": "#7C3AED",

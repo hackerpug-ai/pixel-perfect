@@ -1,7 +1,21 @@
 # Design Inventory replaces design-deconstruct
 
-Status: proposed
+Status: **shipped in 9.0.0** (2026-08-30) — all seven tasks done; proof run passed on holocron
 Date: 2026-08-30
+
+> **Outcome.** T1 `docs/INVENTORY-CONTRACT.md` + `docs/inventory.schema.json`; T2 `scripts/render-frames.mjs`
+> + shared `scripts/chrome.mjs` (10 real-Chrome tests; two fixes the proof forced: `--frame-selector auto`
+> falls back to top-most bordered screen-sized boxes because Claude Design runtimes re-serialize inline
+> colors, and local decks are served over per-directory HTTP because Chrome blocks `fetch()` between
+> `file://` URLs — without it every `<dc-import>` partial rendered as a blank panel); T3
+> `scripts/verify-inventory.mjs` (25 tests); T4 build Phase 4a + rewired 4b/5/5b/5c/6; T5 satellite
+> workflows/docs; T6 proof on holocron: 94 frames from 7 sources, one 250K-token read (vs the 865K ad-hoc
+> fork it replaces) → gate exit 0, all six previously-missed components + three organisms present,
+> `interrupted` ≠ `cancelled`, zero built-but-absent, plus finds the session's own audit missed
+> (`MobileHeader`, `Composer`/`LibraryRow`/`UnfurlCard` as organisms, 9-state Chats route);
+> T7 deconstruct deleted (412K engine + all surfaces), validators/tests/manifests updated, 9.0.0
+> prepared and verified, CI 174/174. Holocron artifacts: `.spec/prds/web-client/design/{reference/,
+> inventory.json,inventory.md}` — B-inv unanswered, so nothing is recorded in the holocron manifest.
 Evidence: the holocron `web-client` session (cmux `holocron` workspace, surface "pixel perfect",
 transcript `~/.claude/projects/-Users-justinrich-Projects-holocron/7d7bd2ba-….jsonl`, 2026-08-29 → 08-30)
 

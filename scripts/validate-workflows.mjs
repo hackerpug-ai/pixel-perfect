@@ -11,8 +11,8 @@ const PLUGIN_ROOT = "plugins/pixel-perfect";
 // user_choice batch; none may print a decision as prose.
 const INTERACTIVE_WORKFLOWS = ["add-platform", "build", "evolve", "init", "refine", "scaffold", "wireframe"];
 // Workflows that never ask. Linted for prose decisions only.
-const SILENT_WORKFLOWS = ["design-deconstruct", "research", "status", "verify"];
-const INTERNAL_SKILLS = ["deconstruct-engine", "process-context"];
+const SILENT_WORKFLOWS = ["research", "status", "verify"];
+const INTERNAL_SKILLS = ["process-context"];
 
 const CONTRACT_REQUIREMENTS = [
   "USER_CHOICE",
@@ -334,7 +334,7 @@ export function lintWorkflowText(text, relativePath, options = {}) {
 
   if (!structural) return errors;
   // Only workflows that ask are budgeted. A workflow whose deliverable IS a report — status,
-  // research, design-deconstruct — is doing exactly what it was invoked to do at any length.
+  // research, status, verify — is doing exactly what it was invoked to do at any length.
   if (interactive) {
     lintDigestBudget(lines, relativePath, errors);
     lintAsksSection(lines, relativePath, errors);

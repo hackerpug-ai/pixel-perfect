@@ -4,6 +4,21 @@ All notable changes to Pixel Perfect are documented here.
 
 ## [Unreleased]
 
+## [9.0.0] - 2026-08-30
+
+### Added
+
+- **Build Phase 4a — DESIGN INVENTORY.** When the manifest lists design references and `design/inventory.json` is missing or stale, `build` renders every reference to frames (`scripts/render-frames.mjs`, node + headless Chrome, sources loaded in place), dispatches one whole-design read against `docs/INVENTORY-CONTRACT.md`, gates it with `scripts/verify-inventory.mjs` (every frame claimed or excused; layering; undrawn reasons; unique names; `--frames` coverage), and confirms with `B-inv`. Later phases read their lists from the inventory; `B-atoms`/`B-mol`/`B-org` never fire on an inventoried project. Schema: `docs/inventory.schema.json`.
+- `render-frames.mjs` auto frame detection: `.fr`, then top-most bordered screen-sized boxes by computed style (Claude Design canvases), then full page. `scripts/chrome.mjs` — the shared headless-Chrome/CDP launcher `capture-polish.mjs` and `render-frames.mjs` both use.
+
+### Removed
+
+- **Breaking:** `pixel-perfect:design-deconstruct` and the bundled `deconstruct-engine` (five phases of token-pure HTML mockups, per-theme renders, audits, Design Review Browser, `theme-seed.json`, `deconstruction.json`, native mode). The design is the reference and the component is the deliverable; nothing is generated that is not shipped. See `docs/UPGRADING-9.0.md`.
+
+### Changed
+
+- **Breaking:** per-item targets are reference frames (`design/reference/{slug}/{NN}.png`, tied to entities by `design/inventory.json`), not `design/system` mockups. `init` seeds from `design/inventory.json`; `scaffold` reads the spec's token table, then the design references, then vibe keywords (no `theme-seed.json`); `status` reports the inventory receipt; `evolve` acquires new designs through `render-frames.mjs`; `wireframe`'s ladder is wireframe → inventory → component.
+
 ## [8.0.0] - 2026-08-12
 
 ### Added
