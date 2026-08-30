@@ -59,6 +59,7 @@ Build analyzes a whole codebase against a whole spec, so it has more to say than
 | Batch | Phase | Decisions | Fires |
 |-------|-------|-----------|-------|
 | B-arg | entry | what the free-form input meant | only when the input does not resolve to exactly one thing |
+| B-inv | 4a | the design inventory — every frame claimed, every component and screen×state to make | only when the manifest lists design references and `design/inventory.json` is missing or a reference changed |
 | B-plan | 4b | the level plan · the platform | always. Platform joins it only when several are configured and no `--platform` was passed |
 | B-eco | 4b | which complex components take a library | after B-plan, only when the plan left components that match a library pattern and `ecosystemMode` is not `off` |
 | B-val | 4b | how to handle a library that failed validation | only when a chosen library fails its install or peer-dependency check |
@@ -67,14 +68,15 @@ Build analyzes a whole codebase against a whole spec, so it has more to say than
 | B-org | 5c | the organism list | only when ORGANISMS is ACTIVE |
 | B-screens | 6 | the route map | only when the collapse is significant or a route is ambiguous |
 
-Worst case is eight calls across a greenfield multi-platform build with libraries; the common case on a scaffolded single-platform project is two — `B-plan`, then `B-screens`. A level whose list the plan already settled spends no call on re-confirming it.
+Worst case is nine calls across a greenfield multi-platform build with designs and libraries; the common case on a scaffolded single-platform project is two — `B-plan`, then `B-screens` — or three with designs, `B-inv` first. A level whose list the plan already settled spends no call on re-confirming it, and a project with a confirmed inventory never fires `B-atoms`, `B-mol`, or `B-org` at all.
 
 ## Overview
 
 Build progresses through an analysis phase followed by adaptive build phases. Each phase has entry/exit gates and tracks progress in the manifest.
 
 ```
-Phase 4b: PLAN      → Analyze spec + codebase; produce level-tagged work plan; confirm with user
+Phase 4a: INVENTORY → Render every design reference to frames; ONE whole-design read; coverage gate; confirm
+Phase 4b: PLAN      → Analyze inventory + spec + codebase; produce level-tagged work plan; confirm with user
 Phase 5: ATOMS      → Individual components (Button, Card, Badge, etc.)
 Phase 5b: MOLECULES → Functional compositions of 2-3 atoms (SearchBar, UserCard, FormField)
 Phase 5c: ORGANISMS  → Complex stateful compositions of molecules + atoms (DataTable, Accordion)
@@ -91,15 +93,93 @@ All build operations read from and write to `manifest.platforms[platform]`. Refe
 
 ---
 
+## Phase 4a: DESIGN INVENTORY
+
+Read every design the project has, once, before anything is planned — and come back with the list of real components and screen states to make, each tied to the rendered frame that justifies it. This phase exists because deriving component lists per layer from the spec's prose undercounts: it misses what the prose never named (a mobile tab bar that replaces the desktop rail, a row's overflow menu, a sign-in form drawn once) and it leaves organisms scattered across documents. One read, one confirmation, and every later phase dispatches from a settled list.
+
+**Runs when** `manifest.references` names at least one design source — an HTML deck, a URL, a screenshot, a `design/wireframes/` directory — and either `design/inventory.json` does not exist or a listed source's content hash differs from the one recorded in `manifest.inventory.sources[]`. **Skipped** silently when the project has no design references. **Skipped** in one line when the inventory is current: `Inventory current — 32 frames · 11 atoms · 13 molecules · 3 organisms · 5 screens (confirmed 2026-08-30)`.
+
+The inventory is never HTML and never a mockup. The frames it points at are the pixel-targets the real components are built to match; the inventory is the index that says which target belongs to which component. `design/` here means the directory holding `design/manifest.json`.
+
+### Step 1: Render the references to frames (deterministic)
+
+```
+node {plugin}/scripts/render-frames.mjs <ref>… --out design/reference [--frame-selector <css>]
+```
+
+One PNG per drawn frame, cropped from the rendered source, plus `design/reference/frames.json` (ids `{source-slug}/{NN}`, labels, viewports, a content hash per source). Sources are loaded **in place** — a deck that pulls in sibling partials at runtime keeps working. `--frame-selector` names the source's frame wrapper (default `.fr`, the Claude Design frame class); when it matches nothing the source becomes one full-page frame and the run says so — set the selector rather than accept one giant frame. Exit `1` (a blank render — the deck did not settle) or `2` (no Chrome, an unreadable reference) stops the phase with the script's diagnosis; never proceed on a partial render. A URL renders at desktop and mobile widths; an image is its own frame; a wireframes directory contributes text, not frames.
+
+`design/reference/` is committed — the frames are the targets the rest of the build refers to.
+
+### Step 2: One whole-design read (probabilistic)
+
+`DESIGN_EXECUTE` with `docs/INVENTORY-CONTRACT.md`, substituting: the frames index and every frame image, the source files, `manifest.spec`, the platform's existing atoms/molecules/organisms/screens (names are reused, never re-invented), `scaffold.components[]` (library primitives are recorded, not re-created), and the prior `design/inventory.json` when re-running. **One dispatch, strongest available vision-capable model** — do not split the read per source; cross-source compositions are what a split loses. The designer returns `design/inventory.json` (`docs/inventory.schema.json`).
+
+### Step 3: Gate (deterministic)
+
+```
+node {plugin}/scripts/verify-inventory.mjs design/inventory.json --frames design/reference/frames.json
+```
+
+Every rendered frame is claimed by a screen state or listed as unclaimed with a reason; every `composes` name exists one layer down or lower; every screen state and every component has a frame or an `undrawn` reason; names are unique. Exit `1` → re-dispatch the read with the printed violations (cap 2, then stop and surface to the user); `2` → the returned JSON is malformed, re-dispatch once with the shape errors; `3` → nothing was looked at, treat as a failed render.
+
+### Step 4: Write the brief, digest it, and confirm
+
+Write `design/inventory.md` — the human view: frames per source, the route map with states and their frames, each layer's list with what it composes and where it appears, the unclaimed frames and why, the `undrawn` items, and the designer's `notes`. Then digest it and fire `B-inv` in the same turn:
+
+```
+DESIGN INVENTORY — 6 sources · 32 frames (30 claimed · 2 palette sheets) · design/inventory.md
+
+  ATOMS      11  (4 library primitives)
+  MOLECULES  13
+  ORGANISMS   3  NavRail · ResearchCard · DocumentBody
+  SCREENS     5  /chats [6 states] · /library [4] · /library/:id [4] · /d/:token [3] · /sign-in [4]
+  UNDRAWN     1  Citation — spec G1, no frame draws it
+
+  Note: the deck draws interrupted and cancelled as two outcomes; the routing doc lists one.
+```
+
+```user_choice
+batch: B-inv — the design inventory
+- header: Inventory
+  question: Is this inventory of components and screen states the set to build?
+  options:
+    - label: Yes, this is the set (Recommended)
+      description: Records the inventory as the required set. Every later phase reads its lists from it — the plan, the atoms, the molecules, the organisms, the route map — and none of them re-asks what the designs contain. Each item is built to match the frames the inventory ties it to.
+    - label: Change the inventory
+      description: Choose Other and name what to add, drop, rename, merge, or re-layer — for example a molecule that is really an organism, two screen states that are one, or a component the read missed. The inventory is corrected and re-gated before it is recorded; nothing is built from the uncorrected version.
+    - label: Cancel
+      description: Writes nothing to the manifest. The rendered frames and the unconfirmed inventory stay on disk for inspection, and re-running build resumes here from the same read instead of redoing it.
+```
+
+**Change the inventory** applies the named edits to the JSON, re-runs the gate, and re-presents the digest. On acceptance, write `confirmed` (ISO time) into `design/inventory.json` and record the receipt in the manifest:
+
+```json
+{
+  "inventory": {
+    "file": "design/inventory.json",
+    "reference": "design/reference",
+    "confirmed": "2026-08-30T18:40:00Z",
+    "sources": [ { "ref": ".spec/prds/web-client/designs/concepts/Cockpit.dc.html", "hash": "sha256:…" } ]
+  }
+}
+```
+
+### Phase 4a Exit Gate
+
+`design/inventory.json` exists with `confirmed` set, `verify-inventory.mjs` exits `0` against the current `frames.json`, and `manifest.inventory.sources[].hash` matches every reference. A reference whose hash later changes makes the inventory stale: before `compose` has passed, build re-runs this phase (the prior inventory is an input, so confirmed names survive); after `compose` has passed, route the change to `pixel-perfect:evolve`, which classifies the delta against the golden catalog.
+
+---
+
 ## Phase 4b: BUILD PLAN
 
 Analyze the requirements spec against the current codebase state. Determine which build levels have non-zero delta — what needs to be created, updated, or is already complete. Produce a work plan. The user confirms the plan before any code is written.
 
 This phase runs automatically when `pixel-perfect:build` is invoked and `plan` is not yet `passed` in the manifest.
 
-**If the project was seeded by `pixel-perfect:design-deconstruct`** (`design/deconstruction.json` exists): the atoms/molecules lists are pre-populated from the deconstruction inventory (atoms→atoms, molecules→molecules), and the screens are the deconstruction views **collapsed by route** — state-split views (`feed/default`, `feed/empty`, …) become ONE screen with a `states` list, not separate screens (see Phase 6 Step 1). Each item carries a `target` mockup (per state for collapsed screens). Treat these as the required set, reconcile against the spec, and confirm the route map with the user as usual.
+**If the project has design references** (`manifest.references` names decks, URLs, screenshots, or a `design/wireframes/` directory): Phase 4a has already run and `design/inventory.json` is the required set — atoms, molecules, organisms, and screens (route-keyed, with `states`), each carrying the reference frames that justify it. The lists below are read from it, not re-derived from the spec. Reconcile against the spec (an item the spec requires and no frame draws is already in the inventory as `undrawn`) and confirm the plan as usual.
 
-**If the project was wireframed** (`design/wireframes.json` exists): the **screen list** — and the atoms/molecules each screen implies — is pre-populated from the wireframe inventory, with each screen carrying its `design/wireframes/{screen}.md` as a structural target. (A later `design-deconstruct` run upgrades these structural targets to high-fi mockups.)
+**If the project has no design references**: the lists are derived from the spec as Step 2 describes, and the per-layer identification steps (Phase 5 Step 1, 5b Step 1, 5c Step 1, 6 Step 1) ask their batches as written. A wireframed project (`design/wireframes.json`) has design references — the wireframes directory is a source the inventory reads.
 
 ### The Build Levels
 
@@ -130,7 +210,7 @@ A missing token file makes Tokens ACTIVE (greenfield token setup). A missing or 
 
 ### Step 2: Read the spec and compute the delta
 
-Read the requirements document (from `manifest.spec`). For each level, **delta = required by spec − already verified in the codebase**. A level is ACTIVE when its delta is above zero, SKIP when the delta is zero and no lower level is ACTIVE.
+Read the requirements document (from `manifest.spec`) and, when it exists, `design/inventory.json`. For each level, **delta = required − already verified in the codebase**, where *required* is the inventory's list for that level when an inventory exists and otherwise what the spec names. A level is ACTIVE when its delta is above zero, SKIP when the delta is zero and no lower level is ACTIVE.
 
 **Bottom-up propagation is automatic.** A lower ACTIVE level forces every higher level to be re-evaluated, even when its own delta is zero — changed atoms mean the molecules composing them need re-checking. A level cannot be SKIP while something below it is ACTIVE.
 
@@ -158,6 +238,7 @@ This is the workflow's first turn and it ends on a question.
 ```
 BUILD PLAN — web-desktop · brownfield · design/build-plan.md
 
+  INVENTORY  9 frames · 4 atoms · 2 molecules · 1 organism · 2 screens (confirmed)
   TOKENS     skip    token file matches spec
   ATOMS      build   1 new (ActionButton); 3 already verified
   MOLECULES  build   1 new (JobRow) — triggered by the atoms change
@@ -341,6 +422,8 @@ Build individual, reusable components.
 
 Fire `B-atoms` only when the list is genuinely open: the user chose "Change what gets built" at the plan gate, or the atoms are being derived here for the first time because the plan was seeded without them.
 
+**With an inventory** (`design/inventory.json`), the list is never open here: the atoms are `inventory.atoms` minus what is verified on disk, confirmed at `B-inv` and again at `B-plan`. Each atom's `states` and `variants` come from its inventory entry; an atom with `library_primitive` set is configured from the component library, not created.
+
 ```
 ATOMS 0/5 — StatusBadge, JobCard, DateChip, SectionHeader, ActionButton. Building StatusBadge.
 ```
@@ -379,7 +462,7 @@ For each component, in order:
    - **Component contract** for this platform's component library (`manifest.platforms[platform].tools.component_contract`). Load `docs/component-contracts/{id}.md` when `component_contract_source` is `builtin`/`manual`, or `design/research/libraries/{id}.md` when `researched`. This is a **hard constraint** on what the component is built on (Step 1c) — not optional guidance. If `component_contract_source` is `"none"` or absent, **no contract is loaded and nothing is printed** — a project with no component library is a normal project, and Step 1c and its gate are skipped entirely.
    - Project theme file
    - The bundled design contract (`docs/DESIGN-CONTRACT.md`) and the result of `DESIGN_EXECUTE` for this atom
-   - **Deconstruction target** (if `design/deconstruction.json` exists): the matching mockup for this atom (its `inventory.atoms[].html` / `.png`) — build the real component to match the mockup's structure, tokens, and states
+   - **Inventory target** (if `design/inventory.json` exists): the frames this atom's `appears_on` names (`design/reference/{slug}/{NN}.png`) and its `states`, `variants`, and `evidence` — look at the frame images and build the real component to match their structure, tokens, and states. A source deck's markup and CSS are a pixel reference only
 
 ### Step 1b: Apply Styling Contract
 
@@ -394,7 +477,7 @@ From the contract, you MUST:
 
 You MUST NOT:
 - Use any **forbidden pattern** in the contract's `checks` block (e.g. global custom-class CSS, inline `style={{}}` for static values, hardcoded color literals). These are blocking — Step 4's gate fails the layer on any.
-- **Port a mockup's `<style>` block verbatim into the project.** A deconstruction target's CSS is a *pixel reference only*; translate every style into the contract's emit method. (The gate would block the verbatim port anyway.)
+- **Port a design source's `<style>` block verbatim into the project.** A reference frame's source CSS is a *pixel reference only*; translate every style into the contract's emit method. (The gate would block the verbatim port anyway.)
 
 The styling contract governs the **styling mechanism**. What the component is *built on* is governed by the component contract — Step 1c. Both apply, and neither can catch the other's failure.
 
@@ -544,7 +627,7 @@ The contract's `Free primitives` section is as binding as its ban list: layout a
      - `hard-fail` (default): **block this atom** — print the violations (file, pattern, rationale) and rebuild the component on the library's primitive before continuing. Do NOT mark the atom verified.
      - `warn`: print the violations and continue (the atom is still verified).
      - The two gates are independent and both must pass. A styling-contract pass says nothing about composition: hand-rolled markup with correct utility classes satisfies every styling contract in the repo. This is the gate that would have caught a component library declared, installed, and then ignored.
-   - If a deconstruction `target` exists for this atom: the rendered component matches the mockup's structure, tokens, and states (the literal pixel-perfect goal)
+   - If the inventory names frames for this atom: the rendered component matches the frames' structure, tokens, and states (the literal pixel-perfect goal)
 
 5. **Aesthetic gate** (always active through the bundled design contract):
    - Component uses the project font pairing
@@ -660,7 +743,7 @@ If none of these conditions apply, skip Phase 5b and proceed to Phase 6.
 
 ### Step 1: Identify Molecules
 
-Review the verified atoms and the spec for repeated atom groupings, then digest the candidates with the screens that justify each one:
+**With an inventory**, the molecules are `inventory.molecules` minus what is verified on disk, and each one's state declarations (Step 1b) are seeded from its inventory `states[]` — digest them one line each and continue; `B-mol` never fires. Otherwise, review the verified atoms and the spec for repeated atom groupings, then digest the candidates with the screens that justify each one:
 
 ```
 Proposed molecules
@@ -934,7 +1017,7 @@ If no patterns meet these criteria, skip Phase 5c and proceed to Phase 6. This p
 
 ### Step 1: Identify Organisms
 
-Review molecules, atoms, and the spec for complex compositions spanning multiple screens. Digest each candidate as one line — what it composes, what state it owns, and where it is reused:
+**With an inventory**, the organisms are `inventory.organisms` minus what is verified on disk, each with its `composes`, `states`, and the frames it appears on — digest them one line each and continue; `B-org` never fires. Otherwise, review molecules, atoms, and the spec for complex compositions spanning multiple screens. Digest each candidate as one line — what it composes, what state it owns, and where it is reused:
 
 ```
 Proposed organisms
@@ -1088,7 +1171,7 @@ Screens are keyed by **route**, not by visual state. Multiple state-variants of 
 Gather every candidate view from all available sources:
 - The spec/PRD's described screens and information architecture / navigation
 - `design/wireframes.json` `screens[]` (if wireframed) — note each wireframe's `## States` annotation (default/empty/loading/error)
-- `design/deconstruction.json` `inventory.views[]` (if deconstructed) — these are often **already state-split** into nested folders (`feed/default`, `feed/empty`, `feed/loading`)
+- `design/inventory.json` `screens[]` (if the project has design references) — already route-keyed and state-split, each state naming its frames. **With an inventory, Steps 1b and 1c are done**: go to Step 1d and present its route map, forcing the gate only when the inventory's `notes` flag an ambiguous collapse or the collapse rule below says so
 
 #### Step 1b: Assign a route to each candidate
 
@@ -1156,7 +1239,7 @@ For each screen:
    - **Styling contract and component contract** — the same two resolved in Phase 5 Step 1 (`tools.style_contract`, `tools.component_contract`). Both remain hard constraints at this layer: apply them per Steps 1b and 1c, and both gates run at Step 4. A component contract that is `"none"`/absent stays silent here too.
    - Theme file
    - The bundled design contract and the result of `DESIGN_EXECUTE` for this screen
-   - **Target (fidelity precedence)** — build the screen to match the highest-fidelity reference available: a **deconstruction mockup** (`design/deconstruction.json` → `inventory.views[].html`/`.png`, high-fi) if present; otherwise the screen's **wireframe** (`design/wireframes/{screen}.md`, structural — match its layout/IA/regions). If both exist, the mockup governs pixels while the wireframe still informs structure.
+   - **Target (fidelity precedence)** — build the screen to match the highest-fidelity reference available: the state's **reference frames** (`design/inventory.json` → `screens[].states[].frames`, rendered under `design/reference/`) if present; otherwise the screen's **wireframe** (`design/wireframes/{screen}.md`, structural — match its layout/IA/regions). If both exist, the frames govern pixels while the wireframe still informs structure.
 
 2. **Write screen file:**
    - Composes atoms into a complete layout
@@ -1224,7 +1307,7 @@ For each screen:
    - Layout responds to viewport changes (if applicable)
    - No hardcoded spacing or colors (uses theme)
    - **Both contract gates** pass across the built component/screen files — same script, same invocation, same exit-code handling as Phase 5 Step 4. The component gate is skipped when no component contract is in force.
-   - If a `target` exists for this screen (a deconstruction mockup, or else the wireframe): the layout matches it — structure, spacing rhythm, responsive behavior (and pixels too when the target is a high-fi mockup)
+   - If a target exists for this screen (its reference frames, or else the wireframe): the layout matches it — structure, spacing rhythm, responsive behavior (and pixels too when the target is a rendered frame)
 
 5. **Aesthetic gate** (always active through the bundled design contract):
    - Layout has intentional hierarchy (not uniform spacing)
@@ -1276,7 +1359,7 @@ Update manifest:
 
 ## Resuming
 
-If BUILD PLAN has not been confirmed (plan gate is `pending`), `pixel-perfect:build` runs Phase 4b first before resuming any other phase.
+If the project has design references and no current inventory (missing, unconfirmed, or a reference's hash changed), `pixel-perfect:build` runs Phase 4a first. If BUILD PLAN has not been confirmed (plan gate is `pending`), it runs Phase 4b next, before resuming any other phase.
 
 Otherwise build resumes from the current phase in one line and keeps going. It does not re-audit the codebase, re-read the spec, or re-present a plan the manifest already holds.
 

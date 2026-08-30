@@ -53,7 +53,7 @@ src/lib/
 Bits UI has no theme. Styling comes entirely from the **style adapter** and the project theme tokens:
 
 - **Tailwind**: reference theme tokens as utilities (`bg-primary`, `text-muted-foreground`, `rounded-[var(--radius)]`). Define the semantic tokens (`--primary`, `--background`, `--radius`, …) in `app.css` exactly as the shadcn token model (see `docs/adapters/shadcn.md` → Theme Integration; the same `:root` / `.dark` CSS-variable block applies).
-- Keep all values semantic (no hardcoded colors) so the project theme — including a `design/theme-seed.json` produced by `design-deconstruct` — drives the look.
+- Keep all values semantic (no hardcoded colors) so the project theme — grounded in the spec's token table or the design references when the manifest lists them — drives the look.
 
 ## Verify
 

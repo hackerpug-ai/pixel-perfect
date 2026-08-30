@@ -1,11 +1,11 @@
 # Wireframe (Phase 0 — low-fidelity on-ramp)
 
-The cheapest rung of the design ladder. Point this at **plans or any other target** (a PRD, a sprint ROADMAP/SPRINT/TASK, a spec, the manifest, a deconstruction inventory, or a written concept) and it produces **ASCII box-drawing wireframes** in `design/wireframes/` — one per screen, desktop + mobile, annotated and mapped to the components they imply.
+The cheapest rung of the design ladder. Point this at **plans or any other target** (a PRD, a sprint ROADMAP/SPRINT/TASK, a spec, the manifest, a design inventory, or a written concept) and it produces **ASCII box-drawing wireframes** in `design/wireframes/` — one per screen, desktop + mobile, annotated and mapped to the components they imply.
 
-ASCII is deliberate: it's token-cheap, diff-able, version-controllable, needs **no renderer** (no Chrome), and the AI reads/writes it natively. A wireframe forces the **structural** decisions — layout, information architecture, hierarchy, states — *before* you spend effort on pixels. It is a pre-step to high-fidelity design or `pixel-perfect:design-deconstruct`, completing the fidelity ladder:
+ASCII is deliberate: it's token-cheap, diff-able, version-controllable, needs **no renderer** (no Chrome), and the AI reads/writes it natively. A wireframe forces the **structural** decisions — layout, information architecture, hierarchy, states — *before* you spend effort on pixels. It is the structural rung below build's design inventory, completing the fidelity ladder:
 
 ```
-wireframe (ASCII, structure)  →  mockup (HTML, design-deconstruct / high-fi)  →  component (real, Storybook)
+wireframe (ASCII, structure)  →  inventory (design/inventory.json — what to make, read from wireframes or high-fi designs)  →  component (real, in the sandbox)
 ```
 
 Wireframes are **targets/specs, never the deliverable** — the real components supersede them. They live in `design/wireframes/` and are never shipped.
@@ -22,7 +22,7 @@ pixel-perfect:wireframe [<target>] [options]
   - a **plan/spec** path — `PRD.md`, `ROADMAP.md`, `SPRINT.md`, a `TASK-*.md`, or any spec markdown
   - a **directory** (scans for the above)
   - `design/manifest.json` (uses the project's `spec` + any seeded screen list)
-  - `design/deconstruction.json` (re-wireframe from a deconstruction inventory)
+  - `design/inventory.json` (re-wireframe from a design inventory)
   - a **quoted concept/goal** — e.g. `"a field-service dashboard: today's jobs, job detail, settings"`
   - **omitted** → auto-detect via `init.md`'s requirements-discovery order (`manifest.spec`, then `PRD.md`, `requirements.md`, `README.md`, `*.md`)
 
@@ -67,7 +67,7 @@ Name the engine in the opening digest — one clause, not a section. No renderer
 
 ### Step 1: Acquire the target + derive the screen list
 
-1. Resolve `<target>` (or auto-detect). Read the plan/spec. If `design/deconstruction.json` or a manifest screen list already exists, reuse that inventory rather than re-deriving.
+1. Resolve `<target>` (or auto-detect). Read the plan/spec. If `design/inventory.json` or a manifest screen list already exists, reuse that inventory rather than re-deriving.
 2. For **each screen/view**, extract: its regions/sections, the components each region implies, the **states** (default / empty / loading / error), key interactions, and representative data.
 3. **Confirm the screen list with the user** before generating (as `init` and `build` do). Digest it as one line per screen — its name and its purpose — and fire `W1` in the same turn:
 
@@ -216,8 +216,8 @@ Wireframed PRD.md — 3 screens, engine: frontend-designer
 
   design/wireframes/{TodayFeed,JobDetail,Settings}.md + index.md + wireframes.json
 
-  Next: pixel-perfect:design-deconstruct design/wireframes  → HTML mockups + tokens
-        or pixel-perfect:init                               → seeds these screens
+  Next: pixel-perfect:init   → records these wireframes as a design reference and seeds the screens;
+        build's Phase 4a then inventories them alongside any high-fi designs
 ```
 
 ---
@@ -235,8 +235,8 @@ Wireframed PRD.md — 3 screens, engine: frontend-designer
 
 ## Relationship to other commands
 
-- **Fidelity ladder:** `wireframe` (structure) → `design-deconstruct` / high-fi (pixels) → `build` (real components). Each rung is a target the next rung is built to match.
-- **`pixel-perfect:design-deconstruct design/wireframes`** consumes these wireframes as a *source* (it normalizes the ASCII into a concept HTML, then produces token-governed HTML mockups).
+- **Fidelity ladder:** `wireframe` (structure) → `build` Phase 4a design inventory (what to make, with the frames or wireframes as targets) → `build` (real components). Each rung is a target the next rung is built to match.
+- **`pixel-perfect:build`** reads `design/wireframes/` as a design reference in Phase 4a — the annotations and build mappings become inventory entries; no conversion step in between.
 - **`pixel-perfect:init`** detects `design/wireframes/` and pre-seeds the screen list + references.
 - **`pixel-perfect:research`** gathers external patterns; wireframes encode *your* structure. They compose — research informs the layout, the wireframe commits to it.
 
@@ -252,9 +252,9 @@ pixel-perfect:wireframe .spec/prds/field-service/PRD.md --desktop-only --width 9
 # From a one-line concept
 pixel-perfect:wireframe "analytics dashboard: overview, reports, alerts, settings"
 
-# Re-wireframe from an existing deconstruction inventory
-pixel-perfect:wireframe design/deconstruction.json --force
+# Re-wireframe from an existing design inventory
+pixel-perfect:wireframe design/inventory.json --force
 
-# Then climb the ladder
-pixel-perfect:design-deconstruct design/wireframes
+# Then climb the ladder — init records the wireframes as a reference, build inventories them
+pixel-perfect:init && pixel-perfect:scaffold && pixel-perfect:build
 ```

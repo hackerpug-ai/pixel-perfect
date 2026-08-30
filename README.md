@@ -36,9 +36,9 @@ A design system that is generated once and then hand-edited is just a slower way
 
 ## Designs Are Inputs, Not Deliverables
 
-Bringing a design *in* is a first-class path, not a compromise. Point `design-deconstruct` at a URL, a screenshot, an HTML export, a competitor's app, or a written concept, and it extracts a token-governed atomic system from it — semantic tokens plus atom, molecule, organism, and view mockups. Those become **targets** the real components are built to match, pixel for pixel.
+Bringing a design *in* is a first-class path, not a compromise. List a Claude Design deck, an HTML export, a URL, a screenshot, or a wireframes folder in the manifest's references, and `build` reads it before it plans: every frame is rendered, read once, and turned into `design/inventory.json` — the atoms, molecules, organisms, and screen states to make, each tied to the frame that justifies it. Those frames are the **targets** the real components are built to match, pixel for pixel.
 
-The mockup is a precise reference spec that AI reads perfectly. It is never what ships. The components in your framework's sandbox supersede it.
+There is no mockup step in between. The design is the reference and the component is the deliverable; nothing is generated that is not shipped.
 
 ## Why a Sandbox Makes This Work
 
@@ -146,10 +146,8 @@ Invoke capabilities as `/init`, `/build`, `/status`, and so on. To upgrade to a 
 ### First Project
 
 ```bash
-# 0. (Optional) Start from an existing design instead of a blank PRD
-/pixel-perfect:design-deconstruct https://example.com   # Claude Code or Grok
-# $pixel-perfect:design-deconstruct https://example.com # Codex
-# /design-deconstruct https://example.com               # OpenCode or Cursor
+# 0. (Optional) Have a design already? Keep it where it is — init records it as a
+#    reference, and build reads every frame of it once before planning.
 
 # 1. Set up your project (phases 1-3)
 /pixel-perfect:init
@@ -248,11 +246,10 @@ Every component prop is wired to sandbox controls (`argTypes` in Storybook; labe
 
 | Command | Phases | What It Does |
 |---------|--------|-------------|
-| `/pixel-perfect:wireframe` | 0 (optional) | Low-fi: ASCII wireframes from plans/targets into `design/wireframes/` — a pre-step to design-deconstruct |
-| `/pixel-perfect:design-deconstruct` | 0 (optional) | Deconstruct existing UI (code, URL, screenshot, concept) into token-governed HTML mockups that seed the build |
+| `/pixel-perfect:wireframe` | 0 (optional) | Low-fi: ASCII wireframes from plans/targets into `design/wireframes/` — a structural source for build's design inventory |
 | `/pixel-perfect:init` | 1-3 | DISCOVER goal + vibe, TARGET platforms + framework + tools, EQUIP |
 | `/pixel-perfect:scaffold` | 4 | Install tools, create theme, generate design token stories, verify hello-world, write first catalog golden |
-| `/pixel-perfect:build` | 5-7 | Build atoms, compose screens, wire integration (layer goldens + composition mutation check) |
+| `/pixel-perfect:build` | 4a-7 | Inventory the designs (render every frame, read once, gate, confirm), then build atoms, compose screens, wire integration (layer goldens + composition mutation check) |
 | `/pixel-perfect:verify` | any | Run gate checks for current phase (contracts + catalog capture) |
 | `/pixel-perfect:status` | any | Show phase progress, catalog drift, dead inventory, and component tracking |
 | `/pixel-perfect:research` | any | Research design patterns, competitors, and ecosystem libraries (`--libraries`) |
@@ -263,13 +260,11 @@ Every component prop is wired to sandbox controls (`argTypes` in Storybook; labe
 ### Command Flow
 
 ```
-wireframe ─▶ design-deconstruct      research (optional)
-(ASCII,      (HTML mockups,                 |
- optional)    optional)                     |
-        \           \                       |
-         v           v                      v
-        init  ──▶  scaffold  ──▶  build  ──▶  verify
-        (1-3)      (4)           (5-7)       (gates)
+wireframe (ASCII, optional)   designs (decks, URLs, shots)   research (optional)
+        \                          |                              |
+         v                         v                              v
+        init  ──▶  scaffold  ──▶  build  ─────────────────────▶  verify
+        (1-3)      (4)           (4a inventory · 5-7 build)      (gates)
                                   |
                     ┌─────────────┼─────────────┐
                     v             v             v
@@ -279,29 +274,24 @@ wireframe ─▶ design-deconstruct      research (optional)
 
 ---
 
-## Starting From Existing UI or Concepts
+## Starting From Existing UI or Designs
 
-Not every project starts from a written PRD. If you already have a design — a competitor's site, an old app's components, a screenshot, a Claude Design export, or just a concept — run the optional **`design-deconstruct`** step first:
+Not every project starts from a written PRD. If you already have a design — Claude Design decks, a competitor's site, a screenshot, an HTML export — point `init` at it: each source is recorded in the manifest's `references`, untouched and in place. Then `build`'s first phase, **DESIGN INVENTORY**, does the reading:
 
-```
-/pixel-perfect:design-deconstruct <source>   # code path, URL, image, HTML, or concept text
-```
+1. `render-frames.mjs` renders every reference to per-frame PNGs under `design/reference/` (sources are loaded where they live, so decks that import sibling partials keep working);
+2. one whole-design read — every frame image, every source, the spec — returns `design/inventory.json`: atoms, molecules, organisms, and screens with their states, each naming the frames that justify it and what it composes;
+3. `verify-inventory.mjs` proves every rendered frame is claimed or excused and every composition names things one layer down;
+4. you confirm the inventory once, and every later phase builds from it.
 
-It normalizes the source into a concept HTML, then deconstructs it into a **token-governed atomic design system** under `design/system/` — semantic tokens plus atom / molecule / organism / view HTML mockups (with PNG references). Those outputs seed the rest of the process:
-
-- the extracted **tokens** become the theme (`scaffold` reads `design/theme-seed.json`)
-- the **inventory** pre-fills the atom / molecule / screen build lists
-- each **view mockup** becomes a pixel-perfect *target* the real component is built to match
-
-The deconstructed HTML is a precise, token-governed *reference spec* — clean markup the AI reads perfectly — not a lossy hand-drawn mock, and never the deliverable. The real components in your framework's native sandbox supersede it. The deconstruction engine ships with the plugin; it extracts every UI concept and token from your design into a governed system. Nothing extra to install.
+Component lists come from looking at the designs, not from grepping the spec — the difference between finding the mobile tab bar and shipping without one. The read happens once, up front; the frames stay as pixel-targets; nothing is generated that is not shipped.
 
 ### Wireframe first (the low-fi rung)
 
 When you're starting from **plans** rather than existing UI, run `/pixel-perfect:wireframe` first. It turns a PRD / sprint plan / spec (or a one-line concept) into **ASCII box-drawing wireframes** in `design/wireframes/` — one per screen, desktop + mobile, annotated and mapped to the components they imply. No renderer, no pixels: it commits the *structure* (layout, IA, hierarchy, states) cheaply. That gives the full **fidelity ladder**:
 
-> **wireframe** (ASCII, structure) → **mockup** (HTML, design-deconstruct / high-fi) → **component** (real, in your framework's native sandbox)
+> **wireframe** (ASCII, structure) → **inventory** (`design/inventory.json`, what to make) → **component** (real, in your framework's native sandbox)
 
-Each rung is a *target* the next is built to match. Wireframes feed `design-deconstruct` directly (`/pixel-perfect:design-deconstruct design/wireframes`) or seed `init` (it detects them and pre-fills your screen list).
+Each rung is a *target* the next is built to match. A wireframes folder is itself a design reference — `init` detects it and pre-fills your screen list, and `build`'s inventory phase reads it alongside any high-fi designs.
 
 ---
 

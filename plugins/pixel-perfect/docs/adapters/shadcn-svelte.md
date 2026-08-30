@@ -76,7 +76,7 @@ shadcn-svelte uses the **same CSS-custom-property theme model as shadcn/ui**. Ma
 | professional | Slate-based neutrals, `--radius: 0.5rem`, subtle `--accent` |
 | playful | Multi-hue `--primary`/`--secondary`, `--radius: 1rem`, warm `--muted` |
 
-When a `design-deconstruct` run produced `design/theme-seed.json`, write those semantic tokens straight into this `:root` / `.dark` block instead of deriving from vibe keywords (the token names align 1:1).
+When the spec carries a token table, or the manifest lists design references, write the semantic tokens read from them straight into this `:root` / `.dark` block instead of deriving from vibe keywords.
 
 ### Tailwind Bridge
 The CSS variables are exposed as Tailwind utilities (`bg-primary`, `text-primary-foreground`, `border-border`, …) via the Tailwind theme wiring that `init` sets up.
