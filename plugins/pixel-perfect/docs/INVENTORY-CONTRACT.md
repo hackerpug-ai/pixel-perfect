@@ -68,9 +68,10 @@ PROCEDURE (in this order — the order is what prevents undercounting)
        state   — what varies (default · empty · loading · error · a tab · a drawn outcome).
        shows   — every distinct composition visible in it, by name (the names you will
                  use in the layers below).
-     A frame that is not a product screen (a palette sheet, a type ramp, a decisions page,
-     a sticker sheet of one component's variants) is UNCLAIMED with that reason — and its
-     content still feeds atoms/molecules (a variant sheet names states and variants).
+     A frame that is not a product screen is still accounted for: a sticker sheet of one
+     component's variants is claimed by the components that appear on it (list it in their
+     appears_on, and read its states and variants off it); a frame nothing is built from —
+     a palette sheet, a type ramp, a decisions page — is UNCLAIMED with that reason.
   3. Roll up bottom-up:
        atoms      — indivisible UI primitives. One that the component library already
                     provides is still listed, with library_primitive set (e.g.
