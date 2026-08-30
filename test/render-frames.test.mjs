@@ -266,6 +266,28 @@ describe("render-frames", () => {
     }
   });
 
+  test("auto selector falls back to top-most bordered boxes when no .fr exists", async () => {
+    const tmpDir = mkdtempSync(path.join(tmpdir(), "pp-render-bordered-"));
+    const outDir = path.join(tmpDir, "output");
+    try {
+      const { code, stderr } = await runCli([path.join(FIXTURE_SRC, "bordered.html"), "--out", outDir]);
+      assert.equal(code, 0, stderr);
+      const frames = JSON.parse(readFileSync(path.join(outDir, "frames.json"), "utf8"));
+      const source = frames.sources.find((s) => s.slug === "bordered");
+      assert.equal(source.frame_selector, "auto:bordered");
+      const ids = frames.frames.filter((f) => f.id.startsWith("bordered/")).map((f) => f.id);
+      assert.deepEqual(ids, ["bordered/01", "bordered/02"], "two screen-sized boxes; nested card and tiny box excluded");
+      const [a, b] = frames.frames.filter((f) => f.id.startsWith("bordered/"));
+      assert.equal(a.label, "Screen A");
+      assert.equal(b.label, "Screen B mobile");
+      assert.ok(a.width >= 640 && a.height >= 400, `frame A rect ${a.viewport}`);
+      assert.ok(b.width >= 390 && b.width < 500, `frame B rect ${b.viewport}`);
+      for (const id of ids) assert.ok(existsSync(path.join(outDir, `${id}.png`)), `${id}.png written`);
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
   test("frame selector .nope produces warning and full-page frame", async () => {
     const chrome = findChrome();
     assert.ok(chrome, "Chrome must be available to run this test");

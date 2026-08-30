@@ -34,7 +34,9 @@ Usage:
 
 Options:
   --out <dir>               output directory (required)
-  --frame-selector <css>    CSS selector for frames (default: .fr)
+  --frame-selector <css>    CSS selector for frames, or auto (default): .fr, then
+                            top-most bordered boxes >=300x200 (Claude Design canvases),
+                            then the full page
   --settle <ms>             settle time after load (default: 15000)
   --width <px>              desktop viewport width (default: 1440)
   --mobile-width <px>       mobile viewport width (default: 390)
@@ -163,12 +165,10 @@ async function renderHtmlDeck(cdp, ref, selector, settleMs, width) {
     hasTouch: false,
   });
 
-  // Query frames
-  const frameElements = await cdp.send("Runtime.evaluate", {
-    expression: `(function() {
-      const selector = ${JSON.stringify(selector)};
-      const elements = Array.from(document.querySelectorAll(selector));
-      return elements.map(el => {
+  // Query frames. "auto" tries the Claude Design frame class first, then a computed-style
+  // heuristic — top-most bordered boxes of screen size — because deck runtimes re-serialize
+  // inline colors (hex -> rgb()), so an attribute selector on the authored style never matches.
+  const RECT_MAP = `els.map(el => {
         const rect = el.getBoundingClientRect();
         return {
           x: Math.round(rect.left),
@@ -180,12 +180,30 @@ async function renderHtmlDeck(cdp, ref, selector, settleMs, width) {
           state: el.getAttribute('data-state') || null,
           heading: (el.querySelector('h1, h2, h3')?.textContent || '').trim().slice(0, 80) || null,
         };
+      })`;
+  const bySelector = (sel) => `(function() { const els = Array.from(document.querySelectorAll(${JSON.stringify(sel)})); return ${RECT_MAP}; })()`;
+  const BORDERED = `(function() {
+      const cands = Array.from(document.querySelectorAll('div,section,article,figure')).filter(el => {
+        const cs = getComputedStyle(el); const r = el.getBoundingClientRect();
+        return r.width >= 300 && r.height >= 200 && parseFloat(cs.borderTopWidth) > 0 && cs.borderTopStyle !== 'none';
       });
-    })()`,
-    returnByValue: true,
-  });
+      const els = cands.filter(el => !cands.some(o => o !== el && o.contains(el)));
+      return ${RECT_MAP};
+    })()`;
+  const query = async (expression) => (await cdp.send("Runtime.evaluate", { expression, returnByValue: true })).result?.value || [];
 
-  const frames = frameElements.result?.value || [];
+  let frames = [];
+  let resolvedSelector = selector;
+  if (selector === "auto") {
+    frames = await query(bySelector(".fr"));
+    resolvedSelector = "auto:.fr";
+    if (frames.length === 0) {
+      frames = await query(BORDERED);
+      resolvedSelector = "auto:bordered";
+    }
+  } else {
+    frames = await query(bySelector(selector));
+  }
 
   // If no frames found with selector, capture full page
   if (frames.length === 0) {
@@ -201,12 +219,13 @@ async function renderHtmlDeck(cdp, ref, selector, settleMs, width) {
           label: null,
           route: null,
           state: null,
-          viewport: `${width}x${Math.round(scrollHeight.value)}`,
+          viewport: `${width}x${Math.round(scrollHeight)}`,
           width,
-          height: Math.round(scrollHeight.value),
+          height: Math.round(scrollHeight),
         },
       ],
-      warning: `Selector ${selector} matched no elements; captured full page instead.`,
+      resolvedSelector: "full-page",
+      warning: `Selector ${resolvedSelector} matched no elements; captured full page instead.`,
     };
   }
 
@@ -237,7 +256,7 @@ async function renderHtmlDeck(cdp, ref, selector, settleMs, width) {
     }
   }
 
-  return { blank: false, frames: captured };
+  return { blank: false, resolvedSelector, frames: captured };
 }
 
 async function renderUrl(cdp, url, widths) {
@@ -296,7 +315,7 @@ async function renderUrl(cdp, url, widths) {
 export async function main(args = process.argv.slice(2)) {
   const refs = [];
   let outDir = null;
-  let selector = ".fr";
+  let selector = "auto";
   let settleMs = 15000;
   let width = 1440;
   let mobileWidth = 390;
@@ -414,7 +433,7 @@ export async function main(args = process.argv.slice(2)) {
             continue;
           }
 
-          source.frame_selector = selector;
+          source.frame_selector = result.resolvedSelector;
           for (let i = 0; i < result.frames.length; i++) {
             const f = result.frames[i];
             const frameId = `${refSlug}/${String(i + 1).padStart(2, "0")}`;
@@ -439,7 +458,7 @@ export async function main(args = process.argv.slice(2)) {
           if (result.warning) {
             console.error(`⚠ ${refSlug} — ${result.warning}`);
           }
-          console.log(`✓ ${refSlug} — ${framesForSource.length} frames (${selector})`);
+          console.log(`✓ ${refSlug} — ${framesForSource.length} frames (${result.resolvedSelector})`);
         } else if (kind === "url") {
           const html = await (await fetch(ref)).text();
           source.hash = sha256(html);
