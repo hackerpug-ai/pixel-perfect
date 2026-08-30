@@ -172,7 +172,7 @@ Based on the tools in the manifest, follow these conventions:
 - Implement `docs/sandbox-spec.md` natively in the target framework (see `docs/adapters/custom-sandbox.md`): a layer-keyed story registry, a two-pane navigator, token codegen from `theme.*.json`, one run command, **and a catalog capture command** (piece #8).
 - Register each component under its layer; render it in isolation; show variants × states together.
 - Codegen tokens (build.rs / CSS vars / `Palette`) — components reference tokens, never hardcode.
-- Each story names its pixel-target (`// Target: design/system/{layer}/{name}/dark.png`).
+- Each story names its pixel-target (`// Target: design/reference/{slug}/{NN}.png` — the frame `design/inventory.json` ties to it).
 - Record `platforms[name].capture` and keep goldens under `design/goldens/{platform}/` current via `verify-catalog.mjs`.
 
 ### When `platforms[name].tools.sandbox` is storybook:
@@ -303,4 +303,4 @@ For design token story regeneration and the polyfill disclaimer pattern (require
 | `pixel-perfect:refine` | Iterate on an existing entity's **implementation** (not inventory) |
 | `pixel-perfect:evolve` | Change **inventory** — add/promote/remove/deprecate, proved by re-capture |
 
-**Fidelity ladder.** When `design/wireframes/` (structural ASCII) or `design/system/` (high-fi HTML mockups) exist, build each screen/component to match the **highest-fidelity target available** (mockup > wireframe). These are targets/specs — the real components supersede them.
+**Fidelity ladder.** When `design/wireframes/` (structural ASCII) or `design/reference/` (frames rendered from the design references, indexed by `design/inventory.json`) exist, build each screen/component to match the **highest-fidelity target available** (reference frame > wireframe). These are targets/specs — the real components supersede them.

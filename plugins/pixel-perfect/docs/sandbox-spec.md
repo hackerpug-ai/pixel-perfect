@@ -96,10 +96,10 @@ A single command launches the browser, encoded in a `Makefile`/script target. A 
 - **Web (custom)**: `npm run sandbox` → a dev server; **`npm run sandbox:capture`** → headless structural dump per story (see #8). **Storybook**: `storybook dev -p 6006` + a capture script that walks stories.
 
 ### 6. Design ↔ code mapping (the pixel-target)
-Each story names the design mock it was built to match, as a comment/annotation. The HTML/PNG in `design/system/` is the **spec**; the component code is the **real thing**.
+Each story names the design frame it was built to match, as a comment/annotation. The frames under `design/reference/` (rendered by build Phase 4a and indexed by `design/inventory.json`) are the **spec**; the component code is the **real thing**.
 
-- Both refs: `//! Target: design/system/atoms/button/dark.png` atop each story file.
-- `design/system/{layer}/{name}/{dark,light}.{html,png}` is the pixel reference; the sandbox story renders the live component beside (or against) it.
+- One ref: `//! Target: design/reference/cockpit-dc/01.png` atop each story file — the frame the inventory's `appears_on` names for that entity.
+- `design/reference/{slug}/{NN}.png` is the pixel reference; the sandbox story renders the live component beside (or against) it.
 
 ### 7. Variants × states in one story (recommended)
 A story shows a component's variants and states **together** (a static catalog), so isolation doubles as visual coverage.

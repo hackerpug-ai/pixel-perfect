@@ -8,7 +8,6 @@ const REPOSITORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)
 const PUBLIC_CAPABILITIES = [
   "add-platform",
   "build",
-  "design-deconstruct",
   "evolve",
   "init",
   "refine",
@@ -116,12 +115,6 @@ export async function checkRuntimePaths(root = REPOSITORY_ROOT) {
   }
 
   try {
-    const opencodeEngine = await readFile(path.join(packageRoot, ".opencode/skills/deconstruct-engine/SKILL.md"), "utf8");
-    for (const match of opencodeEngine.matchAll(/`\.pixel-perfect\/plugins\/pixel-perfect\/([^`]+)`/g)) {
-      if (!(await exists(path.join(packageRoot, cleanReference(match[1]))))) {
-        errors.push(`OpenCode deconstruct-engine references missing path: ${match[1]}`);
-      }
-    }
     const processContextTarget = await realpath(path.join(packageRoot, ".opencode/skills/process-context/SKILL.md"));
     if (processContextTarget !== path.join(packageRoot, "skills/process-context/SKILL.md")) {
       errors.push("OpenCode process-context must resolve to the canonical internal skill");

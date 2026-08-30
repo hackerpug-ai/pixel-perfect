@@ -93,7 +93,7 @@ Generate target-language tokens from `design/system/tokens/theme.{light,dark}.js
 ## Story Registry
 
 One explicit list, tagged by layer (`Tokens·Atoms·Molecules·Organisms·Views`):
-- **Web:** `export const stories = [{ layer:"Atoms", name:"Button", render: () => <Button …/>, target:"design/system/atoms/button/dark.png" }, …]`.
+- **Web:** `export const stories = [{ layer:"Atoms", name:"Button", render: () => <Button …/>, target:"design/reference/cockpit-dc/01.png" }, …]`.
 - **Rust (GPUI/TUI):** a `Vec<StoryEntry>` / `RegistryBuilder.group(...).story(...)` (see refs).
 Adding a component = adding one registry line (the build command does this — see `scaffold.md`/`build.md`).
 
@@ -130,7 +130,7 @@ Determinism: fixed fixtures, no animation, normalize ids/hashes/paths/timestamps
 - Each built component is **registered under its layer** and **renders in isolation**.
 - The catalog is **navigable** with a `{layer}/{name}` breadcrumb.
 - Tokens are **codegenned from `theme.*.json`** — no hardcoded colors/spacing in components.
-- One **run command** launches it; each story names its **pixel-target** (`design/system/.../dark.png`).
+- One **run command** launches it; each story names its **pixel-target** (`design/reference/{slug}/{NN}.png`).
 - A **capture command** exists; hello-world has a golden; `--check` is wired into verify.
 
 ## When to use a named tool instead

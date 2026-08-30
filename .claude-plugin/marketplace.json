@@ -5,15 +5,15 @@
     "email": "justin@hackerpug.com"
   },
   "metadata": {
-    "description": "Build real UIs in your target framework with a native sandbox (Storybook optional); deconstruct existing designs straight into native components. Includes the deconstruction engine — extracts UI concepts and design tokens from any mockup.",
-    "version": "8.0.0"
+    "description": "Build real UIs in your target framework with a native sandbox (Storybook optional). Start from a PRD, wireframes, or an existing design: build inventories every design frame first, then builds real components against them.",
+    "version": "9.0.0"
   },
   "plugins": [
     {
       "name": "pixel-perfect",
       "source": "./plugins/pixel-perfect",
-      "description": "6-phase build process → real components in your target framework, browsable in a native sandbox built from scratch (Storybook optional). Start from a PRD, ASCII wireframes, or deconstruct an existing design straight into native components. Includes the deconstruction engine — extracts UI concepts and design tokens from any mockup.",
-      "version": "8.0.0",
+      "description": "Gated build process → real components in your target framework, browsable in a native sandbox built from scratch (Storybook optional). Start from a PRD, ASCII wireframes, or an existing design — every design frame is rendered, inventoried, and confirmed before anything is built.",
+      "version": "9.0.0",
       "author": {
         "name": "Justin Rich"
       },
@@ -28,7 +28,7 @@
         "components",
         "storybook",
         "sveltekit",
-        "design-deconstruct",
+        "design-inventory",
         "wireframe",
         "sandbox",
         "native"

@@ -8,7 +8,6 @@ const REPOSITORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)
 const PUBLIC_CAPABILITIES = [
   "add-platform",
   "build",
-  "design-deconstruct",
   "evolve",
   "init",
   "refine",
@@ -18,7 +17,7 @@ const PUBLIC_CAPABILITIES = [
   "verify",
   "wireframe",
 ];
-const INTERNAL_SKILLS = ["deconstruct-engine", "process-context"];
+const INTERNAL_SKILLS = ["process-context"];
 // Support dirs under skills/ that are not public capabilities and do not
 // require OpenCode adapters. `polish` holds the lens pack + findings schema
 // (P2); the public polish command/workflow is P6 and must not appear here.
@@ -90,7 +89,10 @@ export async function validatePackage(root = REPOSITORY_ROOT) {
     "LICENSE",
     "scripts/verify-styling-contract.mjs",
     "scripts/verify-inventory.mjs",
-    "skills/deconstruct-engine/SKILL.md",
+    "scripts/render-frames.mjs",
+    "scripts/chrome.mjs",
+    "docs/INVENTORY-CONTRACT.md",
+    "docs/inventory.schema.json",
     "skills/process-context/SKILL.md",
     "workflows/RUNTIME-CONTRACT.md",
   ];
