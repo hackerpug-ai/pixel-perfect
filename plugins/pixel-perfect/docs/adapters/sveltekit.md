@@ -187,7 +187,7 @@ export default preview;
 
 - **Tailwind / shadcn-svelte / Skeleton**: import the global stylesheet (`app.css`) that defines the theme CSS variables. See `docs/adapters/{components}.md`.
 - **Dark mode**: toggle a `data-theme="dark"` attribute (or the project's theme class) via a global decorator.
-- Theme **values** come from the style/components adapters (and from `design/theme-seed.json` when a `design-deconstruct` run produced one — see `workflows/scaffold.md` Step 4).
+- Theme **values** come from the style/components adapters (grounded in the spec's token table or the design references when present — see `workflows/scaffold.md` Step 4).
 
 ## Verify
 

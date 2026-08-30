@@ -63,17 +63,13 @@ Capture the project's purpose and aesthetic direction.
 
 ### Step 0: Detect prior design artifacts (optional)
 
-**Wireframes** — if `design/wireframes.json` (or a `design/wireframes/` directory) exists, produced by `pixel-perfect:wireframe` (the low-fi sibling), pre-seed the **screen list** (the Step 1b component hierarchy) from its `screens` inventory — including the atoms/molecules each screen implies — and append each wireframe file to `references`. Set top-level `wireframed: true`. **One wireframe = one route = one screen**: assign each wireframe a `route`, and seed that screen's `states` list from the wireframe's `## States` annotation (e.g. `default · empty · loading · error`) — do not create a separate screen per state. Wireframes commit the *structure*; a later `design-deconstruct` run (or the build phases) adds fidelity. Each `design/wireframes/{screen}.md` is the structural target the real screen is built to match.
+**Wireframes** — if `design/wireframes.json` (or a `design/wireframes/` directory) exists, produced by `pixel-perfect:wireframe` (the low-fi sibling), pre-seed the **screen list** (the Step 1b component hierarchy) from its `screens` inventory — including the atoms/molecules each screen implies — and append each wireframe file to `references`. Set top-level `wireframed: true`. **One wireframe = one route = one screen**: assign each wireframe a `route`, and seed that screen's `states` list from the wireframe's `## States` annotation (e.g. `default · empty · loading · error`) — do not create a separate screen per state. Wireframes commit the *structure*; build's design inventory and the build phases add fidelity. Each `design/wireframes/{screen}.md` is the structural target the real screen is built to match.
 
-**Deconstruction** — if `design/deconstruction.json` (or a `design/system/` directory) exists — produced by `pixel-perfect:design-deconstruct` — use it to pre-seed this init:
+**Design references** — if the requirements folder, the repository, or the user names design sources (Claude Design decks or other HTML exports, URLs, screenshots, a `design/wireframes/` directory), record each in `references` exactly where it lives — nothing is copied or converted. They are not read here: `pixel-perfect:build` Phase 4a renders every reference to frames, reads them once, and produces `design/inventory.json`, the component and screen×state inventory the build lists come from. Say so in the digest (`3 design references recorded — build inventories them before planning`).
 
-- **Vibe**: infer the vibe from the extracted tokens/typography (low-chroma + generous spacing → "clean, minimal"; high-contrast → "bold") and propose it in Step 3 for confirmation.
-- **Theme**: note that `design/theme-seed.json` exists — scaffold will generate the theme from it instead of from vibe keywords.
-- **Inventory**: read `design/deconstruction.json` `inventory` + `level_map` to pre-fill the component hierarchy (Step 1b) and the build lists — atoms→atoms, molecules→molecules (organisms become screen sections). For **views → screens, do NOT map 1:1**: deconstruction views are often **state-split** into nested folders (`feed/default`, `feed/empty`, `feed/loading`). First assign each view a **route** (strip state suffixes like `-empty`/`-loading`/`-error` and tab suffixes; nested folders like `feed/empty` share route `/feed`), then **collapse** views sharing a route into ONE screen whose `states` list is those variants (apply the state-vs-route rule in `docs/state-patterns.md`). Seed the manifest's `atoms`/`molecules` and the collapsed `screens` (status `pending`); each screen carries its `route` + `states`, and each per-state mockup HTML/PNG becomes the `target` for that state's story. Confirm the collapsed route map with the user (the route-map confirm in Step 1b).
-- **References**: add each view's mockup to the manifest `references`.
-- **Markers**: set top-level `deconstructed: true` and `design_system: "design/system"` when writing the manifest.
+**Inventory** — if `design/inventory.json` already exists (a prior build ran Phase 4a, or the project is being re-initialised): pre-seed the route map (Step 1b) from `inventory.screens[]` — already route-keyed, each with its `states` — and the component hierarchy from `inventory.atoms` / `molecules` / `organisms`; read the vibe off `tokens_observed` for B1 Q4 option 1. Do not re-derive from the spec what the inventory already settled.
 
-Confirm the seeded values with the user — don't accept them blindly. If no wireframes or deconstruction exist, proceed normally.
+Confirm the seeded values with the user — don't accept them blindly. If no wireframes, references, or inventory exist, proceed normally.
 
 ### Step 1: Requirements Discovery
 
@@ -146,7 +142,7 @@ Store the user's own text when they choose Other, and the chosen option's plain 
 
 ### Step 3: Design Vibe
 
-This is **B1 Q4**. Capture the aesthetic direction as a free-form description, proposed rather than asked blank. When a deconstruction or a live token layer exists, read the vibe off the tokens and typography and make that option 1. When the requirements document carries tone or style language, extract it. Otherwise compose four candidate directions from the keyword table below.
+This is **B1 Q4**. Capture the aesthetic direction as a free-form description, proposed rather than asked blank. When an inventory (`tokens_observed`), a design reference, or a live token layer exists, read the vibe off the tokens and typography and make that option 1. When the requirements document carries tone or style language, extract it. Otherwise compose four candidate directions from the keyword table below.
 
 Store the vibe verbatim in `manifest.vibe` — the user's own text when they choose Other, the option's plain sentence otherwise ("clean, professional, high-contrast for outdoor use"), never the short label.
 
@@ -720,7 +716,7 @@ Creates `{directory}/design/manifest.json`:
 
 The `spec` field is the path to the spec/PRD document (relative to the project root) that drives the component hierarchy during build. If no spec was provided, this field is omitted.
 
-**Deconstruction fields (optional).** When the project was seeded by `pixel-perfect:design-deconstruct`, the manifest also carries top-level `"deconstructed": true` and `"design_system": "design/system"`, and seeded `atoms`/`molecules`/`screens` entries include a `"target"` (the mockup the real component is built to match), e.g. `"target": "design/system/views/feed/feed.html"`. These are additive and ignored by projects that never ran deconstruct.
+**Inventory receipt (optional).** When the project has design references, build Phase 4a writes a top-level `"inventory"` receipt — `file` (`design/inventory.json`), `reference` (`design/reference`), `confirmed` (ISO time), and `sources[]` as `{ref, hash}` — so a later run can tell a current inventory from a stale one. Per-item targets are the frames the inventory ties to each component, read from `design/inventory.json`, not manifest fields. Additive; ignored by projects with no references.
 
 ### DESIGN.md pin (when tokens exist)
 

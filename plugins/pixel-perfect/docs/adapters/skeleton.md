@@ -49,7 +49,7 @@ src/
 Skeleton's theme **is** the project theme. It exposes semantic design tokens (e.g. `primary`, `secondary`, `tertiary`, `surface`, plus type scale and spacing) as Tailwind utilities and CSS custom properties.
 
 - Map the project **vibe** to a Skeleton **preset theme** (e.g. clean → a low-chroma theme; bold → a high-contrast theme), or generate a **custom theme** with Skeleton's theme generator and import it instead of a preset.
-- When a `design-deconstruct` run produced `design/theme-seed.json`, translate those semantic tokens into a custom Skeleton theme (the token names align: surface/primary/secondary/…).
+- When the spec carries a token table, or the manifest lists design references, translate the semantic tokens read from them into a custom Skeleton theme (surface/primary/secondary/…) instead of deriving from vibe keywords.
 - Components and atoms reference Skeleton's semantic classes/tokens — never hardcode colors.
 
 | Vibe Keyword | Skeleton Theme Direction |

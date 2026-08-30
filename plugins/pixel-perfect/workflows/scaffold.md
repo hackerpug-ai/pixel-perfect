@@ -196,10 +196,10 @@ If no sibling theme exists, skip this step and proceed to theme generation as no
 
 ### Step 4: Create Theme
 
-**If `design/theme-seed.json` exists (from `pixel-perfect:design-deconstruct`):**
-1. Generate the theme directly from the seed — its semantic tokens (colors light/dark, typography, spacing, radius) map onto the chosen component library's theme format (CSS variables for shadcn / shadcn-svelte, `tailwind.config` extensions for plain Tailwind, a Skeleton theme, an MD3 object for Paper, etc.).
-2. The seed is already semantic, so it satisfies the semantic-color requirement (Step 4b) by construction — verify, don't regenerate from vibe keywords.
-3. `DESIGN_EXECUTE` may refine non-color aesthetics (font-pairing nuance, motion); do not discard the seed's grounded color/spacing values.
+**Where the values come from, in precedence order:**
+1. A token table in the spec (`manifest.spec`) — transcribe it; it is the constitution and nothing below overrides it.
+2. The manifest's design `references` — `DESIGN_EXECUTE` reads them directly (the design contract's inputs include reference images and HTML) and grounds palette, type, and spacing in what the design actually shows rather than in vibe keywords alone. On a re-scaffold, `design/inventory.json`'s `tokens_observed` (written by build Phase 4a) is the shortlist of what the read saw.
+3. Vibe keywords, only when neither exists.
 
 Load `docs/DESIGN-CONTRACT.md`, then run `DESIGN_EXECUTE` with the project vibe, selected platform, adapters, any theme seed, and existing product constraints. When `frontend-designer` is available it performs this work; otherwise the primary agent applies the same contract directly. Write the resulting concrete decisions into the theme file using the component library's required format. Never replace this step with a generic design agent or a keyword-only theme.
 

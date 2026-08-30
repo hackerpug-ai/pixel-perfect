@@ -25,7 +25,7 @@ Reads `design/manifest.json` **and** runs catalog capture when goldens exist:
    - deprecated entities that still have live dependents (`--reach`)
    - **dead inventory** — entities that reach no live root (screen)
 5. **Design engine** - Whether `frontend-designer` or the bundled design contract will execute aesthetic work
-6. **Design artifacts** - Whether wireframes (`design/wireframes/` + `wireframed: true`) or a `design-deconstruct` system (`design/system/` + `deconstructed: true`) seed this project
+6. **Design artifacts** - Whether wireframes (`design/wireframes/` + `wireframed: true`) or a design inventory (`design/inventory.json` + the manifest's `inventory` receipt — frame count, per-layer counts, confirmed date, and whether any reference's hash has drifted since) seed this project
 7. **Next action** - What to do next based on platform states
 
 ## Status Icons
@@ -125,7 +125,7 @@ Platforms:
 
 design engine:   frontend-designer (bundled contract loaded)
 wireframes:     design/wireframes/ (3 screens) — structural targets
-deconstruction: design/system/ (4 views, 9 atoms) — pixel-perfect targets active
+inventory:      design/inventory.json — 9 frames · 4 atoms · 2 molecules · 1 organism · 2 screens (confirmed 2026-08-30)
 
 Next: Scaffold the mobile-ios platform
   pixel-perfect:scaffold --platform mobile-ios
