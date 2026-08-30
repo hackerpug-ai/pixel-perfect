@@ -121,7 +121,7 @@ One PNG per drawn frame, cropped from the rendered source, plus `design/referenc
 node {plugin}/scripts/verify-inventory.mjs design/inventory.json --frames design/reference/frames.json
 ```
 
-Every rendered frame is claimed by a screen state or listed as unclaimed with a reason; every `composes` name exists one layer down or lower; every screen state and every component has a frame or an `undrawn` reason; names are unique. Exit `1` → re-dispatch the read with the printed violations (cap 2, then stop and surface to the user); `2` → the returned JSON is malformed, re-dispatch once with the shape errors; `3` → nothing was looked at, treat as a failed render.
+Every rendered frame is claimed — by a screen state or by a component's `appears_on` — or listed as unclaimed with a reason; every `composes` name exists one layer down or lower; every screen state and every component has a frame or an `undrawn` reason; names are unique. Exit `1` → re-dispatch the read with the printed violations (cap 2, then stop and surface to the user); `2` → the returned JSON is malformed, re-dispatch once with the shape errors; `3` → nothing was looked at, treat as a failed render.
 
 ### Step 4: Write the brief, digest it, and confirm
 
