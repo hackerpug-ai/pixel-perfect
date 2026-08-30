@@ -349,6 +349,7 @@ export async function main(args = process.argv.slice(2)) {
   const sourceSlugsToRemove = new Set();
   let hasBlank = false;
   let hasError = false;
+  let hasUnreadable = false;
 
   // Launch Chrome once
   let session;
@@ -388,7 +389,7 @@ export async function main(args = process.argv.slice(2)) {
         if (kind === "html-deck") {
           if (!existsSync(ref)) {
             console.error(`✗ ${refSlug} — unreadable: file not found`);
-            hasError = true;
+            hasUnreadable = true;
             continue;
           }
 
@@ -404,8 +405,11 @@ export async function main(args = process.argv.slice(2)) {
 
           if (result.blank) {
             source.frames = [];
+            source.status = "blank";
+            source.diagnosis = result.diagnosis;
             console.error(`✗ ${refSlug} — BLANK RENDER: ${result.diagnosis}`);
             existing.sources = existing.sources.filter((s) => s.slug !== refSlug);
+            existing.sources.push(source);
             hasBlank = true;
             continue;
           }
@@ -435,7 +439,7 @@ export async function main(args = process.argv.slice(2)) {
           if (result.warning) {
             console.error(`⚠ ${refSlug} — ${result.warning}`);
           }
-          console.log(`✓ ${refSlug} — ${framesForSource.length} frames (.fr)`);
+          console.log(`✓ ${refSlug} — ${framesForSource.length} frames (${selector})`);
         } else if (kind === "url") {
           const html = await (await fetch(ref)).text();
           source.hash = sha256(html);
@@ -466,7 +470,7 @@ export async function main(args = process.argv.slice(2)) {
         } else if (kind === "image") {
           if (!existsSync(ref)) {
             console.error(`✗ ${refSlug} — unreadable: file not found`);
-            hasError = true;
+            hasUnreadable = true;
             continue;
           }
 
@@ -498,13 +502,18 @@ export async function main(args = process.argv.slice(2)) {
         }
 
         source.frames = framesForSource;
+        source.status = kind === "wireframes" ? "text" : "rendered";
 
         // Update existing sources, removing old version if present
         existing.sources = existing.sources.filter((s) => s.slug !== refSlug);
         existing.sources.push(source);
       } catch (err) {
         console.error(`✗ ${refSlug} — ${err.message}`);
+        source.frames = [];
+        source.status = "failed";
+        source.diagnosis = err.message;
         existing.sources = existing.sources.filter((s) => s.slug !== refSlug);
+        existing.sources.push(source);
         hasError = true;
       }
     }
@@ -518,18 +527,15 @@ export async function main(args = process.argv.slice(2)) {
     existing.frames = [...surviving, ...newFrames];
     existing.rendered_at = new Date().toISOString();
 
-    // Write frames.json
-    if (!jsonOnly) {
-      writeFileSync(framesPath, JSON.stringify(existing, null, 2) + "\n");
-    }
+    // Write frames.json (always — --json additionally prints it)
+    writeFileSync(framesPath, JSON.stringify(existing, null, 2) + "\n");
+    if (jsonOnly) console.log(JSON.stringify(existing, null, 2));
 
-    if (jsonOnly) {
-      console.log(JSON.stringify(existing, null, 2));
-    }
-
-    // Exit code: 0 = all rendered, 1 = some blank/failed, 2 = usage/config, 3 = vacuous (zero frames from this run)
-    if (newFrames.length === 0) return 3;
+    // Exit precedence: 2 unreadable ref · 1 a source blank/failed (everything else written) ·
+    // 3 nothing rendered at all · 0 every source rendered
+    if (hasUnreadable) return 2;
     if (hasBlank || hasError) return 1;
+    if (newFrames.length === 0) return 3;
     return 0;
   } finally {
     // Cleanup Chrome
