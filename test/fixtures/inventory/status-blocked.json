@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "status": "blocked",
+  "blocked": ["test/01: render failed", "test.dc.html: not accessible"],
+  "sources": [
+    {
+      "ref": "test.dc.html",
+      "kind": "html-deck",
+      "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000001",
+      "slug": "test",
+      "frames": ["test/01"]
+    }
+  ],
+  "frames": [
+    { "id": "test/01", "png": "test/01.png", "source": "test.dc.html", "shows": [] }
+  ],
+  "screens": [],
+  "organisms": [],
+  "molecules": [],
+  "atoms": []
+}
