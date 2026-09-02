@@ -31,5 +31,8 @@ jobs:
             process.exit(1);
           }"
 
+      - name: Install pinned dependencies
+        run: npm ci
+
       - name: Recheck every release channel and package gate
         run: npm run ci

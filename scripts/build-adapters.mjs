@@ -57,9 +57,10 @@ export async function loadCapabilities(root = REPOSITORY_ROOT) {
 }
 
 export async function renderAdapters(root = REPOSITORY_ROOT) {
-  const [commandTemplate, skillTemplate, capabilities] = await Promise.all([
+  const [commandTemplate, skillTemplate, piSkillTemplate, capabilities] = await Promise.all([
     readFile(path.join(root, "scripts/adapters/command.template.md"), "utf8"),
     readFile(path.join(root, "scripts/adapters/skill.template.md"), "utf8"),
+    readFile(path.join(root, "scripts/adapters/pi-skill.template.md"), "utf8"),
     loadCapabilities(root),
   ]);
 
@@ -90,10 +91,19 @@ export async function renderAdapters(root = REPOSITORY_ROOT) {
         skill_footer: skillFooter,
       }),
     );
+    const piSkillBody = normalizeBody(
+      renderTemplate(piSkillTemplate, {
+        name,
+        title,
+        description,
+        preservation,
+      }),
+    );
 
     files.set(`${PLUGIN_ROOT}/commands/${name}.md`, commandBody);
     files.set(`${PLUGIN_ROOT}/skills/${name}/SKILL.md`, skillBody);
     files.set(`${PLUGIN_ROOT}/.opencode/commands/${name}.md`, commandBody);
+    files.set(`${PLUGIN_ROOT}/.pi/skills/pixel-perfect-${name}/SKILL.md`, piSkillBody);
   }
   return { capabilities, files };
 }
@@ -139,11 +149,11 @@ if (isMain) {
     .then((result) => {
       if (check) {
         process.stdout.write(
-          `adapters in sync: ${result.capabilities} capabilities × 3 surfaces (${result.surfaces} files)\n`,
+          `adapters in sync: ${result.capabilities} capabilities × 4 surfaces (${result.surfaces} files)\n`,
         );
       } else {
         process.stdout.write(
-          `adapters written: ${result.capabilities} capabilities × 3 surfaces (${result.surfaces} files)\n`,
+          `adapters written: ${result.capabilities} capabilities × 4 surfaces (${result.surfaces} files)\n`,
         );
       }
     })

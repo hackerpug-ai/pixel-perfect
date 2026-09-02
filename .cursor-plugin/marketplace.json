@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Build real UIs in your target framework with a native sandbox (Storybook optional). Start from a PRD, wireframes, or an existing design: build inventories every design frame first, then builds real components against them.",
-    "version": "9.0.0"
+    "version": "9.1.0"
   },
   "plugins": [
     {

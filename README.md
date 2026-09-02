@@ -4,7 +4,7 @@
 
 # pixel-perfect
 
-A version-locked plugin for Claude Code, Codex, Cursor, Grok, and OpenCode that generates and maintains a **high-fidelity production design system** — semantic tokens, atoms, molecules, organisms, screens — as real code in your target framework, browsable in a **native sandbox** it builds from scratch.
+A version-locked plugin and Pi package for Claude Code, Codex, Cursor, Grok, OpenCode, and Pi that generates and maintains a **high-fidelity production design system** — semantic tokens, atoms, molecules, organisms, screens — as real code in your target framework, browsable in a **native sandbox** it builds from scratch.
 
 It exists to close one gap: the one between a beautiful AI-generated design and UI code you can actually ship.
 
@@ -68,7 +68,7 @@ Each phase has a **gate** that must pass before you proceed. The plugin tracks s
 
 ## Quick Start
 
-Version 8.0.0 projects the same runtime into all five harnesses.
+Version 9.1.0 projects the same runtime into all six harnesses.
 
 **Upgrading from 7.x:** see [`plugins/pixel-perfect/docs/UPGRADING-8.0.md`](plugins/pixel-perfect/docs/UPGRADING-8.0.md) — add a capture command, run `--baseline` once, drop composition-edge/`controls` authority; inventory changes use `evolve`.
 
@@ -114,7 +114,7 @@ Keep the personal marketplace itself if it contains other plugins. `codex plugin
 Cursor loads local plugins from `~/.cursor/plugins/local/`. **Copy** the package (do not symlink — Cursor has known failures loading symlinked local plugins):
 
 ```bash
-git clone --branch v8.0.0 --depth 1 https://github.com/hackerpug-ai/pixel-perfect.git /tmp/pixel-perfect
+git clone --branch v9.1.0 --depth 1 https://github.com/hackerpug-ai/pixel-perfect.git /tmp/pixel-perfect
 mkdir -p ~/.cursor/plugins/local
 rm -rf ~/.cursor/plugins/local/pixel-perfect
 cp -R /tmp/pixel-perfect/plugins/pixel-perfect ~/.cursor/plugins/local/pixel-perfect
@@ -135,13 +135,25 @@ Invoke capabilities as `/pixel-perfect:init`, `/pixel-perfect:build`, and so on.
 OpenCode consumes the tagged Git checkout and its versioned adapter package. From the target project:
 
 ```bash
-git clone --branch v7.1.0 --depth 1 https://github.com/hackerpug-ai/pixel-perfect.git .pixel-perfect
+git clone --branch v9.1.0 --depth 1 https://github.com/hackerpug-ai/pixel-perfect.git .pixel-perfect
 mkdir -p .opencode
 ln -s ../.pixel-perfect/plugins/pixel-perfect/.opencode/commands .opencode/commands
 ln -s ../.pixel-perfect/plugins/pixel-perfect/.opencode/skills .opencode/skills
 ```
 
 Invoke capabilities as `/init`, `/build`, `/status`, and so on. To upgrade to a later release, fetch tags in `.pixel-perfect`, check out the desired `v<version>` tag, and restart OpenCode. The Pixel Perfect product version is in `plugins/pixel-perfect/.opencode/package.json`; the `@opencode-ai/plugin` dependency version is independent.
+
+### Pi
+
+Install the npm package with Pi's package manager:
+
+```bash
+pi install npm:@hackerpug-ai/pixel-perfect
+```
+
+For local development from this repository, run `pi install ./plugins/pixel-perfect`.
+
+Invoke a capability through its namespaced skill, such as `/skill:pixel-perfect-init`, `/skill:pixel-perfect-build`, or `/skill:pixel-perfect-status`. Upgrade with `pi update npm:@hackerpug-ai/pixel-perfect`.
 
 ### First Project
 
@@ -167,6 +179,8 @@ Invoke capabilities as `/init`, `/build`, `/status`, and so on. To upgrade to a 
 > **Cursor users**: slash commands from the local plugin use the short form (e.g., `/init`, `/build`, `/status`).
 
 > **Codex users**: replace the leading slash form with `$pixel-perfect:<name>`.
+
+> **Pi users**: replace the leading slash form with `/skill:pixel-perfect-<name>`.
 
 Init walks you through:
 1. **Where are your requirements?** (auto-detects PRD.md)
@@ -432,15 +446,15 @@ Unsupported `autoActivate` metadata is not used. Every public entry adapter chec
 
 ## Releasing
 
-`plugin-release.json` is the only manually selected product version. Product version lockstep covers Claude, Codex, Cursor, Grok (via Claude marketplace), and OpenCode. All releases must use:
+`plugin-release.json` is the only manually selected product version. Product version lockstep covers Claude, Codex, Cursor, Grok (via Claude marketplace), OpenCode, and Pi. All releases must use:
 
 ```bash
-node scripts/release.mjs prepare 8.0.0
-node scripts/release.mjs verify 8.0.0
-node scripts/release.mjs publish 8.0.0
+node scripts/release.mjs prepare <version>
+node scripts/release.mjs verify <version>
+node scripts/release.mjs publish <version>
 ```
 
-Direct version edits, hand-created tags, and manual GitHub releases are unsupported. `prepare` synchronizes product-version fields (including Cursor manifest + marketplace metadata) without changing OpenCode dependency versions. `verify` is read-only. `publish` requires clean `main`, `HEAD === origin/main`, a matching non-empty changelog section, valid package content, an absent tag, and authenticated `gh` before creating an annotated tag or GitHub release.
+Direct version edits, hand-created tags, and manual GitHub releases are unsupported. `prepare` synchronizes product-version fields, including the Cursor metadata and Pi package, without changing OpenCode dependency versions. `verify` is read-only. `publish` requires clean `main`, `HEAD === origin/main`, a matching non-empty changelog section, valid package content, an absent tag, and authenticated `gh` before creating an annotated tag or GitHub release. Publishing the npm artifact remains a separate authorized release action.
 
 ---
 
@@ -469,7 +483,7 @@ v4 is a clean break from v2. There is no incremental migration path.
 
 ## Requirements
 
-- **Claude Code**, **Codex**, **Cursor**, or **Grok** with plugin support, or **OpenCode** with command/skill support
+- **Claude Code**, **Codex**, **Cursor**, or **Grok** with plugin support; **OpenCode** with command/skill support; or **Pi** with package support
 - A project directory with requirements (PRD.md or similar)
 
 ---

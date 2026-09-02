@@ -111,6 +111,13 @@ Always load `docs/DESIGN-CONTRACT.md` for design authoring or design review. If 
 - User choices and task tracking: OpenCode's native question and todo/planning mechanisms, one call per declared batch; otherwise a numbered plain-text batch as the last thing in the turn. Never a printed question followed by an ended turn.
 - Plugin paths: adapters include canonical files from `.pixel-perfect/plugins/pixel-perfect/`.
 
+### Pi
+
+- Invocation: `/skill:pixel-perfect-<name>` from the installed Pi package.
+- User choices: Pi's structured question or input mechanism when available, one call per declared batch; otherwise a numbered plain-text batch as the last thing in the turn. Never print a question and then end the turn.
+- Task tracking: Pi's task or todo mechanism when installed. Do not write a second durable state file.
+- Plugin paths: resolve relative to the loaded namespaced skill under the installed package's `.pi/skills/` directory.
+
 ### Cursor
 
 - Invocation: `/<name>` (slash command from the installed plugin) or the skill name when skills are discovered by convention.

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { readFile, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
@@ -26,11 +27,11 @@ test("capabilities match interactive flags from validate-workflows", async () =>
   }
 });
 
-test("renderAdapters is deterministic and covers all 10×3 surfaces", async () => {
+test("renderAdapters is deterministic and covers all 10×4 surfaces", async () => {
   const first = await renderAdapters(ROOT);
   const second = await renderAdapters(ROOT);
   assert.equal(first.capabilities.length, 10);
-  assert.equal(first.files.size, 30);
+  assert.equal(first.files.size, 40);
   assert.deepEqual([...first.files.keys()].sort(), [...second.files.keys()].sort());
   for (const [relativePath, content] of first.files) {
     assert.equal(content, second.files.get(relativePath), relativePath);
@@ -41,12 +42,17 @@ test("renderAdapters is deterministic and covers all 10×3 surfaces", async () =
     const commandPath = `plugins/pixel-perfect/commands/${capability.name}.md`;
     const skillPath = `plugins/pixel-perfect/skills/${capability.name}/SKILL.md`;
     const opencodePath = `plugins/pixel-perfect/.opencode/commands/${capability.name}.md`;
+    const piPath = `plugins/pixel-perfect/.pi/skills/pixel-perfect-${capability.name}/SKILL.md`;
     assert.ok(first.files.has(commandPath), commandPath);
     assert.ok(first.files.has(skillPath), skillPath);
     assert.ok(first.files.has(opencodePath), opencodePath);
+    assert.ok(first.files.has(piPath), piPath);
     assert.equal(first.files.get(commandPath), first.files.get(opencodePath));
     assert.match(first.files.get(commandPath), /~\/\.cursor\/plugins\//);
     assert.doesNotMatch(first.files.get(skillPath), /Codex invocation/);
+    assert.match(first.files.get(piPath), new RegExp(`name: pixel-perfect-${capability.name}`));
+    assert.match(first.files.get(piPath), new RegExp(`skills/${capability.name}/SKILL\\.md`));
+    assert.match(first.files.get(piPath), new RegExp(`/skill:pixel-perfect-${capability.name}`));
   }
 });
 
@@ -54,24 +60,28 @@ test("buildAdapters --check passes on the clean repository tree", async () => {
   const result = await buildAdapters(ROOT, { check: true });
   assert.equal(result.mode, "check");
   assert.equal(result.capabilities, 10);
-  assert.equal(result.surfaces, 30);
+  assert.equal(result.surfaces, 40);
   assert.deepEqual(result.drifts, []);
 });
 
 test("buildAdapters --check fails with the mutated path", async () => {
+  const testRoot = await mkdtemp(path.join(tmpdir(), "pixel-perfect-adapter-drift-"));
+  await mkdir(path.join(testRoot, "scripts"), { recursive: true });
+  await cp(path.join(ROOT, "scripts/adapters"), path.join(testRoot, "scripts/adapters"), { recursive: true });
+  await cp(path.join(ROOT, "plugins"), path.join(testRoot, "plugins"), { recursive: true });
   const relativePath = "plugins/pixel-perfect/commands/status.md";
-  const source = path.join(ROOT, relativePath);
+  const source = path.join(testRoot, relativePath);
   const original = await readFile(source, "utf8");
   try {
     await writeFile(source, `${original}\n# drift\n`, "utf8");
     await assert.rejects(
-      buildAdapters(ROOT, { check: true }),
+      buildAdapters(testRoot, { check: true }),
       (error) =>
         error instanceof AdapterBuildError &&
         error.details.some((detail) => detail.includes(relativePath)),
     );
   } finally {
-    await writeFile(source, original, "utf8");
+    await rm(testRoot, { recursive: true, force: true });
   }
   await buildAdapters(ROOT, { check: true });
 });

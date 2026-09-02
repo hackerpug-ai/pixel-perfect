@@ -10,5 +10,8 @@
   },
   "dependencies": {
     "@google/design.md": "0.4.0"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "0.84.4"
   }
 }

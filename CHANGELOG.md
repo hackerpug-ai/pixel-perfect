@@ -4,6 +4,17 @@ All notable changes to Pixel Perfect are documented here.
 
 ## [Unreleased]
 
+## [9.1.0] - 2026-09-02
+
+### Added
+
+- Added a publishable Pi package with ten namespaced skills (`/skill:pixel-perfect-<name>`) that delegate to the canonical Pixel Perfect runtime. The package ships the workflows, contracts, validators, and reference documentation required to execute them.
+- Added a real packed-artifact integration test that starts Pi in isolated Remote Procedure Call (RPC) mode and verifies that Pi discovers every namespaced skill from the npm tarball.
+
+### Changed
+
+- Pi now participates in release-version lockstep with Claude Code, Codex, Cursor, Grok, and OpenCode.
+
 ## [9.0.0] - 2026-08-30
 
 ### Added

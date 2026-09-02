@@ -1,11 +1,12 @@
 {
   "name": "pixel-perfect",
-  "version": "9.0.0",
+  "version": "9.1.0",
   "channels": {
     "claude": "claude-marketplace",
     "codex": "codex-marketplace",
     "cursor": "cursor-marketplace",
     "grok": "claude-marketplace",
-    "opencode": "opencode-adapter"
+    "opencode": "opencode-adapter",
+    "pi": "pi-package"
   }
 }

@@ -15,6 +15,7 @@ import { validateSkills } from "./validate-skills.mjs";
 const execFile = promisify(execFileCallback);
 const REPOSITORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PRODUCT_NAME = "pixel-perfect";
+const PI_PACKAGE_NAME = "@hackerpug-ai/pixel-perfect";
 const OPENCODE_PACKAGE_NAME = "pixel-perfect-opencode-adapter";
 const OPENCODE_DEPENDENCY = "@opencode-ai/plugin";
 const OPENCODE_DEPENDENCY_VERSION = "1.16.2";
@@ -24,6 +25,7 @@ const CHANNELS = {
   cursor: "cursor-marketplace",
   grok: "claude-marketplace",
   opencode: "opencode-adapter",
+  pi: "pi-package",
 };
 
 export const RELEASE_PATHS = {
@@ -35,6 +37,7 @@ export const RELEASE_PATHS = {
   cursorMarketplace: ".cursor-plugin/marketplace.json",
   opencodePackage: "plugins/pixel-perfect/.opencode/package.json",
   opencodeLock: "plugins/pixel-perfect/.opencode/package-lock.json",
+  piPackage: "plugins/pixel-perfect/package.json",
   changelog: "CHANGELOG.md",
 };
 
@@ -143,6 +146,7 @@ export async function readReleaseDocuments(root = REPOSITORY_ROOT) {
     cursorMarketplace,
     opencodePackage,
     opencodeLock,
+    piPackage,
     changelog,
   ] = await Promise.all([
     readJson(root, RELEASE_PATHS.authority),
@@ -153,6 +157,7 @@ export async function readReleaseDocuments(root = REPOSITORY_ROOT) {
     readJson(root, RELEASE_PATHS.cursorMarketplace),
     readJson(root, RELEASE_PATHS.opencodePackage),
     readJson(root, RELEASE_PATHS.opencodeLock),
+    readJson(root, RELEASE_PATHS.piPackage),
     readText(root, RELEASE_PATHS.changelog),
   ]);
 
@@ -174,6 +179,8 @@ export async function readReleaseDocuments(root = REPOSITORY_ROOT) {
     opencodeLock.packages[`node_modules/${OPENCODE_DEPENDENCY}`],
     `${RELEASE_PATHS.opencodeLock}.packages[\"node_modules/${OPENCODE_DEPENDENCY}\"]`,
   );
+  requireObject(piPackage, RELEASE_PATHS.piPackage);
+  requireObject(piPackage.pi, `${RELEASE_PATHS.piPackage}.pi`);
 
   return {
     authority,
@@ -186,6 +193,7 @@ export async function readReleaseDocuments(root = REPOSITORY_ROOT) {
     cursorMarketplacePlugin: findPlugin(cursorMarketplace, RELEASE_PATHS.cursorMarketplace),
     opencodePackage,
     opencodeLock,
+    piPackage,
     changelog,
   };
 }
@@ -214,6 +222,7 @@ function collectStateErrors(documents, expectedVersion, tagName) {
     ["OpenCode package", RELEASE_PATHS.opencodePackage, documents.opencodePackage.version],
     ["OpenCode lockfile", RELEASE_PATHS.opencodeLock, documents.opencodeLock.version],
     ["OpenCode lock root package", `${RELEASE_PATHS.opencodeLock} packages[\"\"].version`, documents.opencodeLock.packages[""].version],
+    ["Pi package", RELEASE_PATHS.piPackage, documents.piPackage.version],
   ];
 
   let authorityVersion;
@@ -262,6 +271,9 @@ function collectStateErrors(documents, expectedVersion, tagName) {
   }
   if (documents.opencodeLock.packages[""].name !== OPENCODE_PACKAGE_NAME) {
     errors.push(`${RELEASE_PATHS.opencodeLock} root package name must be ${OPENCODE_PACKAGE_NAME}`);
+  }
+  if (documents.piPackage.name !== PI_PACKAGE_NAME) {
+    errors.push(`${RELEASE_PATHS.piPackage}.name must be ${PI_PACKAGE_NAME}`);
   }
 
   const packageDependency = documents.opencodePackage.dependencies[OPENCODE_DEPENDENCY];
@@ -327,6 +339,7 @@ export async function verifyVersionState(root = REPOSITORY_ROOT, expectedVersion
       cursor: documents.cursorManifest.version,
       grok: documents.claudeManifest.version,
       opencode: documents.opencodePackage.version,
+      pi: documents.piPackage.version,
     },
   };
 }
@@ -443,6 +456,7 @@ export async function prepareRelease(root = REPOSITORY_ROOT, targetVersion, opti
   const cursorMarketplace = cloneJson(documents.cursorMarketplace);
   const opencodePackage = cloneJson(documents.opencodePackage);
   const opencodeLock = cloneJson(documents.opencodeLock);
+  const piPackage = cloneJson(documents.piPackage);
 
   authority.version = targetVersion;
   codexManifest.version = targetVersion;
@@ -454,6 +468,7 @@ export async function prepareRelease(root = REPOSITORY_ROOT, targetVersion, opti
   opencodePackage.version = targetVersion;
   opencodeLock.version = targetVersion;
   opencodeLock.packages[""].version = targetVersion;
+  piPackage.version = targetVersion;
 
   const date = options.date ?? new Date().toISOString().slice(0, 10);
   const changelog = prepareChangelog(documents.changelog, targetVersion, date);
@@ -469,6 +484,7 @@ export async function prepareRelease(root = REPOSITORY_ROOT, targetVersion, opti
     cursorMarketplacePlugin: findPlugin(cursorMarketplace, RELEASE_PATHS.cursorMarketplace),
     opencodePackage,
     opencodeLock,
+    piPackage,
     changelog,
   };
   const candidateErrors = collectStateErrors(candidate, targetVersion, undefined);
@@ -485,6 +501,7 @@ export async function prepareRelease(root = REPOSITORY_ROOT, targetVersion, opti
     [RELEASE_PATHS.cursorMarketplace, jsonText(cursorMarketplace)],
     [RELEASE_PATHS.opencodePackage, jsonText(opencodePackage)],
     [RELEASE_PATHS.opencodeLock, jsonText(opencodeLock)],
+    [RELEASE_PATHS.piPackage, jsonText(piPackage)],
     [RELEASE_PATHS.changelog, changelog],
   ]);
 
@@ -559,6 +576,7 @@ export function formatVerification(state) {
     `  cursor:   ${state.channels.cursor} (Cursor plugin manifest + marketplace)`,
     `  grok:     ${state.channels.grok} (shared Claude marketplace)`,
     `  opencode: ${state.channels.opencode} (adapter package + lockfile)`,
+    `  pi:       ${state.channels.pi} (npm Pi package)`,
   ].join("\n");
 }
 

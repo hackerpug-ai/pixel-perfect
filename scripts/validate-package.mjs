@@ -22,12 +22,13 @@ const INTERNAL_SKILLS = ["process-context"];
 // require OpenCode adapters. `polish` holds the lens pack + findings schema
 // (P2); the public polish command/workflow is P6 and must not appear here.
 const SUPPORT_SKILL_DIRS = ["polish"];
+const PI_PACKAGE_NAME = "@hackerpug-ai/pixel-perfect";
+const PI_SKILLS_PATH = "./.pi/skills";
 const PROHIBITED_SEGMENTS = new Set([".git", ".handoff", ".tmp", "node_modules", "planning"]);
 const PROHIBITED_ROOT_FILES = new Set([
   "CHANGELOG.md",
   "plugin-release.json",
   "V4-DIRECTION.md",
-  "package.json",
   "opencode.json",
 ]);
 
@@ -81,6 +82,8 @@ export async function validatePackage(root = REPOSITORY_ROOT) {
     ".cursor-plugin/plugin.json",
     ".opencode/package.json",
     ".opencode/package-lock.json",
+    "package.json",
+    "README.md",
     "assets/icon.png",
     "docs/DESIGN-CONTRACT.md",
     "docs/component-contracts/README.md",
@@ -101,6 +104,7 @@ export async function validatePackage(root = REPOSITORY_ROOT) {
       `commands/${capability}.md`,
       `skills/${capability}/SKILL.md`,
       `.opencode/commands/${capability}.md`,
+      `.pi/skills/pixel-perfect-${capability}/SKILL.md`,
       `workflows/${capability}.md`,
     );
   }
@@ -155,6 +159,12 @@ export async function validatePackage(root = REPOSITORY_ROOT) {
     );
     compareNames(await namesIn(path.join(packageRoot, ".opencode/skills")), INTERNAL_SKILLS, "OpenCode internal skills", errors);
     compareNames(
+      await namesIn(path.join(packageRoot, ".pi/skills")),
+      PUBLIC_CAPABILITIES.map((capability) => `pixel-perfect-${capability}`),
+      "Pi skills",
+      errors,
+    );
+    compareNames(
       (await namesIn(path.join(packageRoot, "workflows"), ".md")).filter((name) => name !== "RUNTIME-CONTRACT"),
       PUBLIC_CAPABILITIES,
       "canonical workflows",
@@ -165,7 +175,11 @@ export async function validatePackage(root = REPOSITORY_ROOT) {
   }
 
   for (const capability of PUBLIC_CAPABILITIES) {
-    for (const adapterPath of [`commands/${capability}.md`, `skills/${capability}/SKILL.md`]) {
+    for (const adapterPath of [
+      `commands/${capability}.md`,
+      `skills/${capability}/SKILL.md`,
+      `.pi/skills/pixel-perfect-${capability}/SKILL.md`,
+    ]) {
       try {
         const lines = (await readFile(path.join(packageRoot, adapterPath), "utf8")).split("\n").length;
         if (lines > 24) errors.push(`adapter is not thin (${lines} lines): ${adapterPath}`);
@@ -191,6 +205,21 @@ export async function validatePackage(root = REPOSITORY_ROOT) {
   }
 
   try {
+    const manifest = JSON.parse(await readFile(path.join(packageRoot, "package.json"), "utf8"));
+    if (manifest.name !== PI_PACKAGE_NAME) errors.push(`package.json.name must be ${PI_PACKAGE_NAME}`);
+    if (!Array.isArray(manifest.keywords) || !manifest.keywords.includes("pi-package")) {
+      errors.push("package.json.keywords must include pi-package");
+    }
+    if (JSON.stringify(manifest.pi) !== JSON.stringify({ skills: [PI_SKILLS_PATH] })) {
+      errors.push(`package.json.pi must declare exactly { skills: [${PI_SKILLS_PATH}] }`);
+    }
+    if (manifest.private !== undefined) errors.push("package.json must not declare private for the public Pi package");
+    if (manifest.publishConfig?.access !== "public") errors.push("package.json.publishConfig.access must be public");
+  } catch (error) {
+    errors.push(`cannot validate Pi package manifest: ${error.message}`);
+  }
+
+  try {
     const runtimeContract = await readFile(path.join(packageRoot, "workflows/RUNTIME-CONTRACT.md"), "utf8");
     const designContract = await readFile(path.join(packageRoot, "docs/DESIGN-CONTRACT.md"), "utf8");
     if (!runtimeContract.includes("frontend-designer") || !runtimeContract.includes("executes the same contract directly")) {
@@ -204,7 +233,13 @@ export async function validatePackage(root = REPOSITORY_ROOT) {
   }
 
   if (errors.length > 0) throw new PackageValidationError([...new Set(errors)]);
-  return { packageRoot, capabilities: PUBLIC_CAPABILITIES.length, internalSkills: INTERNAL_SKILLS.length, totalBytes };
+  return {
+    packageRoot,
+    capabilities: PUBLIC_CAPABILITIES.length,
+    internalSkills: INTERNAL_SKILLS.length,
+    piSkills: PUBLIC_CAPABILITIES.length,
+    totalBytes,
+  };
 }
 
 const isMain = process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
@@ -212,7 +247,7 @@ if (isMain) {
   validatePackage()
     .then((result) => {
       process.stdout.write(
-        `package content valid: ${result.capabilities} public capabilities, ${result.internalSkills} internal skills, ${result.totalBytes} bytes\n`,
+        `package content valid: ${result.capabilities} public capabilities, ${result.internalSkills} internal skills, ${result.piSkills} Pi skills, ${result.totalBytes} bytes\n`,
       );
     })
     .catch((error) => {

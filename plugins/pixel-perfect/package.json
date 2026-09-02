@@ -1,0 +1,40 @@
+{
+  "name": "@hackerpug-ai/pixel-perfect",
+  "version": "9.1.0",
+  "description": "Pixel Perfect design-system workflows packaged for the Pi coding agent",
+  "license": "MIT",
+  "author": {
+    "name": "Justin Rich"
+  },
+  "homepage": "https://github.com/hackerpug-ai/pixel-perfect",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hackerpug-ai/pixel-perfect.git",
+    "directory": "plugins/pixel-perfect"
+  },
+  "keywords": [
+    "pi-package",
+    "design",
+    "design-system",
+    "ui",
+    "agent-skills"
+  ],
+  "files": [
+    ".pi/",
+    "assets/",
+    "docs/",
+    "scripts/",
+    "skills/",
+    "workflows/",
+    "LICENSE",
+    "README.md"
+  ],
+  "pi": {
+    "skills": [
+      "./.pi/skills"
+    ]
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

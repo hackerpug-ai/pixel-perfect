@@ -20,6 +20,7 @@ const CHANNELS = {
   cursor: "cursor-marketplace",
   grok: "claude-marketplace",
   opencode: "opencode-adapter",
+  pi: "pi-package",
 };
 
 async function writeJson(root, relativePath, value) {
@@ -43,6 +44,7 @@ async function makeFixture(options = {}) {
     opencodePackage: version,
     opencodeLock: version,
     opencodeLockRoot: version,
+    piPackage: version,
     ...options.versions,
   };
 
@@ -121,6 +123,13 @@ async function makeFixture(options = {}) {
         },
       },
     }),
+    writeJson(root, RELEASE_PATHS.piPackage, {
+      name: "@hackerpug-ai/pixel-perfect",
+      version: versions.piPackage,
+      keywords: ["pi-package"],
+      pi: { skills: ["./.pi/skills"] },
+      preserved: { piPackage: true },
+    }),
   ]);
   await writeFile(
     path.join(root, RELEASE_PATHS.changelog),
@@ -160,6 +169,7 @@ test("prepare repairs divergent product versions and no other JSON fields", asyn
       opencodePackage: "6.6.0",
       opencodeLock: "6.5.0",
       opencodeLockRoot: "6.4.0",
+      piPackage: "6.3.0",
     },
   });
 
@@ -173,6 +183,7 @@ test("prepare repairs divergent product versions and no other JSON fields", asyn
       RELEASE_PATHS.cursorMarketplace,
       RELEASE_PATHS.opencodePackage,
       RELEASE_PATHS.opencodeLock,
+      RELEASE_PATHS.piPackage,
     ];
     const before = await Promise.all(jsonPaths.map((relativePath) => json(root, relativePath)));
     const state = await prepareRelease(root, "7.1.0", { date: "2026-08-07" });
@@ -182,6 +193,7 @@ test("prepare repairs divergent product versions and no other JSON fields", asyn
       cursor: "7.1.0",
       grok: "7.1.0",
       opencode: "7.1.0",
+      pi: "7.1.0",
     });
 
     const after = await Promise.all(jsonPaths.map((relativePath) => json(root, relativePath)));
@@ -196,6 +208,7 @@ test("prepare repairs divergent product versions and no other JSON fields", asyn
       [6, ["version"]],
       [7, ["version"]],
       [7, ["packages", "", "version"]],
+      [8, ["version"]],
     ];
     for (const [index, keys] of versionPaths) {
       let cursor = after[index];
@@ -272,6 +285,11 @@ for (const scenario of [
     name: "stale Cursor marketplace metadata",
     options: { versions: { cursorMarketplaceMetadata: "7.0.9" } },
     pattern: /cursor-plugin\/marketplace\.json metadata\.version is 7\.0\.9/,
+  },
+  {
+    name: "stale pi package",
+    options: { versions: { piPackage: "7.0.9" } },
+    pattern: /plugins\/pixel-perfect\/package\.json is 7\.0\.9/,
   },
 ]) {
   test(`verify rejects ${scenario.name}`, async () => {
