@@ -149,9 +149,18 @@ async function renderHtmlDeck(cdp, url, selector, settleMs, width) {
     };
   }
 
-  // Set device metrics for full-page captures
+  // Set device metrics for full-page captures. App-frame decks scroll inside an
+  // overflow:auto region, so documentElement.scrollHeight stops at one viewport;
+  // include every scrollable region's extent or frames below its fold capture blank.
   const scrollHeightResp = await cdp.send("Runtime.evaluate", {
-    expression: "document.documentElement.scrollHeight",
+    expression: `Math.max(
+      document.documentElement.scrollHeight,
+      ...Array.from(document.querySelectorAll('*')).flatMap(el => {
+        const s = getComputedStyle(el);
+        if (s.overflowY !== 'auto' && s.overflowY !== 'scroll') return [];
+        return [Math.round(el.getBoundingClientRect().top + el.scrollTop + el.scrollHeight)];
+      })
+    )`,
     returnByValue: true,
   });
   const scrollHeight = scrollHeightResp.result?.value || 0;

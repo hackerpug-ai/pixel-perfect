@@ -125,6 +125,11 @@ export async function launchChrome({ windowSize = [1280, 800] } = {}) {
       "--disable-background-networking",
       "--mute-audio",
       "--hide-scrollbars",
+      // Decks animate in with staggered CSS fades that settle detection (innerText +
+      // sized-element counts) cannot see, so screenshots race them and frames come out
+      // blank nondeterministically. Forcing reduced motion makes decks honoring
+      // prefers-reduced-motion paint their final state immediately.
+      "--force-prefers-reduced-motion",
       `--user-data-dir=${userData}`,
       "--remote-debugging-port=0",
       `--window-size=${windowSize[0]},${windowSize[1]}`,
