@@ -1,0 +1,920 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>pixel-perfect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@50..150,100..900&family=IBM+Plex+Mono:wght@400;500;600&family=Libre+Franklin:wght@400..700&display=swap">
+<style>
+/* Layout: a press proof. The hero separates one mockup into the five plates pixel-perfect builds;
+   sections read like proof sheets with crop marks, slug lines and a CMYK control strip. */
+:root {
+  --paper: #F3F4F1;
+  --sheet: #FBFBF9;
+  --ink: #111316;
+  --ink-2: #50555C;
+  --rule: #D5D8D2;
+  --cyan: #0096D1;
+  --cyan-ink: #006C99;
+  --magenta: #E0007A;
+  --magenta-ink: #B5005F;
+  --yellow: #FFD900;
+  --key: #111316;
+  --blend: multiply;
+  --mark-bg: #C4006A;
+  --on-mark: #FFFFFF;
+  --on-yellow: #111316;
+  --accent-bg: #0079AD;
+  --on-accent: #FFFFFF;
+  --code-bg: #14171B;
+  --code-fg: #E6E7E2;
+  --code-dim: #858B93;
+  --code-key: #7CCFF2;
+  --code-str: #FFE27A;
+  --code-ok: #8EE3B0;
+  --m-page: #E8EAE5;
+  --m-surface: #FFFFFF;
+  --m-line: #D1D4CE;
+  --m-ink: #15181C;
+  --m-muted: #687078;
+  --drift-blue: #3B82F6;
+  --grid: color-mix(in srgb, var(--cyan) 20%, transparent);
+
+  --font-display: "Anybody", "Arial Black", system-ui, sans-serif;
+  --font-body: "Libre Franklin", "Franklin Gothic Medium", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0D0F12; --sheet: #14171B; --ink: #ECEDE8; --ink-2: #A2A7AE; --rule: #272B31;
+    --cyan: #29C1F0; --cyan-ink: #6AD3F6; --magenta: #FF3D9E; --magenta-ink: #FF7AB9; --yellow: #FFE14A;
+    --key: #ECEDE8; --blend: screen; --mark-bg: #FF4FA6; --on-mark: #22000F; --on-yellow: #111316;
+    --accent-bg: #29C1F0; --on-accent: #04202B;
+    --code-bg: #171A1F; --code-fg: #E6E7E2; --code-dim: #7D838B; --code-key: #7CCFF2; --code-str: #FFE27A; --code-ok: #8EE3B0;
+    --m-page: #101317; --m-surface: #1A1E23; --m-line: #2C3138; --m-ink: #ECEDE8; --m-muted: #8D939B;
+    --drift-blue: #5B9BFF;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0D0F12; --sheet: #14171B; --ink: #ECEDE8; --ink-2: #A2A7AE; --rule: #272B31;
+  --cyan: #29C1F0; --cyan-ink: #6AD3F6; --magenta: #FF3D9E; --magenta-ink: #FF7AB9; --yellow: #FFE14A;
+  --key: #ECEDE8; --blend: screen; --mark-bg: #FF4FA6; --on-mark: #22000F; --on-yellow: #111316;
+  --accent-bg: #29C1F0; --on-accent: #04202B;
+  --code-bg: #171A1F; --code-fg: #E6E7E2; --code-dim: #7D838B; --code-key: #7CCFF2; --code-str: #FFE27A; --code-ok: #8EE3B0;
+  --m-page: #101317; --m-surface: #1A1E23; --m-line: #2C3138; --m-ink: #ECEDE8; --m-muted: #8D939B;
+  --drift-blue: #5B9BFF;
+  color-scheme: dark;
+}
+
+@property --spread { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --tilt { syntax: "<number>"; inherits: true; initial-value: 1; }
+@property --reg { syntax: "<number>"; inherits: true; initial-value: 0; }
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: var(--yellow); color: var(--on-yellow); }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--magenta); outline-offset: 3px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+p { margin: 0; }
+code, pre { font-family: var(--font-mono); }
+
+.wrap { max-width: 76rem; margin-inline: auto; padding-inline: clamp(1rem, 4vw, 2.5rem); }
+.label {
+  font-family: var(--font-mono); font-size: .75rem; font-weight: 500;
+  letter-spacing: .09em; text-transform: uppercase; color: var(--ink-2);
+}
+.label--mag { color: var(--magenta-ink); }
+.rm-ico { width: 14px; height: 14px; color: var(--ink-2); flex: none; }
+
+/* ---------- top bar ---------- */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-block: 1.25rem; }
+.brand {
+  display: inline-flex; align-items: center; gap: .6rem; text-decoration: none;
+  font-family: var(--font-display); font-weight: 800; font-stretch: 125%; font-size: 1.15rem; letter-spacing: -.01em;
+}
+.brand svg { width: 28px; height: 28px; }
+.nav { display: flex; align-items: center; gap: clamp(.9rem, 2.4vw, 2rem); }
+.nav a { font-family: var(--font-mono); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; text-decoration: none; color: var(--ink-2); }
+.nav a:hover { color: var(--ink); }
+@media (max-width: 640px) { .nav .sec { display: none; } }
+
+/* ---------- press sheet (hero) ---------- */
+.sheet { position: relative; padding: clamp(1.25rem, 3vw, 2.5rem); margin-block: .5rem 1rem; }
+.crop { position: absolute; width: 0; height: 0; }
+.crop::before, .crop::after { content: ""; position: absolute; background: var(--ink-2); }
+.crop::before { width: 11px; height: 1px; }
+.crop::after { width: 1px; height: 11px; }
+.crop.tl { top: 0; left: 0; } .crop.tl::before { left: -14px; top: 0; } .crop.tl::after { left: 0; top: -14px; }
+.crop.tr { top: 0; right: 0; } .crop.tr::before { left: 3px; top: 0; } .crop.tr::after { left: 0; top: -14px; }
+.crop.bl { bottom: 0; left: 0; } .crop.bl::before { left: -14px; top: 0; } .crop.bl::after { left: 0; top: 3px; }
+.crop.br { bottom: 0; right: 0; } .crop.br::before { left: 3px; top: 0; } .crop.br::after { left: 0; top: 3px; }
+
+.strip { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }
+.strip i { display: block; width: 12px; height: 12px; }
+.strip .slug { margin-left: .75rem; }
+
+.hero-head { margin-top: clamp(1.5rem, 4vw, 3rem); }
+h1 {
+  font-family: var(--font-display); font-weight: 820; font-stretch: 116%;
+  font-size: clamp(2.4rem, 6.4vw, 5.1rem); line-height: .98; letter-spacing: -.025em;
+  margin-top: 1rem;
+}
+h1 .quiet { display: block; font-weight: 280; color: var(--ink-2); }
+
+/* registration: C, M, Y plates offset behind the key plate, converging on load */
+.reg { position: relative; display: block; isolation: isolate; --reg: 0;
+  animation: register 1.35s cubic-bezier(.2,.7,.1,1) .25s backwards;
+  transition: --reg .45s cubic-bezier(.2,.7,.1,1); }
+.reg:hover { --reg: .3; }
+.reg > span { display: block; }
+.reg .k { position: relative; z-index: 1; }
+.reg .c, .reg .m, .reg .y { position: absolute; inset: 0; mix-blend-mode: var(--blend); }
+.reg .c { color: var(--cyan);    transform: translate(calc(var(--reg) * -.10em), calc(var(--reg) * .05em)); }
+.reg .m { color: var(--magenta); transform: translate(calc(var(--reg) * .08em), calc(var(--reg) * -.06em)); }
+.reg .y { color: var(--yellow);  transform: translate(calc(var(--reg) * .04em), calc(var(--reg) * .09em)); }
+@keyframes register { from { --reg: 1; } }
+
+.hero-body {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 2.5rem; align-items: start;
+  margin-top: clamp(1.75rem, 3vw, 2.5rem);
+}
+@media (min-width: 1100px) { .hero-body { grid-template-columns: minmax(0, 1fr) auto; gap: 3rem; } }
+.hero-copy { display: grid; gap: 1.75rem; max-width: 34rem; padding-top: .5rem; }
+.lede { font-size: 1.2rem; line-height: 1.55; }
+.lede strong { font-weight: 650; }
+.ctas { display: flex; flex-wrap: wrap; gap: .75rem; }
+.btn {
+  display: inline-flex; align-items: center; gap: .5rem; padding: .85rem 1.3rem;
+  font-family: var(--font-mono); font-size: .82rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  text-decoration: none; border: 1px solid var(--ink); border-radius: 2px; cursor: pointer;
+}
+.btn--ink { background: var(--ink); color: var(--paper); }
+.btn--ink:hover { background: var(--magenta-ink); border-color: var(--magenta-ink); }
+.btn--line { background: transparent; color: var(--ink); }
+.btn--line:hover { background: var(--sheet); }
+.meta { display: grid; gap: .35rem; }
+.meta p { font-family: var(--font-mono); font-size: .8rem; color: var(--ink-2); }
+
+/* ---------- Fig. 1: the separation ---------- */
+.fig { margin: 0; justify-self: center; display: grid; gap: 1rem; max-width: 100%; }
+.fig-stage {
+  --plate: 17rem;
+  --spread-max: 3.25rem;
+  --spread: var(--spread-max);
+  --tilt: 1;
+  position: relative;
+  width: calc(var(--plate) * 1.4142 + .5rem + 12rem);
+  max-width: 100%;
+  height: calc(2.5rem + var(--plate) * .75 + 4 * (var(--spread-max) + 2px) * .848 + 1.5rem);
+  animation: separate 2.7s cubic-bezier(.55,0,.25,1) .45s backwards;
+  transition: --tilt .7s cubic-bezier(.6,0,.2,1), --spread .8s cubic-bezier(.6,0,.2,1) .55s;
+}
+.fig-stage.is-assembled {
+  --tilt: 0; --spread: 0px;
+  transition: --spread .6s cubic-bezier(.6,0,.2,1), --tilt .7s cubic-bezier(.6,0,.2,1) .5s;
+}
+@keyframes separate {
+  0%, 32% { --tilt: 0; --spread: 0px; }
+  62% { --tilt: 1; --spread: 0px; }
+}
+.stack {
+  position: absolute;
+  width: var(--plate); height: var(--plate);
+  left: calc(var(--plate) * .2071 + .5rem);
+  bottom: calc(2.5rem - var(--plate) * .125);
+  transform: rotateX(calc(var(--tilt) * 58deg)) rotateZ(calc(var(--tilt) * -45deg));
+  transform-style: preserve-3d;
+  font-size: calc(var(--plate) / 28);
+}
+.plate {
+  position: absolute; inset: 0;
+  transform: translateZ(calc(var(--i) * (var(--spread) + 2px)));
+  border: 1px solid color-mix(in srgb, var(--ink) calc(var(--tilt) * 32%), transparent);
+  background: color-mix(in srgb, var(--sheet) calc(var(--tilt) * 12%), transparent);
+  font-family: var(--font-body);
+  color: var(--m-ink);
+}
+.plate.base { background: var(--sheet); border-color: var(--rule); }
+.el { position: absolute; white-space: nowrap; line-height: 1; }
+.rm { position: absolute; width: 1.2em; height: 1.2em; color: var(--ink-2); opacity: .75; }
+.page { left: 2em; top: 2em; width: 24em; height: 24em; background: var(--m-page); border-radius: .6em; }
+.gridlines {
+  left: 2em; top: 2em; width: 24em; height: 24em; border-radius: .6em; opacity: var(--tilt);
+  background-image: linear-gradient(to right, var(--grid) 1px, transparent 1px), linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+  background-size: 1em 1em;
+}
+.surf { background: var(--m-surface); border-radius: .5em; }
+.bar { display: flex; gap: .2em; left: 3em; top: 26.55em; }
+.bar i { display: block; width: .75em; height: .75em; }
+.logo { width: 1em; height: 1em; background: var(--cyan); border-radius: .25em; }
+.av { width: 1.3em; height: 1.3em; border-radius: 50%; }
+.mbtn { display: grid; place-items: center; background: var(--accent-bg); color: var(--on-accent); border-radius: .9em; font-weight: 600; }
+.mbtn span { font-size: .56em; }
+.spark { width: 4.2em; height: 2em; overflow: visible; }
+.spark polyline { fill: none; stroke: var(--cyan); stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+.badge { display: grid; place-items: center; width: 3.3em; height: 1.1em; border-radius: 1em; font-weight: 650; }
+.badge span { font-size: .46em; }
+.badge.live  { background: color-mix(in srgb, var(--cyan) 20%, var(--m-surface)); color: var(--cyan-ink); }
+.badge.build { background: color-mix(in srgb, var(--yellow) 38%, var(--m-surface)); color: var(--m-ink); }
+.badge.fail  { background: color-mix(in srgb, var(--magenta) 16%, var(--m-surface)); color: var(--magenta-ink); }
+.box { border: 1px solid var(--m-line); border-radius: .5em; }
+.hr { height: 0; border-top: 1px solid var(--m-line); }
+.t-brand { font-size: .72em; font-weight: 700; }
+.t-nav { font-size: .56em; color: var(--m-muted); }
+.t-nav.on { color: var(--m-ink); font-weight: 650; box-shadow: 0 .45em 0 -.25em var(--cyan); }
+.t-search { font-size: .5em; color: var(--m-muted); }
+.t-cap { font-family: var(--font-mono); font-size: .44em; letter-spacing: .08em; text-transform: uppercase; color: var(--m-muted); }
+.t-big { font-family: var(--font-display); font-size: 1.45em; font-weight: 800; font-stretch: 110%; }
+.t-name { font-size: .6em; font-weight: 650; }
+.t-meta { font-size: .48em; color: var(--m-muted); }
+.t-h { font-size: .66em; font-weight: 700; }
+.t-link { font-size: .52em; color: var(--cyan-ink); font-weight: 600; }
+.t-title { font-family: var(--font-display); font-size: 1.3em; font-weight: 800; font-stretch: 112%; }
+.guide { width: 0; height: 24em; top: 2em; border-left: 1px dashed var(--magenta); opacity: var(--tilt); }
+
+.callouts { list-style: none; margin: 0; padding: 0; }
+.callouts li {
+  position: absolute;
+  left: calc(var(--plate) * 1.4142 + .5rem);
+  bottom: calc(2.5rem + var(--plate) * .3747);
+  transform: translateY(50%) translateY(calc(var(--i) * (var(--spread) + 2px) * -.848));
+  opacity: clamp(0, calc(var(--tilt) * 4 - 3), 1);
+  padding-left: 2.6rem;
+  display: grid; grid-template-columns: auto auto; column-gap: .5rem; align-items: baseline; justify-content: start;
+  line-height: 1.2;
+}
+.callouts li::before { content: ""; position: absolute; left: 0; top: 50%; width: 2.1rem; border-top: 1px solid var(--ink-2); }
+.callouts li::after { content: ""; position: absolute; left: 0; top: 50%; width: 7px; height: 7px; border-radius: 50%; background: var(--magenta); transform: translate(-50%, -50%); }
+.callouts .n { font-family: var(--font-mono); font-size: .72rem; font-weight: 600; color: var(--magenta-ink); }
+.callouts .t { font-family: var(--font-display); font-weight: 750; font-stretch: 112%; font-size: .98rem; }
+.callouts .d { grid-column: 2; font-family: var(--font-mono); font-size: .7rem; color: var(--ink-2); }
+
+.fig figcaption { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1.5rem; max-width: 38rem; }
+.fig figcaption p { font-size: .88rem; color: var(--ink-2); max-width: 30rem; }
+.fig figcaption strong { color: var(--ink); font-weight: 650; }
+.fig-legend { display: none; font-family: var(--font-mono); font-size: .72rem; color: var(--ink-2); }
+.toggle {
+  font-family: var(--font-mono); font-size: .74rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase;
+  background: none; color: var(--ink); border: 1px solid var(--rule); border-radius: 2px; padding: .5rem .8rem; cursor: pointer;
+}
+.toggle:hover { border-color: var(--ink); }
+
+@media (max-width: 600px) {
+  .sheet { padding-inline: 1rem; }
+  .fig-stage { --plate: 11.5rem; --spread-max: 2.4rem; width: calc(var(--plate) * 1.4142 + .5rem + 3rem); }
+  .callouts li { padding-left: 1.6rem; }
+  .callouts li::before { width: 1.15rem; }
+  .callouts .t, .callouts .d { display: none; }
+  .fig-legend { display: block; }
+}
+
+/* ---------- sections ---------- */
+section { padding-block: clamp(4rem, 9vw, 7rem); border-top: 1px solid var(--rule); scroll-margin-top: 1rem; }
+.sec-head { display: grid; gap: 1rem; max-width: 46rem; margin-bottom: clamp(2.5rem, 5vw, 3.5rem); }
+.eyebrow { display: flex; align-items: center; gap: .55rem; }
+h2 {
+  font-family: var(--font-display); font-weight: 800; font-stretch: 114%;
+  font-size: clamp(2rem, 4.4vw, 3.3rem); line-height: 1.02; letter-spacing: -.02em;
+}
+.sec-head > p { font-size: 1.12rem; color: var(--ink-2); max-width: 40rem; }
+.sec-head > p + p { margin-top: -.25rem; }
+
+/* why: approved vs shipped */
+.proof { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2rem 3rem; align-items: start; }
+@media (min-width: 820px) { .proof { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.proof figure { margin: 0; display: grid; gap: .9rem; }
+.proof figcaption { display: flex; align-items: center; gap: .5rem; }
+.inv {
+  position: relative; max-width: 24rem; width: 100%;
+  background: var(--m-surface); border: 1px solid var(--m-line); color: var(--m-ink);
+  font-family: var(--font-body);
+}
+.inv--ok { padding: 20px; border-radius: 12px; }
+.inv--drift { padding: 14px 20px 16px 14px; border-radius: 6px; }
+.inv-title { font-size: 1.05rem; font-weight: 700; line-height: 1.3; }
+.inv--drift .inv-title { font-size: 1rem; font-weight: 600; }
+.inv-sub { font-size: .9rem; color: var(--m-muted); margin-top: 4px; line-height: 1.45; }
+.inv-row { display: flex; gap: 8px; margin-top: 16px; }
+.inv--drift .inv-row { margin-top: 12px; gap: 6px; }
+.inv-input { flex: 1; min-width: 0; height: 38px; display: flex; align-items: center; padding-inline: 12px; border: 1px solid var(--m-line); border-radius: 8px; font-size: .88rem; color: var(--m-muted); overflow: hidden; white-space: nowrap; }
+.inv-btn { position: relative; height: 38px; display: grid; place-items: center; padding-inline: 14px; border-radius: 8px; background: var(--accent-bg); color: var(--on-accent); font-size: .88rem; font-weight: 600; white-space: nowrap; }
+.inv--drift .inv-btn { background: var(--drift-blue); color: #FFFFFF; border-radius: 4px; height: 36px; }
+.inv-people { position: relative; display: flex; align-items: center; margin-top: 16px; }
+.inv-people i { display: block; width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--m-surface); margin-right: -8px; }
+.inv-people i:nth-child(1) { background: color-mix(in srgb, var(--cyan) 45%, var(--m-surface)); }
+.inv-people i:nth-child(2) { background: color-mix(in srgb, var(--magenta) 40%, var(--m-surface)); }
+.inv-people i:nth-child(3) { background: color-mix(in srgb, var(--yellow) 60%, var(--m-surface)); }
+.inv-people span { margin-left: 18px; font-size: .85rem; color: var(--m-muted); }
+.inv--drift .inv-people i:nth-child(1) { width: 24px; height: 24px; }
+.inv--drift .inv-people i:nth-child(2) { width: 22px; height: 22px; }
+.inv--drift .inv-people i:nth-child(3) { width: 28px; height: 28px; }
+.inv--drift .inv-people span { margin-left: 14px; transform: translateY(2px); }
+.mk {
+  position: absolute; z-index: 2; width: 22px; height: 22px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--mark-bg); color: var(--on-mark);
+  font-family: var(--font-mono); font-size: .72rem; font-weight: 600; font-style: normal;
+  box-shadow: 0 0 0 3px var(--paper);
+}
+.proof-notes { list-style: none; margin: 2.5rem 0 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem 3rem; }
+@media (min-width: 820px) { .proof-notes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.proof-notes li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .8rem; align-items: start; }
+.proof-notes .mk { position: static; box-shadow: none; }
+.proof-notes p { font-size: .98rem; }
+.proof-notes strong { font-weight: 650; }
+
+.pivot {
+  margin-block: clamp(3.5rem, 7vw, 5.5rem) clamp(2.5rem, 5vw, 3.5rem);
+  font-family: var(--font-display); font-weight: 300; font-stretch: 105%;
+  font-size: clamp(1.5rem, 3.1vw, 2.35rem); line-height: 1.2; letter-spacing: -.01em; max-width: 52rem; text-wrap: balance;
+}
+.pivot strong { font-weight: 780; }
+
+.principles { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2.25rem 2rem; }
+@media (min-width: 700px) { .principles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .principles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.pr { border-top: 2px solid var(--ink); padding-top: 1rem; display: grid; gap: .6rem; align-content: start; }
+.pr h3 { font-family: var(--font-display); font-weight: 750; font-stretch: 108%; font-size: 1.2rem; line-height: 1.2; }
+.pr p { font-size: .96rem; color: var(--ink-2); }
+.chip { justify-self: start; font-family: var(--font-mono); font-size: .76rem; padding: .2rem .5rem; background: var(--sheet); border: 1px solid var(--rule); border-radius: 2px; }
+
+/* install */
+.install { max-width: 54rem; }
+.tabs { display: flex; gap: 0; overflow-x: auto; border-bottom: 1px solid var(--rule); scrollbar-width: none; }
+.tab {
+  flex: none; background: none; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  padding: .8rem 1rem; cursor: pointer; color: var(--ink-2);
+  font-family: var(--font-mono); font-size: .8rem; font-weight: 500; letter-spacing: .06em; text-transform: uppercase;
+}
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--magenta); font-weight: 600; }
+.panel { padding-top: 1.75rem; display: grid; gap: 1.25rem; }
+.panel > p { color: var(--ink-2); max-width: 44rem; }
+.panel .run { display: flex; flex-wrap: wrap; align-items: baseline; gap: .6rem; }
+.panel .run code { font-size: .95rem; font-weight: 600; color: var(--ink); background: var(--sheet); border: 1px solid var(--rule); padding: .15rem .5rem; border-radius: 2px; }
+.note { font-size: .92rem; color: var(--ink-2); border-left: 2px solid var(--yellow); padding-left: .9rem; }
+.note code { font-size: .85em; }
+
+.code { background: var(--code-bg); color: var(--code-fg); border-radius: 3px; overflow: hidden; min-width: 0; }
+.code-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .55rem .9rem; border-bottom: 1px solid color-mix(in srgb, var(--code-fg) 12%, transparent); }
+.code-head span { font-family: var(--font-mono); font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--code-dim); }
+.copy {
+  font-family: var(--font-mono); font-size: .72rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  background: none; color: var(--code-fg); border: 1px solid color-mix(in srgb, var(--code-fg) 25%, transparent);
+  border-radius: 2px; padding: .25rem .6rem; cursor: pointer;
+}
+.copy:hover { border-color: var(--code-fg); }
+.code pre { margin: 0; padding: 1rem 1.1rem 1.15rem; overflow-x: auto; font-size: .86rem; line-height: 1.7; }
+.code .k { color: var(--code-key); }
+.code .s { color: var(--code-str); }
+.code .d { color: var(--code-dim); }
+.code .ok { color: var(--code-ok); }
+.code .y { color: var(--code-str); }
+
+/* use: steps */
+.syntax { font-size: .92rem; color: var(--ink-2); }
+.syntax code { font-size: .88em; color: var(--ink); }
+.steps { list-style: none; margin: 0; padding: 0; }
+.step {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.75rem 3.5rem; align-items: start;
+  padding-block: clamp(2rem, 4vw, 3rem); border-top: 1px solid var(--rule);
+}
+@media (min-width: 920px) { .step { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); } }
+.step-text { display: grid; gap: .85rem; align-content: start; }
+.step-text h3 { font-family: var(--font-display); font-weight: 780; font-stretch: 112%; font-size: clamp(1.45rem, 2.6vw, 1.9rem); line-height: 1.1; }
+.cmd { justify-self: start; font-family: var(--font-mono); font-size: 1rem; font-weight: 600; color: var(--magenta-ink); }
+.step-text p { color: var(--ink-2); }
+.step-text p strong { color: var(--ink); font-weight: 650; }
+
+/* sandbox mock */
+.sbx { border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; background: var(--sheet); min-width: 0; }
+.sbx-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .55rem .9rem; border-bottom: 1px solid var(--rule); }
+.sbx-body { display: grid; grid-template-columns: minmax(0, 10rem) minmax(0, 1fr); }
+.sbx-nav { border-right: 1px solid var(--rule); padding: .9rem .8rem; display: grid; gap: .8rem; align-content: start; }
+.sbx-nav div { display: grid; gap: .15rem; }
+.sbx-nav b { font-family: var(--font-mono); font-size: .64rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.sbx-nav span { font-size: .84rem; padding: .1rem .4rem; border-radius: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sbx-nav span.on { background: color-mix(in srgb, var(--magenta) 14%, transparent); color: var(--magenta-ink); font-weight: 650; }
+.sbx-main { padding: 1rem; display: grid; gap: 1rem; align-content: start; min-width: 0; }
+.sbx-canvas {
+  display: flex; flex-wrap: wrap; gap: .6rem; padding: 1.4rem 1rem; border-radius: 3px; background: var(--m-page);
+  background-image: linear-gradient(to right, var(--grid) 1px, transparent 1px), linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+  background-size: 12px 12px;
+}
+.sb-btn { font-size: .86rem; font-weight: 600; padding: .5rem .9rem; border-radius: 99px; white-space: nowrap; color: var(--m-ink); }
+.sb-btn.p { background: var(--accent-bg); color: var(--on-accent); }
+.sb-btn.s { background: var(--m-surface); border: 1px solid var(--m-line); }
+.sb-btn.g { background: transparent; color: var(--cyan-ink); }
+.ctrl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .45rem 1rem; font-size: .84rem; align-items: center; }
+.ctrl dt { font-family: var(--font-mono); font-size: .74rem; color: var(--ink-2); }
+.ctrl dd { margin: 0; min-width: 0; }
+.ctrl dd span { display: inline-block; padding: .12rem .5rem; border: 1px solid var(--rule); border-radius: 2px; background: var(--paper); font-family: var(--font-mono); font-size: .76rem; }
+
+/* more commands */
+.more { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2rem 3rem; margin-top: clamp(2rem, 4vw, 3rem); }
+@media (min-width: 760px) { .more { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.more div { display: grid; gap: .4rem; align-content: start; }
+.more code { font-size: .92rem; font-weight: 600; color: var(--magenta-ink); }
+.more p { color: var(--ink-2); font-size: .98rem; }
+.more-head { margin-top: clamp(3rem, 6vw, 4.5rem); }
+.more-head h3 { font-family: var(--font-display); font-weight: 780; font-stretch: 112%; font-size: 1.5rem; margin-top: .6rem; }
+
+/* closing */
+.end { display: grid; gap: 2rem; }
+.end h2 { font-size: clamp(2.2rem, 5.4vw, 4.2rem); max-width: 18ch; }
+footer { border-top: 1px solid var(--rule); padding-block: 1.5rem 2.5rem; }
+.foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
+.foot p { font-family: var(--font-mono); font-size: .76rem; color: var(--ink-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .reg, .fig-stage, .fig-stage.is-assembled { animation: none; transition: none; }
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="rm" viewBox="0 0 20 20"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M10 1v18M1 10h18" stroke="currentColor" stroke-width="1.2" fill="none"/></symbol>
+</svg>
+
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#top" aria-label="pixel-perfect home">
+      <svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M14 1v7M14 20v7M1 14h7M20 14h7" stroke="currentColor" stroke-width="1.6" fill="none"/><rect x="11" y="11" width="6" height="6" fill="var(--magenta)"/></svg>
+      pixel-perfect
+    </a>
+    <nav class="nav" aria-label="Sections">
+      <a class="sec" href="#why">Why</a>
+      <a class="sec" href="#install">Install</a>
+      <a class="sec" href="#use">Use</a>
+      <a href="https://github.com/hackerpug-ai/pixel-perfect">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <div class="sheet">
+      <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
+      <div class="strip" aria-hidden="true">
+        <i style="background:var(--cyan)"></i><i style="background:var(--magenta)"></i><i style="background:var(--yellow)"></i><i style="background:var(--key)"></i>
+        <i style="background:color-mix(in srgb, var(--key) 60%, transparent)"></i><i style="background:color-mix(in srgb, var(--key) 30%, transparent)"></i><i style="background:color-mix(in srgb, var(--key) 12%, transparent)"></i>
+        <span class="label slug">pixel-perfect 9.1.0 · agent skill · MIT</span>
+      </div>
+
+      <div class="hero-head">
+        <p class="label label--mag">For Claude Code, Codex, Cursor, Grok, OpenCode, and Pi</p>
+        <h1>
+          <span class="quiet">Your mockup is a picture.</span>
+          <span class="reg">
+            <span class="k">Ship the system inside it.</span>
+            <span class="c" aria-hidden="true">Ship the system inside it.</span>
+            <span class="m" aria-hidden="true">Ship the system inside it.</span>
+            <span class="y" aria-hidden="true">Ship the system inside it.</span>
+          </span>
+        </h1>
+      </div>
+
+      <div class="hero-body">
+        <div class="hero-copy">
+          <p class="lede"><strong>pixel-perfect</strong> is an agent skill that reads every frame of a high-fidelity mockup and turns it into real components in your framework: tokens, atoms, molecules, organisms, and screens. Each layer is checked against the frames it came from before the next layer starts.</p>
+          <div class="ctas">
+            <a class="btn btn--ink" href="#install">Install pixel-perfect</a>
+            <a class="btn btn--line" href="#use">See how it works</a>
+          </div>
+          <div class="meta">
+            <p>Free and open source · MIT license</p>
+            <p>React · SvelteKit · Expo · SwiftUI · GPUI · Ratatui</p>
+          </div>
+        </div>
+
+        <figure class="fig" aria-labelledby="fig-cap">
+          <div class="fig-stage" id="fig-stage">
+            <div class="stack" aria-hidden="true">
+              <!-- 01 tokens -->
+              <div class="plate base" style="--i:0">
+                <div class="el page"></div>
+                <div class="el gridlines"></div>
+                <div class="el surf" style="left:2em;top:2em;width:24em;height:2.6em;border-radius:.6em .6em 0 0"></div>
+                <div class="el surf" style="left:2.8em;top:9em;width:10.8em;height:4.6em"></div>
+                <div class="el surf" style="left:14.4em;top:9em;width:10.8em;height:4.6em"></div>
+                <div class="el surf" style="left:2.8em;top:14.4em;width:22.4em;height:10.8em"></div>
+                <div class="el bar"><i style="background:var(--cyan)"></i><i style="background:var(--magenta)"></i><i style="background:var(--yellow)"></i><i style="background:var(--key)"></i><i style="background:var(--m-page)"></i><i style="background:var(--m-surface)"></i><i style="background:var(--m-line)"></i></div>
+                <svg class="rm" style="left:.5em;top:.5em"><use href="#rm"/></svg><svg class="rm" style="left:26.3em;top:.5em"><use href="#rm"/></svg><svg class="rm" style="left:.5em;top:26.3em"><use href="#rm"/></svg><svg class="rm" style="left:26.3em;top:26.3em"><use href="#rm"/></svg>
+              </div>
+              <!-- 02 atoms -->
+              <div class="plate" style="--i:1">
+                <div class="el logo" style="left:2.8em;top:2.8em"></div>
+                <div class="el av" style="left:23.9em;top:2.65em;background:var(--m-ink)"></div>
+                <div class="el mbtn" style="left:19.8em;top:5.6em;width:5.4em;height:1.8em"><span>New deploy</span></div>
+                <svg class="el spark" style="left:8.6em;top:10.4em" viewBox="0 0 42 20"><polyline points="0,15 6,13 12,14 18,9 24,11 30,6 36,7 42,3"/></svg>
+                <svg class="el spark" style="left:20.2em;top:10.4em" viewBox="0 0 42 20"><polyline points="0,12 6,16 12,10 18,12 24,7 30,9 36,4 42,6"/></svg>
+                <div class="el av" style="left:3.8em;top:17.25em;background:color-mix(in srgb, var(--cyan) 45%, var(--m-surface))"></div>
+                <div class="el av" style="left:3.8em;top:19.85em;background:color-mix(in srgb, var(--magenta) 40%, var(--m-surface))"></div>
+                <div class="el av" style="left:3.8em;top:22.45em;background:color-mix(in srgb, var(--yellow) 60%, var(--m-surface))"></div>
+                <div class="el badge live" style="left:21.2em;top:17.35em"><span>Live</span></div>
+                <div class="el badge build" style="left:21.2em;top:19.95em"><span>Building</span></div>
+                <div class="el badge fail" style="left:21.2em;top:22.55em"><span>Failed</span></div>
+                <svg class="rm" style="left:.5em;top:.5em"><use href="#rm"/></svg><svg class="rm" style="left:26.3em;top:.5em"><use href="#rm"/></svg><svg class="rm" style="left:.5em;top:26.3em"><use href="#rm"/></svg><svg class="rm" style="left:26.3em;top:26.3em"><use href="#rm"/></svg>
+              </div>
+              <!-- 03 molecules -->
+              <div class="plate" style="--i:2">
+                <div class="el" style="left:4.2em;top:2.95em"><span class="t-brand">Harbor</span></div>
+                <div class="el box" style="left:15.6em;top:2.75em;width:7em;height:1.2em;border-radius:.6em;padding:.33em .6em"><span class="t-search">Search services</span></div>
+                <div class="el box" style="left:2.8em;top:9em;width:10.8em;height:4.6em"></div>
+                <div class="el box" style="left:14.4em;top:9em;width:10.8em;height:4.6em"></div>
+                <div class="el" style="left:3.6em;top:9.8em"><span class="t-cap">Uptime · 30d</span></div>
+                <div class="el" style="left:3.6em;top:11em"><span class="t-big">99.98%</span></div>
+                <div class="el" style="left:15.2em;top:9.8em"><span class="t-cap">Deploys today</span></div>
+                <div class="el" style="left:15.2em;top:11em"><span class="t-big">14</span></div>
+                <div class="el" style="left:5.7em;top:17.35em"><span class="t-name">web</span></div>
+                <div class="el" style="left:5.7em;top:18.2em"><span class="t-meta">main · 2m ago</span></div>
+                <div class="el hr" style="left:3.8em;top:19.2em;width:20.4em"></div>
+                <div class="el" style="left:5.7em;top:19.95em"><span class="t-name">api</span></div>
+                <div class="el" style="left:5.7em;top:20.8em"><span class="t-meta">fix/auth · 14m ago</span></div>
+                <div class="el hr" style="left:3.8em;top:21.8em;width:20.4em"></div>
+                <div class="el" style="left:5.7em;top:22.55em"><span class="t-name">docs</span></div>
+                <div class="el" style="left:5.7em;top:23.4em"><span class="t-meta">main · 1h ago</span></div>
+                <svg class="rm" style="left:.5em;top:.5em"><use href="#rm"/></svg><svg class="rm" style="left:26.3em;top:.5em"><use href="#rm"/></svg><svg class="rm" style="left:.5em;top:26.3em"><use href="#rm"/></svg><svg class="rm" style="left:26.3em;top:26.3em"><use href="#rm"/></svg>
+              </div>
+              <!-- 04 organisms -->
+              <div class="plate" style="--i:3">
+                <div class="el hr" style="left:2em;top:4.6em;width:24em"></div>
+                <div class="el" style="left:8.6em;top:3.05em"><span class="t-nav on">Deploys</span></div>
+                <div class="el" style="left:11.6em;top:3.05em"><span class="t-nav">Logs</span></div>
+                <div class="el box" style="left:2.8em;top:14.4em;width:22.4em;height:10.8em"></div>
+                <div class="el" style="left:3.8em;top:15.3em"><span class="t-h">Recent deploys</span></div>
+                <div class="el" style="left:21.9em;top:15.4em"><span class="t-link">View all</span></div>
+                <svg class="rm" style="left:.5em;top:.5em"><use href="#rm"/></svg><svg class="rm" style="left:26.3em;top:.5em"><use href="#rm"/></svg><svg class="rm" style="left:.5em;top:26.3em"><use href="#rm"/></svg><svg class="rm" style="left:26.3em;top:26.3em"><use href="#rm"/></svg>
+              </div>
+              <!-- 05 screen -->
+              <div class="plate" style="--i:4">
+                <div class="el" style="left:2.8em;top:5.5em"><span class="t-title">Deploys</span></div>
+                <div class="el" style="left:2.8em;top:7.35em"><span class="t-meta">3 services · us-east-1</span></div>
+                <div class="el guide" style="left:2.8em"></div>
+                <div class="el guide" style="left:25.2em"></div>
+                <svg class="rm" style="left:.5em;top:.5em"><use href="#rm"/></svg><svg class="rm" style="left:26.3em;top:.5em"><use href="#rm"/></svg><svg class="rm" style="left:.5em;top:26.3em"><use href="#rm"/></svg><svg class="rm" style="left:26.3em;top:26.3em"><use href="#rm"/></svg>
+              </div>
+            </div>
+            <ol class="callouts">
+              <li style="--i:0"><span class="n">01</span><span class="t">Tokens</span><span class="d">color · type · space</span></li>
+              <li style="--i:1"><span class="n">02</span><span class="t">Atoms</span><span class="d">button · badge · avatar</span></li>
+              <li style="--i:2"><span class="n">03</span><span class="t">Molecules</span><span class="d">stat card · deploy row</span></li>
+              <li style="--i:3"><span class="n">04</span><span class="t">Organisms</span><span class="d">nav bar · deploy list</span></li>
+              <li style="--i:4"><span class="n">05</span><span class="t">Screens</span><span class="d">Deploys, default state</span></li>
+            </ol>
+          </div>
+          <figcaption>
+            <p id="fig-cap"><strong>Fig. 1</strong> A dashboard mockup separated into the five layers pixel-perfect builds, bottom plate first. Each plate passes its gate before the next one starts.</p>
+            <p class="fig-legend">01 Tokens · 02 Atoms · 03 Molecules · 04 Organisms · 05 Screens</p>
+            <button class="toggle" id="fig-toggle" type="button">Assemble the plates</button>
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <!-- WHY -->
+    <section id="why">
+      <div class="sec-head">
+        <p class="eyebrow"><svg class="rm-ico" aria-hidden="true"><use href="#rm"/></svg><span class="label">Why it exists</span></p>
+        <h2>Designs die in translation.</h2>
+        <p>AI can draw a gorgeous dashboard in seconds. Someone still has to read that picture and write the code. Spacing gets eyeballed, colors get hardcoded, and the same card gets built four times with four different paddings.</p>
+        <p>Six weeks later nothing matches what was approved, and nobody can say what correct would look like. There was only ever a picture of a system.</p>
+      </div>
+
+      <div class="proof">
+        <figure>
+          <figcaption><span class="label">Approved frame</span></figcaption>
+          <div class="inv inv--ok" aria-hidden="true">
+            <p class="inv-title">Invite your team</p>
+            <p class="inv-sub">Teammates can deploy services and read logs.</p>
+            <div class="inv-row"><span class="inv-input">name@company.com</span><span class="inv-btn">Send invite</span></div>
+            <div class="inv-people"><i></i><i></i><i></i><span>+4 pending</span></div>
+          </div>
+        </figure>
+        <figure>
+          <figcaption><span class="label label--mag">Shipped, week six · 4 marks</span></figcaption>
+          <div class="inv inv--drift" aria-hidden="true">
+            <b class="mk" style="left:-11px;top:14px">1</b>
+            <b class="mk" style="right:-11px;top:-11px">3</b>
+            <p class="inv-title">Invite your team</p>
+            <p class="inv-sub">Teammates can deploy services and read logs.</p>
+            <div class="inv-row"><span class="inv-input">name@company.com</span><span class="inv-btn">Send invite<b class="mk" style="right:-9px;top:-13px">2</b></span></div>
+            <div class="inv-people"><i></i><i></i><i></i><span>+4 pending</span><b class="mk" style="left:96px;top:-12px">4</b></div>
+          </div>
+        </figure>
+      </div>
+      <ol class="proof-notes">
+        <li><b class="mk">1</b><p><strong>Padding 20 → 14.</strong> Measured by eye from a screenshot.</p></li>
+        <li><b class="mk">2</b><p><strong>Button color typed by hand.</strong> The accent token existed. Nobody used it.</p></li>
+        <li><b class="mk">3</b><p><strong>Corner radius 12 → 6.</strong> Copied from a card on another page.</p></li>
+        <li><b class="mk">4</b><p><strong>Avatars at 24, 22, and 28 px.</strong> This is the fourth copy of the card, and each copy differs.</p></li>
+      </ol>
+
+      <p class="pivot">Generating a design is the easy half. <strong>pixel-perfect does the other half: it turns the design into a system you can build on and keep.</strong></p>
+
+      <div class="principles">
+        <div class="pr">
+          <span class="label label--mag">Input</span>
+          <h3>Designs go in as references</h3>
+          <p>Point it at a Claude Design deck, an HTML export, a URL, a screenshot, or a wireframes folder. It renders every frame, reads them once, and writes an inventory of what to build. The frames stay on as pixel targets.</p>
+          <span class="chip">design/inventory.json</span>
+        </div>
+        <div class="pr">
+          <span class="label label--mag">Order</span>
+          <h3>Layers are built in order</h3>
+          <p>Tokens first, then atoms, molecules, organisms, and screens. Every layer has a gate, so a screen is never built on an atom that doesn't render.</p>
+          <span class="chip">gates</span>
+        </div>
+        <div class="pr">
+          <span class="label label--mag">Upkeep</span>
+          <h3>The system stays maintained</h3>
+          <p>A manifest records what exists, what passed, and which library each component wraps. Later changes run back through the same gates, so the system doesn't drift.</p>
+          <span class="chip">design/manifest.json</span>
+        </div>
+        <div class="pr">
+          <span class="label label--mag">Sandbox</span>
+          <h3>A component browser in any stack</h3>
+          <p>It generates a sandbox in your own framework, from React and SvelteKit to Expo, SwiftUI, GPUI, and Ratatui. Storybook is there if you want it.</p>
+          <span class="chip">npm run sandbox</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- INSTALL -->
+    <section id="install">
+      <div class="sec-head">
+        <p class="eyebrow"><svg class="rm-ico" aria-hidden="true"><use href="#rm"/></svg><span class="label">Install</span></p>
+        <h2>Install it in your agent</h2>
+        <p>One package works in six agent harnesses. Choose yours and copy the commands.</p>
+      </div>
+
+      <div class="install">
+        <div class="tabs" role="tablist" aria-label="Agent harness">
+          <button class="tab" role="tab" id="tab-claude" aria-controls="p-claude" aria-selected="true">Claude Code</button>
+          <button class="tab" role="tab" id="tab-codex" aria-controls="p-codex" aria-selected="false" tabindex="-1">Codex</button>
+          <button class="tab" role="tab" id="tab-cursor" aria-controls="p-cursor" aria-selected="false" tabindex="-1">Cursor</button>
+          <button class="tab" role="tab" id="tab-grok" aria-controls="p-grok" aria-selected="false" tabindex="-1">Grok</button>
+          <button class="tab" role="tab" id="tab-opencode" aria-controls="p-opencode" aria-selected="false" tabindex="-1">OpenCode</button>
+          <button class="tab" role="tab" id="tab-pi" aria-controls="p-pi" aria-selected="false" tabindex="-1">Pi</button>
+        </div>
+
+        <div class="panel" role="tabpanel" id="p-claude" aria-labelledby="tab-claude">
+          <p>Run these inside a Claude Code session.</p>
+          <div class="code"><div class="code-head"><span>Claude Code</span><button class="copy" type="button">Copy</button></div>
+<pre><code>/plugin marketplace add hackerpug-ai/pixel-perfect
+/plugin install pixel-perfect@pixel-perfect</code></pre></div>
+          <p class="run"><span class="label">Then run</span><code>/pixel-perfect:init</code></p>
+        </div>
+
+        <div class="panel" role="tabpanel" id="p-codex" aria-labelledby="tab-codex" hidden>
+          <p>Run these in your terminal.</p>
+          <div class="code"><div class="code-head"><span>Terminal</span><button class="copy" type="button">Copy</button></div>
+<pre><code>codex plugin marketplace add hackerpug-ai/pixel-perfect
+codex plugin add pixel-perfect@pixel-perfect</code></pre></div>
+          <p class="run"><span class="label">Then run</span><code>$pixel-perfect:init</code></p>
+          <p class="note">Have an older personal install? Remove it first with <code>codex plugin remove pixel-perfect@personal</code> so you don't get duplicate commands.</p>
+        </div>
+
+        <div class="panel" role="tabpanel" id="p-cursor" aria-labelledby="tab-cursor" hidden>
+          <p>Cursor loads local plugins from <code>~/.cursor/plugins/local/</code>. Run these in your terminal.</p>
+          <div class="code"><div class="code-head"><span>Terminal</span><button class="copy" type="button">Copy</button></div>
+<pre><code>git clone --branch v9.1.0 --depth 1 https://github.com/hackerpug-ai/pixel-perfect.git /tmp/pixel-perfect
+mkdir -p ~/.cursor/plugins/local
+rm -rf ~/.cursor/plugins/local/pixel-perfect
+cp -R /tmp/pixel-perfect/plugins/pixel-perfect ~/.cursor/plugins/local/pixel-perfect</code></pre></div>
+          <p class="run"><span class="label">Then reload Cursor and run</span><code>/init</code></p>
+          <p class="note">Copy the folder instead of symlinking it. Cursor fails to load symlinked local plugins. To reload, open the Command Palette and choose Developer: Reload Window.</p>
+        </div>
+
+        <div class="panel" role="tabpanel" id="p-grok" aria-labelledby="tab-grok" hidden>
+          <p>Grok reads Claude Code plugins. Install with the Claude Code commands, then enable pixel-perfect in Grok's <code>/plugins</code> view if it isn't on already.</p>
+          <div class="code"><div class="code-head"><span>Claude Code</span><button class="copy" type="button">Copy</button></div>
+<pre><code>/plugin marketplace add hackerpug-ai/pixel-perfect
+/plugin install pixel-perfect@pixel-perfect</code></pre></div>
+          <p class="run"><span class="label">Then run</span><code>/pixel-perfect:init</code></p>
+        </div>
+
+        <div class="panel" role="tabpanel" id="p-opencode" aria-labelledby="tab-opencode" hidden>
+          <p>Run these from your project folder.</p>
+          <div class="code"><div class="code-head"><span>Terminal</span><button class="copy" type="button">Copy</button></div>
+<pre><code>git clone --branch v9.1.0 --depth 1 https://github.com/hackerpug-ai/pixel-perfect.git .pixel-perfect
+mkdir -p .opencode
+ln -s ../.pixel-perfect/plugins/pixel-perfect/.opencode/commands .opencode/commands
+ln -s ../.pixel-perfect/plugins/pixel-perfect/.opencode/skills .opencode/skills</code></pre></div>
+          <p class="run"><span class="label">Then run</span><code>/init</code></p>
+        </div>
+
+        <div class="panel" role="tabpanel" id="p-pi" aria-labelledby="tab-pi" hidden>
+          <p>Install the npm package with Pi's package manager.</p>
+          <div class="code"><div class="code-head"><span>Terminal</span><button class="copy" type="button">Copy</button></div>
+<pre><code>pi install npm:@hackerpug-ai/pixel-perfect</code></pre></div>
+          <p class="run"><span class="label">Then run</span><code>/skill:pixel-perfect-init</code></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- USE -->
+    <section id="use">
+      <div class="sec-head">
+        <p class="eyebrow"><svg class="rm-ico" aria-hidden="true"><use href="#rm"/></svg><span class="label">Use</span></p>
+        <h2>From mockup to system in four commands</h2>
+        <p class="syntax">Commands are shown in Claude Code syntax. In Codex, use <code>$pixel-perfect:init</code>. In Cursor and OpenCode, use <code>/init</code>. In Pi, use <code>/skill:pixel-perfect-init</code>.</p>
+      </div>
+
+      <ol class="steps">
+        <li class="step">
+          <div class="step-text">
+            <span class="label">Step 1</span>
+            <h3>Describe the project</h3>
+            <code class="cmd">/pixel-perfect:init</code>
+            <p>It asks for the goal, the vibe, your platforms, framework, style system, and component library. <strong>List your designs as references.</strong> They stay where they are; nothing is copied or converted.</p>
+          </div>
+          <div class="code"><div class="code-head"><span>design/manifest.json</span></div>
+<pre><code><span class="d">{</span>
+  <span class="k">"goal"</span><span class="d">:</span> <span class="s">"Deploy dashboard for small platform teams"</span><span class="d">,</span>
+  <span class="k">"vibe"</span><span class="d">:</span> <span class="s">"calm, dense, high-contrast"</span><span class="d">,</span>
+  <span class="k">"references"</span><span class="d">: [</span>
+    <span class="s">"design/harbor-deck.html"</span><span class="d">,</span>
+    <span class="s">"design/screens/mobile-list.png"</span>
+  <span class="d">],</span>
+  <span class="k">"platforms"</span><span class="d">: {</span>
+    <span class="k">"web-desktop"</span><span class="d">: {</span>
+      <span class="k">"tools"</span><span class="d">: {</span>
+        <span class="k">"framework"</span><span class="d">:</span> <span class="s">"vite"</span><span class="d">,</span>
+        <span class="k">"style"</span><span class="d">:</span> <span class="s">"tailwind"</span><span class="d">,</span>
+        <span class="k">"components"</span><span class="d">:</span> <span class="s">"shadcn"</span><span class="d">,</span>
+        <span class="k">"sandbox"</span><span class="d">:</span> <span class="s">"custom"</span>
+      <span class="d">}</span>
+    <span class="d">}</span>
+  <span class="d">}</span>
+<span class="d">}</span></code></pre></div>
+        </li>
+
+        <li class="step">
+          <div class="step-text">
+            <span class="label">Step 2</span>
+            <h3>Set up the bench</h3>
+            <code class="cmd">/pixel-perfect:scaffold</code>
+            <p>It installs your tools, writes the theme, and generates a sandbox in your framework with a story for every token. <strong>A hello-world component has to render</strong> before anything else gets built.</p>
+          </div>
+          <div class="sbx" aria-label="Example sandbox showing the Button component with three variants and its controls" role="img">
+            <div class="sbx-bar"><span class="label">Harbor sandbox</span><span class="label">npm run sandbox</span></div>
+            <div class="sbx-body">
+              <div class="sbx-nav">
+                <div><b>Design system</b><span>Colors</span><span>Typography</span><span>Spacing</span></div>
+                <div><b>Components</b><span class="on">Button</span><span>StatusBadge</span><span>Avatar</span></div>
+                <div><b>Molecules</b><span>StatCard</span><span>DeployRow</span></div>
+                <div><b>Organisms</b><span>NavBar</span><span>DeployList</span></div>
+                <div><b>Screens</b><span>Deploys</span></div>
+              </div>
+              <div class="sbx-main">
+                <span class="label">Components / Button</span>
+                <div class="sbx-canvas"><span class="sb-btn p">New deploy</span><span class="sb-btn s">Cancel</span><span class="sb-btn g">View logs</span></div>
+                <dl class="ctrl">
+                  <dt>label</dt><dd><span>New deploy</span></dd>
+                  <dt>variant</dt><dd><span>primary ▾</span></dd>
+                  <dt>size</dt><dd><span>md ▾</span></dd>
+                  <dt>disabled</dt><dd><span>false</span></dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="step">
+          <div class="step-text">
+            <span class="label">Step 3</span>
+            <h3>Separate, confirm, build</h3>
+            <code class="cmd">/pixel-perfect:build</code>
+            <p>It renders every frame of your designs, reads them once, and writes an inventory of the atoms, molecules, organisms, and screens to make, each tied to the frames that justify it. <strong>You confirm the inventory once.</strong> Then it builds each layer against those frames, and each gate has to pass before the next layer starts.</p>
+          </div>
+          <div class="code"><div class="code-head"><span>design/inventory.json · excerpt</span></div>
+<pre><code><span class="k">"molecules"</span><span class="d">: [</span>
+  <span class="d">{</span>
+    <span class="k">"name"</span><span class="d">:</span> <span class="s">"DeployRow"</span><span class="d">,</span>
+    <span class="k">"composes"</span><span class="d">: [</span><span class="s">"Avatar"</span><span class="d">,</span> <span class="s">"StatusBadge"</span><span class="d">],</span>
+    <span class="k">"states"</span><span class="d">: [</span><span class="s">"live"</span><span class="d">,</span> <span class="s">"building"</span><span class="d">,</span> <span class="s">"failed"</span><span class="d">],</span>
+    <span class="k">"appears_on"</span><span class="d">: [</span><span class="s">"harbor-deck/03"</span><span class="d">,</span> <span class="s">"harbor-deck/07"</span><span class="d">],</span>
+    <span class="k">"evidence"</span><span class="d">:</span> <span class="s">"Deploy list rows on desktop and mobile frames"</span>
+  <span class="d">}</span>
+<span class="d">]</span></code></pre></div>
+        </li>
+
+        <li class="step">
+          <div class="step-text">
+            <span class="label">Step 4</span>
+            <h3>Check the proof</h3>
+            <code class="cmd">/pixel-perfect:status</code>
+            <p>It shows phase progress, gate results, drift between each component and its captured reference, and inventory no screen uses anymore. <strong><code>/pixel-perfect:verify</code> re-runs the current gates</strong> whenever you want evidence.</p>
+          </div>
+          <div class="code"><div class="code-head"><span>Example output</span></div>
+<pre><code>pixel-perfect v9.1.0 · Project Status
+
+Goal: Deploy dashboard for small platform teams
+Vibe: calm, dense, high-contrast
+
+--- web-desktop ---
+  <span class="ok">[x]</span> SCAFFOLD    theme configured · sandbox runs
+  <span class="ok">[x]</span> INVENTORY   41 frames · 12 atoms · 5 molecules · 3 organisms · 4 screens
+  <span class="ok">[x]</span> ATOMS       12/12 verified · atoms_capture passed
+  <span class="ok">[x]</span> MOLECULES    5/5 verified · molecules_capture passed
+  <span class="y">[ ]</span> ORGANISMS    2/3 verified · DeployList in progress
+  <span class="d">[ ] COMPOSE      0/4 screens</span>
+
+  Catalog drift: none
+  Next: /pixel-perfect:build</code></pre></div>
+        </li>
+      </ol>
+
+      <div class="more-head">
+        <span class="label">After the first build</span>
+        <h3>Keep the system alive</h3>
+      </div>
+      <div class="more">
+        <div><code>/pixel-perfect:refine</code><p>Change how an existing component or screen is built. The gates it touches run again.</p></div>
+        <div><code>/pixel-perfect:evolve</code><p>Change what exists. Absorb a new screen or mock, promote a repeated pattern into a component, or remove a screen and sweep up what only it used.</p></div>
+        <div><code>/pixel-perfect:add-platform</code><p>Add iOS, Android, or another target without resetting the platforms you already have.</p></div>
+        <div><code>/pixel-perfect:wireframe</code><p>No mockup yet? Turn a PRD into ASCII wireframes. Build reads them the same way it reads a high-fidelity design.</p></div>
+      </div>
+    </section>
+
+    <section class="end-sec">
+      <div class="end">
+        <h2>Your next mockup has a system inside it.</h2>
+        <div class="ctas">
+          <a class="btn btn--ink" href="#install">Install pixel-perfect</a>
+          <a class="btn btn--line" href="https://github.com/hackerpug-ai/pixel-perfect">View on GitHub ↗</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <div class="wrap foot">
+    <div class="strip" aria-hidden="true">
+      <i style="background:var(--cyan)"></i><i style="background:var(--magenta)"></i><i style="background:var(--yellow)"></i><i style="background:var(--key)"></i>
+    </div>
+    <p>pixel-perfect 9.1.0 · MIT license · github.com/hackerpug-ai/pixel-perfect</p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  // Fig. 1 assemble / separate
+  const stage = document.getElementById('fig-stage');
+  const toggle = document.getElementById('fig-toggle');
+  toggle.addEventListener('click', () => {
+    stage.style.animation = 'none';
+    const assembled = stage.classList.toggle('is-assembled');
+    toggle.textContent = assembled ? 'Separate the plates' : 'Assemble the plates';
+  });
+
+  // Harness tabs
+  const tabs = [...document.querySelectorAll('[role="tab"]')];
+  const select = (tab) => {
+    tabs.forEach((t) => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', on);
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    });
+  };
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => select(tab));
+    tab.addEventListener('keydown', (e) => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      const next = tabs[(i + d + tabs.length) % tabs.length];
+      select(next);
+      next.focus();
+    });
+  });
+
+  // Copy buttons
+  document.querySelectorAll('.copy').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const code = btn.closest('.code').querySelector('pre');
+      const done = (label) => { btn.textContent = label; setTimeout(() => { btn.textContent = 'Copy'; }, 1600); };
+      navigator.clipboard.writeText(code.textContent).then(() => done('Copied'), () => {
+        const range = document.createRange();
+        range.selectNodeContents(code);
+        const sel = getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        done('Press ⌘C');
+      });
+    });
+  });
+})();
+</script>
+
+</body></html>
