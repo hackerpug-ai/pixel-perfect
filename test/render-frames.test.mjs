@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
+import { inflateSync } from "node:zlib";
 import { describe, test } from "node:test";
 import { findChrome } from "../plugins/pixel-perfect/scripts/capture-polish.mjs";
 
@@ -19,6 +20,26 @@ function cloneFixture() {
 }
 
 const SCRIPT = path.join(ROOT, "plugins/pixel-perfect/scripts/render-frames.mjs");
+
+const isFullPage = (f) => String(f.label || "").startsWith("full · ");
+
+// Zero-dep PNG probes. The first pixel of the first scanline is stored raw under every PNG
+// filter type (all predictors are 0 at the top-left), so no unfiltering is needed.
+function pngWidth(buf) { return buf.readUInt32BE(16); }
+function firstPixel(buf) {
+  let off = 8; const idat = []; let colorType = 0;
+  while (off < buf.length) {
+    const len = buf.readUInt32BE(off); const type = buf.toString("ascii", off + 4, off + 8);
+    if (type === "IHDR") colorType = buf[off + 8 + 9];
+    if (type === "IDAT") idat.push(buf.subarray(off + 8, off + 8 + len));
+    off += 12 + len;
+  }
+  assert.ok(colorType === 2 || colorType === 6, `expected RGB/RGBA PNG, got color type ${colorType}`);
+  const raw = inflateSync(Buffer.concat(idat));
+  return [raw[1], raw[2], raw[3]];
+}
+const luminance = ([r, g, b]) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
 
 // Run the CLI as a real child process, asynchronously so this process's event loop keeps
 // serving (the URL test hosts a static server here). Patching process.stdout.write
@@ -78,7 +99,8 @@ describe("render-frames", () => {
       const framesPath = path.join(outDir, "frames.json");
       const frames = JSON.parse(readFileSync(framesPath, "utf8"));
 
-      assert.equal(frames.frames.length, 3, "Should have 3 frames");
+      assert.equal(frames.frames.filter((f) => !isFullPage(f)).length, 3, "Should have 3 selected frames");
+      assert.deepEqual(frames.frames.filter(isFullPage).map((f) => f.label), ["full · 1440 · default", "full · 390 · default"], "plus one full page per width (no dark rule in this deck)");
 
       // Verify each frame has valid PNG
       for (let i = 0; i < 3; i++) {
@@ -276,9 +298,9 @@ describe("render-frames", () => {
       const frames = JSON.parse(readFileSync(path.join(outDir, "frames.json"), "utf8"));
       const source = frames.sources.find((s) => s.slug === "bordered");
       assert.equal(source.frame_selector, "auto:bordered");
-      const ids = frames.frames.filter((f) => f.id.startsWith("bordered/")).map((f) => f.id);
+      const ids = frames.frames.filter((f) => f.id.startsWith("bordered/") && !isFullPage(f)).map((f) => f.id);
       assert.deepEqual(ids, ["bordered/01", "bordered/02"], "two screen-sized boxes; nested card and tiny box excluded");
-      const [a, b] = frames.frames.filter((f) => f.id.startsWith("bordered/"));
+      const [a, b] = frames.frames.filter((f) => f.id.startsWith("bordered/") && !isFullPage(f));
       assert.equal(a.label, "Screen A");
       assert.equal(b.label, "Screen B mobile");
       assert.ok(a.width >= 640 && a.height >= 400, `frame A rect ${a.viewport}`);
@@ -342,7 +364,7 @@ describe("render-frames", () => {
       const frames1 = JSON.parse(readFileSync(framesPath, "utf8"));
 
       assert.equal(frames1.sources.length, 1, "First run should have 1 source");
-      assert.equal(frames1.frames.length, 3, "First run should have 3 frames");
+      assert.equal(frames1.frames.length, 5, "First run should have 3 selected frames + 2 full pages");
 
       // Second run: add image source
       const { code: code2, stdout: out2, stderr: err2 } = await runCli([deckPath, imagePath, "--out", outDir]);
@@ -355,11 +377,11 @@ describe("render-frames", () => {
       const frames2 = JSON.parse(readFileSync(framesPath, "utf8"));
 
       assert.equal(frames2.sources.length, 2, "Second run should have 2 sources");
-      assert.equal(frames2.frames.length, 4, "Second run should have 4 frames (3 + 1)");
+      assert.equal(frames2.frames.length, 6, "Second run should have 6 frames (5 + 1)");
 
       // Original deck frames should still be there
       const deckFrames = frames2.frames.filter((f) => f.id.startsWith("deck/"));
-      assert.equal(deckFrames.length, 3, "Deck frames should be preserved");
+      assert.equal(deckFrames.length, 5, "Deck frames should be preserved");
 
       // New image frame should be added
       const imageFrames = frames2.frames.filter((f) => f.id.startsWith("test/"));
@@ -368,147 +390,58 @@ describe("render-frames", () => {
       rmSync(tmpDir, { recursive: true, force: true });
     }
   });
-  test("auto selector prefers [data-screen-label] over bordered boxes", async () => {
-    const chrome = findChrome();
-    assert.ok(chrome, "Chrome must be available to run this test");
-
-    const tmpDir = mkdtempSync(path.join(tmpdir(), "pp-render-screen-label-"));
+  // One render of the labelled deck serves the three checks below.
+  let labelled;
+  async function renderLabelled() {
+    if (labelled) return labelled;
+    const tmpDir = mkdtempSync(path.join(tmpdir(), "pp-render-labelled-"));
     const outDir = path.join(tmpDir, "output");
+    const { code, stderr } = await runCli([path.join(FIXTURE_SRC, "data-screen-label.html"), "--out", outDir]);
+    assert.equal(code, 0, stderr);
+    labelled = { outDir, frames: JSON.parse(readFileSync(path.join(outDir, "frames.json"), "utf8")) };
+    return labelled;
+  }
 
-    try {
-      const deckPath = path.join(FIXTURE_SRC, "data-screen-label.html");
-      const { code, stderr } = await runCli([deckPath, "--out", outDir, "--width", "1440"]);
+  test("auto selector frames an unbordered [data-screen-label] section before bordered boxes", async () => {
+    const { frames } = await renderLabelled();
+    const source = frames.sources.find((s) => s.slug === "data-screen-label");
+    assert.equal(source.frame_selector, "auto:[data-screen-label]");
+    const selected = frames.frames.filter((f) => !isFullPage(f));
+    assert.deepEqual(selected.map((f) => f.label), ["Hero"], "the unbordered hero is a frame; the bordered box is not chosen over it");
+  });
 
-      assert.equal(code, 0, `Expected exit 0, got ${code}. stderr: ${stderr}`);
-
-      const framesPath = path.join(outDir, "frames.json");
-      const frames = JSON.parse(readFileSync(framesPath, "utf8"));
-
-      // Should have at least one frame captured
-      assert.ok(frames.frames.length >= 1, `Should have at least 1 frame, got ${frames.frames.length}`);
-
-      // The source should use the auto selector (trying [data-screen-label] first)
-      const source = frames.sources[0];
-      assert.ok(source.frame_selector?.includes("screen-label") || source.frame_selector?.includes("bordered"),
-        `Expected auto selector, got ${source.frame_selector}`);
-    } finally {
-      rmSync(tmpDir, { recursive: true, force: true });
+  test("every deck gets a full page per width and theme, so regions outside the frames are kept", async () => {
+    const { outDir, frames } = await renderLabelled();
+    const full = frames.frames.filter(isFullPage);
+    assert.deepEqual(full.map((f) => f.label), ["full · 1440 · default", "full · 1440 · dark", "full · 390 · default", "full · 390 · dark"]);
+    assert.deepEqual(full.map((f) => f.state), ["default", "dark", "default", "dark"]);
+    for (const f of full) {
+      const png = readFileSync(path.join(outDir, f.png));
+      assert.equal(pngWidth(png), f.width, `${f.label}: recorded width matches the PNG`);
+      assert.ok(f.viewport.startsWith(f.label.split(" · ")[1] + "x"), `${f.label}: viewport ${f.viewport} is the requested width`);
     }
   });
 
-  test("HTML deck renders at multiple widths (desktop and mobile)", async () => {
-    const chrome = findChrome();
-    assert.ok(chrome, "Chrome must be available to run this test");
-
-    const tmpDir = mkdtempSync(path.join(tmpdir(), "pp-render-multiwidth-"));
-    const outDir = path.join(tmpDir, "output");
-
-    try {
-      const deckPath = path.join(FIXTURE_SRC, "data-screen-label.html");
-      const { code, stderr } = await runCli([
-        deckPath,
-        "--out",
-        outDir,
-        "--width",
-        "1440",
-        "--mobile-width",
-        "390"
-      ]);
-
-      assert.equal(code, 0, `Expected exit 0, got ${code}. stderr: ${stderr}`);
-
-      const framesPath = path.join(outDir, "frames.json");
-      const frames = JSON.parse(readFileSync(framesPath, "utf8"));
-
-      // Should have full-page frames at both widths
-      const desktopFullPage = frames.frames.find((f) => f.viewport?.startsWith("1440"));
-      const mobileFullPage = frames.frames.find((f) => f.viewport?.startsWith("390"));
-
-      assert.ok(desktopFullPage, "Should have desktop (1440) full-page frame");
-      assert.ok(mobileFullPage, "Should have mobile (390) full-page frame");
-
-      // Check that both PNGs exist
-      assert.ok(existsSync(path.join(outDir, desktopFullPage.png)), "Desktop PNG should exist");
-      assert.ok(existsSync(path.join(outDir, mobileFullPage.png)), "Mobile PNG should exist");
-    } finally {
-      rmSync(tmpDir, { recursive: true, force: true });
+  test("the dark pass really paints the dark theme (the sticky header turns dark)", async () => {
+    const { outDir, frames } = await renderLabelled();
+    const px = (label) => firstPixel(readFileSync(path.join(outDir, frames.frames.find((f) => f.label === label).png)));
+    for (const w of [1440, 390]) {
+      const light = luminance(px(`full · ${w} · default`));
+      const dark = luminance(px(`full · ${w} · dark`));
+      assert.ok(light > 200, `${w} default header is light (luminance ${light.toFixed(0)})`);
+      assert.ok(dark < 80, `${w} dark header is dark (luminance ${dark.toFixed(0)})`);
     }
   });
 
-  test("HTML deck renders dark theme when [data-theme] CSS rule exists", async () => {
-    const chrome = findChrome();
-    assert.ok(chrome, "Chrome must be available to run this test");
-
-    const tmpDir = mkdtempSync(path.join(tmpdir(), "pp-render-darkmode-"));
-    const outDir = path.join(tmpDir, "output");
-
-    try {
-      const deckPath = path.join(FIXTURE_SRC, "data-screen-label.html");
-      const { code, stderr } = await runCli([
-        deckPath,
-        "--out",
-        outDir,
-        "--width",
-        "1440",
-        "--mobile-width",
-        "390"
-      ]);
-
-      assert.equal(code, 0, `Expected exit 0, got ${code}. stderr: ${stderr}`);
-
-      const framesPath = path.join(outDir, "frames.json");
-      const frames = JSON.parse(readFileSync(framesPath, "utf8"));
-
-      // Should have frames for both light and dark themes
-      // Check for state field indicating dark theme
-      const darkFrames = frames.frames.filter((f) => f.state === "dark");
-      const lightFrames = frames.frames.filter((f) => f.state !== "dark");
-
-      assert.ok(darkFrames.length > 0, "Should have at least one dark theme frame");
-      assert.ok(lightFrames.length > 0, "Should have at least one light theme frame");
-
-      // Dark and light full-page frames should exist
-      const darkFullPage = darkFrames.find((f) => f.label?.includes("full") || f.viewport?.includes("1440"));
-      const lightFullPage = lightFrames.find((f) => f.label?.includes("full") || f.viewport?.includes("1440"));
-
-      if (darkFullPage) {
-        assert.ok(existsSync(path.join(outDir, darkFullPage.png)), "Dark full-page PNG should exist");
-      }
-      if (lightFullPage) {
-        assert.ok(existsSync(path.join(outDir, lightFullPage.png)), "Light full-page PNG should exist");
-      }
-
-      // Verify that dark and light PNGs differ (pixel comparison)
-      if (darkFullPage && lightFullPage) {
-        const darkPixels = readFileSync(path.join(outDir, darkFullPage.png));
-        const lightPixels = readFileSync(path.join(outDir, lightFullPage.png));
-        assert.notDeepEqual(darkPixels, lightPixels, "Dark and light renders should differ visually");
-      }
-    } finally {
-      rmSync(tmpDir, { recursive: true, force: true });
-    }
-  });
-
-  test("dark theme frames not rendered when no [data-theme] CSS rule exists", async () => {
-    const chrome = findChrome();
-    assert.ok(chrome, "Chrome must be available to run this test");
-
+  test("no dark frames when the deck has no [data-theme=dark] rule", async () => {
     const tmpDir = mkdtempSync(path.join(tmpdir(), "pp-render-no-dark-"));
     const outDir = path.join(tmpDir, "output");
-
     try {
-      // Use bordered.html which has no [data-theme] CSS rule
-      const deckPath = path.join(FIXTURE_SRC, "bordered.html");
-      const { code, stderr } = await runCli([deckPath, "--out", outDir]);
-
-      assert.equal(code, 0, `Expected exit 0, got ${code}. stderr: ${stderr}`);
-
-      const framesPath = path.join(outDir, "frames.json");
-      const frames = JSON.parse(readFileSync(framesPath, "utf8"));
-
-      // Should have NO frames with state: "dark"
-      const darkFrames = frames.frames.filter((f) => f.state === "dark");
-      assert.equal(darkFrames.length, 0, "Should have no dark theme frames when CSS rule missing");
+      const { code, stderr } = await runCli([path.join(FIXTURE_SRC, "bordered.html"), "--out", outDir]);
+      assert.equal(code, 0, stderr);
+      const frames = JSON.parse(readFileSync(path.join(outDir, "frames.json"), "utf8"));
+      assert.equal(frames.frames.filter((f) => f.state === "dark").length, 0);
+      assert.deepEqual(frames.frames.filter(isFullPage).map((f) => f.label), ["full · 1440 · default", "full · 390 · default"]);
     } finally {
       rmSync(tmpDir, { recursive: true, force: true });
     }

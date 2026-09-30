@@ -531,6 +531,22 @@ function modeBaseline(projectRoot, captureCfg, layerFilter) {
   };
 }
 
+// When one component layer is verified, every component the inventory lists for that layer
+// must have a captured story. A component that was inventoried but never built has no story
+// and no golden, so the drift diff alone would pass it. The whole-catalog view (no --layer)
+// skips this: mid-build, later layers legitimately have no stories yet.
+const COMPONENT_LAYERS = new Set(["atoms", "molecules", "organisms"]);
+function findUncatalogued(projectRoot, stories, layerFilter) {
+  if (!COMPONENT_LAYERS.has(layerFilter)) return [];
+  const invPath = join(projectRoot, "design", "inventory.json");
+  if (!existsSync(invPath)) return [];
+  const inventory = JSON.parse(readFileSync(invPath, "utf8"));
+  const captured = new Set(stories.filter((s) => s.layer === layerFilter).map((s) => s.name));
+  return (inventory[layerFilter] || [])
+    .filter((c) => !captured.has(c.name))
+    .map((c) => ({ key: `${layerFilter}/${c.name}`, reason: "inventoried but no captured story" }));
+}
+
 function modeCheck(projectRoot, captureCfg, layerFilter, deprecations = {}) {
   const capture = runCapture(projectRoot, captureCfg, layerFilter);
   if (capture.count === 0) {
@@ -544,6 +560,7 @@ function modeCheck(projectRoot, captureCfg, layerFilter, deprecations = {}) {
       missing: [],
       extra: [],
       deprecatedUsage: [],
+      uncatalogued: [],
     };
   }
   const goldens = inventoryDir(projectRoot, captureCfg.goldens);
@@ -572,12 +589,14 @@ function modeCheck(projectRoot, captureCfg, layerFilter, deprecations = {}) {
   }
 
   const deprecatedUsage = detectDeprecatedComposition(projectRoot, deprecations);
-  const violations = drifted.length + missing.length + extra.length + deprecatedUsage.length;
+  const uncatalogued = findUncatalogued(projectRoot, capture.stories, layerFilter);
+  const violations = drifted.length + missing.length + extra.length + deprecatedUsage.length + uncatalogued.length;
   const parts = [];
   if (drifted.length) parts.push(`${drifted.length} changed`);
   if (missing.length) parts.push(`${missing.length} missing goldens`);
   if (extra.length) parts.push(`${extra.length} new stories`);
   if (deprecatedUsage.length) parts.push(`${deprecatedUsage.length} deprecated composition(s)`);
+  if (uncatalogued.length) parts.push(`${uncatalogued.length} inventoried without a story`);
   return {
     mode: "check",
     exit: violations === 0 ? 0 : 1,
@@ -591,6 +610,7 @@ function modeCheck(projectRoot, captureCfg, layerFilter, deprecations = {}) {
     missing,
     extra,
     deprecatedUsage,
+    uncatalogued,
   };
 }
 
@@ -907,6 +927,9 @@ export function main(argv) {
     }
     if (report.extra?.length) {
       for (const e of report.extra) process.stderr.write(`  new story  ${e.key}\n`);
+    }
+    if (report.uncatalogued?.length) {
+      for (const u of report.uncatalogued) process.stderr.write(`  no story  ${u.key} (inventoried)\n`);
     }
     if (report.moved?.length) {
       for (const m of report.moved) process.stderr.write(`  moved  ${m.key}\n`);

@@ -79,7 +79,7 @@ Verifies all atomic components with sandbox controls.
 | Polyfill disclaimer | (React Native + Storybook only) Stories include polyfill notice decorator |
 | **Styling contract** | **Deterministic. `verify-styling-contract.mjs` against the resolved `tools.style_contract`, exit 0 required** |
 | **Component contract** | **Deterministic. The same script against the resolved `tools.component_contract`, exit 0 required. Skipped when `component_contract_source` is `"none"`/absent** |
-| **Catalog capture** | **Deterministic. `verify-catalog.mjs --check` against the project root, exit 0 required. Exit 1 = unreviewed drift; exit 3 = vacuous (zero stories) — both block** |
+| **Catalog capture** | **Deterministic. `verify-catalog.mjs --check` against the project root, exit 0 required. Exit 1 = unreviewed drift, or (with `--layer`) a component `design/inventory.json` lists for that layer with no captured story; exit 3 = vacuous (zero stories) — both block** |
 | **Ecosystem lib validated** | **If `ecosystemLib` exists, package is installed, importable, and vetting matches manifest** |
 | Aesthetic* | Font pairing, color hierarchy, intentional motion |
 

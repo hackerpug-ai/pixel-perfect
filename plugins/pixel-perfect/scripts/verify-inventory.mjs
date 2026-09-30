@@ -20,6 +20,9 @@
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 
+// An undrawn reason must say why in words; "n/a" or "tbd" is not a reason.
+const MIN_UNDRAWN_REASON = 12;
+
 // ---------------------------------------------------------------------------
 // Validators and Checks
 // ---------------------------------------------------------------------------
@@ -512,7 +515,7 @@ export function verifyInventory(inventory, options = {}) {
     for (let j = 0; j < (screen.states || []).length; j++) {
       const state = screen.states[j];
       const hasFrames = Array.isArray(state.frames) && state.frames.length > 0;
-      const hasUndrawn = typeof state.undrawn === "string" && state.undrawn.length >= 12;
+      const hasUndrawn = typeof state.undrawn === "string" && state.undrawn.length >= MIN_UNDRAWN_REASON;
       if (!hasFrames && !hasUndrawn) {
         violations.push({
           class: "undrawn-state",
@@ -527,7 +530,7 @@ export function verifyInventory(inventory, options = {}) {
   for (let i = 0; i < inventory.atoms.length; i++) {
     const atom = inventory.atoms[i];
     const hasAppears = Array.isArray(atom.appears_on) && atom.appears_on.length > 0;
-    const hasUndrawn = typeof atom.undrawn === "string" && atom.undrawn.length >= 12;
+    const hasUndrawn = typeof atom.undrawn === "string" && atom.undrawn.length >= MIN_UNDRAWN_REASON;
     if (!hasAppears && !hasUndrawn) {
       violations.push({
         class: "undrawn-component",
@@ -539,7 +542,7 @@ export function verifyInventory(inventory, options = {}) {
   for (let i = 0; i < inventory.molecules.length; i++) {
     const mol = inventory.molecules[i];
     const hasAppears = Array.isArray(mol.appears_on) && mol.appears_on.length > 0;
-    const hasUndrawn = typeof mol.undrawn === "string" && mol.undrawn.length >= 12;
+    const hasUndrawn = typeof mol.undrawn === "string" && mol.undrawn.length >= MIN_UNDRAWN_REASON;
     if (!hasAppears && !hasUndrawn) {
       violations.push({
         class: "undrawn-component",
@@ -551,7 +554,7 @@ export function verifyInventory(inventory, options = {}) {
   for (let i = 0; i < inventory.organisms.length; i++) {
     const org = inventory.organisms[i];
     const hasAppears = Array.isArray(org.appears_on) && org.appears_on.length > 0;
-    const hasUndrawn = typeof org.undrawn === "string" && org.undrawn.length >= 12;
+    const hasUndrawn = typeof org.undrawn === "string" && org.undrawn.length >= MIN_UNDRAWN_REASON;
     if (!hasAppears && !hasUndrawn) {
       violations.push({
         class: "undrawn-component",
@@ -561,117 +564,33 @@ export function verifyInventory(inventory, options = {}) {
     }
   }
 
-  // Check K: Empty shows[] — each frame must claim at least one component
-  for (let i = 0; i < inventory.frames.length; i++) {
-    const frame = inventory.frames[i];
-    const shows = frame.shows || [];
-    if (shows.length === 0 && !unclaimedIds.has(frame.id)) {
-      violations.push({
-        class: "empty-shows",
-        path: `frames[${i}].${frame.id}`,
-        message: `frame shows no components (shows[] is empty)`,
-      });
+  // Check K: every frame shows something. Claiming a frame is not the same as reading it:
+  // a frame whose shows[] names nothing is pixels the inventory never accounted for.
+  for (const [i, frame] of inventory.frames.entries()) {
+    if (!(frame.shows || []).length && !unclaimedIds.has(frame.id)) {
+      violations.push({ class: "empty-shows", path: `frames[${i}].${frame.id}`, message: "frame shows no components (shows[] is empty)" });
     }
   }
 
-  // Check L: Component coverage — each component must appear in at least one frame's shows[]
-  const componentShowsCoverage = new Map();
-  for (const atom of inventory.atoms) {
-    componentShowsCoverage.set(atom.name, { layer: "atom", covered: false, index: inventory.atoms.indexOf(atom) });
-  }
-  for (const mol of inventory.molecules) {
-    componentShowsCoverage.set(mol.name, { layer: "molecule", covered: false, index: inventory.molecules.indexOf(mol) });
-  }
-  for (const org of inventory.organisms) {
-    componentShowsCoverage.set(org.name, { layer: "organism", covered: false, index: inventory.organisms.indexOf(org) });
-  }
-
-  // Mark components that appear in some frame's shows[]
-  for (const frame of inventory.frames) {
-    for (const showName of frame.shows || []) {
-      if (componentShowsCoverage.has(showName)) {
-        componentShowsCoverage.get(showName).covered = true;
+  // Check L: every component is shown by some frame, or says why it is undrawn. Checks B and J
+  // prove every frame is claimed; this proves every component was actually seen in one.
+  // Check M: an undrawn reason is a sentence, not a token.
+  const shown = new Set(inventory.frames.flatMap((f) => f.shows || []));
+  const shortReason = (u) => typeof u === "string" && u.length > 0 && u.length < MIN_UNDRAWN_REASON;
+  const tooShort = (path, u) => ({ class: "short-undrawn-reason", path, message: `undrawn reason must be at least ${MIN_UNDRAWN_REASON} characters, found: "${u}"` });
+  for (const [key, layer] of [["atoms", "atom"], ["molecules", "molecule"], ["organisms", "organism"]]) {
+    for (const [i, c] of inventory[key].entries()) {
+      const path = `${key}[${i}].${c.name}`;
+      const hasUndrawn = typeof c.undrawn === "string" && c.undrawn.length >= MIN_UNDRAWN_REASON;
+      if (!shown.has(c.name) && !hasUndrawn) {
+        violations.push({ class: "uncovered-component", path, message: `${layer} ${c.name} never appears in any frame's shows[] and has no undrawn reason` });
       }
+      if (shortReason(c.undrawn)) violations.push(tooShort(path, c.undrawn));
     }
   }
-
-  // Check for components without coverage (and without explicit undrawn reason)
-  for (const atom of inventory.atoms) {
-    const coverage = componentShowsCoverage.get(atom.name);
-    const hasUndrawn = typeof atom.undrawn === "string" && atom.undrawn.length >= 12;
-    if (!coverage.covered && !hasUndrawn) {
-      violations.push({
-        class: "uncovered-component",
-        path: `atoms[${coverage.index}].${atom.name}`,
-        message: `atom ${atom.name} never appears in any frame's shows[] and has no undrawn reason`,
-      });
-    }
-  }
-  for (const mol of inventory.molecules) {
-    const coverage = componentShowsCoverage.get(mol.name);
-    const hasUndrawn = typeof mol.undrawn === "string" && mol.undrawn.length >= 12;
-    if (!coverage.covered && !hasUndrawn) {
-      violations.push({
-        class: "uncovered-component",
-        path: `molecules[${coverage.index}].${mol.name}`,
-        message: `molecule ${mol.name} never appears in any frame's shows[] and has no undrawn reason`,
-      });
-    }
-  }
-  for (const org of inventory.organisms) {
-    const coverage = componentShowsCoverage.get(org.name);
-    const hasUndrawn = typeof org.undrawn === "string" && org.undrawn.length >= 12;
-    if (!coverage.covered && !hasUndrawn) {
-      violations.push({
-        class: "uncovered-component",
-        path: `organisms[${coverage.index}].${org.name}`,
-        message: `organism ${org.name} never appears in any frame's shows[] and has no undrawn reason`,
-      });
-    }
-  }
-
-  // Check M: Short undrawn reason — undrawn must be at least 12 characters
-  for (let i = 0; i < inventory.atoms.length; i++) {
-    const atom = inventory.atoms[i];
-    if (typeof atom.undrawn === "string" && atom.undrawn.length > 0 && atom.undrawn.length < 12) {
-      violations.push({
-        class: "short-undrawn-reason",
-        path: `atoms[${i}].${atom.name}`,
-        message: `undrawn reason must be at least 12 characters, found: "${atom.undrawn}" (${atom.undrawn.length} chars)`,
-      });
-    }
-  }
-  for (let i = 0; i < inventory.molecules.length; i++) {
-    const mol = inventory.molecules[i];
-    if (typeof mol.undrawn === "string" && mol.undrawn.length > 0 && mol.undrawn.length < 12) {
-      violations.push({
-        class: "short-undrawn-reason",
-        path: `molecules[${i}].${mol.name}`,
-        message: `undrawn reason must be at least 12 characters, found: "${mol.undrawn}" (${mol.undrawn.length} chars)`,
-      });
-    }
-  }
-  for (let i = 0; i < inventory.organisms.length; i++) {
-    const org = inventory.organisms[i];
-    if (typeof org.undrawn === "string" && org.undrawn.length > 0 && org.undrawn.length < 12) {
-      violations.push({
-        class: "short-undrawn-reason",
-        path: `organisms[${i}].${org.name}`,
-        message: `undrawn reason must be at least 12 characters, found: "${org.undrawn}" (${org.undrawn.length} chars)`,
-      });
-    }
-  }
-  for (let i = 0; i < inventory.screens.length; i++) {
-    const screen = inventory.screens[i];
-    for (let j = 0; j < (screen.states || []).length; j++) {
-      const state = screen.states[j];
-      if (typeof state.undrawn === "string" && state.undrawn.length > 0 && state.undrawn.length < 12) {
-        violations.push({
-          class: "short-undrawn-reason",
-          path: `screens[${i}].${screen.name}.states[${j}].${state.name}`,
-          message: `undrawn reason must be at least 12 characters, found: "${state.undrawn}" (${state.undrawn.length} chars)`,
-        });
-      }
+  for (const [i, screen] of inventory.screens.entries()) {
+    for (const [j, state] of (screen.states || []).entries()) {
+      if (shortReason(state.undrawn)) violations.push(tooShort(`screens[${i}].${screen.name}.states[${j}].${state.name}`, state.undrawn));
     }
   }
 
