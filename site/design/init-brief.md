@@ -61,3 +61,5 @@ Prepared 2026-09-29 by `/pixel-perfect:init`.
 | Confirm | Write the manifest |
 
 Carried from the spec for scaffold: static output (`@sveltejs/adapter-static`) for GitHub Pages (strategy D3, D4). `design/logo/` holds finished brand assets (the marks shown in `Logo.dc.html`); `design/uploads/` is not recorded.
+
+Motion (2026-09-29): the landing's two load animations and five scroll-driven animations are recorded in `manifest.json` under `motion`, because the frame renderer forces reduced motion and captures only end states. The mechanism (CSS scroll-driven animations versus the design's scroll listener) is an open decision recorded there.

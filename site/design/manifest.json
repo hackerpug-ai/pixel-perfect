@@ -10,6 +10,197 @@
     "../design/Social preview.dc.html",
     "../design/Logo.dc.html"
   ],
+  "motion": {
+    "source": "../design/pixel-perfect Landing.dc.html",
+    "why_recorded": "The frame renderer captures still frames with reduced motion forced, so the inventory and every golden show only end states. This block is the only durable record of what moves. The other three exports have no motion.",
+    "spec": "Strategy §10.4: two orchestrated moments on load; CSS only; never hijacks scrolling; off for visitors who set reduce motion. The design adds five scroll-driven moments beyond those two.",
+    "reduced_motion": "When prefers-reduced-motion is reduce, every animation and transition is off and scroll progress is never computed, so each element renders its end state (listed per entry as end_state). Design lines 36 and 437.",
+    "scroll_progress": {
+      "what": "Each scroll-driven element gets a progress value p from 0 to 1 as it crosses the viewport. Its styles read p.",
+      "formula": "p = clamp(0, 1, (start*vh - rect.top) / (start*vh - end*vh + (span ? rect.height : 0)))",
+      "defaults": {
+        "start": 0.85,
+        "end": 0.25,
+        "span": false
+      },
+      "design_mechanism": "One passive scroll listener plus resize, throttled with requestAnimationFrame, sets --p on every [data-scroll] element (design lines 432-456)."
+    },
+    "mechanism_decision": {
+      "status": "open",
+      "conflict": "The spec says CSS only; the design computes p in JavaScript.",
+      "options": [
+        "CSS scroll-driven animations (animation-timeline: view() with animation-range), with the end state wherever unsupported. Matches the spec; no scroll listener.",
+        "Port the design's listener and set p with style:--p (the styling contract's one allowed inline style). Matches the design exactly on every browser; adds a small script."
+      ]
+    },
+    "load": [
+      {
+        "id": "hero-plates-register",
+        "section": "Hero",
+        "element": "Hero headline (both headline variants)",
+        "behavior": "Three aria-hidden colour copies of the headline (cyan, magenta, yellow, blended with --blend) start offset and slide into registration by 65% of the run, then fade out while the ink text fades in over them.",
+        "offsets_px": {
+          "cyan": [
+            -16,
+            8
+          ],
+          "magenta": [
+            14,
+            -7
+          ],
+          "yellow": [
+            4,
+            13
+          ]
+        },
+        "timing": "1.7s cubic-bezier(.2,.7,.1,1), delay .25s, fill both; keyframes pp-plate and pp-ink",
+        "end_state": "Ink headline only; the colour copies are invisible.",
+        "platforms": [
+          "web-desktop",
+          "web-mobile"
+        ],
+        "design_lines": "32-33, 75-78, 85-88"
+      },
+      {
+        "id": "fig1-tilt",
+        "section": "Hero",
+        "element": "Fig. 1 layer stack",
+        "behavior": "The stack starts as one flat mockup and tilts into the isometric view (rotateX 58deg, rotateZ -32deg) as its five layers lift to their depths.",
+        "timing": "1.8s cubic-bezier(.2,.7,.2,1), delay .5s, fill both; keyframe pp-flat",
+        "end_state": "Tilted stack with layers at their resting depths.",
+        "platforms": [
+          "web-desktop"
+        ],
+        "note": "Fig. 1 is hidden at 720px and below; the proof slider replaces it on mobile.",
+        "design_lines": "34, 155-160"
+      }
+    ],
+    "scroll": [
+      {
+        "id": "fig1-separate",
+        "section": "Hero",
+        "element": "Fig. 1 layer stack and its layer labels",
+        "trigger": {
+          "start": 1.0,
+          "end": 0.2
+        },
+        "behavior": "The four upper layers spread apart in depth as you scroll: translateZ(10+14p, 20+28p, 30+42p, 40+56p px). The label list (Screens to Tokens) opens its gap from 8px to 24px in step.",
+        "end_state": "p = 0.5: layers half separated.",
+        "platforms": [
+          "web-desktop"
+        ],
+        "design_lines": "153, 157-160, 163"
+      },
+      {
+        "id": "why-drift",
+        "section": "Why",
+        "element": "Drifted card and its four proofreader marks",
+        "trigger": {
+          "start": 0.9,
+          "end": 0.35
+        },
+        "behavior": "The drifted card visibly drifts (corner radius 4 to 5px, padding 16 to 20px), and proofreader marks 1 to 4 pop in one by one (opacity 0 to 1, scale .5 to 1) at p = .25, .40, .55, .70.",
+        "end_state": "p = 1: fully drifted card with all four marks shown.",
+        "platforms": [
+          "web-desktop",
+          "web-mobile"
+        ],
+        "design_lines": "179, 192, 197-200"
+      },
+      {
+        "id": "build-rail",
+        "section": "Build it",
+        "element": "Four-step list and its progress rail",
+        "trigger": {
+          "start": 0.7,
+          "end": 0.6,
+          "span": true
+        },
+        "behavior": "A magenta rail fills top to bottom (height p x 100%) while each step brightens from 50% to full opacity as the rail reaches it (steps 1 to 4 at p = -.10, .20, .45, .70, each over 0.1 of progress).",
+        "end_state": "p = 1: rail full, all four steps at full opacity.",
+        "platforms": [
+          "web-desktop",
+          "web-mobile"
+        ],
+        "design_lines": "230, 232, 239, 246, 253"
+      },
+      {
+        "id": "grow-assemble",
+        "section": "Grow it",
+        "element": "The evolve result: a new Changelog page",
+        "trigger": {
+          "start": 0.95,
+          "end": 0.4
+        },
+        "behavior": "The Changelog page's five parts fly in from scattered offsets and settle into place (translate by (1-p) x offset, opacity .3 to 1), showing a new page assembled from existing parts.",
+        "offsets_px": {
+          "bar": [
+            -40,
+            -10
+          ],
+          "title": [
+            30,
+            -6
+          ],
+          "row-v9.1": [
+            -28,
+            14
+          ],
+          "row-v9.0": [
+            34,
+            4
+          ],
+          "row-v8.4": [
+            -18,
+            20
+          ]
+        },
+        "end_state": "p = 1: assembled page.",
+        "platforms": [
+          "web-desktop",
+          "web-mobile"
+        ],
+        "design_lines": "291, 299-303"
+      },
+      {
+        "id": "close-register",
+        "section": "Close",
+        "element": "Close headline",
+        "trigger": {
+          "start": 1.0,
+          "end": 0.7
+        },
+        "behavior": "The same plate effect as the hero, driven by scroll: three aria-hidden colour copies converge into registration and fade out (translate by (1-p) x offset, opacity 1-p).",
+        "offsets_px": {
+          "cyan": [
+            -18,
+            9
+          ],
+          "magenta": [
+            16,
+            -8
+          ],
+          "yellow": [
+            5,
+            14
+          ]
+        },
+        "end_state": "p = 1: ink headline only, in registration.",
+        "platforms": [
+          "web-desktop",
+          "web-mobile"
+        ],
+        "design_lines": "407"
+      }
+    ],
+    "accessibility": "Colour-plate copies are decorative duplicates and stay aria-hidden; the ink span is the only text a screen reader reads. No content depends on motion (strategy §10.5).",
+    "build_notes": [
+      "Plate offsets (--dx, --dy and the per-part offsets) are fixed values: set them with arbitrary-property utilities such as [--dx:-16px]. The styling contract bans static inline styles.",
+      "fig1-tilt animates the transform property from none. Tailwind v4 translate-z utilities write the separate translate property, which that keyframe does not reset, so keep the layer depths on transform ([transform:translateZ(...)]) or change the keyframe to match.",
+      "Only p is dynamic. Set it per element with style:--p, or from a Svelte action that sets --p and nothing else; the styling gate scans .svelte files only and cannot see an action in a .ts file."
+    ],
+    "verify": "Each scroll-driven component takes its progress as a prop (0 to 1) so the sandbox can show and capture any point; stories capture p = 0 and the end state. Load animations are checked with reduced motion off and on."
+  },
   "gates": {
     "discover": "passed",
     "target": "passed",
@@ -38,7 +229,14 @@
         "compose": "pending"
       },
       "screens": [
-        { "name": "Home", "route": "/", "states": ["default"], "status": "pending" }
+        {
+          "name": "Home",
+          "route": "/",
+          "states": [
+            "default"
+          ],
+          "status": "pending"
+        }
       ],
       "pinned": [],
       "deprecations": {}
@@ -65,7 +263,14 @@
         "compose": "pending"
       },
       "screens": [
-        { "name": "Home", "route": "/", "states": ["default"], "status": "pending" }
+        {
+          "name": "Home",
+          "route": "/",
+          "states": [
+            "default"
+          ],
+          "status": "pending"
+        }
       ],
       "pinned": [],
       "deprecations": {}
