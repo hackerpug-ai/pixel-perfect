@@ -20,6 +20,9 @@
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 
+// An undrawn reason must say why in words; "n/a" or "tbd" is not a reason.
+const MIN_UNDRAWN_REASON = 12;
+
 // ---------------------------------------------------------------------------
 // Validators and Checks
 // ---------------------------------------------------------------------------
@@ -512,7 +515,7 @@ export function verifyInventory(inventory, options = {}) {
     for (let j = 0; j < (screen.states || []).length; j++) {
       const state = screen.states[j];
       const hasFrames = Array.isArray(state.frames) && state.frames.length > 0;
-      const hasUndrawn = typeof state.undrawn === "string" && state.undrawn.length >= 3;
+      const hasUndrawn = typeof state.undrawn === "string" && state.undrawn.length >= MIN_UNDRAWN_REASON;
       if (!hasFrames && !hasUndrawn) {
         violations.push({
           class: "undrawn-state",
@@ -527,7 +530,7 @@ export function verifyInventory(inventory, options = {}) {
   for (let i = 0; i < inventory.atoms.length; i++) {
     const atom = inventory.atoms[i];
     const hasAppears = Array.isArray(atom.appears_on) && atom.appears_on.length > 0;
-    const hasUndrawn = typeof atom.undrawn === "string" && atom.undrawn.length >= 3;
+    const hasUndrawn = typeof atom.undrawn === "string" && atom.undrawn.length >= MIN_UNDRAWN_REASON;
     if (!hasAppears && !hasUndrawn) {
       violations.push({
         class: "undrawn-component",
@@ -539,7 +542,7 @@ export function verifyInventory(inventory, options = {}) {
   for (let i = 0; i < inventory.molecules.length; i++) {
     const mol = inventory.molecules[i];
     const hasAppears = Array.isArray(mol.appears_on) && mol.appears_on.length > 0;
-    const hasUndrawn = typeof mol.undrawn === "string" && mol.undrawn.length >= 3;
+    const hasUndrawn = typeof mol.undrawn === "string" && mol.undrawn.length >= MIN_UNDRAWN_REASON;
     if (!hasAppears && !hasUndrawn) {
       violations.push({
         class: "undrawn-component",
@@ -551,13 +554,43 @@ export function verifyInventory(inventory, options = {}) {
   for (let i = 0; i < inventory.organisms.length; i++) {
     const org = inventory.organisms[i];
     const hasAppears = Array.isArray(org.appears_on) && org.appears_on.length > 0;
-    const hasUndrawn = typeof org.undrawn === "string" && org.undrawn.length >= 3;
+    const hasUndrawn = typeof org.undrawn === "string" && org.undrawn.length >= MIN_UNDRAWN_REASON;
     if (!hasAppears && !hasUndrawn) {
       violations.push({
         class: "undrawn-component",
         path: `organisms[${i}].${org.name}`,
         message: `organism has no appears_on and no undrawn reason`,
       });
+    }
+  }
+
+  // Check K: every frame shows something. Claiming a frame is not the same as reading it:
+  // a frame whose shows[] names nothing is pixels the inventory never accounted for.
+  for (const [i, frame] of inventory.frames.entries()) {
+    if (!(frame.shows || []).length && !unclaimedIds.has(frame.id)) {
+      violations.push({ class: "empty-shows", path: `frames[${i}].${frame.id}`, message: "frame shows no components (shows[] is empty)" });
+    }
+  }
+
+  // Check L: every component is shown by some frame, or says why it is undrawn. Checks B and J
+  // prove every frame is claimed; this proves every component was actually seen in one.
+  // Check M: an undrawn reason is a sentence, not a token.
+  const shown = new Set(inventory.frames.flatMap((f) => f.shows || []));
+  const shortReason = (u) => typeof u === "string" && u.length > 0 && u.length < MIN_UNDRAWN_REASON;
+  const tooShort = (path, u) => ({ class: "short-undrawn-reason", path, message: `undrawn reason must be at least ${MIN_UNDRAWN_REASON} characters, found: "${u}"` });
+  for (const [key, layer] of [["atoms", "atom"], ["molecules", "molecule"], ["organisms", "organism"]]) {
+    for (const [i, c] of inventory[key].entries()) {
+      const path = `${key}[${i}].${c.name}`;
+      const hasUndrawn = typeof c.undrawn === "string" && c.undrawn.length >= MIN_UNDRAWN_REASON;
+      if (!shown.has(c.name) && !hasUndrawn) {
+        violations.push({ class: "uncovered-component", path, message: `${layer} ${c.name} never appears in any frame's shows[] and has no undrawn reason` });
+      }
+      if (shortReason(c.undrawn)) violations.push(tooShort(path, c.undrawn));
+    }
+  }
+  for (const [i, screen] of inventory.screens.entries()) {
+    for (const [j, state] of (screen.states || []).entries()) {
+      if (shortReason(state.undrawn)) violations.push(tooShort(`screens[${i}].${screen.name}.states[${j}].${state.name}`, state.undrawn));
     }
   }
 

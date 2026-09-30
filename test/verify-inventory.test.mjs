@@ -271,3 +271,91 @@ test("CLI reports violations with paths", () => {
   assert.match(stdout, /\✗ \[unclaimed-frame\]/);
   assert.match(stdout, /frames\[\d+\]/);
 });
+
+
+test("empty shows[] violation: frame with no components named", () => {
+  const inv = loadFixture("valid");
+  // Modify cockpit/01 to have empty shows[] (and it's NOT in unclaimed_frames)
+  inv.frames[0].shows = [];  // cockpit/01
+  const result = verifyInventory(inv);
+  // Should fail because frame shows nothing
+  assert.equal(result.exit, 1, "Should fail when frame has empty shows[]");
+  assert.ok(result.violations.some((v) => v.class === "empty-shows"), "Should have empty-shows violation");
+});
+
+test("component coverage violation: component never named in any frame", () => {
+  const inv = loadFixture("valid");
+  // Add a new component that doesn't appear in any frame's shows[]
+  inv.atoms.push({
+    name: "UndrawnAtom",
+    states: ["default"],
+    appears_on: [],
+    // no undrawn reason, so should fail
+  });
+  const result = verifyInventory(inv);
+  // Should fail because UndrawnAtom doesn't appear in any frame's shows[]
+  assert.equal(result.exit, 1, "Should fail when component has no coverage");
+  assert.ok(result.violations.some((v) => v.class === "uncovered-component"), "Should have uncovered-component violation");
+});
+
+test("comprehensive failure: one-atom, one-screen inventory with empty shows", () => {
+  // This is the "proof" case from the review: a minimal inventory that passes the old gates
+  // but should fail the new ones
+  const inv = {
+    version: 1,
+    status: "complete",
+    sources: [
+      {
+        ref: "test.html",
+        kind: "html-deck",
+        hash: "sha256:0000000000000000000000000000000000000000000000000000000000000001",
+        slug: "test",
+        frames: ["test/01"]
+      }
+    ],
+    frames: [
+      {
+        id: "test/01",
+        png: "test/01.png",
+        source: "test.html",
+        shows: []  // Frame claims nothing!
+      }
+    ],
+    screens: [
+      {
+        name: "Home",
+        route: "/",
+        states: [{ name: "default", frames: ["test/01"] }],
+        composes: ["Atom1"]
+      }
+    ],
+    organisms: [],
+    molecules: [],
+    atoms: [
+      {
+        name: "Atom1",
+        states: ["default"],
+        appears_on: []  // Atom1 doesn't appear in any frame's shows[]
+      }
+    ]
+  };
+
+  const result = verifyInventory(inv);
+  // Should fail due to BOTH empty shows[] AND uncovered component
+  assert.equal(result.exit, 1, "Should fail on proof case");
+  const violations = result.violations.map((v) => v.class);
+  assert.ok(
+    violations.includes("empty-shows") || violations.includes("uncovered-component"),
+    "Should fail on empty-shows or uncovered-component"
+  );
+});
+
+test("short undrawn reason rejected", () => {
+  const inv = loadFixture("valid");
+  // Modify SignInForm to have a short undrawn reason (less than 12 chars)
+  inv.molecules[3].undrawn = "short";  // Only 5 chars
+  const result = verifyInventory(inv);
+  // Should fail because reason is too short
+  assert.equal(result.exit, 1, "Should fail when undrawn reason is too short");
+  assert.ok(result.violations.some((v) => v.class === "short-undrawn-reason"), "Should have short-undrawn-reason violation");
+});

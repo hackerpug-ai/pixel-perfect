@@ -291,3 +291,24 @@ test("script file is the shipped plugin path used by workflows", () => {
   assert.match(src, /--accept/);
   assert.match(src, /exit.*3|vacuous/i);
 });
+
+test("--check --layer blocks an inventoried component that has no captured story", () => {
+  const dir = cloneFixture();
+  try {
+    const cfg = captureCfg();
+    assert.equal(modeBaseline(dir, cfg, null).exit, 0);
+    mkdirSync(path.join(dir, "design"), { recursive: true });
+    const inv = { atoms: [{ name: "Button" }, { name: "ThemeToggle" }], molecules: [], organisms: [], screens: [] };
+    writeFileSync(path.join(dir, "design/inventory.json"), JSON.stringify(inv));
+    const atoms = modeCheck(dir, cfg, "atoms");
+    assert.equal(atoms.exit, 1, "ThemeToggle is inventoried but was never built into a story");
+    assert.deepEqual(atoms.uncatalogued.map((u) => u.key), ["atoms/ThemeToggle"]);
+    // The whole-catalog view (status, refine) is not blocked by layers that may not exist yet.
+    assert.equal(modeCheck(dir, cfg, null).exit, 0);
+    inv.atoms.pop();
+    writeFileSync(path.join(dir, "design/inventory.json"), JSON.stringify(inv));
+    assert.equal(modeCheck(dir, cfg, "atoms").exit, 0, "every inventoried atom has a story");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
