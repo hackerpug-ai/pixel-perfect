@@ -22,7 +22,8 @@
 //   --platform <id>       platform key in design/manifest.json (default: sole platform, else required)
 //   --json                emit only the JSON report on stdout
 //   --layer <layer>       restrict to one layer (atoms|molecules|organisms|screens|tokens)
-//   --perturb-dir <path>  directory of story sources used for --blast/--reach (default: sandbox/catalog)
+//   --perturb-dir <path>  directory of story sources used for --blast/--reach (default: capture.catalog,
+//                         else sandbox/catalog); {layer}/{Name}/… or flat {layer}/{Name}.{ext}
 
 import {
   copyFileSync,
@@ -667,8 +668,13 @@ function findCatalogSources(projectRoot, catalogRel, name) {
   for (const full of walkFiles(catalogRoot)) {
     const rel = relPosix(catalogRoot, full);
     const parts = rel.split("/");
-    if (parts.length < 3) continue;
-    if (parts[1] === name) hits.push({ full, rel, layer: parts[0], name: parts[1] });
+    // Nested catalog: {layer}/{Name}/{file} (the custom sandbox's layout).
+    if (parts.length >= 3 && parts[1] === name) hits.push({ full, rel, layer: parts[0], name });
+    // Flat components: {layer}/{Name}.{ext} (e.g. a Storybook project's src/lib/components). Only the
+    // component file itself: `Name.stories.svelte` has a different basename and is never perturbed.
+    else if (parts.length === 2 && parts[1].slice(0, parts[1].lastIndexOf(".")) === name) {
+      hits.push({ full, rel, layer: parts[0], name });
+    }
   }
   return hits;
 }
@@ -793,6 +799,7 @@ function parseArgs(argv) {
   let platform = null;
   let layer = null;
   let jsonOnly = false;
+  let perturbDir = null;
 
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -807,6 +814,11 @@ function parseArgs(argv) {
     }
     if (a === "--layer") {
       layer = argv[++i];
+      continue;
+    }
+    if (a === "--perturb-dir") {
+      perturbDir = argv[++i];
+      if (!perturbDir || perturbDir.startsWith("--")) throw new Error("--perturb-dir requires a path");
       continue;
     }
     if (a === "--baseline" || a === "--check") {
@@ -855,7 +867,7 @@ function parseArgs(argv) {
     if (a.startsWith("--")) throw new Error(`Unknown option: ${a}`);
     positional.push(a);
   }
-  return { help: false, mode, blastName, reachNames, acceptGlob, platform, layer, jsonOnly, positional };
+  return { help: false, mode, blastName, reachNames, acceptGlob, platform, layer, jsonOnly, perturbDir, positional };
 }
 
 export function main(argv) {
@@ -886,6 +898,7 @@ export function main(argv) {
     const manifest = loadManifest(projectRoot);
     const { id: platformId, config: platformConfig } = resolvePlatform(manifest, parsed.platform);
     const captureCfg = resolveCaptureConfig(platformConfig, platformId);
+    if (parsed.perturbDir) captureCfg.catalogDir = parsed.perturbDir;
 
     const deprecations = platformConfig.deprecations || {};
     switch (parsed.mode) {
@@ -949,6 +962,7 @@ export function main(argv) {
 }
 
 export {
+  findCatalogSources,
   braceExpand,
   globToRegex,
   makeMatcher,

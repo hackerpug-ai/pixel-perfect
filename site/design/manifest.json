@@ -671,7 +671,8 @@
         "command": "npm run sandbox:capture -- --width 1440",
         "medium": "dom+png",
         "goldens": "design/goldens/web-desktop",
-        "captured_at": "2026-09-30"
+        "captured_at": "2026-09-30",
+        "catalog": "src/lib/components"
       },
       "pinned": [],
       "deprecations": {},
@@ -949,7 +950,8 @@
         "command": "npm run sandbox:capture -- --width 390",
         "medium": "dom+png",
         "goldens": "design/goldens/web-mobile",
-        "captured_at": "2026-09-30"
+        "captured_at": "2026-09-30",
+        "catalog": "src/lib/components"
       },
       "pinned": [],
       "deprecations": {},

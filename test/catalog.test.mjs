@@ -16,6 +16,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import * as verifyCatalogModule from "../plugins/pixel-perfect/scripts/verify-catalog.mjs";
 import {
   main,
   normalizeCapture,
@@ -27,6 +28,7 @@ import {
   modeBlast,
   modeReach,
   resolveCaptureConfig,
+  findCatalogSources,
 } from "../plugins/pixel-perfect/scripts/verify-catalog.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -311,4 +313,31 @@ test("--check --layer blocks an inventoried component that has no captured story
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test("findCatalogSources resolves nested and flat component layouts, never a story file", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "pp-sources-"));
+  try {
+    // nested: {layer}/{Name}/{file} (custom sandbox catalog)
+    mkdirSync(path.join(dir, "atoms/Button"), { recursive: true });
+    writeFileSync(path.join(dir, "atoms/Button/default.txt"), "Button\n");
+    // flat: {layer}/{Name}.{ext} with a sibling story (Storybook projects)
+    mkdirSync(path.join(dir, "molecules"), { recursive: true });
+    writeFileSync(path.join(dir, "molecules/CopyBlock.svelte"), "<div></div>\n");
+    writeFileSync(path.join(dir, "molecules/CopyBlock.stories.svelte"), "<script module></script>\n");
+    writeFileSync(path.join(dir, "molecules/CopyBlockNote.svelte"), "<p></p>\n");
+    const rels = (name) => findCatalogSources(dir, ".", name).map((s) => s.rel).sort();
+    assert.deepEqual(rels("Button"), ["atoms/Button/default.txt"]);
+    assert.deepEqual(rels("CopyBlock"), ["molecules/CopyBlock.svelte"], "the component file only: not its story, not a longer name");
+    assert.equal(findCatalogSources(dir, ".", "CopyBlock")[0].layer, "molecules");
+    assert.deepEqual(rels("Missing"), []);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("--perturb-dir is parsed (it was documented but ignored)", () => {
+  const { parseArgs } = verifyCatalogModule;
+  assert.equal(parseArgs(["--blast", "Button", ".", "--perturb-dir", "src/lib/components"]).perturbDir, "src/lib/components");
+  assert.throws(() => parseArgs(["--blast", "Button", ".", "--perturb-dir"]), /requires a path/);
 });
