@@ -37,7 +37,7 @@ Every visual property is a Tailwind utility on the element's `class`. Conditiona
 <!-- ✓ correct -->
 <button class="bg-magenta text-paper px-4 py-2 font-mono text-sm hover:bg-magenta/90">Copy</button>
 
-<a class={["plate", active && "ring-2 ring-magenta", "mix-blend-multiply dark:mix-blend-screen"]}>…</a>
+<a class={["inline-block text-ink", active && "ring-2 ring-magenta", "mix-blend-multiply dark:mix-blend-screen"]}>…</a>
 
 <!-- ✓ the one inline-style form: a dynamic custom property consumed by a utility -->
 <div style:--reveal="{pos}%" class="[clip-path:inset(0_calc(100%-var(--reveal))_0_0)]">…</div>
@@ -58,6 +58,8 @@ Styles live on the markup, in the component that renders it. Reuse happens by ex
 
 - **Allowed:** utilities in `src/**/*.svelte`; one stylesheet, `src/app.css`, containing `@import "tailwindcss";`, `@custom-variant`, `@theme` / `@theme inline` (tokens and `@keyframes`), token custom properties on `:root` and `[data-theme=dark]`, `@font-face`, and base element rules.
 - **Forbidden:** any other `.css`/`.scss`/`.sass`/`.less` file under `src/`; class selectors in `src/app.css`; `<style>` blocks in `.svelte` files (stories excepted); a JavaScript `tailwind.config.*` (v4 is configured in CSS).
+- **Markup-free wrappers:** a component that renders no styled markup of its own (for example a `Mark` that only outputs an `<img>` of a logo file) fails `mustInclude utility-class-usage` by design. Exempt it by name in `tools.style_contract_overrides` with the reason, rather than adding a meaningless class.
+- **When the gate applies:** from scaffold onward. Before `src/` exists the gate scans nothing and exits 3 (a vacuous scan), which is expected at init and must not be read as a pass.
 
 ## Token binding
 

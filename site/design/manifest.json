@@ -2,13 +2,15 @@
   "version": "6.0.0",
   "created": "2026-09-29",
   "goal": "The pixel-perfect landing page — say what it is, show it working, and get visitors installed — built with pixel-perfect so the site, its Storybook, and its inventory are the proof.",
-  "vibe": "Press proof — a printer's proof sheet. The four process inks (cyan, magenta, yellow, black) on cool neutral paper; overlaps multiply in light mode and screen in dark mode; magenta is the only accent for action and emphasis, and yellow is never text. Anybody for display, Libre Franklin for body, IBM Plex Mono for code and labels. Crop marks, registration targets, a color control strip, slug lines, and numbered proofreader marks, each meaning something. Both themes designed deliberately; WCAG 2.2 AA; CSS-only motion that honors reduced motion.",
+  "vibe": "Press proof — a printer's proof sheet. The four process inks (cyan, magenta, yellow, black) on cool neutral paper; overlaps multiply in light mode and screen in dark mode; magenta is the only accent for action and emphasis, and yellow is never body or interface text (it appears only in decorative plate copies and code-panel syntax). Anybody for display, Libre Franklin for body, IBM Plex Mono for code and labels. Crop marks, registration targets, a color control strip, slug lines, and numbered proofreader marks, each meaning something. Both themes designed deliberately; WCAG 2.2 AA; CSS-only motion that honors reduced motion.",
   "spec": "../.spec/prds/landing/strategy.md",
   "references": [
     "../design/pixel-perfect Landing.dc.html",
     "../design/Component sheet.dc.html",
     "../design/Social preview.dc.html",
-    "../design/Logo.dc.html"
+    "../design/Logo.dc.html",
+    "../design/uploads/pasted-1790742749159-0.png",
+    "../design/uploads/pasted-1790742949005-0.png"
   ],
   "motion": {
     "source": "../design/pixel-perfect Landing.dc.html",
@@ -210,6 +212,161 @@
     ],
     "verify": "Each scroll-driven component takes an optional progress prop (0 to 1). When set, it pauses the animation at that point (paused play-state with a negative delay on a 1s duration), so stories capture p = 0 and the end state and Storybook can scrub the motion. Load animations are checked with reduced motion off and on."
   },
+  "tokens": {
+    "source": "../design/pixel-perfect Landing.dc.html lines 23-24 ([data-pp-root] custom properties); literals elsewhere in the file are promoted below so the styling contract's colour check can pass.",
+    "color": {
+      "light": {
+        "paper": "#F3F4F1",
+        "sheet": "#FBFBF9",
+        "ink": "#111316",
+        "muted": "#4F555C",
+        "line": "#D3D6D0",
+        "cyan": "#0096D1",
+        "cyan-ink": "#006C99",
+        "magenta": "#E0007A",
+        "magenta-ink": "#B5005F",
+        "yellow": "#FFD900",
+        "mark-fg": "#FFFFFF",
+        "stripe": "rgba(17,19,22,.07)",
+        "blend": "multiply"
+      },
+      "dark": {
+        "paper": "#0D0F12",
+        "sheet": "#14171B",
+        "ink": "#ECEDE8",
+        "muted": "#A7ACB2",
+        "line": "#2A2F36",
+        "cyan": "#29C1F0",
+        "cyan-ink": "#6AD3F6",
+        "magenta": "#FF3D9E",
+        "magenta-ink": "#FF7AB9",
+        "yellow": "#FFE14A",
+        "mark-fg": "#0D0F12",
+        "stripe": "rgba(236,237,232,.08)",
+        "blend": "screen"
+      },
+      "code": {
+        "note": "Code and terminal panels are dark in both themes.",
+        "code-bg": "#14171B",
+        "code-fg": "#E6E7E2",
+        "code-comment": "#7D838B",
+        "code-rule": "#22262C",
+        "code-control-border": "#3A4048",
+        "code-key": "#7CCFF2",
+        "code-value": "#FFE27A",
+        "code-success": "#8EE3B0"
+      },
+      "drift": {
+        "value": "#8A8F96",
+        "note": "The drifted card's deliberately off-system gray in the Why section. It is a named token so the example can show drift without breaking the colour rule; nothing else may use it."
+      },
+      "shadow-doc": "rgba(0,0,0,.35)"
+    },
+    "typography": {
+      "display": {
+        "family": "Anybody",
+        "weights": [
+          700,
+          800
+        ],
+        "width_stops_pct": [
+          100,
+          105,
+          110,
+          115,
+          118
+        ],
+        "axes": "wdth 100-150, wght 700-800 (variable)"
+      },
+      "body": {
+        "family": "Libre Franklin",
+        "weights": [
+          400,
+          500,
+          600
+        ],
+        "size_px": 17,
+        "line_height": 1.55
+      },
+      "mono": {
+        "family": "IBM Plex Mono",
+        "weights": [
+          400,
+          500
+        ]
+      },
+      "display_sizes": [
+        "clamp(34px,4.9vw,70px)",
+        "clamp(34px,4.6vw,66px)",
+        "clamp(32px,4.2vw,60px)",
+        "clamp(30px,3.4vw,46px)",
+        "clamp(24px,2.6vw,34px)"
+      ],
+      "loading": "Self-hosted @font-face in src/app.css (the styling contract's only allowed font mechanism), for example from Fontsource variable packages, keeping Anybody's wdth axis. Load only the weights above. Storybook's preview imports app.css so stories use the same faces.",
+      "note": "logo.js specifies Anybody 800 at wdth 112 for the wordmark while Logo.dc.html renders 700 at 105%; the site header follows the landing export."
+    },
+    "radius_px": [
+      2,
+      3,
+      4,
+      5,
+      999
+    ],
+    "layout": {
+      "max_width_px": 1200,
+      "gutter_px": {
+        "desktop": 32,
+        "mobile": 16
+      },
+      "header_height_px": 60,
+      "breakpoint_md_px": 720,
+      "breakpoint_note": "The design switches layout at 720px, not Tailwind's default 768px: set --breakpoint-md: 720px in @theme."
+    }
+  },
+  "theme": {
+    "default": "system: follows prefers-color-scheme, light when unknown",
+    "toggle": "The header button switches light/dark and saves the choice in localStorage.",
+    "attribute": "data-theme on <html>, set by a small inline script in src/app.html before first paint, so a prerendered page never flashes the wrong theme. Without JavaScript, CSS follows prefers-color-scheme via :root:not([data-theme=light]) inside the dark media query.",
+    "tailwind": "@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *)); the colour tokens switch under [data-theme=dark].",
+    "storybook": "A toolbar global sets data-theme on the preview root; goldens are captured in both themes.",
+    "design_note": "The export keeps data-theme on an inner [data-pp-root] div with a light body behind it; the build moves it to <html> so the whole page switches."
+  },
+  "deploy": {
+    "adapter": "@sveltejs/adapter-static",
+    "target": "github-pages",
+    "prerender": true,
+    "base_path": "'' on a custom domain, '/pixel-perfect' on the github.io project URL; the domain is strategy D4 (open).",
+    "publish": [
+      "/ (the landing page)",
+      "/sandbox (the Storybook static build)",
+      "/inventory.json (this site's design/inventory.json)",
+      "/llms.txt",
+      "title, description, and social meta tags (strategy T6 AC-5, AC-7)"
+    ],
+    "static": [
+      {
+        "to": "favicon-16.png, favicon-32.png, favicon-64.png, apple-touch-icon.png (from favicon-180.png)",
+        "from": "../design/logo/favicon-*.png",
+        "role": "favicon (mark B)"
+      },
+      {
+        "to": "mark-A-light.svg, mark-A-dark.svg",
+        "from": "../design/logo/mark-A-{light,dark}.svg",
+        "role": "header mark"
+      },
+      {
+        "to": "mark-C-light.svg, mark-C-dark.svg",
+        "from": "../design/logo/mark-C-{light,dark}.svg",
+        "role": "footer mark"
+      },
+      {
+        "to": "og.png (1200x630)",
+        "from": "../design/Social preview.dc.html, rendered to PNG",
+        "role": "social image (mark A); re-export the social preview first, it still shows the retired crosshair (red-hat CHG-004)"
+      }
+    ],
+    "static_note": "Strip the C2PA <metadata> block from each SVG on copy (about 7.7 KB of each 8.7 KB file); the originals in design/logo keep their provenance."
+  },
   "gates": {
     "discover": "passed",
     "target": "passed",
@@ -221,7 +378,7 @@
         "framework": "sveltekit",
         "style": "tailwind",
         "components": "none",
-        "icons": "@lucide/svelte",
+        "icons": "none",
         "sandbox": "storybook",
         "style_contract": "tailwind-sveltekit",
         "style_contract_source": "researched",
@@ -242,9 +399,20 @@
           "name": "Home",
           "route": "/",
           "states": [
-            "default"
+            "default",
+            "dark",
+            "install-claude",
+            "install-codex",
+            "install-cursor",
+            "install-grok",
+            "install-opencode",
+            "install-pi",
+            "faq-open",
+            "copied",
+            "headline-alternate"
           ],
-          "status": "pending"
+          "status": "pending",
+          "states_note": "One route. The install tabs deep-link with #install-{id} on the same page (same data, instant toggle, shared layout), so they are states, not routes. dark renders Home in the dark theme; headline-alternate is the strategy D13 headline test."
         }
       ],
       "pinned": [],
@@ -255,7 +423,7 @@
         "framework": "sveltekit",
         "style": "tailwind",
         "components": "none",
-        "icons": "@lucide/svelte",
+        "icons": "none",
         "sandbox": "storybook",
         "style_contract": "tailwind-sveltekit",
         "style_contract_source": "researched",
@@ -276,9 +444,20 @@
           "name": "Home",
           "route": "/",
           "states": [
-            "default"
+            "default",
+            "dark",
+            "install-claude",
+            "install-codex",
+            "install-cursor",
+            "install-grok",
+            "install-opencode",
+            "install-pi",
+            "faq-open",
+            "copied",
+            "headline-alternate"
           ],
-          "status": "pending"
+          "status": "pending",
+          "states_note": "One route. The install tabs deep-link with #install-{id} on the same page (same data, instant toggle, shared layout), so they are states, not routes. dark renders Home in the dark theme; headline-alternate is the strategy D13 headline test."
         }
       ],
       "pinned": [],
