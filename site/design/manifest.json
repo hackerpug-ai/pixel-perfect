@@ -408,7 +408,7 @@
       "a11y": "Native details/summary announces expanded and collapsed; the glyph is aria-hidden."
     },
     "copy": {
-      "status": "labels in the export (Landing:474); layout and announcement designed here",
+      "status": "labels in the export (Landing:474); layout and announcement designed here; the next step is always shown (decided at B-inv)",
       "labels": "Copy, then 'Copied ✓' for 2 seconds. If the clipboard is blocked, the command text is selected instead and the label reads 'Selected'.",
       "layout": "The button keeps the width of its widest label (min-width 9ch) so nothing shifts when the label changes.",
       "announce": "A visually hidden aria-live=polite region per copy block says 'Copied to clipboard' or 'Command selected. Press Command-C or Control-C to copy.'",

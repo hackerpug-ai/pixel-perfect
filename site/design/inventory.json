@@ -1,7 +1,7 @@
 {
   "version": 1,
   "status": "complete",
-  "notes": "The export draws 'Next: … /pixel-perfect:init' permanently under the Install tab panel in body type, but manifest ui_states.copy says a mono line appears only after copying; confirm which the Install panel follows (CopyNextStep records both). The gate forbids organisms inside organisms, so Hero takes ProofSlider and LayerStack as slotted children placed by Home, CloseCta and SiteFooter are siblings, and a new ProofFrame molecule (the slider's handle-less pane, drawn alone in social-preview-dc/01) lets SocialCard show the slider. Frames 09 and 11 show the theme toggle reading 'Dark' in the dark theme, a render artifact; the designed dark label is 'Light' (ui_states.theme_toggle).",
+  "notes": "Resolved at B-inv: the 'Next: … /pixel-perfect:init' line is always shown under the Install tabs, as the export draws it. The gate forbids organisms inside organisms, so Hero takes ProofSlider and LayerStack as slotted children placed by Home, CloseCta and SiteFooter are siblings, and a new ProofFrame molecule (the slider's handle-less pane, drawn alone in social-preview-dc/01) lets SocialCard show the slider. Frames 09 and 11 show the theme toggle reading 'Dark' in the dark theme, a render artifact; the designed dark label is 'Light' (ui_states.theme_toggle).",
   "sources": [
     {
       "ref": "../design/pixel-perfect Landing.dc.html",
@@ -769,7 +769,7 @@
         },
         {
           "name": "copied",
-          "undrawn": "Labels are in the export's code (Landing.dc.html:474, 'Copied ✓' / 'Selected'); layout, announcement and the post-copy next step are designed in manifest ui_states.copy. No frame draws a copied button."
+          "undrawn": "Labels are in the export's code (Landing.dc.html:474, 'Copied ✓' / 'Selected'); button width and the screen-reader announcement are designed in manifest ui_states.copy. No frame draws a copied button."
         },
         {
           "name": "headline-alternate",
@@ -833,7 +833,6 @@
         "CopyBlock",
         "TextLink",
         "Button",
-        "CopyNextStep",
         "MetaStrip"
       ],
       "variants": [
@@ -841,8 +840,7 @@
         "headline alternate (undrawn: export prop, Landing.dc.html:82-91 and 419, strategy D13); Fig. 1's caption then carries the primary line"
       ],
       "states": [
-        "default",
-        "copied: CopyNextStep revealed under the paste line (undrawn: ui_states.copy.next_step)"
+        "default"
       ],
       "appears_on": [
         "pixel-perfect-landing-dc/01",
@@ -1455,8 +1453,7 @@
         "InlineCode"
       ],
       "states": [
-        "static: always shown under the Install tab panel in body type (drawn)",
-        "revealed after copy: a mono line under the hero paste line or an Install command for the rest of the visit, no animation (undrawn: manifest ui_states.copy.next_step, strategy §9.2)"
+        "static: always shown under the Install tab panel in body type (drawn; decided at B-inv)"
       ],
       "appears_on": [
         "pixel-perfect-landing-dc/05",
