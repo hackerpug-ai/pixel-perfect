@@ -23,7 +23,12 @@
 </script>
 
 <figure
-	class="m-0 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-6 [--p:0.5] max-md:hidden supports-[animation-timeline:view()]:motion-safe:animate-progress supports-[animation-timeline:view()]:motion-safe:[animation-range:cover_0vh_cover_80vh] supports-[animation-timeline:view()]:motion-safe:[animation-timeline:view()]"
+	class={[
+		'm-0 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-6 [--p:0.5] max-md:hidden',
+		// A pinned progress (stories) replaces the timeline: an animation would override the inline --p.
+		progress === undefined &&
+			'supports-[animation-timeline:view()]:motion-safe:animate-progress supports-[animation-timeline:view()]:motion-safe:[animation-range:cover_0vh_cover_80vh] supports-[animation-timeline:view()]:motion-safe:[animation-timeline:view()]'
+	]}
 	style:--p={progress}
 >
 	<div aria-hidden="true" class="box-border grid h-100 place-items-center overflow-hidden pt-30 perspective-[1100px]">
