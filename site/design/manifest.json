@@ -505,12 +505,16 @@
         "scaffold": "passed",
         "plan": "passed",
         "atoms": "passed",
-        "molecules": "pending",
+        "molecules": "passed",
         "compose": "pending",
         "tokens_capture": "passed",
         "atoms_styling_contract": "passed",
         "atoms_component_contract": "n/a",
-        "atoms_capture": "passed"
+        "atoms_capture": "passed",
+        "molecules_styling_contract": "passed",
+        "molecules_component_contract": "n/a",
+        "molecules_capture": "passed",
+        "molecules_composition": "passed"
       },
       "screens": [
         {
@@ -672,7 +676,7 @@
           "name": "CopyBlock",
           "file": "src/lib/components/molecules/CopyBlock.svelte",
           "story": "src/lib/components/molecules/CopyBlock.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": {
             "declared": [
               {
@@ -692,7 +696,7 @@
           "name": "CommandRow",
           "file": "src/lib/components/molecules/CommandRow.svelte",
           "story": "src/lib/components/molecules/CommandRow.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": {
             "declared": [
               {
@@ -712,63 +716,63 @@
           "name": "CodePanel",
           "file": "src/lib/components/molecules/CodePanel.svelte",
           "story": "src/lib/components/molecules/CodePanel.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "StepCard",
           "file": "src/lib/components/molecules/StepCard.svelte",
           "story": "src/lib/components/molecules/StepCard.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "PlanCard",
           "file": "src/lib/components/molecules/PlanCard.svelte",
           "story": "src/lib/components/molecules/PlanCard.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "ProofNote",
           "file": "src/lib/components/molecules/ProofNote.svelte",
           "story": "src/lib/components/molecules/ProofNote.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "GrowCard",
           "file": "src/lib/components/molecules/GrowCard.svelte",
           "story": "src/lib/components/molecules/GrowCard.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "ThreadRow",
           "file": "src/lib/components/molecules/ThreadRow.svelte",
           "story": "src/lib/components/molecules/ThreadRow.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "MetaStrip",
           "file": "src/lib/components/molecules/MetaStrip.svelte",
           "story": "src/lib/components/molecules/MetaStrip.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "StatGrid",
           "file": "src/lib/components/molecules/StatGrid.svelte",
           "story": "src/lib/components/molecules/StatGrid.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "FaqItem",
           "file": "src/lib/components/molecules/FaqItem.svelte",
           "story": "src/lib/components/molecules/FaqItem.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": {
             "declared": [
               {
@@ -787,56 +791,56 @@
           "name": "TouchList",
           "file": "src/lib/components/molecules/TouchList.svelte",
           "story": "src/lib/components/molecules/TouchList.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "ScanBox",
           "file": "src/lib/components/molecules/ScanBox.svelte",
           "story": "src/lib/components/molecules/ScanBox.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "FigureCaption",
           "file": "src/lib/components/molecules/FigureCaption.svelte",
           "story": "src/lib/components/molecules/FigureCaption.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "ChangelogMini",
           "file": "src/lib/components/molecules/ChangelogMini.svelte",
           "story": "src/lib/components/molecules/ChangelogMini.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "DesignMdCard",
           "file": "src/lib/components/molecules/DesignMdCard.svelte",
           "story": "src/lib/components/molecules/DesignMdCard.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "SectionStrip",
           "file": "src/lib/components/molecules/SectionStrip.svelte",
           "story": "src/lib/components/molecules/SectionStrip.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "CopyNextStep",
           "file": "src/lib/components/molecules/CopyNextStep.svelte",
           "story": "src/lib/components/molecules/CopyNextStep.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "ProofFrame",
           "file": "src/lib/components/molecules/ProofFrame.svelte",
           "story": "src/lib/components/molecules/ProofFrame.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         }
       ],
@@ -885,7 +889,7 @@
           ]
         },
         "molecules": {
-          "status": "build",
+          "status": "verified",
           "create": [
             "CopyBlock",
             "CommandRow",
@@ -957,12 +961,16 @@
         "scaffold": "passed",
         "plan": "passed",
         "atoms": "passed",
-        "molecules": "pending",
+        "molecules": "passed",
         "compose": "pending",
         "tokens_capture": "passed",
         "atoms_styling_contract": "passed",
         "atoms_component_contract": "n/a",
-        "atoms_capture": "passed"
+        "atoms_capture": "passed",
+        "molecules_styling_contract": "passed",
+        "molecules_component_contract": "n/a",
+        "molecules_capture": "passed",
+        "molecules_composition": "passed"
       },
       "screens": [
         {
@@ -1124,7 +1132,7 @@
           "name": "CopyBlock",
           "file": "src/lib/components/molecules/CopyBlock.svelte",
           "story": "src/lib/components/molecules/CopyBlock.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": {
             "declared": [
               {
@@ -1144,7 +1152,7 @@
           "name": "CommandRow",
           "file": "src/lib/components/molecules/CommandRow.svelte",
           "story": "src/lib/components/molecules/CommandRow.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": {
             "declared": [
               {
@@ -1164,63 +1172,63 @@
           "name": "CodePanel",
           "file": "src/lib/components/molecules/CodePanel.svelte",
           "story": "src/lib/components/molecules/CodePanel.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "StepCard",
           "file": "src/lib/components/molecules/StepCard.svelte",
           "story": "src/lib/components/molecules/StepCard.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "PlanCard",
           "file": "src/lib/components/molecules/PlanCard.svelte",
           "story": "src/lib/components/molecules/PlanCard.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "ProofNote",
           "file": "src/lib/components/molecules/ProofNote.svelte",
           "story": "src/lib/components/molecules/ProofNote.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "GrowCard",
           "file": "src/lib/components/molecules/GrowCard.svelte",
           "story": "src/lib/components/molecules/GrowCard.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "ThreadRow",
           "file": "src/lib/components/molecules/ThreadRow.svelte",
           "story": "src/lib/components/molecules/ThreadRow.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "MetaStrip",
           "file": "src/lib/components/molecules/MetaStrip.svelte",
           "story": "src/lib/components/molecules/MetaStrip.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "StatGrid",
           "file": "src/lib/components/molecules/StatGrid.svelte",
           "story": "src/lib/components/molecules/StatGrid.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "FaqItem",
           "file": "src/lib/components/molecules/FaqItem.svelte",
           "story": "src/lib/components/molecules/FaqItem.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": {
             "declared": [
               {
@@ -1239,56 +1247,56 @@
           "name": "TouchList",
           "file": "src/lib/components/molecules/TouchList.svelte",
           "story": "src/lib/components/molecules/TouchList.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "ScanBox",
           "file": "src/lib/components/molecules/ScanBox.svelte",
           "story": "src/lib/components/molecules/ScanBox.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "FigureCaption",
           "file": "src/lib/components/molecules/FigureCaption.svelte",
           "story": "src/lib/components/molecules/FigureCaption.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "ChangelogMini",
           "file": "src/lib/components/molecules/ChangelogMini.svelte",
           "story": "src/lib/components/molecules/ChangelogMini.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "DesignMdCard",
           "file": "src/lib/components/molecules/DesignMdCard.svelte",
           "story": "src/lib/components/molecules/DesignMdCard.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "SectionStrip",
           "file": "src/lib/components/molecules/SectionStrip.svelte",
           "story": "src/lib/components/molecules/SectionStrip.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "CopyNextStep",
           "file": "src/lib/components/molecules/CopyNextStep.svelte",
           "story": "src/lib/components/molecules/CopyNextStep.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         },
         {
           "name": "ProofFrame",
           "file": "src/lib/components/molecules/ProofFrame.svelte",
           "story": "src/lib/components/molecules/ProofFrame.stories.svelte",
-          "status": "pending",
+          "status": "verified",
           "state": null
         }
       ],
@@ -1337,7 +1345,7 @@
           ]
         },
         "molecules": {
-          "status": "build",
+          "status": "verified",
           "create": [
             "CopyBlock",
             "CommandRow",
