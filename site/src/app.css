@@ -63,6 +63,18 @@
 	--shadow-doc-color: rgba(0, 0, 0, 0.35);
 }
 
+/*
+ * Scroll progress for the scroll-driven moments (manifest.motion). Registered so it can be animated:
+ * a view timeline runs it 0 → 1 as an element crosses the viewport, and styles compute from it, as in
+ * the design. Its initial value is the end state, which is what shows with reduced motion or where
+ * animation-timeline is unsupported. Fig. 1 overrides its own resting value to 0.5.
+ */
+@property --p {
+	syntax: '<number>';
+	inherits: true;
+	initial-value: 1;
+}
+
 :root[data-theme='light'] {
 	color-scheme: light;
 }
@@ -127,6 +139,45 @@
 	--radius-xs: 2px;
 	--radius-sm: 3px;
 	--radius-md: 4px;
+
+	/* Design-frame hatching (Landing: slider design pane, demo poster) */
+	--background-image-hatch: repeating-linear-gradient(135deg, var(--stripe) 0 6px, transparent 6px 14px);
+
+	/* Motion (manifest.motion). Load moments play once; scroll moments run --p on a view timeline. */
+	--animate-plate: plate 1.7s cubic-bezier(0.2, 0.7, 0.1, 1) 0.25s both; /* colour copies slide into registration */
+	--animate-ink: ink 1.7s cubic-bezier(0.2, 0.7, 0.1, 1) 0.25s both; /* ink prints over them */
+	--animate-flat: flat 1.8s cubic-bezier(0.2, 0.7, 0.2, 1) 0.5s both; /* Fig. 1 starts flat, then tilts */
+	--animate-progress: progress linear both; /* pair with [animation-timeline:view()] and an animation-range */
+
+	@keyframes plate {
+		0% {
+			opacity: 1;
+			transform: translate(var(--dx), var(--dy));
+		}
+		65% {
+			opacity: 1;
+			transform: translate(0, 0);
+		}
+	}
+	@keyframes ink {
+		0%,
+		65% {
+			opacity: 0;
+		}
+	}
+	@keyframes flat {
+		from {
+			transform: none;
+		}
+	}
+	@keyframes progress {
+		from {
+			--p: 0;
+		}
+		to {
+			--p: 1;
+		}
+	}
 
 	--container-page: 1200px;
 	--breakpoint-md: 720px; /* the design's layout switch, not Tailwind's 768px */

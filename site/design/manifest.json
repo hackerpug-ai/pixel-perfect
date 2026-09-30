@@ -500,13 +500,14 @@
         "style_contract_overrides": {},
         "component_contract_source": "none"
       },
-      "phase": "plan",
+      "phase": "atoms",
       "gates": {
         "scaffold": "passed",
         "plan": "passed",
         "atoms": "pending",
         "molecules": "pending",
-        "compose": "pending"
+        "compose": "pending",
+        "tokens_capture": "passed"
       },
       "screens": [
         {
@@ -539,7 +540,7 @@
       "deprecations": {},
       "build_plan": {
         "tokens": {
-          "status": "build",
+          "status": "verified",
           "create": [
             "motion keyframes and --animate-* tokens",
             "design-frame hatching background"
@@ -640,13 +641,14 @@
         "style_contract_overrides": {},
         "component_contract_source": "none"
       },
-      "phase": "plan",
+      "phase": "atoms",
       "gates": {
         "scaffold": "passed",
         "plan": "passed",
         "atoms": "pending",
         "molecules": "pending",
-        "compose": "pending"
+        "compose": "pending",
+        "tokens_capture": "passed"
       },
       "screens": [
         {
@@ -679,7 +681,7 @@
       "deprecations": {},
       "build_plan": {
         "tokens": {
-          "status": "build",
+          "status": "verified",
           "create": [
             "motion keyframes and --animate-* tokens",
             "design-frame hatching background"
