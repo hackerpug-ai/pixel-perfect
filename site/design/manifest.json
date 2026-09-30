@@ -500,10 +500,10 @@
         "style_contract_overrides": {},
         "component_contract_source": "none"
       },
-      "phase": "scaffold",
+      "phase": "plan",
       "gates": {
         "scaffold": "passed",
-        "plan": "pending",
+        "plan": "passed",
         "atoms": "pending",
         "molecules": "pending",
         "compose": "pending"
@@ -536,7 +536,96 @@
         "captured_at": "2026-09-30"
       },
       "pinned": [],
-      "deprecations": {}
+      "deprecations": {},
+      "build_plan": {
+        "tokens": {
+          "status": "build",
+          "create": [
+            "motion keyframes and --animate-* tokens",
+            "design-frame hatching background"
+          ]
+        },
+        "atoms": {
+          "status": "build",
+          "create": [
+            "Button",
+            "ThemeToggle",
+            "TextLink",
+            "NavLink",
+            "Logo",
+            "CropMark",
+            "RegistrationTarget",
+            "ColorStrip",
+            "SlugLine",
+            "PlateLabel",
+            "ProofMark",
+            "VersionPill",
+            "Stat",
+            "InlineCode",
+            "PlayButton",
+            "SliderHandle",
+            "Tab",
+            "DisclosureIcon",
+            "PlateText",
+            "SectionHeading",
+            "PrincipleCard",
+            "TabNote"
+          ]
+        },
+        "molecules": {
+          "status": "build",
+          "create": [
+            "CopyBlock",
+            "CommandRow",
+            "CodePanel",
+            "StepCard",
+            "PlanCard",
+            "ProofNote",
+            "GrowCard",
+            "ThreadRow",
+            "MetaStrip",
+            "StatGrid",
+            "FaqItem",
+            "TouchList",
+            "ScanBox",
+            "FigureCaption",
+            "ChangelogMini",
+            "DesignMdCard",
+            "SectionStrip",
+            "CopyNextStep",
+            "ProofFrame"
+          ]
+        },
+        "organisms": {
+          "status": "build",
+          "create": [
+            "SiteHeader",
+            "Hero",
+            "ProofSlider",
+            "LayerStack",
+            "DriftComparison",
+            "PrinciplesGrid",
+            "StepsTimeline",
+            "DemoStats",
+            "EvolveThread",
+            "DesignMdPromo",
+            "InstallSection",
+            "FaqList",
+            "CloseCta",
+            "SiteFooter",
+            "SocialCard"
+          ]
+        },
+        "screens": {
+          "status": "build",
+          "create": [
+            "Home"
+          ]
+        },
+        "verify_widths": "Both platforms share one site: every layer is checked at 1440px (web-desktop) and 390px (web-mobile) before the next (decided at B-plan).",
+        "ecosystemLibs": {},
+        "ecosystem_scan": "No component matches an undecided library pattern (motion is CSS, tabs hand-built, slider is a native range input, code colours hand-authored); nothing researched."
+      }
     },
     "web-mobile": {
       "tools": {
@@ -551,10 +640,10 @@
         "style_contract_overrides": {},
         "component_contract_source": "none"
       },
-      "phase": "scaffold",
+      "phase": "plan",
       "gates": {
         "scaffold": "passed",
-        "plan": "pending",
+        "plan": "passed",
         "atoms": "pending",
         "molecules": "pending",
         "compose": "pending"
@@ -587,7 +676,96 @@
         "captured_at": "2026-09-30"
       },
       "pinned": [],
-      "deprecations": {}
+      "deprecations": {},
+      "build_plan": {
+        "tokens": {
+          "status": "build",
+          "create": [
+            "motion keyframes and --animate-* tokens",
+            "design-frame hatching background"
+          ]
+        },
+        "atoms": {
+          "status": "build",
+          "create": [
+            "Button",
+            "ThemeToggle",
+            "TextLink",
+            "NavLink",
+            "Logo",
+            "CropMark",
+            "RegistrationTarget",
+            "ColorStrip",
+            "SlugLine",
+            "PlateLabel",
+            "ProofMark",
+            "VersionPill",
+            "Stat",
+            "InlineCode",
+            "PlayButton",
+            "SliderHandle",
+            "Tab",
+            "DisclosureIcon",
+            "PlateText",
+            "SectionHeading",
+            "PrincipleCard",
+            "TabNote"
+          ]
+        },
+        "molecules": {
+          "status": "build",
+          "create": [
+            "CopyBlock",
+            "CommandRow",
+            "CodePanel",
+            "StepCard",
+            "PlanCard",
+            "ProofNote",
+            "GrowCard",
+            "ThreadRow",
+            "MetaStrip",
+            "StatGrid",
+            "FaqItem",
+            "TouchList",
+            "ScanBox",
+            "FigureCaption",
+            "ChangelogMini",
+            "DesignMdCard",
+            "SectionStrip",
+            "CopyNextStep",
+            "ProofFrame"
+          ]
+        },
+        "organisms": {
+          "status": "build",
+          "create": [
+            "SiteHeader",
+            "Hero",
+            "ProofSlider",
+            "LayerStack",
+            "DriftComparison",
+            "PrinciplesGrid",
+            "StepsTimeline",
+            "DemoStats",
+            "EvolveThread",
+            "DesignMdPromo",
+            "InstallSection",
+            "FaqList",
+            "CloseCta",
+            "SiteFooter",
+            "SocialCard"
+          ]
+        },
+        "screens": {
+          "status": "build",
+          "create": [
+            "Home"
+          ]
+        },
+        "verify_widths": "Both platforms share one site: every layer is checked at 1440px (web-desktop) and 390px (web-mobile) before the next (decided at B-plan).",
+        "ecosystemLibs": {},
+        "ecosystem_scan": "No component matches an undecided library pattern (motion is CSS, tabs hand-built, slider is a native range input, code colours hand-authored); nothing researched."
+      }
     }
   },
   "scaffold": {
