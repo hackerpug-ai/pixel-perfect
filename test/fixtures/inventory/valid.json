@@ -26,7 +26,7 @@
       "viewport": "1440x900",
       "route": "/chats/[[...conversationId]]",
       "state": "empty",
-      "shows": ["NavRail", "EmptyState"]
+      "shows": ["NavRail", "EmptyState", "Button"]
     },
     {
       "id": "cockpit/02",
@@ -36,7 +36,7 @@
       "viewport": "1440x900",
       "route": "/chats/[[...conversationId]]",
       "state": "idle",
-      "shows": ["NavRail", "Conversation"]
+      "shows": ["NavRail", "Conversation", "ConversationRow", "Kbd"]
     },
     {
       "id": "cockpit/03",
@@ -46,7 +46,7 @@
       "viewport": "1440x900",
       "route": "/library",
       "state": "results",
-      "shows": ["NavRail", "LibraryGrid"]
+      "shows": ["NavRail", "LibraryGrid", "LibraryCard"]
     },
     {
       "id": "library/01",
@@ -54,7 +54,7 @@
       "source": ".spec/prds/web-client/designs/library/Library.dc.html",
       "label": "palette sheet",
       "viewport": "1440x900",
-      "shows": []
+      "shows": ["Button", "Kbd", "Input", "LibraryCard"]
     },
     {
       "id": "library/02",
@@ -64,7 +64,7 @@
       "viewport": "390x844",
       "route": "/chats/[[...conversationId]]",
       "state": "idle",
-      "shows": ["MobileTabBar", "DeviceStatusIndicator", "Conversation"]
+      "shows": ["MobileTabBar", "DeviceStatusIndicator", "Conversation", "NavItem", "ConversationRow"]
     }
   ],
   "unclaimed_frames": [

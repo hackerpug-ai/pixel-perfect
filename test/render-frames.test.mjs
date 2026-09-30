@@ -368,4 +368,150 @@ describe("render-frames", () => {
       rmSync(tmpDir, { recursive: true, force: true });
     }
   });
+  test("auto selector prefers [data-screen-label] over bordered boxes", async () => {
+    const chrome = findChrome();
+    assert.ok(chrome, "Chrome must be available to run this test");
+
+    const tmpDir = mkdtempSync(path.join(tmpdir(), "pp-render-screen-label-"));
+    const outDir = path.join(tmpDir, "output");
+
+    try {
+      const deckPath = path.join(FIXTURE_SRC, "data-screen-label.html");
+      const { code, stderr } = await runCli([deckPath, "--out", outDir, "--width", "1440"]);
+
+      assert.equal(code, 0, `Expected exit 0, got ${code}. stderr: ${stderr}`);
+
+      const framesPath = path.join(outDir, "frames.json");
+      const frames = JSON.parse(readFileSync(framesPath, "utf8"));
+
+      // Should have at least one frame captured
+      assert.ok(frames.frames.length >= 1, `Should have at least 1 frame, got ${frames.frames.length}`);
+
+      // The source should use the auto selector (trying [data-screen-label] first)
+      const source = frames.sources[0];
+      assert.ok(source.frame_selector?.includes("screen-label") || source.frame_selector?.includes("bordered"),
+        `Expected auto selector, got ${source.frame_selector}`);
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  test("HTML deck renders at multiple widths (desktop and mobile)", async () => {
+    const chrome = findChrome();
+    assert.ok(chrome, "Chrome must be available to run this test");
+
+    const tmpDir = mkdtempSync(path.join(tmpdir(), "pp-render-multiwidth-"));
+    const outDir = path.join(tmpDir, "output");
+
+    try {
+      const deckPath = path.join(FIXTURE_SRC, "data-screen-label.html");
+      const { code, stderr } = await runCli([
+        deckPath,
+        "--out",
+        outDir,
+        "--width",
+        "1440",
+        "--mobile-width",
+        "390"
+      ]);
+
+      assert.equal(code, 0, `Expected exit 0, got ${code}. stderr: ${stderr}`);
+
+      const framesPath = path.join(outDir, "frames.json");
+      const frames = JSON.parse(readFileSync(framesPath, "utf8"));
+
+      // Should have full-page frames at both widths
+      const desktopFullPage = frames.frames.find((f) => f.viewport?.startsWith("1440"));
+      const mobileFullPage = frames.frames.find((f) => f.viewport?.startsWith("390"));
+
+      assert.ok(desktopFullPage, "Should have desktop (1440) full-page frame");
+      assert.ok(mobileFullPage, "Should have mobile (390) full-page frame");
+
+      // Check that both PNGs exist
+      assert.ok(existsSync(path.join(outDir, desktopFullPage.png)), "Desktop PNG should exist");
+      assert.ok(existsSync(path.join(outDir, mobileFullPage.png)), "Mobile PNG should exist");
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  test("HTML deck renders dark theme when [data-theme] CSS rule exists", async () => {
+    const chrome = findChrome();
+    assert.ok(chrome, "Chrome must be available to run this test");
+
+    const tmpDir = mkdtempSync(path.join(tmpdir(), "pp-render-darkmode-"));
+    const outDir = path.join(tmpDir, "output");
+
+    try {
+      const deckPath = path.join(FIXTURE_SRC, "data-screen-label.html");
+      const { code, stderr } = await runCli([
+        deckPath,
+        "--out",
+        outDir,
+        "--width",
+        "1440",
+        "--mobile-width",
+        "390"
+      ]);
+
+      assert.equal(code, 0, `Expected exit 0, got ${code}. stderr: ${stderr}`);
+
+      const framesPath = path.join(outDir, "frames.json");
+      const frames = JSON.parse(readFileSync(framesPath, "utf8"));
+
+      // Should have frames for both light and dark themes
+      // Check for state field indicating dark theme
+      const darkFrames = frames.frames.filter((f) => f.state === "dark");
+      const lightFrames = frames.frames.filter((f) => f.state !== "dark");
+
+      assert.ok(darkFrames.length > 0, "Should have at least one dark theme frame");
+      assert.ok(lightFrames.length > 0, "Should have at least one light theme frame");
+
+      // Dark and light full-page frames should exist
+      const darkFullPage = darkFrames.find((f) => f.label?.includes("full") || f.viewport?.includes("1440"));
+      const lightFullPage = lightFrames.find((f) => f.label?.includes("full") || f.viewport?.includes("1440"));
+
+      if (darkFullPage) {
+        assert.ok(existsSync(path.join(outDir, darkFullPage.png)), "Dark full-page PNG should exist");
+      }
+      if (lightFullPage) {
+        assert.ok(existsSync(path.join(outDir, lightFullPage.png)), "Light full-page PNG should exist");
+      }
+
+      // Verify that dark and light PNGs differ (pixel comparison)
+      if (darkFullPage && lightFullPage) {
+        const darkPixels = readFileSync(path.join(outDir, darkFullPage.png));
+        const lightPixels = readFileSync(path.join(outDir, lightFullPage.png));
+        assert.notDeepEqual(darkPixels, lightPixels, "Dark and light renders should differ visually");
+      }
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  test("dark theme frames not rendered when no [data-theme] CSS rule exists", async () => {
+    const chrome = findChrome();
+    assert.ok(chrome, "Chrome must be available to run this test");
+
+    const tmpDir = mkdtempSync(path.join(tmpdir(), "pp-render-no-dark-"));
+    const outDir = path.join(tmpDir, "output");
+
+    try {
+      // Use bordered.html which has no [data-theme] CSS rule
+      const deckPath = path.join(FIXTURE_SRC, "bordered.html");
+      const { code, stderr } = await runCli([deckPath, "--out", outDir]);
+
+      assert.equal(code, 0, `Expected exit 0, got ${code}. stderr: ${stderr}`);
+
+      const framesPath = path.join(outDir, "frames.json");
+      const frames = JSON.parse(readFileSync(framesPath, "utf8"));
+
+      // Should have NO frames with state: "dark"
+      const darkFrames = frames.frames.filter((f) => f.state === "dark");
+      assert.equal(darkFrames.length, 0, "Should have no dark theme frames when CSS rule missing");
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
 });

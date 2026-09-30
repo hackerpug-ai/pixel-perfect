@@ -96,7 +96,74 @@ function detectRefKind(ref) {
   throw new Error(`Cannot detect ref kind for: ${ref}`);
 }
 
-async function renderHtmlDeck(cdp, url, selector, settleMs, width) {
+async function renderHtmlDeck(cdp, url, selector, settleMs, widths) {
+  // widths can be a number (legacy) or array [desktop, mobile]
+  const widthArray = Array.isArray(widths) ? widths : [widths];
+  const allFrames = [];
+
+  // First detect if this deck has a [data-theme="dark"] CSS rule
+  await cdp.send("Page.navigate", { url });
+  await cdp.waitFor("Page.loadEventFired");
+
+  const hasDarkTheme = await cdp.send("Runtime.evaluate", {
+    expression: `(function() {
+      let found = false;
+      for (const sheet of document.styleSheets) {
+        try {
+          for (const rule of sheet.cssRules || []) {
+            if (rule.selectorText && rule.selectorText.includes('[data-theme="dark"') || rule.selectorText?.includes('[data-theme=dark')) {
+              found = true;
+              break;
+            }
+          }
+          if (found) break;
+        } catch (e) {}
+      }
+      return found;
+    })()`,
+    returnByValue: true,
+  }).then(r => r.result?.value || false);
+
+  const themes = hasDarkTheme ? ["default", "dark"] : ["default"];
+
+  // Render at each width and theme combination
+  let resolvedSelector = selector;
+  for (const width of widthArray) {
+    for (const theme of themes) {
+      const frames = await renderHtmlDeckAtWidthAndTheme(cdp, url, selector, settleMs, width, theme);
+      if (frames) {
+        allFrames.push(...frames.frames);
+        if (frames.resolvedSelector && resolvedSelector === selector) {
+          resolvedSelector = frames.resolvedSelector;
+        }
+      }
+    }
+  }
+
+  if (allFrames.length === 0) {
+    return { blank: true, diagnosis: `No frames captured` };
+  }
+
+  return { blank: false, resolvedSelector, frames: allFrames };
+}
+
+async function renderHtmlDeckAtWidthAndTheme(cdp, url, selector, settleMs, width, theme) {
+  // Set theme if dark
+  if (theme === "dark") {
+    await cdp.send("Runtime.evaluate", {
+      expression: `(function() {
+        const root = document.documentElement;
+        root.setAttribute('data-theme', 'dark');
+        // Also set on [data-pp-root] if it exists
+        const ppRoot = document.querySelector('[data-pp-root]');
+        if (ppRoot) ppRoot.setAttribute('data-theme', 'dark');
+      })()`,
+      returnByValue: true,
+    });
+    // Wait for paint
+    await sleep(500);
+  }
+
   await cdp.send("Page.navigate", { url });
   await cdp.waitFor("Page.loadEventFired");
 
@@ -119,7 +186,7 @@ async function renderHtmlDeck(cdp, url, selector, settleMs, width) {
       })()`,
       returnByValue: true,
     });
-    if (!info.result || !info.result.value) continue; // Skip if no value yet
+    if (!info.result || !info.result.value) continue;
     const { innerLength, sizedCount } = info.result.value;
     if (innerLength === prevLength && sizedCount === prevCount) {
       stableCount++;
@@ -169,13 +236,11 @@ async function renderHtmlDeck(cdp, url, selector, settleMs, width) {
     width,
     height: Math.round(scrollHeight),
     deviceScaleFactor: 1,
-    mobile: false,
-    hasTouch: false,
+    mobile: width < 720,
+    hasTouch: width < 720,
   });
 
-  // Query frames. "auto" tries the Claude Design frame class first, then a computed-style
-  // heuristic — top-most bordered boxes of screen size — because deck runtimes re-serialize
-  // inline colors (hex -> rgb()), so an attribute selector on the authored style never matches.
+  // Query frames. "auto" tries [data-screen-label], then .fr, then top-most bordered boxes
   const RECT_MAP = `els.map(el => {
         const rect = el.getBoundingClientRect();
         return {
@@ -183,13 +248,17 @@ async function renderHtmlDeck(cdp, url, selector, settleMs, width) {
           y: Math.round(rect.top),
           width: Math.round(rect.width),
           height: Math.round(rect.height),
-          label: el.getAttribute('data-label') || el.getAttribute('aria-label') || el.getAttribute('title') || null,
+          label: el.getAttribute('data-screen-label') || el.getAttribute('data-label') || el.getAttribute('aria-label') || el.getAttribute('title') || null,
           route: el.getAttribute('data-route') || null,
           state: el.getAttribute('data-state') || null,
           heading: (el.querySelector('h1, h2, h3')?.textContent || '').trim().slice(0, 80) || null,
         };
       })`;
   const bySelector = (sel) => `(function() { const els = Array.from(document.querySelectorAll(${JSON.stringify(sel)})); return ${RECT_MAP}; })()`;
+  const SCREEN_LABELS = `(function() {
+      const els = Array.from(document.querySelectorAll('[data-screen-label]'));
+      return ${RECT_MAP};
+    })()`;
   const BORDERED = `(function() {
       const cands = Array.from(document.querySelectorAll('div,section,article,figure')).filter(el => {
         const cs = getComputedStyle(el); const r = el.getBoundingClientRect();
@@ -203,8 +272,12 @@ async function renderHtmlDeck(cdp, url, selector, settleMs, width) {
   let frames = [];
   let resolvedSelector = selector;
   if (selector === "auto") {
-    frames = await query(bySelector(".fr"));
-    resolvedSelector = "auto:.fr";
+    frames = await query(bySelector("[data-screen-label]"));
+    resolvedSelector = "auto:[data-screen-label]";
+    if (frames.length === 0) {
+      frames = await query(bySelector(".fr"));
+      resolvedSelector = "auto:.fr";
+    }
     if (frames.length === 0) {
       frames = await query(BORDERED);
       resolvedSelector = "auto:bordered";
@@ -213,32 +286,10 @@ async function renderHtmlDeck(cdp, url, selector, settleMs, width) {
     frames = await query(bySelector(selector));
   }
 
-  // If no frames found with selector, capture full page
-  if (frames.length === 0) {
-    const fullPage = await cdp.send("Page.captureScreenshot", {
-      format: "png",
-      captureBeyondViewport: true,
-    });
-    return {
-      blank: false,
-      frames: [
-        {
-          png: Buffer.from(fullPage.data, "base64"),
-          label: null,
-          route: null,
-          state: null,
-          viewport: `${width}x${Math.round(scrollHeight)}`,
-          width,
-          height: Math.round(scrollHeight),
-        },
-      ],
-      resolvedSelector: "full-page",
-      warning: `Selector ${resolvedSelector} matched no elements; captured full page instead.`,
-    };
-  }
-
-  // Capture each frame
+  // Capture frames at this width/theme
   const captured = [];
+
+  // Capture selected frames if any
   for (const frame of frames) {
     if (frame.width > 0 && frame.height > 0) {
       const shot = await cdp.send("Page.captureScreenshot", {
@@ -262,6 +313,39 @@ async function renderHtmlDeck(cdp, url, selector, settleMs, width) {
         height: frame.height,
       });
     }
+  }
+
+  // If no selected frames, capture only full page (fallback)
+  // Otherwise, also add full-page frame for each width/theme combination
+  if (frames.length === 0) {
+    const fullPage = await cdp.send("Page.captureScreenshot", {
+      format: "png",
+      captureBeyondViewport: true,
+    });
+    captured.push({
+      png: Buffer.from(fullPage.data, "base64"),
+      label: null,
+      route: null,
+      state: null,
+      viewport: `${width}x${Math.round(scrollHeight)}`,
+      width,
+      height: Math.round(scrollHeight),
+    });
+  } else {
+    // Add full-page frame for coverage (dimensions by width/theme)
+    const fullPage = await cdp.send("Page.captureScreenshot", {
+      format: "png",
+      captureBeyondViewport: true,
+    });
+    captured.push({
+      png: Buffer.from(fullPage.data, "base64"),
+      label: theme === "dark" ? `full · ${width} · dark` : `full · ${width}`,
+      route: null,
+      state: theme === "dark" ? "dark" : null,
+      viewport: `${width}x${Math.round(scrollHeight)}`,
+      width,
+      height: Math.round(scrollHeight),
+    });
   }
 
   return { blank: false, resolvedSelector, frames: captured };
@@ -436,7 +520,7 @@ export async function main(args = process.argv.slice(2)) {
 
           let result;
           try {
-            result = await renderHtmlDeck(session.cdp, await serveDeck(ref), selector, settleMs, width);
+            result = await renderHtmlDeck(session.cdp, await serveDeck(ref), selector, settleMs, [width, mobileWidth]);
           } catch (renderErr) {
             throw new Error(`renderHtmlDeck failed: ${renderErr.message}`);
           }
