@@ -13,14 +13,14 @@
 
 	let { text, variant = 'inline', size, tone = 'inherit' }: Props = $props();
 
-	const sizes: Record<Size, string> = { 13: 'text-code', 13.5: 'text-[13.5px]', 14: 'text-small' };
+	const sizes: Record<Size, string> = { 13: 'text-code', 13.5: 'text-command', 14: 'text-small' };
 	const resolvedSize = $derived(size ?? (variant === 'block' ? 14 : 13.5));
 </script>
 
 <code
 	class={[
 		'font-mono',
-		variant === 'heading' ? 'text-[19px] font-medium' : sizes[resolvedSize],
+		variant === 'heading' ? 'text-title font-medium' : sizes[resolvedSize],
 		variant === 'block' && 'block wrap-anywhere',
 		variant === 'command' && 'block leading-normal wrap-anywhere',
 		tone === 'ink' && 'text-ink',

@@ -11,5 +11,5 @@
 
 <div>
 	<dt class="font-mono text-label text-muted uppercase">{label}</dt>
-	<dd class="m-0 mt-1 font-display text-[30px] leading-none font-bold">{value}</dd>
+	<dd class="m-0 mt-1 font-display text-stat leading-none font-bold">{value}</dd>
 </div>

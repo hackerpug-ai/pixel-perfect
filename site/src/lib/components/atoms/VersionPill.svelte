@@ -11,7 +11,7 @@
 
 <span
 	class={[
-		'inline-block rounded-full px-1.5 py-px text-[10px]',
+		'inline-block rounded-full px-1.5 py-px text-pill',
 		variant === 'filled' && 'bg-accent font-semibold text-on-accent',
 		variant === 'outline' && 'border border-line'
 	]}>{label}</span

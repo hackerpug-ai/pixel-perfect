@@ -130,6 +130,11 @@
 	--text-ui: 15px;
 	--text-body: 17px;
 	--text-body--line-height: 1.55;
+	--text-pill: 10px; /* version pills */
+	--text-command: 13.5px; /* commands and code in prose */
+	--text-title: 19px; /* logo wordmark; the code word in the DESIGN.md subhead */
+	--text-subhead: 22px;
+	--text-stat: 30px; /* stat values */
 	--text-display-sm: clamp(24px, 2.6vw, 34px);
 	--text-display-md: clamp(30px, 3.4vw, 46px);
 	--text-display-lg: clamp(32px, 4.2vw, 60px);

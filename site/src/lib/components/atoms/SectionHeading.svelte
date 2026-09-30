@@ -25,7 +25,7 @@
 		'm-0 font-display',
 		variant === 'section' && 'text-display-md leading-[1.05] font-extrabold tracking-[-.01em] [font-stretch:115%]',
 		variant === 'statement' && 'text-display-sm leading-[1.1] font-bold [font-stretch:110%]',
-		variant === 'subhead' && 'text-[22px] font-bold [font-stretch:110%]'
+		variant === 'subhead' && 'text-subhead font-bold [font-stretch:110%]'
 	]}
 >
 	{#if children}{@render children()}{:else}{text}{/if}

@@ -1,4 +1,40 @@
 {
   "version": 1,
-  "entries": []
+  "entries": [
+    {
+      "date": "2026-09-30",
+      "kind": "add",
+      "path": "text.pill",
+      "to": "10px",
+      "note": "version pills (atoms layer; replaced arbitrary sizes)"
+    },
+    {
+      "date": "2026-09-30",
+      "kind": "add",
+      "path": "text.command",
+      "to": "13.5px",
+      "note": "commands and code in prose (atoms layer; replaced arbitrary sizes)"
+    },
+    {
+      "date": "2026-09-30",
+      "kind": "add",
+      "path": "text.title",
+      "to": "19px",
+      "note": "logo wordmark; DESIGN.md subhead code word (atoms layer; replaced arbitrary sizes)"
+    },
+    {
+      "date": "2026-09-30",
+      "kind": "add",
+      "path": "text.subhead",
+      "to": "22px",
+      "note": "DESIGN.md subhead (atoms layer; replaced arbitrary sizes)"
+    },
+    {
+      "date": "2026-09-30",
+      "kind": "add",
+      "path": "text.stat",
+      "to": "30px",
+      "note": "stat values (atoms layer; replaced arbitrary sizes)"
+    }
+  ]
 }

@@ -43,7 +43,7 @@
 	/>
 	{#if showWordmark}
 		<span
-			class="font-display text-[19px] leading-none font-bold tracking-[-0.01em] [font-stretch:105%]"
+			class="font-display text-title leading-none font-bold tracking-[-0.01em] [font-stretch:105%]"
 			>pixel<span
 				class="mx-[0.06em] inline-block h-[0.11em] w-[0.42em] bg-current align-[0.27em]"
 				><span class="sr-only">-</span></span

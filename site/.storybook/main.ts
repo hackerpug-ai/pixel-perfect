@@ -10,6 +10,8 @@ const config: StorybookConfig = {
     "@storybook/addon-a11y",
     "@storybook/addon-docs"
   ],
-  "framework": "@storybook/sveltekit"
+  "framework": "@storybook/sveltekit",
+  // Serve static/ (brand marks, favicons) as the site does, so stories load them.
+  "staticDirs": ["../static"]
 };
 export default config;

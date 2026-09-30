@@ -504,10 +504,13 @@
       "gates": {
         "scaffold": "passed",
         "plan": "passed",
-        "atoms": "pending",
+        "atoms": "passed",
         "molecules": "pending",
         "compose": "pending",
-        "tokens_capture": "passed"
+        "tokens_capture": "passed",
+        "atoms_styling_contract": "passed",
+        "atoms_component_contract": "n/a",
+        "atoms_capture": "passed"
       },
       "screens": [
         {
@@ -530,6 +533,140 @@
           "states_note": "One route. The install tabs deep-link with #install-{id} on the same page (same data, instant toggle, shared layout), so they are states, not routes. dark renders Home in the dark theme; headline-alternate is the strategy D13 headline test."
         }
       ],
+      "atoms": [
+        {
+          "name": "Button",
+          "file": "src/lib/components/atoms/Button.svelte",
+          "story": "src/lib/components/atoms/Button.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "ThemeToggle",
+          "file": "src/lib/components/atoms/ThemeToggle.svelte",
+          "story": "src/lib/components/atoms/ThemeToggle.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "TextLink",
+          "file": "src/lib/components/atoms/TextLink.svelte",
+          "story": "src/lib/components/atoms/TextLink.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "NavLink",
+          "file": "src/lib/components/atoms/NavLink.svelte",
+          "story": "src/lib/components/atoms/NavLink.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "Logo",
+          "file": "src/lib/components/atoms/Logo.svelte",
+          "story": "src/lib/components/atoms/Logo.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "CropMark",
+          "file": "src/lib/components/atoms/CropMark.svelte",
+          "story": "src/lib/components/atoms/CropMark.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "RegistrationTarget",
+          "file": "src/lib/components/atoms/RegistrationTarget.svelte",
+          "story": "src/lib/components/atoms/RegistrationTarget.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "ColorStrip",
+          "file": "src/lib/components/atoms/ColorStrip.svelte",
+          "story": "src/lib/components/atoms/ColorStrip.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "SlugLine",
+          "file": "src/lib/components/atoms/SlugLine.svelte",
+          "story": "src/lib/components/atoms/SlugLine.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "PlateLabel",
+          "file": "src/lib/components/atoms/PlateLabel.svelte",
+          "story": "src/lib/components/atoms/PlateLabel.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "ProofMark",
+          "file": "src/lib/components/atoms/ProofMark.svelte",
+          "story": "src/lib/components/atoms/ProofMark.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "VersionPill",
+          "file": "src/lib/components/atoms/VersionPill.svelte",
+          "story": "src/lib/components/atoms/VersionPill.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "Stat",
+          "file": "src/lib/components/atoms/Stat.svelte",
+          "story": "src/lib/components/atoms/Stat.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "InlineCode",
+          "file": "src/lib/components/atoms/InlineCode.svelte",
+          "story": "src/lib/components/atoms/InlineCode.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "PlayButton",
+          "file": "src/lib/components/atoms/PlayButton.svelte",
+          "story": "src/lib/components/atoms/PlayButton.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "SliderHandle",
+          "file": "src/lib/components/atoms/SliderHandle.svelte",
+          "story": "src/lib/components/atoms/SliderHandle.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "Tab",
+          "file": "src/lib/components/atoms/Tab.svelte",
+          "story": "src/lib/components/atoms/Tab.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "DisclosureIcon",
+          "file": "src/lib/components/atoms/DisclosureIcon.svelte",
+          "story": "src/lib/components/atoms/DisclosureIcon.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "PlateText",
+          "file": "src/lib/components/atoms/PlateText.svelte",
+          "story": "src/lib/components/atoms/PlateText.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "SectionHeading",
+          "file": "src/lib/components/atoms/SectionHeading.svelte",
+          "story": "src/lib/components/atoms/SectionHeading.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "PrincipleCard",
+          "file": "src/lib/components/atoms/PrincipleCard.svelte",
+          "story": "src/lib/components/atoms/PrincipleCard.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "TabNote",
+          "file": "src/lib/components/atoms/TabNote.svelte",
+          "story": "src/lib/components/atoms/TabNote.stories.svelte",
+          "status": "verified"
+        }
+      ],
       "capture": {
         "command": "npm run sandbox:capture -- --width 1440",
         "medium": "dom+png",
@@ -547,7 +684,7 @@
           ]
         },
         "atoms": {
-          "status": "build",
+          "status": "verified",
           "create": [
             "Button",
             "ThemeToggle",
@@ -645,10 +782,13 @@
       "gates": {
         "scaffold": "passed",
         "plan": "passed",
-        "atoms": "pending",
+        "atoms": "passed",
         "molecules": "pending",
         "compose": "pending",
-        "tokens_capture": "passed"
+        "tokens_capture": "passed",
+        "atoms_styling_contract": "passed",
+        "atoms_component_contract": "n/a",
+        "atoms_capture": "passed"
       },
       "screens": [
         {
@@ -671,6 +811,140 @@
           "states_note": "One route. The install tabs deep-link with #install-{id} on the same page (same data, instant toggle, shared layout), so they are states, not routes. dark renders Home in the dark theme; headline-alternate is the strategy D13 headline test."
         }
       ],
+      "atoms": [
+        {
+          "name": "Button",
+          "file": "src/lib/components/atoms/Button.svelte",
+          "story": "src/lib/components/atoms/Button.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "ThemeToggle",
+          "file": "src/lib/components/atoms/ThemeToggle.svelte",
+          "story": "src/lib/components/atoms/ThemeToggle.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "TextLink",
+          "file": "src/lib/components/atoms/TextLink.svelte",
+          "story": "src/lib/components/atoms/TextLink.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "NavLink",
+          "file": "src/lib/components/atoms/NavLink.svelte",
+          "story": "src/lib/components/atoms/NavLink.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "Logo",
+          "file": "src/lib/components/atoms/Logo.svelte",
+          "story": "src/lib/components/atoms/Logo.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "CropMark",
+          "file": "src/lib/components/atoms/CropMark.svelte",
+          "story": "src/lib/components/atoms/CropMark.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "RegistrationTarget",
+          "file": "src/lib/components/atoms/RegistrationTarget.svelte",
+          "story": "src/lib/components/atoms/RegistrationTarget.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "ColorStrip",
+          "file": "src/lib/components/atoms/ColorStrip.svelte",
+          "story": "src/lib/components/atoms/ColorStrip.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "SlugLine",
+          "file": "src/lib/components/atoms/SlugLine.svelte",
+          "story": "src/lib/components/atoms/SlugLine.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "PlateLabel",
+          "file": "src/lib/components/atoms/PlateLabel.svelte",
+          "story": "src/lib/components/atoms/PlateLabel.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "ProofMark",
+          "file": "src/lib/components/atoms/ProofMark.svelte",
+          "story": "src/lib/components/atoms/ProofMark.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "VersionPill",
+          "file": "src/lib/components/atoms/VersionPill.svelte",
+          "story": "src/lib/components/atoms/VersionPill.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "Stat",
+          "file": "src/lib/components/atoms/Stat.svelte",
+          "story": "src/lib/components/atoms/Stat.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "InlineCode",
+          "file": "src/lib/components/atoms/InlineCode.svelte",
+          "story": "src/lib/components/atoms/InlineCode.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "PlayButton",
+          "file": "src/lib/components/atoms/PlayButton.svelte",
+          "story": "src/lib/components/atoms/PlayButton.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "SliderHandle",
+          "file": "src/lib/components/atoms/SliderHandle.svelte",
+          "story": "src/lib/components/atoms/SliderHandle.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "Tab",
+          "file": "src/lib/components/atoms/Tab.svelte",
+          "story": "src/lib/components/atoms/Tab.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "DisclosureIcon",
+          "file": "src/lib/components/atoms/DisclosureIcon.svelte",
+          "story": "src/lib/components/atoms/DisclosureIcon.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "PlateText",
+          "file": "src/lib/components/atoms/PlateText.svelte",
+          "story": "src/lib/components/atoms/PlateText.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "SectionHeading",
+          "file": "src/lib/components/atoms/SectionHeading.svelte",
+          "story": "src/lib/components/atoms/SectionHeading.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "PrincipleCard",
+          "file": "src/lib/components/atoms/PrincipleCard.svelte",
+          "story": "src/lib/components/atoms/PrincipleCard.stories.svelte",
+          "status": "verified"
+        },
+        {
+          "name": "TabNote",
+          "file": "src/lib/components/atoms/TabNote.svelte",
+          "story": "src/lib/components/atoms/TabNote.stories.svelte",
+          "status": "verified"
+        }
+      ],
       "capture": {
         "command": "npm run sandbox:capture -- --width 390",
         "medium": "dom+png",
@@ -688,7 +962,7 @@
           ]
         },
         "atoms": {
-          "status": "build",
+          "status": "verified",
           "create": [
             "Button",
             "ThemeToggle",
