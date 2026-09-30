@@ -149,9 +149,12 @@ function parseContract(path) {
     for (const c of list) {
       if (!c.id) throw new Error(`A check in ${path} is missing 'id'`);
       if (!Array.isArray(c.glob) || c.glob.length === 0) throw new Error(`Check '${c.id}' in ${path} is missing 'glob'`);
-      if (!c.regex) throw new Error(`Check '${c.id}' in ${path} is missing 'regex'`);
-      try { c._re = new RegExp(c.regex); } catch (e) { throw new Error(`Check '${c.id}' in ${path} has invalid regex '${c.regex}': ${e.message}`); }
       if (!c.mode) c.mode = "content";
+      // `exists` checks match on the glob alone; every other mode needs a regex.
+      if (!c.regex && c.mode !== "exists") throw new Error(`Check '${c.id}' in ${path} is missing 'regex'`);
+      if (c.regex) {
+        try { c._re = new RegExp(c.regex); } catch (e) { throw new Error(`Check '${c.id}' in ${path} has invalid regex '${c.regex}': ${e.message}`); }
+      }
       c._include = makeMatcher(c.glob);
       c._exclude = Array.isArray(c.exclude) && c.exclude.length ? makeMatcher(c.exclude) : null;
     }

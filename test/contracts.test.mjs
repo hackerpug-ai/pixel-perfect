@@ -103,3 +103,16 @@ test("vendored component contracts exclude the library's own source", () => {
     }
   }
 });
+
+test("exists-mode checks need no regex; content-mode checks still do", async () => {
+  const { mkdtempSync, writeFileSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const dir = mkdtempSync(path.join(tmpdir(), "pp-contract-"));
+  const write = (name, check) => {
+    const file = path.join(dir, name);
+    writeFileSync(file, `---\nid: t\nname: t\n---\n\n## Checks\n\n\`\`\`json\n${JSON.stringify({ forbiddenPatterns: [check] })}\n\`\`\`\n`);
+    return file;
+  };
+  assert.doesNotThrow(() => parseContract(write("exists.md", { id: "x", mode: "exists", glob: ["src/**/*.css"], rationale: "r" })));
+  assert.throws(() => parseContract(write("content.md", { id: "y", glob: ["src/**/*.css"], rationale: "r" })), /missing 'regex'/);
+});
