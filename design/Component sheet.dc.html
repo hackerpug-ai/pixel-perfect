@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>pixel-perfect — component sheet</title>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@100..150,700..800&family=IBM+Plex+Mono:wght@400;500&family=Libre+Franklin:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#E9EAE6;-webkit-font-smoothing:antialiased}
+[data-pp-sheet]{--paper:#F3F4F1;--sheet:#FBFBF9;--ink:#111316;--muted:#4F555C;--line:#D3D6D0;--cyan:#0096D1;--magenta:#E0007A;--magenta-ink:#B5005F;--yellow:#FFD900;--mark-fg:#FFFFFF}
+[data-pp-sheet][data-theme="dark"]{--paper:#0D0F12;--sheet:#14171B;--ink:#ECEDE8;--muted:#A7ACB2;--line:#2A2F36;--cyan:#29C1F0;--magenta:#FF3D9E;--magenta-ink:#FF7AB9;--yellow:#FFE14A;--mark-fg:#0D0F12}
+[data-pp-sheet] a{color:var(--magenta-ink)}[data-pp-sheet] a:hover{color:var(--ink)}
+[data-pp-sheet] summary::-webkit-details-marker{display:none}
+</style>
+</helmet>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,560px),1fr));font-family:'Libre Franklin',sans-serif;font-size:15px;line-height:1.5;min-height:100vh">
+<sc-for list="{{ themes }}" as="th" hint-placeholder-count="2">
+<div data-pp-sheet="1" data-theme="{{ th }}" style="background:var(--paper);color:var(--ink);padding:40px 40px 56px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted)"><span>PIXEL-PERFECT · COMPONENT SHEET · {{ th }}</span><span>V9</span></div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:32px 40px">
+<div><div style="font-size:12px;color:var(--muted);margin-bottom:12px">Buttons</div>
+<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+<a href="#" style="display:inline-block;background:var(--ink);color:var(--paper);text-decoration:none;font-weight:500;padding:12px 20px;border-radius:3px">Install pixel-perfect</a>
+<a href="#" style="display:inline-block;color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:3px;padding:11px 16px">See it build</a>
+<a href="#" style="font-size:15px">GitHub ↗</a>
+</div></div>
+
+<div><div style="font-size:12px;color:var(--muted);margin-bottom:12px">Registration target (mark) and color control strip</div>
+<div style="display:flex;gap:24px;align-items:center">
+<span aria-hidden="true" style="position:relative;display:inline-block;width:40px;height:40px;color:var(--ink)"><span style="position:absolute;inset:6px;border:1px solid currentColor;border-radius:50%"></span><span style="position:absolute;left:0;right:0;top:19.5px;height:1px;background:currentColor"></span><span style="position:absolute;top:0;bottom:0;left:19.5px;width:1px;background:currentColor"></span><span style="position:absolute;left:18px;top:18px;width:4px;height:4px;background:var(--magenta)"></span></span>
+<span aria-hidden="true" style="display:flex;gap:2px"><span style="width:20px;height:14px;background:var(--cyan)"></span><span style="width:20px;height:14px;background:var(--magenta)"></span><span style="width:20px;height:14px;background:var(--yellow)"></span><span style="width:20px;height:14px;background:var(--ink)"></span><span style="width:20px;height:14px;background:var(--cyan);opacity:.5"></span><span style="width:20px;height:14px;background:var(--magenta);opacity:.5"></span><span style="width:20px;height:14px;background:var(--yellow);opacity:.5"></span><span style="width:20px;height:14px;background:var(--ink);opacity:.5"></span></span>
+</div></div>
+</div>
+
+<div><div style="font-size:12px;color:var(--muted);margin-bottom:12px">Copy block</div>
+<div style="background:var(--sheet);border:1px solid var(--line);border-radius:4px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;max-width:560px">
+<div style="display:flex;gap:12px;align-items:flex-start;justify-content:space-between">
+<code style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.5;word-break:break-word">Install pixel-perfect: fetch and follow https://github.com/hackerpug-ai/pixel-perfect/INSTALL.md</code>
+<button style="flex:none;font:inherit;font-size:14px;font-weight:500;background:var(--ink);color:var(--paper);border:1px solid var(--ink);border-radius:3px;padding:8px 14px;cursor:pointer;min-height:36px">Copy</button>
+</div>
+<div style="font-size:13px;color:var(--muted)">Paste into any of the six agents.</div>
+</div></div>
+
+<div><div style="font-size:12px;color:var(--muted);margin-bottom:12px">Tab list</div>
+<div role="tablist" style="display:flex;flex-wrap:wrap;gap:0 4px;border-bottom:1px solid var(--line);max-width:560px">
+<span role="tab" aria-selected="true" style="padding:10px 14px;margin-bottom:-1px;color:var(--ink);border-bottom:2px solid var(--ink);font-weight:600">Claude Code</span>
+<span role="tab" aria-selected="false" style="padding:10px 14px;margin-bottom:-1px;color:var(--muted);border-bottom:2px solid transparent">Codex</span>
+<span role="tab" aria-selected="false" style="padding:10px 14px;margin-bottom:-1px;color:var(--muted);border-bottom:2px solid transparent">Cursor</span>
+<span role="tab" aria-selected="false" style="padding:10px 14px;margin-bottom:-1px;color:var(--muted);border-bottom:2px solid transparent">Grok</span>
+<span role="tab" aria-selected="false" style="padding:10px 14px;margin-bottom:-1px;color:var(--muted);border-bottom:2px solid transparent">OpenCode</span>
+<span role="tab" aria-selected="false" style="padding:10px 14px;margin-bottom:-1px;color:var(--muted);border-bottom:2px solid transparent">Pi</span>
+</div></div>
+
+<div><div style="font-size:12px;color:var(--muted);margin-bottom:12px">Code panel</div>
+<div style="background:#14171B;color:#E6E7E2;border-radius:4px;overflow:hidden;max-width:560px"><div style="display:flex;justify-content:space-between;padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7D838B;border-bottom:1px solid #22262C"><span>.pixel-perfect/manifest.yaml</span><span>Example output</span></div>
+<pre style="margin:0;padding:14px;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.6;overflow:auto"><span style="color:#7CCFF2">source</span>: <span style="color:#FFE27A">design/deck.html</span><br><span style="color:#7CCFF2">frames</span>: 12<br><span style="color:#8EE3B0">gate passed</span>   <span style="color:#7D838B"># success · dim</span></pre></div></div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:32px 40px">
+<div><div style="font-size:12px;color:var(--muted);margin-bottom:12px">Proofreader's mark</div>
+<div style="display:flex;gap:14px;align-items:center">
+<span style="width:22px;height:22px;border-radius:50%;background:var(--magenta-ink);color:var(--mark-fg);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;display:grid;place-items:center">1</span>
+<span style="font-size:14px;color:var(--muted)"><span style="font-family:'IBM Plex Mono',monospace;color:var(--magenta-ink)">1</span>&nbsp; Padding 20 instead of 16.</span>
+</div></div>
+<div><div style="font-size:12px;color:var(--muted);margin-bottom:12px">FAQ item</div>
+<details open style="border-top:1px solid var(--line);border-bottom:1px solid var(--line)"><summary style="cursor:pointer;list-style:none;padding:14px 0;font-size:16px;font-weight:500;display:flex;justify-content:space-between;gap:16px">Will it lock me in?<span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;color:var(--muted)">+</span></summary><div style="padding:0 0 16px;color:var(--muted);font-size:15px">No. The output is plain code in your repository plus a DESIGN.md.</div></details></div>
+</div>
+
+<div><div style="font-size:12px;color:var(--muted);margin-bottom:12px">Type</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="font-family:'Anybody',sans-serif;font-stretch:118%;font-weight:800;font-size:40px;line-height:1">Anybody 800 wide</div>
+<div style="font-size:17px">Libre Franklin 400 — all running text.</div>
+<div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted)">IBM PLEX MONO · SLUG LINES · PLATE LABELS</div>
+</div></div>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() { return { themes: ['light', 'dark'] }; }
+}
+</script>
+</body>
+</html>

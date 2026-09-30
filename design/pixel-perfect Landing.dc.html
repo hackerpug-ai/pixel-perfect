@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" sizes="32x32" href="logo/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="logo/favicon-16.png">
+<link rel="apple-touch-icon" href="logo/favicon-180.png">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>pixel-perfect — Your mockup is a picture. Ship the system inside it.</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" sizes="32x32" href="logo/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="logo/favicon-16.png">
+<link rel="apple-touch-icon" href="logo/favicon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@100..150,700..800&family=IBM+Plex+Mono:wght@400;500&family=Libre+Franklin:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F3F4F1;-webkit-font-smoothing:antialiased}
+[data-pp-root]{--paper:#F3F4F1;--sheet:#FBFBF9;--ink:#111316;--muted:#4F555C;--line:#D3D6D0;--cyan:#0096D1;--cyan-ink:#006C99;--magenta:#E0007A;--magenta-ink:#B5005F;--yellow:#FFD900;--blend:multiply;--mark-fg:#FFFFFF;--stripe:rgba(17,19,22,.07);color-scheme:light}
+[data-pp-root][data-theme="dark"]{--paper:#0D0F12;--sheet:#14171B;--ink:#ECEDE8;--muted:#A7ACB2;--line:#2A2F36;--cyan:#29C1F0;--cyan-ink:#6AD3F6;--magenta:#FF3D9E;--magenta-ink:#FF7AB9;--yellow:#FFE14A;--blend:screen;--mark-fg:#0D0F12;--stripe:rgba(236,237,232,.08);color-scheme:dark}
+[data-pp-root] a{color:var(--magenta-ink);text-decoration-thickness:1px;text-underline-offset:3px}
+[data-pp-root] a:hover{color:var(--ink)}
+[data-pp-root] summary::-webkit-details-marker{display:none}
+[data-pp-root] pre{margin:0}
+[data-pp-root] [data-mark="dark"],[data-pp-root][data-theme="dark"] [data-mark="light"]{display:none}
+[data-pp-root][data-theme="dark"] [data-mark="dark"]{display:block}
+[data-pp-root] [data-mark="light"]{display:block}
+@keyframes pp-plate{0%{opacity:1;transform:translate(var(--dx),var(--dy))}65%{opacity:1;transform:translate(0,0)}}
+@keyframes pp-ink{0%,65%{opacity:0}}
+@keyframes pp-flat{from{transform:none}}
+@media (max-width:720px){[data-hide-m]{display:none!important}[data-stack-m]{grid-template-columns:minmax(0,1fr)!important}[data-pad-m]{padding-left:16px!important;padding-right:16px!important}}
+@media (prefers-reduced-motion:reduce){[data-pp-root] *{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div data-pp-root="1" data-theme="{{ theme }}" style="background:var(--paper);color:var(--ink);font-family:'Libre Franklin',sans-serif;font-size:17px;line-height:1.55;min-height:100vh;overflow-x:clip">
+
+<!-- Nav -->
+<header style="position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:1px solid var(--line)">
+<nav data-pad-m="1" style="max-width:1200px;margin:0 auto;padding:0 32px;height:60px;display:flex;align-items:center;gap:28px" aria-label="Main">
+<a href="#top" style="display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500">
+<img data-mark="light" src="logo/mark-A-light.svg" alt="" width="54" height="28" style="height:28px;width:auto"><img data-mark="dark" src="logo/mark-A-dark.svg" alt="" width="54" height="28" style="height:28px;width:auto">
+<span style="font-family:'Anybody',sans-serif;font-stretch:105%;font-weight:700;font-size:19px;line-height:1;letter-spacing:-.01em">pixel<span style="display:inline-block;width:.42em;height:.11em;background:currentColor;vertical-align:.27em;margin:0 .06em"></span>perfect</span></a>
+<div data-hide-m="1" style="display:flex;gap:22px;margin-left:auto;font-size:15px">
+<a href="#why" style="color:var(--ink);text-decoration:none">Why</a>
+<a href="#build" style="color:var(--ink);text-decoration:none">Build it</a>
+<a href="#grow" style="color:var(--ink);text-decoration:none">Grow it</a>
+<a href="#install" style="color:var(--ink);text-decoration:none">Install</a>
+<a href="#faq" style="color:var(--ink);text-decoration:none">FAQ</a>
+<a href="https://github.com/hackerpug-ai/pixel-perfect" style="color:var(--ink);text-decoration:none">GitHub ↗</a>
+</div>
+<button onClick="{{ toggleTheme }}" aria-label="Switch color theme" style="margin-left:auto;font:inherit;font-size:14px;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:3px;padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:8px"><span aria-hidden="true" style="width:10px;height:10px;border-radius:50%;background:var(--ink);display:inline-block"></span>{{ themeLabel }}</button>
+</nav>
+</header>
+
+<!-- Hero -->
+<section id="top" data-screen-label="Hero" data-pad-m="1" style="max-width:1200px;margin:0 auto;padding:36px 32px 64px;position:relative">
+<span aria-hidden="true" style="position:absolute;left:12px;top:12px;width:16px;height:16px;border-left:1px solid var(--muted);border-top:1px solid var(--muted)"></span>
+<span aria-hidden="true" style="position:absolute;right:12px;top:12px;width:16px;height:16px;border-right:1px solid var(--muted);border-top:1px solid var(--muted)"></span>
+<span aria-hidden="true" style="position:absolute;left:12px;bottom:12px;width:16px;height:16px;border-left:1px solid var(--muted);border-bottom:1px solid var(--muted)"></span>
+<span aria-hidden="true" style="position:absolute;right:12px;bottom:12px;width:16px;height:16px;border-right:1px solid var(--muted);border-bottom:1px solid var(--muted)"></span>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:.02em">
+<span>PIXEL-PERFECT · V9 · PROOF SHEET · 2026-09-29</span>
+<span aria-hidden="true" style="display:flex;gap:2px"><span style="width:16px;height:10px;background:var(--cyan)"></span><span style="width:16px;height:10px;background:var(--magenta)"></span><span style="width:16px;height:10px;background:var(--yellow)"></span><span style="width:16px;height:10px;background:var(--ink)"></span><span style="width:16px;height:10px;background:var(--cyan);opacity:.5"></span><span style="width:16px;height:10px;background:var(--magenta);opacity:.5"></span><span style="width:16px;height:10px;background:var(--yellow);opacity:.5"></span><span style="width:16px;height:10px;background:var(--ink);opacity:.5"></span></span>
+</div>
+
+<p style="margin:40px 0 14px;font-size:15px;color:var(--muted)">An agent skill for Claude Code, Codex, Cursor, Grok, OpenCode, and Pi.</p>
+<sc-if value="{{ primaryHeadline }}" hint-placeholder-val="{{ true }}">
+<h1 style="margin:0;max-width:980px;font-family:'Anybody',sans-serif;font-stretch:118%;font-weight:700;font-size:clamp(34px,4.9vw,70px);line-height:1.02;letter-spacing:-.01em;text-wrap:balance">
+<span style="display:block;font-weight:700;font-stretch:100%;color:var(--muted);font-size:.62em;margin-bottom:.22em">Your mockup is a picture.</span>
+<span style="position:relative;display:inline-block;font-weight:800">
+<span style="position:relative;display:block;opacity:1;animation:pp-ink 1.7s cubic-bezier(.2,.7,.1,1) .25s both">Ship the system inside it.</span>
+<span aria-hidden="true" style="position:absolute;inset:0;color:var(--cyan);opacity:0;mix-blend-mode:var(--blend);--dx:-16px;--dy:8px;animation:pp-plate 1.7s cubic-bezier(.2,.7,.1,1) .25s both">Ship the system inside it.</span>
+<span aria-hidden="true" style="position:absolute;inset:0;color:var(--magenta);opacity:0;mix-blend-mode:var(--blend);--dx:14px;--dy:-7px;animation:pp-plate 1.7s cubic-bezier(.2,.7,.1,1) .25s both">Ship the system inside it.</span>
+<span aria-hidden="true" style="position:absolute;inset:0;color:var(--yellow);opacity:0;mix-blend-mode:var(--blend);--dx:4px;--dy:13px;animation:pp-plate 1.7s cubic-bezier(.2,.7,.1,1) .25s both">Ship the system inside it.</span>
+</span>
+</h1>
+</sc-if>
+<sc-if value="{{ altHeadline }}" hint-placeholder-val="{{ false }}">
+<h1 style="margin:0;max-width:980px;font-family:'Anybody',sans-serif;font-stretch:118%;font-weight:800;font-size:clamp(34px,4.6vw,66px);line-height:1.04;letter-spacing:-.01em;text-wrap:balance">
+<span style="position:relative;display:inline-block">
+<span style="position:relative;display:block;opacity:1;animation:pp-ink 1.7s cubic-bezier(.2,.7,.1,1) .25s both">Turn a mockup into a design system your agent keeps building on.</span>
+<span aria-hidden="true" style="position:absolute;inset:0;color:var(--cyan);opacity:0;mix-blend-mode:var(--blend);--dx:-16px;--dy:8px;animation:pp-plate 1.7s cubic-bezier(.2,.7,.1,1) .25s both">Turn a mockup into a design system your agent keeps building on.</span>
+<span aria-hidden="true" style="position:absolute;inset:0;color:var(--magenta);opacity:0;mix-blend-mode:var(--blend);--dx:14px;--dy:-7px;animation:pp-plate 1.7s cubic-bezier(.2,.7,.1,1) .25s both">Turn a mockup into a design system your agent keeps building on.</span>
+<span aria-hidden="true" style="position:absolute;inset:0;color:var(--yellow);opacity:0;mix-blend-mode:var(--blend);--dx:4px;--dy:13px;animation:pp-plate 1.7s cubic-bezier(.2,.7,.1,1) .25s both">Turn a mockup into a design system your agent keeps building on.</span>
+</span>
+</h1>
+</sc-if>
+
+<div data-stack-m="1" style="display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:40px 56px;margin-top:28px;align-items:start">
+<p style="margin:0;max-width:640px;font-size:18px;color:var(--ink);text-wrap:pretty">pixel-perfect is an agent skill that reads every frame of a high-fidelity mockup and turns it into real components in your framework: tokens, atoms, molecules, organisms, and screens. Each layer is checked against the frames it came from before the next layer starts. After that, every new screen, from a mock or a single sentence, is built from the parts you already have.</p>
+
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="background:var(--sheet);border:1px solid var(--line);border-radius:4px;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;gap:12px;align-items:flex-start;justify-content:space-between">
+<code style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.5;color:var(--ink);word-break:break-word">Install pixel-perfect: fetch and follow https://github.com/hackerpug-ai/pixel-perfect/INSTALL.md</code>
+<button onClick="{{ copyHero1 }}" style="flex:none;font:inherit;font-size:14px;font-weight:500;background:var(--ink);color:var(--paper);border:1px solid var(--ink);border-radius:3px;padding:8px 14px;cursor:pointer;min-height:36px">{{ lbl.hero1 }}</button>
+</div>
+<div style="font-size:13px;color:var(--muted)">Paste into any of the six agents.</div>
+</div>
+<div style="border:1px solid var(--line);border-radius:4px;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between">
+<code style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;color:var(--ink)">npx skills add hackerpug-ai/pixel-perfect</code>
+<button onClick="{{ copyHero2 }}" style="flex:none;font:inherit;font-size:14px;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:3px;padding:7px 14px;cursor:pointer;min-height:36px">{{ lbl.hero2 }}</button>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:14px">
+<a href="#install">Prefer your agent's own commands? See every install option.</a>
+<a href="#build" style="color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:3px;padding:8px 14px;min-height:20px">See it build</a>
+</div>
+</div>
+</div>
+
+<div style="margin-top:36px;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;color:var(--muted)">
+<span>MIT</span><span>by Justin Rich</span><a href="https://github.com/hackerpug-ai/pixel-perfect">View source ↗</a><span>Works in six agents</span><span>Frameworks: SvelteKit, React, Expo, SwiftUI, GPUI, Ratatui, and any stack with a docs URL</span>
+</div>
+
+<div data-stack-m="1" style="display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:40px;margin-top:40px;align-items:start">
+<!-- Proof slider -->
+<figure style="margin:0">
+<div style="position:relative;aspect-ratio:16/10;background:var(--sheet);border:1px solid var(--line);overflow:hidden;user-select:none">
+<div style="position:absolute;inset:0;display:grid;place-items:center;background:repeating-linear-gradient(135deg,var(--stripe) 0 6px,transparent 6px 14px)">
+<div style="width:min(300px,70%);background:var(--sheet);border:1px solid var(--line);border-radius:4px;padding:16px;display:flex;flex-direction:column;gap:12px;opacity:.9">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">TEAM PLAN</div>
+<div style="font-family:'Anybody',sans-serif;font-weight:700;font-size:26px;line-height:1">$24<span style="font-size:13px;font-family:'Libre Franklin',sans-serif;font-weight:400;color:var(--muted)"> / month</span></div>
+<div style="font-size:13px;color:var(--muted)">Unlimited projects · 5 seats · Priority support</div>
+<div style="background:var(--ink);color:var(--paper);font-size:13px;font-weight:500;text-align:center;padding:9px;border-radius:3px">Choose plan</div>
+</div>
+</div>
+<div style="position:absolute;inset:0;display:grid;place-items:center;background:var(--sheet);clip-path:inset(0 0 0 {{ splitPct }})">
+<div style="width:min(300px,70%);background:var(--sheet);border:1px solid var(--line);border-radius:4px;padding:16px;display:flex;flex-direction:column;gap:12px">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">TEAM PLAN</div>
+<div style="font-family:'Anybody',sans-serif;font-weight:700;font-size:26px;line-height:1">$24<span style="font-size:13px;font-family:'Libre Franklin',sans-serif;font-weight:400;color:var(--muted)"> / month</span></div>
+<div style="font-size:13px;color:var(--muted)">Unlimited projects · 5 seats · Priority support</div>
+<div style="background:var(--ink);color:var(--paper);font-size:13px;font-weight:500;text-align:center;padding:9px;border-radius:3px">Choose plan</div>
+</div>
+</div>
+<div aria-hidden="true" style="position:absolute;top:0;bottom:0;left:{{ splitPct }};width:2px;background:var(--magenta);transform:translateX(-1px)"></div>
+<div aria-hidden="true" style="position:absolute;top:50%;left:{{ splitPct }};width:28px;height:28px;border-radius:50%;background:var(--sheet);border:2px solid var(--magenta);transform:translate(-50%,-50%);display:grid;place-items:center;font-size:11px;color:var(--magenta-ink);font-family:'IBM Plex Mono',monospace">◂▸</div>
+<span style="position:absolute;left:10px;top:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">DESIGN FRAME</span>
+<span style="position:absolute;right:10px;top:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">BUILT COMPONENT</span>
+<span aria-hidden="true" style="position:absolute;left:8px;bottom:8px;width:14px;height:14px"><span style="position:absolute;inset:2px;border:1px solid var(--muted);border-radius:50%"></span><span style="position:absolute;left:0;right:0;top:6.5px;height:1px;background:var(--muted)"></span><span style="position:absolute;top:0;bottom:0;left:6.5px;width:1px;background:var(--muted)"></span></span>
+<span aria-hidden="true" style="position:absolute;right:8px;bottom:8px;width:14px;height:14px"><span style="position:absolute;inset:2px;border:1px solid var(--muted);border-radius:50%"></span><span style="position:absolute;left:0;right:0;top:6.5px;height:1px;background:var(--muted)"></span><span style="position:absolute;top:0;bottom:0;left:6.5px;width:1px;background:var(--muted)"></span></span>
+<span aria-hidden="true" style="position:absolute;left:8px;top:28px;width:14px;height:14px"><span style="position:absolute;inset:2px;border:1px solid var(--muted);border-radius:50%"></span><span style="position:absolute;left:0;right:0;top:6.5px;height:1px;background:var(--muted)"></span><span style="position:absolute;top:0;bottom:0;left:6.5px;width:1px;background:var(--muted)"></span></span>
+<span aria-hidden="true" style="position:absolute;right:8px;top:28px;width:14px;height:14px"><span style="position:absolute;inset:2px;border:1px solid var(--muted);border-radius:50%"></span><span style="position:absolute;left:0;right:0;top:6.5px;height:1px;background:var(--muted)"></span><span style="position:absolute;top:0;bottom:0;left:6.5px;width:1px;background:var(--muted)"></span></span>
+<input type="range" min="0" max="100" value="{{ split }}" onChange="{{ onSplit }}" onInput="{{ onSplit }}" aria-label="Compare the design frame with the built component" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0">
+</div>
+<figcaption style="margin-top:10px;font-size:14px;color:var(--muted)">Drag to compare the design frame with the component built from it. The corner marks line up when they match. <span style="font-family:'IBM Plex Mono',monospace;font-size:12px">Example — replaced by the real pair at launch.</span></figcaption>
+</figure>
+
+<!-- Fig. 1 -->
+<figure data-hide-m="1" data-scroll="1" data-start="1" data-end=".2" style="margin:0;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:center">
+<div style="perspective:1100px;height:400px;padding-top:120px;box-sizing:border-box;overflow:hidden;display:grid;place-items:center">
+<div style="position:relative;width:250px;height:160px;transform-style:preserve-3d;transform:rotateX(58deg) rotateZ(-32deg);animation:pp-flat 1.8s cubic-bezier(.2,.7,.2,1) .5s both">
+<div style="position:absolute;inset:0;background:var(--sheet);border:1px solid var(--line);transform:translateZ(0px);display:flex;gap:4px;padding:10px;box-sizing:border-box;align-items:flex-end;animation:pp-flat 1.8s cubic-bezier(.2,.7,.2,1) .5s both"><span style="width:22px;height:14px;background:var(--cyan)"></span><span style="width:22px;height:14px;background:var(--magenta)"></span><span style="width:22px;height:14px;background:var(--yellow)"></span><span style="width:22px;height:14px;background:var(--ink)"></span><span style="width:22px;height:14px;background:var(--muted)"></span><span style="width:22px;height:14px;background:var(--line)"></span></div>
+<div style="position:absolute;inset:0;background:var(--sheet);border:1px solid var(--line);transform:translateZ(calc(10px + var(--p,.5) * 14px));padding:12px;box-sizing:border-box;display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;animation:pp-flat 1.8s cubic-bezier(.2,.7,.2,1) .5s both"><span style="width:56px;height:16px;background:var(--ink);border-radius:2px"></span><span style="width:56px;height:16px;border:1px solid var(--ink);border-radius:2px;box-sizing:border-box"></span><span style="width:34px;height:12px;background:var(--magenta);border-radius:999px"></span></div>
+<div style="position:absolute;inset:0;background:var(--sheet);border:1px solid var(--line);transform:translateZ(calc(20px + var(--p,.5) * 28px));padding:12px;box-sizing:border-box;animation:pp-flat 1.8s cubic-bezier(.2,.7,.2,1) .5s both"><span style="display:block;width:90px;height:52px;border:1px solid var(--line);border-radius:3px;padding:6px;box-sizing:border-box"><span style="display:block;width:40px;height:4px;background:var(--muted);margin-bottom:6px"></span><span style="display:block;width:60px;height:8px;background:var(--ink);margin-bottom:8px"></span><span style="display:block;width:40px;height:8px;background:var(--ink);border-radius:2px"></span></span></div>
+<div style="position:absolute;inset:0;background:var(--sheet);border:1px solid var(--line);transform:translateZ(calc(30px + var(--p,.5) * 42px));padding:12px;box-sizing:border-box;display:flex;flex-direction:column;gap:8px;animation:pp-flat 1.8s cubic-bezier(.2,.7,.2,1) .5s both"><span style="display:block;height:10px;background:var(--ink)"></span><span style="display:flex;gap:6px"><span style="flex:1;height:44px;border:1px solid var(--line)"></span><span style="flex:1;height:44px;border:1px solid var(--line)"></span><span style="flex:1;height:44px;border:1px solid var(--line)"></span></span></div>
+<div style="position:absolute;inset:0;background:var(--sheet);border:1px solid var(--ink);transform:translateZ(calc(40px + var(--p,.5) * 56px));padding:10px;box-sizing:border-box;display:flex;flex-direction:column;gap:6px;animation:pp-flat 1.8s cubic-bezier(.2,.7,.2,1) .5s both"><span style="display:block;height:8px;background:var(--ink)"></span><span style="display:block;width:70%;height:14px;background:var(--cyan);mix-blend-mode:var(--blend)"></span><span style="display:block;width:50%;height:14px;background:var(--magenta);mix-blend-mode:var(--blend);margin-top:-8px;margin-left:30%"></span><span style="display:flex;gap:6px;margin-top:auto"><span style="flex:1;height:36px;border:1px solid var(--line)"></span><span style="flex:1;height:36px;border:1px solid var(--line)"></span></span></div>
+</div>
+</div>
+<ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:calc(8px + var(--p,.5) * 16px);font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:.02em">
+<li>SCREENS</li><li>ORGANISMS</li><li>MOLECULES</li><li>ATOMS</li><li>TOKENS</li>
+</ol>
+<figcaption style="grid-column:1 / -1;font-size:14px;color:var(--muted)"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px">FIG. 1</span> &nbsp;{{ figCaption }}</figcaption>
+</figure>
+</div>
+</section>
+
+<!-- Why -->
+<section id="why" data-screen-label="Why" data-pad-m="1" style="max-width:1200px;margin:0 auto;padding:96px 32px;border-top:1px solid var(--line)">
+<div data-stack-m="1" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:48px;align-items:start">
+<div>
+<h2 style="margin:0 0 20px;font-family:'Anybody',sans-serif;font-stretch:115%;font-weight:800;font-size:clamp(30px,3.4vw,46px);line-height:1.05;letter-spacing:-.01em">Designs die in translation.</h2>
+<p style="margin:0 0 16px;max-width:520px;text-wrap:pretty">You paste a screenshot into your agent and say "build this." The first screen comes out well. The second screen's card has different padding, a gray that isn't in the design, and a button that's almost the same. Nobody wrote down which colors are tokens, so the agent guessed.</p>
+<p style="margin:0;max-width:520px;text-wrap:pretty">Six weeks later there are four slightly different cards and no way to say which one is correct. The mockup is still right. The code drifted, one screen at a time.</p>
+</div>
+<figure data-scroll="1" data-start=".9" data-end=".35" style="margin:0">
+<div data-stack-m="1" style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+<div>
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:16px">APPROVED</div>
+<div style="background:var(--sheet);border:1px solid var(--line);border-radius:4px;padding:16px;display:flex;flex-direction:column;gap:12px">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">TEAM PLAN</div>
+<div style="font-family:'Anybody',sans-serif;font-weight:700;font-size:26px;line-height:1">$24<span style="font-size:13px;font-family:'Libre Franklin',sans-serif;font-weight:400;color:var(--muted)"> / month</span></div>
+<div style="font-size:13px;color:var(--muted)">Unlimited projects · 5 seats · Priority support</div>
+<div style="background:var(--ink);color:var(--paper);font-size:13px;font-weight:500;text-align:center;padding:9px;border-radius:3px">Choose plan</div>
+</div>
+</div>
+<div>
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--magenta-ink);margin-bottom:16px">DRIFTED</div>
+<div style="position:relative;background:var(--sheet);border:1px solid var(--line);border-radius:calc(4px + var(--p,1) * 1px);padding:calc(16px + var(--p,1) * 4px);display:flex;flex-direction:column;gap:12px">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8A8F96">TEAM PLAN</div>
+<div style="font-family:'Anybody',sans-serif;font-weight:700;font-size:26px;line-height:1">$24<span style="font-size:13px;font-family:'Libre Franklin',sans-serif;font-weight:400;color:#8A8F96"> / month</span></div>
+<div style="font-size:13px;color:#8A8F96">Unlimited projects · 5 seats · Priority support</div>
+<div style="background:transparent;color:var(--magenta-ink);border:1px solid var(--magenta-ink);font-size:13px;font-weight:600;text-align:center;padding:9px;border-radius:5px">Choose plan</div>
+<span style="position:absolute;left:-11px;top:-11px;opacity:clamp(0,calc((var(--p,1) - 0.25) * 8),1);transform:scale(clamp(.5,calc(.5 + (var(--p,1) - 0.25) * 4),1));width:22px;height:22px;border-radius:50%;background:var(--magenta-ink);color:var(--mark-fg);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;display:grid;place-items:center">1</span>
+<span style="position:absolute;right:-11px;top:14px;opacity:clamp(0,calc((var(--p,1) - 0.4) * 8),1);transform:scale(clamp(.5,calc(.5 + (var(--p,1) - 0.4) * 4),1));width:22px;height:22px;border-radius:50%;background:var(--magenta-ink);color:var(--mark-fg);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;display:grid;place-items:center">2</span>
+<span style="position:absolute;right:-11px;bottom:22px;opacity:clamp(0,calc((var(--p,1) - 0.55) * 8),1);transform:scale(clamp(.5,calc(.5 + (var(--p,1) - 0.55) * 4),1));width:22px;height:22px;border-radius:50%;background:var(--magenta-ink);color:var(--mark-fg);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;display:grid;place-items:center">3</span>
+<span style="position:absolute;right:-11px;bottom:-11px;opacity:clamp(0,calc((var(--p,1) - 0.7) * 8),1);transform:scale(clamp(.5,calc(.5 + (var(--p,1) - 0.7) * 4),1));width:22px;height:22px;border-radius:50%;background:var(--magenta-ink);color:var(--mark-fg);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;display:grid;place-items:center">4</span>
+</div>
+</div>
+</div>
+<figcaption style="margin-top:16px">
+<ol style="margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 20px;font-size:14px;color:var(--muted)">
+<li style="display:flex;gap:10px"><span style="font-family:'IBM Plex Mono',monospace;color:var(--magenta-ink)">1</span><span>Padding 20 instead of 16.</span></li>
+<li style="display:flex;gap:10px"><span style="font-family:'IBM Plex Mono',monospace;color:var(--magenta-ink)">2</span><span>An invented gray, <code style="font-family:'IBM Plex Mono',monospace;font-size:13px">#8A8F96</code>, not in the tokens.</span></li>
+<li style="display:flex;gap:10px"><span style="font-family:'IBM Plex Mono',monospace;color:var(--magenta-ink)">3</span><span>A fifth button style.</span></li>
+<li style="display:flex;gap:10px"><span style="font-family:'IBM Plex Mono',monospace;color:var(--magenta-ink)">4</span><span>Border radius 5 instead of 4.</span></li>
+</ol>
+<div style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted)">Example.</div>
+</figcaption>
+</figure>
+</div>
+
+<p style="margin:72px 0 36px;font-family:'Anybody',sans-serif;font-stretch:110%;font-weight:700;font-size:clamp(24px,2.6vw,34px);line-height:1.1">Your design survives your codebase.</p>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:32px 40px;border-top:1px solid var(--line);padding-top:32px">
+<div><h3 style="margin:0 0 8px;font-size:17px;font-weight:600">Consistency through composability</h3><p style="margin:0;font-size:15px;color:var(--muted);text-wrap:pretty">Every screen is assembled from the same parts, so one card can't quietly become four.</p></div>
+<div><h3 style="margin:0 0 8px;font-size:17px;font-weight:600">Make it real</h3><p style="margin:0;font-size:15px;color:var(--muted);text-wrap:pretty">No mockup step, no spec format, no throwaway files. The design is the reference, and the code in your repository is the deliverable.</p></div>
+<div><h3 style="margin:0 0 8px;font-size:17px;font-weight:600">Rapid iteration</h3><p style="margin:0;font-size:15px;color:var(--muted);text-wrap:pretty">Add a screen with one sentence, and it's built from the parts you already have. Change a token and it flows everywhere. Change a component and everything built on it re-checks.</p></div>
+<div><h3 style="margin:0 0 8px;font-size:17px;font-weight:600">Language agnostic</h3><p style="margin:0;font-size:15px;color:var(--muted);text-wrap:pretty">Works in whatever UI stack you use. Storybook if you want it, a native sandbox if you don't.</p></div>
+</div>
+</section>
+
+<!-- Build it -->
+<section id="build" data-screen-label="Build it" data-pad-m="1" style="max-width:1200px;margin:0 auto;padding:96px 32px;border-top:1px solid var(--line)">
+<h2 style="margin:0 0 12px;font-family:'Anybody',sans-serif;font-stretch:115%;font-weight:800;font-size:clamp(30px,3.4vw,46px);line-height:1.05;letter-spacing:-.01em;max-width:800px">From mockup to system in four commands.</h2>
+<p style="margin:0 0 48px;max-width:600px;color:var(--muted);text-wrap:pretty">Point it at the design, scaffold a sandbox, build the layers, and read the report. Each layer is checked against its frames before the next one starts, so the report is the proof.</p>
+
+<ol data-scroll="1" data-start=".7" data-end=".6" data-span="1" style="margin:0;padding:0 0 0 28px;list-style:none;display:flex;flex-direction:column;gap:40px;position:relative"><li role="presentation" aria-hidden="true" style="position:absolute;left:0;top:4px;bottom:4px;width:2px;background:var(--line)"><span style="display:block;width:2px;height:calc(var(--p,1) * 100%);background:var(--magenta)"></span></li>
+<li data-stack-m="1" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:24px 40px;align-items:start">
+<div style="opacity:clamp(.5,calc(.5 + (var(--p,1) - -0.1) * 5),1)"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);margin-bottom:8px">STEP 1 · READ THE DESIGN</div>
+<code style="display:block;font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--ink);word-break:break-word">/pixel-perfect:init my designs are in design/deck.html</code>
+<p style="margin:10px 0 0;font-size:15px;color:var(--muted)">Finds the frames, detects your framework, writes the manifest.</p></div>
+<div style="background:#14171B;color:#E6E7E2;border-radius:4px;overflow:hidden"><div style="display:flex;justify-content:space-between;padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7D838B;border-bottom:1px solid #22262C"><span>.pixel-perfect/manifest.yaml</span><span>Example output</span></div>
+<pre style="padding:14px;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.6;overflow:auto"><span style="color:#7CCFF2">source</span>: <span style="color:#FFE27A">design/deck.html</span><br><span style="color:#7CCFF2">frames</span>: 12<br><span style="color:#7CCFF2">framework</span>: <span style="color:#FFE27A">sveltekit</span>   <span style="color:#7D838B"># detected from package.json</span><br><span style="color:#7CCFF2">sandbox</span>: <span style="color:#FFE27A">storybook</span><br><span style="color:#7CCFF2">layers</span>: [tokens, atoms, molecules, organisms, screens]</pre></div>
+</li>
+<li data-stack-m="1" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:24px 40px;align-items:start">
+<div style="opacity:clamp(.5,calc(.5 + (var(--p,1) - 0.2) * 5),1)"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);margin-bottom:8px">STEP 2 · SCAFFOLD THE SANDBOX</div>
+<code style="display:block;font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--ink)">/pixel-perfect:scaffold</code>
+<p style="margin:10px 0 0;font-size:15px;color:var(--muted)">A component browser in your framework, with the token stories already in it.</p></div>
+<div style="background:#14171B;color:#E6E7E2;border-radius:4px;overflow:hidden"><div style="display:flex;justify-content:space-between;padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7D838B;border-bottom:1px solid #22262C"><span>terminal</span><span>Example output</span></div>
+<pre style="padding:14px;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.6;overflow:auto"><span style="color:#8EE3B0">created</span>  src/lib/ui/tokens.css<br><span style="color:#8EE3B0">created</span>  .storybook/main.ts<br><span style="color:#8EE3B0">created</span>  src/stories/tokens/Color.stories.svelte<br><span style="color:#8EE3B0">created</span>  src/stories/tokens/Type.stories.svelte<br><span style="color:#7D838B">sandbox</span>  http://localhost:6006</pre></div>
+</li>
+<li data-stack-m="1" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:24px 40px;align-items:start">
+<div style="opacity:clamp(.5,calc(.5 + (var(--p,1) - 0.45) * 5),1)"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);margin-bottom:8px">STEP 3 · BUILD THE LAYERS</div>
+<code style="display:block;font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--ink)">/pixel-perfect:build</code>
+<p style="margin:10px 0 0;font-size:15px;color:var(--muted)">Writes the inventory first. Every item names the frames that justify it and the parts it composes. Then it builds, bottom layer first.</p></div>
+<div style="background:#14171B;color:#E6E7E2;border-radius:4px;overflow:hidden"><div style="display:flex;justify-content:space-between;padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7D838B;border-bottom:1px solid #22262C"><span>.pixel-perfect/inventory.yaml (excerpt)</span><span>Example output</span></div>
+<pre style="padding:14px;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.6;overflow:auto"><span style="color:#7CCFF2">atoms</span>:<br>  - <span style="color:#7CCFF2">name</span>: <span style="color:#FFE27A">Button</span><br>    <span style="color:#7CCFF2">variants</span>: [primary, secondary]<br>    <span style="color:#7CCFF2">frames</span>: [f02, f04, f07]<br><span style="color:#7CCFF2">molecules</span>:<br>  - <span style="color:#7CCFF2">name</span>: <span style="color:#FFE27A">PlanCard</span><br>    <span style="color:#7CCFF2">composes</span>: [Heading, Price, Button]<br>    <span style="color:#7CCFF2">frames</span>: [f04, f05]</pre></div>
+</li>
+<li data-stack-m="1" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:24px 40px;align-items:start">
+<div style="opacity:clamp(.5,calc(.5 + (var(--p,1) - 0.7) * 5),1)"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);margin-bottom:8px">STEP 4 · CHECK THE PROOF</div>
+<code style="display:block;font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--ink)">/pixel-perfect:status</code>
+<p style="margin:10px 0 0;font-size:15px;color:var(--muted)">A gate is a check of one layer against its frames. It runs once per layer, so the next layer starts from parts that already match.</p></div>
+<div style="background:#14171B;color:#E6E7E2;border-radius:4px;overflow:hidden"><div style="display:flex;justify-content:space-between;padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7D838B;border-bottom:1px solid #22262C"><span>status</span><span>Example output</span></div>
+<pre style="padding:14px;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.6;overflow:auto">tokens      built     <span style="color:#8EE3B0">gate passed</span>   [n] frames<br>atoms       built     <span style="color:#8EE3B0">gate passed</span>   [n] frames<br>molecules   built     <span style="color:#8EE3B0">gate passed</span>   [n] frames<br>organisms   <span style="color:#FFE27A">building</span><br>screens     <span style="color:#7D838B">waiting</span></pre></div>
+</li>
+</ol>
+
+<div data-stack-m="1" style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:40px;margin-top:64px;align-items:start">
+<figure style="margin:0">
+<div style="position:relative;aspect-ratio:16/9;background:repeating-linear-gradient(135deg,var(--stripe) 0 6px,transparent 6px 14px);border:1px solid var(--line);display:grid;place-items:center">
+<div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+<span aria-hidden="true" style="width:56px;height:56px;border-radius:50%;border:1px solid var(--ink);display:grid;place-items:center;background:var(--sheet)"><span style="width:0;height:0;border-left:16px solid var(--ink);border-top:10px solid transparent;border-bottom:10px solid transparent;margin-left:4px"></span></span>
+<span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted)">demo video · 60–90 s · poster frame</span>
+</div>
+</div>
+<figcaption style="margin-top:10px;font-size:14px;color:var(--muted)">One run, start to finish: init, scaffold, build, status.</figcaption>
+</figure>
+<div>
+<dl style="margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:20px 16px;border-top:1px solid var(--line);padding-top:20px">
+<div><dt style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">TOKENS</dt><dd style="margin:4px 0 0;font-family:'Anybody',sans-serif;font-weight:700;font-size:30px;line-height:1">[n]</dd></div>
+<div><dt style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">MINUTES</dt><dd style="margin:4px 0 0;font-family:'Anybody',sans-serif;font-weight:700;font-size:30px;line-height:1">[n]</dd></div>
+<div><dt style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">FRAMES</dt><dd style="margin:4px 0 0;font-family:'Anybody',sans-serif;font-weight:700;font-size:30px;line-height:1">[n]</dd></div>
+<div><dt style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">GATES</dt><dd style="margin:4px 0 0;font-family:'Anybody',sans-serif;font-weight:700;font-size:30px;line-height:1">[n]</dd></div>
+<div><dt style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">COMPONENTS</dt><dd style="margin:4px 0 0;font-family:'Anybody',sans-serif;font-weight:700;font-size:30px;line-height:1">[n]</dd></div>
+</dl>
+<div style="margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted)">Measured at launch from the dogfood build.</div>
+<p style="margin:32px 0 0;font-size:15px;color:var(--muted);text-wrap:pretty">No mockup yet? <code style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;color:var(--ink)">wireframe</code> turns a PRD into wireframes that <code style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;color:var(--ink)">build</code> reads the same way.</p>
+</div>
+</div>
+</section>
+
+<!-- Grow it -->
+<section id="grow" data-screen-label="Grow it" data-pad-m="1" style="max-width:1200px;margin:0 auto;padding:96px 32px;border-top:1px solid var(--line)">
+<h2 style="margin:0 0 12px;font-family:'Anybody',sans-serif;font-stretch:115%;font-weight:800;font-size:clamp(30px,3.4vw,46px);line-height:1.05;letter-spacing:-.01em;max-width:900px">Your next screen starts from the parts you already have.</h2>
+<p style="margin:0 0 48px;max-width:600px;color:var(--muted);text-wrap:pretty">The system is the deliverable, so it keeps going. Describe a page, or drop in a new mock, and the agent reuses what exists before it invents anything.</p>
+
+<div data-stack-m="1" style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:40px;align-items:start">
+<figure data-scroll="1" data-start=".95" data-end=".4" style="margin:0">
+<div style="border:1px solid var(--line);background:var(--sheet);border-radius:4px;padding:20px;display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;gap:12px;align-items:flex-start"><span style="flex:none;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);width:44px;padding-top:3px">YOU</span><code style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--ink);word-break:break-word">/pixel-perfect:evolve "add a changelog page"</code></div>
+<div style="display:flex;gap:12px;align-items:flex-start"><span style="flex:none;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);width:44px;padding-top:3px">AGENT</span>
+<div style="display:flex;flex-direction:column;gap:12px;min-width:0;flex:1">
+<div style="font-size:15px">Built <code style="font-family:'IBM Plex Mono',monospace;font-size:13.5px">screens/Changelog</code> from existing parts.</div>
+<div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink);display:flex;gap:10px;flex-wrap:wrap"><span>reuse [n]</span><span style="color:var(--muted)">·</span><span>new [n]</span><span style="color:var(--muted)">·</span><span>[n] captured components moved</span></div>
+<div style="border:1px solid var(--line);background:var(--paper);padding:14px;display:flex;flex-direction:column;gap:10px;max-width:360px">
+<div style="height:8px;width:100%;background:var(--ink);transform:translate(calc((1 - var(--p,1)) * -40px),calc((1 - var(--p,1)) * -10px));opacity:calc(.3 + var(--p,1) * .7);"></div>
+<div style="font-family:'Anybody',sans-serif;font-weight:700;font-size:16px;transform:translate(calc((1 - var(--p,1)) * 30px),calc((1 - var(--p,1)) * -6px));opacity:calc(.3 + var(--p,1) * .7);">Changelog</div>
+<div style="display:flex;gap:8px;align-items:center;transform:translate(calc((1 - var(--p,1)) * -28px),calc((1 - var(--p,1)) * 14px));opacity:calc(.3 + var(--p,1) * .7);"><span style="font-size:10px;background:var(--magenta);color:var(--mark-fg);padding:1px 6px;border-radius:999px;font-weight:600">v9.1</span><span style="height:6px;flex:1;background:var(--line)"></span></div>
+<div style="display:flex;gap:8px;align-items:center;transform:translate(calc((1 - var(--p,1)) * 34px),calc((1 - var(--p,1)) * 4px));opacity:calc(.3 + var(--p,1) * .7);"><span style="font-size:10px;border:1px solid var(--line);padding:1px 6px;border-radius:999px">v9.0</span><span style="height:6px;flex:1;background:var(--line)"></span></div>
+<div style="display:flex;gap:8px;align-items:center;transform:translate(calc((1 - var(--p,1)) * -18px),calc((1 - var(--p,1)) * 20px));opacity:calc(.3 + var(--p,1) * .7);"><span style="font-size:10px;border:1px solid var(--line);padding:1px 6px;border-radius:999px">v8.4</span><span style="height:6px;width:60%;background:var(--line)"></span></div>
+</div>
+</div></div>
+</div>
+<figcaption style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted)">Example thread — replaced by the real run at launch.</figcaption>
+</figure>
+
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="border-top:1px solid var(--line);padding-top:16px"><code style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--ink)">evolve</code> <span style="color:var(--muted);font-size:14px">with a new mock</span><p style="margin:6px 0 0;font-size:15px;text-wrap:pretty">Sorts each element into reuse, variant, new, promote, or remove, with an orphan sweep for removals. Confirms once. Proves by re-capture.</p></div>
+<div style="border-top:1px solid var(--line);padding-top:16px"><code style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--ink)">refine</code> <span style="color:var(--muted);font-size:14px">with a token change</span><p style="margin:6px 0 0;font-size:15px;text-wrap:pretty">Change a token. Every component that uses it updates, and the gates confirm nothing else moved.</p><code style="display:block;margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted)">Cascades into: Button, PlanCard, Header, [n] more</code></div>
+<div style="border-top:1px solid var(--line);padding-top:16px"><code style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--ink)">add-platform</code><p style="margin:6px 0 0;font-size:15px;text-wrap:pretty">The same system on a second platform, built from the same inventory.</p></div>
+</div>
+</div>
+
+<div data-stack-m="1" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:40px;margin-top:64px;align-items:center">
+<div>
+<h3 style="margin:0 0 8px;font-size:22px;font-family:'Anybody',sans-serif;font-stretch:110%;font-weight:700">It writes a <code style="font-family:'IBM Plex Mono',monospace;font-size:19px;font-weight:500">DESIGN.md</code> too.</h3>
+<p style="margin:0 0 24px;font-size:15px;color:var(--muted);text-wrap:pretty">A plain document of your tokens and components, kept current on every build, so your other tools and your teammates read the same system.</p>
+<a href="#install" style="display:inline-block;background:var(--ink);color:var(--paper);text-decoration:none;font-weight:500;font-size:15px;padding:12px 20px;border-radius:3px">Install pixel-perfect</a>
+</div>
+<div style="background:var(--sheet);border:1px solid var(--line);padding:24px 28px;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.7;color:var(--ink);box-shadow:0 1px 0 var(--line),0 12px 32px -20px rgba(0,0,0,.35)">
+<div style="color:var(--muted);font-size:11px;margin-bottom:12px">DESIGN.md · GENERATED · EXAMPLE</div>
+<div style="font-weight:500;font-size:16px">design system</div>
+<div style="color:var(--muted);margin-top:10px">## tokens</div>
+<div>color.ink&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#111316</div><div>color.accent&nbsp;&nbsp;&nbsp;#E0007A</div><div>space.4&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;16px</div><div>radius.sm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4px</div>
+<div style="color:var(--muted);margin-top:10px">## components</div>
+<div>Button&nbsp;&nbsp;&nbsp;&nbsp;primary, secondary</div><div>PlanCard&nbsp;&nbsp;composes Heading, Price, Button</div><div>Header&nbsp;&nbsp;&nbsp;&nbsp;composes Logo, NavLink</div>
+</div>
+</div>
+</section>
+
+<!-- Install -->
+<section id="install" data-screen-label="Install" data-pad-m="1" style="max-width:1200px;margin:0 auto;padding:96px 32px;border-top:1px solid var(--line)">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap">
+<h2 style="margin:0;font-family:'Anybody',sans-serif;font-stretch:115%;font-weight:800;font-size:clamp(30px,3.4vw,46px);line-height:1.05;letter-spacing:-.01em">Install it in your agent.</h2>
+<a href="https://github.com/hackerpug-ai/pixel-perfect" style="font-size:15px">View source ↗</a>
+</div>
+<p style="margin:12px 0 32px;max-width:600px;color:var(--muted)">Read the skill before you install it. It's a folder of markdown and scripts in the open.</p>
+
+<div data-stack-m="1" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:1000px">
+<div style="background:var(--sheet);border:1px solid var(--line);border-radius:4px;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;gap:12px;align-items:flex-start;justify-content:space-between">
+<code style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.5;word-break:break-word">Install pixel-perfect: fetch and follow https://github.com/hackerpug-ai/pixel-perfect/INSTALL.md</code>
+<button onClick="{{ copyInst1 }}" style="flex:none;font:inherit;font-size:14px;font-weight:500;background:var(--ink);color:var(--paper);border:1px solid var(--ink);border-radius:3px;padding:8px 14px;cursor:pointer;min-height:36px">{{ lbl.inst1 }}</button>
+</div>
+<div style="font-size:13px;color:var(--muted)">Paste into any of the six agents.</div>
+</div>
+<div style="border:1px solid var(--line);border-radius:4px;padding:14px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between">
+<code style="font-family:'IBM Plex Mono',monospace;font-size:13.5px">npx skills add hackerpug-ai/pixel-perfect</code>
+<button onClick="{{ copyInst2 }}" style="flex:none;font:inherit;font-size:14px;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:3px;padding:7px 14px;cursor:pointer;min-height:36px">{{ lbl.inst2 }}</button>
+</div>
+</div>
+
+<div style="margin-top:48px;max-width:1000px">
+<div role="tablist" aria-label="Agent" onKeyDown="{{ tabKey }}" style="display:flex;flex-wrap:wrap;gap:0 4px;border-bottom:1px solid var(--line)">
+<sc-for list="{{ tabs }}" as="t" hint-placeholder-count="6">
+<a role="tab" id="tab-{{ t.id }}" href="#install-{{ t.id }}" aria-selected="{{ t.selected }}" aria-controls="install-{{ t.id }}" tabindex="{{ t.tabIndex }}" onClick="{{ t.select }}" style="font:inherit;font-size:15px;text-decoration:none;padding:10px 14px;margin-bottom:-1px;cursor:pointer;color:{{ t.color }};border-bottom:2px solid {{ t.border }};font-weight:{{ t.weight }}">{{ t.name }}</a>
+</sc-for>
+</div>
+<div role="tabpanel" id="install-{{ cur.id }}" aria-labelledby="tab-{{ cur.id }}" tabindex="0" style="padding-top:24px;display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{ cur.steps }}" as="s" hint-placeholder-count="2">
+<div style="display:flex;gap:12px;align-items:center;justify-content:space-between;background:#14171B;color:#E6E7E2;border-radius:4px;padding:10px 14px">
+<code style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;word-break:break-word">{{ s.cmd }}</code>
+<button onClick="{{ s.copy }}" style="flex:none;font:inherit;font-size:13px;color:#E6E7E2;background:transparent;border:1px solid #3A4048;border-radius:3px;padding:6px 12px;cursor:pointer;min-height:32px">{{ s.label }}</button>
+</div>
+</sc-for>
+<sc-if value="{{ cur.hasNote }}" hint-placeholder-val="{{ false }}"><p style="margin:0;font-size:15px">{{ cur.note }}</p></sc-if>
+<sc-if value="{{ cur.hasWarning }}" hint-placeholder-val="{{ false }}"><p style="margin:0;font-size:14px;color:var(--ink);display:flex;gap:10px"><span style="font-family:'IBM Plex Mono',monospace;color:var(--magenta-ink);flex:none">Note</span><span>{{ cur.warning }}</span></p></sc-if>
+<p style="margin:8px 0 0;font-size:15px;color:var(--muted)">Next: open a project that has your design and run <code style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;color:var(--ink)">/pixel-perfect:init</code>.</p>
+</div>
+</div>
+
+<p style="margin:40px 0 0;max-width:600px;font-size:15px;color:var(--muted)">Releases are version-locked across all six agents. Every breaking release ships an upgrade guide.</p>
+
+<div style="margin-top:48px;max-width:1000px;border-top:1px solid var(--line);padding-top:24px">
+<h3 style="margin:0 0 20px;font-size:17px;font-weight:600">What it touches</h3>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:24px;font-size:15px">
+<div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:8px">READS</div><ul style="margin:0;padding-left:18px;color:var(--ink)"><li>Your design files or URL</li><li>package.json and the framework config</li><li>DESIGN.md, if one exists</li></ul></div>
+<div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:8px">WRITES</div><ul style="margin:0;padding-left:18px;color:var(--ink)"><li>Components in your source tree</li><li>Sandbox stories</li><li><code style="font-family:'IBM Plex Mono',monospace;font-size:13.5px">.pixel-perfect/</code> and DESIGN.md</li></ul></div>
+<div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:8px">RUNS</div><ul style="margin:0;padding-left:18px;color:var(--ink)"><li>Your package manager</li><li>A headless browser, for capture</li><li>Your existing lint and test scripts</li></ul></div>
+<div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:8px">SECURITY SCAN</div><div style="border:1px dashed var(--line);padding:12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted)">Third-party scan results — pending.</div></div>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" data-screen-label="FAQ" data-pad-m="1" style="max-width:1200px;margin:0 auto;padding:96px 32px;border-top:1px solid var(--line)">
+<div data-stack-m="1" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:32px 64px;align-items:start">
+<h2 style="margin:0;font-family:'Anybody',sans-serif;font-stretch:115%;font-weight:800;font-size:clamp(30px,3.4vw,46px);line-height:1.05;letter-spacing:-.01em">Questions</h2>
+<div style="border-top:1px solid var(--line)">
+<details style="border-bottom:1px solid var(--line)"><summary style="cursor:pointer;list-style:none;padding:18px 0;font-size:17px;font-weight:500;display:flex;justify-content:space-between;gap:16px">Why not just prompt my agent?<span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;color:var(--muted)">+</span></summary><div style="padding:0 0 20px;color:var(--muted);font-size:15.5px;max-width:640px;text-wrap:pretty">Prompting works for one screen and breaks on the second. The agent has no record of which values are tokens and which parts already exist, so each screen is a fresh guess. pixel-perfect writes that record down as code, then checks every new layer against the design before moving on.</div></details>
+<details style="border-bottom:1px solid var(--line)"><summary style="cursor:pointer;list-style:none;padding:18px 0;font-size:17px;font-weight:500;display:flex;justify-content:space-between;gap:16px">What happens when the design changes?<span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;color:var(--muted)">+</span></summary><div style="padding:0 0 20px;color:var(--muted);font-size:15.5px;max-width:640px;text-wrap:pretty">Run <code style="font-family:'IBM Plex Mono',monospace;font-size:14px">evolve</code> with the new mock. Each element is sorted into reuse, variant, new, promote, or remove, you confirm once, and a re-capture shows exactly which components moved.</div></details>
+<details style="border-bottom:1px solid var(--line)"><summary style="cursor:pointer;list-style:none;padding:18px 0;font-size:17px;font-weight:500;display:flex;justify-content:space-between;gap:16px">How many tokens does it use?<span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;color:var(--muted)">+</span></summary><div style="padding:0 0 20px;color:var(--muted);font-size:15.5px;max-width:640px;text-wrap:pretty">A full build of a [n]-frame design used [n] tokens across [n] minutes (measured at launch). Frames are read once and cached, so evolve and refine runs cost a fraction of the first build.</div></details>
+<details style="border-bottom:1px solid var(--line)"><summary style="cursor:pointer;list-style:none;padding:18px 0;font-size:17px;font-weight:500;display:flex;justify-content:space-between;gap:16px">Does it work with my stack?<span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;color:var(--muted)">+</span></summary><div style="padding:0 0 20px;color:var(--muted);font-size:15.5px;max-width:640px;text-wrap:pretty">If your stack has a docs URL, yes. SvelteKit, React, Expo, SwiftUI, GPUI, and Ratatui have been built with it. Where Storybook doesn't run, it generates a native sandbox in your framework instead.</div></details>
+<details style="border-bottom:1px solid var(--line)"><summary style="cursor:pointer;list-style:none;padding:18px 0;font-size:17px;font-weight:500;display:flex;justify-content:space-between;gap:16px">Will it lock me in?<span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;color:var(--muted)">+</span></summary><div style="padding:0 0 20px;color:var(--muted);font-size:15.5px;max-width:640px;text-wrap:pretty">No. The output is plain code in your repository plus a DESIGN.md. Delete the skill and everything it built still works, because nothing depends on it at runtime.</div></details>
+<details style="border-bottom:1px solid var(--line)"><summary style="cursor:pointer;list-style:none;padding:18px 0;font-size:17px;font-weight:500;display:flex;justify-content:space-between;gap:16px">It's at version 9. Is it stable?<span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;color:var(--muted)">+</span></summary><div style="padding:0 0 20px;color:var(--muted);font-size:15.5px;max-width:640px;text-wrap:pretty">The command surface is stable and version-locked across all six agents. The major number counts breaking changes to the inventory format, and each one ships with an upgrade guide.</div></details>
+<details style="border-bottom:1px solid var(--line)"><summary style="cursor:pointer;list-style:none;padding:18px 0;font-size:17px;font-weight:500;display:flex;justify-content:space-between;gap:16px">Don't gates make this slow?<span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;color:var(--muted)">+</span></summary><div style="padding:0 0 20px;color:var(--muted);font-size:15.5px;max-width:640px;text-wrap:pretty">They make the next step faster. A gate runs once per layer, so every layer is built on parts that already match, and later changes are cheap: change a token, every component that uses it updates, and the gates confirm nothing else moved.</div></details>
+<details style="border-bottom:1px solid var(--line)"><summary style="cursor:pointer;list-style:none;padding:18px 0;font-size:17px;font-weight:500;display:flex;justify-content:space-between;gap:16px">How is this different from v0, Claude Design, or Figma's MCP?<span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;color:var(--muted)">+</span></summary><div style="padding:0 0 20px;color:var(--muted);font-size:15.5px;max-width:640px;text-wrap:pretty">Those produce the design. pixel-perfect starts where they stop: it takes their output as input and turns it into a component system in your repository that keeps growing with every screen.</div></details>
+</div>
+</div>
+</section>
+
+<!-- Close -->
+<section id="close" data-screen-label="Close" data-pad-m="1" style="max-width:1200px;margin:0 auto;padding:96px 32px 64px;border-top:1px solid var(--line)">
+<h2 style="margin:0 0 28px;font-family:'Anybody',sans-serif;font-stretch:118%;font-weight:800;font-size:clamp(32px,4.2vw,60px);line-height:1.02;letter-spacing:-.01em;max-width:900px;text-wrap:balance"><span data-scroll="1" data-start="1" data-end=".7" style="position:relative;display:inline-block"><span style="position:relative;display:block">Your next mockup has a system inside it.</span><span aria-hidden="true" style="position:absolute;inset:0;color:var(--cyan);mix-blend-mode:var(--blend);opacity:calc(1 - var(--p,1));transform:translate(calc((1 - var(--p,1)) * -18px),calc((1 - var(--p,1)) * 9px))">Your next mockup has a system inside it.</span><span aria-hidden="true" style="position:absolute;inset:0;color:var(--magenta);mix-blend-mode:var(--blend);opacity:calc(1 - var(--p,1));transform:translate(calc((1 - var(--p,1)) * 16px),calc((1 - var(--p,1)) * -8px))">Your next mockup has a system inside it.</span><span aria-hidden="true" style="position:absolute;inset:0;color:var(--yellow);mix-blend-mode:var(--blend);opacity:calc(1 - var(--p,1));transform:translate(calc((1 - var(--p,1)) * 5px),calc((1 - var(--p,1)) * 14px))">Your next mockup has a system inside it.</span></span></h2>
+<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+<a href="#install" style="display:inline-block;background:var(--ink);color:var(--paper);text-decoration:none;font-weight:500;font-size:15px;padding:12px 20px;border-radius:3px">Install pixel-perfect</a>
+<a href="https://github.com/hackerpug-ai/pixel-perfect" style="font-size:15px">GitHub ↗</a>
+</div>
+<footer style="margin-top:80px;padding-top:20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--muted)">
+<div style="display:flex;gap:20px;flex-wrap:wrap"><span>MIT</span><a href="https://github.com/hackerpug-ai/pixel-perfect/blob/main/CHANGELOG.md">Changelog</a><a href="https://github.com/hackerpug-ai/pixel-perfect/tree/main/docs/upgrade">Upgrade guides</a></div>
+<span style="display:flex"><img data-mark="light" src="logo/mark-C-light.svg" alt="pixel-perfect" width="20" height="24" style="height:24px;width:auto"><img data-mark="dark" src="logo/mark-C-dark.svg" alt="pixel-perfect" width="20" height="24" style="height:24px;width:auto"></span>
+</footer>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light' | 'dark'&quot;,&quot;section&quot;:&quot;Theme&quot;},&quot;headline&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;primary&quot;,&quot;alternate&quot;],&quot;default&quot;:&quot;primary&quot;,&quot;tsType&quot;:&quot;'primary' | 'alternate'&quot;,&quot;section&quot;:&quot;Hero variant&quot;}}">
+const TABS = [
+  { id: 'claude', name: 'Claude Code', steps: ['/plugin marketplace add hackerpug-ai/pixel-perfect', '/plugin install pixel-perfect@pixel-perfect'] },
+  { id: 'codex', name: 'Codex', steps: ['codex plugin marketplace add hackerpug-ai/pixel-perfect', 'codex plugin add pixel-perfect@pixel-perfect'], warning: 'Two enabled sources create duplicate $pixel-perfect:* namespaces. Remove pixel-perfect@personal first.' },
+  { id: 'cursor', name: 'Cursor', steps: ['git clone --branch <release-tag> https://github.com/hackerpug-ai/pixel-perfect', 'cp -R pixel-perfect/plugins/pixel-perfect ~/.cursor/plugins/local/pixel-perfect'], note: 'Then reload the window.', warning: "Copy, don't symlink. Cursor fails on symlinked plugins." },
+  { id: 'grok', name: 'Grok', steps: ['/plugin marketplace add hackerpug-ai/pixel-perfect', '/plugin install pixel-perfect@pixel-perfect'], note: "Then enable it in Grok's /plugins view." },
+  { id: 'opencode', name: 'OpenCode', steps: ['git clone --branch <release-tag> https://github.com/hackerpug-ai/pixel-perfect .pixel-perfect', 'ln -s ../.pixel-perfect/.opencode/commands .opencode/commands', 'ln -s ../.pixel-perfect/.opencode/skills .opencode/skills'] },
+  { id: 'pi', name: 'Pi', steps: ['pi install npm:@hackerpug-ai/pixel-perfect'] },
+];
+const LINE1 = 'Install pixel-perfect: fetch and follow https://github.com/hackerpug-ai/pixel-perfect/INSTALL.md';
+const LINE2 = 'npx skills add hackerpug-ai/pixel-perfect';
+
+class Component extends DCLogic {
+  state = { theme: null, tab: 'claude', copied: null, split: 50 };
+  componentDidMount() {
+    const m = /^#install-(\w+)$/.exec(location.hash);
+    if (m && TABS.some(t => t.id === m[1])) this.setState({ tab: m[1] });
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const tick = () => {
+      this._raf = 0; const vh = innerHeight;
+      document.querySelectorAll('[data-scroll]').forEach(el => {
+        const r = el.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > vh) return;
+        const st = parseFloat(el.dataset.start ?? .85) * vh, en = parseFloat(el.dataset.end ?? .25) * vh;
+        const d = (st - en) + (el.dataset.span ? r.height : 0);
+        el.style.setProperty('--p', Math.min(1, Math.max(0, (st - r.top) / d)).toFixed(3));
+      });
+    };
+    this._onScroll = () => { if (!this._raf) this._raf = requestAnimationFrame(tick); };
+    addEventListener('scroll', this._onScroll, { passive: true, capture: true });
+    addEventListener('resize', this._onScroll);
+    tick();
+  }
+  componentWillUnmount() {
+    removeEventListener('scroll', this._onScroll, { capture: true });
+    removeEventListener('resize', this._onScroll);
+    cancelAnimationFrame(this._raf);
+  }
+  copy(id, text) {
+    return (e) => {
+      const done = (how) => { this.setState({ copied: id, copyHow: how }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ copied: null }), 2000); };
+      const fallback = () => {
+        const code = e && e.currentTarget && e.currentTarget.parentElement.querySelector('code');
+        if (code) { const r = document.createRange(); r.selectNodeContents(code); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+        let ok = false; try { ok = document.execCommand('copy'); } catch (_) {}
+        done(ok ? 'copied' : 'selected');
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => done('copied'), fallback);
+      else fallback();
+    };
+  }
+  renderVals() {
+    const theme = this.state.theme ?? this.props.theme ?? 'light';
+    const alt = (this.props.headline ?? 'primary') === 'alternate';
+    const c = this.state.copied;
+    const L = id => (c === id ? (this.state.copyHow === 'selected' ? 'Selected' : 'Copied ✓') : 'Copy');
+    const tabs = TABS.map(t => {
+      const sel = t.id === this.state.tab;
+      return { id: t.id, name: t.name, selected: sel ? 'true' : 'false', tabIndex: sel ? 0 : -1,
+        color: sel ? 'var(--ink)' : 'var(--muted)', border: sel ? 'var(--ink)' : 'transparent', weight: sel ? 600 : 400,
+        select: (e) => { e.preventDefault(); this.setState({ tab: t.id }); history.replaceState(null, '', '#install-' + t.id); } };
+    });
+    const curT = TABS.find(t => t.id === this.state.tab) || TABS[0];
+    const cur = { id: curT.id, note: curT.note || '', hasNote: !!curT.note, warning: curT.warning || '', hasWarning: !!curT.warning,
+      steps: curT.steps.map((cmd, i) => ({ cmd, copy: this.copy(curT.id + i, cmd), label: L(curT.id + i) })) };
+    const tabKey = (e) => {
+      const i = TABS.findIndex(t => t.id === this.state.tab);
+      let n = null;
+      if (e.key === 'ArrowRight') n = (i + 1) % TABS.length;
+      else if (e.key === 'ArrowLeft') n = (i - 1 + TABS.length) % TABS.length;
+      else if (e.key === 'Home') n = 0; else if (e.key === 'End') n = TABS.length - 1;
+      if (n === null) return;
+      e.preventDefault();
+      this.setState({ tab: TABS[n].id }, () => { const el = document.getElementById('tab-' + TABS[n].id); if (el) el.focus(); });
+    };
+    return {
+      theme, themeLabel: theme === 'dark' ? 'Light' : 'Dark',
+      toggleTheme: () => this.setState({ theme: theme === 'dark' ? 'light' : 'dark' }),
+      primaryHeadline: !alt, altHeadline: alt,
+      figCaption: alt ? 'Your mockup is a picture. Ship the system inside it.' : 'One mockup, separated into five layers. Each layer is built and checked before the next.',
+      split: this.state.split, splitPct: this.state.split + '%',
+      onSplit: (e) => this.setState({ split: Number(e.target.value) }),
+      lbl: { hero1: L('h1'), hero2: L('h2'), inst1: L('i1'), inst2: L('i2') },
+      copyHero1: this.copy('h1', LINE1), copyHero2: this.copy('h2', LINE2),
+      copyInst1: this.copy('i1', LINE1), copyInst2: this.copy('i2', LINE2),
+      tabs, cur, tabKey,
+    };
+  }
+}
+</script>
+</body>
+</html>
