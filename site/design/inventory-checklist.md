@@ -26,7 +26,7 @@ Slice keys refer to the review's renders: `L1440-N` / `L390-N` are the landing p
 
 | Layer | Name | Variants and states | Seen in |
 |---|---|---|---|
-| atom | Button | primary, secondary, small-on-code; label Copy → Copied ✓ / Selected; focus-visible | L1440-1/5/6/7, CS |
+| atom | Button | primary, secondary, small-on-code; label Copy → Copied ✓ / Selected; hover and focus per manifest ui_states | L1440-1/5/6/7, CS |
 | atom | ThemeToggle | dot + "Dark" / "Light" label | L1440-1, D1440-1 |
 | atom | TextLink | magenta, underlined, external ↗; hover | L1440-1/7 |
 | atom | NavLink | header navigation link; hover, current | L1440-1 |
@@ -62,18 +62,20 @@ Slice keys refer to the review's renders: `L1440-N` / `L390-N` are the landing p
 | molecule | MetaStrip | MIT · by · View source · six agents · frameworks; wraps to 3 rows at 390 | L1440-1, L390-1 |
 | molecule | StatGrid | 4+1 columns at 1440, 3+2 at 390 | L1440-4, L390-4 |
 | molecule | FaqItem | closed and open | L1440-6, CS |
-| molecule | TabNote | per-tab note and warning (Codex duplicate installs, Cursor symlinks) | none — must be drawn (CHG-004) |
+| molecule | TabNote | per-tab note and warning (Codex duplicate installs, Cursor symlinks) | export markup Landing:369-370; open with #install-codex, #install-cursor (manifest ui_states.install_tabs) |
 | molecule | TouchList | "what it touches" column (reads / writes / runs) | L1440-6 |
 | molecule | ScanBox | dashed third-party scan box | L1440-6 |
 | molecule | FigureCaption | "Fig. N" caption line | L1440-1/5 |
 | molecule | ChangelogMini | the assembled Changelog page in Grow it | L1440-4 |
 | molecule | DesignMdCard | the generated DESIGN.md card | L1440-5 |
+| molecule | SectionStrip | mobile slug-line section nav under the header (manifest ui_states.mobile_header) | designed in the manifest |
+| molecule | CopyNextStep | the 'Next: … /pixel-perfect:init' line shown after copying (manifest ui_states.copy) | designed in the manifest |
 
 ## Organisms
 
 | Layer | Name | Variants and states | Seen in |
 |---|---|---|---|
-| organism | SiteHeader | sticky; nav hidden at ≤720 — mobile menu to be drawn (CHG-004) | L1440-1, L390-1 |
+| organism | SiteHeader | sticky; at ≤720 the logo, an Install link, and an icon-only toggle (manifest ui_states.mobile_header) | L1440-1, L390-1 |
 | organism | Hero | slug line, headline (primary / alternate), lede, install stack, meta strip, slider + Fig. 1 | L1440-1, L390-1 |
 | organism | ProofSlider | design frame vs built component; split 0–100 | L1440-1, L390-1, SP |
 | organism | LayerStack | Fig. 1: flat → tilted → separated; hidden at ≤720 | L1440-1, D1440-1, U1, U2 |

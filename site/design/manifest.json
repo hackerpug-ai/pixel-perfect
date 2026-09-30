@@ -254,7 +254,8 @@
         "code-control-border": "#3A4048",
         "code-key": "#7CCFF2",
         "code-value": "#FFE27A",
-        "code-success": "#8EE3B0"
+        "code-success": "#8EE3B0",
+        "code-focus": "#FF7AB9"
       },
       "drift": {
         "value": "#8A8F96",
@@ -331,6 +332,88 @@
     "storybook": "A toolbar global sets data-theme on the preview root; goldens are captured in both themes.",
     "design_note": "The export keeps data-theme on an inner [data-pp-root] div with a light body behind it; the build moves it to <html> so the whole page switches."
   },
+  "ui_states": {
+    "source": "Designed 2026-09-29 with the frontend-design skill, in place of redrawing in Claude Design. Extends ../design/pixel-perfect Landing.dc.html: states the export already defines point at its lines; states it never defined are designed here.",
+    "principle": "States reuse the page's print devices. Registration (alignment) marks focus, magenta-ink is the only action colour, mono labels carry status, and no state depends on motion or on colour alone.",
+    "contrast": {
+      "method": "WCAG 2.2 relative luminance, computed 2026-09-29. Focus indicators need 3:1 against the surface around them (1.4.11); text needs 4.5:1.",
+      "focus_on_paper": "light 6.08, dark 7.98",
+      "focus_on_sheet": "light 6.48, dark 7.48",
+      "focus_on_code_panel": "#FF7AB9 on code-bg 7.48 (light-theme magenta-ink would be 2.68, so code panels use code-focus)",
+      "hover_primary_text": "paper on magenta-ink: light 6.08, dark 7.98",
+      "muted_text_on_paper": "light 6.83, dark 8.40"
+    },
+    "focus": {
+      "status": "designed here (the export has no focus styles)",
+      "applies_to": "every link, button, tab, FAQ summary, the theme toggle, the slider, and the focusable tab panel",
+      "style": "Keyboard focus only (:focus-visible). A 2px solid magenta-ink outline 3px outside the element, square to its corners. Block controls (buttons, tabs, toggle, FAQ summary) also cast a flat cyan plate 3px down-left (box-shadow -3px 3px 0 0 cyan), so a focused control reads as two plates slightly out of register: the plate being checked. Inline text links get the outline only. On code panels the outline uses code-focus and there is no cyan plate, because cyan is a syntax colour there.",
+      "tailwind": "focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-magenta-ink focus-visible:shadow-[-3px_3px_0_0_var(--cyan)]; on code panels focus-visible:outline-code-focus focus-visible:shadow-none",
+      "motion": "Appears instantly; never transitioned."
+    },
+    "hover": {
+      "status": "designed here (the export only turns links ink)",
+      "rules": [
+        "Primary button (ink): background becomes magenta-ink, text paper. The action colour appears on intent.",
+        "Secondary button (outline): border goes from line to ink; background sheet.",
+        "Copy button on a code panel: border goes from code-control-border to code-fg.",
+        "Nav link: a 2px magenta underline 6px below the text, like a registration rule; text stays ink.",
+        "Text link: keeps the export's rule (magenta to ink).",
+        "Tab: text goes from muted to ink.",
+        "FAQ summary: the + glyph turns magenta-ink.",
+        "Theme toggle: border goes from line to ink."
+      ],
+      "devices": "Hover styles apply only where hover exists (Tailwind v4's hover variant already wraps @media (hover: hover)), so touch devices never get stuck hover states."
+    },
+    "install_tabs": {
+      "status": "in the export: tab data at Landing:420-427, panel template at Landing:362-370",
+      "panels": "Each tab shows its numbered command rows. A note (Cursor: 'Then reload the window.', Grok: enable it in /plugins) is a plain 15px line. A warning (Codex duplicate installs, Cursor symlinks) is a 14px line led by a mono magenta-ink 'Note' label. OpenCode and Pi have neither; Claude Code has neither.",
+      "see_it": "Open the export with #install-codex, #install-cursor, #install-grok, #install-opencode, or #install-pi.",
+      "keyboard": "In the export: arrow keys, Home, and End move between tabs; the selected tab is the only one in the tab order; the hash updates so a tab can be linked."
+    },
+    "faq_open": {
+      "status": "designed here (the export's + never changes)",
+      "style": "Open: the mono glyph changes from + to a minus sign (U+2212) and from muted to magenta-ink. The answer appears instantly under the question (native details); several can be open.",
+      "tailwind": "details.group; + visible with group-open:hidden, minus hidden until group-open:inline, colour group-open:text-magenta-ink",
+      "a11y": "Native details/summary announces expanded and collapsed; the glyph is aria-hidden."
+    },
+    "copy": {
+      "status": "labels in the export (Landing:474); layout and announcement designed here",
+      "labels": "Copy, then 'Copied ✓' for 2 seconds. If the clipboard is blocked, the command text is selected instead and the label reads 'Selected'.",
+      "layout": "The button keeps the width of its widest label (min-width 9ch) so nothing shifts when the label changes.",
+      "announce": "A visually hidden aria-live=polite region per copy block says 'Copied to clipboard' or 'Command selected. Press Command-C or Control-C to copy.'",
+      "next_step": "After the hero's paste line or an Install command is copied, a mono line appears under it for the rest of the visit: 'Next: open a project that has your design and run /pixel-perfect:init' (strategy §9.2). It appears without animation."
+    },
+    "slider": {
+      "status": "behaviour in the export (Landing:123-147); ends, focus, and labels designed here",
+      "ends": "At 0 the built component fills the pane; at 100 the design frame fills it. The divider sits on the edge, and the handle is clamped so its whole 28px circle stays inside the pane.",
+      "keyboard": "Native range keys: arrows move 1, Page Up and Page Down move 10, Home and End jump to 0 and 100.",
+      "focus": "The range input is invisible, so its keyboard focus is drawn on the handle (peer-focus-visible), using the focus style above.",
+      "a11y": "aria-valuetext reads '{split}% design frame, {100 - split}% built component'.",
+      "touch": "The pane sets touch-action: pan-y, so a vertical swipe still scrolls the page on phones."
+    },
+    "theme_toggle": {
+      "status": "label in the export (Landing:55, 495); names and mobile form designed here",
+      "label": "The button names the theme it switches to: 'Dark' with a dark dot in the light theme, 'Light' with a light dot in the dark theme (the dot is the current ink).",
+      "a11y": "aria-label 'Switch to dark theme' or 'Switch to light theme'.",
+      "mobile": "At 720px and below the button is the dot alone in a 40x40 square; the word is visually hidden."
+    },
+    "mobile_header": {
+      "status": "designed here (at 720px and below the export hides the nav with no replacement)",
+      "row_1": "Sticky, 60px: the logo lockup (mark A and wordmark), then 'Install' as a mono 13px magenta-ink link to #install, then the icon-only theme toggle. Width at 390px: estimated at about 330px of the 358px available; confirm when the header is built.",
+      "row_2": "Not sticky, directly under the header at the top of the page: a section strip styled as a printer's slug line. Mono caps 11px, letter-spacing .06em, muted, items 'WHY · BUILD IT · GROW IT · INSTALL · FAQ · GITHUB ↗'. It scrolls sideways if it overflows (no visible scrollbar), each link has a 44px tall touch target, and a 1px line sits under it.",
+      "why": "It reuses the slug-line device the page already has and needs no drawer, no script, and no focus trap. The Install link stays in the sticky row because installing is the page's primary action."
+    },
+    "social_card": {
+      "status": "layout from ../design/Social preview.dc.html; lockup changed by the logo decision (strategy D5)",
+      "build": "The SocialCard organism is 1200x630, light theme only, and is rendered to og.png at build.",
+      "change": "The crosshair and mono 'pixel-perfect' lockup become the site's Logo atom: mark A (stacked plates) with the Anybody wordmark, as in the header. Everything else keeps the export's layout: crop marks, the plate-misregistered headline, the agent slug line, and the proof slider.",
+      "content": "The slider pair is the placeholder $24 card until strategy T21 supplies a real pair (see the brief's placeholder register)."
+    },
+    "component_sheet": {
+      "status": "kept as a reference, not rebuilt",
+      "note": "The sheet's 'Registration target (mark)' crosshair is the RegistrationTarget atom, a print device, not the logo. The logo is the P mark family (strategy D5), shown in Storybook's Brand story."
+    }
+  },
   "deploy": {
     "adapter": "@sveltejs/adapter-static",
     "target": "github-pages",
@@ -361,8 +444,8 @@
       },
       {
         "to": "og.png (1200x630)",
-        "from": "../design/Social preview.dc.html, rendered to PNG",
-        "role": "social image (mark A); re-export the social preview first, it still shows the retired crosshair (red-hat CHG-004)"
+        "from": "the built SocialCard component (ui_states.social_card), rendered to PNG",
+        "role": "social image with mark A"
       }
     ],
     "static_note": "Strip the C2PA <metadata> block from each SVG on copy (about 7.7 KB of each 8.7 KB file); the originals in design/logo keep their provenance."

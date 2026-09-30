@@ -77,3 +77,5 @@ The landing export contains placeholder content. Build renders each item either 
 | Demo video poster "60–90 s" | 266 | T8 — the recorded demo and its poster frame |
 | `$24` Team plan card in the proof slider, Why section, and social image (the slider compares identical markup) | 123-138 | T21 — real frame-to-component pairs from this build |
 | "V9 · 2026-09-29", "version 9", `v9.1` pill | 66, 398, 301 | The release version at build time |
+
+UI states (2026-09-29): the states the export never drew are designed in `manifest.json` under `ui_states` (frontend-design skill, no Claude Design redraw): focus, hover, FAQ open, copy feedback, slider ends, the mobile header, and the social card lockup.
