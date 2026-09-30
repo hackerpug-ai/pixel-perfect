@@ -96,6 +96,8 @@ export async function validatePackage(root = REPOSITORY_ROOT) {
     "scripts/chrome.mjs",
     "docs/INVENTORY-CONTRACT.md",
     "docs/inventory.schema.json",
+    "docs/frontend-design/FRONTEND-DESIGN.md",
+    "docs/frontend-design/LICENSE.txt",
     "skills/process-context/SKILL.md",
     "workflows/RUNTIME-CONTRACT.md",
   ];
