@@ -1,0 +1,74 @@
+{
+  "version": "6.0.0",
+  "created": "2026-09-29",
+  "goal": "The pixel-perfect landing page — say what it is, show it working, and get visitors installed — built with pixel-perfect so the site, its Storybook, and its inventory are the proof.",
+  "vibe": "Press proof — a printer's proof sheet. The four process inks (cyan, magenta, yellow, black) on cool neutral paper; overlaps multiply in light mode and screen in dark mode; magenta is the only accent for action and emphasis, and yellow is never text. Anybody for display, Libre Franklin for body, IBM Plex Mono for code and labels. Crop marks, registration targets, a color control strip, slug lines, and numbered proofreader marks, each meaning something. Both themes designed deliberately; WCAG 2.2 AA; CSS-only motion that honors reduced motion.",
+  "spec": "../.spec/prds/landing/strategy.md",
+  "references": [
+    "../design/pixel-perfect Landing.dc.html",
+    "../design/Component sheet.dc.html",
+    "../design/Social preview.dc.html",
+    "../design/Logo.dc.html"
+  ],
+  "gates": {
+    "discover": "passed",
+    "target": "passed",
+    "equip": "passed"
+  },
+  "platforms": {
+    "web-desktop": {
+      "tools": {
+        "framework": "sveltekit",
+        "style": "tailwind",
+        "components": "none",
+        "icons": "@lucide/svelte",
+        "sandbox": "storybook",
+        "style_contract": "tailwind-sveltekit",
+        "style_contract_source": "researched",
+        "style_contract_enforcement": "hard-fail",
+        "style_contract_overrides": {},
+        "component_contract_source": "none"
+      },
+      "phase": "equip",
+      "gates": {
+        "scaffold": "pending",
+        "plan": "pending",
+        "atoms": "pending",
+        "molecules": "pending",
+        "compose": "pending"
+      },
+      "screens": [
+        { "name": "Home", "route": "/", "states": ["default"], "status": "pending" }
+      ],
+      "pinned": [],
+      "deprecations": {}
+    },
+    "web-mobile": {
+      "tools": {
+        "framework": "sveltekit",
+        "style": "tailwind",
+        "components": "none",
+        "icons": "@lucide/svelte",
+        "sandbox": "storybook",
+        "style_contract": "tailwind-sveltekit",
+        "style_contract_source": "researched",
+        "style_contract_enforcement": "hard-fail",
+        "style_contract_overrides": {},
+        "component_contract_source": "none"
+      },
+      "phase": "equip",
+      "gates": {
+        "scaffold": "pending",
+        "plan": "pending",
+        "atoms": "pending",
+        "molecules": "pending",
+        "compose": "pending"
+      },
+      "screens": [
+        { "name": "Home", "route": "/", "states": ["default"], "status": "pending" }
+      ],
+      "pinned": [],
+      "deprecations": {}
+    }
+  }
+}
