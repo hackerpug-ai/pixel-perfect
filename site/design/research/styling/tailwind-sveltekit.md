@@ -13,7 +13,7 @@ lastUpdated: 2026-09-29
 
 # Tailwind CSS v4 (SvelteKit) — Styling Contract
 
-All styling is expressed as **Tailwind utility classes on the Svelte `class` attribute** (string, array, or object form, which Svelte 5.16+ resolves with clsx) or the `class:` directive. `src/app.css` is the only stylesheet: it imports Tailwind, declares design tokens in `@theme`, and holds base element rules. Components carry no `<style>` blocks, no custom CSS classes, and no static inline styles. The single inline-style exception is setting a CSS custom property from a dynamic value with `style:--name={value}`, then consuming it from a utility.
+All styling is expressed as **Tailwind utility classes on the Svelte `class` attribute** (string, array, or object form, which Svelte 5.16+ resolves with clsx) or the `class:` directive. `src/app.css` is the only stylesheet: it imports Tailwind, declares design tokens in `@theme`, and holds base element rules. Components carry no `<style>` blocks, no custom CSS classes, and no static inline styles. The site's real theme is `src/app.css` (see manifest `scaffold.token_names`). The single inline-style exception is setting a CSS custom property from a dynamic value with `style:--name={value}`, then consuming it from a utility.
 
 ## Sources
 
@@ -35,9 +35,9 @@ Every visual property is a Tailwind utility on the element's `class`. Conditiona
 
 ```svelte
 <!-- ✓ correct -->
-<button class="bg-magenta text-paper px-4 py-2 font-mono text-sm hover:bg-magenta/90">Copy</button>
+<button class="bg-ink text-paper px-4 py-2 font-mono text-small hover:bg-accent-text">Copy</button>
 
-<a class={["inline-block text-ink", active && "ring-2 ring-magenta", "mix-blend-multiply dark:mix-blend-screen"]}>…</a>
+<a class={["inline-block text-ink", active && "ring-2 ring-focus", "mix-blend-multiply dark:mix-blend-screen"]}>…</a>
 
 <!-- ✓ the one inline-style form: a dynamic custom property consumed by a utility -->
 <div style:--reveal="{pos}%" class="[clip-path:inset(0_calc(100%-var(--reveal))_0_0)]">…</div>
@@ -72,13 +72,13 @@ Theme values are CSS custom properties that switch per theme; `@theme inline` ma
 @import "tailwindcss";
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
-:root { --paper: oklch(0.97 0.005 240); --ink: oklch(0.18 0.01 260); --magenta: oklch(0.6 0.25 350); }
-[data-theme=dark] { --paper: oklch(0.16 0.01 260); --ink: oklch(0.95 0.005 240); }
+:root { color-scheme: light dark; --paper: light-dark(#f3f4f1, #0d0f12); --ink: light-dark(#111316, #ecede8); --accent: light-dark(#e0007a, #ff3d9e); }
+:root[data-theme=dark] { color-scheme: dark; }
 
 @theme inline {
   --color-paper: var(--paper);
   --color-ink: var(--ink);
-  --color-magenta: var(--magenta);
+  --color-accent: var(--accent);
   --font-display: "Anybody", sans-serif;
   --animate-register: register 700ms ease-out both;
   @keyframes register { from { translate: 6px -4px; } to { translate: 0 0; } }
@@ -102,7 +102,7 @@ Theme values are CSS custom properties that switch per theme; `@theme inline` ma
 ## Verify checklist (component level)
 
 - The component uses Tailwind utilities on `class` (or `class:`), with no `<style>` block.
-- Colors, fonts, and motion come from token utilities (`bg-paper`, `text-magenta`, `font-display`, `animate-register`), not arbitrary literals.
+- Colors, fonts, and motion come from token utilities (`bg-paper`, `text-accent-text`, `font-display`, `animate-register`), not arbitrary literals.
 - Spacing uses the Tailwind scale; arbitrary values are rare and justified.
 - Both widths are handled with responsive variants (`md:`, `lg:`), and both themes with `dark:` where the theme variables do not already switch.
 - Blend modes follow the medium (`mix-blend-multiply` light, `dark:mix-blend-screen` dark), and motion is gated with `motion-safe:` / `motion-reduce:`.

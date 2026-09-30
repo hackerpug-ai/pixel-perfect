@@ -327,7 +327,7 @@
   "theme": {
     "default": "system: follows prefers-color-scheme, light when unknown",
     "toggle": "The header button switches light/dark and saves the choice in localStorage.",
-    "attribute": "data-theme on <html>, set by a small inline script in src/app.html before first paint, so a prerendered page never flashes the wrong theme. Without JavaScript, CSS follows prefers-color-scheme via :root:not([data-theme=light]) inside the dark media query.",
+    "attribute": "data-theme on <html>, set by a small inline script in src/app.html before first paint only when the visitor has saved a choice. Without one, color-scheme: light dark follows prefers-color-scheme, including when JavaScript is off.",
     "tailwind": "@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *)); the colour tokens switch under [data-theme=dark].",
     "storybook": "A toolbar global sets data-theme on the preview root; goldens are captured in both themes.",
     "design_note": "The export keeps data-theme on an inner [data-pp-root] div with a light body behind it; the build moves it to <html> so the whole page switches."
@@ -469,9 +469,9 @@
         "style_contract_overrides": {},
         "component_contract_source": "none"
       },
-      "phase": "equip",
+      "phase": "scaffold",
       "gates": {
-        "scaffold": "pending",
+        "scaffold": "passed",
         "plan": "pending",
         "atoms": "pending",
         "molecules": "pending",
@@ -498,6 +498,12 @@
           "states_note": "One route. The install tabs deep-link with #install-{id} on the same page (same data, instant toggle, shared layout), so they are states, not routes. dark renders Home in the dark theme; headline-alternate is the strategy D13 headline test."
         }
       ],
+      "capture": {
+        "command": "npm run sandbox:capture -- --width 1440",
+        "medium": "dom+png",
+        "goldens": "design/goldens/web-desktop",
+        "captured_at": "2026-09-30"
+      },
       "pinned": [],
       "deprecations": {}
     },
@@ -514,9 +520,9 @@
         "style_contract_overrides": {},
         "component_contract_source": "none"
       },
-      "phase": "equip",
+      "phase": "scaffold",
       "gates": {
-        "scaffold": "pending",
+        "scaffold": "passed",
         "plan": "pending",
         "atoms": "pending",
         "molecules": "pending",
@@ -543,8 +549,33 @@
           "states_note": "One route. The install tabs deep-link with #install-{id} on the same page (same data, instant toggle, shared layout), so they are states, not routes. dark renders Home in the dark theme; headline-alternate is the strategy D13 headline test."
         }
       ],
+      "capture": {
+        "command": "npm run sandbox:capture -- --width 390",
+        "medium": "dom+png",
+        "goldens": "design/goldens/web-mobile",
+        "captured_at": "2026-09-30"
+      },
       "pinned": [],
       "deprecations": {}
     }
+  },
+  "scaffold": {
+    "date": "2026-09-30",
+    "shared": "One SvelteKit app in site/ serves web-desktop and web-mobile; both scaffold gates passed from the same run. Goldens are captured per platform at 1440px and 390px.",
+    "versions": {
+      "svelte": "5.57",
+      "@sveltejs/kit": "2.70",
+      "vite": "8.3",
+      "tailwindcss": "4.3",
+      "storybook": "10.6",
+      "@storybook/addon-svelte-csf": "5.1",
+      "playwright-core": "1.63 (drives the installed Chrome for capture)"
+    },
+    "theme": "src/app.css — the only stylesheet (styling contract). Colours are written once with light-dark(); color-scheme follows the system until the toggle sets data-theme on <html> (src/app.html applies a saved choice before first paint). A block-form dark variant covers both the toggle and the no-JS system case. Tailwind's default palette is removed (--color-*: initial).",
+    "token_names": "Decided at scaffold (semantic-colour check): surfaces keep their print names (paper, sheet, ink, muted, line, stripe); the four inks are plates (plate-cyan, plate-cyan-ink, plate-magenta, plate-magenta-ink, plate-yellow) for plate effects and the colour strip only; interaction uses roles: accent (plate-magenta), accent-text (plate-magenta-ink), on-accent (was mark-fg), focus (plate-magenta-ink). Code-panel, drift, and shadow tokens keep their names.",
+    "fonts": "Self-hosted Fontsource packages imported in app.css: @fontsource-variable/anybody (wdth.css, width 50-150%), @fontsource-variable/libre-franklin, @fontsource/ibm-plex-mono 400 and 500.",
+    "sandbox": "npm run sandbox (Storybook on :6006). Stories: Design System/Colors, Typography, Spacing; Components/HelloWorld (scaffold reference, not part of the landing).",
+    "capture": "npm run sandbox:capture builds Storybook, renders every story in light and dark, and writes normalized DOM with each element's resolved colours and type (the golden) plus a PNG (review). Proven stable run to run; a one-token change drifts exactly the stories that use it.",
+    "color_gate": "passed 2026-09-30 (user checked Design System/Colors in both themes)"
   }
 }

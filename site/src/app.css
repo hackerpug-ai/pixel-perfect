@@ -1,0 +1,139 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/anybody/wdth.css';
+@import '@fontsource-variable/libre-franklin/wght.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+
+/*
+ * Press proof theme. Values come from design/manifest.json → tokens, which were checked
+ * against the landing export (Landing.dc.html lines 23-24). Each colour is written once for
+ * both themes with light-dark(): with no choice made it follows the system; the toggle sets
+ * data-theme on <html>, which pins color-scheme.
+ */
+
+/* dark: an explicit choice (data-theme), or the system when no choice was made (no JS yet). */
+@custom-variant dark {
+	&:where([data-theme='dark'], [data-theme='dark'] *) {
+		@slot;
+	}
+	@media (prefers-color-scheme: dark) {
+		&:where(:root:not([data-theme]), :root:not([data-theme]) *) {
+			@slot;
+		}
+	}
+}
+
+:root {
+	color-scheme: light dark;
+
+	/* Print surfaces — role names from the proof-sheet metaphor */
+	--paper: light-dark(#f3f4f1, #0d0f12);
+	--sheet: light-dark(#fbfbf9, #14171b);
+	--ink: light-dark(#111316, #ecede8);
+	--muted: light-dark(#4f555c, #a7acb2);
+	--line: light-dark(#d3d6d0, #2a2f36);
+	--stripe: light-dark(rgba(17, 19, 22, 0.07), rgba(236, 237, 232, 0.08));
+
+	/* The four process inks as plates (plate effects and the colour strip only) */
+	--plate-cyan: light-dark(#0096d1, #29c1f0);
+	--plate-cyan-ink: light-dark(#006c99, #6ad3f6);
+	--plate-magenta: light-dark(#e0007a, #ff3d9e);
+	--plate-magenta-ink: light-dark(#b5005f, #ff7ab9);
+	--plate-yellow: light-dark(#ffd900, #ffe14a);
+
+	/* Roles over the inks: what interaction uses */
+	--accent: var(--plate-magenta); /* graphic accent: divider, handle, pills */
+	--accent-text: var(--plate-magenta-ink); /* text-safe accent: links, labels, badges */
+	--on-accent: light-dark(#ffffff, #0d0f12); /* text on accent fills */
+	--focus: var(--plate-magenta-ink); /* focus ring on paper and sheet (6.08 / 7.98) */
+
+	/* Code and terminal panels: dark in both themes */
+	--code-bg: #14171b;
+	--code-fg: #e6e7e2;
+	--code-comment: #7d838b;
+	--code-rule: #22262c;
+	--code-control-border: #3a4048;
+	--code-key: #7ccff2;
+	--code-value: #ffe27a;
+	--code-success: #8ee3b0;
+	--code-focus: #ff7ab9; /* focus ring on code panels (7.48) */
+
+	/* The drifted card's deliberate off-system gray (Why section only) */
+	--drift: #8a8f96;
+	--shadow-doc-color: rgba(0, 0, 0, 0.35);
+}
+
+:root[data-theme='light'] {
+	color-scheme: light;
+}
+:root[data-theme='dark'] {
+	color-scheme: dark;
+}
+
+@theme inline {
+	/* Only the design's colours exist; Tailwind's default palette is removed. */
+	--color-*: initial;
+	--color-paper: var(--paper);
+	--color-sheet: var(--sheet);
+	--color-ink: var(--ink);
+	--color-muted: var(--muted);
+	--color-line: var(--line);
+	--color-stripe: var(--stripe);
+	--color-plate-cyan: var(--plate-cyan);
+	--color-plate-cyan-ink: var(--plate-cyan-ink);
+	--color-plate-magenta: var(--plate-magenta);
+	--color-plate-magenta-ink: var(--plate-magenta-ink);
+	--color-plate-yellow: var(--plate-yellow);
+	--color-accent: var(--accent);
+	--color-accent-text: var(--accent-text);
+	--color-on-accent: var(--on-accent);
+	--color-focus: var(--focus);
+	--color-code-bg: var(--code-bg);
+	--color-code-fg: var(--code-fg);
+	--color-code-comment: var(--code-comment);
+	--color-code-rule: var(--code-rule);
+	--color-code-control-border: var(--code-control-border);
+	--color-code-key: var(--code-key);
+	--color-code-value: var(--code-value);
+	--color-code-success: var(--code-success);
+	--color-code-focus: var(--code-focus);
+	--color-drift: var(--drift);
+	--color-transparent: transparent;
+	--color-current: currentColor;
+
+	--shadow-doc: 0 1px 0 var(--line), 0 12px 32px -20px var(--shadow-doc-color); /* Landing's document card */
+}
+
+@theme {
+	--font-display: 'Anybody Variable', sans-serif;
+	--font-sans: 'Libre Franklin Variable', sans-serif;
+	--font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+	/* Type scale by role (sizes the landing uses) */
+	--text-label: 11px; /* mono slug lines and plate labels */
+	--text-caption: 12px;
+	--text-code: 13px;
+	--text-code--line-height: 1.6;
+	--text-small: 14px;
+	--text-ui: 15px;
+	--text-body: 17px;
+	--text-body--line-height: 1.55;
+	--text-display-sm: clamp(24px, 2.6vw, 34px);
+	--text-display-md: clamp(30px, 3.4vw, 46px);
+	--text-display-lg: clamp(32px, 4.2vw, 60px);
+	--text-display-alt: clamp(34px, 4.6vw, 66px);
+	--text-display-xl: clamp(34px, 4.9vw, 70px);
+
+	--radius-xs: 2px;
+	--radius-sm: 3px;
+	--radius-md: 4px;
+
+	--container-page: 1200px;
+	--breakpoint-md: 720px; /* the design's layout switch, not Tailwind's 768px */
+}
+
+@layer base {
+	body {
+		@apply bg-paper font-sans text-body text-ink antialiased;
+	}
+}
