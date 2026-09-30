@@ -500,7 +500,7 @@
         "style_contract_overrides": {},
         "component_contract_source": "none"
       },
-      "phase": "molecules",
+      "phase": "organisms",
       "gates": {
         "scaffold": "passed",
         "plan": "passed",
@@ -841,6 +841,155 @@
           "file": "src/lib/components/molecules/ProofFrame.svelte",
           "story": "src/lib/components/molecules/ProofFrame.stories.svelte",
           "status": "verified",
+          "state": null
+        }
+      ],
+      "organisms": [
+        {
+          "name": "SiteHeader",
+          "file": "src/lib/components/organisms/SiteHeader.svelte",
+          "story": "src/lib/components/organisms/SiteHeader.stories.svelte",
+          "status": "pending",
+          "state": {
+            "declared": [
+              {
+                "name": "theme",
+                "type": "'light' | 'dark'",
+                "initial": "the page's current theme"
+              }
+            ],
+            "scenarios": [
+              "light",
+              "dark",
+              "phone"
+            ]
+          }
+        },
+        {
+          "name": "Hero",
+          "file": "src/lib/components/organisms/Hero.svelte",
+          "story": "src/lib/components/organisms/Hero.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "ProofSlider",
+          "file": "src/lib/components/organisms/ProofSlider.svelte",
+          "story": "src/lib/components/organisms/ProofSlider.stories.svelte",
+          "status": "pending",
+          "state": {
+            "declared": [
+              {
+                "name": "split",
+                "type": "number (0-100)",
+                "initial": "50"
+              }
+            ],
+            "scenarios": [
+              "split-50",
+              "split-0",
+              "split-100"
+            ]
+          }
+        },
+        {
+          "name": "LayerStack",
+          "file": "src/lib/components/organisms/LayerStack.svelte",
+          "story": "src/lib/components/organisms/LayerStack.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "DriftComparison",
+          "file": "src/lib/components/organisms/DriftComparison.svelte",
+          "story": "src/lib/components/organisms/DriftComparison.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "PrinciplesGrid",
+          "file": "src/lib/components/organisms/PrinciplesGrid.svelte",
+          "story": "src/lib/components/organisms/PrinciplesGrid.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "StepsTimeline",
+          "file": "src/lib/components/organisms/StepsTimeline.svelte",
+          "story": "src/lib/components/organisms/StepsTimeline.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "DemoStats",
+          "file": "src/lib/components/organisms/DemoStats.svelte",
+          "story": "src/lib/components/organisms/DemoStats.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "EvolveThread",
+          "file": "src/lib/components/organisms/EvolveThread.svelte",
+          "story": "src/lib/components/organisms/EvolveThread.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "DesignMdPromo",
+          "file": "src/lib/components/organisms/DesignMdPromo.svelte",
+          "story": "src/lib/components/organisms/DesignMdPromo.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "InstallSection",
+          "file": "src/lib/components/organisms/InstallSection.svelte",
+          "story": "src/lib/components/organisms/InstallSection.stories.svelte",
+          "status": "pending",
+          "state": {
+            "declared": [
+              {
+                "name": "tab",
+                "type": "'claude' | 'codex' | 'cursor' | 'grok' | 'opencode' | 'pi'",
+                "initial": "from #install-{id}, else the remembered tab, else 'claude'"
+              }
+            ],
+            "scenarios": [
+              "claude",
+              "codex",
+              "cursor",
+              "grok",
+              "opencode",
+              "pi"
+            ]
+          }
+        },
+        {
+          "name": "FaqList",
+          "file": "src/lib/components/organisms/FaqList.svelte",
+          "story": "src/lib/components/organisms/FaqList.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "CloseCta",
+          "file": "src/lib/components/organisms/CloseCta.svelte",
+          "story": "src/lib/components/organisms/CloseCta.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "SiteFooter",
+          "file": "src/lib/components/organisms/SiteFooter.svelte",
+          "story": "src/lib/components/organisms/SiteFooter.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "SocialCard",
+          "file": "src/lib/components/organisms/SocialCard.svelte",
+          "story": "src/lib/components/organisms/SocialCard.stories.svelte",
+          "status": "pending",
           "state": null
         }
       ],
@@ -956,7 +1105,7 @@
         "style_contract_overrides": {},
         "component_contract_source": "none"
       },
-      "phase": "molecules",
+      "phase": "organisms",
       "gates": {
         "scaffold": "passed",
         "plan": "passed",
@@ -1297,6 +1446,155 @@
           "file": "src/lib/components/molecules/ProofFrame.svelte",
           "story": "src/lib/components/molecules/ProofFrame.stories.svelte",
           "status": "verified",
+          "state": null
+        }
+      ],
+      "organisms": [
+        {
+          "name": "SiteHeader",
+          "file": "src/lib/components/organisms/SiteHeader.svelte",
+          "story": "src/lib/components/organisms/SiteHeader.stories.svelte",
+          "status": "pending",
+          "state": {
+            "declared": [
+              {
+                "name": "theme",
+                "type": "'light' | 'dark'",
+                "initial": "the page's current theme"
+              }
+            ],
+            "scenarios": [
+              "light",
+              "dark",
+              "phone"
+            ]
+          }
+        },
+        {
+          "name": "Hero",
+          "file": "src/lib/components/organisms/Hero.svelte",
+          "story": "src/lib/components/organisms/Hero.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "ProofSlider",
+          "file": "src/lib/components/organisms/ProofSlider.svelte",
+          "story": "src/lib/components/organisms/ProofSlider.stories.svelte",
+          "status": "pending",
+          "state": {
+            "declared": [
+              {
+                "name": "split",
+                "type": "number (0-100)",
+                "initial": "50"
+              }
+            ],
+            "scenarios": [
+              "split-50",
+              "split-0",
+              "split-100"
+            ]
+          }
+        },
+        {
+          "name": "LayerStack",
+          "file": "src/lib/components/organisms/LayerStack.svelte",
+          "story": "src/lib/components/organisms/LayerStack.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "DriftComparison",
+          "file": "src/lib/components/organisms/DriftComparison.svelte",
+          "story": "src/lib/components/organisms/DriftComparison.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "PrinciplesGrid",
+          "file": "src/lib/components/organisms/PrinciplesGrid.svelte",
+          "story": "src/lib/components/organisms/PrinciplesGrid.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "StepsTimeline",
+          "file": "src/lib/components/organisms/StepsTimeline.svelte",
+          "story": "src/lib/components/organisms/StepsTimeline.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "DemoStats",
+          "file": "src/lib/components/organisms/DemoStats.svelte",
+          "story": "src/lib/components/organisms/DemoStats.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "EvolveThread",
+          "file": "src/lib/components/organisms/EvolveThread.svelte",
+          "story": "src/lib/components/organisms/EvolveThread.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "DesignMdPromo",
+          "file": "src/lib/components/organisms/DesignMdPromo.svelte",
+          "story": "src/lib/components/organisms/DesignMdPromo.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "InstallSection",
+          "file": "src/lib/components/organisms/InstallSection.svelte",
+          "story": "src/lib/components/organisms/InstallSection.stories.svelte",
+          "status": "pending",
+          "state": {
+            "declared": [
+              {
+                "name": "tab",
+                "type": "'claude' | 'codex' | 'cursor' | 'grok' | 'opencode' | 'pi'",
+                "initial": "from #install-{id}, else the remembered tab, else 'claude'"
+              }
+            ],
+            "scenarios": [
+              "claude",
+              "codex",
+              "cursor",
+              "grok",
+              "opencode",
+              "pi"
+            ]
+          }
+        },
+        {
+          "name": "FaqList",
+          "file": "src/lib/components/organisms/FaqList.svelte",
+          "story": "src/lib/components/organisms/FaqList.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "CloseCta",
+          "file": "src/lib/components/organisms/CloseCta.svelte",
+          "story": "src/lib/components/organisms/CloseCta.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "SiteFooter",
+          "file": "src/lib/components/organisms/SiteFooter.svelte",
+          "story": "src/lib/components/organisms/SiteFooter.stories.svelte",
+          "status": "pending",
+          "state": null
+        },
+        {
+          "name": "SocialCard",
+          "file": "src/lib/components/organisms/SocialCard.svelte",
+          "story": "src/lib/components/organisms/SocialCard.stories.svelte",
+          "status": "pending",
           "state": null
         }
       ],
