@@ -15,13 +15,17 @@
 //   3 vacuous (empty frames array)
 //
 // Usage:
-//   node verify-inventory.mjs <inventory.json> [--frames <frames.json>] [--json]
+//   node verify-inventory.mjs <inventory.json> [--frames <frames.json>] [--prior <inventory.json>] [--json]
 
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 // An undrawn reason must say why in words; "n/a" or "tbd" is not a reason.
 const MIN_UNDRAWN_REASON = 12;
+
+// own: the project's design (pixel targets). inspiration: a source the user admires — it may
+// shape components and tokens but never defines the project's screens.
+const SOURCE_ROLES = ["own", "inspiration"];
 
 // ---------------------------------------------------------------------------
 // Validators and Checks
@@ -126,6 +130,9 @@ export function validateShape(inventory) {
       }
       if (src.frames !== undefined && !Array.isArray(src.frames)) {
         errors.push(`sources[${i}].frames must be an array if present`);
+      }
+      if (src.role !== undefined && !SOURCE_ROLES.includes(src.role)) {
+        errors.push(`sources[${i}].role must be one of: ${SOURCE_ROLES.join(", ")}`);
       }
     }
   }
@@ -594,6 +601,45 @@ export function verifyInventory(inventory, options = {}) {
     }
   }
 
+  // Check N: an inspiration source never defines the project's screens. Its frames may be
+  // claimed by a component's appears_on or listed unclaimed, never by a screen state.
+  const roleByRef = new Map(inventory.sources.map((src) => [src.ref, src.role || "own"]));
+  const sourceByFrame = new Map(inventory.frames.map((f) => [f.id, f.source]));
+  for (const [i, screen] of inventory.screens.entries()) {
+    for (const [j, state] of (screen.states || []).entries()) {
+      for (const fid of state.frames || []) {
+        const ref = sourceByFrame.get(fid);
+        if (roleByRef.get(ref) === "inspiration") {
+          violations.push({
+            class: "inspiration-screen",
+            path: `screens[${i}].${screen.name}.states[${j}].${state.name}`,
+            message: `frame ${fid} comes from inspiration source ${ref}; claim it from a component's appears_on or list it unclaimed`,
+          });
+        }
+      }
+    }
+  }
+
+  // Check O (with --prior): an additive run must keep everything the prior inventory had —
+  // frames, components, screens, and screen states. Guards the persist step against data loss.
+  if (options.prior) {
+    const keys = (inv) => {
+      const out = new Set();
+      for (const f of inv.frames || []) out.add(`frames.${f.id}`);
+      for (const u of inv.unclaimed_frames || []) out.add(`frames.${u.id}`);
+      for (const layer of ["atoms", "molecules", "organisms"]) for (const c of inv[layer] || []) out.add(`${layer}.${c.name}`);
+      for (const s of inv.screens || []) {
+        out.add(`screens.${s.name}`);
+        for (const st of s.states || []) out.add(`screens.${s.name}.states.${st.name}`);
+      }
+      return out;
+    };
+    const now = keys(inventory);
+    for (const key of keys(options.prior)) {
+      if (!now.has(key)) violations.push({ class: "prior-dropped", path: key, message: `${key} is in the prior inventory but missing here` });
+    }
+  }
+
   // Check H: Duplicate names (case-insensitive)
   const namesCounted = new Map();
   for (const atom of inventory.atoms) {
@@ -686,7 +732,7 @@ export function verifyInventory(inventory, options = {}) {
 // ---------------------------------------------------------------------------
 
 function usage() {
-  process.stderr.write("Usage: verify-inventory.mjs <inventory.json> [--frames <frames.json>] [--json]\n" +
+  process.stderr.write("Usage: verify-inventory.mjs <inventory.json> [--frames <frames.json>] [--prior <inventory.json>] [--json]\n" +
     "  Exit: 0 pass · 1 violations · 2 config/usage/shape · 3 vacuous (empty frames)\n");
 }
 
@@ -695,6 +741,7 @@ function parseArgs(argv) {
 
   let inventoryPath = null;
   let framesPath = null;
+  let priorPath = null;
   let jsonOnly = false;
 
   for (let i = 0; i < argv.length; i++) {
@@ -707,6 +754,9 @@ function parseArgs(argv) {
     } else if (arg === "--frames") {
       framesPath = argv[++i];
       if (!framesPath) return { error: "--frames requires a path" };
+    } else if (arg === "--prior") {
+      priorPath = argv[++i];
+      if (!priorPath) return { error: "--prior requires a path" };
     } else if (!inventoryPath) {
       inventoryPath = arg;
     } else {
@@ -716,7 +766,7 @@ function parseArgs(argv) {
 
   if (!inventoryPath) return { error: "No inventory file specified" };
 
-  return { inventoryPath, framesPath, jsonOnly };
+  return { inventoryPath, framesPath, priorPath, jsonOnly };
 }
 
 export function main(argv) {
@@ -733,7 +783,7 @@ export function main(argv) {
     return 2;
   }
 
-  const { inventoryPath, framesPath, jsonOnly } = parsed;
+  const { inventoryPath, framesPath, priorPath, jsonOnly } = parsed;
 
   // Read inventory
   let inventory;
@@ -785,8 +835,23 @@ export function main(argv) {
     }
   }
 
+  // Read the prior inventory if provided
+  let priorData = null;
+  if (priorPath) {
+    try {
+      if (!existsSync(priorPath)) throw new Error("File not found");
+      priorData = JSON.parse(readFileSync(priorPath, "utf8"));
+    } catch (error) {
+      if (!jsonOnly) process.stderr.write(`CONFIG ERROR: cannot read prior inventory: ${error.message}\n`);
+      return 2;
+    }
+  }
+
   // Verify
-  const result = verifyInventory(inventory, framesData ? { frames: framesData } : {});
+  const result = verifyInventory(inventory, {
+    ...(framesData ? { frames: framesData } : {}),
+    ...(priorData ? { prior: priorData } : {}),
+  });
 
   // Output
   if (jsonOnly) {

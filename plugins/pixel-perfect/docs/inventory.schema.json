@@ -23,7 +23,8 @@
         "required": ["ref", "kind", "hash"],
         "additionalProperties": false,
         "properties": {
-          "ref": { "type": "string", "description": "Path or URL exactly as listed in manifest.references." },
+          "ref": { "type": "string", "description": "Path or URL exactly as listed in manifest.references (own) or in the assimilation receipt (inspiration)." },
+          "role": { "enum": ["own", "inspiration"], "default": "own", "description": "own: the project's design, whose frames are pixel targets. inspiration: a source the user admires; it may shape components and tokens but never defines the project's screens (verify-inventory Check N)." },
           "kind": { "enum": ["html-deck", "url", "image", "wireframes", "code"] },
           "hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
           "slug": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },

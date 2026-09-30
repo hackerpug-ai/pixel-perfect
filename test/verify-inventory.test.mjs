@@ -359,3 +359,77 @@ test("short undrawn reason rejected", () => {
   assert.equal(result.exit, 1, "Should fail when undrawn reason is too short");
   assert.ok(result.violations.some((v) => v.class === "short-undrawn-reason"), "Should have short-undrawn-reason violation");
 });
+
+// --- Provenance for assimilate: sources[].role, Check N, --prior ---
+
+test("sources[].role accepts own and inspiration", () => {
+  const inv = loadFixture("valid");
+  inv.sources[0].role = "own";
+  inv.sources[1].role = "inspiration";
+  assert.equal(validateShape(inv).valid, true, validateShape(inv).errors?.join("\n"));
+});
+
+test("an unknown sources[].role is a shape error (CLI exit 2)", () => {
+  const inv = loadFixture("valid");
+  inv.sources[1].role = "admired";
+  const shape = validateShape(inv);
+  assert.equal(shape.valid, false);
+  assert.match(shape.errors.join("\n"), /sources\[1\]\.role must be one of: own, inspiration/);
+  const tmpDir = mkdtempSync(path.join(tmpdir(), "pp-inv-role-"));
+  const invPath = path.join(tmpDir, "inventory.json");
+  writeFileSync(invPath, JSON.stringify(inv), "utf8");
+  assert.equal(runCli([invPath]).code, 2);
+});
+
+test("Check N: a screen state may not claim a frame from an inspiration source", () => {
+  const inv = loadFixture("valid");
+  inv.sources[1].role = "inspiration"; // Library.dc.html owns library/02, which Chats.idle claims
+  const result = verifyInventory(inv);
+  assert.equal(result.exit, 1);
+  const n = result.violations.filter((v) => v.class === "inspiration-screen");
+  assert.deepEqual(n.map((v) => v.path), ["screens[0].Chats.states[1].idle"]);
+  assert.match(n[0].message, /library\/02/);
+});
+
+test("Check N: inspiration frames claimed only by components pass", () => {
+  const inv = loadFixture("valid");
+  inv.sources[1].role = "inspiration";
+  inv.screens[0].states[1].frames = ["cockpit/02"]; // library/02 stays claimed by atoms' appears_on
+  const result = verifyInventory(inv);
+  assert.equal(result.exit, 0, JSON.stringify(result.violations));
+});
+
+test("--prior: an item, screen state, or frame the prior had is reported prior-dropped", () => {
+  const prior = loadFixture("valid");
+  const current = loadFixture("valid");
+  current.atoms = current.atoms.filter((a) => a.name !== "Input");
+  current.screens[2].states = []; // SignIn.form dropped
+  current.unclaimed_frames = []; // library/01 dropped
+  current.frames = current.frames.filter((f) => f.id !== "library/01");
+  const result = verifyInventory(current, { prior });
+  assert.equal(result.exit, 1);
+  const dropped = result.violations.filter((v) => v.class === "prior-dropped").map((v) => v.path).sort();
+  assert.deepEqual(dropped, ["atoms.Input", "frames.library/01", "screens.SignIn.states.form"]);
+});
+
+test("--prior: additions over the prior pass", () => {
+  const prior = loadFixture("valid");
+  const current = loadFixture("valid");
+  current.atoms.push({ name: "Tooltip", undrawn: "adopted from inspiration — assimilation 2026-09-30-test" });
+  const result = verifyInventory(current, { prior });
+  assert.equal(result.exit, 0, JSON.stringify(result.violations));
+});
+
+test("--prior CLI: reads the prior file; a missing prior file is exit 2", () => {
+  const tmpDir = mkdtempSync(path.join(tmpdir(), "pp-inv-prior-"));
+  const priorPath = path.join(tmpDir, "prior.json");
+  const invPath = path.join(tmpDir, "inventory.json");
+  const current = loadFixture("valid");
+  writeFileSync(priorPath, JSON.stringify(loadFixture("valid")), "utf8");
+  current.atoms = current.atoms.filter((a) => a.name !== "Input");
+  writeFileSync(invPath, JSON.stringify(current), "utf8");
+  const { code, stdout } = runCli([invPath, "--prior", priorPath, "--json"]);
+  assert.equal(code, 1);
+  assert.ok(JSON.parse(stdout).violations.some((v) => v.class === "prior-dropped" && v.path === "atoms.Input"));
+  assert.equal(runCli([invPath, "--prior", path.join(tmpDir, "missing.json")]).code, 2);
+});
