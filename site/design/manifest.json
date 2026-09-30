@@ -12,6 +12,37 @@
     "../design/uploads/pasted-1790742749159-0.png",
     "../design/uploads/pasted-1790742949005-0.png"
   ],
+  "inventory": {
+    "file": "design/inventory.json",
+    "reference": "design/reference",
+    "confirmed": "2026-09-30T22:28:46Z",
+    "sources": [
+      {
+        "ref": "../design/pixel-perfect Landing.dc.html",
+        "hash": "sha256:865c17eca7d42fe1b22307989755f64d3de84f4f35008eda15b4326fa9398860"
+      },
+      {
+        "ref": "../design/Component sheet.dc.html",
+        "hash": "sha256:9a1f2ca3cb1a1acc28b5107d1c7e0bb0e3f5f32e9e5eac37c937ff71324ac599"
+      },
+      {
+        "ref": "../design/Social preview.dc.html",
+        "hash": "sha256:65c57624e75ab56442c54bd2da8bf233decbb5af53ea089b50c216e95f3e9bdc"
+      },
+      {
+        "ref": "../design/Logo.dc.html",
+        "hash": "sha256:30f4b11ec6720f4ad32b2f44b9e537bc18c26c20897da0f67252cf6a2aba53f5"
+      },
+      {
+        "ref": "../design/uploads/pasted-1790742749159-0.png",
+        "hash": "sha256:0886579becfe191b583cf71f56a947233abdbfdefa02fce093297c2fe137b6ea"
+      },
+      {
+        "ref": "../design/uploads/pasted-1790742949005-0.png",
+        "hash": "sha256:723ead76b512ed5aea31a690f218cf1f316126341431aacb147072ed243cd360"
+      }
+    ]
+  },
   "motion": {
     "source": "../design/pixel-perfect Landing.dc.html",
     "why_recorded": "The frame renderer captures still frames with reduced motion forced, so the inventory and every golden show only end states. This block is the only durable record of what moves. The other three exports have no motion.",
@@ -381,7 +412,7 @@
       "labels": "Copy, then 'Copied ✓' for 2 seconds. If the clipboard is blocked, the command text is selected instead and the label reads 'Selected'.",
       "layout": "The button keeps the width of its widest label (min-width 9ch) so nothing shifts when the label changes.",
       "announce": "A visually hidden aria-live=polite region per copy block says 'Copied to clipboard' or 'Command selected. Press Command-C or Control-C to copy.'",
-      "next_step": "After the hero's paste line or an Install command is copied, a mono line appears under it for the rest of the visit: 'Next: open a project that has your design and run /pixel-perfect:init' (strategy §9.2). It appears without animation."
+      "next_step": "Decided at build B-inv: the 'Next: open a project that has your design and run /pixel-perfect:init' line is always shown under the Install tabs in body type, as the export draws it. It is not revealed by copying and does not appear under the hero."
     },
     "slider": {
       "status": "behaviour in the export (Landing:123-147); ends, focus, and labels designed here",

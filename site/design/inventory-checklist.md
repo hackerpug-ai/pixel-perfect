@@ -56,20 +56,20 @@ Slice keys refer to the review's renders: `L1440-N` / `L390-N` are the landing p
 | molecule | StepCard | step on the progress rail (label, title, command, output) | L1440-3 |
 | molecule | PlanCard | approved and drifted variants; drifted carries ProofMarks | L1440-1/2 |
 | molecule | ProofNote | numbered note matching a ProofMark | L1440-2, CS |
-| molecule | PrincipleCard | one of the four principles | L1440-2 |
+| atom | PrincipleCard | one of the four principles | L1440-2 |
 | molecule | GrowCard | evolve / refine / add-platform card with cascade line | L1440-4 |
 | molecule | ThreadRow | YOU / AGENT exchange line | L1440-4 |
 | molecule | MetaStrip | MIT · by · View source · six agents · frameworks; wraps to 3 rows at 390 | L1440-1, L390-1 |
 | molecule | StatGrid | 4+1 columns at 1440, 3+2 at 390 | L1440-4, L390-4 |
 | molecule | FaqItem | closed and open | L1440-6, CS |
-| molecule | TabNote | per-tab note and warning (Codex duplicate installs, Cursor symlinks) | export markup Landing:369-370; open with #install-codex, #install-cursor (manifest ui_states.install_tabs) |
+| atom | TabNote | per-tab note and warning (Codex duplicate installs, Cursor symlinks) | export markup Landing:369-370; open with #install-codex, #install-cursor (manifest ui_states.install_tabs) |
 | molecule | TouchList | "what it touches" column (reads / writes / runs) | L1440-6 |
 | molecule | ScanBox | dashed third-party scan box | L1440-6 |
 | molecule | FigureCaption | "Fig. N" caption line | L1440-1/5 |
 | molecule | ChangelogMini | the assembled Changelog page in Grow it | L1440-4 |
 | molecule | DesignMdCard | the generated DESIGN.md card | L1440-5 |
 | molecule | SectionStrip | mobile slug-line section nav under the header (manifest ui_states.mobile_header) | designed in the manifest |
-| molecule | CopyNextStep | the 'Next: … /pixel-perfect:init' line shown after copying (manifest ui_states.copy) | designed in the manifest |
+| molecule | CopyNextStep | the 'Next: … /pixel-perfect:init' line, always shown under the Install tabs (decided at B-inv) | L1440-6 |
 
 ## Organisms
 

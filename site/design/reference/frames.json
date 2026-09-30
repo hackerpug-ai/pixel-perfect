@@ -1,0 +1,355 @@
+{
+  "version": 1,
+  "rendered_at": "2026-09-30T22:07:15.774Z",
+  "chrome": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  "sources": [
+    {
+      "ref": "../design/pixel-perfect Landing.dc.html",
+      "kind": "html-deck",
+      "hash": "sha256:865c17eca7d42fe1b22307989755f64d3de84f4f35008eda15b4326fa9398860",
+      "slug": "pixel-perfect-landing-dc",
+      "frame_selector": "auto:[data-screen-label]",
+      "frames": [
+        "pixel-perfect-landing-dc/01",
+        "pixel-perfect-landing-dc/02",
+        "pixel-perfect-landing-dc/03",
+        "pixel-perfect-landing-dc/04",
+        "pixel-perfect-landing-dc/05",
+        "pixel-perfect-landing-dc/06",
+        "pixel-perfect-landing-dc/07",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "status": "rendered"
+    },
+    {
+      "ref": "../design/Component sheet.dc.html",
+      "kind": "html-deck",
+      "hash": "sha256:9a1f2ca3cb1a1acc28b5107d1c7e0bb0e3f5f32e9e5eac37c937ff71324ac599",
+      "slug": "component-sheet-dc",
+      "frame_selector": "full-page",
+      "frames": [
+        "component-sheet-dc/01",
+        "component-sheet-dc/02",
+        "component-sheet-dc/03",
+        "component-sheet-dc/04"
+      ],
+      "status": "rendered"
+    },
+    {
+      "ref": "../design/Social preview.dc.html",
+      "kind": "html-deck",
+      "hash": "sha256:65c57624e75ab56442c54bd2da8bf233decbb5af53ea089b50c216e95f3e9bdc",
+      "slug": "social-preview-dc",
+      "frame_selector": "auto:bordered",
+      "frames": [
+        "social-preview-dc/01",
+        "social-preview-dc/02",
+        "social-preview-dc/03"
+      ],
+      "status": "rendered"
+    },
+    {
+      "ref": "../design/Logo.dc.html",
+      "kind": "html-deck",
+      "hash": "sha256:30f4b11ec6720f4ad32b2f44b9e537bc18c26c20897da0f67252cf6a2aba53f5",
+      "slug": "logo-dc",
+      "frame_selector": "full-page",
+      "frames": [
+        "logo-dc/01",
+        "logo-dc/02"
+      ],
+      "status": "rendered"
+    },
+    {
+      "ref": "../design/uploads/pasted-1790742749159-0.png",
+      "kind": "image",
+      "hash": "sha256:0886579becfe191b583cf71f56a947233abdbfdefa02fce093297c2fe137b6ea",
+      "slug": "pasted-1790742749159-0",
+      "frame_selector": null,
+      "frames": [
+        "pasted-1790742749159-0/01"
+      ],
+      "status": "rendered"
+    },
+    {
+      "ref": "../design/uploads/pasted-1790742949005-0.png",
+      "kind": "image",
+      "hash": "sha256:723ead76b512ed5aea31a690f218cf1f316126341431aacb147072ed243cd360",
+      "slug": "pasted-1790742949005-0",
+      "frame_selector": null,
+      "frames": [
+        "pasted-1790742949005-0/01"
+      ],
+      "status": "rendered"
+    }
+  ],
+  "frames": [
+    {
+      "id": "pixel-perfect-landing-dc/01",
+      "png": "pixel-perfect-landing-dc/01.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "index": 1,
+      "label": "Hero",
+      "viewport": "1264x1252",
+      "width": 1264,
+      "height": 1252,
+      "route": null,
+      "state": null
+    },
+    {
+      "id": "pixel-perfect-landing-dc/02",
+      "png": "pixel-perfect-landing-dc/02.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "index": 2,
+      "label": "Why",
+      "viewport": "1264x875",
+      "width": 1264,
+      "height": 875,
+      "route": null,
+      "state": null
+    },
+    {
+      "id": "pixel-perfect-landing-dc/03",
+      "png": "pixel-perfect-landing-dc/03.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "index": 3,
+      "label": "Build it",
+      "viewport": "1264x1741",
+      "width": 1264,
+      "height": 1741,
+      "route": null,
+      "state": null
+    },
+    {
+      "id": "pixel-perfect-landing-dc/04",
+      "png": "pixel-perfect-landing-dc/04.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "index": 4,
+      "label": "Grow it",
+      "viewport": "1264x1182",
+      "width": 1264,
+      "height": 1182,
+      "route": null,
+      "state": null
+    },
+    {
+      "id": "pixel-perfect-landing-dc/05",
+      "png": "pixel-perfect-landing-dc/05.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "index": 5,
+      "label": "Install",
+      "viewport": "1264x1087",
+      "width": 1264,
+      "height": 1087,
+      "route": null,
+      "state": null
+    },
+    {
+      "id": "pixel-perfect-landing-dc/06",
+      "png": "pixel-perfect-landing-dc/06.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "index": 6,
+      "label": "FAQ",
+      "viewport": "1264x701",
+      "width": 1264,
+      "height": 701,
+      "route": null,
+      "state": null
+    },
+    {
+      "id": "pixel-perfect-landing-dc/07",
+      "png": "pixel-perfect-landing-dc/07.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "index": 7,
+      "label": "Close",
+      "viewport": "1264x484",
+      "width": 1264,
+      "height": 484,
+      "route": null,
+      "state": null
+    },
+    {
+      "id": "pixel-perfect-landing-dc/08",
+      "png": "pixel-perfect-landing-dc/08.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "index": 8,
+      "label": "full · 1440 · default",
+      "viewport": "1440x7381",
+      "width": 1440,
+      "height": 7381,
+      "route": null,
+      "state": "default"
+    },
+    {
+      "id": "pixel-perfect-landing-dc/09",
+      "png": "pixel-perfect-landing-dc/09.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "index": 9,
+      "label": "full · 1440 · dark",
+      "viewport": "1440x7381",
+      "width": 1440,
+      "height": 7381,
+      "route": null,
+      "state": "dark"
+    },
+    {
+      "id": "pixel-perfect-landing-dc/10",
+      "png": "pixel-perfect-landing-dc/10.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "index": 10,
+      "label": "full · 390 · default",
+      "viewport": "390x10890",
+      "width": 390,
+      "height": 10890,
+      "route": null,
+      "state": "default"
+    },
+    {
+      "id": "pixel-perfect-landing-dc/11",
+      "png": "pixel-perfect-landing-dc/11.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "index": 11,
+      "label": "full · 390 · dark",
+      "viewport": "390x10890",
+      "width": 390,
+      "height": 10890,
+      "route": null,
+      "state": "dark"
+    },
+    {
+      "id": "component-sheet-dc/01",
+      "png": "component-sheet-dc/01.png",
+      "source": "../design/Component sheet.dc.html",
+      "index": 1,
+      "label": null,
+      "viewport": "1440x1010",
+      "width": 1440,
+      "height": 1010,
+      "route": null,
+      "state": null
+    },
+    {
+      "id": "component-sheet-dc/02",
+      "png": "component-sheet-dc/02.png",
+      "source": "../design/Component sheet.dc.html",
+      "index": 2,
+      "label": "full · 1440 · dark",
+      "viewport": "1440x1010",
+      "width": 1440,
+      "height": 1010,
+      "route": null,
+      "state": "dark"
+    },
+    {
+      "id": "component-sheet-dc/03",
+      "png": "component-sheet-dc/03.png",
+      "source": "../design/Component sheet.dc.html",
+      "index": 3,
+      "label": "full · 390 · default",
+      "viewport": "390x2720",
+      "width": 390,
+      "height": 2720,
+      "route": null,
+      "state": "default"
+    },
+    {
+      "id": "component-sheet-dc/04",
+      "png": "component-sheet-dc/04.png",
+      "source": "../design/Component sheet.dc.html",
+      "index": 4,
+      "label": "full · 390 · dark",
+      "viewport": "390x2720",
+      "width": 390,
+      "height": 2720,
+      "route": null,
+      "state": "dark"
+    },
+    {
+      "id": "social-preview-dc/01",
+      "png": "social-preview-dc/01.png",
+      "source": "../design/Social preview.dc.html",
+      "index": 1,
+      "label": null,
+      "viewport": "440x276",
+      "width": 440,
+      "height": 276,
+      "route": null,
+      "state": null
+    },
+    {
+      "id": "social-preview-dc/02",
+      "png": "social-preview-dc/02.png",
+      "source": "../design/Social preview.dc.html",
+      "index": 2,
+      "label": "full · 1440 · default",
+      "viewport": "1440x900",
+      "width": 1440,
+      "height": 900,
+      "route": null,
+      "state": "default"
+    },
+    {
+      "id": "social-preview-dc/03",
+      "png": "social-preview-dc/03.png",
+      "source": "../design/Social preview.dc.html",
+      "index": 3,
+      "label": "full · 390 · default",
+      "viewport": "390x2770",
+      "width": 1200,
+      "height": 8524,
+      "route": null,
+      "state": "default"
+    },
+    {
+      "id": "logo-dc/01",
+      "png": "logo-dc/01.png",
+      "source": "../design/Logo.dc.html",
+      "index": 1,
+      "label": null,
+      "viewport": "1440x3600",
+      "width": 1440,
+      "height": 3600,
+      "route": null,
+      "state": null
+    },
+    {
+      "id": "logo-dc/02",
+      "png": "logo-dc/02.png",
+      "source": "../design/Logo.dc.html",
+      "index": 2,
+      "label": "full · 390 · default",
+      "viewport": "390x4379",
+      "width": 1328,
+      "height": 14912,
+      "route": null,
+      "state": "default"
+    },
+    {
+      "id": "pasted-1790742749159-0/01",
+      "png": "pasted-1790742749159-0/01.png",
+      "source": "../design/uploads/pasted-1790742749159-0.png",
+      "index": 1,
+      "label": null,
+      "viewport": null,
+      "width": null,
+      "height": null,
+      "route": null,
+      "state": null
+    },
+    {
+      "id": "pasted-1790742949005-0/01",
+      "png": "pasted-1790742949005-0/01.png",
+      "source": "../design/uploads/pasted-1790742949005-0.png",
+      "index": 1,
+      "label": null,
+      "viewport": null,
+      "width": null,
+      "height": null,
+      "route": null,
+      "state": null
+    }
+  ]
+}
