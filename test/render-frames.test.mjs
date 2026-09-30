@@ -447,4 +447,85 @@ describe("render-frames", () => {
     }
   });
 
+  // --- assimilate targets: directories, slug ownership, --reserve, --merge-from ---
+
+  const FIXTURES = path.join(ROOT, "test/fixtures");
+  const readIndex = (dir) => JSON.parse(readFileSync(path.join(dir, "frames.json"), "utf8"));
+  const scratch = (tag) => mkdtempSync(path.join(tmpdir(), `pp-render-${tag}-`));
+
+  test("a directory of screenshots expands to one source per image or html file, sorted", async () => {
+    const out = path.join(scratch("dir"), "out");
+    const dir = path.join(FIXTURES, "screens-dir");
+    const { code, stderr } = await runCli([dir, "--out", out]);
+    assert.equal(code, 0, stderr);
+    const index = readIndex(out);
+    assert.deepEqual(index.sources.map((s) => path.basename(s.ref)), ["home.png", "pricing.png"], "notes.txt is not a design and is skipped");
+    assert.deepEqual(index.sources.map((s) => s.kind), ["image", "image"]);
+    for (const f of index.frames) assert.ok(existsSync(path.join(out, f.png)), `${f.png} written`);
+  });
+
+  test("an empty directory or an unsupported ref exits 2 with an unreadable line and no stack trace", async () => {
+    const out = path.join(scratch("bad"), "out");
+    for (const ref of [path.join(FIXTURES, "empty-dir"), path.join(FIXTURES, "screens-dir/notes.txt")]) {
+      const { code, stderr } = await runCli([ref, "--out", out]);
+      assert.equal(code, 2, `${ref}: ${stderr}`);
+      assert.match(stderr, /✗ .* unreadable/);
+      assert.ok(!/\n\s+at /.test(stderr) && !/Unhandled|ReferenceError|require is not defined/.test(stderr), `no crash: ${stderr}`);
+    }
+  });
+
+  test("a new ref whose name collides with another ref's slug gets a new slug; the other source survives", async () => {
+    const out = path.join(scratch("slug"), "out");
+    assert.equal((await runCli([path.join(FIXTURE_SRC, "test.png"), "--out", out])).code, 0);
+    const second = path.join(FIXTURES, "screens-dir-alt/test.png");
+    assert.equal((await runCli([second, "--out", out])).code, 0);
+    const index = readIndex(out);
+    assert.deepEqual(index.sources.map((s) => s.slug).sort(), ["test", "test-2"]);
+    assert.deepEqual(index.frames.map((f) => f.id).sort(), ["test-2/01", "test/01"], "the first source's frames were not deleted");
+    assert.ok(existsSync(path.join(out, "test/01.png")) && existsSync(path.join(out, "test-2/01.png")));
+  });
+
+  test("--reserve treats another index's slugs as taken, but reuses the slug of the same ref", async () => {
+    const base = scratch("reserve");
+    const dst = path.join(base, "design-reference");
+    const run = path.join(base, "run-reference");
+    assert.equal((await runCli([path.join(FIXTURE_SRC, "test.png"), "--out", dst])).code, 0);
+    const other = path.join(FIXTURES, "screens-dir-alt/test.png");
+    assert.equal((await runCli([other, path.join(FIXTURE_SRC, "test.png"), "--out", run, "--reserve", path.join(dst, "frames.json")])).code, 0);
+    const bySlug = Object.fromEntries(readIndex(run).sources.map((s) => [s.slug, s.ref]));
+    assert.equal(bySlug["test"], path.join(FIXTURE_SRC, "test.png"), "same ref keeps its reserved slug");
+    assert.equal(bySlug["test-2"], other, "a different ref avoids the reserved slug");
+  });
+
+  test("--merge-from copies chosen sources' frames into another index without rendering", async () => {
+    const base = scratch("merge");
+    const dst = path.join(base, "design-reference");
+    const run = path.join(base, "run-reference");
+    assert.equal((await runCli([path.join(FIXTURE_SRC, "test.png"), "--out", dst])).code, 0);
+    const home = path.join(FIXTURES, "screens-dir/home.png");
+    const pricing = path.join(FIXTURES, "screens-dir/pricing.png");
+    assert.equal((await runCli([home, pricing, "--out", run, "--reserve", path.join(dst, "frames.json")])).code, 0);
+    const started = Date.now();
+    const { code, stderr } = await runCli(["--merge-from", run, home, "--out", dst]);
+    assert.equal(code, 0, stderr);
+    assert.ok(Date.now() - started < 3000, "no Chrome launch for a merge");
+    const index = readIndex(dst);
+    assert.deepEqual(index.sources.map((s) => path.basename(s.ref)).sort(), ["home.png", "test.png"], "only the named ref is merged");
+    assert.deepEqual(index.frames.map((f) => f.id).sort(), ["home/01", "test/01"]);
+    assert.ok(existsSync(path.join(dst, "home/01.png")));
+    assert.ok(!existsSync(path.join(dst, "pricing")), "unnamed sources stay in the run");
+  });
+
+  test("--merge-from refuses a slug that another ref already owns (exit 2)", async () => {
+    const base = scratch("merge-conflict");
+    const dst = path.join(base, "design-reference");
+    const run = path.join(base, "run-reference");
+    assert.equal((await runCli([path.join(FIXTURE_SRC, "test.png"), "--out", dst])).code, 0);
+    assert.equal((await runCli([path.join(FIXTURES, "screens-dir-alt/test.png"), "--out", run])).code, 0); // no --reserve: slug "test" again
+    const { code, stderr } = await runCli(["--merge-from", run, "--out", dst]);
+    assert.equal(code, 2, stderr);
+    assert.match(stderr, /slug "test" .* another ref/);
+    assert.deepEqual(readIndex(dst).sources.map((s) => s.ref), [path.join(FIXTURE_SRC, "test.png")], "destination untouched");
+  });
+
 });

@@ -11,8 +11,10 @@
 //   3 — zero frames produced
 
 import {
+  cpSync,
   existsSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   rmSync,
   statSync,
@@ -31,12 +33,20 @@ render-frames.mjs — render design frames for inventory
 
 Usage:
   node render-frames.mjs <ref>... --out <dir> [options]
+  node render-frames.mjs --merge-from <run-dir> [<ref>...] --out <dir>
+
+A <ref> is an HTML deck, an image, a URL, a wireframes directory, or a directory
+whose html/htm/png/jpg/jpeg/webp files are each rendered as their own source.
 
 Options:
   --out <dir>               output directory (required)
   --frame-selector <css>    CSS selector for frames, or auto (default): .fr, then
-                            top-most bordered boxes >=300x200 (Claude Design canvases),
-                            then the full page
+                            [data-screen-label] sections, then top-most bordered boxes
+                            >=300x200 (Claude Design canvases), then the full page
+  --reserve <frames.json>   treat that index's slugs as taken (a run rendered outside
+                            design/reference); the same ref keeps its reserved slug
+  --merge-from <run-dir>    copy sources (all, or only the named refs) and their frames
+                            from a run directory into --out, without rendering
   --settle <ms>             settle time after load (default: 15000)
   --width <px>              desktop viewport width (default: 1440)
   --mobile-width <px>       mobile viewport width (default: 390)
@@ -82,18 +92,79 @@ function detectRefKind(ref) {
   if ([".png", ".jpg", ".jpeg", ".webp"].includes(ext)) {
     return "image";
   }
-  if (existsSync(ref) && statSync(ref).isDirectory()) {
-    if (existsSync(join(ref, "wireframes.json"))) {
-      return "wireframes";
-    }
-    const htmlFiles = require("fs")
-      .readdirSync(ref)
-      .filter((f) => [".html", ".htm"].includes(extname(f).toLowerCase()));
-    if (htmlFiles.length > 0) {
-      return "html-deck-dir";
+  if (existsSync(ref) && statSync(ref).isDirectory() && existsSync(join(ref, "wireframes.json"))) {
+    return "wireframes";
+  }
+  return null;
+}
+
+const DESIGN_FILE = /\.(html?|png|jpe?g|webp)$/i;
+
+// A directory (other than a wireframes directory) stands for its design files: each html or
+// image child becomes its own source, in name order, non-recursively. Anything that cannot be
+// a source is reported unreadable here, before Chrome starts, instead of crashing the run.
+function expandRefs(refs) {
+  const expanded = [];
+  const unreadable = [];
+  for (const ref of refs) {
+    const isUrl = ref.startsWith("http://") || ref.startsWith("https://");
+    if (!isUrl && existsSync(ref) && statSync(ref).isDirectory() && !existsSync(join(ref, "wireframes.json"))) {
+      const children = readdirSync(ref).filter((f) => DESIGN_FILE.test(f)).sort();
+      if (children.length === 0) unreadable.push({ ref, why: "directory has no html or image files" });
+      for (const child of children) expanded.push(join(ref, child));
+    } else if (detectRefKind(ref) === null) {
+      unreadable.push({ ref, why: existsSync(ref) ? "unsupported reference type" : "not found" });
+    } else {
+      expanded.push(ref);
     }
   }
-  throw new Error(`Cannot detect ref kind for: ${ref}`);
+  return { expanded, unreadable };
+}
+
+// Copy chosen sources and their frame files from a run directory's index into another index.
+// A slug already owned by a different ref in the destination is refused: merging it would
+// replace that source's frames.
+function mergeFrom(runDir, outDir, onlyRefs) {
+  const read = (dir) => {
+    const file = join(dir, "frames.json");
+    return existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : { version: 1, rendered_at: "", sources: [], frames: [] };
+  };
+  if (!existsSync(join(runDir, "frames.json"))) {
+    console.error(`✗ ${runDir} — unreadable: no frames.json to merge from`);
+    return 2;
+  }
+  const run = read(runDir);
+  const dst = read(outDir);
+  const want = onlyRefs.length ? new Set(onlyRefs) : null;
+  const chosen = run.sources.filter((src) => !want || want.has(src.ref));
+  if (want) {
+    for (const ref of want) {
+      if (!chosen.some((src) => src.ref === ref)) {
+        console.error(`✗ ${ref} — unreadable: not a source in ${runDir}`);
+        return 2;
+      }
+    }
+  }
+  for (const src of chosen) {
+    const owner = dst.sources.find((d) => d.slug === src.slug && d.ref !== src.ref);
+    if (owner) {
+      console.error(`✗ ${src.ref} — slug "${src.slug}" is owned by another ref in ${outDir} (${owner.ref}); re-render the run with --reserve`);
+      return 2;
+    }
+  }
+  ensureDir(outDir);
+  for (const src of chosen) {
+    rmSync(join(outDir, src.slug), { recursive: true, force: true });
+    if (existsSync(join(runDir, src.slug))) cpSync(join(runDir, src.slug), join(outDir, src.slug), { recursive: true });
+    dst.sources = dst.sources.filter((d) => d.ref !== src.ref);
+    dst.sources.push(src);
+    dst.frames = dst.frames.filter((f) => f.id.split("/")[0] !== src.slug);
+    dst.frames.push(...run.frames.filter((f) => f.id.split("/")[0] === src.slug));
+  }
+  dst.rendered_at = new Date().toISOString();
+  writeFileSync(join(outDir, "frames.json"), JSON.stringify(dst, null, 2) + "\n");
+  console.log(`✓ merged ${chosen.length} source(s) from ${runDir} into ${outDir}`);
+  return 0;
 }
 
 async function loadAndSettle(cdp, url, settleMs) {
@@ -397,6 +468,8 @@ export async function main(args = process.argv.slice(2)) {
   let width = 1440;
   let mobileWidth = 390;
   let jsonOnly = false;
+  let reservePath = null;
+  let mergeFromDir = null;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--out" && i + 1 < args.length) {
@@ -411,15 +484,31 @@ export async function main(args = process.argv.slice(2)) {
       mobileWidth = parseInt(args[++i], 10);
     } else if (args[i] === "--json") {
       jsonOnly = true;
+    } else if (args[i] === "--reserve" && i + 1 < args.length) {
+      reservePath = args[++i];
+    } else if (args[i] === "--merge-from" && i + 1 < args.length) {
+      mergeFromDir = args[++i];
     } else if (!args[i].startsWith("--")) {
       refs.push(args[i]);
     }
+  }
+
+  if (mergeFromDir) {
+    if (!outDir) {
+      usage();
+      return 2;
+    }
+    return mergeFrom(mergeFromDir, outDir, refs);
   }
 
   if (refs.length === 0 || !outDir) {
     usage();
     return 2;
   }
+
+  const { expanded, unreadable } = expandRefs(refs);
+  for (const { ref, why } of unreadable) console.error(`✗ ${ref} — unreadable: ${why}`);
+  if (expanded.length === 0) return 2;
 
   const chrome = findChrome();
   if (!chrome) {
@@ -442,6 +531,16 @@ export async function main(args = process.argv.slice(2)) {
   const newFrames = [];
   const slugByRef = new Map(existing.sources.map((s) => [s.ref, s.slug]));
   const slugUsed = new Map();
+  // A slug is taken when another ref owns it in this index or in the --reserve index; reusing it
+  // would overwrite that source's frames. The same ref keeps the slug it already has.
+  const takenBy = new Map(existing.sources.map((s) => [s.slug, s.ref]));
+  if (reservePath && existsSync(reservePath)) {
+    for (const s of JSON.parse(readFileSync(reservePath, "utf8")).sources || []) {
+      if (!takenBy.has(s.slug)) takenBy.set(s.slug, s.ref);
+      if (!slugByRef.has(s.ref)) slugByRef.set(s.ref, s.slug);
+    }
+  }
+  let hasUnreadableRef = unreadable.length > 0;
   const sourceSlugsToRemove = new Set();
   let hasBlank = false;
   let hasError = false;
@@ -468,7 +567,7 @@ export async function main(args = process.argv.slice(2)) {
   }
 
   try {
-    for (const ref of refs) {
+    for (const ref of expanded) {
       const kind = detectRefKind(ref);
 
       // Preserve slug if this ref was rendered before, otherwise generate new one
@@ -476,11 +575,12 @@ export async function main(args = process.argv.slice(2)) {
       if (slugByRef.has(ref)) {
         refSlug = slugByRef.get(ref);
       } else {
-        refSlug = slug(basename(ref).replace(extname(ref), ""));
-        // De-duplicate with other new slugs in this run
+        const base = slug(basename(ref).replace(extname(ref), ""));
+        refSlug = base;
+        // De-duplicate against this run and against slugs other refs own
         let counter = 2;
-        while (slugUsed.has(refSlug) || slugByRef.has(ref)) {
-          refSlug = `${slug(basename(ref).replace(extname(ref), ""))}-${counter++}`;
+        while (slugUsed.has(refSlug) || (takenBy.has(refSlug) && takenBy.get(refSlug) !== ref)) {
+          refSlug = `${base}-${counter++}`;
         }
       }
 
@@ -643,7 +743,7 @@ export async function main(args = process.argv.slice(2)) {
 
     // Exit precedence: 2 unreadable ref · 1 a source blank/failed (everything else written) ·
     // 3 nothing rendered at all · 0 every source rendered
-    if (hasUnreadable) return 2;
+    if (hasUnreadable || hasUnreadableRef) return 2;
     if (hasBlank || hasError) return 1;
     if (newFrames.length === 0) return 3;
     return 0;
