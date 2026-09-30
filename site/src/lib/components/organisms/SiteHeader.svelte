@@ -52,7 +52,7 @@
 </script>
 
 <header class="sticky top-0 z-20 border-b border-line bg-paper">
-	<nav aria-label="Main" class="mx-auto flex h-15 max-w-page items-center gap-7 px-8 max-md:gap-3 max-md:px-4">
+	<nav aria-label="Main" class="mx-auto box-content flex h-15 max-w-page items-center gap-7 px-8 max-md:gap-3 max-md:px-4">
 		<Logo variant="header" href="#top" />
 		<ul class="m-0 ml-auto flex list-none gap-5.5 p-0 max-md:hidden">
 			{#each links as link (link.href)}

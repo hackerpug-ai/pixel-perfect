@@ -36,8 +36,8 @@
 	};
 </script>
 
-{#snippet design()}<div class="w-[min(300px,70%)]"><PlanCard {...card} variant="frame-side" /></div>{/snippet}
-{#snippet built()}<div class="w-[min(300px,70%)]"><PlanCard {...card} /></div>{/snippet}
+{#snippet design()}<div class="w-[calc(min(300px,70%)_+_34px)]"><PlanCard {...card} variant="frame-side" /></div>{/snippet}
+{#snippet built()}<div class="w-[calc(min(300px,70%)_+_34px)]"><PlanCard {...card} /></div>{/snippet}
 
 {#snippet pane(args: Args)}
 	<div class="max-w-155"><ProofFrame {...args} {design} {built} /></div>
