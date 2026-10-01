@@ -1,0 +1,111 @@
+
+> site@0.0.1 build
+> vite build
+
+vite v8.3.1 building ssr environment for production...
+transforming...
+✓ 207 modules transformed.
+rendering chunks...
+vite v8.3.1 building client environment for production...
+transforming...
+✓ 218 modules transformed.
+rendering chunks...
+computing gzip size...
+.svelte-kit/output/client/_app/version.json                                                              0.02 kB │ gzip:  0.04 kB
+.svelte-kit/output/client/_app/immutable/assets/ibm-plex-mono-vietnamese-500-normal.C8zxqsMH.woff        5.61 kB
+.svelte-kit/output/client/_app/immutable/assets/ibm-plex-mono-vietnamese-400-normal.DDuiU_S-.woff        5.62 kB
+.svelte-kit/output/client/_app/immutable/assets/ibm-plex-mono-cyrillic-ext-500-normal.BIfNGwUT.woff      5.77 kB
+.svelte-kit/output/client/_app/immutable/assets/ibm-plex-mono-cyrillic-ext-400-normal.DMdlQ8Kv.woff      5.82 kB
+.svelte-kit/output/client/_app/immutable/assets/ibm-plex-mono-vietnamese-400-normal.BulugwFq.woff2       5.86 kB
+.svelte-kit/output/client/_app/immutable/assets/ibm-plex-mono-vietnamese-500-normal.DZ4AoWbu.woff2       6.04 kB
+.svelte-kit/output/client/_app/immutable/assets/ibm-plex-mono-cyrillic-ext-400-normal.xuaO2J-f.woff2     6.91 kB
+.svelte-kit/output/client/_app/immutable/assets/ibm-plex-mono-cyrillic-ext-500-normal.BqneJy0T.woff2     6.97 kB
+.svelte-kit/output/client/_app/immutable/assets/ibm-plex-mono-cyrillic-400-normal.CEL4l2ZJ.woff          7.20 kB
+.svelte-kit/output/client/_app/immutable/assets/ibm-plex-mono-cyrillic-500-normal.Ael50iVv.woff          7.20 kB
+.svelte-kit/output/client/_app/immutable/assets/libre-franklin-vietnamese-wght-normal.DTJpi3oK.woff2     7.58 kB
+.svelte-kit/output/client/_app/immutable/assets/ibm-plex-mono-cyrillic-400-normal.BSMlKf0J.woff2         8.35 kB
+.svelte-kit/output/client/_app/immutable/assets/ibm-plex-mono-cyrillic-500-normal.Bq9vWWag.woff2         8.46 kB
+.svelte-kit/output/client/_app/immutable/assets/ibm-plex-mono-latin-ext-400-normal.D3D2R8hC.woff        11.76 kB
+.svelte-kit/output/client/_app/immutable/assets/ibm-plex-mono-latin-ext-500-normal.CZ70TYgx.woff        11.76 kB
+.svelte-kit/output/client/.vite/manifest.json                                                           12.63 kB │ gzip:  1.30 kB
+.svelte-kit/output/client/_app/immutable/assets/ibm-plex-mono-latin-400-normal.CvHOgSBP.woff            13.14 kB
+.svelte-kit/output/client/_app/immutable/assets/ibm-plex-mono-latin-500-normal.CB9ihrfo.woff            13.15 kB
+.svelte-kit/output/client/_app/immutable/assets/ibm-plex-mono-latin-ext-400-normal.BmRBH3aV.woff2       13.34 kB
+.svelte-kit/output/client/_app/immutable/assets/ibm-plex-mono-latin-ext-500-normal.CAhNIIs5.woff2       13.43 kB
+.svelte-kit/output/client/_app/immutable/assets/ibm-plex-mono-latin-400-normal.DMJ8VG8y.woff2           14.70 kB
+.svelte-kit/output/client/_app/immutable/assets/ibm-plex-mono-latin-500-normal.DSY6xOcd.woff2           14.88 kB
+.svelte-kit/output/client/_app/immutable/assets/anybody-vietnamese-wdth-normal.9GtAklmW.woff2           15.42 kB
+.svelte-kit/output/client/_app/immutable/assets/libre-franklin-cyrillic-wght-normal.se3OnFSl.woff2      15.86 kB
+.svelte-kit/output/client/_app/immutable/assets/libre-franklin-cyrillic-ext-wght-normal.BbRulJFC.woff2  21.61 kB
+.svelte-kit/output/client/_app/immutable/assets/libre-franklin-latin-ext-wght-normal.CeZZaleV.woff2     25.69 kB
+.svelte-kit/output/client/_app/immutable/assets/libre-franklin-latin-wght-normal.CLTz0ja0.woff2         29.29 kB
+.svelte-kit/output/client/_app/immutable/assets/anybody-latin-ext-wdth-normal.BaQ5u-C4.woff2            45.50 kB
+.svelte-kit/output/client/_app/immutable/assets/anybody-latin-wdth-normal.CHqbGEEr.woff2                56.88 kB
+.svelte-kit/output/client/_app/immutable/assets/0.C1fTLvUD.css                                          48.19 kB │ gzip: 10.03 kB
+.svelte-kit/output/client/_app/immutable/chunks/xihTtKlq.js                                              0.06 kB │ gzip:  0.08 kB
+.svelte-kit/output/client/_app/immutable/entry/start.DccCDT50.js                                         0.07 kB │ gzip:  0.08 kB
+.svelte-kit/output/client/_app/immutable/nodes/1.DReqKU8o.js                                             0.57 kB │ gzip:  0.32 kB
+.svelte-kit/output/client/_app/immutable/chunks/Bjy-W4x2.js                                              1.36 kB │ gzip:  0.65 kB
+.svelte-kit/output/client/_app/immutable/nodes/0.C4FMJvmX.js                                             2.46 kB │ gzip:  1.03 kB
+.svelte-kit/output/client/_app/immutable/entry/app.8hRPuMT-.js                                           3.99 kB │ gzip:  1.88 kB
+.svelte-kit/output/client/_app/immutable/chunks/woPEQT0p.js                                             26.68 kB │ gzip: 10.33 kB
+.svelte-kit/output/client/_app/immutable/chunks/CIRXBA5L.js                                             53.43 kB │ gzip: 20.39 kB
+.svelte-kit/output/client/_app/immutable/nodes/2.DYfnLk7P.js                                            63.58 kB │ gzip: 20.76 kB
+
+✓ built in 179ms
+computing gzip size...
+.svelte-kit/output/server/_app/immutable/assets/ibm-plex-mono-vietnamese-500-normal.C8zxqsMH.woff         5.61 kB
+.svelte-kit/output/server/_app/immutable/assets/ibm-plex-mono-vietnamese-400-normal.DDuiU_S-.woff         5.62 kB
+.svelte-kit/output/server/_app/immutable/assets/ibm-plex-mono-cyrillic-ext-500-normal.BIfNGwUT.woff       5.77 kB
+.svelte-kit/output/server/_app/immutable/assets/ibm-plex-mono-cyrillic-ext-400-normal.DMdlQ8Kv.woff       5.82 kB
+.svelte-kit/output/server/_app/immutable/assets/ibm-plex-mono-vietnamese-400-normal.BulugwFq.woff2        5.86 kB
+.svelte-kit/output/server/_app/immutable/assets/ibm-plex-mono-vietnamese-500-normal.DZ4AoWbu.woff2        6.04 kB
+.svelte-kit/output/server/_app/immutable/assets/ibm-plex-mono-cyrillic-ext-400-normal.xuaO2J-f.woff2      6.91 kB
+.svelte-kit/output/server/_app/immutable/assets/ibm-plex-mono-cyrillic-ext-500-normal.BqneJy0T.woff2      6.97 kB
+.svelte-kit/output/server/_app/immutable/assets/ibm-plex-mono-cyrillic-400-normal.CEL4l2ZJ.woff           7.20 kB
+.svelte-kit/output/server/_app/immutable/assets/ibm-plex-mono-cyrillic-500-normal.Ael50iVv.woff           7.20 kB
+.svelte-kit/output/server/_app/immutable/assets/libre-franklin-vietnamese-wght-normal.DTJpi3oK.woff2      7.58 kB
+.svelte-kit/output/server/_app/immutable/assets/ibm-plex-mono-cyrillic-400-normal.BSMlKf0J.woff2          8.35 kB
+.svelte-kit/output/server/_app/immutable/assets/ibm-plex-mono-cyrillic-500-normal.Bq9vWWag.woff2          8.46 kB
+.svelte-kit/output/server/_app/immutable/assets/ibm-plex-mono-latin-ext-400-normal.D3D2R8hC.woff         11.76 kB
+.svelte-kit/output/server/_app/immutable/assets/ibm-plex-mono-latin-ext-500-normal.CZ70TYgx.woff         11.76 kB
+.svelte-kit/output/server/_app/immutable/assets/ibm-plex-mono-latin-400-normal.CvHOgSBP.woff             13.14 kB
+.svelte-kit/output/server/_app/immutable/assets/ibm-plex-mono-latin-500-normal.CB9ihrfo.woff             13.15 kB
+.svelte-kit/output/server/_app/immutable/assets/ibm-plex-mono-latin-ext-400-normal.BmRBH3aV.woff2        13.34 kB
+.svelte-kit/output/server/_app/immutable/assets/ibm-plex-mono-latin-ext-500-normal.CAhNIIs5.woff2        13.43 kB
+.svelte-kit/output/server/.vite/manifest.json                                                            13.48 kB │ gzip:  1.36 kB
+.svelte-kit/output/server/_app/immutable/assets/ibm-plex-mono-latin-400-normal.DMJ8VG8y.woff2            14.70 kB
+.svelte-kit/output/server/_app/immutable/assets/ibm-plex-mono-latin-500-normal.DSY6xOcd.woff2            14.88 kB
+.svelte-kit/output/server/_app/immutable/assets/anybody-vietnamese-wdth-normal.9GtAklmW.woff2            15.42 kB
+.svelte-kit/output/server/_app/immutable/assets/libre-franklin-cyrillic-wght-normal.se3OnFSl.woff2       15.86 kB
+.svelte-kit/output/server/_app/immutable/assets/libre-franklin-cyrillic-ext-wght-normal.BbRulJFC.woff2   21.61 kB
+.svelte-kit/output/server/_app/immutable/assets/libre-franklin-latin-ext-wght-normal.CeZZaleV.woff2      25.69 kB
+.svelte-kit/output/server/_app/immutable/assets/libre-franklin-latin-wght-normal.CLTz0ja0.woff2          29.29 kB
+.svelte-kit/output/server/_app/immutable/assets/anybody-latin-ext-wdth-normal.BaQ5u-C4.woff2             45.50 kB
+.svelte-kit/output/server/_app/immutable/assets/anybody-latin-wdth-normal.CHqbGEEr.woff2                 56.88 kB
+.svelte-kit/output/server/_app/immutable/assets/_layout.LBnf-fhS.css                                     47.36 kB │ gzip:  9.97 kB
+.svelte-kit/output/server/entries/pages/_layout.ts.js                                                     0.08 kB │ gzip:  0.09 kB
+.svelte-kit/output/server/env.js                                                                          0.22 kB │ gzip:  0.14 kB
+.svelte-kit/output/server/chunks/env.js                                                                   0.28 kB │ gzip:  0.17 kB
+.svelte-kit/output/server/internal.js                                                                     0.40 kB │ gzip:  0.20 kB
+.svelte-kit/output/server/chunks/internal2.js                                                             0.90 kB │ gzip:  0.41 kB
+.svelte-kit/output/server/chunks/paths.js                                                                 1.15 kB │ gzip:  0.60 kB
+.svelte-kit/output/server/entries/pages/_layout.svelte.js                                                 2.58 kB │ gzip:  1.05 kB
+.svelte-kit/output/server/entries/fallbacks/error.svelte.js                                               4.16 kB │ gzip:  1.66 kB
+.svelte-kit/output/server/chunks/exports.js                                                               5.39 kB │ gzip:  1.80 kB
+.svelte-kit/output/server/chunks/routing.js                                                               8.95 kB │ gzip:  3.03 kB
+.svelte-kit/output/server/chunks/shared.js                                                               10.57 kB │ gzip:  3.38 kB
+.svelte-kit/output/server/chunks/utils.js                                                                31.76 kB │ gzip:  9.35 kB
+.svelte-kit/output/server/chunks/internal.js                                                             40.34 kB │ gzip: 11.63 kB
+.svelte-kit/output/server/remote-entry.js                                                                54.49 kB │ gzip: 12.02 kB
+.svelte-kit/output/server/entries/pages/_page.svelte.js                                                  88.12 kB │ gzip: 21.57 kB
+.svelte-kit/output/server/chunks/server.js                                                              121.68 kB │ gzip: 32.09 kB
+.svelte-kit/output/server/index.js                                                                      124.95 kB │ gzip: 31.70 kB
+
+✓ built in 1.06s
+
+Run npm run preview to preview your production build locally.
+
+> Using @sveltejs/adapter-static
+  Wrote site to "build"
+  ✔ done

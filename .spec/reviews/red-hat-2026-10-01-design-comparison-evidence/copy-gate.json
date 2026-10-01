@@ -1,0 +1,93 @@
+{
+  "mode": "check",
+  "exit": 0,
+  "vacuous": false,
+  "message": "Catalog matches goldens (10 stories)",
+  "stories": [
+    {
+      "layer": "molecules",
+      "name": "CopyBlock",
+      "state": "card--dark",
+      "rel": "molecules/CopyBlock/card--dark.html",
+      "hash": "bc77d40288182d3b",
+      "bytes": 1809
+    },
+    {
+      "layer": "molecules",
+      "name": "CopyBlock",
+      "state": "card-copied--dark",
+      "rel": "molecules/CopyBlock/card-copied--dark.html",
+      "hash": "9e16ab8865aa48e8",
+      "bytes": 1833
+    },
+    {
+      "layer": "molecules",
+      "name": "CopyBlock",
+      "state": "card-copied",
+      "rel": "molecules/CopyBlock/card-copied.html",
+      "hash": "cbdf92a0507fd1f0",
+      "bytes": 1818
+    },
+    {
+      "layer": "molecules",
+      "name": "CopyBlock",
+      "state": "card-selected--dark",
+      "rel": "molecules/CopyBlock/card-selected--dark.html",
+      "hash": "e28f96df7b2e47cc",
+      "bytes": 1867
+    },
+    {
+      "layer": "molecules",
+      "name": "CopyBlock",
+      "state": "card-selected",
+      "rel": "molecules/CopyBlock/card-selected.html",
+      "hash": "3c4214ab82b5c46e",
+      "bytes": 1852
+    },
+    {
+      "layer": "molecules",
+      "name": "CopyBlock",
+      "state": "card",
+      "rel": "molecules/CopyBlock/card.html",
+      "hash": "13d10cfb836ad2bd",
+      "bytes": 1794
+    },
+    {
+      "layer": "molecules",
+      "name": "CopyBlock",
+      "state": "row--dark",
+      "rel": "molecules/CopyBlock/row--dark.html",
+      "hash": "5b34efa732a7ceaa",
+      "bytes": 1377
+    },
+    {
+      "layer": "molecules",
+      "name": "CopyBlock",
+      "state": "row-copied--dark",
+      "rel": "molecules/CopyBlock/row-copied--dark.html",
+      "hash": "6eb97d13dc899602",
+      "bytes": 1401
+    },
+    {
+      "layer": "molecules",
+      "name": "CopyBlock",
+      "state": "row-copied",
+      "rel": "molecules/CopyBlock/row-copied.html",
+      "hash": "7f96879849ca683c",
+      "bytes": 1392
+    },
+    {
+      "layer": "molecules",
+      "name": "CopyBlock",
+      "state": "row",
+      "rel": "molecules/CopyBlock/row.html",
+      "hash": "932bb1844fc5f924",
+      "bytes": 1368
+    }
+  ],
+  "drifted": [],
+  "missing": [],
+  "extra": [],
+  "deprecatedUsage": [],
+  "uncatalogued": []
+}

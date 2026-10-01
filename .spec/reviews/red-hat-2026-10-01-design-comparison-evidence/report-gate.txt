@@ -1,0 +1,9 @@
+== red-hat-2026-10-01-design-comparison.md ==
+  ✓ G1 CHANGE_COVERAGE  every CRITICAL/HIGH finding is closed or explicitly upstream (4 finding(s))
+  ✓ G2 CHANGE_TARGET   every change names a resolvable target (2 change(s))
+  ✓ G3 CHANGE_VERIFY   every change carries a non-circular verification
+  ✓ G4 ORPHAN_CHANGE   every change closes a finding that exists
+  ✓ G5 STANDING_SEAT   the test-reality lens line is present
+  ✓ G6 SHRINK_SEVERITY  no 'shrink' entry above LOW
+
+change-set gate: 6 passed, 0 blocking, 0 warning

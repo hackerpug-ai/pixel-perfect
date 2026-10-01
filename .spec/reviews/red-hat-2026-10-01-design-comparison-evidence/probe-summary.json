@@ -1,0 +1,40 @@
+{
+  "source_sha": "cbf07fd88048e6aecd0bab5a9f94c621cba0f0a2",
+  "isolation": "/tmp/pixel-perfect-tq-20261001",
+  "source_restored": true,
+  "viewport": 1440,
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "baseline_command": "node scripts/sandbox-capture.mjs --width 1440 --out /tmp/pixel-perfect-tq-evidence/baseline",
+  "baseline_exit": 0,
+  "mutants": [
+    {
+      "ac": "AC-4",
+      "mutation": "site/src/lib/copy.svelte.ts:13: replace await navigator.clipboard.writeText(text) with await Promise.resolve()",
+      "stories": "Molecules/CopyBlock: all 5 stories x 2 themes",
+      "gate": "copy-gate.json",
+      "exit": 0,
+      "verdict": "SURVIVED"
+    },
+    {
+      "ac": "AC-2",
+      "mutation": "site/src/app.css:155: --radius-md 4px -> 40px",
+      "stories": "Molecules/CopyBlock: all 5 stories x 2 themes",
+      "gate": "radius-gate.json",
+      "exit": 0,
+      "verdict": "SURVIVED",
+      "visual_difference": "card and card--dark PNG hashes differ; HTML bytes identical; screenshot visually inspected"
+    },
+    {
+      "ac": "AC-3",
+      "mutation": "site/src/app.css:159: --animate-plate -> none",
+      "stories": "Components/PlateText: all 5 stories x 2 themes",
+      "gate": "motion-gate.json",
+      "exit": 0,
+      "verdict": "SURVIVED"
+    }
+  ],
+  "bounds": "1 mutant per AC, 3 ACs; no mobile repeats; AC1 and AC5 not mutation probed"
+}

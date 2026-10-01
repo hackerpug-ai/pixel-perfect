@@ -1,0 +1,8 @@
+
+> site@0.0.1 check
+> svelte-kit sync && svelte-check --tsconfig ./tsconfig.json
+
+Loading svelte-check in workspace: /Users/justinrich/Projects/pixel-perfect/site
+Getting Svelte diagnostics...
+
+svelte-check found 0 errors and 0 warnings

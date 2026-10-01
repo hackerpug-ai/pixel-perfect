@@ -1,0 +1,1438 @@
+{
+  "layout": [
+    {
+      "label": "built",
+      "width": 1440,
+      "theme": "light",
+      "scrollY": 0,
+      "overflow": 0,
+      "bg": "rgba(0, 0, 0, 0)",
+      "sections": [
+        {
+          "id": "top",
+          "height": 1250.421875
+        },
+        {
+          "id": "why",
+          "height": 865.328125
+        },
+        {
+          "id": "build",
+          "height": 1739.625
+        },
+        {
+          "id": "grow",
+          "height": 1182.375
+        },
+        {
+          "id": "install",
+          "height": 1048.953125
+        },
+        {
+          "id": "faq",
+          "height": 700.75
+        },
+        {
+          "id": "close",
+          "height": 483.625
+        }
+      ],
+      "h1": "\"Anybody Variable\", sans-serif"
+    },
+    {
+      "label": "concept",
+      "width": 1440,
+      "theme": "light",
+      "scrollY": 0,
+      "overflow": 0,
+      "bg": "rgb(243, 244, 241)",
+      "sections": [
+        {
+          "id": "top",
+          "height": 1251.765625
+        },
+        {
+          "id": "why",
+          "height": 874.609375
+        },
+        {
+          "id": "build",
+          "height": 1740.5
+        },
+        {
+          "id": "grow",
+          "height": 1181.71875
+        },
+        {
+          "id": "install",
+          "height": 1086.796875
+        },
+        {
+          "id": "faq",
+          "height": 700.75
+        },
+        {
+          "id": "close",
+          "height": 483.625
+        }
+      ],
+      "h1": "Anybody, sans-serif"
+    },
+    {
+      "label": "built",
+      "width": 1440,
+      "theme": "dark",
+      "scrollY": 0,
+      "overflow": 0,
+      "bg": "rgba(0, 0, 0, 0)",
+      "sections": [
+        {
+          "id": "top",
+          "height": 1250.421875
+        },
+        {
+          "id": "why",
+          "height": 865.328125
+        },
+        {
+          "id": "build",
+          "height": 1739.625
+        },
+        {
+          "id": "grow",
+          "height": 1182.375
+        },
+        {
+          "id": "install",
+          "height": 1048.953125
+        },
+        {
+          "id": "faq",
+          "height": 700.75
+        },
+        {
+          "id": "close",
+          "height": 483.625
+        }
+      ],
+      "h1": "\"Anybody Variable\", sans-serif"
+    },
+    {
+      "label": "concept",
+      "width": 1440,
+      "theme": "dark",
+      "scrollY": 0,
+      "overflow": 0,
+      "bg": "rgb(13, 15, 18)",
+      "sections": [
+        {
+          "id": "top",
+          "height": 1251.765625
+        },
+        {
+          "id": "why",
+          "height": 874.609375
+        },
+        {
+          "id": "build",
+          "height": 1740.5
+        },
+        {
+          "id": "grow",
+          "height": 1181.71875
+        },
+        {
+          "id": "install",
+          "height": 1086.796875
+        },
+        {
+          "id": "faq",
+          "height": 700.75
+        },
+        {
+          "id": "close",
+          "height": 483.625
+        }
+      ],
+      "h1": "Anybody, sans-serif"
+    },
+    {
+      "label": "built",
+      "width": 390,
+      "theme": "light",
+      "scrollY": 0,
+      "overflow": 0,
+      "bg": "rgba(0, 0, 0, 0)",
+      "sections": [
+        {
+          "id": "top",
+          "height": 1544.140625
+        },
+        {
+          "id": "why",
+          "height": 1888.015625
+        },
+        {
+          "id": "build",
+          "height": 2490.546875
+        },
+        {
+          "id": "grow",
+          "height": 2000.609375
+        },
+        {
+          "id": "install",
+          "height": 1513.90625
+        },
+        {
+          "id": "faq",
+          "height": 790.59375
+        },
+        {
+          "id": "close",
+          "height": 459.125
+        }
+      ],
+      "h1": "\"Anybody Variable\", sans-serif"
+    },
+    {
+      "label": "concept",
+      "width": 390,
+      "theme": "light",
+      "scrollY": 0,
+      "overflow": 0,
+      "bg": "rgb(243, 244, 241)",
+      "sections": [
+        {
+          "id": "top",
+          "height": 1568.171875
+        },
+        {
+          "id": "why",
+          "height": 1911.234375
+        },
+        {
+          "id": "build",
+          "height": 2489.875
+        },
+        {
+          "id": "grow",
+          "height": 1997.984375
+        },
+        {
+          "id": "install",
+          "height": 1612.484375
+        },
+        {
+          "id": "faq",
+          "height": 790.59375
+        },
+        {
+          "id": "close",
+          "height": 459.125
+        }
+      ],
+      "h1": "Anybody, sans-serif"
+    },
+    {
+      "label": "built",
+      "width": 390,
+      "theme": "dark",
+      "scrollY": 0,
+      "overflow": 0,
+      "bg": "rgba(0, 0, 0, 0)",
+      "sections": [
+        {
+          "id": "top",
+          "height": 1544.140625
+        },
+        {
+          "id": "why",
+          "height": 1888.015625
+        },
+        {
+          "id": "build",
+          "height": 2490.546875
+        },
+        {
+          "id": "grow",
+          "height": 2000.609375
+        },
+        {
+          "id": "install",
+          "height": 1513.90625
+        },
+        {
+          "id": "faq",
+          "height": 790.59375
+        },
+        {
+          "id": "close",
+          "height": 459.125
+        }
+      ],
+      "h1": "\"Anybody Variable\", sans-serif"
+    },
+    {
+      "label": "concept",
+      "width": 390,
+      "theme": "dark",
+      "scrollY": 0,
+      "overflow": 0,
+      "bg": "rgb(13, 15, 18)",
+      "sections": [
+        {
+          "id": "top",
+          "height": 1568.171875
+        },
+        {
+          "id": "why",
+          "height": 1911.234375
+        },
+        {
+          "id": "build",
+          "height": 2489.875
+        },
+        {
+          "id": "grow",
+          "height": 1997.984375
+        },
+        {
+          "id": "install",
+          "height": 1612.484375
+        },
+        {
+          "id": "faq",
+          "height": 790.59375
+        },
+        {
+          "id": "close",
+          "height": 459.125
+        }
+      ],
+      "h1": "Anybody, sans-serif"
+    }
+  ],
+  "motion": [
+    {
+      "label": "built",
+      "pos": 0,
+      "states": [
+        {
+          "tag": "FIGURE",
+          "section": "top",
+          "p": "0.274922",
+          "animation": "progress",
+          "rect": {
+            "y": 780.046875,
+            "height": 467.375
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "why",
+          "p": "0",
+          "animation": "progress",
+          "rect": {
+            "y": 1408.421875,
+            "height": 323.15625
+          }
+        },
+        {
+          "tag": "OL",
+          "section": "build",
+          "p": "0",
+          "animation": "progress",
+          "rect": {
+            "y": 2509.375,
+            "height": 846.515625
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "grow",
+          "p": "0",
+          "animation": "progress",
+          "rect": {
+            "y": 4270.953125,
+            "height": 337.625
+          }
+        },
+        {
+          "tag": "DIV",
+          "section": "close",
+          "p": "0",
+          "animation": "progress",
+          "rect": {
+            "y": 6945.453125,
+            "height": 122.375
+          }
+        }
+      ]
+    },
+    {
+      "label": "built",
+      "pos": 900,
+      "states": [
+        {
+          "tag": "FIGURE",
+          "section": "top",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -119.953125,
+            "height": 467.375
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "why",
+          "p": "0.711932",
+          "animation": "progress",
+          "rect": {
+            "y": 508.421875,
+            "height": 328.84375
+          }
+        },
+        {
+          "tag": "OL",
+          "section": "build",
+          "p": "0",
+          "animation": "progress",
+          "rect": {
+            "y": 1609.375,
+            "height": 846.515625
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "grow",
+          "p": "0",
+          "animation": "progress",
+          "rect": {
+            "y": 3370.953125,
+            "height": 337.625
+          }
+        },
+        {
+          "tag": "DIV",
+          "section": "close",
+          "p": "0",
+          "animation": "progress",
+          "rect": {
+            "y": 6045.453125,
+            "height": 122.375
+          }
+        }
+      ]
+    },
+    {
+      "label": "built",
+      "pos": 1300,
+      "states": [
+        {
+          "tag": "FIGURE",
+          "section": "top",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -519.953125,
+            "height": 467.375
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "why",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": 108.421875,
+            "height": 331.15625
+          }
+        },
+        {
+          "tag": "OL",
+          "section": "build",
+          "p": "0",
+          "animation": "progress",
+          "rect": {
+            "y": 1209.375,
+            "height": 846.515625
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "grow",
+          "p": "0",
+          "animation": "progress",
+          "rect": {
+            "y": 2970.953125,
+            "height": 337.625
+          }
+        },
+        {
+          "tag": "DIV",
+          "section": "close",
+          "p": "0",
+          "animation": "progress",
+          "rect": {
+            "y": 5645.453125,
+            "height": 122.375
+          }
+        }
+      ]
+    },
+    {
+      "label": "built",
+      "pos": 2050,
+      "states": [
+        {
+          "tag": "FIGURE",
+          "section": "top",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -1269.953125,
+            "height": 467.375
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "why",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -641.578125,
+            "height": 331.15625
+          }
+        },
+        {
+          "tag": "OL",
+          "section": "build",
+          "p": "0.254222",
+          "animation": "progress",
+          "rect": {
+            "y": 459.375,
+            "height": 846.515625
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "grow",
+          "p": "0",
+          "animation": "progress",
+          "rect": {
+            "y": 2220.953125,
+            "height": 337.625
+          }
+        },
+        {
+          "tag": "DIV",
+          "section": "close",
+          "p": "0",
+          "animation": "progress",
+          "rect": {
+            "y": 4895.453125,
+            "height": 122.375
+          }
+        }
+      ]
+    },
+    {
+      "label": "built",
+      "pos": 2400,
+      "states": [
+        {
+          "tag": "FIGURE",
+          "section": "top",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -1619.953125,
+            "height": 467.375
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "why",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -991.578125,
+            "height": 331.15625
+          }
+        },
+        {
+          "tag": "OL",
+          "section": "build",
+          "p": "0.623999",
+          "animation": "progress",
+          "rect": {
+            "y": 109.375,
+            "height": 846.515625
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "grow",
+          "p": "0",
+          "animation": "progress",
+          "rect": {
+            "y": 1870.953125,
+            "height": 337.625
+          }
+        },
+        {
+          "tag": "DIV",
+          "section": "close",
+          "p": "0",
+          "animation": "progress",
+          "rect": {
+            "y": 4545.453125,
+            "height": 122.375
+          }
+        }
+      ]
+    },
+    {
+      "label": "built",
+      "pos": 3050,
+      "states": [
+        {
+          "tag": "FIGURE",
+          "section": "top",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -2269.953125,
+            "height": 467.375
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "why",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -1641.578125,
+            "height": 331.15625
+          }
+        },
+        {
+          "tag": "OL",
+          "section": "build",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -540.625,
+            "height": 846.515625
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "grow",
+          "p": "0",
+          "animation": "progress",
+          "rect": {
+            "y": 1220.953125,
+            "height": 337.625
+          }
+        },
+        {
+          "tag": "DIV",
+          "section": "close",
+          "p": "0",
+          "animation": "progress",
+          "rect": {
+            "y": 3895.453125,
+            "height": 122.375
+          }
+        }
+      ]
+    },
+    {
+      "label": "built",
+      "pos": 3650,
+      "states": [
+        {
+          "tag": "FIGURE",
+          "section": "top",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -2869.953125,
+            "height": 467.375
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "why",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -2241.578125,
+            "height": 331.15625
+          }
+        },
+        {
+          "tag": "OL",
+          "section": "build",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -1140.625,
+            "height": 846.515625
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "grow",
+          "p": "0.598182",
+          "animation": "progress",
+          "rect": {
+            "y": 620.953125,
+            "height": 337.625
+          }
+        },
+        {
+          "tag": "DIV",
+          "section": "close",
+          "p": "0",
+          "animation": "progress",
+          "rect": {
+            "y": 3295.453125,
+            "height": 122.375
+          }
+        }
+      ]
+    },
+    {
+      "label": "built",
+      "pos": 4050,
+      "states": [
+        {
+          "tag": "FIGURE",
+          "section": "top",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -3269.953125,
+            "height": 467.375
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "why",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -2641.578125,
+            "height": 331.15625
+          }
+        },
+        {
+          "tag": "OL",
+          "section": "build",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -1540.625,
+            "height": 846.515625
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "grow",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": 220.953125,
+            "height": 337.625
+          }
+        },
+        {
+          "tag": "DIV",
+          "section": "close",
+          "p": "0",
+          "animation": "progress",
+          "rect": {
+            "y": 2895.453125,
+            "height": 122.375
+          }
+        }
+      ]
+    },
+    {
+      "label": "built",
+      "pos": 6200,
+      "states": [
+        {
+          "tag": "FIGURE",
+          "section": "top",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -5419.953125,
+            "height": 467.375
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "why",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -4791.578125,
+            "height": 331.15625
+          }
+        },
+        {
+          "tag": "OL",
+          "section": "build",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -3690.625,
+            "height": 846.515625
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "grow",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -1929.046875,
+            "height": 337.625
+          }
+        },
+        {
+          "tag": "DIV",
+          "section": "close",
+          "p": "0.848333",
+          "animation": "progress",
+          "rect": {
+            "y": 745.453125,
+            "height": 122.375
+          }
+        }
+      ]
+    },
+    {
+      "label": "built",
+      "pos": 6700,
+      "states": [
+        {
+          "tag": "FIGURE",
+          "section": "top",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -5551.953125,
+            "height": 467.375
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "why",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -4923.578125,
+            "height": 331.15625
+          }
+        },
+        {
+          "tag": "OL",
+          "section": "build",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -3822.625,
+            "height": 846.515625
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "grow",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": -2061.046875,
+            "height": 337.625
+          }
+        },
+        {
+          "tag": "DIV",
+          "section": "close",
+          "p": "1",
+          "animation": "progress",
+          "rect": {
+            "y": 613.453125,
+            "height": 122.375
+          }
+        }
+      ]
+    },
+    {
+      "label": "concept",
+      "pos": 0,
+      "states": [
+        {
+          "tag": "FIGURE",
+          "section": "top",
+          "p": "0.362",
+          "animation": "none",
+          "rect": {
+            "y": 781.390625,
+            "height": 467.375
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "why",
+          "p": "",
+          "animation": "none",
+          "rect": {
+            "y": 1409.765625,
+            "height": 352.625
+          }
+        },
+        {
+          "tag": "OL",
+          "section": "build",
+          "p": "",
+          "animation": "none",
+          "rect": {
+            "y": 2520,
+            "height": 846.515625
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "grow",
+          "p": "",
+          "animation": "none",
+          "rect": {
+            "y": 4282.453125,
+            "height": 336.96875
+          }
+        },
+        {
+          "tag": "SPAN",
+          "section": "close",
+          "p": "",
+          "animation": "none",
+          "rect": {
+            "y": 6994.140625,
+            "height": 122.375
+          }
+        }
+      ]
+    },
+    {
+      "label": "concept",
+      "pos": 900,
+      "states": [
+        {
+          "tag": "FIGURE",
+          "section": "top",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -118.609375,
+            "height": 467.375
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "why",
+          "p": "0.710",
+          "animation": "none",
+          "rect": {
+            "y": 509.765625,
+            "height": 350.28125
+          }
+        },
+        {
+          "tag": "OL",
+          "section": "build",
+          "p": "",
+          "animation": "none",
+          "rect": {
+            "y": 1617.65625,
+            "height": 846.515625
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "grow",
+          "p": "",
+          "animation": "none",
+          "rect": {
+            "y": 3380.109375,
+            "height": 336.96875
+          }
+        },
+        {
+          "tag": "SPAN",
+          "section": "close",
+          "p": "",
+          "animation": "none",
+          "rect": {
+            "y": 6091.796875,
+            "height": 122.375
+          }
+        }
+      ]
+    },
+    {
+      "label": "concept",
+      "pos": 1300,
+      "states": [
+        {
+          "tag": "FIGURE",
+          "section": "top",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -518.609375,
+            "height": 467.375
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "why",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": 109.765625,
+            "height": 352.625
+          }
+        },
+        {
+          "tag": "OL",
+          "section": "build",
+          "p": "",
+          "animation": "none",
+          "rect": {
+            "y": 1220,
+            "height": 846.515625
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "grow",
+          "p": "",
+          "animation": "none",
+          "rect": {
+            "y": 2982.453125,
+            "height": 336.96875
+          }
+        },
+        {
+          "tag": "SPAN",
+          "section": "close",
+          "p": "",
+          "animation": "none",
+          "rect": {
+            "y": 5694.140625,
+            "height": 122.375
+          }
+        }
+      ]
+    },
+    {
+      "label": "concept",
+      "pos": 2050,
+      "states": [
+        {
+          "tag": "FIGURE",
+          "section": "top",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -1268.609375,
+            "height": 467.375
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "why",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -640.234375,
+            "height": 352.625
+          }
+        },
+        {
+          "tag": "OL",
+          "section": "build",
+          "p": "0.243",
+          "animation": "none",
+          "rect": {
+            "y": 470,
+            "height": 846.515625
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "grow",
+          "p": "",
+          "animation": "none",
+          "rect": {
+            "y": 2232.453125,
+            "height": 336.96875
+          }
+        },
+        {
+          "tag": "SPAN",
+          "section": "close",
+          "p": "",
+          "animation": "none",
+          "rect": {
+            "y": 4944.140625,
+            "height": 122.375
+          }
+        }
+      ]
+    },
+    {
+      "label": "concept",
+      "pos": 2400,
+      "states": [
+        {
+          "tag": "FIGURE",
+          "section": "top",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -1618.609375,
+            "height": 467.375
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "why",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -990.234375,
+            "height": 352.625
+          }
+        },
+        {
+          "tag": "OL",
+          "section": "build",
+          "p": "0.613",
+          "animation": "none",
+          "rect": {
+            "y": 120,
+            "height": 846.515625
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "grow",
+          "p": "",
+          "animation": "none",
+          "rect": {
+            "y": 1882.453125,
+            "height": 336.96875
+          }
+        },
+        {
+          "tag": "SPAN",
+          "section": "close",
+          "p": "",
+          "animation": "none",
+          "rect": {
+            "y": 4594.140625,
+            "height": 122.375
+          }
+        }
+      ]
+    },
+    {
+      "label": "concept",
+      "pos": 3050,
+      "states": [
+        {
+          "tag": "FIGURE",
+          "section": "top",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -2268.609375,
+            "height": 467.375
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "why",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -1640.234375,
+            "height": 352.625
+          }
+        },
+        {
+          "tag": "OL",
+          "section": "build",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -530,
+            "height": 846.515625
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "grow",
+          "p": "",
+          "animation": "none",
+          "rect": {
+            "y": 1232.453125,
+            "height": 336.96875
+          }
+        },
+        {
+          "tag": "SPAN",
+          "section": "close",
+          "p": "",
+          "animation": "none",
+          "rect": {
+            "y": 3944.140625,
+            "height": 122.375
+          }
+        }
+      ]
+    },
+    {
+      "label": "concept",
+      "pos": 3650,
+      "states": [
+        {
+          "tag": "FIGURE",
+          "section": "top",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -2868.609375,
+            "height": 467.375
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "why",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -2240.234375,
+            "height": 352.625
+          }
+        },
+        {
+          "tag": "OL",
+          "section": "build",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -1130,
+            "height": 846.515625
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "grow",
+          "p": "0.577",
+          "animation": "none",
+          "rect": {
+            "y": 632.453125,
+            "height": 336.96875
+          }
+        },
+        {
+          "tag": "SPAN",
+          "section": "close",
+          "p": "",
+          "animation": "none",
+          "rect": {
+            "y": 3344.140625,
+            "height": 122.375
+          }
+        }
+      ]
+    },
+    {
+      "label": "concept",
+      "pos": 4050,
+      "states": [
+        {
+          "tag": "FIGURE",
+          "section": "top",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -3268.609375,
+            "height": 467.375
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "why",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -2640.234375,
+            "height": 352.625
+          }
+        },
+        {
+          "tag": "OL",
+          "section": "build",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -1530,
+            "height": 846.515625
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "grow",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": 232.453125,
+            "height": 336.96875
+          }
+        },
+        {
+          "tag": "SPAN",
+          "section": "close",
+          "p": "",
+          "animation": "none",
+          "rect": {
+            "y": 2944.140625,
+            "height": 122.375
+          }
+        }
+      ]
+    },
+    {
+      "label": "concept",
+      "pos": 6200,
+      "states": [
+        {
+          "tag": "FIGURE",
+          "section": "top",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -5418.609375,
+            "height": 467.375
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "why",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -4790.234375,
+            "height": 352.625
+          }
+        },
+        {
+          "tag": "OL",
+          "section": "build",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -3680,
+            "height": 846.515625
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "grow",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -1917.546875,
+            "height": 336.96875
+          }
+        },
+        {
+          "tag": "SPAN",
+          "section": "close",
+          "p": "0.686",
+          "animation": "none",
+          "rect": {
+            "y": 794.140625,
+            "height": 122.375
+          }
+        }
+      ]
+    },
+    {
+      "label": "concept",
+      "pos": 6700,
+      "states": [
+        {
+          "tag": "FIGURE",
+          "section": "top",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -5599.609375,
+            "height": 467.375
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "why",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -4971.234375,
+            "height": 352.625
+          }
+        },
+        {
+          "tag": "OL",
+          "section": "build",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -3861,
+            "height": 846.515625
+          }
+        },
+        {
+          "tag": "FIGURE",
+          "section": "grow",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": -2098.546875,
+            "height": 336.96875
+          }
+        },
+        {
+          "tag": "SPAN",
+          "section": "close",
+          "p": "1.000",
+          "animation": "none",
+          "rect": {
+            "y": 613.140625,
+            "height": 122.375
+          }
+        }
+      ]
+    }
+  ]
+}

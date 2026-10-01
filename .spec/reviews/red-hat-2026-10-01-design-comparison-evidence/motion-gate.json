@@ -1,0 +1,93 @@
+{
+  "mode": "check",
+  "exit": 0,
+  "vacuous": false,
+  "message": "Catalog matches goldens (10 stories)",
+  "stories": [
+    {
+      "layer": "atoms",
+      "name": "PlateText",
+      "state": "close--dark",
+      "rel": "atoms/PlateText/close--dark.html",
+      "hash": "9a6c52fc085994c5",
+      "bytes": 1829
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateText",
+      "state": "close-scroll-start--dark",
+      "rel": "atoms/PlateText/close-scroll-start--dark.html",
+      "hash": "1a0afa7c3b0cf0ae",
+      "bytes": 1845
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateText",
+      "state": "close-scroll-start",
+      "rel": "atoms/PlateText/close-scroll-start.html",
+      "hash": "bcba71a64b86a3bc",
+      "bytes": 1833
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateText",
+      "state": "close",
+      "rel": "atoms/PlateText/close.html",
+      "hash": "281595be07392070",
+      "bytes": 1817
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateText",
+      "state": "default--dark",
+      "rel": "atoms/PlateText/default--dark.html",
+      "hash": "2b2d22677ee8672e",
+      "bytes": 1770
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateText",
+      "state": "default",
+      "rel": "atoms/PlateText/default.html",
+      "hash": "83ebbde0a747ce62",
+      "bytes": 1755
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateText",
+      "state": "hero-alternate--dark",
+      "rel": "atoms/PlateText/hero-alternate--dark.html",
+      "hash": "e5afe5d6a26a5dc3",
+      "bytes": 1707
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateText",
+      "state": "hero-alternate",
+      "rel": "atoms/PlateText/hero-alternate.html",
+      "hash": "2437e0a963dcf8ed",
+      "bytes": 1695
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateText",
+      "state": "social--dark",
+      "rel": "atoms/PlateText/social--dark.html",
+      "hash": "8ae932a1c28f4565",
+      "bytes": 1995
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateText",
+      "state": "social",
+      "rel": "atoms/PlateText/social.html",
+      "hash": "bf9a961039f81d42",
+      "bytes": 1980
+    }
+  ],
+  "drifted": [],
+  "missing": [],
+  "extra": [],
+  "deprecatedUsage": [],
+  "uncatalogued": []
+}

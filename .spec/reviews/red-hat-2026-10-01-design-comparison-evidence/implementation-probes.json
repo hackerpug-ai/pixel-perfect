@@ -1,0 +1,240 @@
+{
+  "at": "2026-10-01T22:19:14.635Z",
+  "url": "http://127.0.0.1:5177/",
+  "desktop": {
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "errors": [],
+    "head": {
+      "meta": [
+        {
+          "name": "",
+          "property": null,
+          "content": ""
+        },
+        {
+          "name": "viewport",
+          "property": null,
+          "content": "width=device-width, initial-scale=1"
+        },
+        {
+          "name": "text-scale",
+          "property": null,
+          "content": "scale"
+        },
+        {
+          "name": "description",
+          "property": null,
+          "content": "An agent skill for Claude Code, Codex, Cursor, Grok, OpenCode, and Pi that turns a high-fidelity mockup into a checked component system in your framework, then keeps building on it."
+        }
+      ],
+      "icons": [
+        {
+          "rel": "icon",
+          "href": "data:image/svg+xml containing title svelte-logo"
+        }
+      ]
+    },
+    "tabs": [
+      {
+        "name": "Codex",
+        "selected": "true",
+        "visiblePanels": [
+          "codex plugin marketplace add hackerpug-ai/pixel-perfect\nCopy\ncodex plugin add pixel-perfect@pixel-perfect\nCopy\n\nNote\nTwo enabled sources create duplicate $pixel-perfect:* namespaces. Remove pixel-perfect@personal first.\n\nNext: open a project that has your design and run /pixel-perfect:init."
+        ]
+      },
+      {
+        "name": "Cursor",
+        "selected": "true",
+        "visiblePanels": [
+          "git clone --branch v9.2.0 https://github.com/hackerpug-ai/pixel-perfect\nCopy\ncp -R pixel-perfect/plugins/pixel-perfect ~/.cursor/plugins/local/pixel-perfect\nCopy\n\nThen reload the window.\n\nNote\nCopy, don't symlink. Cursor fails on symlinked plugins.\n\nNext: open a project that has your design and run /pixel-perfect:init."
+        ]
+      },
+      {
+        "name": "Grok",
+        "selected": "true",
+        "visiblePanels": [
+          "/plugin marketplace add hackerpug-ai/pixel-perfect\nCopy\n/plugin install pixel-perfect@pixel-perfect\nCopy\n\nThen enable it in Grok's /plugins view.\n\nNext: open a project that has your design and run /pixel-perfect:init."
+        ]
+      },
+      {
+        "name": "OpenCode",
+        "selected": "true",
+        "visiblePanels": [
+          "git clone --branch v9.2.0 https://github.com/hackerpug-ai/pixel-perfect .pixel-perfect\nCopy\nmkdir -p .opencode\nCopy\nln -s ../.pixel-perfect/plugins/pixel-perfect/.opencode/commands .opencode/commands\nCopy\nln -s ../.pixel-perfect/plugins/pixel-perfect/.opencode/skills .opencode/skills\nCopy\n\nNext: open a project that has your design and run /pixel-perfect:init."
+        ]
+      },
+      {
+        "name": "Pi",
+        "selected": "true",
+        "visiblePanels": [
+          "pi install npm:@hackerpug-ai/pixel-perfect\nCopy\n\nNext: open a project that has your design and run /pixel-perfect:init."
+        ]
+      },
+      {
+        "name": "Claude Code",
+        "selected": "true",
+        "visiblePanels": [
+          "/plugin marketplace add hackerpug-ai/pixel-perfect\nCopy\n/plugin install pixel-perfect@pixel-perfect\nCopy\n\nNext: open a project that has your design and run /pixel-perfect:init."
+        ]
+      }
+    ],
+    "tabEnd": "true",
+    "tabWrap": "true",
+    "faqOpen": true,
+    "sliderHome": "0% design frame, 100% built component",
+    "sliderEnd": "100% design frame, 0% built component",
+    "clipboard": "Install pixel-perfect: fetch and follow https://github.com/hackerpug-ai/pixel-perfect/INSTALL.md",
+    "demo": {
+      "mediaOrDialogCount": 0,
+      "url": "http://127.0.0.1:5177/#install-claude"
+    },
+    "deepLink": {
+      "hash": "#install-opencode",
+      "selected": "true",
+      "panelTop": -0.46875,
+      "headerBottom": 61,
+      "firstCommandTop": 40.46875,
+      "firstCommandBottom": 60.71875,
+      "scrollMarginTop": "0px",
+      "firstCommand": "git clone --branch v9.2.0 https://github.com/hackerpug-ai/pixel-perfect .pixel-perfect"
+    },
+    "assets": [
+      {
+        "path": "og.png",
+        "status": 404,
+        "contentType": "text/html"
+      },
+      {
+        "path": "favicon-32.png",
+        "status": 404,
+        "contentType": "text/html"
+      },
+      {
+        "path": "apple-touch-icon.png",
+        "status": 404,
+        "contentType": "text/html"
+      }
+    ]
+  },
+  "mobile": {
+    "viewport": {
+      "width": 390,
+      "height": 1000
+    },
+    "errors": [],
+    "head": {
+      "meta": [
+        {
+          "name": "",
+          "property": null,
+          "content": ""
+        },
+        {
+          "name": "viewport",
+          "property": null,
+          "content": "width=device-width, initial-scale=1"
+        },
+        {
+          "name": "text-scale",
+          "property": null,
+          "content": "scale"
+        },
+        {
+          "name": "description",
+          "property": null,
+          "content": "An agent skill for Claude Code, Codex, Cursor, Grok, OpenCode, and Pi that turns a high-fidelity mockup into a checked component system in your framework, then keeps building on it."
+        }
+      ],
+      "icons": [
+        {
+          "rel": "icon",
+          "href": "data:image/svg+xml containing title svelte-logo"
+        }
+      ]
+    },
+    "tabs": [
+      {
+        "name": "Codex",
+        "selected": "true",
+        "visiblePanels": [
+          "codex plugin marketplace add hackerpug-ai/pixel-perfect\nCopy\ncodex plugin add pixel-perfect@pixel-perfect\nCopy\n\nNote\nTwo enabled sources create duplicate $pixel-perfect:* namespaces. Remove pixel-perfect@personal first.\n\nNext: open a project that has your design and run /pixel-perfect:init."
+        ]
+      },
+      {
+        "name": "Cursor",
+        "selected": "true",
+        "visiblePanels": [
+          "git clone --branch v9.2.0 https://github.com/hackerpug-ai/pixel-perfect\nCopy\ncp -R pixel-perfect/plugins/pixel-perfect ~/.cursor/plugins/local/pixel-perfect\nCopy\n\nThen reload the window.\n\nNote\nCopy, don't symlink. Cursor fails on symlinked plugins.\n\nNext: open a project that has your design and run /pixel-perfect:init."
+        ]
+      },
+      {
+        "name": "Grok",
+        "selected": "true",
+        "visiblePanels": [
+          "/plugin marketplace add hackerpug-ai/pixel-perfect\nCopy\n/plugin install pixel-perfect@pixel-perfect\nCopy\n\nThen enable it in Grok's /plugins view.\n\nNext: open a project that has your design and run /pixel-perfect:init."
+        ]
+      },
+      {
+        "name": "OpenCode",
+        "selected": "true",
+        "visiblePanels": [
+          "git clone --branch v9.2.0 https://github.com/hackerpug-ai/pixel-perfect .pixel-perfect\nCopy\nmkdir -p .opencode\nCopy\nln -s ../.pixel-perfect/plugins/pixel-perfect/.opencode/commands .opencode/commands\nCopy\nln -s ../.pixel-perfect/plugins/pixel-perfect/.opencode/skills .opencode/skills\nCopy\n\nNext: open a project that has your design and run /pixel-perfect:init."
+        ]
+      },
+      {
+        "name": "Pi",
+        "selected": "true",
+        "visiblePanels": [
+          "pi install npm:@hackerpug-ai/pixel-perfect\nCopy\n\nNext: open a project that has your design and run /pixel-perfect:init."
+        ]
+      },
+      {
+        "name": "Claude Code",
+        "selected": "true",
+        "visiblePanels": [
+          "/plugin marketplace add hackerpug-ai/pixel-perfect\nCopy\n/plugin install pixel-perfect@pixel-perfect\nCopy\n\nNext: open a project that has your design and run /pixel-perfect:init."
+        ]
+      }
+    ],
+    "tabEnd": "true",
+    "tabWrap": "true",
+    "faqOpen": true,
+    "sliderHome": "0% design frame, 100% built component",
+    "sliderEnd": "100% design frame, 0% built component",
+    "clipboard": "Install pixel-perfect: fetch and follow https://github.com/hackerpug-ai/pixel-perfect/INSTALL.md",
+    "demo": {
+      "mediaOrDialogCount": 0,
+      "url": "http://127.0.0.1:5177/#install-claude"
+    },
+    "deepLink": {
+      "hash": "#install-opencode",
+      "selected": "true",
+      "panelTop": -0.265625,
+      "headerBottom": 61,
+      "firstCommandTop": 33.734375,
+      "firstCommandBottom": 94.484375,
+      "scrollMarginTop": "0px",
+      "firstCommand": "git clone --branch v9.2.0 https://github.com/hackerpug-ai/pixel-perfect .pixel-perfect"
+    },
+    "assets": [
+      {
+        "path": "og.png",
+        "status": 404,
+        "contentType": "text/html"
+      },
+      {
+        "path": "favicon-32.png",
+        "status": 404,
+        "contentType": "text/html"
+      },
+      {
+        "path": "apple-touch-icon.png",
+        "status": 404,
+        "contentType": "text/html"
+      }
+    ]
+  }
+}
