@@ -27,7 +27,7 @@ pixel-perfect:assimilate [<source>…]
 ## What it never does
 
 - **Copy a brand.** From a source you admire it takes structure, tokens, and patterns — never logos, brand marks, product names, copy text, or proprietary assets. Those are recorded as unclaimed with the reason "third-party brand or content — not assimilated".
-- **Publish someone else's pixels.** Screenshots of an admired source stay in the run's `reference/` folder, which is git-ignored (`design/assimilations/*/reference/`). The manifest keeps the URL, the capture date, the content hash, and what was adopted.
+- **Publish someone else's pixels.** Screenshots of an admired source stay in the run's `reference/` folder, which the run git-ignores with its own `reference/.gitignore` (`*`) — your project's `.gitignore` is never edited. The manifest keeps the URL, the capture date, the content hash, and what was adopted.
 - **Turn an admired source into your screens.** Its frames can justify a component, never a route or a screen state (`verify-inventory.mjs` Check N).
 - **Build.** It records what to make; `pixel-perfect:build` (or `evolve`, after `compose`) makes it.
 
@@ -109,7 +109,7 @@ The `A0` answer authorizes this phase. Run `docs/DESIGN-ANALYSIS.md` Steps 1–4
 | `NOTES` | the `A0` Context answer, or none |
 | `LENS` | `docs/frontend-design/FRONTEND-DESIGN.md` |
 
-Before rendering, make sure the project's `.gitignore` has the line `design/assimilations/*/reference/` (add it if missing). The gate must pass before the report is written; a read that fails it twice stops the run and shows the violations.
+Before rendering, write `<run>/reference/.gitignore` containing `*`, so the run's screenshots are never committed and nothing outside the run changes. The gate must pass before the report is written; a read that fails it twice stops the run and shows the violations.
 
 ---
 
@@ -170,8 +170,8 @@ batch: A1 — keep the findings
 
 | Project | Your own mockup | A source you admire |
 |---|---|---|
-| **new** | `receipt.json` only — `init` adds its own sources to `references`, writes the inventory receipt, and records the assimilation. Next: `pixel-perfect:init` | Adopted components join `design/inventory.json`; token and pattern proposals live in `receipt.json` until `init` records them. Next: `pixel-perfect:init` |
-| **pre-compose** | Add the sources to `manifest.references`, write the manifest `inventory` receipt, append to `assimilations[]`, and set the `plan` gate back to `pending` if it had passed so build plans the new items. Next: `pixel-perfect:build` | Append to `assimilations[]`; never touch `references`. Reset `plan` if the inventory grew. Next: `pixel-perfect:build`, or `pixel-perfect:refine` to apply adopted tokens to an existing theme |
+| **new** | `receipt.json` only — `init` adds its own sources to `references`, writes the inventory receipt, and records the assimilation. Next: `pixel-perfect:init` | `receipt.json` only — adopted components, tokens, and patterns wait there; `init` records them. Next: `pixel-perfect:init` |
+| **pre-compose** | Add the sources to `manifest.references`, write the manifest `inventory` receipt, append to `assimilations[]`, and set the `plan` gate back to `pending` if it had passed so build plans the new items. Next: `pixel-perfect:build` | Append to `assimilations[]`; never touch `references`. Adopted components join `design/inventory.json` when one exists (and `plan` resets if it grew); otherwise build Phase 4a adds them when it first runs. Next: `pixel-perfect:build`, or `pixel-perfect:refine` to apply adopted tokens to an existing theme |
 | **post-compose** | Append to `assimilations[]` only. Next: `pixel-perfect:evolve design/assimilations/<run>/`, which proves the change against the golden catalog | Same |
 
 `<run>/receipt.json` and each `manifest.assimilations[]` entry share one shape:
@@ -184,7 +184,10 @@ batch: A1 — keep the findings
   "notes": "Focus on the plan comparison table",
   "sources": [{ "ref": "https://fieldpro.example/pricing", "hash": "sha256:…", "role": "inspiration" }],
   "adopted": {
-    "components": ["PlanComparisonTable", "BillingToggle"],
+    "components": [
+      { "name": "PlanComparisonTable", "layer": "organisms", "evidence": "fieldpro.example/pricing frame 03 — plan columns with a sticky header row" },
+      { "name": "BillingToggle", "layer": "molecules", "evidence": "fieldpro.example/pricing frame 02 — monthly / yearly switch" }
+    ],
     "tokens": [{ "role": "radius-md", "value": "6px", "from": "https://fieldpro.example/pricing", "note": "softer than the current 4px" }],
     "patterns": ["Plan columns stay aligned on scroll with a sticky header row"]
   },

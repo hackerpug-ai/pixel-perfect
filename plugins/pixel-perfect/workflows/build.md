@@ -117,6 +117,8 @@ One PNG per drawn frame, cropped from the rendered source, plus `design/referenc
 
 `DESIGN_EXECUTE` with `docs/INVENTORY-CONTRACT.md` (`<<CALLER>>` and `<<ANALYSIS_EXTRAS>>` as `docs/DESIGN-ANALYSIS.md` Step 2 gives them for build), substituting: the frames index and every frame image, the source files, `manifest.spec`, the platform's existing atoms/molecules/organisms/screens (names are reused, never re-invented), `scaffold.components[]` (library primitives are recorded, not re-created), and the prior `design/inventory.json` when re-running. **One dispatch, strongest available vision-capable model** — do not split the read per source; cross-source compositions are what a split loses. The designer returns `design/inventory.json` (`docs/inventory.schema.json`).
 
+**Adopted components.** Before the gate, add each component in `manifest.assimilations[].adopted.components` that the read did not return — in the layer its receipt records, with `undrawn: "adopted from inspiration — assimilation <run>"` and the receipt's `evidence` — so what the user adopted through `pixel-perfect:assimilate` is planned and built like everything else.
+
 ### Step 3: Gate (deterministic)
 
 ```
