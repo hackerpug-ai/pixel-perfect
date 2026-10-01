@@ -19,7 +19,7 @@
 		argTypes: { title: { control: 'text' }, label: { control: 'text' }, lines: { control: 'object' } },
 		args: {
 			title: 'design/manifest.json (excerpt)',
-			label: "This site's build",
+			label: 'This build',
 			lines: excerpts.manifest
 		}
 	});

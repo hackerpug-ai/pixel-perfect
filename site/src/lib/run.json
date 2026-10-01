@@ -1,5 +1,5 @@
 {
-	"recorded": "2026-10-01T03:38:43.991Z",
+	"recorded": "2026-10-01T21:37:14.408Z",
 	"release": {
 		"version": "9.2.0",
 		"major": "9",
@@ -7,12 +7,12 @@
 		"date": "2026-10-01"
 	},
 	"numbers": {
-		"tokens": 8743277,
-		"cachedTokens": 404851903,
-		"minutes": 280,
+		"tokens": 9970153,
+		"cachedTokens": 444395796,
+		"minutes": 326,
 		"frames": 22,
-		"gates": 28,
-		"components": 56
+		"gates": 34,
+		"components": 55
 	},
 	"excerpts": {
 		"manifest": [
@@ -233,7 +233,7 @@
 			[
 				[
 					"plain",
-					"tokens      built     "
+					"tokens    "
 				],
 				[
 					"success",
@@ -241,13 +241,13 @@
 				],
 				[
 					"plain",
-					"   25 colour tokens"
+					"  25 colours"
 				]
 			],
 			[
 				[
 					"plain",
-					"atoms       built     "
+					"atoms     "
 				],
 				[
 					"success",
@@ -255,13 +255,13 @@
 				],
 				[
 					"plain",
-					"   22 components"
+					"  22 components"
 				]
 			],
 			[
 				[
 					"plain",
-					"molecules   built     "
+					"molecules "
 				],
 				[
 					"success",
@@ -269,13 +269,13 @@
 				],
 				[
 					"plain",
-					"   19 components"
+					"  18 components"
 				]
 			],
 			[
 				[
 					"plain",
-					"organisms   built     "
+					"organisms "
 				],
 				[
 					"success",
@@ -283,13 +283,13 @@
 				],
 				[
 					"plain",
-					"   15 components"
+					"  15 components"
 				]
 			],
 			[
 				[
 					"plain",
-					"screens     "
+					"screens   "
 				],
 				[
 					"value",
@@ -316,14 +316,14 @@
 	},
 	"method": {
 		"tokens": {
-			"input": 3144,
-			"cacheWrite": 7946087,
-			"cacheRead": 404851903,
-			"output": 794046
+			"input": 3366,
+			"cacheWrite": 9086987,
+			"cacheRead": 444395796,
+			"output": 879800
 		},
-		"responses": 1277,
+		"responses": 1386,
 		"idleMinutes": 15,
 		"from": "2026-09-30T04:45:38.036Z",
-		"sessions": 31
+		"sessions": 33
 	}
 }

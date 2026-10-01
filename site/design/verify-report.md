@@ -43,3 +43,24 @@ Platforms: web-desktop (1440) and web-mobile (390). One route, `/` (Home). Sourc
 
 - Interaction, focus and motion were not assessed: the screenshots are static, with reduced motion. Earlier real-Chrome checks covered the theme toggle, the slider keys and the install tabs.
 - Contrast ratios and the tap area of the phone section strip were not measured.
+
+## Fixes since this run (2026-10-01)
+
+These address the defects above. The gate result above stands until verify runs again, and the gate still needs the evolve placeholder resolved.
+
+1. **Drift pins.** Pins 2 and 3 have traded places. In real Chrome, at 1440 and 390, pin 2 sits beside the drift-gray helper line and pin 3 beside the restyled button.
+2. **Mobile viewport.** `.storybook/preview.ts` now defines the two platform widths as viewport presets, Desktop (1440) and Phone (390).
+   - The new `Screens/Home` story `Phone` opens at 390 in Storybook's UI. Measured: the preview is 390px wide and shows the phone header.
+   - Every other story keeps the full canvas.
+3. **390 code panels.**
+   - The status lines are now at most 36 characters, so the status panel no longer clips at 390 (0px overflow).
+   - The header label is "This build", and every header fits on one line at both widths.
+   - The other panels still scroll sideways at 390, as the design specifies.
+
+The run numbers were re-recorded with `scripts/record-run.mjs`.
+
+Afterwards:
+- Catalog `--check` matches 348 stories at each width. The only changes accepted were the expected ones: Stat, StatGrid, DemoStats, FaqList, CodePanel, StepsTimeline, DriftComparison and Home, plus the new Phone story.
+- All 11 Home states are re-proven.
+- No import changed.
+- svelte-check is clean, the styling contract has 0 violations, and both builds pass.

@@ -41,11 +41,13 @@
 		'[&_p]:text-drift',
 		'[&_button]:rounded-[5px] [&_button]:border-accent-text [&_button]:bg-transparent [&_button]:font-semibold [&_button]:text-accent-text'
 	];
-	// Mark positions on the card edge (export: 1 top-left corner, 2-4 down the right edge) and pop-in points.
+	// Mark positions on the card edge and pop-in points. Each pin sits beside what its note names: 1 the
+	// padded corner, 2 the drift-gray helper line, 3 the restyled button (top right on the install card,
+	// so 2 and 3 trade the export's places, where the plan card's button was at the bottom), 4 the radius.
 	const marks = [
 		{ n: 1, at: 'opacity-[clamp(0,calc((var(--p)_-_0.25)*8),1)] scale-[clamp(.5,calc(.5_+_(var(--p)_-_0.25)*4),1)]', pos: '-top-2.75 -left-2.75' },
-		{ n: 2, at: 'opacity-[clamp(0,calc((var(--p)_-_0.4)*8),1)] scale-[clamp(.5,calc(.5_+_(var(--p)_-_0.4)*4),1)]', pos: 'top-3.5 -right-2.75' },
-		{ n: 3, at: 'opacity-[clamp(0,calc((var(--p)_-_0.55)*8),1)] scale-[clamp(.5,calc(.5_+_(var(--p)_-_0.55)*4),1)]', pos: '-right-2.75 bottom-5.5' },
+		{ n: 2, at: 'opacity-[clamp(0,calc((var(--p)_-_0.4)*8),1)] scale-[clamp(.5,calc(.5_+_(var(--p)_-_0.4)*4),1)]', pos: '-right-2.75 bottom-5.5' },
+		{ n: 3, at: 'opacity-[clamp(0,calc((var(--p)_-_0.55)*8),1)] scale-[clamp(.5,calc(.5_+_(var(--p)_-_0.55)*4),1)]', pos: 'top-3.5 -right-2.75' },
 		{ n: 4, at: 'opacity-[clamp(0,calc((var(--p)_-_0.7)*8),1)] scale-[clamp(.5,calc(.5_+_(var(--p)_-_0.7)*4),1)]', pos: '-right-2.75 -bottom-2.75' }
 	];
 </script>

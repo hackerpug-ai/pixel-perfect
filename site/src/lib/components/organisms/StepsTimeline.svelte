@@ -76,7 +76,7 @@
 	{#each steps as step, i (step.command)}
 		<li class="grid grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] items-start gap-x-10 gap-y-6 max-md:grid-cols-1">
 			<StepCard step={i + 1} title={step.title} command={step.command} description={step.description} threshold={step.threshold} />
-			<CodePanel title={step.panel.title} label="This site's build" lines={step.panel.lines} />
+			<CodePanel title={step.panel.title} label="This build" lines={step.panel.lines} />
 		</li>
 	{/each}
 </ol>

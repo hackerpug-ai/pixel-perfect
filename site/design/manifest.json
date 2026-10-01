@@ -546,7 +546,7 @@
           "states_note": "One route. The install tabs deep-link with #install-{id} on the same page (same data, instant toggle, shared layout), so they are states, not routes. dark renders Home in the dark theme; headline-alternate is the strategy D13 headline test.",
           "file": "src/lib/components/screens/Home.svelte",
           "story": "src/lib/components/screens/Home.stories.svelte",
-          "scenario_note": "dark is the capture's dark pass of each story (default--dark and so on), as for SiteHeader's theme; every other state has its own story. Status stays 'built', not 'verified', until the compose gate passes: the evolve thread's summary waits for the real evolve run (T6 AC-3)."
+          "scenario_note": "dark is the capture's dark pass of each story (default--dark and so on), as for SiteHeader's theme; every other state has its own story. Status stays 'built', not 'verified', until the compose gate passes: the evolve thread's summary waits for the real evolve run (T6 AC-3). A 'phone' story opens Home at the web-mobile viewport preset (390) in the sandbox; it is a review aid, not a state."
         }
       ],
       "atoms": [
@@ -1155,7 +1155,7 @@
           "states_note": "One route. The install tabs deep-link with #install-{id} on the same page (same data, instant toggle, shared layout), so they are states, not routes. dark renders Home in the dark theme; headline-alternate is the strategy D13 headline test.",
           "file": "src/lib/components/screens/Home.svelte",
           "story": "src/lib/components/screens/Home.stories.svelte",
-          "scenario_note": "dark is the capture's dark pass of each story (default--dark and so on), as for SiteHeader's theme; every other state has its own story. Status stays 'built', not 'verified', until the compose gate passes: the evolve thread's summary waits for the real evolve run (T6 AC-3)."
+          "scenario_note": "dark is the capture's dark pass of each story (default--dark and so on), as for SiteHeader's theme; every other state has its own story. Status stays 'built', not 'verified', until the compose gate passes: the evolve thread's summary waits for the real evolve run (T6 AC-3). A 'phone' story opens Home at the web-mobile viewport preset (390) in the sandbox; it is a review aid, not a state."
         }
       ],
       "atoms": [

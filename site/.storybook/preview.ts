@@ -25,6 +25,13 @@ const preview: Preview = {
 	],
 	parameters: {
 		layout: 'fullscreen',
+		// The two platform widths (manifest platforms), so a screen can be reviewed at each in the sandbox.
+		viewport: {
+			options: {
+				desktop: { name: 'Desktop (web-desktop, 1440)', styles: { width: '1440px', height: '900px' }, type: 'desktop' },
+				phone: { name: 'Phone (web-mobile, 390)', styles: { width: '390px', height: '844px' }, type: 'mobile' }
+			}
+		},
 		controls: {
 			matchers: {
 				color: /(background|color)$/i,
