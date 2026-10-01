@@ -97,6 +97,9 @@ export async function checkRuntimePaths(root = REPOSITORY_ROOT) {
     "docs/library-vetting-rubric.md",
     "docs/styling-contracts/README.md",
     "docs/component-contracts/README.md",
+    "docs/DESIGN-ANALYSIS.md",
+    "docs/INVENTORY-CONTRACT.md",
+    "docs/frontend-design/FRONTEND-DESIGN.md",
   ];
   for (const relativePath of pathBearingFiles) {
     let content;

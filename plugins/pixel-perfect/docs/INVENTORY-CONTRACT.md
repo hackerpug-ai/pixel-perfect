@@ -1,12 +1,15 @@
 # Design Inventory Contract
 
-The brief for the one whole-design read that `pixel-perfect:build` Phase 4a dispatches through
-`DESIGN_EXECUTE`. Its output is **the list of real components and compositions to make** — atoms,
+The brief for the one whole-design read that `docs/DESIGN-ANALYSIS.md` dispatches through
+`DESIGN_EXECUTE` — for `pixel-perfect:build` Phase 4a, `pixel-perfect:assimilate`, and
+`pixel-perfect:evolve` E1. Its output is **the list of real components and compositions to make** — atoms,
 molecules, organisms, and screens with their states — each tied to the rendered frames that justify
 it. It is never HTML, never a mockup, never a token pipeline. The real components built later are the
 deliverable; this inventory is the checklist they are built against.
 
-The orchestrator substitutes `<<PLACEHOLDERS>>` at dispatch time. Load
+The orchestrator substitutes `<<PLACEHOLDERS>>` at dispatch time, including `<<CALLER>>` and
+`<<ANALYSIS_EXTRAS>>` as `docs/DESIGN-ANALYSIS.md` Step 2 specifies (for build they reproduce the
+brief exactly as it read before the procedure was shared). Load
 [`DESIGN-CONTRACT.md`](DESIGN-CONTRACT.md) alongside this file; the design contract governs how the
 designer looks, this contract governs what the designer returns.
 
@@ -32,8 +35,8 @@ exactly what a split loses.
 ## THE BRIEF
 
 ```
-You are the designer for ONE whole-design read in the "build" workflow (Phase 4a — DESIGN
-INVENTORY). You return a complete inventory of what must be built; you write no code, no
+You are the designer for ONE whole-design read in the <<CALLER>>.
+You return a complete inventory of what must be built; you write no code, no
 HTML, and no mockup.
 
 EXECUTE DIRECTLY. Do not spawn subagents or delegate; the orchestrator owns dispatch.
@@ -57,6 +60,7 @@ INPUTS
                        repo; a primitive that exists is recorded, not re-invented)
   • Prior inventory:   <<PRIOR_INVENTORY>>   (design/inventory.json when re-running after a
                        source changed — keep every confirmed name that is still drawn)
+<<ANALYSIS_EXTRAS>>
 
 PROCEDURE (in this order — the order is what prevents undercounting)
   1. Count the frames in the index. Your inventory must account for every one of them
