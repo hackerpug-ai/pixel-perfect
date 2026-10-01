@@ -68,7 +68,7 @@ Each phase has a **gate** that must pass before you proceed. The plugin tracks s
 
 ## Quick Start
 
-Version 9.1.0 projects the same runtime into all six harnesses.
+Version 9.2.0 projects the same runtime into all six harnesses.
 
 **Upgrading from 7.x:** see [`plugins/pixel-perfect/docs/UPGRADING-8.0.md`](plugins/pixel-perfect/docs/UPGRADING-8.0.md) — add a capture command, run `--baseline` once, drop composition-edge/`controls` authority; inventory changes use `evolve`.
 
@@ -114,7 +114,7 @@ Keep the personal marketplace itself if it contains other plugins. `codex plugin
 Cursor loads local plugins from `~/.cursor/plugins/local/`. **Copy** the package (do not symlink — Cursor has known failures loading symlinked local plugins):
 
 ```bash
-git clone --branch v9.1.0 --depth 1 https://github.com/hackerpug-ai/pixel-perfect.git /tmp/pixel-perfect
+git clone --branch v9.2.0 --depth 1 https://github.com/hackerpug-ai/pixel-perfect.git /tmp/pixel-perfect
 mkdir -p ~/.cursor/plugins/local
 rm -rf ~/.cursor/plugins/local/pixel-perfect
 cp -R /tmp/pixel-perfect/plugins/pixel-perfect ~/.cursor/plugins/local/pixel-perfect
@@ -135,7 +135,7 @@ Invoke capabilities as `/pixel-perfect:init`, `/pixel-perfect:build`, and so on.
 OpenCode consumes the tagged Git checkout and its versioned adapter package. From the target project:
 
 ```bash
-git clone --branch v9.1.0 --depth 1 https://github.com/hackerpug-ai/pixel-perfect.git .pixel-perfect
+git clone --branch v9.2.0 --depth 1 https://github.com/hackerpug-ai/pixel-perfect.git .pixel-perfect
 mkdir -p .opencode
 ln -s ../.pixel-perfect/plugins/pixel-perfect/.opencode/commands .opencode/commands
 ln -s ../.pixel-perfect/plugins/pixel-perfect/.opencode/skills .opencode/skills

@@ -4,6 +4,8 @@ All notable changes to Pixel Perfect are documented here.
 
 ## [Unreleased]
 
+## [9.2.0] - 2026-10-01
+
 ### Added
 
 - Added `pixel-perfect:assimilate`, which analyzes something that is not usable components — a new mockup of your own, or the UI of a site or design you admire — and folds the findings into your design system after you read a report and confirm. It works before `init` (a brand-new project) and on an existing system. Sources you admire contribute components, tokens, and patterns in your own style; their brand, copy, and screens are never copied, and their screenshots stay local (git-ignored).
@@ -19,6 +21,7 @@ All notable changes to Pixel Perfect are documented here.
 - `render-frames.mjs` crashed on any directory without `wireframes.json` (a CommonJS `require` in an ES module), and a new source whose file name matched another source's slug deleted that source's frames.
 - `evolve` E1 rendered into `design/reference` before its E4 confirmation; it now renders into its delta directory.
 - `init` recorded products to borrow from in `references`, which `build` renders as your own design. They are now `assimilate_candidates`.
+- The test suite could hang: capture-polish deleted Chrome's profile while Chrome's helpers were still writing it (`ENOTEMPTY`), and the error skipped closing its server, so the process never exited. Profile cleanup now retries and can no longer skip the server close. `render-frames.mjs` launches Chrome only when a source needs it (an HTML deck or a URL); images and wireframes are read from disk.
 
 ## [9.1.0] - 2026-09-02
 

@@ -58,7 +58,7 @@ async function packPackage(directory) {
 test("pi package manifest exposes only namespaced Pixel Perfect skills", async () => {
   const manifest = JSON.parse(await readFile(path.join(PACKAGE_ROOT, "package.json"), "utf8"));
   assert.equal(manifest.name, "@hackerpug-ai/pixel-perfect");
-  assert.equal(manifest.version, "9.1.0");
+  assert.equal(manifest.version, "9.2.0");
   assert.ok(manifest.keywords.includes("pi-package"));
   assert.deepEqual(manifest.pi, { skills: ["./.pi/skills"] });
   assert.equal(manifest.publishConfig.access, "public");
