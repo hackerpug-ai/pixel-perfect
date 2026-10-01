@@ -410,7 +410,7 @@
     "copy": {
       "status": "labels in the export (Landing:474); layout and announcement designed here; the next step is always shown (decided at B-inv)",
       "labels": "Copy, then 'Copied ✓' for 2 seconds. If the clipboard is blocked, the command text is selected instead and the label reads 'Selected'.",
-      "layout": "The button keeps the width of its widest label (min-width 9ch) so nothing shifts when the label changes.",
+      "layout": "The button is as wide as its label, as the design draws it ('Copy'). While 'Copied ✓' or 'Selected' shows (2 seconds) it widens and the command may re-wrap. Decided 2026-09-30 by the owner: the earlier rule (keep the widest label's width, min-width 9ch) made the built card differ from the design, which the hero's real proof pair exposed.",
       "announce": "A visually hidden aria-live=polite region per copy block says 'Copied to clipboard' or 'Command selected. Press Command-C or Control-C to copy.'",
       "next_step": "Decided at build B-inv: the 'Next: open a project that has your design and run /pixel-perfect:init' line is always shown under the Install tabs in body type, as the export draws it. It is not revealed by copying and does not appear under the hero."
     },
@@ -438,7 +438,7 @@
       "status": "layout from ../design/Social preview.dc.html; lockup changed by the logo decision (strategy D5)",
       "build": "The SocialCard organism is 1200x630, light theme only, and is rendered to og.png at build.",
       "change": "The crosshair and mono 'pixel-perfect' lockup become the site's Logo atom: mark A (stacked plates) with the Anybody wordmark, as in the header. Everything else keeps the export's layout: crop marks, the plate-misregistered headline, the agent slug line, and the proof slider.",
-      "content": "The slider pair is the placeholder $24 card until strategy T21 supplies a real pair (see the brief's placeholder register)."
+      "content": "The slider pair is real (owner's decision 2026-09-30): the install card as drawn in the design export beside the live CopyBlock built from it, staged at the card's 545px design width and zoomed to fit the 440px pane."
     },
     "component_sheet": {
       "status": "kept as a reference, not rebuilt",
@@ -500,7 +500,7 @@
         "style_contract_overrides": {},
         "component_contract_source": "none"
       },
-      "phase": "organisms",
+      "phase": "compose",
       "gates": {
         "scaffold": "passed",
         "plan": "passed",
@@ -519,7 +519,10 @@
         "organisms_styling_contract": "passed",
         "organisms_component_contract": "n/a",
         "organisms_capture": "passed",
-        "organisms_composition": "passed"
+        "organisms_composition": "passed",
+        "screens_styling_contract": "passed",
+        "screens_component_contract": "n/a",
+        "compose_capture": "passed"
       },
       "screens": [
         {
@@ -538,8 +541,11 @@
             "copied",
             "headline-alternate"
           ],
-          "status": "pending",
-          "states_note": "One route. The install tabs deep-link with #install-{id} on the same page (same data, instant toggle, shared layout), so they are states, not routes. dark renders Home in the dark theme; headline-alternate is the strategy D13 headline test."
+          "status": "built",
+          "states_note": "One route. The install tabs deep-link with #install-{id} on the same page (same data, instant toggle, shared layout), so they are states, not routes. dark renders Home in the dark theme; headline-alternate is the strategy D13 headline test.",
+          "file": "src/lib/components/screens/Home.svelte",
+          "story": "src/lib/components/screens/Home.stories.svelte",
+          "scenario_note": "dark is the capture's dark pass of each story (default--dark and so on), as for SiteHeader's theme; every other state has its own story. Status stays 'built', not 'verified', until the compose gate passes: the evolve thread's summary waits for the real evolve run (T6 AC-3)."
         }
       ],
       "atoms": [
@@ -728,13 +734,6 @@
           "name": "StepCard",
           "file": "src/lib/components/molecules/StepCard.svelte",
           "story": "src/lib/components/molecules/StepCard.stories.svelte",
-          "status": "verified",
-          "state": null
-        },
-        {
-          "name": "PlanCard",
-          "file": "src/lib/components/molecules/PlanCard.svelte",
-          "story": "src/lib/components/molecules/PlanCard.stories.svelte",
           "status": "verified",
           "state": null
         },
@@ -1109,7 +1108,7 @@
         "style_contract_overrides": {},
         "component_contract_source": "none"
       },
-      "phase": "organisms",
+      "phase": "compose",
       "gates": {
         "scaffold": "passed",
         "plan": "passed",
@@ -1128,7 +1127,10 @@
         "organisms_styling_contract": "passed",
         "organisms_component_contract": "n/a",
         "organisms_capture": "passed",
-        "organisms_composition": "passed"
+        "organisms_composition": "passed",
+        "screens_styling_contract": "passed",
+        "screens_component_contract": "n/a",
+        "compose_capture": "passed"
       },
       "screens": [
         {
@@ -1147,8 +1149,11 @@
             "copied",
             "headline-alternate"
           ],
-          "status": "pending",
-          "states_note": "One route. The install tabs deep-link with #install-{id} on the same page (same data, instant toggle, shared layout), so they are states, not routes. dark renders Home in the dark theme; headline-alternate is the strategy D13 headline test."
+          "status": "built",
+          "states_note": "One route. The install tabs deep-link with #install-{id} on the same page (same data, instant toggle, shared layout), so they are states, not routes. dark renders Home in the dark theme; headline-alternate is the strategy D13 headline test.",
+          "file": "src/lib/components/screens/Home.svelte",
+          "story": "src/lib/components/screens/Home.stories.svelte",
+          "scenario_note": "dark is the capture's dark pass of each story (default--dark and so on), as for SiteHeader's theme; every other state has its own story. Status stays 'built', not 'verified', until the compose gate passes: the evolve thread's summary waits for the real evolve run (T6 AC-3)."
         }
       ],
       "atoms": [
@@ -1337,13 +1342,6 @@
           "name": "StepCard",
           "file": "src/lib/components/molecules/StepCard.svelte",
           "story": "src/lib/components/molecules/StepCard.stories.svelte",
-          "status": "verified",
-          "state": null
-        },
-        {
-          "name": "PlanCard",
-          "file": "src/lib/components/molecules/PlanCard.svelte",
-          "story": "src/lib/components/molecules/PlanCard.stories.svelte",
           "status": "verified",
           "state": null
         },

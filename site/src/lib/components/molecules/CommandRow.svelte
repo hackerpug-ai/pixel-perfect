@@ -4,7 +4,7 @@
 	import { untrack } from 'svelte';
 	import Button from '$lib/components/atoms/Button.svelte';
 	import InlineCode from '$lib/components/atoms/InlineCode.svelte';
-	import { CopyFeedback, COPY_LABELS, type CopyResult } from '$lib/copy.svelte';
+	import { CopyFeedback, type CopyResult } from '$lib/copy.svelte';
 
 	interface Props {
 		command: string;
@@ -26,6 +26,6 @@
 
 <div class="flex items-center justify-between gap-3 rounded-md bg-code-bg px-3.5 py-2.5 text-code-fg">
 	<span bind:this={commandEl} class="min-w-0"><InlineCode text={command} variant="command" /></span>
-	<Button label={feedback.label} reserve={COPY_LABELS} variant="code" onclick={copy} />
+	<Button label={feedback.label} variant="code" onclick={copy} />
 	<span class="sr-only" aria-live="polite">{feedback.announcement}</span>
 </div>

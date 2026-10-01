@@ -11,12 +11,12 @@
 			docs: {
 				description: {
 					component:
-						'The approved card beside its drifted copy, with a note per proofreader’s mark. On scroll the copy drifts and the marks pop in (why-drift); at rest, and with reduced motion, it is fully drifted. Example content.'
+						'The install card beside a drifted copy of it, with a note per proofreader’s mark. On scroll the copy drifts and the marks pop in (why-drift); at rest, and with reduced motion, it is fully drifted. The card is the real install card from this build.'
 				}
 			}
 		},
 		argTypes: {
-			card: { control: 'object' },
+			command: { control: 'text' },
 			notes: { control: 'object', description: 'One note per mark; code in backticks' },
 			caption: { control: 'text' },
 			progress: { control: { type: 'range', min: 0, max: 1, step: 0.05 }, description: 'Pins drift progress for stories' }

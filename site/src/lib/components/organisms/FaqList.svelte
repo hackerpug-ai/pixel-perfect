@@ -3,6 +3,7 @@
 	// (native details; several can be open). Home places the 'Questions' heading beside it at 1440
 	// (1:2 grid) and above it at 390.
 	import FaqItem from '$lib/components/molecules/FaqItem.svelte';
+	import { numbers, release, short } from '$lib/run';
 
 	type Part = string | { code: string };
 
@@ -29,8 +30,7 @@
 			},
 			{
 				question: 'How many tokens does it use?',
-				answer:
-					'A full build of a [n]-frame design used [n] tokens across [n] minutes (measured at launch). Frames are read once and cached, so evolve and refine runs cost a fraction of the first build.'
+				answer: `This site's own build read a ${numbers.frames}-frame design and used ${short(numbers.tokens)} new tokens across ${numbers.minutes} active minutes, plus ${short(numbers.cachedTokens)} tokens of cached context re-read between turns. Frames are read once and cached, so evolve and refine runs cost a fraction of the first build.`
 			},
 			{
 				question: 'Does it work with my stack?',
@@ -43,7 +43,7 @@
 					'No. The output is plain code in your repository plus a DESIGN.md. Delete the skill and everything it built still works, because nothing depends on it at runtime.'
 			},
 			{
-				question: "It's at version 9. Is it stable?",
+				question: `It's at version ${release.major}. Is it stable?`,
 				answer:
 					'The command surface is stable and version-locked across all six agents. The major number counts breaking changes to the inventory format, and each one ships with an upgrade guide.'
 			},

@@ -2,6 +2,7 @@
 	import { defineMeta } from '@storybook/addon-svelte-csf';
 	import { fn } from 'storybook/test';
 	import CommandRow from './CommandRow.svelte';
+	import { release } from '$lib/run';
 
 	const { Story } = defineMeta({
 		title: 'Molecules/CommandRow',
@@ -25,5 +26,5 @@
 <Story name="Selected" args={{ initialFeedback: 'selected' }} />
 <Story
 	name="Long command"
-	args={{ command: 'git clone --branch <release-tag> https://github.com/hackerpug-ai/pixel-perfect .pixel-perfect' }}
+	args={{ command: `git clone --branch ${release.tag} https://github.com/hackerpug-ai/pixel-perfect .pixel-perfect` }}
 />

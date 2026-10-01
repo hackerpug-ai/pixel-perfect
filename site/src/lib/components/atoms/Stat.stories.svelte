@@ -1,6 +1,7 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
 	import Stat from './Stat.svelte';
+	import { stats } from '$lib/run';
 
 	const { Story } = defineMeta({
 		title: 'Components/Stat',
@@ -12,17 +13,17 @@
 			docs: {
 				description: {
 					component:
-						"One figure from the Build it stats: a mono label over an Anybody value. Values stay '[n]' until the dogfood run is measured."
+						"One figure from the Build it stats: a mono label over an Anybody value. The values are this site's own build (run.json)."
 				}
 			}
 		},
 		argTypes: {
 			label: { control: 'text', description: 'What is counted' },
-			value: { control: 'text', description: "Measured value; '[n]' until the dogfood run" }
+			value: { control: 'text', description: 'Measured value' }
 		},
 		args: {
-			label: 'Tokens',
-			value: '[n]'
+			label: stats[0].label,
+			value: stats[0].value
 		}
 	});
 </script>

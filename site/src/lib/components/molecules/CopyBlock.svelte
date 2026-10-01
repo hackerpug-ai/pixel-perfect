@@ -6,7 +6,7 @@
 	import { untrack } from 'svelte';
 	import Button from '$lib/components/atoms/Button.svelte';
 	import InlineCode from '$lib/components/atoms/InlineCode.svelte';
-	import { CopyFeedback, COPY_LABELS, type CopyResult } from '$lib/copy.svelte';
+	import { CopyFeedback, type CopyResult } from '$lib/copy.svelte';
 
 	interface Props {
 		command: string;
@@ -44,12 +44,12 @@
 	{#if variant === 'card'}
 		<div class="flex items-start justify-between gap-3">
 			<span bind:this={commandEl} class="min-w-0"><InlineCode text={command} variant="command" tone="ink" /></span>
-			<Button label={feedback.label} reserve={COPY_LABELS} size="md" onclick={copy} />
+			<Button label={feedback.label} size="md" onclick={copy} />
 		</div>
 		<p class="m-0 text-code text-muted">{helper}</p>
 	{:else}
 		<span bind:this={commandEl} class="min-w-0"><InlineCode text={command} variant="command" tone="ink" /></span>
-		<Button label={feedback.label} reserve={COPY_LABELS} variant="secondary" size="md" onclick={copy} />
+		<Button label={feedback.label} variant="secondary" size="md" onclick={copy} />
 	{/if}
 	<span class="sr-only" aria-live="polite">{feedback.announcement}</span>
 </div>

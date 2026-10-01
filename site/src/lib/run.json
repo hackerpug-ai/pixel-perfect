@@ -1,0 +1,329 @@
+{
+	"recorded": "2026-10-01T03:38:43.991Z",
+	"release": {
+		"version": "9.2.0",
+		"major": "9",
+		"tag": "v9.2.0",
+		"date": "2026-10-01"
+	},
+	"numbers": {
+		"tokens": 8743277,
+		"cachedTokens": 404851903,
+		"minutes": 280,
+		"frames": 22,
+		"gates": 28,
+		"components": 56
+	},
+	"excerpts": {
+		"manifest": [
+			[
+				[
+					"plain",
+					"{"
+				]
+			],
+			[
+				[
+					"plain",
+					"  "
+				],
+				[
+					"key",
+					"\"spec\""
+				],
+				[
+					"plain",
+					": "
+				],
+				[
+					"value",
+					"\"../.spec/prds/landing/strategy.md\""
+				],
+				[
+					"plain",
+					","
+				]
+			],
+			[
+				[
+					"plain",
+					"  "
+				],
+				[
+					"key",
+					"\"references\""
+				],
+				[
+					"plain",
+					": [6 design files]"
+				],
+				[
+					"plain",
+					","
+				]
+			],
+			[
+				[
+					"plain",
+					"  "
+				],
+				[
+					"key",
+					"\"framework\""
+				],
+				[
+					"plain",
+					": "
+				],
+				[
+					"value",
+					"\"sveltekit\""
+				],
+				[
+					"plain",
+					","
+				]
+			],
+			[
+				[
+					"plain",
+					"  "
+				],
+				[
+					"key",
+					"\"sandbox\""
+				],
+				[
+					"plain",
+					": "
+				],
+				[
+					"value",
+					"\"storybook\""
+				],
+				[
+					"plain",
+					","
+				]
+			],
+			[
+				[
+					"plain",
+					"  "
+				],
+				[
+					"key",
+					"\"platforms\""
+				],
+				[
+					"plain",
+					": [\"web-desktop\", \"web-mobile\"]"
+				]
+			]
+		],
+		"inventory": [
+			[
+				[
+					"key",
+					"\"atoms\""
+				],
+				[
+					"plain",
+					": ["
+				]
+			],
+			[
+				[
+					"plain",
+					"  { "
+				],
+				[
+					"key",
+					"\"name\""
+				],
+				[
+					"plain",
+					": "
+				],
+				[
+					"value",
+					"\"Button\""
+				],
+				[
+					"plain",
+					","
+				]
+			],
+			[
+				[
+					"plain",
+					"    "
+				],
+				[
+					"key",
+					"\"appears_on\""
+				],
+				[
+					"plain",
+					": [\"pixel-perfect-landing-dc/01\", … 17 frames] }, …"
+				]
+			],
+			[
+				[
+					"key",
+					"\"molecules\""
+				],
+				[
+					"plain",
+					": ["
+				]
+			],
+			[
+				[
+					"plain",
+					"  { "
+				],
+				[
+					"key",
+					"\"name\""
+				],
+				[
+					"plain",
+					": "
+				],
+				[
+					"value",
+					"\"CopyBlock\""
+				],
+				[
+					"plain",
+					","
+				]
+			],
+			[
+				[
+					"plain",
+					"    "
+				],
+				[
+					"key",
+					"\"composes\""
+				],
+				[
+					"plain",
+					": [\"InlineCode\", \"Button\"],"
+				]
+			],
+			[
+				[
+					"plain",
+					"    "
+				],
+				[
+					"key",
+					"\"appears_on\""
+				],
+				[
+					"plain",
+					": [\"pixel-perfect-landing-dc/01\", … 10 frames] }, …"
+				]
+			]
+		],
+		"status": [
+			[
+				[
+					"plain",
+					"tokens      built     "
+				],
+				[
+					"success",
+					"gate passed"
+				],
+				[
+					"plain",
+					"   25 colour tokens"
+				]
+			],
+			[
+				[
+					"plain",
+					"atoms       built     "
+				],
+				[
+					"success",
+					"gate passed"
+				],
+				[
+					"plain",
+					"   22 components"
+				]
+			],
+			[
+				[
+					"plain",
+					"molecules   built     "
+				],
+				[
+					"success",
+					"gate passed"
+				],
+				[
+					"plain",
+					"   19 components"
+				]
+			],
+			[
+				[
+					"plain",
+					"organisms   built     "
+				],
+				[
+					"success",
+					"gate passed"
+				],
+				[
+					"plain",
+					"   15 components"
+				]
+			],
+			[
+				[
+					"plain",
+					"screens     "
+				],
+				[
+					"value",
+					"building"
+				]
+			]
+		]
+	},
+	"cascade": {
+		"token": "accent-text",
+		"direct": [
+			"Button",
+			"DisclosureIcon",
+			"DriftComparison",
+			"PlateLabel",
+			"PlayButton",
+			"ProofMark",
+			"ProofNote",
+			"SliderHandle",
+			"TabNote",
+			"TextLink"
+		],
+		"reached": 35
+	},
+	"method": {
+		"tokens": {
+			"input": 3144,
+			"cacheWrite": 7946087,
+			"cacheRead": 404851903,
+			"output": 794046
+		},
+		"responses": 1277,
+		"idleMinutes": 15,
+		"from": "2026-09-30T04:45:38.036Z",
+		"sessions": 31
+	}
+}

@@ -36,8 +36,6 @@ const ANNOUNCEMENTS = {
 	selected: 'Command selected. Press Command-C or Control-C to copy.'
 } as const;
 
-/** Every label the copy button can show, so it can reserve the widest (Button `reserve`). */
-export const COPY_LABELS = Object.values(LABELS);
 
 /** A copy button's feedback: shown for 2 seconds, then back to "Copy". */
 export class CopyFeedback {

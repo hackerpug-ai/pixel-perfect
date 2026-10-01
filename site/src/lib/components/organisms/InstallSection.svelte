@@ -3,7 +3,8 @@
 	// one-step installs, the per-agent tabs and panel, the stability line, then "What it touches".
 	// Home places the heading row above it. Stateful: the selected tab. A link (#install-{id}) wins,
 	// then the visitor's remembered choice (strategy §12), then the first agent. Selecting updates the
-	// hash so the tab can be linked; arrows, Home and End move between tabs (roving tabindex).
+	// hash so the tab can be linked; arrows, Home and End move between tabs (roving tabindex). Every
+	// panel is rendered and the inactive ones hidden, so each tab's link and aria-controls resolve.
 	import { onMount, tick, untrack } from 'svelte';
 	import Tab from '$lib/components/atoms/Tab.svelte';
 	import TabNote from '$lib/components/atoms/TabNote.svelte';
@@ -12,18 +13,18 @@
 	import CopyNextStep from '$lib/components/molecules/CopyNextStep.svelte';
 	import ScanBox from '$lib/components/molecules/ScanBox.svelte';
 	import TouchList from '$lib/components/molecules/TouchList.svelte';
+	import { release } from '$lib/run';
 
 	type Agent = { id: string; name: string; steps: string[]; note?: string; warning?: string };
 	type Item = string | { code: string; text?: string };
 
 	interface Props {
-		/** The published release tag the clone commands check out, e.g. v9.1.0. */
-		releaseTag: string;
+		/** The release tag the clone commands check out (default: this release, run.json). */
+		releaseTag?: string;
 		/** Pins the selected tab (stories); unset, a link or the remembered choice decides. */
 		initialTab?: string;
 		pasteLine?: string;
 		skillsLine?: string;
-		/** Steps may contain <release-tag>, replaced with releaseTag. */
 		agents?: Agent[];
 		stability?: string;
 		touches?: { label: string; items: Item[] }[];
@@ -33,7 +34,7 @@
 	}
 
 	let {
-		releaseTag,
+		releaseTag = release.tag,
 		initialTab,
 		pasteLine = 'Install pixel-perfect: fetch and follow https://github.com/hackerpug-ai/pixel-perfect/INSTALL.md',
 		skillsLine = 'npx skills add hackerpug-ai/pixel-perfect',
@@ -49,7 +50,7 @@
 				id: 'cursor',
 				name: 'Cursor',
 				steps: [
-					'git clone --branch <release-tag> https://github.com/hackerpug-ai/pixel-perfect',
+					`git clone --branch ${releaseTag} https://github.com/hackerpug-ai/pixel-perfect`,
 					'cp -R pixel-perfect/plugins/pixel-perfect ~/.cursor/plugins/local/pixel-perfect'
 				],
 				note: 'Then reload the window.',
@@ -64,10 +65,13 @@
 			{
 				id: 'opencode',
 				name: 'OpenCode',
+				// The design linked .opencode/* at the clone's root, which does not exist: the OpenCode
+				// surface ships under plugins/pixel-perfect/. Checked against the v9.0.0 tag.
 				steps: [
-					'git clone --branch <release-tag> https://github.com/hackerpug-ai/pixel-perfect .pixel-perfect',
-					'ln -s ../.pixel-perfect/.opencode/commands .opencode/commands',
-					'ln -s ../.pixel-perfect/.opencode/skills .opencode/skills'
+					`git clone --branch ${releaseTag} https://github.com/hackerpug-ai/pixel-perfect .pixel-perfect`,
+					'mkdir -p .opencode',
+					'ln -s ../.pixel-perfect/plugins/pixel-perfect/.opencode/commands .opencode/commands',
+					'ln -s ../.pixel-perfect/plugins/pixel-perfect/.opencode/skills .opencode/skills'
 				]
 			},
 			{ id: 'pi', name: 'Pi', steps: ['pi install npm:@hackerpug-ai/pixel-perfect'] }
@@ -86,7 +90,6 @@
 	const known = (id: string | null | undefined) => (agents.some((a) => a.id === id) ? id! : undefined);
 
 	let selected = $state(untrack(() => known(initialTab) ?? agents[0].id));
-	const current = $derived(agents.find((a) => a.id === selected) ?? agents[0]);
 
 	function pick(id: string, focus = false) {
 		selected = id;
@@ -149,7 +152,7 @@
 				href="#install-{agent.id}"
 				label={agent.name}
 				selected={agent.id === selected}
-				controls={agent.id === selected ? `install-${agent.id}` : undefined}
+				controls="install-{agent.id}"
 				onselect={(event) => {
 					event.preventDefault();
 					pick(agent.id);
@@ -157,18 +160,21 @@
 			/>
 		{/each}
 	</div>
-	<div
-		role="tabpanel"
-		id="install-{current.id}"
-		aria-labelledby="tab-{current.id}"
-		tabindex="0"
-		class="flex flex-col gap-3 pt-6 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-focus"
-	>
-		{#each current.steps as step (step)}<CommandRow command={step.replaceAll('<release-tag>', releaseTag)} />{/each}
-		{#if current.note}<TabNote text={current.note} />{/if}
-		{#if current.warning}<TabNote variant="warning" text={current.warning} />{/if}
-		<div class="mt-2"><CopyNextStep /></div>
-	</div>
+	{#each agents as agent (agent.id)}
+		<div
+			role="tabpanel"
+			id="install-{agent.id}"
+			aria-labelledby="tab-{agent.id}"
+			tabindex="0"
+			hidden={agent.id !== selected}
+			class="flex flex-col gap-3 pt-6 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-focus"
+		>
+			{#each agent.steps as step (step)}<CommandRow command={step} />{/each}
+			{#if agent.note}<TabNote text={agent.note} />{/if}
+			{#if agent.warning}<TabNote variant="warning" text={agent.warning} />{/if}
+			<div class="mt-2"><CopyNextStep /></div>
+		</div>
+	{/each}
 </div>
 
 <p class="m-0 mt-10 max-w-150 text-ui text-muted">{stability}</p>

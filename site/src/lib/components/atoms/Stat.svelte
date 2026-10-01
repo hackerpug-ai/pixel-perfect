@@ -1,6 +1,6 @@
 <script lang="ts">
 	// One measured figure from the Build it stats: a term/description pair meant to sit in a <dl>
-	// (StatGrid). The value comes from the dogfood run; until then it is the '[n]' placeholder.
+	// (StatGrid). The value comes from this site's own build (run.json).
 	interface Props {
 		label: string;
 		value: string;

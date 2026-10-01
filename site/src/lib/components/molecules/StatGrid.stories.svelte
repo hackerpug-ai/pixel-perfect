@@ -1,6 +1,7 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
 	import StatGrid from './StatGrid.svelte';
+	import { stats } from '$lib/run';
 
 	type Args = { stats: { label: string; value: string }[]; note?: string };
 
@@ -14,23 +15,17 @@
 			docs: {
 				description: {
 					component:
-						"The Build it stats: five Stats in auto-fit columns under a rule (4 + 1 at 1440, 3 + 2 at 390) and the mono note on where they come from. Values stay '[n]' until the dogfood run is measured."
+						"The Build it stats: five Stats in auto-fit columns under a rule (4 + 1 at 1440, 3 + 2 at 390) and the mono note on where they come from. The values are this site's own build (run.json)."
 				}
 			}
 		},
 		argTypes: {
-			stats: { control: 'object', description: "The figures, { label, value }; values stay '[n]' until measured" },
+			stats: { control: 'object', description: 'The figures, { label, value }' },
 			note: { control: 'text', description: 'Mono footnote under the grid; empty hides it' }
 		},
 		args: {
-			stats: [
-				{ label: 'Tokens', value: '[n]' },
-				{ label: 'Minutes', value: '[n]' },
-				{ label: 'Frames', value: '[n]' },
-				{ label: 'Gates', value: '[n]' },
-				{ label: 'Components', value: '[n]' }
-			],
-			note: 'Measured at launch from the dogfood build.'
+			stats,
+			note: "Measured on this site's own build. Tokens counts new tokens; see the FAQ."
 		}
 	});
 </script>

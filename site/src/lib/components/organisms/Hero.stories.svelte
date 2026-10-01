@@ -28,7 +28,7 @@
 			skillsLine: { control: 'text' },
 			meta: { control: 'object' }
 		},
-		args: { headline: 'primary', version: 'V9', date: '2026-09-29' }
+		args: { headline: 'primary' }
 	});
 </script>
 

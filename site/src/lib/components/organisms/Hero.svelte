@@ -12,27 +12,31 @@
 	import TextLink from '$lib/components/atoms/TextLink.svelte';
 	import CopyBlock from '$lib/components/molecules/CopyBlock.svelte';
 	import MetaStrip from '$lib/components/molecules/MetaStrip.svelte';
+	import { release } from '$lib/run';
+	import type { CopyResult } from '$lib/copy.svelte';
 
 	interface Props {
 		/** strategy D13: the primary line, or the alternate being tested. */
 		headline?: 'primary' | 'alternate';
-		/** Slug line version and date (bound to the release, never hard-coded). */
-		version: string;
-		date: string;
+		/** Slug line version and date (default: this release, run.json). */
+		version?: string;
+		date?: string;
 		harnesses?: string;
 		lede?: string;
 		pasteLine?: string;
 		skillsLine?: string;
 		/** The meta strip under the install stack: strings are text, objects are links. */
 		meta?: (string | { label: string; href: string; external?: boolean })[];
+		/** Starts the install card on its copy feedback (Home's 'copied' state). */
+		pasteFeedback?: CopyResult | null;
 		/** The figure row: ProofSlider and LayerStack, placed by Home. */
 		figures?: Snippet;
 	}
 
 	let {
 		headline = 'primary',
-		version,
-		date,
+		version = `V${release.major}`,
+		date = release.date,
 		harnesses = 'An agent skill for Claude Code, Codex, Cursor, Grok, OpenCode, and Pi.',
 		lede = 'pixel-perfect is an agent skill that reads every frame of a high-fidelity mockup and turns it into real components in your framework: tokens, atoms, molecules, organisms, and screens. Each layer is checked against the frames it came from before the next layer starts. After that, every new screen, from a mock or a single sentence, is built from the parts you already have.',
 		pasteLine = 'Install pixel-perfect: fetch and follow https://github.com/hackerpug-ai/pixel-perfect/INSTALL.md',
@@ -44,6 +48,7 @@
 			'Works in six agents',
 			'Frameworks: SvelteKit, React, Expo, SwiftUI, GPUI, Ratatui, and any stack with a docs URL'
 		],
+		pasteFeedback = null,
 		figures
 	}: Props = $props();
 
@@ -81,7 +86,7 @@
 	<div class="mt-7 grid grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] items-start gap-x-14 gap-y-10 max-md:grid-cols-1">
 		<p class="m-0 max-w-160 text-lg text-pretty text-ink">{lede}</p>
 		<div class="flex flex-col gap-2.5">
-			<CopyBlock command={pasteLine} />
+			<CopyBlock command={pasteLine} initialFeedback={pasteFeedback} />
 			<CopyBlock command={skillsLine} variant="row" />
 			<div class="flex flex-wrap items-center justify-between gap-3">
 				<TextLink href="#install" label="Prefer your agent's own commands? See every install option." variant="small" />

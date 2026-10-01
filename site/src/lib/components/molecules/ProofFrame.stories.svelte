@@ -1,7 +1,8 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
 	import ProofFrame from './ProofFrame.svelte';
-	import PlanCard from './PlanCard.svelte';
+	import { asset } from '$app/paths';
+	import CopyBlock from './CopyBlock.svelte';
 	import SliderHandle from '$lib/components/atoms/SliderHandle.svelte';
 
 	const { Story } = defineMeta({
@@ -27,17 +28,16 @@
 
 	type Args = { split?: number; designLabel?: string; builtLabel?: string };
 
-	const card = {
-		label: 'TEAM PLAN',
-		price: '$24',
-		period: '/ month',
-		features: 'Unlimited projects · 5 seats · Priority support',
-		action: 'Choose plan'
-	};
+	// The real pair from this build: the install card as designed (a 2x crop of the export) and the
+	// live component, both at the card's 545px design width.
+	const command = 'Install pixel-perfect: fetch and follow https://github.com/hackerpug-ai/pixel-perfect/INSTALL.md';
 </script>
 
-{#snippet design()}<div class="w-[calc(min(300px,70%)_+_34px)]"><PlanCard {...card} variant="frame-side" /></div>{/snippet}
-{#snippet built()}<div class="w-[calc(min(300px,70%)_+_34px)]"><PlanCard {...card} /></div>{/snippet}
+{#snippet design()}
+	<img src={asset('/proof/install-card-desktop-light.png')} alt="The install card as drawn in the design" width="545" height="121" class="block dark:hidden" />
+	<img src={asset('/proof/install-card-desktop-dark.png')} alt="The install card as drawn in the design" width="545" height="121" class="hidden dark:block" />
+{/snippet}
+{#snippet built()}<div inert class="w-[545px]"><CopyBlock {command} /></div>{/snippet}
 
 {#snippet pane(args: Args)}
 	<div class="max-w-155"><ProofFrame {...args} {design} {built} /></div>
@@ -46,7 +46,6 @@
 	<div class="max-w-155">
 		<ProofFrame {...args} {design} {built}>
 			{#snippet handle()}
-				<div aria-hidden="true" class="absolute inset-y-0 left-(--split) w-0.5 -translate-x-px bg-accent"></div>
 				<SliderHandle split={args.split} />
 			{/snippet}
 		</ProofFrame>

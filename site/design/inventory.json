@@ -102,7 +102,6 @@
         "MetaStrip",
         "ProofSlider",
         "ProofFrame",
-        "PlanCard",
         "PlateLabel",
         "RegistrationTarget",
         "SliderHandle",
@@ -122,7 +121,7 @@
         "SectionHeading",
         "DriftComparison",
         "PlateLabel",
-        "PlanCard",
+        "CopyBlock",
         "Button",
         "ProofMark",
         "ProofNote",
@@ -258,7 +257,6 @@
         "MetaStrip",
         "ProofSlider",
         "ProofFrame",
-        "PlanCard",
         "PlateLabel",
         "RegistrationTarget",
         "SliderHandle",
@@ -323,7 +321,6 @@
         "MetaStrip",
         "ProofSlider",
         "ProofFrame",
-        "PlanCard",
         "PlateLabel",
         "RegistrationTarget",
         "SliderHandle",
@@ -387,7 +384,6 @@
         "MetaStrip",
         "ProofSlider",
         "ProofFrame",
-        "PlanCard",
         "PlateLabel",
         "RegistrationTarget",
         "SliderHandle",
@@ -450,7 +446,6 @@
         "MetaStrip",
         "ProofSlider",
         "ProofFrame",
-        "PlanCard",
         "PlateLabel",
         "RegistrationTarget",
         "SliderHandle",
@@ -598,7 +593,7 @@
       "state": "default (slider crop)",
       "shows": [
         "ProofFrame",
-        "PlanCard",
+        "CopyBlock",
         "PlateLabel",
         "RegistrationTarget",
         "Button"
@@ -619,7 +614,7 @@
         "PlateText",
         "SlugLine",
         "ProofFrame",
-        "PlanCard",
+        "CopyBlock",
         "PlateLabel",
         "Button"
       ]
@@ -639,7 +634,7 @@
         "PlateText",
         "SlugLine",
         "ProofFrame",
-        "PlanCard",
+        "CopyBlock",
         "PlateLabel",
         "Button"
       ]
@@ -693,7 +688,7 @@
         "TextLink",
         "ProofSlider",
         "ProofFrame",
-        "PlanCard",
+        "CopyBlock",
         "PlateLabel",
         "RegistrationTarget",
         "SliderHandle",
@@ -858,7 +853,7 @@
       "composes": [
         "ProofFrame",
         "SliderHandle",
-        "PlanCard",
+        "CopyBlock",
         "FigureCaption"
       ],
       "states": [
@@ -876,7 +871,7 @@
         "pasted-1790742949005-0/01"
       ],
       "evidence": "Proof slider figure (Landing.dc.html:121-150).",
-      "note": "Owns split (0-100) through an invisible native range input: arrows ±1, Page Up/Down ±10, Home/End; aria-valuetext '{split}% design frame, {100 - split}% built component'; touch-action pan-y. The pair is the placeholder $24 PlanCard until T21. The checklist cites the social preview; that draws the handle-less ProofFrame and is claimed there. At 390 the placeholder card nearly fills the short pane."
+      "note": "Owns split (0-100) through an invisible native range input: arrows ±1, Page Up/Down ±10, Home/End; aria-valuetext '{split}% design frame, {100 - split}% built component'; touch-action pan-y. The checklist cites the social preview; that draws the handle-less ProofFrame and is claimed there. The pair is real (owner's decision 2026-09-30): the install card as drawn in the export, cropped at 2x into static/proof/, beside the live CopyBlock; the drawn $24 card was placeholder content and PlanCard is removed. Both sides are staged at the card's design width (545px from the 1440 frame, 358px from the 390 frame) and zoomed together to fit the pane."
     },
     {
       "name": "LayerStack",
@@ -902,7 +897,7 @@
       "name": "DriftComparison",
       "composes": [
         "PlateLabel",
-        "PlanCard",
+        "CopyBlock",
         "ProofMark",
         "ProofNote",
         "FigureCaption"
@@ -915,7 +910,7 @@
         "pixel-perfect-landing-dc/11"
       ],
       "evidence": "Why figure: APPROVED vs DRIFTED (Landing.dc.html:179-213).",
-      "note": "Columns side by side at 1440, stacked at 390. Motion why-drift drifts the card and pops the four ProofMarks in; takes a progress prop; the end state is fully drifted."
+      "note": "Columns side by side at 1440, stacked at 390. Motion why-drift drifts the card and pops the four ProofMarks in; takes a progress prop; the end state is fully drifted. The drifted card is the real CopyBlock with the four drifts layered on as ad-hoc overrides (padding 20, the drift gray, an outline button, radius 5); the approved card is the CopyBlock as built (owner's decision 2026-09-30, strategy §9.2)."
     },
     {
       "name": "PrinciplesGrid",
@@ -1089,7 +1084,7 @@
         "PlateText",
         "SlugLine",
         "ProofFrame",
-        "PlanCard"
+        "CopyBlock"
       ],
       "variants": [
         "1200x630, light theme only"
@@ -1099,7 +1094,7 @@
         "social-preview-dc/03"
       ],
       "evidence": "Social preview.dc.html (full page); manifest ui_states.social_card.",
-      "note": "Rendered to og.png at build (manifest deploy.static). The export's crosshair plus mono 'pixel-perfect' lockup becomes the Logo atom (mark A + wordmark) per D5; no frame draws the new lockup. The plate headline is statically misregistered. Frame 03 (the 390 capture) renders the same fixed 1200px card over empty background."
+      "note": "Rendered to og.png at build (manifest deploy.static). The export's crosshair plus mono 'pixel-perfect' lockup becomes the Logo atom (mark A + wordmark) per D5; no frame draws the new lockup. The plate headline is statically misregistered. Frame 03 (the 390 capture) renders the same fixed 1200px card over empty background. The pair is real (owner's decision 2026-09-30): the install card as drawn in the export, cropped at 2x into static/proof/, beside the live CopyBlock; the drawn $24 card was placeholder content and PlanCard is removed."
     }
   ],
   "molecules": [
@@ -1202,33 +1197,6 @@
       "note": "The checklist folds the output into the card; a molecule cannot hold the CodePanel molecule, so StepsTimeline pairs each StepCard with its CodePanel (side by side at 1440, stacked at 390). Motion build-rail brightens each step from 50% opacity as the rail reaches it; the end state is full opacity."
     },
     {
-      "name": "PlanCard",
-      "composes": [
-        "PlateLabel",
-        "Button",
-        "ProofMark"
-      ],
-      "variants": [
-        "approved: sheet card, radius 4, padding 16, ink 'Choose plan'",
-        "drifted: radius 5, padding 20, the drift gray #8A8F96 on its text, an outline magenta-ink 600 'Choose plan' (deliberately off-system, built from the drift token), four ProofMarks on its edges",
-        "frame-side: 0.9 opacity on the hatched design side of ProofFrame"
-      ],
-      "appears_on": [
-        "pixel-perfect-landing-dc/01",
-        "pixel-perfect-landing-dc/02",
-        "pixel-perfect-landing-dc/08",
-        "pixel-perfect-landing-dc/09",
-        "pixel-perfect-landing-dc/10",
-        "pixel-perfect-landing-dc/11",
-        "social-preview-dc/01",
-        "social-preview-dc/02",
-        "social-preview-dc/03",
-        "pasted-1790742949005-0/01"
-      ],
-      "evidence": "The '$24 / month TEAM PLAN' card in the slider, the drift example and the social card.",
-      "note": "Example content: the drift illustration, and the slider's placeholder pair until T21 supplies real pairs (manifest ui_states.social_card.content). Strategy §9.2 asks the drift card be redrawn from a real dogfood component. Motion why-drift grows radius and padding. The social copy drops 'Priority support'."
-    },
-    {
       "name": "ProofNote",
       "composes": [
         "InlineCode"
@@ -1260,7 +1228,7 @@
       ],
       "variants": [
         "evolve: 'with a new mock'",
-        "refine: 'with a token change' plus the mono cascade line 'Cascades into: Button, PlanCard, Header, [n] more'",
+        "refine: 'with a token change' plus the mono cascade line the cascade line, measured from this build (run.json)",
         "add-platform: no qualifier"
       ],
       "appears_on": [
@@ -1495,7 +1463,7 @@
       "name": "Button",
       "library_primitive": null,
       "variants": [
-        "primary: ink fill, paper text (hero and Install copy buttons, 'Install pixel-perfect' as a link to #install, PlanCard's 'Choose plan')",
+        "primary: ink fill, paper text (hero and Install copy buttons, 'Install pixel-perfect' as a link to #install)",
         "secondary: outline in the line colour ('See it build', the npx copy button)",
         "small-on-code: 13px, code-control-border on code-bg (CommandRow copy button)"
       ],
@@ -1525,7 +1493,7 @@
         "pasted-1790742949005-0/01"
       ],
       "evidence": "Component sheet 'Buttons' row draws primary and secondary; landing 05 draws the small copy button on the dark command rows.",
-      "note": "Renders as <a> when given an href. Keeps min-width 9ch so the Copy label swap never shifts layout (ui_states.copy). The drifted PlanCard's outline 'Choose plan' is the deliberate 'fifth button style' and is NOT a Button variant."
+      "note": "Renders as <a> when given an href. As wide as its label, as designed; a copy button widens while its feedback shows (ui_states.copy, decided 2026-09-30). The drifted card's outline button (DriftComparison) is the deliberate 'fifth button style' and is NOT a Button variant; size sm, drawn for the example card's 'Choose plan', is unused since that card became the real install card."
     },
     {
       "name": "ThemeToggle",

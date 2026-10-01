@@ -1,7 +1,7 @@
 <script lang="ts">
 	// An example-output panel beside each Build it step (Landing.dc.html:235-257): dark in both
 	// themes, a header with the file name and an "Example output" plate label, then syntax-coloured
-	// lines. Content is data (the export's is placeholder output until the real run replaces it).
+	// lines. Content is data; the page passes this site's own build output (run.json).
 	// At phone width it scrolls sideways; the scroll area is focusable so keyboards can scroll it.
 	import PlateLabel from '$lib/components/atoms/PlateLabel.svelte';
 

@@ -37,12 +37,12 @@
 {/snippet}
 
 <Story name="Reads" />
-<!-- The export's path, which the placeholder register says to correct when the organism is wired. -->
+<!-- The real folder this build writes (the export showed a placeholder folder). -->
 <Story
 	name="Writes"
 	args={{
 		label: 'WRITES',
-		items: ['Components in your source tree', 'Sandbox stories', { code: '.pixel-perfect/', text: 'and DESIGN.md' }]
+		items: ['Components in your source tree', 'Sandbox stories', { code: 'design/', text: ' and DESIGN.md' }]
 	}}
 />
 <Story

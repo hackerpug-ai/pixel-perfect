@@ -12,7 +12,7 @@
 			docs: {
 				description: {
 					component:
-						"The demo poster beside the build stats and the wireframe line. Poster and numbers are placeholders ('[n]') until the demo video and the dogfood run."
+						"The demo poster beside the build stats (this site's own build) and the wireframe line. The play button waits for the demo video (strategy T8)."
 				}
 			}
 		},

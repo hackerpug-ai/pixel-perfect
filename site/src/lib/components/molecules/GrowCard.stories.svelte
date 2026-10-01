@@ -1,6 +1,7 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
 	import GrowCard from './GrowCard.svelte';
+	import { cascadeLine } from '$lib/run';
 
 	const { Story } = defineMeta({
 		title: 'Molecules/GrowCard',
@@ -43,7 +44,7 @@
 		command: 'refine',
 		qualifier: 'with a token change',
 		description: 'Change a token. Every component that uses it updates, and the gates confirm nothing else moved.',
-		cascade: 'Cascades into: Button, PlanCard, Header, [n] more'
+		cascade: cascadeLine
 	}}
 	template={column}
 />

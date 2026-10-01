@@ -17,7 +17,7 @@
 			}
 		},
 		argTypes: {
-			releaseTag: { control: 'text', description: 'Replaces <release-tag> in the clone commands' },
+			releaseTag: { control: 'text', description: 'The tag the clone commands check out (default: this release)' },
 			initialTab: { control: 'select', options: ['claude', 'codex', 'cursor', 'grok', 'opencode', 'pi'] },
 			pasteLine: { control: 'text' },
 			skillsLine: { control: 'text' },
@@ -27,7 +27,7 @@
 			scan: { control: 'text', description: 'Third-party scan result; empty leaves the box out' },
 			onselect: { action: 'tab selected' }
 		},
-		args: { releaseTag: 'v9.1.0', onselect: fn() }
+		args: { onselect: fn() }
 	});
 </script>
 

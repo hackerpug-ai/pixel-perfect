@@ -54,7 +54,7 @@ Slice keys refer to the review's renders: `L1440-N` / `L390-N` are the landing p
 | molecule | CommandRow | dark numbered command row with small copy button | L1440-6, L390-6 |
 | molecule | CodePanel | filename header, "Example output" tag, syntax-colored body; clips at 390 | L1440-3/4, CS |
 | molecule | StepCard | step on the progress rail (label, title, command, output) | L1440-3 |
-| molecule | PlanCard | approved and drifted variants; drifted carries ProofMarks | L1440-1/2 |
+| molecule | CopyBlock | the drawn $24 plan card was placeholder content (placeholder register); the real install card (CopyBlock) fills its slot in the slider, the drift comparison, and the social image (owner's decision 2026-09-30) | L1440-1/2 |
 | molecule | ProofNote | numbered note matching a ProofMark | L1440-2, CS |
 | atom | PrincipleCard | one of the four principles | L1440-2 |
 | molecule | GrowCard | evolve / refine / add-platform card with cascade line | L1440-4 |

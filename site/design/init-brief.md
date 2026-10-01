@@ -66,7 +66,7 @@ Motion (2026-09-29): the landing's two load animations and five scroll-driven an
 
 ## Placeholder register (red-hat F-005, strategy blocker B3)
 
-The landing export contains placeholder content. Build renders each item either wired to the real value or visibly labelled "Example"; it never ships a placeholder as fact. The `compose` gate cannot pass while any item remains unresolved, checked by `grep -rnE '\[n\]|<release-tag>|\.pixel-perfect/|TEAM PLAN' site/src` printing nothing.
+The landing export contains placeholder content. Build renders each item either wired to the real value or visibly labelled "Example"; it never ships a placeholder as fact. The `compose` gate cannot pass while any item remains unresolved, checked by `grep -rnE '\[n\]|<release-tag>|\.pixel-perfect/(manifest|inventory)|TEAM PLAN' site/src` printing nothing. (Narrowed 2026-09-30 from `\.pixel-perfect/`, which also matched `.pixel-perfect`, the real folder the OpenCode install clones into.)
 
 | Placeholder | Landing lines | Real value comes from |
 |---|---|---|
@@ -77,5 +77,17 @@ The landing export contains placeholder content. Build renders each item either 
 | Demo video poster "60–90 s" | 266 | T8 — the recorded demo and its poster frame |
 | `$24` Team plan card in the proof slider, Why section, and social image (the slider compares identical markup) | 123-138 | T21 — real frame-to-component pairs from this build |
 | "V9 · 2026-09-29", "version 9", `v9.1` pill | 66, 398, 301 | The release version at build time |
+
+Status at compose (2026-09-30; the owner chose these at build):
+
+| Placeholder | Resolved as |
+|---|---|
+| Run numbers | Measured from this build by `site/scripts/record-run.mjs` into `src/lib/run.json` (frames, gates, components counted; tokens are new tokens, cached re-reads stated in the FAQ; minutes are active minutes). Re-run at the end of the run. The evolve summary waits for the real evolve run (T6 AC-3). |
+| Manifest, inventory, status panels; WRITES | Real excerpts of this site's `design/manifest.json` and `design/inventory.json`, the status derived from its gates, the files the scaffold created; WRITES names `design/`. |
+| `<release-tag>` | `run.json` release: the plugin's version (`v9.1.0`), which exists once T1 tags it. The OpenCode commands were also corrected: the design linked a path that does not exist in a clone. |
+| Scan box | Left out of the page until a result exists (a story still shows the box). |
+| Demo poster | Kept as designed, play button included, by the owner's decision; it plays nothing until T8's video exists. |
+| `$24` card | Replaced by a real pair: the install card as drawn in the export (2x crops, `static/proof/`) beside the live CopyBlock, in the slider, the Why drift card, and the social image. PlanCard is removed. |
+| Version and date | `run.json` release. |
 
 UI states (2026-09-29): the states the export never drew are designed in `manifest.json` under `ui_states` (frontend-design skill, no Claude Design redraw): focus, hover, FAQ open, copy feedback, slider ends, the mobile header, and the social card lockup.

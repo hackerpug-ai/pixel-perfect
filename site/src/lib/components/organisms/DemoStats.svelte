@@ -1,12 +1,15 @@
 <script lang="ts">
 	// Build it's closing row (Landing.dc.html:262-283): the demo poster (hatched 16:9 with PlayButton)
-	// beside the stats and the wireframe line; stacks at 720px and below. The poster, its label and
-	// the numbers are placeholders until T8 and the dogfood run. Home sets the space above it.
+	// beside the stats and the wireframe line; stacks at 720px and below. The numbers are this site's
+	// own build (run.json). The poster and its play button wait for the demo video (strategy T8):
+	// kept as designed by the owner's decision (2026-09-30), the button plays nothing until then.
+	// Home sets the space above it.
 	import InlineCode from '$lib/components/atoms/InlineCode.svelte';
 	import PlateLabel from '$lib/components/atoms/PlateLabel.svelte';
 	import PlayButton from '$lib/components/atoms/PlayButton.svelte';
 	import FigureCaption from '$lib/components/molecules/FigureCaption.svelte';
 	import StatGrid from '$lib/components/molecules/StatGrid.svelte';
+	import { stats as runStats } from '$lib/run';
 
 	interface Props {
 		posterLabel?: string;
@@ -19,14 +22,8 @@
 	let {
 		posterLabel = 'demo video · 60–90 s · poster frame',
 		caption = 'One run, start to finish: init, scaffold, build, status.',
-		stats = [
-			{ label: 'Tokens', value: '[n]' },
-			{ label: 'Minutes', value: '[n]' },
-			{ label: 'Frames', value: '[n]' },
-			{ label: 'Gates', value: '[n]' },
-			{ label: 'Components', value: '[n]' }
-		],
-		statsNote = 'Measured at launch from the dogfood build.',
+		stats = runStats,
+		statsNote = "Measured on this site's own build. Tokens counts new tokens; see the FAQ.",
 		onplay
 	}: Props = $props();
 </script>

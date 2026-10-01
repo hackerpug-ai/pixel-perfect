@@ -4,7 +4,7 @@
 	import Stat from '$lib/components/atoms/Stat.svelte';
 
 	interface Props {
-		/** The figures, in order. Values stay '[n]' until the dogfood run is measured. */
+		/** The figures, in order: this site's own build (run.json). */
 		stats: { label: string; value: string }[];
 		/** The mono footnote under the grid; empty hides it. */
 		note?: string;

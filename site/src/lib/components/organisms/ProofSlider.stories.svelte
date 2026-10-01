@@ -13,15 +13,14 @@
 			docs: {
 				description: {
 					component:
-						'Drag (or use arrows, Page Up/Down, Home, End) to compare the design frame with the built component. The split lives in a native range input; its focus is drawn on the handle. Placeholder pair until T21.'
+						'Drag (or use arrows, Page Up/Down, Home, End) to compare the design frame with the built component. The split lives in a native range input; its focus is drawn on the handle. The pair is real: the install card as designed beside the live component.'
 				}
 			}
 		},
 		argTypes: {
 			initialSplit: { control: { type: 'range', min: 0, max: 100, step: 1 } },
-			card: { control: 'object' },
+			command: { control: 'text' },
 			caption: { control: 'text' },
-			captionNote: { control: 'text' },
 			onsplit: { action: 'split' }
 		},
 		args: { initialSplit: 50, onsplit: fn() }
