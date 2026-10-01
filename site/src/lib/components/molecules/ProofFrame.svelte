@@ -1,9 +1,9 @@
 <script lang="ts">
 	// The proof slider's comparison pane without its control (Landing.dc.html:122-146; drawn alone in
 	// social-preview-dc/01): the hatched design frame on the left, the built component clipped in
-	// from the right at `split`, the two plate labels and four registration targets. The ProofSlider
-	// organism passes `handle` (divider, SliderHandle and the range input) and owns `split`; the
-	// social card uses the static pane.
+	// from the right at `split`, the 2px divider, the two plate labels and four registration targets.
+	// The ProofSlider organism passes `handle` (SliderHandle and the range input) and owns `split`;
+	// the social card uses the static pane.
 	import type { Snippet } from 'svelte';
 	import PlateLabel from '$lib/components/atoms/PlateLabel.svelte';
 	import RegistrationTarget from '$lib/components/atoms/RegistrationTarget.svelte';
@@ -42,6 +42,7 @@
 	<div class="absolute inset-0 grid place-items-center bg-sheet [clip-path:inset(0_0_0_var(--split))]">
 		{@render built()}
 	</div>
+	<div aria-hidden="true" class="absolute inset-y-0 left-(--split) w-0.5 -translate-x-px bg-accent"></div>
 	{@render handle?.()}
 	<span class="absolute top-2.5 left-2.5"><PlateLabel label={designLabel} /></span>
 	<span class="absolute top-2.5 right-2.5"><PlateLabel label={builtLabel} /></span>

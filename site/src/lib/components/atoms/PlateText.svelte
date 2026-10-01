@@ -9,7 +9,7 @@
 	//   With reduced motion --p keeps its registered initial value (1), so only the ink shows.
 	//   `progress` pins --p for stories (manifest motion.verify).
 	// - static: the social card's permanent misregistration (--p fixed at 0), ink printed on top.
-	type Size = 'display-sm' | 'display-md' | 'display-lg' | 'display-alt' | 'display-xl';
+	type Size = 'display-sm' | 'display-md' | 'display-lg' | 'display-alt' | 'display-xl' | 'social';
 	type Stretch = 100 | 105 | 110 | 115 | 118;
 	type Motion = 'load' | 'scroll' | 'static';
 
@@ -38,7 +38,9 @@
 		'display-alt': 'text-display-alt leading-[1.04]',
 		'display-lg': 'text-display-lg leading-[1.02]',
 		'display-md': 'text-display-md leading-[1.05]',
-		'display-sm': 'text-display-sm leading-[1.1]'
+		'display-sm': 'text-display-sm leading-[1.1]',
+		// The social card is a fixed 1200x630 image, so its headline does not scale with the viewport.
+		social: 'text-[58px] leading-[1.02]'
 	};
 
 	const stretches: Record<Stretch, string> = {
@@ -68,10 +70,15 @@
 
 <svelte:element
 	this={as}
-	class={['m-0 font-display font-bold tracking-[-.01em] text-balance text-ink', sizes[size], stretches[stretch]]}
+	class={[
+		'm-0 font-display font-bold tracking-[-.01em] text-ink',
+		size !== 'social' && 'text-balance', // the social export wraps greedily: 'system inside / it.'
+		sizes[size],
+		stretches[stretch]
+	]}
 >
 	{#if lead}
-		<span class="mb-[.22em] block text-[.62em] text-muted [font-stretch:100%]">{lead}</span>
+		<span class={['block text-[.62em] text-muted [font-stretch:100%]', size === 'social' ? 'mb-[.25em]' : 'mb-[.22em]']}>{lead}</span>
 	{/if}
 	<span
 		class={['relative inline-block font-extrabold', motion === 'static' && '[--p:0]']}

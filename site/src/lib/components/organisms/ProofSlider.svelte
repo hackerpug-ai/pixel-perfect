@@ -36,7 +36,6 @@
 		{#snippet design()}<div class="w-[calc(min(300px,70%)_+_34px)]"><PlanCard {...card} variant="frame-side" /></div>{/snippet}
 		{#snippet built()}<div class="w-[calc(min(300px,70%)_+_34px)]"><PlanCard {...card} /></div>{/snippet}
 		{#snippet handle()}
-			<div aria-hidden="true" class="absolute inset-y-0 left-(--split) w-0.5 -translate-x-px bg-accent"></div>
 			<input
 				type="range"
 				min="0"

@@ -21,7 +21,7 @@
 			as: { control: 'select', options: ['h1', 'h2', 'p'], description: 'Element' },
 			size: {
 				control: 'select',
-				options: ['display-xl', 'display-alt', 'display-lg', 'display-md', 'display-sm'],
+				options: ['display-xl', 'display-alt', 'display-lg', 'display-md', 'display-sm', 'social'],
 				description: 'Display type token'
 			},
 			stretch: { control: 'select', options: [100, 105, 110, 115, 118], description: 'Anybody width (%)' },
@@ -59,4 +59,4 @@
 	name="Close scroll start"
 	args={{ text: 'Your next mockup has a system inside it.', lead: '', as: 'h2', size: 'display-lg', motion: 'scroll', progress: 0 }}
 />
-<Story name="Social" args={{ motion: 'static' }} />
+<Story name="Social" args={{ motion: 'static', size: 'social' }} />

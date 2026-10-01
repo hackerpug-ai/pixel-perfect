@@ -8,22 +8,28 @@
  * Press proof theme. Values come from design/manifest.json → tokens, which were checked
  * against the landing export (Landing.dc.html lines 23-24). Each colour is written once for
  * both themes with light-dark(): with no choice made it follows the system; the toggle sets
- * data-theme on <html>, which pins color-scheme.
+ * data-theme on <html>, which pins color-scheme. The tokens are re-declared on any element with
+ * data-theme (a theme island, e.g. the light-only social card), because the build's light-dark()
+ * fallback resolves them where they are declared, not where they are used.
  */
 
-/* dark: an explicit choice (data-theme), or the system when no choice was made (no JS yet). */
+/*
+ * dark: an explicit choice (data-theme), or the system when no choice was made (no JS yet).
+ * Never inside a light-only island (data-theme='light' on an element, e.g. the social card).
+ */
 @custom-variant dark {
-	&:where([data-theme='dark'], [data-theme='dark'] *) {
+	&:where([data-theme='dark'], [data-theme='dark'] *):not(:where([data-theme='light'], [data-theme='light'] *)) {
 		@slot;
 	}
 	@media (prefers-color-scheme: dark) {
-		&:where(:root:not([data-theme]), :root:not([data-theme]) *) {
+		&:where(:root:not([data-theme]), :root:not([data-theme]) *):not(:where([data-theme='light'], [data-theme='light'] *)) {
 			@slot;
 		}
 	}
 }
 
-:root {
+:root,
+[data-theme] {
 	color-scheme: light dark;
 
 	/* Print surfaces — role names from the proof-sheet metaphor */
@@ -75,10 +81,10 @@
 	initial-value: 1;
 }
 
-:root[data-theme='light'] {
+[data-theme='light'] {
 	color-scheme: light;
 }
-:root[data-theme='dark'] {
+[data-theme='dark'] {
 	color-scheme: dark;
 }
 
@@ -114,6 +120,9 @@
 	--color-current: currentColor;
 
 	--shadow-doc: 0 1px 0 var(--line), 0 12px 32px -20px var(--shadow-doc-color); /* Landing's document card */
+	/* Design-frame hatching (Landing: slider design pane, demo poster). Inline, like the colours, so
+	   var(--stripe) resolves on the element (a theme island keeps its own stripe). */
+	--background-image-hatch: repeating-linear-gradient(135deg, var(--stripe) 0 6px, transparent 6px 14px);
 }
 
 @theme {
@@ -145,8 +154,6 @@
 	--radius-sm: 3px;
 	--radius-md: 4px;
 
-	/* Design-frame hatching (Landing: slider design pane, demo poster) */
-	--background-image-hatch: repeating-linear-gradient(135deg, var(--stripe) 0 6px, transparent 6px 14px);
 
 	/* Motion (manifest.motion). Load moments play once; scroll moments run --p on a view timeline. */
 	--animate-plate: plate 1.7s cubic-bezier(0.2, 0.7, 0.1, 1) 0.25s both; /* colour copies slide into registration */
