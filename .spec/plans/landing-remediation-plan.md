@@ -92,14 +92,15 @@ Read-only inputs: `site/src/lib/components/organisms/SocialCard.svelte`, `design
 One arrangement. `export-social-card.mjs` is the only producer of the public PNG and the only copier of the icons.
 
 1. `site/src/routes/social-card/+page.svelte` renders `SocialCard` and nothing else. Body margin is 0. The root layout already prerenders (`site/src/routes/+layout.ts`). The card keeps its own `data-theme="light"` and its 1200 by 630 box. The page waits until `/proof/install-card-desktop-light.png` has decoded before a screenshot is taken.
-2. `site/scripts/export-social-card.mjs` runs after `npm run build`. It serves `site/build` with Playwright `playwright-core` and `channel: 'chrome'`. It opens the prerendered social-card route, screenshots the SocialCard element (not the browser chrome) at 1200×630 with `deviceScaleFactor` 1, and writes `site/static/og.png`. It then copies that PNG into the already built output so preview can serve it. A later plain `npm run build` copies `site/static/` again. The script is rerun whenever SocialCard changes. Nobody draws a replacement PNG by hand.
-3. The same script copies the approved mark-B rasters, byte for byte:
+2. `site/scripts/export-social-card.mjs` runs after `npm run build`. It serves `site/build` on an ephemeral port with Playwright `playwright-core` and `channel: 'chrome'`, then closes that server before it returns. It opens the prerendered social-card route, screenshots the SocialCard element (not the browser chrome) at 1200×630 with `deviceScaleFactor` 1, and writes `site/static/og.png`. The script is rerun whenever SocialCard changes. Nobody draws a replacement PNG by hand.
+3. The same script copies the approved mark-B rasters, byte for byte, into `site/static/`:
    - `design/logo/favicon-16.png` to `site/static/favicon-16.png`
    - `design/logo/favicon-32.png` to `site/static/favicon-32.png`
    - `design/logo/favicon-64.png` to `site/static/favicon-64.png`
    - `design/logo/favicon-180.png` to `site/static/apple-touch-icon.png`
 
    Strategy D5 and `manifest.json` `deploy.static` already assign these PNGs to mark B. The task ships those files. It does not render the favicon from `mark-B-*.svg`, and it does not ship mark A or mark C as the icon.
+   Before the script exits, it copies all five files into the build `npm run preview` serves, next to `site/build/index.html`: `og.png`, `favicon-16.png`, `favicon-32.png`, `favicon-64.png`, and `apple-touch-icon.png`. That copy is what the verification preview serves. The command does not run `npm run build` a second time. A later plain `npm run build` copies `site/static/` into a fresh `site/build/` again.
 4. `+layout.svelte` drops the `favicon.svg` import and the starter icon link. It emits icon links for the four static files. Each `href` uses `base` from `$app/paths`.
 5. `+page.svelte` keeps the current title and description strings and adds prerendered Open Graph and Twitter tags in the static HTML: `og:title`, `og:description`, `og:image`, `og:image:width` of 1200, `og:image:height` of 630, `og:type` of `website`, `twitter:card` of `summary_large_image`, `twitter:title`, `twitter:description`, and `twitter:image`. The image `href` is `${base}/og.png` through the same `base` import.
 
@@ -113,8 +114,8 @@ A Storybook-only card check does not pass.
 
 - `npm run check` exits 0.
 - The static homepage, fetched with no JavaScript, contains the Open Graph and Twitter tags listed above.
-- Resolving those `href`s against the fetched page URL yields paths that start with `/pixel-perfect/`, each GET returns HTTP 200, and the served `og.png` IHDR is 1200×630.
-- The served `favicon-32.png` bytes equal `design/logo/favicon-32.png`, and the served `apple-touch-icon.png` bytes equal `design/logo/favicon-180.png`. Those files are the mark B artwork.
+- Resolving those `href`s against the fetched page URL yields paths that start with `/pixel-perfect/`, each GET returns HTTP 200 from the preview of this build, and the served `og.png` IHDR is 1200×630.
+- The served `favicon-32.png` bytes equal `design/logo/favicon-32.png`, and the served `apple-touch-icon.png` bytes equal `design/logo/favicon-180.png`. Those files are the mark B artwork, copied into `site/build/` by `export:social` before preview.
 - No social or icon URL in the HTML contains a scheme or a host.
 
 ### Verification command
@@ -128,7 +129,7 @@ npm run preview -- --host 127.0.0.1 --port 4177 --strictPort
 node scripts/export-social-card.mjs --check http://127.0.0.1:4177/pixel-perfect/
 ```
 
-`export:social` is `node scripts/export-social-card.mjs`. The `--check` mode only fetches. It does not write assets and it does not open Storybook. It parses the homepage HTML, rejects any social or icon URL that has a host, resolves the rest against the page URL, requires HTTP 200, reads the PNG IHDR, and compares the two icon files to `design/logo/`. The preview origin is the checker's fetch target. It is not a value stored in the page.
+`export:social` is `node scripts/export-social-card.mjs`. That run writes `site/static/` and copies `og.png`, `favicon-16.png`, `favicon-32.png`, `favicon-64.png`, and `apple-touch-icon.png` into `site/build/` before it returns. The `--check` mode only fetches. It does not write assets and it does not open Storybook. It parses the homepage HTML, rejects any social or icon URL that has a host, resolves the rest against the page URL, requires HTTP 200 for `og.png`, `favicon-32.png`, and `apple-touch-icon.png`, reads the PNG IHDR, and compares those two icon files to `design/logo/`. The preview origin is the checker's fetch target. It is not a value stored in the page.
 
 ### Initial state
 
@@ -316,7 +317,7 @@ npm run preview -- --host 127.0.0.1 --port 4177 --strictPort
 node scripts/verify-landing.mjs --only install-deeplink http://127.0.0.1:4177/
 ```
 
-F-003 is task 1, so `paths.base` is still empty and the page URL is the site root. The assert compares rectangle edges.
+F-003 is task 1, so `paths.base` is still empty and the page URL is the site root. The assert compares rectangle edges. The script reads that URL from the argument. It does not hardcode `http://127.0.0.1:4177/`. F-004 passes `http://127.0.0.1:4177/pixel-perfect/` to the same case.
 
 ### Initial state
 
@@ -366,11 +367,11 @@ Order: task 3. Second writer of `site/package.json`. Second writer of `site/scri
 
 Existing paths:
 
-- `site/package.json` — add `verify:landing` after `export:social` exists. The script value is `node scripts/verify-landing.mjs`.
+- `site/package.json` — add `verify:landing` after `export:social` exists. The script value is `node scripts/verify-landing.mjs`. The page URL is an argument. The script does not default it to `/` or to `http://127.0.0.1:4177/`.
 - `site/scripts/sandbox-capture.mjs` — the structural record at the `data-cs` write (about lines 118-124) omits radius. The default page sets `reducedMotion: 'reduce'` (about line 139).
 - `site/scripts/verify-landing.mjs` — created by F-003. This task adds cases. It does not remove `install-deeplink`.
 
-New path: none besides the evidence directory. The chosen entry point is `NEW: site/scripts/verify-landing.mjs` (created in F-003, completed here), invoked as `npm run verify:landing`. `npm run sandbox:capture` stays the catalog capture. It is not this entry point.
+New path: none besides the evidence directory. The chosen entry point is `NEW: site/scripts/verify-landing.mjs` (created in F-003, completed here), invoked as `npm run verify:landing -- http://127.0.0.1:4177/pixel-perfect/`. `npm run sandbox:capture` stays the catalog capture. It is not this entry point.
 
 Chosen entry: `site/scripts/verify-landing.mjs`.
 
@@ -384,7 +385,7 @@ Normal-motion proof lives in `verify-landing.mjs`, against the built homepage, n
 
 | Case | What it does |
 |---|---|
-| `install-deeplink` | Kept as F-003 wrote it. |
+| `install-deeplink` | The same geometry asserts F-003 wrote. This task's page URL is `http://127.0.0.1:4177/pixel-perfect/`, because F-001 has set `paths.base`. The root URL from F-003's own command is not reused here. |
 | `clipboard` | Granted clipboard permission: activate Copy on a real command, read `navigator.clipboard.readText()`, require the command string. Denied permission: `copyText` in `site/src/lib/copy.svelte.ts` takes the fallback, the control reports `selected`, and the announcement is `Command selected. Press Command-C or Control-C to copy.` |
 | `tabs-hash-persistence` | Choosing a tab writes `#install-{id}` and `localStorage` key `pixel-perfect:install-tab`. A reload restores that tab. `#install-grok` selects Grok. A hash that names no agent does not throw and does not select an unknown tab. |
 | `slider` | Focus the range input in `ProofSlider.svelte`. End sets the split to 100. Home sets it to 0. Read the input value. |
@@ -395,7 +396,7 @@ Normal-motion proof lives in `verify-landing.mjs`, against the built homepage, n
 
 Healthy code: every case exits 0.
 
-Mutations run in an isolated checkout: a new detached git worktree, never on shared `main`, and never in the three worktrees listed at the top. Apply one mutation, run the full `npm run verify:landing`, record which case failed, discard the worktree.
+Mutations run in an isolated checkout: a new detached git worktree, never on shared `main`, and never in the three worktrees listed at the top. Apply one mutation, run `npm run verify:landing -- http://127.0.0.1:4177/pixel-perfect/`, record which case failed, discard the worktree.
 
 | Mutation | Targeted case that must fail | Cases that must still pass |
 |---|---|---|
@@ -409,7 +410,7 @@ The plugin is not rewritten. `plugins/pixel-perfect/scripts/verify-catalog.mjs` 
 
 ### Done when
 
-- Healthy `npm run check`, `npm run build`, `npm run sandbox:capture`, and `npm run verify:landing` exit 0.
+- Healthy `npm run check`, `npm run build`, `npm run sandbox:capture`, and `npm run verify:landing -- http://127.0.0.1:4177/pixel-perfect/` exit 0.
 - Each mutation above fails only its targeted case, in an isolated worktree.
 - The run includes the real clipboard grant, the denied-permission fallback, tabs, hash, persistence, the slider, the FAQ, one normal-motion temporal assert, and the reduced-motion fallback.
 - Fidelity uses the 4px measurement and the named concept reference, not only a regenerated snapshot.
@@ -421,17 +422,19 @@ cd /Users/justinrich/Projects/pixel-perfect/site
 npm run check
 npm run build
 npm run sandbox:capture
-npm run verify:landing
+npm run preview -- --host 127.0.0.1 --port 4177 --strictPort
+npm run verify:landing -- http://127.0.0.1:4177/pixel-perfect/
 ```
 
 Mutation rerun, from a new detached worktree of this repo, after each single edit:
 
 ```bash
 npm run build
-npm run verify:landing
+npm run preview -- --host 127.0.0.1 --port 4177 --strictPort
+npm run verify:landing -- http://127.0.0.1:4177/pixel-perfect/
 ```
 
-`verify:landing` prints `PASS` or `FAIL` per case and exits 0 only when every case passes. Port 4177 is `strictPort`. If it is taken, stop and free it. Do not silently switch ports.
+`verify:landing` prints `PASS` or `FAIL` per case and exits 0 only when every case passes. Every case, including `install-deeplink`, opens `http://127.0.0.1:4177/pixel-perfect/`. A missing argument, or an argument whose path does not start with `/pixel-perfect/`, exits nonzero. Port 4177 is `strictPort`. If it is taken, stop and free it. Do not silently switch ports.
 
 ### Initial state
 
