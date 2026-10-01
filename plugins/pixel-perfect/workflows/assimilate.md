@@ -49,12 +49,13 @@ Two calls in the common case; three when the user changes the result once. Nothi
 ## Phase 1: ORIENT (cheap)
 
 1. **Resolve the sources.** Each argument must exist (a URL is accepted as given). Anything that does not resolve is asked in `A0` Sources, with the nearest match first — never guessed.
-2. **Detect candidates** when no source was given: design files under `design/` that are not in `manifest.references` and not in an earlier assimilation receipt, plus `manifest.assimilate_candidates` (products the user named at init).
-3. **Classify the project** — this decides what persisting writes:
+2. **Detect candidates** when no source was given: design files under `design/` that are not in `manifest.references` and not in an earlier assimilation receipt, plus `manifest.assimilate_candidates` (products the user named at init). When there are none, drop the detected-candidates option from `A0` Sources.
+3. **Set each source's role.** Intent sets the default; when the sources mix kinds, a file under the project's `design/` is `own` and a URL or a path outside the project is `inspiration`, and the digest lists each source with its role so the user can correct it with Other.
+4. **Classify the project** — this decides what persisting writes:
    - **new** — no `design/manifest.json`
    - **pre-compose** — a manifest, and no platform has `compose: passed`
    - **post-compose** — a platform has `compose: passed`
-4. **Digest** in twelve lines or fewer — the sources, the project state, and what the analysis will do — then fire `A0`:
+5. **Digest** in twelve lines or fewer — the sources, the project state, and what the analysis will do — then fire `A0`:
 
 ```
 ASSIMILATE — 2 sources · project: pre-compose (web-desktop, web-mobile)
@@ -142,11 +143,11 @@ batch: A1 — keep the findings
   question: Fold these findings into your design system?
   options[own]:
     - label: Fold it into the system (Recommended)
-      description: Merges the mockup's frames into design/reference, adds its screens, states, and components to design/inventory.json, and records the source in your manifest. Build makes the new items next, or evolve if the system is already composed.
+      description: Merges the mockup's frames into design/reference, adds its screens, states, and components to design/inventory.json, and records the source in your manifest; build makes the new items next. If your system is already composed, it is recorded for evolve instead, which proves the change.
     - label: Change what's folded in
-      description: Choose Other and name items to drop, rename, merge, or move to another layer. The run's inventory is corrected and re-gated, and the report is shown again before anything is kept.
+      description: Choose Other and name new items to drop, rename, merge, or move to another layer (items already in your system change through evolve). The run is corrected, re-gated, and shown again before anything is kept.
     - label: Keep the report only
-      description: Leaves the report and the run's analysis in design/assimilations for later and changes nothing else. Re-running assimilate on the same source starts from this analysis.
+      description: Leaves the report and the run's analysis in design/assimilations to read later and changes nothing else in your project. Nothing is recorded in the manifest.
     - label: Discard this run
       description: Deletes the run folder, including its screenshots and analysis. Your inventory, reference frames, and manifest are exactly as they were before the run.
   options[inspiration]:
@@ -166,12 +167,12 @@ batch: A1 — keep the findings
 
 **Change** applies the named edits to `<run>/inventory.json` and the proposals, re-runs the gate (`docs/DESIGN-ANALYSIS.md` Step 3), rewrites the report, and asks `A1` again. **Keep the report only** writes nothing outside the run folder. **Discard** deletes the run folder.
 
-**Fold it in / Adopt** runs `docs/DESIGN-ANALYSIS.md` Step 5 (own frames merged into `design/reference`, `design/inventory.json` written and re-gated with `--prior`), then writes `<run>/receipt.json` and records it by project state:
+**Fold it in / Adopt** runs `docs/DESIGN-ANALYSIS.md` Step 5 (staged: own frames merged and the inventory gated with `--prior` before anything in `design/` changes) — except post-compose, where `evolve` runs that step — then writes `<run>/receipt.json`, removes its sources from `manifest.assimilate_candidates`, and records it by project state:
 
 | Project | Your own mockup | A source you admire |
 |---|---|---|
-| **new** | `receipt.json` only — `init` adds its own sources to `references`, writes the inventory receipt, and records the assimilation. Next: `pixel-perfect:init` | `receipt.json` only — adopted components, tokens, and patterns wait there; `init` records them. Next: `pixel-perfect:init` |
-| **pre-compose** | Add the sources to `manifest.references`, write the manifest `inventory` receipt, append to `assimilations[]`, and set the `plan` gate back to `pending` if it had passed so build plans the new items. Next: `pixel-perfect:build` | Append to `assimilations[]`; never touch `references`. Adopted components join `design/inventory.json` when one exists (and `plan` resets if it grew); otherwise build Phase 4a adds them when it first runs. Next: `pixel-perfect:build`, or `pixel-perfect:refine` to apply adopted tokens to an existing theme |
+| **new** | `receipt.json` — `init` adds its own sources to `references`, writes the inventory receipt, and records the assimilation. Next: `pixel-perfect:init` | `receipt.json` only — adopted components, tokens, and patterns wait there; `init` records them and build plans the components. Next: `pixel-perfect:init` |
+| **pre-compose** | Add the sources to `manifest.references`, write the manifest `inventory` receipt, append to `assimilations[]`, and set the `plan` gate back to `pending` if it had passed so build plans the new items. Next: `pixel-perfect:build` | Append to `assimilations[]`; never touch `references`. Adopted components join `design/inventory.json` when one exists (and `plan` resets if it grew); otherwise build plans them from the receipt. Next: `pixel-perfect:build`, or `pixel-perfect:refine` to apply adopted tokens to an existing theme |
 | **post-compose** | Append to `assimilations[]` only. Next: `pixel-perfect:evolve design/assimilations/<run>/`, which proves the change against the golden catalog | Same |
 
 `<run>/receipt.json` and each `manifest.assimilations[]` entry share one shape:

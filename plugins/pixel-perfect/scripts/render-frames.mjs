@@ -109,7 +109,9 @@ function expandRefs(refs) {
   for (const ref of refs) {
     const isUrl = ref.startsWith("http://") || ref.startsWith("https://");
     if (!isUrl && existsSync(ref) && statSync(ref).isDirectory() && !existsSync(join(ref, "wireframes.json"))) {
-      const children = readdirSync(ref).filter((f) => DESIGN_FILE.test(f)).sort();
+      const children = readdirSync(ref)
+        .filter((f) => DESIGN_FILE.test(f) && !f.startsWith("._") && statSync(join(ref, f)).isFile())
+        .sort();
       if (children.length === 0) unreadable.push({ ref, why: "directory has no html or image files" });
       for (const child of children) expanded.push(join(ref, child));
     } else if (detectRefKind(ref) === null) {
@@ -118,7 +120,7 @@ function expandRefs(refs) {
       expanded.push(ref);
     }
   }
-  return { expanded, unreadable };
+  return { expanded: [...new Set(expanded)], unreadable };
 }
 
 // Copy chosen sources and their frame files from a run directory's index into another index.
@@ -127,16 +129,27 @@ function expandRefs(refs) {
 function mergeFrom(runDir, outDir, onlyRefs) {
   const read = (dir) => {
     const file = join(dir, "frames.json");
-    return existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : { version: 1, rendered_at: "", sources: [], frames: [] };
+    if (!existsSync(file)) return { version: 1, rendered_at: "", sources: [], frames: [] };
+    const index = JSON.parse(readFileSync(file, "utf8"));
+    if (!Array.isArray(index?.sources) || !Array.isArray(index?.frames)) throw new Error(`${file} is not a frames index`);
+    return index;
   };
   if (!existsSync(join(runDir, "frames.json"))) {
     console.error(`✗ ${runDir} — unreadable: no frames.json to merge from`);
     return 2;
   }
-  const run = read(runDir);
-  const dst = read(outDir);
+  let run;
+  let dst;
+  try {
+    run = read(runDir);
+    dst = read(outDir);
+  } catch (error) {
+    console.error(`✗ ${runDir} — unreadable: ${error.message}`);
+    return 2;
+  }
   const want = onlyRefs.length ? new Set(onlyRefs) : null;
-  const chosen = run.sources.filter((src) => !want || want.has(src.ref));
+  // Only rendered sources merge; a named source that did not render is refused.
+  const chosen = run.sources.filter((src) => (!want || want.has(src.ref)) && (src.status ?? "rendered") === "rendered");
   if (want) {
     for (const ref of want) {
       if (!chosen.some((src) => src.ref === ref)) {
@@ -145,7 +158,12 @@ function mergeFrom(runDir, outDir, onlyRefs) {
       }
     }
   }
+  // Every check runs before anything in --out changes: a refusal leaves the destination as it was.
   for (const src of chosen) {
+    if ((src.frames || []).length && !existsSync(join(runDir, src.slug))) {
+      console.error(`✗ ${src.ref} — unreadable: its frames folder ${join(runDir, src.slug)} is missing`);
+      return 2;
+    }
     const owner = dst.sources.find((d) => d.slug === src.slug && d.ref !== src.ref);
     if (owner) {
       console.error(`✗ ${src.ref} — slug "${src.slug}" is owned by another ref in ${outDir} (${owner.ref}); re-render the run with --reserve`);
@@ -534,8 +552,16 @@ export async function main(args = process.argv.slice(2)) {
   // A slug is taken when another ref owns it in this index or in the --reserve index; reusing it
   // would overwrite that source's frames. The same ref keeps the slug it already has.
   const takenBy = new Map(existing.sources.map((s) => [s.slug, s.ref]));
-  if (reservePath && existsSync(reservePath)) {
-    for (const s of JSON.parse(readFileSync(reservePath, "utf8")).sources || []) {
+  if (reservePath) {
+    let reserved;
+    try {
+      reserved = JSON.parse(readFileSync(reservePath, "utf8"));
+      if (!Array.isArray(reserved?.sources)) throw new Error("not a frames index");
+    } catch (error) {
+      console.error(`✗ ${reservePath} — unreadable: ${error.code === "ENOENT" ? "not found" : error.message}`);
+      return 2;
+    }
+    for (const s of reserved.sources) {
       if (!takenBy.has(s.slug)) takenBy.set(s.slug, s.ref);
       if (!slugByRef.has(s.ref)) slugByRef.set(s.ref, s.slug);
     }

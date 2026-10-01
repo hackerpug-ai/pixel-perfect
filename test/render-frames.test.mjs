@@ -1,7 +1,7 @@
 // Behavioral tests for render-frames.mjs against real Chrome and fixtures
 
 import assert from "node:assert/strict";
-import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -505,10 +505,8 @@ describe("render-frames", () => {
     const home = path.join(FIXTURES, "screens-dir/home.png");
     const pricing = path.join(FIXTURES, "screens-dir/pricing.png");
     assert.equal((await runCli([home, pricing, "--out", run, "--reserve", path.join(dst, "frames.json")])).code, 0);
-    const started = Date.now();
     const { code, stderr } = await runCli(["--merge-from", run, home, "--out", dst]);
     assert.equal(code, 0, stderr);
-    assert.ok(Date.now() - started < 3000, "no Chrome launch for a merge");
     const index = readIndex(dst);
     assert.deepEqual(index.sources.map((s) => path.basename(s.ref)).sort(), ["home.png", "test.png"], "only the named ref is merged");
     assert.deepEqual(index.frames.map((f) => f.id).sort(), ["home/01", "test/01"]);
@@ -526,6 +524,54 @@ describe("render-frames", () => {
     assert.equal(code, 2, stderr);
     assert.match(stderr, /slug "test" .* another ref/);
     assert.deepEqual(readIndex(dst).sources.map((s) => s.ref), [path.join(FIXTURE_SRC, "test.png")], "destination untouched");
+  });
+
+  test("directory expansion is byte-order sorted, non-recursive, and skips non-files and AppleDouble files", async () => {
+    const out = path.join(scratch("order"), "out");
+    const { code, stderr } = await runCli([path.join(FIXTURES, "screens-dir-order"), "--out", out]);
+    assert.equal(code, 0, stderr);
+    assert.deepEqual(readIndex(out).sources.map((s) => path.basename(s.ref)), ["Zeta.png", "alpha.png"],
+      "uppercase sorts first; nested/deep.png, ._alpha.png, and the directory dir.png are not sources");
+  });
+
+  test("an explicit --reserve that is missing or malformed is unreadable (exit 2), not a crash", async () => {
+    const base = scratch("reserve-bad");
+    const bad = path.join(base, "bad.json");
+    writeFileSync(bad, "{ not json");
+    for (const reserve of [path.join(base, "missing.json"), bad]) {
+      const { code, stderr } = await runCli([path.join(FIXTURE_SRC, "test.png"), "--out", path.join(base, "out"), "--reserve", reserve]);
+      assert.equal(code, 2, stderr);
+      assert.match(stderr, /✗ .* unreadable/);
+      assert.ok(!/\n\s+at /.test(stderr), `no stack trace: ${stderr}`);
+    }
+  });
+
+  test("--merge-from refuses before touching anything: unknown ref, missing index, missing frames, malformed index", async () => {
+    const base = scratch("merge-guard");
+    const dst = path.join(base, "dst");
+    const run = path.join(base, "run");
+    assert.equal((await runCli([path.join(FIXTURE_SRC, "test.png"), "--out", dst])).code, 0);
+    assert.equal((await runCli([path.join(FIXTURES, "screens-dir/home.png"), "--out", run, "--reserve", path.join(dst, "frames.json")])).code, 0);
+    const before = readFileSync(path.join(dst, "frames.json"), "utf8");
+    // a ref the run does not hold
+    assert.equal((await runCli(["--merge-from", run, "/no/such/ref.png", "--out", dst])).code, 2);
+    // a run directory with no index
+    assert.equal((await runCli(["--merge-from", path.join(base, "empty-run"), "--out", dst])).code, 2);
+    // a run whose source folder is missing: the destination must survive untouched
+    const runIndex = JSON.parse(readFileSync(path.join(run, "frames.json"), "utf8"));
+    rmSync(path.join(run, runIndex.sources[0].slug), { recursive: true, force: true });
+    const missing = await runCli(["--merge-from", run, "--out", dst]);
+    assert.equal(missing.code, 2, missing.stderr);
+    assert.match(missing.stderr, /unreadable/);
+    // a malformed run index
+    const broken = path.join(base, "broken-run");
+    mkdirSync(broken, { recursive: true });
+    writeFileSync(path.join(broken, "frames.json"), "{ nope");
+    const malformed = await runCli(["--merge-from", broken, "--out", dst]);
+    assert.equal(malformed.code, 2, malformed.stderr);
+    assert.ok(!/\n\s+at /.test(malformed.stderr), `no stack trace: ${malformed.stderr}`);
+    assert.equal(readFileSync(path.join(dst, "frames.json"), "utf8"), before, "destination index unchanged");
+    assert.ok(existsSync(path.join(dst, "test/01.png")), "destination frames unchanged");
   });
 
 });

@@ -601,6 +601,18 @@ export function verifyInventory(inventory, options = {}) {
     }
   }
 
+  // Check P: every frame comes from a declared source, under that source's slug. Check N
+  // resolves a frame's role through its source, so a mislabelled frame would otherwise slip by.
+  const sourceByRef = new Map(inventory.sources.map((src) => [src.ref, src]));
+  for (const [i, frame] of inventory.frames.entries()) {
+    const src = sourceByRef.get(frame.source);
+    if (!src) {
+      violations.push({ class: "frame-source", path: `frames[${i}].${frame.id}`, message: `frame source ${frame.source} is not a declared source` });
+    } else if (src.slug && frame.id.split("/")[0] !== src.slug) {
+      violations.push({ class: "frame-source", path: `frames[${i}].${frame.id}`, message: `frame id is not under its source's slug "${src.slug}"` });
+    }
+  }
+
   // Check N: an inspiration source never defines the project's screens. Its frames may be
   // claimed by a component's appears_on or listed unclaimed, never by a screen state.
   const roleByRef = new Map(inventory.sources.map((src) => [src.ref, src.role || "own"]));
@@ -626,7 +638,7 @@ export function verifyInventory(inventory, options = {}) {
     const keys = (inv) => {
       const out = new Set();
       for (const f of inv.frames || []) out.add(`frames.${f.id}`);
-      for (const u of inv.unclaimed_frames || []) out.add(`frames.${u.id}`);
+      for (const u of inv.unclaimed_frames || []) out.add(`unclaimed.${u.id}`);
       for (const layer of ["atoms", "molecules", "organisms"]) for (const c of inv[layer] || []) out.add(`${layer}.${c.name}`);
       for (const s of inv.screens || []) {
         out.add(`screens.${s.name}`);
@@ -841,6 +853,7 @@ export function main(argv) {
     try {
       if (!existsSync(priorPath)) throw new Error("File not found");
       priorData = JSON.parse(readFileSync(priorPath, "utf8"));
+      if (!priorData || typeof priorData !== "object" || Array.isArray(priorData)) throw new Error("not an inventory object");
     } catch (error) {
       if (!jsonOnly) process.stderr.write(`CONFIG ERROR: cannot read prior inventory: ${error.message}\n`);
       return 2;

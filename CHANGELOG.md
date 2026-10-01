@@ -11,6 +11,8 @@ All notable changes to Pixel Perfect are documented here.
 - Bundled the `frontend-design` skill (Apache-2.0) as `docs/frontend-design/FRONTEND-DESIGN.md`, the analysis's aesthetic lens.
 - Inventory provenance: `sources[].role` (`own` | `inspiration`); `verify-inventory.mjs` Check N (an inspiration source never defines your screens) and `--prior` (an additive run may not drop anything the prior inventory held).
 - `render-frames.mjs`: a directory renders each html or image file as its own source; `--reserve` and `--merge-from` let a run render outside `design/reference` and merge only what is kept.
+- `merge-inventory.mjs`: an additive read returns only what it adds or changes and is merged over the prior inventory in code, so a model omission cannot drop anything; persisting is staged and swapped in only after the gate passes.
+- `verify-inventory.mjs` Check P: every frame comes from a declared source, under that source's slug.
 
 ### Fixed
 

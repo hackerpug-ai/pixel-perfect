@@ -340,8 +340,13 @@ test("assimilate asks intent first, reports before persisting, and runs the shar
   for (const needle of ["batch: A0", "batch: A1", "header: Intent", "header: Context", "header: Persist", "docs/DESIGN-ANALYSIS.md", "docs/frontend-design/FRONTEND-DESIGN.md", "reference/.gitignore"]) {
     assert.ok(text.includes(needle), `assimilate.md must contain ${needle}`);
   }
-  assert.ok(text.indexOf("batch: A0") < text.indexOf("Phase 2: ANALYZE"), "the intent question fires before anything is analyzed");
-  assert.ok(text.indexOf("Phase 3: REPORT") < text.indexOf("batch: A1"), "the report is written before the persist question");
+  const at = (needle) => {
+    const i = text.indexOf(needle);
+    assert.ok(i >= 0, `assimilate.md must contain ${needle}`);
+    return i;
+  };
+  assert.ok(at("batch: A0") < at("## Phase 2: ANALYZE"), "the intent question fires before anything is analyzed");
+  assert.ok(at("## Phase 3: REPORT") < at("batch: A1"), "the report is written before the persist question");
   const build = readFileSync(path.join(ROOT, "plugins/pixel-perfect/workflows/build.md"), "utf8");
   assert.ok(build.includes("docs/DESIGN-ANALYSIS.md"), "build Phase 4a runs the shared analysis");
 });

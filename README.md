@@ -291,7 +291,7 @@ wireframe (ASCII, optional)   designs (decks, URLs, shots)   research (optional)
 
 ## Starting From Existing UI or Designs
 
-Not every project starts from a written PRD. If you already have a design — Claude Design decks, a competitor's site, a screenshot, an HTML export — point `init` at it: each source is recorded in the manifest's `references`, untouched and in place. Then `build`'s first phase, **DESIGN INVENTORY**, does the reading:
+Not every project starts from a written PRD. If you already have a design — Claude Design decks, a screenshot, an HTML export — point `init` at it: each source is recorded in the manifest's `references`, untouched and in place. (A site you only admire is not your design: `/pixel-perfect:assimilate` learns from it without copying it.) Then `build`'s first phase, **DESIGN INVENTORY**, does the reading:
 
 1. `render-frames.mjs` renders every reference to per-frame PNGs under `design/reference/` (sources are loaded where they live, so decks that import sibling partials keep working);
 2. one whole-design read — every frame image, every source, the spec — returns `design/inventory.json`: atoms, molecules, organisms, and screens with their states, each naming the frames that justify it and what it composes;

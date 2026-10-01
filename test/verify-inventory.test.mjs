@@ -399,17 +399,25 @@ test("Check N: inspiration frames claimed only by components pass", () => {
   assert.equal(result.exit, 0, JSON.stringify(result.violations));
 });
 
-test("--prior: an item, screen state, or frame the prior had is reported prior-dropped", () => {
+test("--prior: each kind of drop is reported on its own", () => {
   const prior = loadFixture("valid");
-  const current = loadFixture("valid");
-  current.atoms = current.atoms.filter((a) => a.name !== "Input");
-  current.screens[2].states = []; // SignIn.form dropped
-  current.unclaimed_frames = []; // library/01 dropped
-  current.frames = current.frames.filter((f) => f.id !== "library/01");
-  const result = verifyInventory(current, { prior });
-  assert.equal(result.exit, 1);
-  const dropped = result.violations.filter((v) => v.class === "prior-dropped").map((v) => v.path).sort();
-  assert.deepEqual(dropped, ["atoms.Input", "frames.library/01", "screens.SignIn.states.form"]);
+  const cases = [
+    ["a component", (c) => { c.atoms = c.atoms.filter((a) => a.name !== "Input"); }, "atoms.Input"],
+    ["a screen state", (c) => { c.screens[2].states = []; }, "screens.SignIn.states.form"],
+    ["a whole screen", (c) => { c.screens = c.screens.filter((x) => x.name !== "SignIn"); }, "screens.SignIn"],
+    ["an unclaimed frame", (c) => { c.unclaimed_frames = []; }, "unclaimed.library/01"],
+    ["a claimed frame", (c) => {
+      c.frames = c.frames.filter((f) => f.id !== "cockpit/03");
+      for (const scr of c.screens) for (const st of scr.states) st.frames = (st.frames || []).filter((id) => id !== "cockpit/03");
+      for (const layer of ["atoms", "molecules", "organisms"]) for (const it of c[layer]) if (it.appears_on) it.appears_on = it.appears_on.filter((id) => id !== "cockpit/03");
+    }, "frames.cockpit/03"],
+  ];
+  for (const [what, drop, key] of cases) {
+    const current = loadFixture("valid");
+    drop(current);
+    const dropped = verifyInventory(current, { prior }).violations.filter((v) => v.class === "prior-dropped").map((v) => v.path);
+    assert.ok(dropped.includes(key), `dropping ${what} must report ${key}; got ${JSON.stringify(dropped)}`);
+  }
 });
 
 test("--prior: additions over the prior pass", () => {
@@ -432,4 +440,28 @@ test("--prior CLI: reads the prior file; a missing prior file is exit 2", () => 
   assert.equal(code, 1);
   assert.ok(JSON.parse(stdout).violations.some((v) => v.class === "prior-dropped" && v.path === "atoms.Input"));
   assert.equal(runCli([invPath, "--prior", path.join(tmpDir, "missing.json")]).code, 2);
+});
+
+test("--prior that is not an inventory object is a usage error (exit 2)", () => {
+  const tmpDir = mkdtempSync(path.join(tmpdir(), "pp-inv-prior-null-"));
+  const invPath = path.join(tmpDir, "inventory.json");
+  const priorPath = path.join(tmpDir, "prior.json");
+  writeFileSync(invPath, JSON.stringify(loadFixture("valid")), "utf8");
+  writeFileSync(priorPath, "null", "utf8");
+  assert.equal(runCli([invPath, "--prior", priorPath]).code, 2);
+});
+
+test("a frame whose source is not a declared source, or whose id is not under its source's slug, is a violation", () => {
+  const unknown = loadFixture("valid");
+  unknown.frames[0].source = "elsewhere/Unknown.dc.html";
+  const a = verifyInventory(unknown);
+  assert.equal(a.exit, 1);
+  assert.ok(a.violations.some((v) => v.class === "frame-source" && /not a declared source/.test(v.message)), JSON.stringify(a.violations));
+  const slugged = loadFixture("valid");
+  slugged.sources[0].slug = "cockpit";
+  slugged.sources[1].slug = "library";
+  assert.equal(verifyInventory(slugged).exit, 0, "ids under their source's slug pass");
+  slugged.frames[3].source = slugged.sources[0].ref; // library/01 relabelled as Cockpit's
+  const b = verifyInventory(slugged);
+  assert.ok(b.violations.some((v) => v.class === "frame-source" && /slug/.test(v.message)), JSON.stringify(b.violations));
 });

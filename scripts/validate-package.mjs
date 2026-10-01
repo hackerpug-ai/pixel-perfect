@@ -94,6 +94,7 @@ export async function validatePackage(root = REPOSITORY_ROOT) {
     "scripts/verify-styling-contract.mjs",
     "scripts/verify-inventory.mjs",
     "scripts/render-frames.mjs",
+    "scripts/merge-inventory.mjs",
     "scripts/chrome.mjs",
     "docs/INVENTORY-CONTRACT.md",
     "docs/DESIGN-ANALYSIS.md",

@@ -230,6 +230,8 @@ What opens each level:
 
 Screens are counted by **route**, not by visual state. Views differing only by state — default, empty, loading, error, or the tabs of one page — are one screen carrying a `states` list. Phase 6 Step 1 holds the collapse and the state-vs-route rule.
 
+**Adopted components.** `manifest.assimilations[].adopted.components` are required items too. When Phase 4a ran, its "Adopted components" step already put them in the inventory; when the project has no design references (so no inventory), add them to the spec-derived lists here, each as an undrawn item to build in the project's own style.
+
 **Greenfield** (no existing components) skips delta computation: every level is ACTIVE and the plan proposes creating everything the spec describes. **Brownfield** runs the delta per level and proposes only what is missing or changed. Say which mode ran in the digest.
 
 ### Step 3: Write the brief, digest it, and confirm the plan
