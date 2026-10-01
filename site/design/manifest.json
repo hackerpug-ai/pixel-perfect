@@ -522,7 +522,8 @@
         "organisms_composition": "passed",
         "screens_styling_contract": "passed",
         "screens_component_contract": "n/a",
-        "compose_capture": "passed"
+        "compose_capture": "passed",
+        "screens_composition": "passed"
       },
       "screens": [
         {
@@ -1130,7 +1131,8 @@
         "organisms_composition": "passed",
         "screens_styling_contract": "passed",
         "screens_component_contract": "n/a",
-        "compose_capture": "passed"
+        "compose_capture": "passed",
+        "screens_composition": "passed"
       },
       "screens": [
         {
