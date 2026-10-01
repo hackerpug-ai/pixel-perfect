@@ -9,7 +9,7 @@ const PLUGIN_ROOT = "plugins/pixel-perfect";
 
 // Workflows that collect decisions from the user. Each must declare at least one
 // user_choice batch; none may print a decision as prose.
-const INTERACTIVE_WORKFLOWS = ["add-platform", "build", "evolve", "init", "refine", "scaffold", "wireframe"];
+const INTERACTIVE_WORKFLOWS = ["add-platform", "assimilate", "build", "evolve", "init", "refine", "scaffold", "wireframe"];
 // Workflows that never ask. Linted for prose decisions only.
 const SILENT_WORKFLOWS = ["research", "status", "verify"];
 const INTERNAL_SKILLS = ["process-context"];

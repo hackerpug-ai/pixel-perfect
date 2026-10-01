@@ -4,6 +4,20 @@ All notable changes to Pixel Perfect are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- Added `pixel-perfect:assimilate`, which analyzes something that is not usable components — a new mockup of your own, or the UI of a site or design you admire — and folds the findings into your design system after you read a report and confirm. It works before `init` (a brand-new project) and on an existing system. Sources you admire contribute components, tokens, and patterns in your own style; their brand, copy, and screens are never copied, and their screenshots stay local (git-ignored).
+- Added `docs/DESIGN-ANALYSIS.md`, the one design analysis (render, one whole-design read, gate, persist) that `build` Phase 4a, `assimilate`, and `evolve` now share.
+- Bundled the `frontend-design` skill (Apache-2.0) as `docs/frontend-design/FRONTEND-DESIGN.md`, the analysis's aesthetic lens.
+- Inventory provenance: `sources[].role` (`own` | `inspiration`); `verify-inventory.mjs` Check N (an inspiration source never defines your screens) and `--prior` (an additive run may not drop anything the prior inventory held).
+- `render-frames.mjs`: a directory renders each html or image file as its own source; `--reserve` and `--merge-from` let a run render outside `design/reference` and merge only what is kept.
+
+### Fixed
+
+- `render-frames.mjs` crashed on any directory without `wireframes.json` (a CommonJS `require` in an ES module), and a new source whose file name matched another source's slug deleted that source's frames.
+- `evolve` E1 rendered into `design/reference` before its E4 confirmation; it now renders into its delta directory.
+- `init` recorded products to borrow from in `references`, which `build` renders as your own design. They are now `assimilate_candidates`.
+
 ## [9.1.0] - 2026-09-02
 
 ### Added

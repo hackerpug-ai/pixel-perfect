@@ -109,5 +109,5 @@ test("no public polish command, workflow, or capability is registered", () => {
   assert.equal(existsSync(path.join(PLUGIN, "workflows/polish.md")), false);
   const caps = JSON.parse(readFileSync(path.join(ROOT, "scripts/adapters/capabilities.json"), "utf8"));
   assert.equal(caps.some((c) => c.name === "polish"), false);
-  assert.equal(caps.length, 10);
+  assert.equal(caps.length, 11);
 });

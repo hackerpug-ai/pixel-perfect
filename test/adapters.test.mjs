@@ -7,7 +7,7 @@ import test from "node:test";
 import { AdapterBuildError, buildAdapters, loadCapabilities, renderAdapters } from "../scripts/build-adapters.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const INTERACTIVE_WORKFLOWS = ["add-platform", "build", "evolve", "init", "refine", "scaffold", "wireframe"];
+const INTERACTIVE_WORKFLOWS = ["add-platform", "assimilate", "build", "evolve", "init", "refine", "scaffold", "wireframe"];
 const SILENT_WORKFLOWS = ["research", "status", "verify"];
 const PUBLIC_CAPABILITIES = [...INTERACTIVE_WORKFLOWS, ...SILENT_WORKFLOWS].sort();
 
@@ -27,11 +27,11 @@ test("capabilities match interactive flags from validate-workflows", async () =>
   }
 });
 
-test("renderAdapters is deterministic and covers all 10×4 surfaces", async () => {
+test("renderAdapters is deterministic and covers all 11×4 surfaces", async () => {
   const first = await renderAdapters(ROOT);
   const second = await renderAdapters(ROOT);
-  assert.equal(first.capabilities.length, 10);
-  assert.equal(first.files.size, 40);
+  assert.equal(first.capabilities.length, 11);
+  assert.equal(first.files.size, 44);
   assert.deepEqual([...first.files.keys()].sort(), [...second.files.keys()].sort());
   for (const [relativePath, content] of first.files) {
     assert.equal(content, second.files.get(relativePath), relativePath);
@@ -59,8 +59,8 @@ test("renderAdapters is deterministic and covers all 10×4 surfaces", async () =
 test("buildAdapters --check passes on the clean repository tree", async () => {
   const result = await buildAdapters(ROOT, { check: true });
   assert.equal(result.mode, "check");
-  assert.equal(result.capabilities, 10);
-  assert.equal(result.surfaces, 40);
+  assert.equal(result.capabilities, 11);
+  assert.equal(result.surfaces, 44);
   assert.deepEqual(result.drifts, []);
 });
 

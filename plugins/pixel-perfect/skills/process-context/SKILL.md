@@ -293,6 +293,7 @@ For design token story regeneration and the polyfill disclaimer pattern (require
 | Command | What It Does |
 |---------|-------------|
 | `pixel-perfect:wireframe` | Phase 0 (optional, low-fi): ASCII wireframes from plans/targets into `design/wireframes/` — a structural source for build's design inventory |
+| `pixel-perfect:assimilate` | Any time, before or after init: analyze a new mockup or a UI you admire through the shared design analysis, report, and fold what you confirm into the system |
 | `pixel-perfect:init` | Phases 1-3: discover + target + equip |
 | `pixel-perfect:add-platform` | Add a new platform to an existing project (post-init) |
 | `pixel-perfect:scaffold` | Phase 4: set up project structure, theme, token stories, catalog capture + first golden |

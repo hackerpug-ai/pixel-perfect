@@ -7,6 +7,13 @@
     "interactive": true
   },
   {
+    "name": "assimilate",
+    "title": "Assimilate",
+    "description": "Assimilate a new mockup or a UI you admire into a Pixel Perfect design system — one shared design analysis with the bundled aesthetic lens, a report, and a persist decision.",
+    "preservation": "Run the complete shared design analysis and gate, write the report, and persist only what the user confirms",
+    "interactive": true
+  },
+  {
     "name": "build",
     "title": "Build",
     "description": "Build a Pixel Perfect project through planning, atoms, molecules, organisms, screens, and integration using real components and required verification gates.",
@@ -16,7 +23,7 @@
   {
     "name": "evolve",
     "title": "Evolve",
-    "description": "Evolve a Pixel Perfect design system inventory \u2014 absorb a new screen or mock, extend an entity, promote a repeated pattern, or shed a screen with an orphan sweep, proved by catalog capture.",
+    "description": "Evolve a Pixel Perfect design system inventory — absorb a new screen or mock, extend an entity, promote a repeated pattern, or shed a screen with an orphan sweep, proved by catalog capture.",
     "preservation": "Confirm the full delta before any write or delete; hand additions to build; prove with re-capture; never silent-duplicate or silent-sweep",
     "interactive": true
   },

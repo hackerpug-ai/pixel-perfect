@@ -8,6 +8,7 @@ const REPOSITORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)
 const PLUGIN_ROOT = "plugins/pixel-perfect";
 const PUBLIC_CAPABILITIES = [
   "add-platform",
+  "assimilate",
   "build",
   "evolve",
   "init",

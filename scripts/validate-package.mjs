@@ -7,6 +7,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const REPOSITORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PUBLIC_CAPABILITIES = [
   "add-platform",
+  "assimilate",
   "build",
   "evolve",
   "init",

@@ -31,14 +31,14 @@ test("repository release and package gates pass together", async () => {
     opencode: "9.1.0",
     pi: "9.1.0",
   });
-  assert.equal(packageResult.capabilities, 10);
+  assert.equal(packageResult.capabilities, 11);
   assert.equal(packageResult.internalSkills, 1);
-  assert.equal(packageResult.piSkills, 10);
+  assert.equal(packageResult.piSkills, 11);
   assert.equal(plugin.codexVersion, "9.1.0");
   assert.equal(plugin.cursorVersion, "9.1.0");
-  assert.equal(skills.publicCapabilities, 10);
-  assert.equal(runtimePaths.checkedCapabilities, 10);
-  assert.equal(workflows.interactive, 7);
+  assert.equal(skills.publicCapabilities, 11);
+  assert.equal(runtimePaths.checkedCapabilities, 11);
+  assert.equal(workflows.interactive, 8);
   assert.equal(contracts.layers, 4);
   assert.equal(contracts.builtinComponentContracts, 5);
 });

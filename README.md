@@ -261,6 +261,7 @@ Every component prop is wired to sandbox controls (`argTypes` in Storybook; labe
 | Command | Phases | What It Does |
 |---------|--------|-------------|
 | `/pixel-perfect:wireframe` | 0 (optional) | Low-fi: ASCII wireframes from plans/targets into `design/wireframes/` — a structural source for build's design inventory |
+| `/pixel-perfect:assimilate` | any (optional) | Analyze a new mockup or a UI you admire with the same design analysis build uses, read the report, and fold what you confirm into your system — adopted, never copied |
 | `/pixel-perfect:init` | 1-3 | DISCOVER goal + vibe, TARGET platforms + framework + tools, EQUIP |
 | `/pixel-perfect:scaffold` | 4 | Install tools, create theme, generate design token stories, verify hello-world, write first catalog golden |
 | `/pixel-perfect:build` | 4a-7 | Inventory the designs (render every frame, read once, gate, confirm), then build atoms, compose screens, wire integration (layer goldens + composition mutation check) |

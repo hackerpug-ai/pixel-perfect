@@ -1,6 +1,6 @@
 # Pixel Perfect for Pi
 
-Pixel Perfect provides ten design-system workflows to the Pi coding agent as namespaced skills.
+Pixel Perfect provides eleven design-system workflows to the Pi coding agent as namespaced skills.
 
 Install the package:
 

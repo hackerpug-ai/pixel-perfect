@@ -11,6 +11,7 @@ const PACKAGE_ROOT = path.join(ROOT, "plugins/pixel-perfect");
 const PI_BIN = path.join(ROOT, "node_modules/.bin/pi");
 const CAPABILITIES = [
   "add-platform",
+  "assimilate",
   "build",
   "evolve",
   "init",

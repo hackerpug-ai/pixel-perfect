@@ -1,7 +1,7 @@
 # Design Analysis
 
 The one procedure that turns design sources into a gated inventory. Three workflows run it:
-`workflows/build.md` Phase 4a (the project's own designs, before planning), `pixel-perfect:assimilate`
+`workflows/build.md` Phase 4a (the project's own designs, before planning), `workflows/assimilate.md`
 (a new mockup, or a source the user admires), and `workflows/evolve.md` E1 (a design change to an
 existing system). The procedure renders, reads once, and gates. **Confirmation and recording belong to
 the caller**: build asks `B-inv`, assimilate asks `A1`, evolve asks `E4`. Nothing outside `OUT` is
