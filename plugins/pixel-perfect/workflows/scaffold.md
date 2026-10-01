@@ -199,7 +199,8 @@ If no sibling theme exists, skip this step and proceed to theme generation as no
 **Where the values come from, in precedence order:**
 1. A token table in the spec (`manifest.spec`) — transcribe it; it is the constitution and nothing below overrides it.
 2. The manifest's design `references` — `DESIGN_EXECUTE` reads them directly (the design contract's inputs include reference images and HTML) and grounds palette, type, and spacing in what the design actually shows rather than in vibe keywords alone. On a re-scaffold, `design/inventory.json`'s `tokens_observed` (written by build Phase 4a) is the shortlist of what the read saw.
-3. Vibe keywords, only when neither exists.
+   - Token proposals the user adopted through `pixel-perfect:assimilate` (`manifest.assimilations[].adopted.tokens`) sit below the project's own references: they are proposals learned from a source, so the design contract decides how they fit.
+3. Vibe keywords, only when none of the above exists.
 
 Load `docs/DESIGN-CONTRACT.md`, then run `DESIGN_EXECUTE` with the project vibe, selected platform, adapters, any theme seed, and existing product constraints. When `frontend-designer` is available it performs this work; otherwise the primary agent applies the same contract directly. Write the resulting concrete decisions into the theme file using the component library's required format. Never replace this step with a generic design agent or a keyword-only theme.
 

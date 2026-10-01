@@ -69,7 +69,9 @@ Capture the project's purpose and aesthetic direction.
 
 **Inventory** — if `design/inventory.json` already exists (a prior build ran Phase 4a, or the project is being re-initialised): pre-seed the route map (Step 1b) from `inventory.screens[]` — already route-keyed, each with its `states` — and the component hierarchy from `inventory.atoms` / `molecules` / `organisms`; read the vibe off `tokens_observed` for B1 Q4 option 1. Do not re-derive from the spec what the inventory already settled.
 
-Confirm the seeded values with the user — don't accept them blindly. If no wireframes, references, or inventory exist, proceed normally.
+**Assimilation runs** — if `design/assimilations/*/receipt.json` exist (`pixel-perfect:assimilate` ran before init and its findings were persisted), add each receipt's **own** sources to `references` (inspiration sources never go there), write the manifest `inventory` receipt from `design/inventory.json`, and append each receipt to `assimilations[]`. Adopted token proposals and the lens findings in `tokens_observed` inform B1 Q4 option 1.
+
+Confirm the seeded values with the user — don't accept them blindly. If no wireframes, references, inventory, or assimilation receipts exist, proceed normally.
 
 ### Step 1: Requirements Discovery
 
@@ -212,20 +214,17 @@ This is **B2 Q2**, asked alongside the route map. When the vibe answer was "Matc
 ```user_choice
 batch: B2 — the screens and what they should look like
 - header: References
-  question: Are there products whose design this should borrow from? Choose Other to paste URLs.
+  question: Are there products whose design this should learn from? Choose Other to paste URLs.
   options:
     - label: No references (Recommended)
       description: The theme is generated from the vibe alone. Nothing is fetched, and scaffold derives colors and type scale from the vibe keywords rather than from an existing product.
     - label: The competitors named in the spec
-      description: Fetches the URLs already named in the requirements document, extracts their navigation style, layout approach, and color usage, and records the observed patterns in the manifest.
+      description: Records the URLs already named in the requirements document as sources to learn from, not as your own design. After init, pixel-perfect:assimilate analyzes each one and adopts only the tokens, patterns, and components you choose.
     - label: Products I will name
-      description: Choose Other and paste URLs, comma-separated. Each is fetched and read for navigation, layout, and color patterns, which are recorded in the manifest references section.
+      description: Choose Other and paste URLs, comma-separated. They are recorded as sources to learn from, not as your own design; after init, pixel-perfect:assimilate analyzes them and adopts what you choose.
 ```
 
-If URLs are provided:
-1. Fetch each URL using available web tools (Jina, WebFetch)
-2. Extract design patterns observed (navigation style, layout approach, color usage)
-3. Record patterns in manifest references section
+If URLs are provided, record them in the manifest's top-level `assimilate_candidates` list — **never in `references`**. `references` is the project's own design: build renders it as pixel targets and inventories it as screens to build, so a competitor recorded there would be built as your own product. Nothing is fetched here; name `pixel-perfect:assimilate <url>` as a next step in the completion message, which analyzes each source through the shared design analysis and adopts only what the user confirms.
 
 **Exit gate:** Goal and vibe are captured. Manifest has `discover: passed`.
 

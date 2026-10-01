@@ -101,6 +101,8 @@ Read every design the project has, once, before anything is planned — and come
 
 The inventory is never HTML and never a mockup. The frames it points at are the pixel-targets the real components are built to match; the inventory is the index that says which target belongs to which component. `design/` here means the directory holding `design/manifest.json`.
 
+**Steps 1–3 are the shared design analysis** (`docs/DESIGN-ANALYSIS.md`), run with build's parameters: `SOURCES` = `manifest.references` (all own), `OUT` = `design/`, `PRIOR` = `design/inventory.json` when re-running, no notes, no aesthetic lens. `pixel-perfect:assimilate` and `evolve` run the same procedure, so an inventory reads the same however it was made. Step 4 — the confirmation and the receipt — is build's own.
+
 ### Step 1: Render the references to frames (deterministic)
 
 ```
@@ -113,7 +115,7 @@ One PNG per drawn frame, cropped from the rendered source, plus `design/referenc
 
 ### Step 2: One whole-design read (probabilistic)
 
-`DESIGN_EXECUTE` with `docs/INVENTORY-CONTRACT.md`, substituting: the frames index and every frame image, the source files, `manifest.spec`, the platform's existing atoms/molecules/organisms/screens (names are reused, never re-invented), `scaffold.components[]` (library primitives are recorded, not re-created), and the prior `design/inventory.json` when re-running. **One dispatch, strongest available vision-capable model** — do not split the read per source; cross-source compositions are what a split loses. The designer returns `design/inventory.json` (`docs/inventory.schema.json`).
+`DESIGN_EXECUTE` with `docs/INVENTORY-CONTRACT.md` (`<<CALLER>>` and `<<ANALYSIS_EXTRAS>>` as `docs/DESIGN-ANALYSIS.md` Step 2 gives them for build), substituting: the frames index and every frame image, the source files, `manifest.spec`, the platform's existing atoms/molecules/organisms/screens (names are reused, never re-invented), `scaffold.components[]` (library primitives are recorded, not re-created), and the prior `design/inventory.json` when re-running. **One dispatch, strongest available vision-capable model** — do not split the read per source; cross-source compositions are what a split loses. The designer returns `design/inventory.json` (`docs/inventory.schema.json`).
 
 ### Step 3: Gate (deterministic)
 

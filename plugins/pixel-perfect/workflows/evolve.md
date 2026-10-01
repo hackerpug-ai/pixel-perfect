@@ -67,7 +67,8 @@ If `refine` detects an inventory-level request, it routes here rather than doing
 
 Normalize the input.
 
-- A **file, URL, screenshot, or directory** is rendered to frames with `node {plugin}/scripts/render-frames.mjs <ref> --out design/reference` (the renderer build Phase 4a uses — sources load in place, never copied), then read against `docs/INVENTORY-CONTRACT.md` with the current `design/inventory.json` as the prior inventory, so what comes back is a delta over confirmed names, not a fresh list.
+- A **persisted assimilation run** (`design/assimilations/<run>/`, from `pixel-perfect:assimilate`) is already analyzed: take the delta from its `inventory.json` and `receipt.json`. No re-render, no re-read.
+- A **file, URL, screenshot, or directory** goes through the shared design analysis (`docs/DESIGN-ANALYSIS.md`) with `SOURCES` = the input (own), `OUT` = `design/deltas/<date>-<slug>/`, `PRIOR` = `design/inventory.json`, and the aesthetic lens — the same render, read, and gate build Phase 4a uses. It renders into the delta directory, so nothing reaches `design/reference` before E4, and what comes back is a delta over confirmed names, not a fresh list.
 - **Prose** is parsed for target and intent against the manifest inventory and golden catalog. Anything that does not resolve to exactly one entity or one clear intent is asked — uncertainty is asked, not guessed (runtime contract).
 
 Write intermediate notes to `design/deltas/<date>-<slug>/acquire.md` when the input needs multi-step normalization. The turn still ends on a digest or a question.
@@ -171,7 +172,7 @@ batch: E4 — confirm the inventory delta
 
 ### E5 — APPLY
 
-**Additions and variants** update `design/inventory.json` (append the new entities and the frames that justify them, re-run `verify-inventory.mjs`) and `build_plan`, then hand to `build`. New entities pass every existing gate — styling contract, component contract, sandbox registration, state stories, **catalog capture** — because they go through the normal path.
+**Additions and variants** are persisted through `docs/DESIGN-ANALYSIS.md` Step 5 (own frames merged into `design/reference`, `design/inventory.json` written and re-gated with `--prior`), then `build_plan` is updated and the work is handed to `build`. New entities pass every existing gate — styling contract, component contract, sandbox registration, state stories, **catalog capture** — because they go through the normal path.
 
 **Removals** execute an **atomic checklist**. Partial removal is the drift that poisons the next run — all of it lands together or none does:
 

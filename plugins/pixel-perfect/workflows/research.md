@@ -22,7 +22,7 @@ pixel-perfect:research --styling <style-system> --framework <framework> [--docs 
 
 - `--topic <topic>`: Research a specific design topic (e.g., "mobile-navigation", "form-design")
 - `--trend <name>`: Research current design trends (e.g., "bento-grids", "glassmorphism")
-- `--competitor <url>`: Analyze a competitor's design patterns
+- `--competitor <url>`: Analyze a competitor's design patterns (a text note in the research library; to fold what you learn into your design system — tokens, components, patterns — use `pixel-perfect:assimilate <url>`)
 - `--libraries <pattern>` or `--ecosystem <pattern>`: Research ecosystem libraries for a UI pattern (e.g., "data-table", "date-picker", "drag-and-drop")
 - `--styling <style-system>`: Research the idiomatic **styling conventions** for a style system that has no built-in contract (e.g. "SwiftUI", "Jetpack Compose", "Flutter", "Lipgloss", "Textual", or any "Other" choice from `pixel-perfect:init`). Synthesizes a styling contract. Requires `--framework`.
 - `--docs <url>`: Official documentation URL for the style system (the `tools.style_docs` value recorded at EQUIP time when the user picked "Other"). Strongly preferred — it grounds the contract in the vendor's docs rather than blog posts.
