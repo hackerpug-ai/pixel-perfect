@@ -164,7 +164,11 @@ export async function launchChrome({ windowSize = [1280, 800] } = {}) {
     return { chrome, proc, userData, cdp, ws };
   } catch (error) {
     proc.kill("SIGKILL");
-    rmSync(userData, { recursive: true, force: true });
+    try {
+      rmSync(userData, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    } catch {
+      /* keep the launch error, not a cleanup race */
+    }
     throw error;
   }
 }

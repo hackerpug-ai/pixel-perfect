@@ -528,8 +528,10 @@ export async function main(args = process.argv.slice(2)) {
   for (const { ref, why } of unreadable) console.error(`✗ ${ref} — unreadable: ${why}`);
   if (expanded.length === 0) return 2;
 
-  const chrome = findChrome();
-  if (!chrome) {
+  // Only HTML decks and URLs need a browser; images and wireframes are read from disk.
+  const needsChrome = expanded.some((r) => ["html-deck", "url"].includes(detectRefKind(r)));
+  const chrome = needsChrome ? findChrome() : null;
+  if (needsChrome && !chrome) {
     console.error("No Chrome binary found (tried CHROME env var and common paths)");
     return 2;
   }
@@ -583,13 +585,15 @@ export async function main(args = process.argv.slice(2)) {
     return `http://127.0.0.1:${deckServers.get(dir).port}/${encodeURIComponent(basename(ref))}`;
   };
 
-  // Launch Chrome once
-  let session;
-  try {
-    session = await launchChrome({ windowSize: [width, 800] });
-  } catch (err) {
-    console.error(`Chrome launch failed: ${err.message}`);
-    return 2;
+  // Launch Chrome once, and only when a source needs it
+  let session = null;
+  if (needsChrome) {
+    try {
+      session = await launchChrome({ windowSize: [width, 800] });
+    } catch (err) {
+      console.error(`Chrome launch failed: ${err.message}`);
+      return 2;
+    }
   }
 
   try {
@@ -778,10 +782,10 @@ export async function main(args = process.argv.slice(2)) {
       try { server.close(); } catch {}
     }
     // Cleanup Chrome
-    try {
+    if (session) try {
       session.ws.close();
       session.proc.kill("SIGKILL");
-      rmSync(session.userData, { recursive: true, force: true });
+      rmSync(session.userData, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
     } catch {}
   }
 }

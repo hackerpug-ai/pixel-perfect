@@ -304,7 +304,14 @@ export async function captureProject(projectRoot, { platform = null, runId = nul
       /* ignore */
     }
     session.proc.kill("SIGKILL");
-    rmSync(session.userData, { recursive: true, force: true });
+    // Chrome's helpers can still be writing the profile just after the kill (ENOTEMPTY); retry,
+    // and never let a failed cleanup skip closing the server — an open server keeps the
+    // process alive forever.
+    try {
+      rmSync(session.userData, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    } catch {
+      /* a leftover temp profile is harmless */
+    }
     await new Promise((r) => server.close(r));
   }
 
