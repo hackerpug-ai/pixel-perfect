@@ -37,3 +37,5 @@
 <Story name="Grok" args={{ initialTab: 'grok' }} />
 <Story name="OpenCode" args={{ initialTab: 'opencode' }} />
 <Story name="Pi" args={{ initialTab: 'pi' }} />
+<!-- The page leaves the box out until a scan result exists; this story shows the box with the export's own pending text. -->
+<Story name="Scan box" args={{ initialTab: 'claude', scan: 'Third-party scan results — pending.' }} />
