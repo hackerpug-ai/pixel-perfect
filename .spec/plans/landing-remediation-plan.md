@@ -92,7 +92,7 @@ Read-only inputs: `site/src/lib/components/organisms/SocialCard.svelte`, `design
 One arrangement. `export-social-card.mjs` is the only producer of the public PNG and the only copier of the icons.
 
 1. `site/src/routes/social-card/+page.svelte` renders `SocialCard` and nothing else. Body margin is 0. The root layout already prerenders (`site/src/routes/+layout.ts`). The card keeps its own `data-theme="light"` and its 1200 by 630 box. The page waits until `/proof/install-card-desktop-light.png` has decoded before a screenshot is taken.
-2. `site/scripts/export-social-card.mjs` runs after `npm run build`. It serves `site/build` on an ephemeral port with Playwright `playwright-core` and `channel: 'chrome'`, then closes that server before it returns. It opens the prerendered social-card route, screenshots the SocialCard element (not the browser chrome) at 1200×630 with `deviceScaleFactor` 1, and writes `site/static/og.png`. The script is rerun whenever SocialCard changes. Nobody draws a replacement PNG by hand.
+2. `site/scripts/export-social-card.mjs` runs after `npm run build`. `npm run preview` does not read `site/build`. It sirvs `site/.svelte-kit/output/client` under `paths.base`, and it reads HTML from `site/.svelte-kit/output/prerendered/pages`. `kit.outDir` defaults to `.svelte-kit`. The script's screenshot server uses that same mapping on an ephemeral port, with Playwright `playwright-core` and `channel: 'chrome'`, then closes before it returns. It opens the prerendered social-card page, screenshots the SocialCard element (not the browser chrome) at 1200×630 with `deviceScaleFactor` 1, and writes `site/static/og.png`. The script is rerun whenever SocialCard changes. Nobody draws a replacement PNG by hand.
 3. The same script copies the approved mark-B rasters, byte for byte, into `site/static/`:
    - `design/logo/favicon-16.png` to `site/static/favicon-16.png`
    - `design/logo/favicon-32.png` to `site/static/favicon-32.png`
@@ -100,7 +100,7 @@ One arrangement. `export-social-card.mjs` is the only producer of the public PNG
    - `design/logo/favicon-180.png` to `site/static/apple-touch-icon.png`
 
    Strategy D5 and `manifest.json` `deploy.static` already assign these PNGs to mark B. The task ships those files. It does not render the favicon from `mark-B-*.svg`, and it does not ship mark A or mark C as the icon.
-   Before the script exits, it copies all five files into the build `npm run preview` serves, next to `site/build/index.html`: `og.png`, `favicon-16.png`, `favicon-32.png`, `favicon-64.png`, and `apple-touch-icon.png`. That copy is what the verification preview serves. The command does not run `npm run build` a second time. A later plain `npm run build` copies `site/static/` into a fresh `site/build/` again.
+   Before the script exits, it copies those five files into `site/.svelte-kit/output/client/`, which is the directory `npm run preview` sirvs: `og.png`, `favicon-16.png`, `favicon-32.png`, `favicon-64.png`, and `apple-touch-icon.png`. It also copies the same five next to `site/build/index.html` so the adapter-static folder matches. Preview does not read that folder. The command does not run `npm run build` a second time. A later plain `npm run build` copies `site/static/` into both output trees again.
 4. `+layout.svelte` drops the `favicon.svg` import and the starter icon link. It emits icon links for the four static files. Each `href` uses `base` from `$app/paths`.
 5. `+page.svelte` keeps the current title and description strings and adds prerendered Open Graph and Twitter tags in the static HTML: `og:title`, `og:description`, `og:image`, `og:image:width` of 1200, `og:image:height` of 630, `og:type` of `website`, `twitter:card` of `summary_large_image`, `twitter:title`, `twitter:description`, and `twitter:image`. The image `href` is `${base}/og.png` through the same `base` import.
 
@@ -115,7 +115,7 @@ A Storybook-only card check does not pass.
 - `npm run check` exits 0.
 - The static homepage, fetched with no JavaScript, contains the Open Graph and Twitter tags listed above.
 - Resolving those `href`s against the fetched page URL yields paths that start with `/pixel-perfect/`, each GET returns HTTP 200 from the preview of this build, and the served `og.png` IHDR is 1200×630.
-- The served `favicon-32.png` bytes equal `design/logo/favicon-32.png`, and the served `apple-touch-icon.png` bytes equal `design/logo/favicon-180.png`. Those files are the mark B artwork, copied into `site/build/` by `export:social` before preview.
+- The served `favicon-32.png` bytes equal `design/logo/favicon-32.png`, and the served `apple-touch-icon.png` bytes equal `design/logo/favicon-180.png`. Those files are the mark B artwork. `export:social` has copied them into `site/.svelte-kit/output/client/` before preview.
 - No social or icon URL in the HTML contains a scheme or a host.
 
 ### Verification command
@@ -129,7 +129,7 @@ npm run preview -- --host 127.0.0.1 --port 4177 --strictPort
 node scripts/export-social-card.mjs --check http://127.0.0.1:4177/pixel-perfect/
 ```
 
-`export:social` is `node scripts/export-social-card.mjs`. That run writes `site/static/` and copies `og.png`, `favicon-16.png`, `favicon-32.png`, `favicon-64.png`, and `apple-touch-icon.png` into `site/build/` before it returns. The `--check` mode only fetches. It does not write assets and it does not open Storybook. It parses the homepage HTML, rejects any social or icon URL that has a host, resolves the rest against the page URL, requires HTTP 200 for `og.png`, `favicon-32.png`, and `apple-touch-icon.png`, reads the PNG IHDR, and compares those two icon files to `design/logo/`. The preview origin is the checker's fetch target. It is not a value stored in the page.
+`export:social` is `node scripts/export-social-card.mjs`. That run writes `site/static/` and copies `og.png`, `favicon-16.png`, `favicon-32.png`, `favicon-64.png`, and `apple-touch-icon.png` into `site/.svelte-kit/output/client/` before it returns. Preview sirvs that directory. Copying the files only next to `site/build/index.html` leaves these GETs at 404. The `--check` mode only fetches. It does not write assets and it does not open Storybook. It parses the homepage HTML, rejects any social or icon URL that has a host, resolves the rest against the page URL, requires HTTP 200 for `og.png`, `favicon-32.png`, and `apple-touch-icon.png`, reads the PNG IHDR, and compares those two icon files to `design/logo/`. The preview origin is the checker's fetch target. It is not a value stored in the page.
 
 ### Initial state
 
