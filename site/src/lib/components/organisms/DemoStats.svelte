@@ -1,9 +1,9 @@
 <script lang="ts">
-	// Build it's closing row (Landing.dc.html:262-283): the demo poster (hatched 16:9 with PlayButton)
-	// beside the stats and the wireframe line; stacks at 720px and below. The numbers are this site's
-	// own build (run.json). The poster and its play button wait for the demo video (strategy T8):
-	// kept as designed by the owner's decision (2026-09-30), the button plays nothing until then.
+	// Build it's closing row (Landing.dc.html:262-283): the demo beside the stats and the wireframe
+	// line; stacks at 720px and below. The numbers are this site's own build (run.json).
+	// Play starts the recorded T8 run. The video stays mounted so playback can be observed.
 	// Home sets the space above it.
+	import { base } from '$app/paths';
 	import InlineCode from '$lib/components/atoms/InlineCode.svelte';
 	import PlateLabel from '$lib/components/atoms/PlateLabel.svelte';
 	import PlayButton from '$lib/components/atoms/PlayButton.svelte';
@@ -20,21 +20,52 @@
 	}
 
 	let {
-		posterLabel = 'demo video · 60–90 s · poster frame',
-		caption = 'One run, start to finish: init, scaffold, build, status.',
+		posterLabel = 'demo video',
+		caption = 'Recorded run: init, build, sandbox, and one evolve.',
 		stats = runStats,
 		statsNote = "Measured on this site's own build. Tokens counts new tokens; see the FAQ.",
 		onplay
 	}: Props = $props();
+
+	let video = $state<HTMLVideoElement | null>(null);
+	let playing = $state(false);
+
+	function play() {
+		playing = true;
+		void video?.play();
+		onplay?.();
+	}
 </script>
 
 <div class="grid grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] items-start gap-10 max-md:grid-cols-1">
 	<figure class="m-0">
-		<div class="relative grid aspect-video place-items-center border border-line bg-hatch">
-			<div class="flex flex-col items-center gap-3">
-				<PlayButton {onplay} />
-				<PlateLabel label={posterLabel} size="caption" />
-			</div>
+		<div class="relative aspect-video overflow-hidden border border-line bg-ink">
+			<video
+				bind:this={video}
+				class="h-full w-full object-contain"
+				poster="{base}/demo/poster.png"
+				muted
+				playsinline
+				preload="auto"
+				controls
+			>
+				<source src="{base}/demo/demo.mp4" type="video/mp4" />
+				<track
+					kind="captions"
+					src="{base}/demo/demo.vtt"
+					srclang="en"
+					label="English"
+					default
+				/>
+			</video>
+			{#if !playing}
+				<div class="absolute inset-0 grid place-items-center">
+					<div class="flex flex-col items-center gap-3">
+						<PlayButton onplay={play} />
+						<PlateLabel label={posterLabel} size="caption" />
+					</div>
+				</div>
+			{/if}
 		</div>
 		<div class="mt-2.5"><FigureCaption text={caption} /></div>
 	</figure>

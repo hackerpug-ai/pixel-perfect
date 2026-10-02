@@ -12,7 +12,7 @@
 			docs: {
 				description: {
 					component:
-						'The example evolve thread: the command, the reply with its change summary, and the Changelog page it built. On scroll the page assembles (grow-assemble); at rest it is assembled. Example until the real run.'
+						'The recorded evolve thread: the command, the reply with its change summary, and the Changelog page it built. On scroll the page assembles (grow-assemble); at rest it is assembled. This thread is the recorded run.'
 				}
 			}
 		},
