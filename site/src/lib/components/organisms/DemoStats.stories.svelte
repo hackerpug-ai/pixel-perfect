@@ -12,7 +12,7 @@
 			docs: {
 				description: {
 					component:
-						"The demo poster beside the build stats (this site's own build) and the wireframe line. The play button waits for the demo video (strategy T8)."
+						"The recorded demo beside the build stats (this site's own build) and the wireframe line. Play starts the recorded run."
 				}
 			}
 		},

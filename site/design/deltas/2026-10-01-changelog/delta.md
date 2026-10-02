@@ -40,7 +40,7 @@ DELTA — +1 screen
   sweep: none
 ```
 
-The screen was written by an earlier run that recorded this gate as passed without a user choice. That sentence is not the confirmation. This invocation parsed `add a changelog page` against the inventory. Screen Changelog is already at route `/changelog`, so the sentence reuses that screen and adds nothing. No new transcript, counts, or captioned recording were produced. The scene-script clip stays removed. Playback stays on the inactive poster, and the thread stays the example.
+The user did not click Apply or Cancel. The evaluator ordered a re-run from the tree before this screen existed (`af0eb9a`). On that tree the sentence adds the page. Init refused with exit 2 because `design/manifest.json` already exists and the phase is compose. `--force` was not passed. The screen files, the inventory entry, the manifest, and the prerender entry were then taken from the changelog commit onto that tree. Catalog check on web-desktop and web-mobile each reported only the two new Changelog stories. Pre-existing golden HTML files changed: 0 of 696. Measured counts are reuse 4, new 1, capturedMoved 0. The result route is `/changelog`. The captioned recording is that terminal session.
 
 ## E5 — Apply
 

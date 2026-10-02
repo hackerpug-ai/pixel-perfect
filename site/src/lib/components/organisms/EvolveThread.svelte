@@ -1,17 +1,24 @@
 <script lang="ts">
-	// Grow it's example thread (Landing.dc.html:290-311): YOU runs evolve, AGENT replies with the
-	// change summary and the Changelog page it assembled. Motion grow-assemble (manifest.motion): this
-	// figure runs the view timeline; ChangelogMini's parts fly in with --p. At rest, and with reduced
-	// motion, the page is assembled. Example until the real evolve run (T21).
+	// Grow it's evolve thread (Landing.dc.html:290-311): YOU runs evolve, AGENT replies with the
+	// change summary and the Changelog page it assembled. The words and the counts are the recorded
+	// run in design/evolve-run. The release labels are the Changelog screen's measured versions.
+	// Motion grow-assemble (manifest.motion): this figure runs the view timeline; ChangelogMini's
+	// parts fly in with --p. At rest, and with reduced motion, the page is assembled.
+	import { base } from '$app/paths';
 	import InlineCode from '$lib/components/atoms/InlineCode.svelte';
+	import TextLink from '$lib/components/atoms/TextLink.svelte';
+	import { changelogVersions } from '$lib/components/screens/Changelog.svelte';
 	import ChangelogMini from '$lib/components/molecules/ChangelogMini.svelte';
 	import FigureCaption from '$lib/components/molecules/FigureCaption.svelte';
 	import ThreadRow from '$lib/components/molecules/ThreadRow.svelte';
+	import counts from '../../../../design/evolve-run/counts.json';
+	import resultPathFile from '../../../../design/evolve-run/result-path.txt?raw';
+	import transcript from '../../../../design/evolve-run/transcript.md?raw';
 
 	interface Props {
 		command?: string;
 		reply?: string;
-		/** The change summary, in order ('reuse [n]', 'new [n]', …); rendered with muted dots between. */
+		/** The change summary, in order (reuse, new, captured moved); rendered with muted dots between. */
 		summary?: string[];
 		versions?: [string, string, string];
 		caption?: string;
@@ -19,12 +26,24 @@
 		progress?: number;
 	}
 
+	function transcriptLine(label: string) {
+		const line = transcript.split('\n').find((item) => item.startsWith(label));
+		return line ? line.slice(label.length).trim() : '';
+	}
+
+	const recordedSummary = [
+		`reuse ${counts.reuse}`,
+		`new ${counts.new}`,
+		`${counts.capturedMoved} captured components moved`
+	];
+	const resultPath = resultPathFile.trim();
+
 	let {
-		command = '/pixel-perfect:evolve "add a changelog page"',
-		reply = 'Built `screens/Changelog` from existing parts.',
-		summary = ['reuse [n]', 'new [n]', '[n] captured components moved'],
-		versions = ['v9.1', 'v9.0', 'v8.4'],
-		caption = 'Example thread — replaced by the real run at launch.',
+		command = transcriptLine('Command:'),
+		reply = transcriptLine('Reply:'),
+		summary = recordedSummary,
+		versions = changelogVersions,
+		caption = 'This thread is the recorded run.',
 		progress
 	}: Props = $props();
 </script>
@@ -44,6 +63,9 @@
 				{#each summary as item, i (i)}{#if i}<span class="font-mono text-code text-muted">·</span>{/if}<InlineCode text={item} size={13} />{/each}
 			</div>
 			<ChangelogMini {versions} />
+			<p class="m-0">
+				<TextLink href="{base}{resultPath}" label={resultPath} />
+			</p>
 		</ThreadRow>
 	</div>
 	<div class="mt-2.5"><FigureCaption variant="mono" text={caption} /></div>

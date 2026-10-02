@@ -1,0 +1,23 @@
+WEBVTT
+
+00:00:00.500 --> 00:00:04.000
+changelog-before absent
+design/manifest.json already exists (phase: compose).
+INIT_EXIT: 2
+
+00:00:04.000 --> 00:00:20.000
+built in 1.12s
+BUILD_EXIT: 0
+Command: /pixel-perfect:evolve "add a changelog page"
+changelog-after present
+
+00:00:20.000 --> 00:01:05.000
+catalog check: Drift: 2 new stories
+new story screens/Changelog/default--dark
+new story screens/Changelog/default
+
+00:01:05.000 --> 00:01:24.000
+reuse: 4
+new: 1
+capturedMoved: 0
+Result route: /changelog
