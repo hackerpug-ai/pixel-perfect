@@ -40,7 +40,7 @@ DELTA — +1 screen
   sweep: none
 ```
 
-The landing-remediation run instructed this evolve to pass the confirmation gate and apply the full delta. Applied. Nothing in the inventory or the component tree was written before this record.
+The screen was written by an earlier run that recorded this gate as passed without a user choice. That sentence is not the confirmation. This invocation writes nothing further until the gate is answered. The shipped demo ends on `SCENE_DONE` after a scene script printed these counts. It is not a recording of `/pixel-perfect:evolve`.
 
 ## E5 — Apply
 
