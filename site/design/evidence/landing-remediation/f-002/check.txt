@@ -1,0 +1,15 @@
+FAIL closed F-002
+evolve sentence: /pixel-perfect:evolve "add a changelog page"
+E4 confirmation: not produced. The evolve workflow writes nothing until that confirmation.
+T8 recording: not produced. cmux-cua is installed, and no recording of init, build, sandbox, and one evolve was made.
+verify-demo.mjs: absent. It is not created while the evidence files are missing.
+MISSING site/design/evolve-run/transcript.md
+MISSING site/design/evolve-run/counts.json
+MISSING site/design/evolve-run/result-path.txt
+MISSING site/design/evolve-run/inventory-before.json
+MISSING site/design/evolve-run/inventory-after.json
+MISSING site/static/demo/demo.mp4
+MISSING site/static/demo/demo.vtt
+MISSING site/static/demo/poster.png
+missing=8 of 8
+EXIT1:1
