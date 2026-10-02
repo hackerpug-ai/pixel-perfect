@@ -216,10 +216,21 @@ node {plugin}/scripts/verify-catalog.mjs --check <project-root> --platform {plat
 
 The **removal assertion** is the one that makes shedding safe: if deleting something changes something else, reachability missed a live dependent — **revert the removal** rather than report done.
 
-Report a short digest:
+Report a short digest, then the measured integers. Each integer is the inventory difference. Do not drop a part because this run extended it.
+
+- `reuse` counts every `composes` name on a screen this run added, when that name already existed before the run. An extended part still counts.
+- `new` counts entity keys present after the run and absent before it.
+- `capturedMoved` counts pre-existing golden HTML files whose bytes changed. New goldens are not in that count.
+
+Print these lines with nothing else on the line. The numbers below are illustrations; substitute the measured ones. Do not send a later message to reprint them.
 
 ```
 EVOLVE proved — add ProgressModal · JobDetail+progress · check clean · 0 pre-existing goldens moved
+reuse: 2
+new: 1
+capturedMoved: 0
+Result route: /jobs/progress
+pre-existing golden HTML files changed: 0 of 12
 ```
 
 ## Tokens
