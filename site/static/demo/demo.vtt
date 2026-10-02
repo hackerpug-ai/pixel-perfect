@@ -1,15 +1,19 @@
 WEBVTT
 
-00:00:12.000 --> 00:00:40.000
-Apply this inventory change to the site? Nothing has been built yet; only the delta write-up exists.
-1. Page plus footer link
-2. Page only
-3. Cancel
+00:00:00.000 --> 00:04:13.000
+/pixel-perfect:evolve "add a changelog page"
 
-00:00:40.000 --> 00:01:16.000
-Command: /pixel-perfect:evolve "add a changelog page"
-Reply: Built screens/Changelog at /changelog from existing parts, printing the repo's real CHANGELOG.md with the newest release first.
-reuse: 4
-new: 2
+00:04:13.000 --> 00:06:00.000
+Apply this inventory change to the landing site? Only the delta note has been written so far.
+1. Apply the full delta (Recommended). The landing page will not link to the new page yet.
+
+00:06:00.000 --> 00:32:05.000
+Apply the full delta. The same turn builds the Changelog page. The footer link stays on GitHub.
+
+00:32:05.000 --> 01:30:00.000
+EVOLVE proved — add Changelog · SiteHeader+home · TouchList+inline code · check clean · 0 pre-existing goldens moved
+reuse: 6
+new: 1
 capturedMoved: 0
 Result route: /changelog
+pre-existing golden HTML files changed: 0 of 696
