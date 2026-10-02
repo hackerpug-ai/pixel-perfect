@@ -1,0 +1,8 @@
+web-desktop before new goldens: exit 1. Drift: 2 new stories. drifted 0. missing 0. extra screens/Changelog/default, screens/Changelog/default--dark.
+web-mobile before new goldens: exit 1. Drift: 2 new stories. drifted 0. missing 0. extra screens/Changelog/default, screens/Changelog/default--dark.
+After the screen stopped composing SiteHeader, web-desktop: exit 1. Drift: 2 changed. drifted screens/Changelog/default, screens/Changelog/default--dark. missing 0. extra 0.
+After the screen stopped composing SiteHeader, web-mobile: exit 1. Drift: 2 changed. drifted screens/Changelog/default, screens/Changelog/default--dark. missing 0. extra 0.
+pre-existing golden HTML files changed: 0 of 696.
+web-desktop after the Changelog goldens were kept: exit 0. Catalog matches goldens (350 stories). drifted 0. missing 0. extra 0.
+web-mobile after the Changelog goldens were kept: exit 0. Catalog matches goldens (350 stories). drifted 0. missing 0. extra 0.
+capturedMoved: 0

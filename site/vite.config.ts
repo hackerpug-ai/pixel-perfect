@@ -16,6 +16,7 @@ export default defineConfig({
 			// export:social writes these after this build. Prerender crawls the new
 			// links, and a missing file here is not a broken page.
 			prerender: {
+				entries: ['*', '/changelog'],
 				handleHttpError: ({ path, message }) => {
 					const writtenAfterBuild = new Set([
 						'/pixel-perfect/og.png',

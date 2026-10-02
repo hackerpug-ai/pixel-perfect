@@ -792,24 +792,6 @@
       ],
       "evidence": "manifest platforms.web-desktop/web-mobile screens 'Home' '/'; strategy §9.1 order Hero, Why, Build it, Grow it, Install, FAQ, Close.",
       "note": "One route serves web-desktop (1440) and web-mobile (390); at 390 every two-column row stacks and Fig. 1 hides, and the only structurally new mobile part is the designed header (SiteHeader mobile + SectionStrip), which no frame draws."
-    },
-    {
-      "name": "Changelog",
-      "route": "/changelog",
-      "states": [
-        {
-          "name": "default",
-          "undrawn": "Added by evolve from the sentence \"add a changelog page\". No new reference frame. The body is ChangelogMini, already recorded as the assembled Changelog page (Landing.dc.html:298-304)."
-        }
-      ],
-      "composes": [
-        "SectionHeading",
-        "ChangelogMini",
-        "TextLink",
-        "SiteFooter"
-      ],
-      "evidence": "evolve 2026-10-01 sentence \"add a changelog page\"; ChangelogMini evidence Landing.dc.html:298-304; labels are the three newest headings in CHANGELOG.md (9.2.0, 9.1.0, 9.0.0).",
-      "note": "One route /changelog on both platforms. A text link returns to the home page. The repository changelog keeps the full history. SiteHeader stays on Home: its #top and #install links are for that page."
     }
   ],
   "organisms": [

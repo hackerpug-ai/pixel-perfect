@@ -547,6 +547,16 @@
           "file": "src/lib/components/screens/Home.svelte",
           "story": "src/lib/components/screens/Home.stories.svelte",
           "scenario_note": "dark is the capture's dark pass of each story (default--dark and so on), as for SiteHeader's theme; every other state has its own story. Status stays 'built', not 'verified', until the compose gate passes: the evolve thread's summary waits for the real evolve run (T6 AC-3). A 'phone' story opens Home at the web-mobile viewport preset (390) in the sandbox; it is a review aid, not a state."
+        },
+        {
+          "name": "Changelog",
+          "route": "/changelog",
+          "states": ["default", "dark"],
+          "status": "built",
+          "states_note": "Added by the 2026-10-01 evolve sentence \"add a changelog page\". default is the light story. dark is that story's dark capture.",
+          "file": "src/lib/components/screens/Changelog.svelte",
+          "story": "src/lib/components/screens/Changelog.stories.svelte",
+          "scenario_note": "No new reference frame. The body is ChangelogMini. Release labels are 9.2.0, 9.1.0, and 9.0.0 from CHANGELOG.md."
         }
       ],
       "atoms": [
@@ -1156,6 +1166,16 @@
           "file": "src/lib/components/screens/Home.svelte",
           "story": "src/lib/components/screens/Home.stories.svelte",
           "scenario_note": "dark is the capture's dark pass of each story (default--dark and so on), as for SiteHeader's theme; every other state has its own story. Status stays 'built', not 'verified', until the compose gate passes: the evolve thread's summary waits for the real evolve run (T6 AC-3). A 'phone' story opens Home at the web-mobile viewport preset (390) in the sandbox; it is a review aid, not a state."
+        },
+        {
+          "name": "Changelog",
+          "route": "/changelog",
+          "states": ["default", "dark"],
+          "status": "built",
+          "states_note": "Added by the 2026-10-01 evolve sentence \"add a changelog page\". default is the light story. dark is that story's dark capture.",
+          "file": "src/lib/components/screens/Changelog.svelte",
+          "story": "src/lib/components/screens/Changelog.stories.svelte",
+          "scenario_note": "No new reference frame. The body is ChangelogMini. Release labels are 9.2.0, 9.1.0, and 9.0.0 from CHANGELOG.md."
         }
       ],
       "atoms": [
