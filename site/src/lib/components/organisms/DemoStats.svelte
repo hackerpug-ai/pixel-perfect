@@ -3,7 +3,6 @@
 	// line; stacks at 720px and below. The numbers are this site's own build (run.json).
 	// Play starts the recorded T8 run. The video stays mounted so playback can be observed.
 	// Home sets the space above it.
-	import { base } from '$app/paths';
 	import InlineCode from '$lib/components/atoms/InlineCode.svelte';
 	import PlateLabel from '$lib/components/atoms/PlateLabel.svelte';
 	import PlayButton from '$lib/components/atoms/PlayButton.svelte';
@@ -31,8 +30,8 @@
 	let playing = $state(false);
 
 	function play() {
-		playing = true;
-		void video?.play();
+		// Unwired: the shipped clip holds an unanswered confirm. Playback stays inactive
+		// until a same-turn evolve recording passes the frame check.
 		onplay?.();
 	}
 </script>
@@ -43,15 +42,10 @@
 			<video
 				bind:this={video}
 				class="h-full w-full object-contain"
-				poster="{base}/demo/poster.png"
 				muted
 				playsinline
-				preload="auto"
-				controls
-			>
-				<source src="{base}/demo/demo.mp4" type="video/mp4" />
-				<track kind="captions" src="{base}/demo/demo.vtt" srclang="en" label="English" default />
-			</video>
+				preload="none"
+			></video>
 			{#if !playing}
 				<div class="absolute inset-0 grid place-items-center">
 					<div class="flex flex-col items-center gap-3">

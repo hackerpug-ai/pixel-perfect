@@ -4,17 +4,11 @@
 	// run in design/evolve-run. The release labels are the Changelog screen's measured versions.
 	// Motion grow-assemble (manifest.motion): this figure runs the view timeline; ChangelogMini's
 	// parts fly in with --p. At rest, and with reduced motion, the page is assembled.
-	import { base } from '$app/paths';
 	import InlineCode from '$lib/components/atoms/InlineCode.svelte';
-	import TextLink from '$lib/components/atoms/TextLink.svelte';
 	import { changelogVersions } from '$lib/changelog';
 	import ChangelogMini from '$lib/components/molecules/ChangelogMini.svelte';
 	import FigureCaption from '$lib/components/molecules/FigureCaption.svelte';
 	import ThreadRow from '$lib/components/molecules/ThreadRow.svelte';
-	import counts from '../../../../design/evolve-run/counts.json';
-	import resultPathFile from '../../../../design/evolve-run/result-path.txt?raw';
-	import transcript from '../../../../design/evolve-run/transcript.md?raw';
-
 	interface Props {
 		command?: string;
 		reply?: string;
@@ -26,24 +20,12 @@
 		progress?: number;
 	}
 
-	function transcriptLine(label: string) {
-		const line = transcript.split('\n').find((item) => item.startsWith(label));
-		return line ? line.slice(label.length).trim() : '';
-	}
-
-	const recordedSummary = [
-		`reuse ${counts.reuse}`,
-		`new ${counts.new}`,
-		`${counts.capturedMoved} captured components moved`
-	];
-	const resultPath = resultPathFile.trim();
-
 	let {
-		command = transcriptLine('Command:'),
-		reply = transcriptLine('Reply:'),
-		summary = recordedSummary,
+		command = '',
+		reply = '',
+		summary = [],
 		versions = changelogVersions,
-		caption = 'This thread is the recorded run.',
+		caption = 'No evolve run is wired.',
 		progress
 	}: Props = $props();
 </script>
@@ -63,9 +45,7 @@
 				{#each summary as item, i (i)}{#if i}<span class="font-mono text-code text-muted">·</span>{/if}<InlineCode text={item} size={13} />{/each}
 			</div>
 			<ChangelogMini {versions} />
-			<p class="m-0">
-				<TextLink href="{base}{resultPath}" label={resultPath} />
-			</p>
+			<p class="m-0"></p>
 		</ThreadRow>
 	</div>
 	<div class="mt-2.5"><FigureCaption variant="mono" text={caption} /></div>
