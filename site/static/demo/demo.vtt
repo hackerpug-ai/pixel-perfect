@@ -1,12 +1,12 @@
 WEBVTT
 
-00:00:00.500 --> 00:02:00.000
+00:00:12.000 --> 00:00:40.000
 Apply this inventory change to the site? Nothing has been built yet; only the delta write-up exists.
 1. Page plus footer link
 2. Page only
 3. Cancel
 
-00:02:00.000 --> 00:06:20.000
+00:00:40.000 --> 00:01:16.000
 Command: /pixel-perfect:evolve "add a changelog page"
 Reply: Built screens/Changelog at /changelog from existing parts, printing the repo's real CHANGELOG.md with the newest release first.
 reuse: 4
