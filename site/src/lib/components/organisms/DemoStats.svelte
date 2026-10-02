@@ -2,7 +2,9 @@
 	// Build it's closing row (Landing.dc.html:262-283): the demo beside the stats and the wireframe
 	// line; stacks at 720px and below. The numbers are this site's own build (run.json).
 	// Play starts the recorded T8 run. The video stays mounted so playback can be observed.
+	// The file is the uncut turn, about 185MB. The source is attached on Play so a page load does not fetch it.
 	// Home sets the space above it.
+	import { tick } from 'svelte';
 	import { base } from '$app/paths';
 	import InlineCode from '$lib/components/atoms/InlineCode.svelte';
 	import PlateLabel from '$lib/components/atoms/PlateLabel.svelte';
@@ -30,8 +32,9 @@
 	let video = $state<HTMLVideoElement | null>(null);
 	let playing = $state(false);
 
-	function play() {
+	async function play() {
 		playing = true;
+		await tick();
 		void video?.play();
 		onplay?.();
 	}
@@ -46,10 +49,10 @@
 				poster="{base}/demo/poster.png"
 				muted
 				playsinline
-				preload="auto"
+				preload="none"
 				controls
 			>
-				<source src="{base}/demo/demo.mp4" type="video/mp4" />
+				{#if playing}<source src="{base}/demo/demo.mp4" type="video/mp4" />{/if}
 				<track kind="captions" src="{base}/demo/demo.vtt" srclang="en" label="English" default />
 			</video>
 			{#if !playing}

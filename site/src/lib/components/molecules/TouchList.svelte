@@ -1,6 +1,7 @@
 <script lang="ts">
 	// One "What it touches" column in Install (Landing.dc.html:380-382): a mono plate label over a
-	// bulleted list. An item may lead with a mono path ({ code, text }), as WRITES does.
+	// bulleted list. An item may lead with a mono path ({ code, text }), as WRITES does. In a text
+	// item, `backticked` runs render as inline code (the Changelog's entries), as ThreadRow does.
 	import PlateLabel from '$lib/components/atoms/PlateLabel.svelte';
 	import InlineCode from '$lib/components/atoms/InlineCode.svelte';
 
@@ -25,7 +26,7 @@
 		{#each items as item, i (i)}
 			<li>
 				{#if typeof item === 'string'}
-					{item}
+					{#each item.split('`') as part, j (j)}{#if j % 2}<InlineCode text={part} />{:else}{part}{/if}{/each}
 				{:else}
 					<InlineCode text={item.code} />{#if item.text}{` ${item.text}`}{/if}
 				{/if}

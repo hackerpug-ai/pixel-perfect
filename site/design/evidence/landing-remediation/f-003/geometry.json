@@ -7,9 +7,9 @@
       "name": "OpenCode",
       "mode": "fresh",
       "headerBottom": 61,
-      "commandTop": 88.421875,
+      "commandTop": 87.671875,
       "selected": true,
-      "scrollY": 5526,
+      "scrollY": 5550,
       "pass": true
     },
     {
@@ -18,9 +18,9 @@
       "name": "OpenCode",
       "mode": "hashchange",
       "headerBottom": 61,
-      "commandTop": 88.421875,
+      "commandTop": 87.671875,
       "selected": true,
-      "scrollY": 5526,
+      "scrollY": 5550,
       "pass": true
     },
     {
@@ -29,9 +29,9 @@
       "name": "Claude Code",
       "mode": "fresh",
       "headerBottom": 61,
-      "commandTop": 88.421875,
+      "commandTop": 87.671875,
       "selected": true,
-      "scrollY": 5526,
+      "scrollY": 5550,
       "pass": true
     },
     {
@@ -40,9 +40,9 @@
       "name": "Claude Code",
       "mode": "hashchange",
       "headerBottom": 61,
-      "commandTop": 88.421875,
+      "commandTop": 87.671875,
       "selected": true,
-      "scrollY": 5526,
+      "scrollY": 5550,
       "pass": true
     },
     {
@@ -51,9 +51,9 @@
       "name": "OpenCode",
       "mode": "fresh",
       "headerBottom": 61,
-      "commandTop": 88.234375,
+      "commandTop": 87.734375,
       "selected": true,
-      "scrollY": 8645,
+      "scrollY": 8692,
       "pass": true
     },
     {
@@ -62,9 +62,9 @@
       "name": "OpenCode",
       "mode": "hashchange",
       "headerBottom": 61,
-      "commandTop": 88.234375,
+      "commandTop": 87.734375,
       "selected": true,
-      "scrollY": 8645,
+      "scrollY": 8692,
       "pass": true
     },
     {
@@ -73,9 +73,9 @@
       "name": "Claude Code",
       "mode": "fresh",
       "headerBottom": 61,
-      "commandTop": 88.234375,
+      "commandTop": 87.734375,
       "selected": true,
-      "scrollY": 8645,
+      "scrollY": 8692,
       "pass": true
     },
     {
@@ -84,9 +84,9 @@
       "name": "Claude Code",
       "mode": "hashchange",
       "headerBottom": 61,
-      "commandTop": 88.234375,
+      "commandTop": 87.734375,
       "selected": true,
-      "scrollY": 8645,
+      "scrollY": 8692,
       "pass": true
     }
   ]

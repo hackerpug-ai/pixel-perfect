@@ -807,14 +807,15 @@
         }
       ],
       "composes": [
-        "Logo",
-        "TextLink",
-        "SectionHeading",
-        "ReleaseEntry",
+        "SiteHeader",
+        "PlateText",
+        "VersionPill",
+        "PlateLabel",
+        "TouchList",
         "SiteFooter"
       ],
-      "evidence": "Prose request 'add a changelog page'; the landing names the page screens/Changelog (EvolveThread reply) and ChangelogMini draws it in miniature (Landing.dc.html:298-304).",
-      "note": "One route serves web-desktop (1440) and web-mobile (390). The page prints the repository's CHANGELOG.md, read at build time. It does not use SiteHeader, whose links are in-page anchors on Home; the lockup links home instead. Nothing on Home links to it (the footer link was left as it is at the E4 gate)."
+      "evidence": "site/design/evolve-run/transcript.md; the recorded evolve built screens/Changelog from SiteHeader, PlateText, VersionPill, PlateLabel, TouchList, and SiteFooter. ChangelogMini draws it in miniature (Landing.dc.html:298-304).",
+      "note": "One route serves web-desktop (1440) and web-mobile (390). The page prints the repository's CHANGELOG.md, read at build time. SiteHeader's home prop leads back to the landing page. Nothing on Home links to it (the footer link was left as it is at the E4 gate)."
     }
   ],
   "organisms": [
@@ -830,7 +831,8 @@
       "variants": [
         "desktop: sticky 60px, lockup, six NavLinks, labelled ThemeToggle",
         "mobile as exported (720px and below): lockup and labelled toggle only (frames 10, 11)",
-        "mobile as designed: lockup, mono 'Install' TextLink, icon-only toggle, then a non-sticky SectionStrip row (undrawn: manifest ui_states.mobile_header)"
+        "mobile as designed: lockup, mono 'Install' TextLink, icon-only toggle, then a non-sticky SectionStrip row (undrawn: manifest ui_states.mobile_header)",
+        "subpage (undrawn: evolve 2026-10-02): the home prop prefixes the logo, the phone Install link and every in-page link, so the header leads back to the landing page from another route"
       ],
       "appears_on": [
         "pixel-perfect-landing-dc/08",
@@ -1348,7 +1350,8 @@
       "variants": [
         "reads",
         "writes",
-        "runs"
+        "runs",
+        "inline-code (undrawn: evolve 2026-10-02): a text item renders its backticked runs as InlineCode, for changelog entries"
       ],
       "appears_on": [
         "pixel-perfect-landing-dc/05",
