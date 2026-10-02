@@ -799,17 +799,22 @@
       "states": [
         {
           "name": "default",
-          "undrawn": "Added by evolve from the sentence \"add a changelog page\". No new reference frame. The body is ChangelogMini, already recorded as the assembled Changelog page (Landing.dc.html:298-304)."
+          "undrawn": "No frame draws this page. It was added by evolve from the prose request 'add a changelog page' (design/deltas/2026-10-01-changelog-page/delta.md) and is built in the site's existing design language."
+        },
+        {
+          "name": "dark",
+          "undrawn": "No frame draws this page. The dark theme is the capture's dark pass of the default story, as for Home."
         }
       ],
       "composes": [
-        "SectionHeading",
-        "ChangelogMini",
+        "Logo",
         "TextLink",
+        "SectionHeading",
+        "ReleaseEntry",
         "SiteFooter"
       ],
-      "evidence": "evolve 2026-10-01 sentence \"add a changelog page\"; ChangelogMini evidence Landing.dc.html:298-304; labels are the three newest headings in CHANGELOG.md (9.2.0, 9.1.0, 9.0.0).",
-      "note": "One route /changelog on both platforms. A text link returns to the home page. The repository changelog keeps the full history. SiteHeader stays on Home: its #top and #install links are for that page."
+      "evidence": "Prose request 'add a changelog page'; the landing names the page screens/Changelog (EvolveThread reply) and ChangelogMini draws it in miniature (Landing.dc.html:298-304).",
+      "note": "One route serves web-desktop (1440) and web-mobile (390). The page prints the repository's CHANGELOG.md, read at build time. It does not use SiteHeader, whose links are in-page anchors on Home; the lockup links home instead. Nothing on Home links to it (the footer link was left as it is at the E4 gate)."
     }
   ],
   "organisms": [
@@ -1474,6 +1479,21 @@
       ],
       "evidence": "social-preview-dc/01 draws the slider pane with no handle; Landing.dc.html:122-146 is the same pane plus handle and range input.",
       "note": "Not on the checklist. A 16:10 sheet pane: hatched design side (stripe token), built side clipped at the split, 2px magenta divider, DESIGN FRAME / BUILT COMPONENT labels, four small RegistrationTargets; the pair is passed in. Added so SocialCard can show the slider without composing the ProofSlider organism (the gate forbids an organism inside an organism)."
+    },
+    {
+      "name": "ReleaseEntry",
+      "composes": [
+        "VersionPill",
+        "PlateLabel",
+        "InlineCode"
+      ],
+      "variants": [
+        "latest: filled pill (the newest release)",
+        "older: outline pill"
+      ],
+      "undrawn": "No frame draws a release at full size; ChangelogMini draws the row in miniature (a pill and a line). Added by evolve for the Changelog screen.",
+      "evidence": "ChangelogMini rows (Landing.dc.html:301-303) set the pill rule: newest filled, older outlined. design/deltas/2026-10-01-changelog-page/delta.md.",
+      "note": "One release: the version pill and date in the margin, then each group of changes (Added, Changed, Fixed, Removed) as a plate label over a bulleted list. Backticked runs in a change render as InlineCode."
     }
   ],
   "atoms": [
@@ -1914,12 +1934,13 @@
     },
     {
       "name": "SectionHeading",
-      "library_primitive": null,
       "variants": [
         "section: h2 Anybody 800 wdth 115, clamp(30px,3.4vw,46px) (Why, Build it, Grow it, Install, 'Questions')",
         "statement: Anybody 700 wdth 110, clamp(24px,2.6vw,34px) ('Your design survives your codebase.')",
-        "subhead: h3 Anybody 700 wdth 110, 22px ('It writes a DESIGN.md too.')"
+        "subhead: h3 Anybody 700 wdth 110, 22px ('It writes a DESIGN.md too.')",
+        "section as h1: the same recipe on a page title (the Changelog screen's 'Changelog'; undrawn)"
       ],
+      "library_primitive": null,
       "appears_on": [
         "pixel-perfect-landing-dc/02",
         "pixel-perfect-landing-dc/03",
@@ -1965,5 +1986,5 @@
       "note": "The checklist lists it as a molecule. It composes no atom (a text line with an optional mono lead), so it is recorded as an atom. Cursor shows both a note and a warning; OpenCode and Pi show neither."
     }
   ],
-  "confirmed": "2026-09-30T22:28:46Z"
+  "confirmed": "2026-10-02T05:43:45Z"
 }

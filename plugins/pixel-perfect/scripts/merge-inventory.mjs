@@ -66,8 +66,10 @@ export function mergeInventories(prior, delta) {
   if (blocked.length) merged.blocked = blocked;
   const tokens = mergeDeep(prior.tokens_observed, delta.tokens_observed);
   if (Object.keys(tokens).length) merged.tokens_observed = tokens;
-  const notes = unique([...(prior.notes || []), ...(delta.notes || [])]);
-  if (notes.length) merged.notes = notes;
+  // The schema's `notes` is one string; a read may also return a list. concat takes either without
+  // spreading a string into characters, and a string prior stays a string.
+  const notes = unique([].concat(prior.notes || [], delta.notes || []));
+  if (notes.length) merged.notes = Array.isArray(prior.notes ?? delta.notes) ? notes : notes.join(" ");
   return merged; // never `confirmed`: the caller confirms after its own question
 }
 

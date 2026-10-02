@@ -128,7 +128,9 @@ async function playback(mode) {
 	await video.evaluate(
 		(node) =>
 			new Promise((resolve, reject) => {
-				if (!node.paused && node.currentTime > 0) {
+				// A just-started video can still report currentTime 0 after `playing` has fired.
+				// Waiting for that event then misses it. A later sample still has to move forward.
+				if (!node.paused) {
 					resolve(true);
 					return;
 				}

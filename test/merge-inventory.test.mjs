@@ -69,6 +69,15 @@ test("tokens_observed and notes merge rather than replace", () => {
   assert.equal(merged.confirmed, undefined, "a merged result is unconfirmed until the caller confirms");
 });
 
+test("a string notes field (the schema's shape) survives the merge as that string", () => {
+  const p = prior();
+  p.notes = "Resolved at B-inv: the line is always shown.";
+  const d = delta();
+  delete d.notes;
+  assert.equal(mergeInventories(p, d).notes, p.notes);
+  assert.equal(mergeInventories(p, { ...d, notes: "A second note." }).notes, `${p.notes} A second note.`);
+});
+
 test("CLI writes the merged inventory; a missing input is exit 2", async () => {
   const dir = mkdtempSync(path.join(tmpdir(), "pp-merge-inv-"));
   const priorPath = path.join(dir, "prior.json");

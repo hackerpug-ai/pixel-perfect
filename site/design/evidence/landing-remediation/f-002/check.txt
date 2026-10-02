@@ -1,17 +1,17 @@
 run 1 exit 0
-PASS counts reuse=4 new=1 capturedMoved=0 added=screens/Changelog
+PASS counts reuse=4 new=2 capturedMoved=0 added=screens/Changelog,molecules/ReleaseEntry
 PASS result-route HTTP 200 /pixel-perfect/changelog
-PASS playback-pointer currentTime 0.101713 -> 0.607609
-PASS caption-pointer cue: "changelog-before absent\ndesign/manifest.json already exists (phase: compose).\nINIT_REFUSED: --force was not passed\nINIT_EXIT: 2\nCommand: /pixel-perfect:evolve \"add a changelog page\"\nwrote site/src/lib/components/screens/Changelog.svelte\nwrote site/vite.config.ts entries /changelog\nchangelog-after written\nBUILD_EXIT: 0\ncatalog check: Drift: 2 new stories\nnew story screens/Changelog/default--dark\nnew story screens/Changelog/default\nchangelog-after written\nreuse: 4\nnew: 1\ncapturedMoved: 0\nResult route: /changelog\nEVOLVE_EXIT: 0"
-PASS playback-keyboard currentTime 0.06039 -> 0.564073
-PASS caption-keyboard cue: "changelog-before absent\ndesign/manifest.json already exists (phase: compose).\nINIT_REFUSED: --force was not passed\nINIT_EXIT: 2\nCommand: /pixel-perfect:evolve \"add a changelog page\"\nwrote site/src/lib/components/screens/Changelog.svelte\nwrote site/vite.config.ts entries /changelog\nchangelog-after written\nBUILD_EXIT: 0\ncatalog check: Drift: 2 new stories\nnew story screens/Changelog/default--dark\nnew story screens/Changelog/default\nchangelog-after written\nreuse: 4\nnew: 1\ncapturedMoved: 0\nResult route: /changelog\nEVOLVE_EXIT: 0"
+PASS playback-pointer currentTime 0 -> 0.457876
+PASS caption-pointer cue: "Apply this inventory change to the site? Nothing has been built yet; only the delta write-up exists.\n1. Page plus footer link\n2. Page only\n3. Cancel\nCommand: /pixel-perfect:evolve \"add a changelog page\"\nReply: Built screens/Changelog at /changelog from existing parts, printing the repo's real CHANGELOG.md with the newest release first.\nreuse: 4\nnew: 2\ncapturedMoved: 0\nResult route: /changelog"
+PASS playback-keyboard currentTime 0 -> 0.502504
+PASS caption-keyboard cue: "Apply this inventory change to the site? Nothing has been built yet; only the delta write-up exists.\n1. Page plus footer link\n2. Page only\n3. Cancel\nCommand: /pixel-perfect:evolve \"add a changelog page\"\nReply: Built screens/Changelog at /changelog from existing parts, printing the repo's real CHANGELOG.md with the newest release first.\nreuse: 4\nnew: 2\ncapturedMoved: 0\nResult route: /changelog"
 PASS no [n]
 
 run 2 exit 0
-PASS counts reuse=4 new=1 capturedMoved=0 added=screens/Changelog
+PASS counts reuse=4 new=2 capturedMoved=0 added=screens/Changelog,molecules/ReleaseEntry
 PASS result-route HTTP 200 /pixel-perfect/changelog
-PASS playback-pointer currentTime 0.061718 -> 0.566302
-PASS caption-pointer cue: "changelog-before absent\ndesign/manifest.json already exists (phase: compose).\nINIT_REFUSED: --force was not passed\nINIT_EXIT: 2\nCommand: /pixel-perfect:evolve \"add a changelog page\"\nwrote site/src/lib/components/screens/Changelog.svelte\nwrote site/vite.config.ts entries /changelog\nchangelog-after written\nBUILD_EXIT: 0\ncatalog check: Drift: 2 new stories\nnew story screens/Changelog/default--dark\nnew story screens/Changelog/default\nchangelog-after written\nreuse: 4\nnew: 1\ncapturedMoved: 0\nResult route: /changelog\nEVOLVE_EXIT: 0"
-PASS playback-keyboard currentTime 0.060176 -> 0.565055
-PASS caption-keyboard cue: "changelog-before absent\ndesign/manifest.json already exists (phase: compose).\nINIT_REFUSED: --force was not passed\nINIT_EXIT: 2\nCommand: /pixel-perfect:evolve \"add a changelog page\"\nwrote site/src/lib/components/screens/Changelog.svelte\nwrote site/vite.config.ts entries /changelog\nchangelog-after written\nBUILD_EXIT: 0\ncatalog check: Drift: 2 new stories\nnew story screens/Changelog/default--dark\nnew story screens/Changelog/default\nchangelog-after written\nreuse: 4\nnew: 1\ncapturedMoved: 0\nResult route: /changelog\nEVOLVE_EXIT: 0"
+PASS playback-pointer currentTime 0 -> 0.493842
+PASS caption-pointer cue: "Apply this inventory change to the site? Nothing has been built yet; only the delta write-up exists.\n1. Page plus footer link\n2. Page only\n3. Cancel\nCommand: /pixel-perfect:evolve \"add a changelog page\"\nReply: Built screens/Changelog at /changelog from existing parts, printing the repo's real CHANGELOG.md with the newest release first.\nreuse: 4\nnew: 2\ncapturedMoved: 0\nResult route: /changelog"
+PASS playback-keyboard currentTime 0 -> 0.502752
+PASS caption-keyboard cue: "Apply this inventory change to the site? Nothing has been built yet; only the delta write-up exists.\n1. Page plus footer link\n2. Page only\n3. Cancel\nCommand: /pixel-perfect:evolve \"add a changelog page\"\nReply: Built screens/Changelog at /changelog from existing parts, printing the repo's real CHANGELOG.md with the newest release first.\nreuse: 4\nnew: 2\ncapturedMoved: 0\nResult route: /changelog"
 PASS no [n]

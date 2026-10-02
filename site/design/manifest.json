@@ -551,12 +551,15 @@
         {
           "name": "Changelog",
           "route": "/changelog",
-          "states": ["default", "dark"],
-          "status": "built",
-          "states_note": "Added by the 2026-10-01 evolve sentence \"add a changelog page\". default is the light story. dark is that story's dark capture.",
+          "states": [
+            "default",
+            "dark"
+          ],
+          "status": "verified",
+          "states_note": "One route with one state. dark is the capture's dark pass of the default story, as for Home.",
           "file": "src/lib/components/screens/Changelog.svelte",
           "story": "src/lib/components/screens/Changelog.stories.svelte",
-          "scenario_note": "No new reference frame. The body is ChangelogMini. Release labels are 9.2.0, 9.1.0, and 9.0.0 from CHANGELOG.md."
+          "scenario_note": "Added by evolve (design/deltas/2026-10-01-changelog-page). The page prints the repository's CHANGELOG.md, read at build time (src/lib/changelog.ts). No frame draws it. Nothing on Home links to it."
         }
       ],
       "atoms": [
@@ -855,6 +858,13 @@
           "name": "ProofFrame",
           "file": "src/lib/components/molecules/ProofFrame.svelte",
           "story": "src/lib/components/molecules/ProofFrame.stories.svelte",
+          "status": "verified",
+          "state": null
+        },
+        {
+          "name": "ReleaseEntry",
+          "file": "src/lib/components/molecules/ReleaseEntry.svelte",
+          "story": "src/lib/components/molecules/ReleaseEntry.stories.svelte",
           "status": "verified",
           "state": null
         }
@@ -1011,7 +1021,7 @@
         "command": "npm run sandbox:capture -- --width 1440",
         "medium": "dom+png",
         "goldens": "design/goldens/web-desktop",
-        "captured_at": "2026-09-30",
+        "captured_at": "2026-10-02",
         "catalog": "src/lib/components"
       },
       "pinned": [],
@@ -1072,7 +1082,8 @@
             "DesignMdCard",
             "SectionStrip",
             "CopyNextStep",
-            "ProofFrame"
+            "ProofFrame",
+            "ReleaseEntry"
           ]
         },
         "organisms": {
@@ -1098,7 +1109,8 @@
         "screens": {
           "status": "build",
           "create": [
-            "Home"
+            "Home",
+            "Changelog"
           ]
         },
         "verify_widths": "Both platforms share one site: every layer is checked at 1440px (web-desktop) and 390px (web-mobile) before the next (decided at B-plan).",
@@ -1170,12 +1182,15 @@
         {
           "name": "Changelog",
           "route": "/changelog",
-          "states": ["default", "dark"],
-          "status": "built",
-          "states_note": "Added by the 2026-10-01 evolve sentence \"add a changelog page\". default is the light story. dark is that story's dark capture.",
+          "states": [
+            "default",
+            "dark"
+          ],
+          "status": "verified",
+          "states_note": "One route with one state. dark is the capture's dark pass of the default story, as for Home.",
           "file": "src/lib/components/screens/Changelog.svelte",
           "story": "src/lib/components/screens/Changelog.stories.svelte",
-          "scenario_note": "No new reference frame. The body is ChangelogMini. Release labels are 9.2.0, 9.1.0, and 9.0.0 from CHANGELOG.md."
+          "scenario_note": "Added by evolve (design/deltas/2026-10-01-changelog-page). The page prints the repository's CHANGELOG.md, read at build time (src/lib/changelog.ts). No frame draws it. Nothing on Home links to it."
         }
       ],
       "atoms": [
@@ -1476,6 +1491,13 @@
           "story": "src/lib/components/molecules/ProofFrame.stories.svelte",
           "status": "verified",
           "state": null
+        },
+        {
+          "name": "ReleaseEntry",
+          "file": "src/lib/components/molecules/ReleaseEntry.svelte",
+          "story": "src/lib/components/molecules/ReleaseEntry.stories.svelte",
+          "status": "verified",
+          "state": null
         }
       ],
       "organisms": [
@@ -1630,7 +1652,7 @@
         "command": "npm run sandbox:capture -- --width 390",
         "medium": "dom+png",
         "goldens": "design/goldens/web-mobile",
-        "captured_at": "2026-09-30",
+        "captured_at": "2026-10-02",
         "catalog": "src/lib/components"
       },
       "pinned": [],
@@ -1691,7 +1713,8 @@
             "DesignMdCard",
             "SectionStrip",
             "CopyNextStep",
-            "ProofFrame"
+            "ProofFrame",
+            "ReleaseEntry"
           ]
         },
         "organisms": {
@@ -1717,7 +1740,8 @@
         "screens": {
           "status": "build",
           "create": [
-            "Home"
+            "Home",
+            "Changelog"
           ]
         },
         "verify_widths": "Both platforms share one site: every layer is checked at 1440px (web-desktop) and 390px (web-mobile) before the next (decided at B-plan).",

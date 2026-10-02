@@ -2,6 +2,7 @@
 	// The landing's plain display heading (PlateText owns the plate effect). Three recipes from the
 	// export: section h2s (Why, Build it, Grow it, Install, Questions), the statement line
 	// ('Your design survives your codebase.', a <p> in the export), and the DESIGN.md subhead (h3).
+	// The section recipe also titles the Changelog page, as its h1 (as="h1").
 	// Margins and max-width belong to the section that places it.
 	import type { Snippet } from 'svelte';
 
@@ -10,7 +11,7 @@
 	interface Props {
 		text?: string;
 		variant?: Variant;
-		as?: 'h2' | 'h3' | 'p';
+		as?: 'h1' | 'h2' | 'h3' | 'p';
 		children?: Snippet;
 	}
 

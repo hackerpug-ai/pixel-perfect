@@ -1,5 +1,7 @@
 # Evolve delta — add a changelog page
 
+Status: the recorded session is `../2026-10-01-changelog-page/delta.md`. This note is the earlier classification. The recorded counts are reuse 4, new 2, capturedMoved 0.
+
 Sentence: `/pixel-perfect:evolve "add a changelog page"`
 
 Date: 2026-10-01. Project root: `site/`. Inventory before this apply: `site/design/evolve-run/inventory-before.json`.
@@ -40,7 +42,7 @@ DELTA — +1 screen
   sweep: none
 ```
 
-The user did not click Apply or Cancel. The evaluator ordered a re-run from the tree before this screen existed (`af0eb9a`). On that tree the sentence adds the page. Init refused with exit 2 because `design/manifest.json` already exists and the phase is compose. `--force` was not passed. The session then wrote Changelog.svelte, Changelog.stories.svelte, the `/changelog` route, the inventory screen, the manifest screen on web-desktop and web-mobile, and the prerender entry. Catalog check on web-desktop and web-mobile each reported only the two new Changelog stories. Pre-existing golden HTML files changed: 0 of 696. Measured counts are reuse 4, new 1, capturedMoved 0. The result route is `/changelog`. The captioned recording is that terminal session.
+The recorded session is `design/deltas/2026-10-01-changelog-page/`. It ran on the pre-add tree `af0eb9a`, asked the inventory question, and applied Page only. It added the Changelog screen and the ReleaseEntry molecule. Catalog check on web-desktop and web-mobile each matched, with 8 new stories per platform and no pre-existing golden changed. Measured counts are reuse 4, new 2, capturedMoved 0. The result route is `/changelog`. The captioned recording is that Claude session.
 
 ## E5 — Apply
 

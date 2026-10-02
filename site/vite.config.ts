@@ -30,5 +30,8 @@ export default defineConfig({
 				}
 			}
 		})
-	]
+	],
+	// The Changelog page imports the repository's CHANGELOG.md (src/lib/changelog.ts), one level
+	// above this project. Dev servers (vite dev, Storybook) refuse files outside the root without this.
+	server: { fs: { allow: ['../CHANGELOG.md'] } }
 });

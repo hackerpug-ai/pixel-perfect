@@ -23,7 +23,7 @@
 				options: ['section', 'statement', 'subhead'],
 				description: 'section: 800 wdth 115 display-md · statement: 700 wdth 110 display-sm · subhead: 700 wdth 110 22px'
 			},
-			as: { control: 'select', options: [undefined, 'h2', 'h3', 'p'], description: 'Element; defaults to h2, p, h3 by variant' },
+			as: { control: 'select', options: [undefined, 'h1', 'h2', 'h3', 'p'], description: 'Element; defaults to h2, p, h3 by variant' },
 			children: { control: false, description: 'Rich content (for example an InlineCode run); replaces text' }
 		},
 		args: {
@@ -40,3 +40,4 @@
 		<SectionHeading {...args}>It writes a <InlineCode text="DESIGN.md" variant="heading" /> too.</SectionHeading>
 	{/snippet}
 </Story>
+<Story name="Page title" args={{ text: 'Changelog', as: 'h1' }} />

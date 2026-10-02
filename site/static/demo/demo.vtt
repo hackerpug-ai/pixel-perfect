@@ -1,27 +1,15 @@
 WEBVTT
 
-00:00:00.500 --> 00:00:06.000
-changelog-before absent
-design/manifest.json already exists (phase: compose).
-INIT_REFUSED: --force was not passed
-INIT_EXIT: 2
+00:00:00.500 --> 00:02:00.000
+Apply this inventory change to the site? Nothing has been built yet; only the delta write-up exists.
+1. Page plus footer link
+2. Page only
+3. Cancel
 
-00:00:06.000 --> 00:00:14.000
+00:02:00.000 --> 00:06:20.000
 Command: /pixel-perfect:evolve "add a changelog page"
-wrote site/src/lib/components/screens/Changelog.svelte
-wrote site/vite.config.ts entries /changelog
-changelog-after written
-BUILD_EXIT: 0
-
-00:00:14.000 --> 00:00:54.000
-catalog check: Drift: 2 new stories
-new story screens/Changelog/default--dark
-new story screens/Changelog/default
-
-00:00:54.000 --> 00:01:02.500
-changelog-after written
+Reply: Built screens/Changelog at /changelog from existing parts, printing the repo's real CHANGELOG.md with the newest release first.
 reuse: 4
-new: 1
+new: 2
 capturedMoved: 0
 Result route: /changelog
-EVOLVE_EXIT: 0

@@ -1,41 +1,47 @@
-<script module lang="ts">
-	/** Newest three `## [x.y.z]` headings in the repository CHANGELOG.md at the 2026-10-01 evolve. */
-	export const changelogVersions = ['9.2.0', '9.1.0', '9.0.0'] as [string, string, string];
-</script>
-
 <script lang="ts">
-	// Changelog, the page added by /pixel-perfect:evolve "add a changelog page".
-	// The body is ChangelogMini, the designed assembly (Landing.dc.html:298-304).
-	// SiteHeader stays off this route: its hash links are not on the page.
-	// The footer is the existing SiteFooter. No new part is introduced.
+	// The Changelog page at /changelog: every release in the repository's CHANGELOG.md, newest first.
+	// ChangelogMini draws it in miniature (a bar, the title, rows of pill and text); this is the full
+	// page in Home's frame: 1200px of content plus the gutters, releases ruled apart. The bar links the
+	// lockup home and offers the landing's primary action, Install. It is not SiteHeader, whose links
+	// are in-page anchors on Home, and it does not stick: each release's margin slug does instead.
+	// One route serves both widths; below 720px each release stacks.
 	import { base } from '$app/paths';
+	import Logo from '$lib/components/atoms/Logo.svelte';
 	import SectionHeading from '$lib/components/atoms/SectionHeading.svelte';
 	import TextLink from '$lib/components/atoms/TextLink.svelte';
-	import ChangelogMini from '$lib/components/molecules/ChangelogMini.svelte';
+	import ReleaseEntry from '$lib/components/molecules/ReleaseEntry.svelte';
 	import SiteFooter from '$lib/components/organisms/SiteFooter.svelte';
+	import { releases as changelog, type Release } from '$lib/changelog';
 
-	const section = 'mx-auto box-content max-w-page scroll-mt-15 border-t border-line px-8 max-md:px-4';
+	interface Props {
+		/** Newest first. Defaults to the repository's CHANGELOG.md, parsed at build time. */
+		releases?: Release[];
+	}
+
+	let { releases = changelog }: Props = $props();
+
+	const frame = 'mx-auto box-content max-w-page px-8 max-md:px-4';
 </script>
 
 <div class="min-h-screen overflow-x-clip bg-paper text-ink">
-	<main>
-		<section class={[section, 'border-t-0 py-24']}>
-			<p class="m-0 mb-8">
-				<TextLink href="{base}/" label="pixel-perfect" />
+	<header class="border-b border-line">
+		<nav aria-label="Main" class={[frame, 'flex h-15 items-center justify-between gap-4']}>
+			<Logo variant="header" href="{base}/" />
+			<TextLink href="{base}/#install" label="Install pixel-perfect" variant="ui" />
+		</nav>
+	</header>
+	<main class={frame}>
+		<div class="pt-20 pb-14 max-md:pt-12 max-md:pb-10">
+			<SectionHeading text="Changelog" as="h1" />
+			<p class="m-0 mt-4 max-w-150 text-pretty text-muted">
+				What changed in each release of <span class="whitespace-nowrap">pixel-perfect</span>, newest first.
 			</p>
-			<div class="mb-8"><SectionHeading text="Changelog" /></div>
-			<p class="m-0 mb-8 max-w-150 text-pretty">The three newest releases.</p>
-			<ChangelogMini versions={changelogVersions} />
-			<p class="m-0 mt-8">
-				<TextLink
-					href="https://github.com/hackerpug-ai/pixel-perfect/blob/main/CHANGELOG.md"
-					label="Full changelog"
-					external
-				/>
-			</p>
-		</section>
-		<section class={[section, 'pt-0 pb-16']}>
-			<SiteFooter />
-		</section>
+		</div>
+		<ol class="m-0 list-none p-0">
+			{#each releases as release, i (release.version)}
+				<li class="border-t border-line py-12 max-md:py-8"><ReleaseEntry {...release} latest={i === 0} /></li>
+			{/each}
+		</ol>
 	</main>
+	<div class={[frame, 'pb-16']}><SiteFooter /></div>
 </div>

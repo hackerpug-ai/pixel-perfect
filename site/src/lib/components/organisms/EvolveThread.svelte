@@ -7,7 +7,7 @@
 	import { base } from '$app/paths';
 	import InlineCode from '$lib/components/atoms/InlineCode.svelte';
 	import TextLink from '$lib/components/atoms/TextLink.svelte';
-	import { changelogVersions } from '$lib/components/screens/Changelog.svelte';
+	import { changelogVersions } from '$lib/changelog';
 	import ChangelogMini from '$lib/components/molecules/ChangelogMini.svelte';
 	import FigureCaption from '$lib/components/molecules/FigureCaption.svelte';
 	import ThreadRow from '$lib/components/molecules/ThreadRow.svelte';

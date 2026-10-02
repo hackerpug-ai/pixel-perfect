@@ -1,0 +1,54 @@
+{
+ "web-desktop": {
+  "ok": true,
+  "priorGoldens": 348,
+  "disturbed": [],
+  "missingNew": [],
+  "check": {
+   "exit": 0,
+   "message": "Catalog matches goldens (356 stories)",
+   "stories": 356,
+   "drifted": [],
+   "missing": [],
+   "extra": [],
+   "deprecatedUsage": [],
+   "uncatalogued": []
+  },
+  "newStories": [
+   "atoms/SectionHeading/page-title--dark.html",
+   "atoms/SectionHeading/page-title.html",
+   "molecules/ReleaseEntry/default--dark.html",
+   "molecules/ReleaseEntry/default.html",
+   "molecules/ReleaseEntry/older--dark.html",
+   "molecules/ReleaseEntry/older.html",
+   "screens/Changelog/default--dark.html",
+   "screens/Changelog/default.html"
+  ]
+ },
+ "web-mobile": {
+  "ok": true,
+  "priorGoldens": 348,
+  "disturbed": [],
+  "missingNew": [],
+  "check": {
+   "exit": 0,
+   "message": "Catalog matches goldens (356 stories)",
+   "stories": 356,
+   "drifted": [],
+   "missing": [],
+   "extra": [],
+   "deprecatedUsage": [],
+   "uncatalogued": []
+  },
+  "newStories": [
+   "atoms/SectionHeading/page-title--dark.html",
+   "atoms/SectionHeading/page-title.html",
+   "molecules/ReleaseEntry/default--dark.html",
+   "molecules/ReleaseEntry/default.html",
+   "molecules/ReleaseEntry/older--dark.html",
+   "molecules/ReleaseEntry/older.html",
+   "screens/Changelog/default--dark.html",
+   "screens/Changelog/default.html"
+  ]
+ }
+}

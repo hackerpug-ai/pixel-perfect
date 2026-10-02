@@ -1,15 +1,6 @@
-# Evolve transcript
-
 Command: /pixel-perfect:evolve "add a changelog page"
-
-Reply: Built screens/Changelog from existing parts.
-
+Reply: Built screens/Changelog at /changelog from existing parts, printing the repo's real CHANGELOG.md with the newest release first.
 reuse: 4
-new: 1
+new: 2
 capturedMoved: 0
-
-The screen at /changelog composes SectionHeading, ChangelogMini, TextLink, SiteFooter.
-The inventory gained screens/Changelog.
-Catalog drift of pre-existing golden HTML files: 0 of 696.
-
 Result route: /changelog

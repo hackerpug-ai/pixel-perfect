@@ -1,0 +1,2864 @@
+{
+  "mode": "check",
+  "exit": 0,
+  "vacuous": false,
+  "message": "Catalog matches goldens (356 stories)",
+  "stories": [
+    {
+      "layer": "atoms",
+      "name": "Button",
+      "state": "card--dark",
+      "rel": "atoms/Button/card--dark.html",
+      "hash": "12aade415dcfa76b",
+      "bytes": 761
+    },
+    {
+      "layer": "atoms",
+      "name": "Button",
+      "state": "card",
+      "rel": "atoms/Button/card.html",
+      "hash": "2affa359bdf88ade",
+      "bytes": 755
+    },
+    {
+      "layer": "atoms",
+      "name": "Button",
+      "state": "code--dark",
+      "rel": "atoms/Button/code--dark.html",
+      "hash": "95a03b07f8b168a4",
+      "bytes": 762
+    },
+    {
+      "layer": "atoms",
+      "name": "Button",
+      "state": "code-copied--dark",
+      "rel": "atoms/Button/code-copied--dark.html",
+      "hash": "0de0cdce83d3b1a1",
+      "bytes": 768
+    },
+    {
+      "layer": "atoms",
+      "name": "Button",
+      "state": "code-copied",
+      "rel": "atoms/Button/code-copied.html",
+      "hash": "e989258a0fd995d3",
+      "bytes": 765
+    },
+    {
+      "layer": "atoms",
+      "name": "Button",
+      "state": "code",
+      "rel": "atoms/Button/code.html",
+      "hash": "247815154170b28a",
+      "bytes": 759
+    },
+    {
+      "layer": "atoms",
+      "name": "Button",
+      "state": "copied--dark",
+      "rel": "atoms/Button/copied--dark.html",
+      "hash": "93549c31c91cee40",
+      "bytes": 607
+    },
+    {
+      "layer": "atoms",
+      "name": "Button",
+      "state": "copied",
+      "rel": "atoms/Button/copied.html",
+      "hash": "1da0dc3e9c314504",
+      "bytes": 604
+    },
+    {
+      "layer": "atoms",
+      "name": "Button",
+      "state": "copy--dark",
+      "rel": "atoms/Button/copy--dark.html",
+      "hash": "568b6c0703b20b1d",
+      "bytes": 601
+    },
+    {
+      "layer": "atoms",
+      "name": "Button",
+      "state": "copy",
+      "rel": "atoms/Button/copy.html",
+      "hash": "9e90b7a45a78cac7",
+      "bytes": 598
+    },
+    {
+      "layer": "atoms",
+      "name": "Button",
+      "state": "default--dark",
+      "rel": "atoms/Button/default--dark.html",
+      "hash": "9fc837e5d50a6792",
+      "bytes": 604
+    },
+    {
+      "layer": "atoms",
+      "name": "Button",
+      "state": "default",
+      "rel": "atoms/Button/default.html",
+      "hash": "22ed276bbfffa170",
+      "bytes": 601
+    },
+    {
+      "layer": "atoms",
+      "name": "Button",
+      "state": "secondary--dark",
+      "rel": "atoms/Button/secondary--dark.html",
+      "hash": "e8035a9351281ef3",
+      "bytes": 569
+    },
+    {
+      "layer": "atoms",
+      "name": "Button",
+      "state": "secondary-compact--dark",
+      "rel": "atoms/Button/secondary-compact--dark.html",
+      "hash": "a7b9a6dbefc707c7",
+      "bytes": 581
+    },
+    {
+      "layer": "atoms",
+      "name": "Button",
+      "state": "secondary-compact",
+      "rel": "atoms/Button/secondary-compact.html",
+      "hash": "2d7053a96baee405",
+      "bytes": 581
+    },
+    {
+      "layer": "atoms",
+      "name": "Button",
+      "state": "secondary-copy--dark",
+      "rel": "atoms/Button/secondary-copy--dark.html",
+      "hash": "83f8a71ac60f1c94",
+      "bytes": 583
+    },
+    {
+      "layer": "atoms",
+      "name": "Button",
+      "state": "secondary-copy",
+      "rel": "atoms/Button/secondary-copy.html",
+      "hash": "b22c554e5d81bf79",
+      "bytes": 583
+    },
+    {
+      "layer": "atoms",
+      "name": "Button",
+      "state": "secondary",
+      "rel": "atoms/Button/secondary.html",
+      "hash": "a0b8e73beed551b6",
+      "bytes": 569
+    },
+    {
+      "layer": "atoms",
+      "name": "Button",
+      "state": "selected--dark",
+      "rel": "atoms/Button/selected--dark.html",
+      "hash": "f6f8ed3ca4083826",
+      "bytes": 605
+    },
+    {
+      "layer": "atoms",
+      "name": "Button",
+      "state": "selected",
+      "rel": "atoms/Button/selected.html",
+      "hash": "5ba152cdc93f4b68",
+      "bytes": 602
+    },
+    {
+      "layer": "atoms",
+      "name": "ColorStrip",
+      "state": "default--dark",
+      "rel": "atoms/ColorStrip/default--dark.html",
+      "hash": "873dc0302d32cf7f",
+      "bytes": 1642
+    },
+    {
+      "layer": "atoms",
+      "name": "ColorStrip",
+      "state": "default",
+      "rel": "atoms/ColorStrip/default.html",
+      "hash": "d47598e861941814",
+      "bytes": 1603
+    },
+    {
+      "layer": "atoms",
+      "name": "ColorStrip",
+      "state": "sheet--dark",
+      "rel": "atoms/ColorStrip/sheet--dark.html",
+      "hash": "85660f4bba02e0e1",
+      "bytes": 1642
+    },
+    {
+      "layer": "atoms",
+      "name": "ColorStrip",
+      "state": "sheet",
+      "rel": "atoms/ColorStrip/sheet.html",
+      "hash": "b738045ce5cd83cd",
+      "bytes": 1603
+    },
+    {
+      "layer": "atoms",
+      "name": "CropMark",
+      "state": "bottom-left--dark",
+      "rel": "atoms/CropMark/bottom-left--dark.html",
+      "hash": "4d7bed1594b4ff13",
+      "bytes": 431
+    },
+    {
+      "layer": "atoms",
+      "name": "CropMark",
+      "state": "bottom-left",
+      "rel": "atoms/CropMark/bottom-left.html",
+      "hash": "6ff69e47f18db7f9",
+      "bytes": 428
+    },
+    {
+      "layer": "atoms",
+      "name": "CropMark",
+      "state": "bottom-right--dark",
+      "rel": "atoms/CropMark/bottom-right--dark.html",
+      "hash": "07fef5d857e3223b",
+      "bytes": 432
+    },
+    {
+      "layer": "atoms",
+      "name": "CropMark",
+      "state": "bottom-right",
+      "rel": "atoms/CropMark/bottom-right.html",
+      "hash": "0ff56aa6a49b3123",
+      "bytes": 429
+    },
+    {
+      "layer": "atoms",
+      "name": "CropMark",
+      "state": "default--dark",
+      "rel": "atoms/CropMark/default--dark.html",
+      "hash": "143df6fbcd9dff5c",
+      "bytes": 458
+    },
+    {
+      "layer": "atoms",
+      "name": "CropMark",
+      "state": "default",
+      "rel": "atoms/CropMark/default.html",
+      "hash": "ace74ae0de44c03d",
+      "bytes": 452
+    },
+    {
+      "layer": "atoms",
+      "name": "CropMark",
+      "state": "social--dark",
+      "rel": "atoms/CropMark/social--dark.html",
+      "hash": "be77a5b49a5a3363",
+      "bytes": 458
+    },
+    {
+      "layer": "atoms",
+      "name": "CropMark",
+      "state": "social",
+      "rel": "atoms/CropMark/social.html",
+      "hash": "d0f76ae30f044305",
+      "bytes": 452
+    },
+    {
+      "layer": "atoms",
+      "name": "CropMark",
+      "state": "top-right--dark",
+      "rel": "atoms/CropMark/top-right--dark.html",
+      "hash": "e80a862ac3628aeb",
+      "bytes": 459
+    },
+    {
+      "layer": "atoms",
+      "name": "CropMark",
+      "state": "top-right",
+      "rel": "atoms/CropMark/top-right.html",
+      "hash": "8fd35cf61fbf1a69",
+      "bytes": 453
+    },
+    {
+      "layer": "atoms",
+      "name": "DisclosureIcon",
+      "state": "default--dark",
+      "rel": "atoms/DisclosureIcon/default--dark.html",
+      "hash": "49cc6a0a968bbf68",
+      "bytes": 233
+    },
+    {
+      "layer": "atoms",
+      "name": "DisclosureIcon",
+      "state": "default",
+      "rel": "atoms/DisclosureIcon/default.html",
+      "hash": "c5eb497eacb82c3c",
+      "bytes": 230
+    },
+    {
+      "layer": "atoms",
+      "name": "DisclosureIcon",
+      "state": "open--dark",
+      "rel": "atoms/DisclosureIcon/open--dark.html",
+      "hash": "389597b4255c1468",
+      "bytes": 212
+    },
+    {
+      "layer": "atoms",
+      "name": "DisclosureIcon",
+      "state": "open",
+      "rel": "atoms/DisclosureIcon/open.html",
+      "hash": "70e35313b317b987",
+      "bytes": 209
+    },
+    {
+      "layer": "atoms",
+      "name": "InlineCode",
+      "state": "block--dark",
+      "rel": "atoms/InlineCode/block--dark.html",
+      "hash": "f215a8369dee8ebb",
+      "bytes": 244
+    },
+    {
+      "layer": "atoms",
+      "name": "InlineCode",
+      "state": "block",
+      "rel": "atoms/InlineCode/block.html",
+      "hash": "705d9c291410d79a",
+      "bytes": 241
+    },
+    {
+      "layer": "atoms",
+      "name": "InlineCode",
+      "state": "command--dark",
+      "rel": "atoms/InlineCode/command--dark.html",
+      "hash": "0d99747b4b083c15",
+      "bytes": 465
+    },
+    {
+      "layer": "atoms",
+      "name": "InlineCode",
+      "state": "command",
+      "rel": "atoms/InlineCode/command.html",
+      "hash": "1b16fb9762915959",
+      "bytes": 459
+    },
+    {
+      "layer": "atoms",
+      "name": "InlineCode",
+      "state": "default--dark",
+      "rel": "atoms/InlineCode/default--dark.html",
+      "hash": "d3fe5b4cb65adeee",
+      "bytes": 413
+    },
+    {
+      "layer": "atoms",
+      "name": "InlineCode",
+      "state": "default",
+      "rel": "atoms/InlineCode/default.html",
+      "hash": "5537721c927ae359",
+      "bytes": 407
+    },
+    {
+      "layer": "atoms",
+      "name": "InlineCode",
+      "state": "heading--dark",
+      "rel": "atoms/InlineCode/heading--dark.html",
+      "hash": "a1523702d3769c7d",
+      "bytes": 183
+    },
+    {
+      "layer": "atoms",
+      "name": "InlineCode",
+      "state": "heading",
+      "rel": "atoms/InlineCode/heading.html",
+      "hash": "2986cee575237be2",
+      "bytes": 180
+    },
+    {
+      "layer": "atoms",
+      "name": "InlineCode",
+      "state": "in-muted-prose--dark",
+      "rel": "atoms/InlineCode/in-muted-prose--dark.html",
+      "hash": "a82503cbdf20c315",
+      "bytes": 512
+    },
+    {
+      "layer": "atoms",
+      "name": "InlineCode",
+      "state": "in-muted-prose",
+      "rel": "atoms/InlineCode/in-muted-prose.html",
+      "hash": "dbae5609811b51e0",
+      "bytes": 506
+    },
+    {
+      "layer": "atoms",
+      "name": "Logo",
+      "state": "default--dark",
+      "rel": "atoms/Logo/default--dark.html",
+      "hash": "85fbc20860e124e8",
+      "bytes": 1305
+    },
+    {
+      "layer": "atoms",
+      "name": "Logo",
+      "state": "default",
+      "rel": "atoms/Logo/default.html",
+      "hash": "2b823bbf5fabff7a",
+      "bytes": 1284
+    },
+    {
+      "layer": "atoms",
+      "name": "Logo",
+      "state": "footer-mark--dark",
+      "rel": "atoms/Logo/footer-mark--dark.html",
+      "hash": "4965ec697be70600",
+      "bytes": 726
+    },
+    {
+      "layer": "atoms",
+      "name": "Logo",
+      "state": "footer-mark",
+      "rel": "atoms/Logo/footer-mark.html",
+      "hash": "4acc4f166c1d805d",
+      "bytes": 717
+    },
+    {
+      "layer": "atoms",
+      "name": "Logo",
+      "state": "header-link--dark",
+      "rel": "atoms/Logo/header-link--dark.html",
+      "hash": "f85ccf2f827ae1a4",
+      "bytes": 1386
+    },
+    {
+      "layer": "atoms",
+      "name": "Logo",
+      "state": "header-link",
+      "rel": "atoms/Logo/header-link.html",
+      "hash": "6975c8edc361523e",
+      "bytes": 1365
+    },
+    {
+      "layer": "atoms",
+      "name": "NavLink",
+      "state": "default--dark",
+      "rel": "atoms/NavLink/default--dark.html",
+      "hash": "9cd9fa3fbd798aa5",
+      "bytes": 349
+    },
+    {
+      "layer": "atoms",
+      "name": "NavLink",
+      "state": "default",
+      "rel": "atoms/NavLink/default.html",
+      "hash": "a7f47d69e826150d",
+      "bytes": 346
+    },
+    {
+      "layer": "atoms",
+      "name": "NavLink",
+      "state": "external--dark",
+      "rel": "atoms/NavLink/external--dark.html",
+      "hash": "b8b29c1a4577462a",
+      "bytes": 564
+    },
+    {
+      "layer": "atoms",
+      "name": "NavLink",
+      "state": "external",
+      "rel": "atoms/NavLink/external.html",
+      "hash": "f6244876e49d2e25",
+      "bytes": 558
+    },
+    {
+      "layer": "atoms",
+      "name": "NavLink",
+      "state": "strip--dark",
+      "rel": "atoms/NavLink/strip--dark.html",
+      "hash": "bb33e1a194f5b786",
+      "bytes": 423
+    },
+    {
+      "layer": "atoms",
+      "name": "NavLink",
+      "state": "strip",
+      "rel": "atoms/NavLink/strip.html",
+      "hash": "d9a634728ceb796b",
+      "bytes": 420
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateLabel",
+      "state": "approved--dark",
+      "rel": "atoms/PlateLabel/approved--dark.html",
+      "hash": "77fa2c0845111808",
+      "bytes": 181
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateLabel",
+      "state": "approved",
+      "rel": "atoms/PlateLabel/approved.html",
+      "hash": "bf6642842fb183e2",
+      "bytes": 178
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateLabel",
+      "state": "default--dark",
+      "rel": "atoms/PlateLabel/default--dark.html",
+      "hash": "c01b5e24f4da8db7",
+      "bytes": 185
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateLabel",
+      "state": "default",
+      "rel": "atoms/PlateLabel/default.html",
+      "hash": "93d734ed08359c13",
+      "bytes": 182
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateLabel",
+      "state": "drifted--dark",
+      "rel": "atoms/PlateLabel/drifted--dark.html",
+      "hash": "0dd1687a127bbfc6",
+      "bytes": 186
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateLabel",
+      "state": "drifted",
+      "rel": "atoms/PlateLabel/drifted.html",
+      "hash": "8bb8af4288aea7c7",
+      "bytes": 183
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateLabel",
+      "state": "on-code--dark",
+      "rel": "atoms/PlateLabel/on-code--dark.html",
+      "hash": "17bd77b911bedcb0",
+      "bytes": 377
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateLabel",
+      "state": "on-code",
+      "rel": "atoms/PlateLabel/on-code.html",
+      "hash": "7d47f87ded4db291",
+      "bytes": 374
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateLabel",
+      "state": "step--dark",
+      "rel": "atoms/PlateLabel/step--dark.html",
+      "hash": "ff33865eb7dcf029",
+      "bytes": 199
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateLabel",
+      "state": "step",
+      "rel": "atoms/PlateLabel/step.html",
+      "hash": "09f315d102349490",
+      "bytes": 196
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateText",
+      "state": "close--dark",
+      "rel": "atoms/PlateText/close--dark.html",
+      "hash": "a8b87dc66f45fef4",
+      "bytes": 1901
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateText",
+      "state": "close-scroll-start--dark",
+      "rel": "atoms/PlateText/close-scroll-start--dark.html",
+      "hash": "a68c5dca8ffc02c8",
+      "bytes": 1917
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateText",
+      "state": "close-scroll-start",
+      "rel": "atoms/PlateText/close-scroll-start.html",
+      "hash": "1b8c398d16f59672",
+      "bytes": 1905
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateText",
+      "state": "close",
+      "rel": "atoms/PlateText/close.html",
+      "hash": "17a69876267c2732",
+      "bytes": 1889
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateText",
+      "state": "default--dark",
+      "rel": "atoms/PlateText/default--dark.html",
+      "hash": "cc4e22e44de59b9d",
+      "bytes": 1855
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateText",
+      "state": "default",
+      "rel": "atoms/PlateText/default.html",
+      "hash": "5deb308dfd1214a7",
+      "bytes": 1840
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateText",
+      "state": "hero-alternate--dark",
+      "rel": "atoms/PlateText/hero-alternate--dark.html",
+      "hash": "41b57d64d231a94d",
+      "bytes": 1773
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateText",
+      "state": "hero-alternate",
+      "rel": "atoms/PlateText/hero-alternate.html",
+      "hash": "3307c4eb5a7cf27a",
+      "bytes": 1761
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateText",
+      "state": "social--dark",
+      "rel": "atoms/PlateText/social--dark.html",
+      "hash": "e4d982a21d4fd33d",
+      "bytes": 2072
+    },
+    {
+      "layer": "atoms",
+      "name": "PlateText",
+      "state": "social",
+      "rel": "atoms/PlateText/social.html",
+      "hash": "22bbdd14a118bcd1",
+      "bytes": 2057
+    },
+    {
+      "layer": "atoms",
+      "name": "PlayButton",
+      "state": "default--dark",
+      "rel": "atoms/PlayButton/default--dark.html",
+      "hash": "aeef7b58ce677a9a",
+      "bytes": 897
+    },
+    {
+      "layer": "atoms",
+      "name": "PlayButton",
+      "state": "default",
+      "rel": "atoms/PlayButton/default.html",
+      "hash": "3fdca3c6b75f982d",
+      "bytes": 888
+    },
+    {
+      "layer": "atoms",
+      "name": "PrincipleCard",
+      "state": "default--dark",
+      "rel": "atoms/PrincipleCard/default--dark.html",
+      "hash": "7bc36fa8db47c88e",
+      "bytes": 629
+    },
+    {
+      "layer": "atoms",
+      "name": "PrincipleCard",
+      "state": "default",
+      "rel": "atoms/PrincipleCard/default.html",
+      "hash": "84b93a0c3791da8a",
+      "bytes": 620
+    },
+    {
+      "layer": "atoms",
+      "name": "PrincipleCard",
+      "state": "language-agnostic--dark",
+      "rel": "atoms/PrincipleCard/language-agnostic--dark.html",
+      "hash": "68e87ef6c776e0b3",
+      "bytes": 620
+    },
+    {
+      "layer": "atoms",
+      "name": "PrincipleCard",
+      "state": "language-agnostic",
+      "rel": "atoms/PrincipleCard/language-agnostic.html",
+      "hash": "4d61cb38cf1b5cfb",
+      "bytes": 611
+    },
+    {
+      "layer": "atoms",
+      "name": "PrincipleCard",
+      "state": "make-it-real--dark",
+      "rel": "atoms/PrincipleCard/make-it-real--dark.html",
+      "hash": "9f4704fb6f8a5273",
+      "bytes": 655
+    },
+    {
+      "layer": "atoms",
+      "name": "PrincipleCard",
+      "state": "make-it-real",
+      "rel": "atoms/PrincipleCard/make-it-real.html",
+      "hash": "571c17390f1069b1",
+      "bytes": 646
+    },
+    {
+      "layer": "atoms",
+      "name": "PrincipleCard",
+      "state": "rapid-iteration--dark",
+      "rel": "atoms/PrincipleCard/rapid-iteration--dark.html",
+      "hash": "5b86968a23d360b7",
+      "bytes": 702
+    },
+    {
+      "layer": "atoms",
+      "name": "PrincipleCard",
+      "state": "rapid-iteration",
+      "rel": "atoms/PrincipleCard/rapid-iteration.html",
+      "hash": "dbc73a25bc0c9b56",
+      "bytes": 693
+    },
+    {
+      "layer": "atoms",
+      "name": "ProofMark",
+      "state": "default--dark",
+      "rel": "atoms/ProofMark/default--dark.html",
+      "hash": "47e2122690a2c01f",
+      "bytes": 261
+    },
+    {
+      "layer": "atoms",
+      "name": "ProofMark",
+      "state": "default",
+      "rel": "atoms/ProofMark/default.html",
+      "hash": "e740fe5a726f1cc1",
+      "bytes": 261
+    },
+    {
+      "layer": "atoms",
+      "name": "ProofMark",
+      "state": "hidden--dark",
+      "rel": "atoms/ProofMark/hidden--dark.html",
+      "hash": "d6ed358ca50af656",
+      "bytes": 280
+    },
+    {
+      "layer": "atoms",
+      "name": "ProofMark",
+      "state": "hidden",
+      "rel": "atoms/ProofMark/hidden.html",
+      "hash": "f456ed6d2de25bbd",
+      "bytes": 280
+    },
+    {
+      "layer": "atoms",
+      "name": "ProofMark",
+      "state": "mark-2--dark",
+      "rel": "atoms/ProofMark/mark-2--dark.html",
+      "hash": "d0d13964a0fddc18",
+      "bytes": 261
+    },
+    {
+      "layer": "atoms",
+      "name": "ProofMark",
+      "state": "mark-2",
+      "rel": "atoms/ProofMark/mark-2.html",
+      "hash": "32222cdd7426f719",
+      "bytes": 261
+    },
+    {
+      "layer": "atoms",
+      "name": "ProofMark",
+      "state": "mark-3--dark",
+      "rel": "atoms/ProofMark/mark-3--dark.html",
+      "hash": "d56aafa5d5ab2c67",
+      "bytes": 261
+    },
+    {
+      "layer": "atoms",
+      "name": "ProofMark",
+      "state": "mark-3",
+      "rel": "atoms/ProofMark/mark-3.html",
+      "hash": "83944a5291f9f3fa",
+      "bytes": 261
+    },
+    {
+      "layer": "atoms",
+      "name": "ProofMark",
+      "state": "mark-4--dark",
+      "rel": "atoms/ProofMark/mark-4--dark.html",
+      "hash": "de1dd7f4df087940",
+      "bytes": 261
+    },
+    {
+      "layer": "atoms",
+      "name": "ProofMark",
+      "state": "mark-4",
+      "rel": "atoms/ProofMark/mark-4.html",
+      "hash": "6ce58f0d2cdb845f",
+      "bytes": 261
+    },
+    {
+      "layer": "atoms",
+      "name": "RegistrationTarget",
+      "state": "default--dark",
+      "rel": "atoms/RegistrationTarget/default--dark.html",
+      "hash": "3fb0175d6e592eb8",
+      "bytes": 891
+    },
+    {
+      "layer": "atoms",
+      "name": "RegistrationTarget",
+      "state": "default",
+      "rel": "atoms/RegistrationTarget/default.html",
+      "hash": "bd40187f47fbe912",
+      "bytes": 870
+    },
+    {
+      "layer": "atoms",
+      "name": "RegistrationTarget",
+      "state": "large--dark",
+      "rel": "atoms/RegistrationTarget/large--dark.html",
+      "hash": "a752fa45e7c53f3e",
+      "bytes": 1108
+    },
+    {
+      "layer": "atoms",
+      "name": "RegistrationTarget",
+      "state": "large",
+      "rel": "atoms/RegistrationTarget/large.html",
+      "hash": "58b48b14508fefa4",
+      "bytes": 1083
+    },
+    {
+      "layer": "atoms",
+      "name": "SectionHeading",
+      "state": "default--dark",
+      "rel": "atoms/SectionHeading/default--dark.html",
+      "hash": "6586c0b82198f979",
+      "bytes": 267
+    },
+    {
+      "layer": "atoms",
+      "name": "SectionHeading",
+      "state": "default",
+      "rel": "atoms/SectionHeading/default.html",
+      "hash": "e6520a8239c98222",
+      "bytes": 264
+    },
+    {
+      "layer": "atoms",
+      "name": "SectionHeading",
+      "state": "page-title--dark",
+      "rel": "atoms/SectionHeading/page-title--dark.html",
+      "hash": "7b5c43e855271217",
+      "bytes": 249
+    },
+    {
+      "layer": "atoms",
+      "name": "SectionHeading",
+      "state": "page-title",
+      "rel": "atoms/SectionHeading/page-title.html",
+      "hash": "4a652ba41f3fcc1d",
+      "bytes": 246
+    },
+    {
+      "layer": "atoms",
+      "name": "SectionHeading",
+      "state": "statement--dark",
+      "rel": "atoms/SectionHeading/statement--dark.html",
+      "hash": "40f5e75a156e5825",
+      "bytes": 249
+    },
+    {
+      "layer": "atoms",
+      "name": "SectionHeading",
+      "state": "statement",
+      "rel": "atoms/SectionHeading/statement.html",
+      "hash": "ebc98efeadcebfff",
+      "bytes": 246
+    },
+    {
+      "layer": "atoms",
+      "name": "SectionHeading",
+      "state": "subhead--dark",
+      "rel": "atoms/SectionHeading/subhead--dark.html",
+      "hash": "679ce976ade15096",
+      "bytes": 398
+    },
+    {
+      "layer": "atoms",
+      "name": "SectionHeading",
+      "state": "subhead",
+      "rel": "atoms/SectionHeading/subhead.html",
+      "hash": "069354c661495da3",
+      "bytes": 392
+    },
+    {
+      "layer": "atoms",
+      "name": "SliderHandle",
+      "state": "default--dark",
+      "rel": "atoms/SliderHandle/default--dark.html",
+      "hash": "130e94254161d264",
+      "bytes": 792
+    },
+    {
+      "layer": "atoms",
+      "name": "SliderHandle",
+      "state": "default",
+      "rel": "atoms/SliderHandle/default.html",
+      "hash": "7e68d2787d196427",
+      "bytes": 794
+    },
+    {
+      "layer": "atoms",
+      "name": "SliderHandle",
+      "state": "end--dark",
+      "rel": "atoms/SliderHandle/end--dark.html",
+      "hash": "d7eb3367b787ceb6",
+      "bytes": 793
+    },
+    {
+      "layer": "atoms",
+      "name": "SliderHandle",
+      "state": "end",
+      "rel": "atoms/SliderHandle/end.html",
+      "hash": "2043c33ed7d255f1",
+      "bytes": 795
+    },
+    {
+      "layer": "atoms",
+      "name": "SliderHandle",
+      "state": "focused--dark",
+      "rel": "atoms/SliderHandle/focused--dark.html",
+      "hash": "6def491ca2314624",
+      "bytes": 833
+    },
+    {
+      "layer": "atoms",
+      "name": "SliderHandle",
+      "state": "focused",
+      "rel": "atoms/SliderHandle/focused.html",
+      "hash": "92b4067f7b7c4b9b",
+      "bytes": 835
+    },
+    {
+      "layer": "atoms",
+      "name": "SliderHandle",
+      "state": "start--dark",
+      "rel": "atoms/SliderHandle/start--dark.html",
+      "hash": "5403865f1ea335d7",
+      "bytes": 791
+    },
+    {
+      "layer": "atoms",
+      "name": "SliderHandle",
+      "state": "start",
+      "rel": "atoms/SliderHandle/start.html",
+      "hash": "1adb2084d53a5ef5",
+      "bytes": 793
+    },
+    {
+      "layer": "atoms",
+      "name": "SlugLine",
+      "state": "agent--dark",
+      "rel": "atoms/SlugLine/agent--dark.html",
+      "hash": "23a6530a968b18f3",
+      "bytes": 268
+    },
+    {
+      "layer": "atoms",
+      "name": "SlugLine",
+      "state": "agent",
+      "rel": "atoms/SlugLine/agent.html",
+      "hash": "32428832f618afe7",
+      "bytes": 265
+    },
+    {
+      "layer": "atoms",
+      "name": "SlugLine",
+      "state": "default--dark",
+      "rel": "atoms/SlugLine/default--dark.html",
+      "hash": "50307863cb7fdc3f",
+      "bytes": 244
+    },
+    {
+      "layer": "atoms",
+      "name": "SlugLine",
+      "state": "default",
+      "rel": "atoms/SlugLine/default.html",
+      "hash": "8a882b0acf010af3",
+      "bytes": 241
+    },
+    {
+      "layer": "atoms",
+      "name": "Stat",
+      "state": "default--dark",
+      "rel": "atoms/Stat/default--dark.html",
+      "hash": "ce7f65d0d5a65696",
+      "bytes": 676
+    },
+    {
+      "layer": "atoms",
+      "name": "Stat",
+      "state": "default",
+      "rel": "atoms/Stat/default.html",
+      "hash": "a93a5efa28547372",
+      "bytes": 664
+    },
+    {
+      "layer": "atoms",
+      "name": "Tab",
+      "state": "default--dark",
+      "rel": "atoms/Tab/default--dark.html",
+      "hash": "b9e9749e72927e63",
+      "bytes": 749
+    },
+    {
+      "layer": "atoms",
+      "name": "Tab",
+      "state": "default",
+      "rel": "atoms/Tab/default.html",
+      "hash": "ad7d910c84f2c429",
+      "bytes": 743
+    },
+    {
+      "layer": "atoms",
+      "name": "Tab",
+      "state": "unselected--dark",
+      "rel": "atoms/Tab/unselected--dark.html",
+      "hash": "7b0e48b327f94494",
+      "bytes": 751
+    },
+    {
+      "layer": "atoms",
+      "name": "Tab",
+      "state": "unselected",
+      "rel": "atoms/Tab/unselected.html",
+      "hash": "85ed4b85bd365168",
+      "bytes": 745
+    },
+    {
+      "layer": "atoms",
+      "name": "TabNote",
+      "state": "codex-warning--dark",
+      "rel": "atoms/TabNote/codex-warning--dark.html",
+      "hash": "61c0f6df5f96e99b",
+      "bytes": 607
+    },
+    {
+      "layer": "atoms",
+      "name": "TabNote",
+      "state": "codex-warning",
+      "rel": "atoms/TabNote/codex-warning.html",
+      "hash": "0d039c48d9f824d8",
+      "bytes": 598
+    },
+    {
+      "layer": "atoms",
+      "name": "TabNote",
+      "state": "default--dark",
+      "rel": "atoms/TabNote/default--dark.html",
+      "hash": "97db282329d5ea24",
+      "bytes": 189
+    },
+    {
+      "layer": "atoms",
+      "name": "TabNote",
+      "state": "default",
+      "rel": "atoms/TabNote/default.html",
+      "hash": "e7e54124eb04e12e",
+      "bytes": 186
+    },
+    {
+      "layer": "atoms",
+      "name": "TabNote",
+      "state": "grok-note--dark",
+      "rel": "atoms/TabNote/grok-note--dark.html",
+      "hash": "5eae0c177adde863",
+      "bytes": 205
+    },
+    {
+      "layer": "atoms",
+      "name": "TabNote",
+      "state": "grok-note",
+      "rel": "atoms/TabNote/grok-note.html",
+      "hash": "e67767c0e4a1e718",
+      "bytes": 202
+    },
+    {
+      "layer": "atoms",
+      "name": "TabNote",
+      "state": "warning--dark",
+      "rel": "atoms/TabNote/warning--dark.html",
+      "hash": "fa427017f62a269f",
+      "bytes": 560
+    },
+    {
+      "layer": "atoms",
+      "name": "TabNote",
+      "state": "warning",
+      "rel": "atoms/TabNote/warning.html",
+      "hash": "f83f63a450f2aa38",
+      "bytes": 551
+    },
+    {
+      "layer": "atoms",
+      "name": "TextLink",
+      "state": "default--dark",
+      "rel": "atoms/TextLink/default--dark.html",
+      "hash": "54d7aa3a29531d28",
+      "bytes": 397
+    },
+    {
+      "layer": "atoms",
+      "name": "TextLink",
+      "state": "default",
+      "rel": "atoms/TextLink/default.html",
+      "hash": "7c55e7eeacb33aaf",
+      "bytes": 394
+    },
+    {
+      "layer": "atoms",
+      "name": "TextLink",
+      "state": "external--dark",
+      "rel": "atoms/TextLink/external--dark.html",
+      "hash": "ff9a6c90760004a7",
+      "bytes": 555
+    },
+    {
+      "layer": "atoms",
+      "name": "TextLink",
+      "state": "external",
+      "rel": "atoms/TextLink/external.html",
+      "hash": "e815976728f32fe6",
+      "bytes": 549
+    },
+    {
+      "layer": "atoms",
+      "name": "TextLink",
+      "state": "footer--dark",
+      "rel": "atoms/TextLink/footer--dark.html",
+      "hash": "ee91300ae9bf646c",
+      "bytes": 407
+    },
+    {
+      "layer": "atoms",
+      "name": "TextLink",
+      "state": "footer",
+      "rel": "atoms/TextLink/footer.html",
+      "hash": "73b1f39d6fc8c976",
+      "bytes": 404
+    },
+    {
+      "layer": "atoms",
+      "name": "TextLink",
+      "state": "mono--dark",
+      "rel": "atoms/TextLink/mono--dark.html",
+      "hash": "fe1b393f56edf3db",
+      "bytes": 334
+    },
+    {
+      "layer": "atoms",
+      "name": "TextLink",
+      "state": "mono",
+      "rel": "atoms/TextLink/mono.html",
+      "hash": "230070b158ab82f4",
+      "bytes": 331
+    },
+    {
+      "layer": "atoms",
+      "name": "ThemeToggle",
+      "state": "dark-theme--dark",
+      "rel": "atoms/ThemeToggle/dark-theme--dark.html",
+      "hash": "7e9a970c08389e69",
+      "bytes": 995
+    },
+    {
+      "layer": "atoms",
+      "name": "ThemeToggle",
+      "state": "dark-theme",
+      "rel": "atoms/ThemeToggle/dark-theme.html",
+      "hash": "711b8f67f722a94c",
+      "bytes": 986
+    },
+    {
+      "layer": "atoms",
+      "name": "ThemeToggle",
+      "state": "default--dark",
+      "rel": "atoms/ThemeToggle/default--dark.html",
+      "hash": "8bd67385e0ac2939",
+      "bytes": 993
+    },
+    {
+      "layer": "atoms",
+      "name": "ThemeToggle",
+      "state": "default",
+      "rel": "atoms/ThemeToggle/default.html",
+      "hash": "a307334a0bc820e0",
+      "bytes": 984
+    },
+    {
+      "layer": "atoms",
+      "name": "ThemeToggle",
+      "state": "icon-only--dark",
+      "rel": "atoms/ThemeToggle/icon-only--dark.html",
+      "hash": "a786117b5174dfd2",
+      "bytes": 949
+    },
+    {
+      "layer": "atoms",
+      "name": "ThemeToggle",
+      "state": "icon-only",
+      "rel": "atoms/ThemeToggle/icon-only.html",
+      "hash": "3e1456b5a5bd7c83",
+      "bytes": 940
+    },
+    {
+      "layer": "atoms",
+      "name": "VersionPill",
+      "state": "default--dark",
+      "rel": "atoms/VersionPill/default--dark.html",
+      "hash": "b818ef877f37621a",
+      "bytes": 250
+    },
+    {
+      "layer": "atoms",
+      "name": "VersionPill",
+      "state": "default",
+      "rel": "atoms/VersionPill/default.html",
+      "hash": "c46084d08fa2fece",
+      "bytes": 252
+    },
+    {
+      "layer": "atoms",
+      "name": "VersionPill",
+      "state": "outline--dark",
+      "rel": "atoms/VersionPill/outline--dark.html",
+      "hash": "9bf5743ce9c895ca",
+      "bytes": 259
+    },
+    {
+      "layer": "atoms",
+      "name": "VersionPill",
+      "state": "outline",
+      "rel": "atoms/VersionPill/outline.html",
+      "hash": "c9a870ae6711251c",
+      "bytes": 259
+    },
+    {
+      "layer": "molecules",
+      "name": "ChangelogMini",
+      "state": "default--dark",
+      "rel": "molecules/ChangelogMini/default--dark.html",
+      "hash": "58c1002c5aa3e7a0",
+      "bytes": 3231
+    },
+    {
+      "layer": "molecules",
+      "name": "ChangelogMini",
+      "state": "default",
+      "rel": "molecules/ChangelogMini/default.html",
+      "hash": "85e684229340e14e",
+      "bytes": 3218
+    },
+    {
+      "layer": "molecules",
+      "name": "ChangelogMini",
+      "state": "scattered--dark",
+      "rel": "molecules/ChangelogMini/scattered--dark.html",
+      "hash": "0da59f2255778e66",
+      "bytes": 3247
+    },
+    {
+      "layer": "molecules",
+      "name": "ChangelogMini",
+      "state": "scattered",
+      "rel": "molecules/ChangelogMini/scattered.html",
+      "hash": "4fe0202b1ef32d5c",
+      "bytes": 3234
+    },
+    {
+      "layer": "molecules",
+      "name": "CodePanel",
+      "state": "status--dark",
+      "rel": "molecules/CodePanel/status--dark.html",
+      "hash": "a624bc016aa66242",
+      "bytes": 3245
+    },
+    {
+      "layer": "molecules",
+      "name": "CodePanel",
+      "state": "status",
+      "rel": "molecules/CodePanel/status.html",
+      "hash": "a624bc016aa66242",
+      "bytes": 3245
+    },
+    {
+      "layer": "molecules",
+      "name": "CodePanel",
+      "state": "terminal--dark",
+      "rel": "molecules/CodePanel/terminal--dark.html",
+      "hash": "9085ca3974a76e1f",
+      "bytes": 2749
+    },
+    {
+      "layer": "molecules",
+      "name": "CodePanel",
+      "state": "terminal",
+      "rel": "molecules/CodePanel/terminal.html",
+      "hash": "9085ca3974a76e1f",
+      "bytes": 2749
+    },
+    {
+      "layer": "molecules",
+      "name": "CodePanel",
+      "state": "yaml--dark",
+      "rel": "molecules/CodePanel/yaml--dark.html",
+      "hash": "2515204996baaa2c",
+      "bytes": 4547
+    },
+    {
+      "layer": "molecules",
+      "name": "CodePanel",
+      "state": "yaml",
+      "rel": "molecules/CodePanel/yaml.html",
+      "hash": "2515204996baaa2c",
+      "bytes": 4547
+    },
+    {
+      "layer": "molecules",
+      "name": "CommandRow",
+      "state": "copied--dark",
+      "rel": "molecules/CommandRow/copied--dark.html",
+      "hash": "35de4b575fd1e47b",
+      "bytes": 1417
+    },
+    {
+      "layer": "molecules",
+      "name": "CommandRow",
+      "state": "copied",
+      "rel": "molecules/CommandRow/copied.html",
+      "hash": "35de4b575fd1e47b",
+      "bytes": 1417
+    },
+    {
+      "layer": "molecules",
+      "name": "CommandRow",
+      "state": "default--dark",
+      "rel": "molecules/CommandRow/default--dark.html",
+      "hash": "8d9b3f3a9a9e6166",
+      "bytes": 1393
+    },
+    {
+      "layer": "molecules",
+      "name": "CommandRow",
+      "state": "default",
+      "rel": "molecules/CommandRow/default.html",
+      "hash": "8d9b3f3a9a9e6166",
+      "bytes": 1393
+    },
+    {
+      "layer": "molecules",
+      "name": "CommandRow",
+      "state": "long-command--dark",
+      "rel": "molecules/CommandRow/long-command--dark.html",
+      "hash": "29efd29d76238284",
+      "bytes": 1429
+    },
+    {
+      "layer": "molecules",
+      "name": "CommandRow",
+      "state": "long-command",
+      "rel": "molecules/CommandRow/long-command.html",
+      "hash": "29efd29d76238284",
+      "bytes": 1429
+    },
+    {
+      "layer": "molecules",
+      "name": "CommandRow",
+      "state": "selected--dark",
+      "rel": "molecules/CommandRow/selected--dark.html",
+      "hash": "05a02eedc6e258b9",
+      "bytes": 1451
+    },
+    {
+      "layer": "molecules",
+      "name": "CommandRow",
+      "state": "selected",
+      "rel": "molecules/CommandRow/selected.html",
+      "hash": "05a02eedc6e258b9",
+      "bytes": 1451
+    },
+    {
+      "layer": "molecules",
+      "name": "CopyBlock",
+      "state": "card--dark",
+      "rel": "molecules/CopyBlock/card--dark.html",
+      "hash": "f007fd5c54658943",
+      "bytes": 1886
+    },
+    {
+      "layer": "molecules",
+      "name": "CopyBlock",
+      "state": "card-copied--dark",
+      "rel": "molecules/CopyBlock/card-copied--dark.html",
+      "hash": "3204409930c77e6c",
+      "bytes": 1910
+    },
+    {
+      "layer": "molecules",
+      "name": "CopyBlock",
+      "state": "card-copied",
+      "rel": "molecules/CopyBlock/card-copied.html",
+      "hash": "393ad3a590bc78d6",
+      "bytes": 1895
+    },
+    {
+      "layer": "molecules",
+      "name": "CopyBlock",
+      "state": "card-selected--dark",
+      "rel": "molecules/CopyBlock/card-selected--dark.html",
+      "hash": "4533b8d03d836f46",
+      "bytes": 1944
+    },
+    {
+      "layer": "molecules",
+      "name": "CopyBlock",
+      "state": "card-selected",
+      "rel": "molecules/CopyBlock/card-selected.html",
+      "hash": "8588c26d0c3fd9ec",
+      "bytes": 1929
+    },
+    {
+      "layer": "molecules",
+      "name": "CopyBlock",
+      "state": "card",
+      "rel": "molecules/CopyBlock/card.html",
+      "hash": "5a527cb5668ef000",
+      "bytes": 1871
+    },
+    {
+      "layer": "molecules",
+      "name": "CopyBlock",
+      "state": "row--dark",
+      "rel": "molecules/CopyBlock/row--dark.html",
+      "hash": "4127d89a21f1771d",
+      "bytes": 1432
+    },
+    {
+      "layer": "molecules",
+      "name": "CopyBlock",
+      "state": "row-copied--dark",
+      "rel": "molecules/CopyBlock/row-copied--dark.html",
+      "hash": "ed79c85ac20410a8",
+      "bytes": 1456
+    },
+    {
+      "layer": "molecules",
+      "name": "CopyBlock",
+      "state": "row-copied",
+      "rel": "molecules/CopyBlock/row-copied.html",
+      "hash": "cebfc356c51f983a",
+      "bytes": 1447
+    },
+    {
+      "layer": "molecules",
+      "name": "CopyBlock",
+      "state": "row",
+      "rel": "molecules/CopyBlock/row.html",
+      "hash": "b511b5ad3c9612f6",
+      "bytes": 1423
+    },
+    {
+      "layer": "molecules",
+      "name": "CopyNextStep",
+      "state": "default--dark",
+      "rel": "molecules/CopyNextStep/default--dark.html",
+      "hash": "9670e09f6b503858",
+      "bytes": 418
+    },
+    {
+      "layer": "molecules",
+      "name": "CopyNextStep",
+      "state": "default",
+      "rel": "molecules/CopyNextStep/default.html",
+      "hash": "7e6bcc1b16d27571",
+      "bytes": 412
+    },
+    {
+      "layer": "molecules",
+      "name": "DesignMdCard",
+      "state": "default--dark",
+      "rel": "molecules/DesignMdCard/default--dark.html",
+      "hash": "88ef5c029f2670b9",
+      "bytes": 3580
+    },
+    {
+      "layer": "molecules",
+      "name": "DesignMdCard",
+      "state": "default",
+      "rel": "molecules/DesignMdCard/default.html",
+      "hash": "55a104fbda0f1827",
+      "bytes": 3523
+    },
+    {
+      "layer": "molecules",
+      "name": "FaqItem",
+      "state": "closed--dark",
+      "rel": "molecules/FaqItem/closed--dark.html",
+      "hash": "e680aac564c1256f",
+      "bytes": 1603
+    },
+    {
+      "layer": "molecules",
+      "name": "FaqItem",
+      "state": "closed",
+      "rel": "molecules/FaqItem/closed.html",
+      "hash": "c94f2b030ae40c46",
+      "bytes": 1588
+    },
+    {
+      "layer": "molecules",
+      "name": "FaqItem",
+      "state": "open--dark",
+      "rel": "molecules/FaqItem/open--dark.html",
+      "hash": "14071f10c9cee741",
+      "bytes": 1590
+    },
+    {
+      "layer": "molecules",
+      "name": "FaqItem",
+      "state": "open",
+      "rel": "molecules/FaqItem/open.html",
+      "hash": "d307d0f84489615e",
+      "bytes": 1575
+    },
+    {
+      "layer": "molecules",
+      "name": "FigureCaption",
+      "state": "example--dark",
+      "rel": "molecules/FigureCaption/example--dark.html",
+      "hash": "fce930d7cb53c96a",
+      "bytes": 501
+    },
+    {
+      "layer": "molecules",
+      "name": "FigureCaption",
+      "state": "example",
+      "rel": "molecules/FigureCaption/example.html",
+      "hash": "b51b867b7b006bff",
+      "bytes": 495
+    },
+    {
+      "layer": "molecules",
+      "name": "FigureCaption",
+      "state": "fig--dark",
+      "rel": "molecules/FigureCaption/fig--dark.html",
+      "hash": "8d3533930119ea18",
+      "bytes": 445
+    },
+    {
+      "layer": "molecules",
+      "name": "FigureCaption",
+      "state": "fig",
+      "rel": "molecules/FigureCaption/fig.html",
+      "hash": "d4e926bdf3489690",
+      "bytes": 439
+    },
+    {
+      "layer": "molecules",
+      "name": "FigureCaption",
+      "state": "mono--dark",
+      "rel": "molecules/FigureCaption/mono--dark.html",
+      "hash": "f9d8a121f2615ccb",
+      "bytes": 401
+    },
+    {
+      "layer": "molecules",
+      "name": "FigureCaption",
+      "state": "mono",
+      "rel": "molecules/FigureCaption/mono.html",
+      "hash": "9b4982760c606b3c",
+      "bytes": 395
+    },
+    {
+      "layer": "molecules",
+      "name": "FigureCaption",
+      "state": "plain--dark",
+      "rel": "molecules/FigureCaption/plain--dark.html",
+      "hash": "b2ed21f30d696f82",
+      "bytes": 226
+    },
+    {
+      "layer": "molecules",
+      "name": "FigureCaption",
+      "state": "plain",
+      "rel": "molecules/FigureCaption/plain.html",
+      "hash": "8dbde99d1ada7570",
+      "bytes": 223
+    },
+    {
+      "layer": "molecules",
+      "name": "GrowCard",
+      "state": "add-platform--dark",
+      "rel": "molecules/GrowCard/add-platform--dark.html",
+      "hash": "82fe97c149713cd1",
+      "bytes": 927
+    },
+    {
+      "layer": "molecules",
+      "name": "GrowCard",
+      "state": "add-platform",
+      "rel": "molecules/GrowCard/add-platform.html",
+      "hash": "e2c0a8273587a2b7",
+      "bytes": 915
+    },
+    {
+      "layer": "molecules",
+      "name": "GrowCard",
+      "state": "default--dark",
+      "rel": "molecules/GrowCard/default--dark.html",
+      "hash": "9091a4159d763a37",
+      "bytes": 1176
+    },
+    {
+      "layer": "molecules",
+      "name": "GrowCard",
+      "state": "default",
+      "rel": "molecules/GrowCard/default.html",
+      "hash": "4f74d075cf862477",
+      "bytes": 1161
+    },
+    {
+      "layer": "molecules",
+      "name": "GrowCard",
+      "state": "refine--dark",
+      "rel": "molecules/GrowCard/refine--dark.html",
+      "hash": "43faeed5f0a3cbd4",
+      "bytes": 1551
+    },
+    {
+      "layer": "molecules",
+      "name": "GrowCard",
+      "state": "refine",
+      "rel": "molecules/GrowCard/refine.html",
+      "hash": "ed7bed1230e39acf",
+      "bytes": 1530
+    },
+    {
+      "layer": "molecules",
+      "name": "MetaStrip",
+      "state": "default--dark",
+      "rel": "molecules/MetaStrip/default--dark.html",
+      "hash": "35c88ea97c3b9fa8",
+      "bytes": 1635
+    },
+    {
+      "layer": "molecules",
+      "name": "MetaStrip",
+      "state": "default",
+      "rel": "molecules/MetaStrip/default.html",
+      "hash": "e1c489e1f9149228",
+      "bytes": 1614
+    },
+    {
+      "layer": "molecules",
+      "name": "MetaStrip",
+      "state": "narrow--dark",
+      "rel": "molecules/MetaStrip/narrow--dark.html",
+      "hash": "392d1c4b488794c9",
+      "bytes": 1799
+    },
+    {
+      "layer": "molecules",
+      "name": "MetaStrip",
+      "state": "narrow",
+      "rel": "molecules/MetaStrip/narrow.html",
+      "hash": "0e8c0d62357cdbab",
+      "bytes": 1775
+    },
+    {
+      "layer": "molecules",
+      "name": "ProofFrame",
+      "state": "built-side--dark",
+      "rel": "molecules/ProofFrame/built-side--dark.html",
+      "hash": "9841914549f03cc9",
+      "bytes": 8742
+    },
+    {
+      "layer": "molecules",
+      "name": "ProofFrame",
+      "state": "built-side",
+      "rel": "molecules/ProofFrame/built-side.html",
+      "hash": "788cacb732581541",
+      "bytes": 8603
+    },
+    {
+      "layer": "molecules",
+      "name": "ProofFrame",
+      "state": "design-side--dark",
+      "rel": "molecules/ProofFrame/design-side--dark.html",
+      "hash": "a5599e367639422b",
+      "bytes": 8744
+    },
+    {
+      "layer": "molecules",
+      "name": "ProofFrame",
+      "state": "design-side",
+      "rel": "molecules/ProofFrame/design-side.html",
+      "hash": "70c8a63a7718eaa2",
+      "bytes": 8605
+    },
+    {
+      "layer": "molecules",
+      "name": "ProofFrame",
+      "state": "static--dark",
+      "rel": "molecules/ProofFrame/static--dark.html",
+      "hash": "912e6262cd75c40f",
+      "bytes": 8743
+    },
+    {
+      "layer": "molecules",
+      "name": "ProofFrame",
+      "state": "static",
+      "rel": "molecules/ProofFrame/static.html",
+      "hash": "4e6b8aeb81427fef",
+      "bytes": 8604
+    },
+    {
+      "layer": "molecules",
+      "name": "ProofFrame",
+      "state": "with-handle--dark",
+      "rel": "molecules/ProofFrame/with-handle--dark.html",
+      "hash": "a7b2ddfc1c5898c8",
+      "bytes": 9312
+    },
+    {
+      "layer": "molecules",
+      "name": "ProofFrame",
+      "state": "with-handle",
+      "rel": "molecules/ProofFrame/with-handle.html",
+      "hash": "9d1531961e02df5f",
+      "bytes": 9172
+    },
+    {
+      "layer": "molecules",
+      "name": "ProofNote",
+      "state": "default--dark",
+      "rel": "molecules/ProofNote/default--dark.html",
+      "hash": "f278619f101fb674",
+      "bytes": 683
+    },
+    {
+      "layer": "molecules",
+      "name": "ProofNote",
+      "state": "default",
+      "rel": "molecules/ProofNote/default.html",
+      "hash": "33206592ec6d5def",
+      "bytes": 671
+    },
+    {
+      "layer": "molecules",
+      "name": "ProofNote",
+      "state": "fifth-button--dark",
+      "rel": "molecules/ProofNote/fifth-button--dark.html",
+      "hash": "d91ff954dd75ba01",
+      "bytes": 679
+    },
+    {
+      "layer": "molecules",
+      "name": "ProofNote",
+      "state": "fifth-button",
+      "rel": "molecules/ProofNote/fifth-button.html",
+      "hash": "cd0f277488d5e38b",
+      "bytes": 667
+    },
+    {
+      "layer": "molecules",
+      "name": "ProofNote",
+      "state": "invented-gray--dark",
+      "rel": "molecules/ProofNote/invented-gray--dark.html",
+      "hash": "d64e2d10600b20db",
+      "bytes": 862
+    },
+    {
+      "layer": "molecules",
+      "name": "ProofNote",
+      "state": "invented-gray",
+      "rel": "molecules/ProofNote/invented-gray.html",
+      "hash": "1c2a7701c6b9e50f",
+      "bytes": 847
+    },
+    {
+      "layer": "molecules",
+      "name": "ProofNote",
+      "state": "radius--dark",
+      "rel": "molecules/ProofNote/radius--dark.html",
+      "hash": "ad1dec53386d0d10",
+      "bytes": 687
+    },
+    {
+      "layer": "molecules",
+      "name": "ProofNote",
+      "state": "radius",
+      "rel": "molecules/ProofNote/radius.html",
+      "hash": "1ec927feed8b3325",
+      "bytes": 675
+    },
+    {
+      "layer": "molecules",
+      "name": "ReleaseEntry",
+      "state": "default--dark",
+      "rel": "molecules/ReleaseEntry/default--dark.html",
+      "hash": "d161950e2f88ee87",
+      "bytes": 3939
+    },
+    {
+      "layer": "molecules",
+      "name": "ReleaseEntry",
+      "state": "default",
+      "rel": "molecules/ReleaseEntry/default.html",
+      "hash": "aaec383c7fd3dabb",
+      "bytes": 3887
+    },
+    {
+      "layer": "molecules",
+      "name": "ReleaseEntry",
+      "state": "older--dark",
+      "rel": "molecules/ReleaseEntry/older--dark.html",
+      "hash": "98605f32c5038057",
+      "bytes": 11604
+    },
+    {
+      "layer": "molecules",
+      "name": "ReleaseEntry",
+      "state": "older",
+      "rel": "molecules/ReleaseEntry/older.html",
+      "hash": "df82a325cc4cf7ab",
+      "bytes": 11433
+    },
+    {
+      "layer": "molecules",
+      "name": "ScanBox",
+      "state": "default--dark",
+      "rel": "molecules/ScanBox/default--dark.html",
+      "hash": "a03a93adeff3b497",
+      "bytes": 761
+    },
+    {
+      "layer": "molecules",
+      "name": "ScanBox",
+      "state": "default",
+      "rel": "molecules/ScanBox/default.html",
+      "hash": "a42e90fc60e709eb",
+      "bytes": 752
+    },
+    {
+      "layer": "molecules",
+      "name": "SectionStrip",
+      "state": "default--dark",
+      "rel": "molecules/SectionStrip/default--dark.html",
+      "hash": "4cbc862fc47cdac5",
+      "bytes": 5453
+    },
+    {
+      "layer": "molecules",
+      "name": "SectionStrip",
+      "state": "default",
+      "rel": "molecules/SectionStrip/default.html",
+      "hash": "63d210796b62022c",
+      "bytes": 5390
+    },
+    {
+      "layer": "molecules",
+      "name": "StatGrid",
+      "state": "default--dark",
+      "rel": "molecules/StatGrid/default--dark.html",
+      "hash": "6c78c6aad3c3d7ec",
+      "bytes": 3433
+    },
+    {
+      "layer": "molecules",
+      "name": "StatGrid",
+      "state": "default",
+      "rel": "molecules/StatGrid/default.html",
+      "hash": "cee66404207bd280",
+      "bytes": 3379
+    },
+    {
+      "layer": "molecules",
+      "name": "StatGrid",
+      "state": "narrow--dark",
+      "rel": "molecules/StatGrid/narrow--dark.html",
+      "hash": "568c6f6ef885d1dd",
+      "bytes": 3437
+    },
+    {
+      "layer": "molecules",
+      "name": "StatGrid",
+      "state": "narrow",
+      "rel": "molecules/StatGrid/narrow.html",
+      "hash": "da779f1f1ce15fd7",
+      "bytes": 3383
+    },
+    {
+      "layer": "molecules",
+      "name": "StepCard",
+      "state": "default--dark",
+      "rel": "molecules/StepCard/default--dark.html",
+      "hash": "61e05f86ac4bd5ac",
+      "bytes": 1238
+    },
+    {
+      "layer": "molecules",
+      "name": "StepCard",
+      "state": "default",
+      "rel": "molecules/StepCard/default.html",
+      "hash": "4784f7bb9f1e43f1",
+      "bytes": 1220
+    },
+    {
+      "layer": "molecules",
+      "name": "StepCard",
+      "state": "rail-not-reached--dark",
+      "rel": "molecules/StepCard/rail-not-reached--dark.html",
+      "hash": "22e16b2e010f7a13",
+      "bytes": 1280
+    },
+    {
+      "layer": "molecules",
+      "name": "StepCard",
+      "state": "rail-not-reached",
+      "rel": "molecules/StepCard/rail-not-reached.html",
+      "hash": "dc5e139ed306cbd7",
+      "bytes": 1262
+    },
+    {
+      "layer": "molecules",
+      "name": "StepCard",
+      "state": "step-2-scaffold--dark",
+      "rel": "molecules/StepCard/step-2-scaffold--dark.html",
+      "hash": "7d7daf079e5aad71",
+      "bytes": 1225
+    },
+    {
+      "layer": "molecules",
+      "name": "StepCard",
+      "state": "step-2-scaffold",
+      "rel": "molecules/StepCard/step-2-scaffold.html",
+      "hash": "91b325a16f78a3fe",
+      "bytes": 1207
+    },
+    {
+      "layer": "molecules",
+      "name": "StepCard",
+      "state": "step-3-build--dark",
+      "rel": "molecules/StepCard/step-3-build--dark.html",
+      "hash": "ffed545a41308b7e",
+      "bytes": 1277
+    },
+    {
+      "layer": "molecules",
+      "name": "StepCard",
+      "state": "step-3-build",
+      "rel": "molecules/StepCard/step-3-build.html",
+      "hash": "6852a06bf45c2f85",
+      "bytes": 1259
+    },
+    {
+      "layer": "molecules",
+      "name": "StepCard",
+      "state": "step-4-status--dark",
+      "rel": "molecules/StepCard/step-4-status--dark.html",
+      "hash": "962ed8984f5ceab2",
+      "bytes": 1272
+    },
+    {
+      "layer": "molecules",
+      "name": "StepCard",
+      "state": "step-4-status",
+      "rel": "molecules/StepCard/step-4-status.html",
+      "hash": "d28874a878b3defe",
+      "bytes": 1254
+    },
+    {
+      "layer": "molecules",
+      "name": "ThreadRow",
+      "state": "agent--dark",
+      "rel": "molecules/ThreadRow/agent--dark.html",
+      "hash": "95442bef33487c8a",
+      "bytes": 1308
+    },
+    {
+      "layer": "molecules",
+      "name": "ThreadRow",
+      "state": "agent",
+      "rel": "molecules/ThreadRow/agent.html",
+      "hash": "c3f2d3b7e64c7c04",
+      "bytes": 1293
+    },
+    {
+      "layer": "molecules",
+      "name": "ThreadRow",
+      "state": "default--dark",
+      "rel": "molecules/ThreadRow/default--dark.html",
+      "hash": "695ee3e039f26152",
+      "bytes": 992
+    },
+    {
+      "layer": "molecules",
+      "name": "ThreadRow",
+      "state": "default",
+      "rel": "molecules/ThreadRow/default.html",
+      "hash": "ce915efac38cc80c",
+      "bytes": 983
+    },
+    {
+      "layer": "molecules",
+      "name": "TouchList",
+      "state": "reads--dark",
+      "rel": "molecules/TouchList/reads--dark.html",
+      "hash": "fea6aa657469d8b3",
+      "bytes": 1370
+    },
+    {
+      "layer": "molecules",
+      "name": "TouchList",
+      "state": "reads",
+      "rel": "molecules/TouchList/reads.html",
+      "hash": "8dc233b3cbaa0ce8",
+      "bytes": 1346
+    },
+    {
+      "layer": "molecules",
+      "name": "TouchList",
+      "state": "runs--dark",
+      "rel": "molecules/TouchList/runs--dark.html",
+      "hash": "3a6cc08ec54ef392",
+      "bytes": 1370
+    },
+    {
+      "layer": "molecules",
+      "name": "TouchList",
+      "state": "runs",
+      "rel": "molecules/TouchList/runs.html",
+      "hash": "cf793575c68d1f9b",
+      "bytes": 1346
+    },
+    {
+      "layer": "molecules",
+      "name": "TouchList",
+      "state": "writes--dark",
+      "rel": "molecules/TouchList/writes--dark.html",
+      "hash": "a8fa308b905dd6a3",
+      "bytes": 1520
+    },
+    {
+      "layer": "molecules",
+      "name": "TouchList",
+      "state": "writes",
+      "rel": "molecules/TouchList/writes.html",
+      "hash": "510443f6a49b7999",
+      "bytes": 1493
+    },
+    {
+      "layer": "organisms",
+      "name": "CloseCta",
+      "state": "default--dark",
+      "rel": "organisms/CloseCta/default--dark.html",
+      "hash": "71999946aece8932",
+      "bytes": 3778
+    },
+    {
+      "layer": "organisms",
+      "name": "CloseCta",
+      "state": "default",
+      "rel": "organisms/CloseCta/default.html",
+      "hash": "895a3da3b49de4d8",
+      "bytes": 3748
+    },
+    {
+      "layer": "organisms",
+      "name": "CloseCta",
+      "state": "scroll-start--dark",
+      "rel": "organisms/CloseCta/scroll-start--dark.html",
+      "hash": "cd929e5a122ee16b",
+      "bytes": 3794
+    },
+    {
+      "layer": "organisms",
+      "name": "CloseCta",
+      "state": "scroll-start",
+      "rel": "organisms/CloseCta/scroll-start.html",
+      "hash": "7f8ad6ce32e04001",
+      "bytes": 3764
+    },
+    {
+      "layer": "organisms",
+      "name": "DemoStats",
+      "state": "default--dark",
+      "rel": "organisms/DemoStats/default--dark.html",
+      "hash": "a895281987296e86",
+      "bytes": 6372
+    },
+    {
+      "layer": "organisms",
+      "name": "DemoStats",
+      "state": "default",
+      "rel": "organisms/DemoStats/default.html",
+      "hash": "8ef16191fb386134",
+      "bytes": 6282
+    },
+    {
+      "layer": "organisms",
+      "name": "DesignMdPromo",
+      "state": "default--dark",
+      "rel": "organisms/DesignMdPromo/default--dark.html",
+      "hash": "5f17d585c5898eff",
+      "bytes": 5277
+    },
+    {
+      "layer": "organisms",
+      "name": "DesignMdPromo",
+      "state": "default",
+      "rel": "organisms/DesignMdPromo/default.html",
+      "hash": "e8cfd9789338c691",
+      "bytes": 5202
+    },
+    {
+      "layer": "organisms",
+      "name": "DriftComparison",
+      "state": "drifted--dark",
+      "rel": "organisms/DriftComparison/drifted--dark.html",
+      "hash": "1baafddfe81f4524",
+      "bytes": 11356
+    },
+    {
+      "layer": "organisms",
+      "name": "DriftComparison",
+      "state": "drifted",
+      "rel": "organisms/DriftComparison/drifted.html",
+      "hash": "d92bdee5ee8c4144",
+      "bytes": 11230
+    },
+    {
+      "layer": "organisms",
+      "name": "DriftComparison",
+      "state": "mid-drift--dark",
+      "rel": "organisms/DriftComparison/mid-drift--dark.html",
+      "hash": "d2387cbb1b43824e",
+      "bytes": 11144
+    },
+    {
+      "layer": "organisms",
+      "name": "DriftComparison",
+      "state": "mid-drift",
+      "rel": "organisms/DriftComparison/mid-drift.html",
+      "hash": "b67a503d876932a4",
+      "bytes": 11018
+    },
+    {
+      "layer": "organisms",
+      "name": "DriftComparison",
+      "state": "scroll-start--dark",
+      "rel": "organisms/DriftComparison/scroll-start--dark.html",
+      "hash": "43f95d6a0994f87f",
+      "bytes": 11140
+    },
+    {
+      "layer": "organisms",
+      "name": "DriftComparison",
+      "state": "scroll-start",
+      "rel": "organisms/DriftComparison/scroll-start.html",
+      "hash": "beb4568258b41920",
+      "bytes": 11014
+    },
+    {
+      "layer": "organisms",
+      "name": "EvolveThread",
+      "state": "assembled--dark",
+      "rel": "organisms/EvolveThread/assembled--dark.html",
+      "hash": "40f6319e94498e4a",
+      "bytes": 7490
+    },
+    {
+      "layer": "organisms",
+      "name": "EvolveThread",
+      "state": "assembled",
+      "rel": "organisms/EvolveThread/assembled.html",
+      "hash": "24a63ed6cec21b2d",
+      "bytes": 7417
+    },
+    {
+      "layer": "organisms",
+      "name": "EvolveThread",
+      "state": "scroll-start--dark",
+      "rel": "organisms/EvolveThread/scroll-start--dark.html",
+      "hash": "969d0b2b32d2b993",
+      "bytes": 7275
+    },
+    {
+      "layer": "organisms",
+      "name": "EvolveThread",
+      "state": "scroll-start",
+      "rel": "organisms/EvolveThread/scroll-start.html",
+      "hash": "e84ad5a46ebe709d",
+      "bytes": 7202
+    },
+    {
+      "layer": "organisms",
+      "name": "FaqList",
+      "state": "all-closed--dark",
+      "rel": "organisms/FaqList/all-closed--dark.html",
+      "hash": "06a2a42d7cc4ce62",
+      "bytes": 10469
+    },
+    {
+      "layer": "organisms",
+      "name": "FaqList",
+      "state": "all-closed",
+      "rel": "organisms/FaqList/all-closed.html",
+      "hash": "b986979a78c79010",
+      "bytes": 10370
+    },
+    {
+      "layer": "organisms",
+      "name": "FaqList",
+      "state": "some-open--dark",
+      "rel": "organisms/FaqList/some-open--dark.html",
+      "hash": "8afce94a147193c6",
+      "bytes": 10443
+    },
+    {
+      "layer": "organisms",
+      "name": "FaqList",
+      "state": "some-open",
+      "rel": "organisms/FaqList/some-open.html",
+      "hash": "000e0f51440e9aa2",
+      "bytes": 10344
+    },
+    {
+      "layer": "organisms",
+      "name": "Hero",
+      "state": "default--dark",
+      "rel": "organisms/Hero/default--dark.html",
+      "hash": "b783c01e4a673d72",
+      "bytes": 36377
+    },
+    {
+      "layer": "organisms",
+      "name": "Hero",
+      "state": "default",
+      "rel": "organisms/Hero/default.html",
+      "hash": "6d20b494de9ed503",
+      "bytes": 35916
+    },
+    {
+      "layer": "organisms",
+      "name": "Hero",
+      "state": "headline-alternate--dark",
+      "rel": "organisms/Hero/headline-alternate--dark.html",
+      "hash": "62cae3c45ad8ece8",
+      "bytes": 36295
+    },
+    {
+      "layer": "organisms",
+      "name": "Hero",
+      "state": "headline-alternate",
+      "rel": "organisms/Hero/headline-alternate.html",
+      "hash": "011b5ea11f5a18fd",
+      "bytes": 35837
+    },
+    {
+      "layer": "organisms",
+      "name": "InstallSection",
+      "state": "claude--dark",
+      "rel": "organisms/InstallSection/claude--dark.html",
+      "hash": "cd2157d46ce5d0aa",
+      "bytes": 37378
+    },
+    {
+      "layer": "organisms",
+      "name": "InstallSection",
+      "state": "claude",
+      "rel": "organisms/InstallSection/claude.html",
+      "hash": "8541411aa1a412e4",
+      "bytes": 37156
+    },
+    {
+      "layer": "organisms",
+      "name": "InstallSection",
+      "state": "codex--dark",
+      "rel": "organisms/InstallSection/codex--dark.html",
+      "hash": "625fe6086d023b53",
+      "bytes": 37378
+    },
+    {
+      "layer": "organisms",
+      "name": "InstallSection",
+      "state": "codex",
+      "rel": "organisms/InstallSection/codex.html",
+      "hash": "fb0fd0b0b4362c67",
+      "bytes": 37156
+    },
+    {
+      "layer": "organisms",
+      "name": "InstallSection",
+      "state": "cursor--dark",
+      "rel": "organisms/InstallSection/cursor--dark.html",
+      "hash": "24d69d48b7a6c513",
+      "bytes": 37378
+    },
+    {
+      "layer": "organisms",
+      "name": "InstallSection",
+      "state": "cursor",
+      "rel": "organisms/InstallSection/cursor.html",
+      "hash": "6c9a2c7a49a0ec94",
+      "bytes": 37156
+    },
+    {
+      "layer": "organisms",
+      "name": "InstallSection",
+      "state": "grok--dark",
+      "rel": "organisms/InstallSection/grok--dark.html",
+      "hash": "c0ac71f5bd5eac45",
+      "bytes": 37378
+    },
+    {
+      "layer": "organisms",
+      "name": "InstallSection",
+      "state": "grok",
+      "rel": "organisms/InstallSection/grok.html",
+      "hash": "56f92f86e6de4236",
+      "bytes": 37156
+    },
+    {
+      "layer": "organisms",
+      "name": "InstallSection",
+      "state": "opencode--dark",
+      "rel": "organisms/InstallSection/opencode--dark.html",
+      "hash": "bb446f17479065ac",
+      "bytes": 37378
+    },
+    {
+      "layer": "organisms",
+      "name": "InstallSection",
+      "state": "opencode",
+      "rel": "organisms/InstallSection/opencode.html",
+      "hash": "3c22f7d702713045",
+      "bytes": 37156
+    },
+    {
+      "layer": "organisms",
+      "name": "InstallSection",
+      "state": "pi--dark",
+      "rel": "organisms/InstallSection/pi--dark.html",
+      "hash": "dc850c305e544227",
+      "bytes": 37378
+    },
+    {
+      "layer": "organisms",
+      "name": "InstallSection",
+      "state": "pi",
+      "rel": "organisms/InstallSection/pi.html",
+      "hash": "384fc3be9ac1c4f4",
+      "bytes": 37156
+    },
+    {
+      "layer": "organisms",
+      "name": "InstallSection",
+      "state": "scan-box--dark",
+      "rel": "organisms/InstallSection/scan-box--dark.html",
+      "hash": "c3ab237474d2b566",
+      "bytes": 38139
+    },
+    {
+      "layer": "organisms",
+      "name": "InstallSection",
+      "state": "scan-box",
+      "rel": "organisms/InstallSection/scan-box.html",
+      "hash": "02812ed51fbb80d0",
+      "bytes": 37908
+    },
+    {
+      "layer": "organisms",
+      "name": "LayerStack",
+      "state": "resting--dark",
+      "rel": "organisms/LayerStack/resting--dark.html",
+      "hash": "9f8b5b77aa73d595",
+      "bytes": 9766
+    },
+    {
+      "layer": "organisms",
+      "name": "LayerStack",
+      "state": "resting",
+      "rel": "organisms/LayerStack/resting.html",
+      "hash": "331dee170c13738f",
+      "bytes": 9640
+    },
+    {
+      "layer": "organisms",
+      "name": "LayerStack",
+      "state": "scroll-start--dark",
+      "rel": "organisms/LayerStack/scroll-start--dark.html",
+      "hash": "4e5775188b018b34",
+      "bytes": 9551
+    },
+    {
+      "layer": "organisms",
+      "name": "LayerStack",
+      "state": "scroll-start",
+      "rel": "organisms/LayerStack/scroll-start.html",
+      "hash": "73ed6bf56df4f655",
+      "bytes": 9425
+    },
+    {
+      "layer": "organisms",
+      "name": "LayerStack",
+      "state": "separated--dark",
+      "rel": "organisms/LayerStack/separated--dark.html",
+      "hash": "0c2aa8d1e211e098",
+      "bytes": 9551
+    },
+    {
+      "layer": "organisms",
+      "name": "LayerStack",
+      "state": "separated",
+      "rel": "organisms/LayerStack/separated.html",
+      "hash": "100aeb1834462b66",
+      "bytes": 9425
+    },
+    {
+      "layer": "organisms",
+      "name": "PrinciplesGrid",
+      "state": "default--dark",
+      "rel": "organisms/PrinciplesGrid/default--dark.html",
+      "hash": "be0a24c8691b9b9c",
+      "bytes": 3434
+    },
+    {
+      "layer": "organisms",
+      "name": "PrinciplesGrid",
+      "state": "default",
+      "rel": "organisms/PrinciplesGrid/default.html",
+      "hash": "486876c36e65df83",
+      "bytes": 3389
+    },
+    {
+      "layer": "organisms",
+      "name": "ProofSlider",
+      "state": "split-0--dark",
+      "rel": "organisms/ProofSlider/split-0--dark.html",
+      "hash": "6df5194d85527caa",
+      "bytes": 13480
+    },
+    {
+      "layer": "organisms",
+      "name": "ProofSlider",
+      "state": "split-0",
+      "rel": "organisms/ProofSlider/split-0.html",
+      "hash": "cb80adc845c1475d",
+      "bytes": 13298
+    },
+    {
+      "layer": "organisms",
+      "name": "ProofSlider",
+      "state": "split-100--dark",
+      "rel": "organisms/ProofSlider/split-100--dark.html",
+      "hash": "35db489d31449dc6",
+      "bytes": 13484
+    },
+    {
+      "layer": "organisms",
+      "name": "ProofSlider",
+      "state": "split-100",
+      "rel": "organisms/ProofSlider/split-100.html",
+      "hash": "a77c91305a6b85d3",
+      "bytes": 13302
+    },
+    {
+      "layer": "organisms",
+      "name": "ProofSlider",
+      "state": "split-50--dark",
+      "rel": "organisms/ProofSlider/split-50--dark.html",
+      "hash": "6def913f5e3d898f",
+      "bytes": 13482
+    },
+    {
+      "layer": "organisms",
+      "name": "ProofSlider",
+      "state": "split-50",
+      "rel": "organisms/ProofSlider/split-50.html",
+      "hash": "bc8d6d07662ce774",
+      "bytes": 13300
+    },
+    {
+      "layer": "organisms",
+      "name": "SiteFooter",
+      "state": "default--dark",
+      "rel": "organisms/SiteFooter/default--dark.html",
+      "hash": "0fafdf4f8915ef8a",
+      "bytes": 2129
+    },
+    {
+      "layer": "organisms",
+      "name": "SiteFooter",
+      "state": "default",
+      "rel": "organisms/SiteFooter/default.html",
+      "hash": "89c78a594cf7619f",
+      "bytes": 2108
+    },
+    {
+      "layer": "organisms",
+      "name": "SiteHeader",
+      "state": "default--dark",
+      "rel": "organisms/SiteHeader/default--dark.html",
+      "hash": "3274cb19345c8757",
+      "bytes": 12328
+    },
+    {
+      "layer": "organisms",
+      "name": "SiteHeader",
+      "state": "default",
+      "rel": "organisms/SiteHeader/default.html",
+      "hash": "05fd56f48d428a25",
+      "bytes": 12179
+    },
+    {
+      "layer": "organisms",
+      "name": "SocialCard",
+      "state": "default--dark",
+      "rel": "organisms/SocialCard/default--dark.html",
+      "hash": "4a6fdff0ca61665a",
+      "bytes": 13306
+    },
+    {
+      "layer": "organisms",
+      "name": "SocialCard",
+      "state": "default",
+      "rel": "organisms/SocialCard/default.html",
+      "hash": "4a6fdff0ca61665a",
+      "bytes": 13306
+    },
+    {
+      "layer": "organisms",
+      "name": "StepsTimeline",
+      "state": "complete--dark",
+      "rel": "organisms/StepsTimeline/complete--dark.html",
+      "hash": "356510bc969a03f4",
+      "bytes": 21402
+    },
+    {
+      "layer": "organisms",
+      "name": "StepsTimeline",
+      "state": "complete",
+      "rel": "organisms/StepsTimeline/complete.html",
+      "hash": "672e886096cd3644",
+      "bytes": 21323
+    },
+    {
+      "layer": "organisms",
+      "name": "StepsTimeline",
+      "state": "halfway--dark",
+      "rel": "organisms/StepsTimeline/halfway--dark.html",
+      "hash": "1816d157a3f8cb56",
+      "bytes": 21175
+    },
+    {
+      "layer": "organisms",
+      "name": "StepsTimeline",
+      "state": "halfway",
+      "rel": "organisms/StepsTimeline/halfway.html",
+      "hash": "e0098fa11a61a794",
+      "bytes": 21096
+    },
+    {
+      "layer": "organisms",
+      "name": "StepsTimeline",
+      "state": "scroll-start--dark",
+      "rel": "organisms/StepsTimeline/scroll-start--dark.html",
+      "hash": "785ee4bf5cf08a47",
+      "bytes": 21173
+    },
+    {
+      "layer": "organisms",
+      "name": "StepsTimeline",
+      "state": "scroll-start",
+      "rel": "organisms/StepsTimeline/scroll-start.html",
+      "hash": "3afecf8d809f49ca",
+      "bytes": 21094
+    },
+    {
+      "layer": "screens",
+      "name": "Changelog",
+      "state": "default--dark",
+      "rel": "screens/Changelog/default--dark.html",
+      "hash": "f0bdd4e600ea7332",
+      "bytes": 81200
+    },
+    {
+      "layer": "screens",
+      "name": "Changelog",
+      "state": "default",
+      "rel": "screens/Changelog/default.html",
+      "hash": "becb0be7fdbefafb",
+      "bytes": 80110
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "copied--dark",
+      "rel": "screens/Home/copied--dark.html",
+      "hash": "5f5e45ea5ed8fa8e",
+      "bytes": 168972
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "copied",
+      "rel": "screens/Home/copied.html",
+      "hash": "7d9f3fce55c67511",
+      "bytes": 167388
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "default--dark",
+      "rel": "screens/Home/default--dark.html",
+      "hash": "bec6eb12d4832bbd",
+      "bytes": 168948
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "default",
+      "rel": "screens/Home/default.html",
+      "hash": "4ce376daa3aa1539",
+      "bytes": 167364
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "faq-open--dark",
+      "rel": "screens/Home/faq-open--dark.html",
+      "hash": "2048d7f56cadf8cd",
+      "bytes": 168935
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "faq-open",
+      "rel": "screens/Home/faq-open.html",
+      "hash": "638b309c7de16391",
+      "bytes": 167351
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "headline-alternate--dark",
+      "rel": "screens/Home/headline-alternate--dark.html",
+      "hash": "915c355f8e673c61",
+      "bytes": 168866
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "headline-alternate",
+      "rel": "screens/Home/headline-alternate.html",
+      "hash": "a6b5abb244af6cc1",
+      "bytes": 167285
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "install-claude--dark",
+      "rel": "screens/Home/install-claude--dark.html",
+      "hash": "bec6eb12d4832bbd",
+      "bytes": 168948
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "install-claude",
+      "rel": "screens/Home/install-claude.html",
+      "hash": "4ce376daa3aa1539",
+      "bytes": 167364
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "install-codex--dark",
+      "rel": "screens/Home/install-codex--dark.html",
+      "hash": "dc6b2aa5d2f86206",
+      "bytes": 168948
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "install-codex",
+      "rel": "screens/Home/install-codex.html",
+      "hash": "464973f834068b97",
+      "bytes": 167364
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "install-cursor--dark",
+      "rel": "screens/Home/install-cursor--dark.html",
+      "hash": "3015e26f74ecee88",
+      "bytes": 168948
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "install-cursor",
+      "rel": "screens/Home/install-cursor.html",
+      "hash": "8233175529c7c249",
+      "bytes": 167364
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "install-grok--dark",
+      "rel": "screens/Home/install-grok--dark.html",
+      "hash": "203741b54eb837bf",
+      "bytes": 168948
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "install-grok",
+      "rel": "screens/Home/install-grok.html",
+      "hash": "32e916e93cbbf1de",
+      "bytes": 167364
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "install-opencode--dark",
+      "rel": "screens/Home/install-opencode--dark.html",
+      "hash": "958976fbeaeda7d5",
+      "bytes": 168948
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "install-opencode",
+      "rel": "screens/Home/install-opencode.html",
+      "hash": "556807e1a88292d9",
+      "bytes": 167364
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "install-pi--dark",
+      "rel": "screens/Home/install-pi--dark.html",
+      "hash": "5ed537066a616417",
+      "bytes": 168948
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "install-pi",
+      "rel": "screens/Home/install-pi.html",
+      "hash": "2ac7de8c67855ecd",
+      "bytes": 167364
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "phone--dark",
+      "rel": "screens/Home/phone--dark.html",
+      "hash": "bec6eb12d4832bbd",
+      "bytes": 168948
+    },
+    {
+      "layer": "screens",
+      "name": "Home",
+      "state": "phone",
+      "rel": "screens/Home/phone.html",
+      "hash": "4ce376daa3aa1539",
+      "bytes": 167364
+    },
+    {
+      "layer": "tokens",
+      "name": "Colors",
+      "state": "palette--dark",
+      "rel": "tokens/Colors/palette--dark.html",
+      "hash": "099c3c0ceeb09231",
+      "bytes": 28048
+    },
+    {
+      "layer": "tokens",
+      "name": "Colors",
+      "state": "palette",
+      "rel": "tokens/Colors/palette.html",
+      "hash": "e81261a89d36f486",
+      "bytes": 27751
+    },
+    {
+      "layer": "tokens",
+      "name": "Motion",
+      "state": "tokens--dark",
+      "rel": "tokens/Motion/tokens--dark.html",
+      "hash": "8c9a1f57d12b0d3d",
+      "bytes": 4523
+    },
+    {
+      "layer": "tokens",
+      "name": "Motion",
+      "state": "tokens",
+      "rel": "tokens/Motion/tokens.html",
+      "hash": "a419cb3146ad4e80",
+      "bytes": 4489
+    },
+    {
+      "layer": "tokens",
+      "name": "Spacing",
+      "state": "scale--dark",
+      "rel": "tokens/Spacing/scale--dark.html",
+      "hash": "74d3bc7c4d9db200",
+      "bytes": 11579
+    },
+    {
+      "layer": "tokens",
+      "name": "Spacing",
+      "state": "scale",
+      "rel": "tokens/Spacing/scale.html",
+      "hash": "fec33c86d6b151ba",
+      "bytes": 11382
+    },
+    {
+      "layer": "tokens",
+      "name": "Typography",
+      "state": "scale--dark",
+      "rel": "tokens/Typography/scale--dark.html",
+      "hash": "6e18dc8f32674a12",
+      "bytes": 10701
+    },
+    {
+      "layer": "tokens",
+      "name": "Typography",
+      "state": "scale",
+      "rel": "tokens/Typography/scale.html",
+      "hash": "22e41e6c52f184c8",
+      "bytes": 10545
+    }
+  ],
+  "drifted": [],
+  "missing": [],
+  "extra": [],
+  "deprecatedUsage": [],
+  "uncatalogued": [],
+  "platform": "web-mobile",
+  "goldens": "design/goldens/web-mobile",
+  "medium": "dom+png"
+}

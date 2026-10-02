@@ -1,0 +1,39 @@
+{
+	"version": 1,
+	"status": "complete",
+	"screens": [
+		{
+			"name": "Changelog",
+			"route": "/changelog",
+			"states": [
+				{
+					"name": "default",
+					"undrawn": "No frame draws this page. It was added by evolve from the prose request 'add a changelog page' (design/deltas/2026-10-01-changelog-page/delta.md) and is built in the site's existing design language."
+				},
+				{
+					"name": "dark",
+					"undrawn": "No frame draws this page. The dark theme is the capture's dark pass of the default story, as for Home."
+				}
+			],
+			"composes": ["Logo", "TextLink", "SectionHeading", "ReleaseEntry", "SiteFooter"],
+			"evidence": "Prose request 'add a changelog page'; the landing names the page screens/Changelog (EvolveThread reply) and ChangelogMini draws it in miniature (Landing.dc.html:298-304).",
+			"note": "One route serves web-desktop (1440) and web-mobile (390). The page prints the repository's CHANGELOG.md, read at build time. It does not use SiteHeader, whose links are in-page anchors on Home; the lockup links home instead. Nothing on Home links to it (the footer link was left as it is at the E4 gate)."
+		}
+	],
+	"molecules": [
+		{
+			"name": "ReleaseEntry",
+			"composes": ["VersionPill", "PlateLabel", "InlineCode"],
+			"variants": ["latest: filled pill (the newest release)", "older: outline pill"],
+			"undrawn": "No frame draws a release at full size; ChangelogMini draws the row in miniature (a pill and a line). Added by evolve for the Changelog screen.",
+			"evidence": "ChangelogMini rows (Landing.dc.html:301-303) set the pill rule: newest filled, older outlined. design/deltas/2026-10-01-changelog-page/delta.md.",
+			"note": "One release: the version pill and date in the margin, then each group of changes (Added, Changed, Fixed, Removed) as a plate label over a bulleted list. Backticked runs in a change render as InlineCode."
+		}
+	],
+	"atoms": [
+		{
+			"name": "SectionHeading",
+			"variants": ["section as h1: the same recipe on a page title (the Changelog screen's 'Changelog'; undrawn)"]
+		}
+	]
+}

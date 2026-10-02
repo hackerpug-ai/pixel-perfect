@@ -1,0 +1,3935 @@
+{
+  "mode": "reach",
+  "exit": 0,
+  "vacuous": false,
+  "message": "VersionPill → screens/Changelog/default--dark, screens/Changelog/default, screens/Home/copied--dark, screens/Home/copied, screens/Home/default--dark, screens/Home/default, screens/Home/faq-open--dark, screens/Home/faq-open, screens/Home/headline-alternate--dark, screens/Home/headline-alternate, screens/Home/install-claude--dark, screens/Home/install-claude, screens/Home/install-codex--dark, screens/Home/install-codex, screens/Home/install-cursor--dark, screens/Home/install-cursor, screens/Home/install-grok--dark, screens/Home/install-grok, screens/Home/install-opencode--dark, screens/Home/install-opencode, screens/Home/install-pi--dark, screens/Home/install-pi, screens/Home/phone--dark, screens/Home/phone; PlateLabel → screens/Changelog/default--dark, screens/Changelog/default, screens/Home/copied--dark, screens/Home/copied, screens/Home/default--dark, screens/Home/default, screens/Home/faq-open--dark, screens/Home/faq-open, screens/Home/headline-alternate--dark, screens/Home/headline-alternate, screens/Home/install-claude--dark, screens/Home/install-claude, screens/Home/install-codex--dark, screens/Home/install-codex, screens/Home/install-cursor--dark, screens/Home/install-cursor, screens/Home/install-grok--dark, screens/Home/install-grok, screens/Home/install-opencode--dark, screens/Home/install-opencode, screens/Home/install-pi--dark, screens/Home/install-pi, screens/Home/phone--dark, screens/Home/phone; InlineCode → screens/Changelog/default--dark, screens/Changelog/default, screens/Home/copied--dark, screens/Home/copied, screens/Home/default--dark, screens/Home/default, screens/Home/faq-open--dark, screens/Home/faq-open, screens/Home/headline-alternate--dark, screens/Home/headline-alternate, screens/Home/install-claude--dark, screens/Home/install-claude, screens/Home/install-codex--dark, screens/Home/install-codex, screens/Home/install-cursor--dark, screens/Home/install-cursor, screens/Home/install-grok--dark, screens/Home/install-grok, screens/Home/install-opencode--dark, screens/Home/install-opencode, screens/Home/install-pi--dark, screens/Home/install-pi, screens/Home/phone--dark, screens/Home/phone; Logo → screens/Changelog/default--dark, screens/Changelog/default, screens/Home/copied--dark, screens/Home/copied, screens/Home/default--dark, screens/Home/default, screens/Home/faq-open--dark, screens/Home/faq-open, screens/Home/headline-alternate--dark, screens/Home/headline-alternate, screens/Home/install-claude--dark, screens/Home/install-claude, screens/Home/install-codex--dark, screens/Home/install-codex, screens/Home/install-cursor--dark, screens/Home/install-cursor, screens/Home/install-grok--dark, screens/Home/install-grok, screens/Home/install-opencode--dark, screens/Home/install-opencode, screens/Home/install-pi--dark, screens/Home/install-pi, screens/Home/phone--dark, screens/Home/phone; TextLink → screens/Changelog/default--dark, screens/Changelog/default, screens/Home/copied--dark, screens/Home/copied, screens/Home/default--dark, screens/Home/default, screens/Home/faq-open--dark, screens/Home/faq-open, screens/Home/headline-alternate--dark, screens/Home/headline-alternate, screens/Home/install-claude--dark, screens/Home/install-claude, screens/Home/install-codex--dark, screens/Home/install-codex, screens/Home/install-cursor--dark, screens/Home/install-cursor, screens/Home/install-grok--dark, screens/Home/install-grok, screens/Home/install-opencode--dark, screens/Home/install-opencode, screens/Home/install-pi--dark, screens/Home/install-pi, screens/Home/phone--dark, screens/Home/phone; SectionHeading → screens/Changelog/default--dark, screens/Changelog/default, screens/Home/copied--dark, screens/Home/copied, screens/Home/default--dark, screens/Home/default, screens/Home/faq-open--dark, screens/Home/faq-open, screens/Home/headline-alternate--dark, screens/Home/headline-alternate, screens/Home/install-claude--dark, screens/Home/install-claude, screens/Home/install-codex--dark, screens/Home/install-codex, screens/Home/install-cursor--dark, screens/Home/install-cursor, screens/Home/install-grok--dark, screens/Home/install-grok, screens/Home/install-opencode--dark, screens/Home/install-opencode, screens/Home/install-pi--dark, screens/Home/install-pi, screens/Home/phone--dark, screens/Home/phone; SiteFooter → screens/Changelog/default--dark, screens/Changelog/default, screens/Home/copied--dark, screens/Home/copied, screens/Home/default--dark, screens/Home/default, screens/Home/faq-open--dark, screens/Home/faq-open, screens/Home/headline-alternate--dark, screens/Home/headline-alternate, screens/Home/install-claude--dark, screens/Home/install-claude, screens/Home/install-codex--dark, screens/Home/install-codex, screens/Home/install-cursor--dark, screens/Home/install-cursor, screens/Home/install-grok--dark, screens/Home/install-grok, screens/Home/install-opencode--dark, screens/Home/install-opencode, screens/Home/install-pi--dark, screens/Home/install-pi, screens/Home/phone--dark, screens/Home/phone; ReleaseEntry → screens/Changelog/default--dark, screens/Changelog/default",
+  "results": [
+    {
+      "name": "VersionPill",
+      "reaches": [
+        {
+          "key": "screens/Changelog/default--dark",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Changelog/default",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/copied--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied--dark"
+        },
+        {
+          "key": "screens/Home/copied",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied"
+        },
+        {
+          "key": "screens/Home/default--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Home/default",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/faq-open--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open--dark"
+        },
+        {
+          "key": "screens/Home/faq-open",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open"
+        },
+        {
+          "key": "screens/Home/headline-alternate--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate--dark"
+        },
+        {
+          "key": "screens/Home/headline-alternate",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate"
+        },
+        {
+          "key": "screens/Home/install-claude--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude--dark"
+        },
+        {
+          "key": "screens/Home/install-claude",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude"
+        },
+        {
+          "key": "screens/Home/install-codex--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex--dark"
+        },
+        {
+          "key": "screens/Home/install-codex",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex"
+        },
+        {
+          "key": "screens/Home/install-cursor--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor--dark"
+        },
+        {
+          "key": "screens/Home/install-cursor",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor"
+        },
+        {
+          "key": "screens/Home/install-grok--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok--dark"
+        },
+        {
+          "key": "screens/Home/install-grok",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok"
+        },
+        {
+          "key": "screens/Home/install-opencode--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode--dark"
+        },
+        {
+          "key": "screens/Home/install-opencode",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode"
+        },
+        {
+          "key": "screens/Home/install-pi--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi--dark"
+        },
+        {
+          "key": "screens/Home/install-pi",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi"
+        },
+        {
+          "key": "screens/Home/phone--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone--dark"
+        },
+        {
+          "key": "screens/Home/phone",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone"
+        }
+      ],
+      "moved": [
+        {
+          "key": "atoms/VersionPill/default--dark",
+          "layer": "atoms",
+          "name": "VersionPill",
+          "state": "default--dark"
+        },
+        {
+          "key": "atoms/VersionPill/default",
+          "layer": "atoms",
+          "name": "VersionPill",
+          "state": "default"
+        },
+        {
+          "key": "atoms/VersionPill/outline--dark",
+          "layer": "atoms",
+          "name": "VersionPill",
+          "state": "outline--dark"
+        },
+        {
+          "key": "atoms/VersionPill/outline",
+          "layer": "atoms",
+          "name": "VersionPill",
+          "state": "outline"
+        },
+        {
+          "key": "molecules/ChangelogMini/default--dark",
+          "layer": "molecules",
+          "name": "ChangelogMini",
+          "state": "default--dark"
+        },
+        {
+          "key": "molecules/ChangelogMini/default",
+          "layer": "molecules",
+          "name": "ChangelogMini",
+          "state": "default"
+        },
+        {
+          "key": "molecules/ChangelogMini/scattered--dark",
+          "layer": "molecules",
+          "name": "ChangelogMini",
+          "state": "scattered--dark"
+        },
+        {
+          "key": "molecules/ChangelogMini/scattered",
+          "layer": "molecules",
+          "name": "ChangelogMini",
+          "state": "scattered"
+        },
+        {
+          "key": "molecules/ReleaseEntry/default--dark",
+          "layer": "molecules",
+          "name": "ReleaseEntry",
+          "state": "default--dark"
+        },
+        {
+          "key": "molecules/ReleaseEntry/default",
+          "layer": "molecules",
+          "name": "ReleaseEntry",
+          "state": "default"
+        },
+        {
+          "key": "molecules/ReleaseEntry/older--dark",
+          "layer": "molecules",
+          "name": "ReleaseEntry",
+          "state": "older--dark"
+        },
+        {
+          "key": "molecules/ReleaseEntry/older",
+          "layer": "molecules",
+          "name": "ReleaseEntry",
+          "state": "older"
+        },
+        {
+          "key": "organisms/EvolveThread/assembled--dark",
+          "layer": "organisms",
+          "name": "EvolveThread",
+          "state": "assembled--dark"
+        },
+        {
+          "key": "organisms/EvolveThread/assembled",
+          "layer": "organisms",
+          "name": "EvolveThread",
+          "state": "assembled"
+        },
+        {
+          "key": "organisms/EvolveThread/scroll-start--dark",
+          "layer": "organisms",
+          "name": "EvolveThread",
+          "state": "scroll-start--dark"
+        },
+        {
+          "key": "organisms/EvolveThread/scroll-start",
+          "layer": "organisms",
+          "name": "EvolveThread",
+          "state": "scroll-start"
+        },
+        {
+          "key": "screens/Changelog/default--dark",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Changelog/default",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/copied--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied--dark"
+        },
+        {
+          "key": "screens/Home/copied",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied"
+        },
+        {
+          "key": "screens/Home/default--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Home/default",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/faq-open--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open--dark"
+        },
+        {
+          "key": "screens/Home/faq-open",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open"
+        },
+        {
+          "key": "screens/Home/headline-alternate--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate--dark"
+        },
+        {
+          "key": "screens/Home/headline-alternate",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate"
+        },
+        {
+          "key": "screens/Home/install-claude--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude--dark"
+        },
+        {
+          "key": "screens/Home/install-claude",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude"
+        },
+        {
+          "key": "screens/Home/install-codex--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex--dark"
+        },
+        {
+          "key": "screens/Home/install-codex",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex"
+        },
+        {
+          "key": "screens/Home/install-cursor--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor--dark"
+        },
+        {
+          "key": "screens/Home/install-cursor",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor"
+        },
+        {
+          "key": "screens/Home/install-grok--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok--dark"
+        },
+        {
+          "key": "screens/Home/install-grok",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok"
+        },
+        {
+          "key": "screens/Home/install-opencode--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode--dark"
+        },
+        {
+          "key": "screens/Home/install-opencode",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode"
+        },
+        {
+          "key": "screens/Home/install-pi--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi--dark"
+        },
+        {
+          "key": "screens/Home/install-pi",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi"
+        },
+        {
+          "key": "screens/Home/phone--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone--dark"
+        },
+        {
+          "key": "screens/Home/phone",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone"
+        }
+      ],
+      "exit": 0,
+      "message": "Perturbed \"VersionPill\": 40 stories moved"
+    },
+    {
+      "name": "PlateLabel",
+      "reaches": [
+        {
+          "key": "screens/Changelog/default--dark",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Changelog/default",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/copied--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied--dark"
+        },
+        {
+          "key": "screens/Home/copied",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied"
+        },
+        {
+          "key": "screens/Home/default--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Home/default",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/faq-open--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open--dark"
+        },
+        {
+          "key": "screens/Home/faq-open",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open"
+        },
+        {
+          "key": "screens/Home/headline-alternate--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate--dark"
+        },
+        {
+          "key": "screens/Home/headline-alternate",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate"
+        },
+        {
+          "key": "screens/Home/install-claude--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude--dark"
+        },
+        {
+          "key": "screens/Home/install-claude",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude"
+        },
+        {
+          "key": "screens/Home/install-codex--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex--dark"
+        },
+        {
+          "key": "screens/Home/install-codex",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex"
+        },
+        {
+          "key": "screens/Home/install-cursor--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor--dark"
+        },
+        {
+          "key": "screens/Home/install-cursor",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor"
+        },
+        {
+          "key": "screens/Home/install-grok--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok--dark"
+        },
+        {
+          "key": "screens/Home/install-grok",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok"
+        },
+        {
+          "key": "screens/Home/install-opencode--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode--dark"
+        },
+        {
+          "key": "screens/Home/install-opencode",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode"
+        },
+        {
+          "key": "screens/Home/install-pi--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi--dark"
+        },
+        {
+          "key": "screens/Home/install-pi",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi"
+        },
+        {
+          "key": "screens/Home/phone--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone--dark"
+        },
+        {
+          "key": "screens/Home/phone",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone"
+        }
+      ],
+      "moved": [
+        {
+          "key": "atoms/PlateLabel/approved--dark",
+          "layer": "atoms",
+          "name": "PlateLabel",
+          "state": "approved--dark"
+        },
+        {
+          "key": "atoms/PlateLabel/approved",
+          "layer": "atoms",
+          "name": "PlateLabel",
+          "state": "approved"
+        },
+        {
+          "key": "atoms/PlateLabel/default--dark",
+          "layer": "atoms",
+          "name": "PlateLabel",
+          "state": "default--dark"
+        },
+        {
+          "key": "atoms/PlateLabel/default",
+          "layer": "atoms",
+          "name": "PlateLabel",
+          "state": "default"
+        },
+        {
+          "key": "atoms/PlateLabel/drifted--dark",
+          "layer": "atoms",
+          "name": "PlateLabel",
+          "state": "drifted--dark"
+        },
+        {
+          "key": "atoms/PlateLabel/drifted",
+          "layer": "atoms",
+          "name": "PlateLabel",
+          "state": "drifted"
+        },
+        {
+          "key": "atoms/PlateLabel/on-code--dark",
+          "layer": "atoms",
+          "name": "PlateLabel",
+          "state": "on-code--dark"
+        },
+        {
+          "key": "atoms/PlateLabel/on-code",
+          "layer": "atoms",
+          "name": "PlateLabel",
+          "state": "on-code"
+        },
+        {
+          "key": "atoms/PlateLabel/step--dark",
+          "layer": "atoms",
+          "name": "PlateLabel",
+          "state": "step--dark"
+        },
+        {
+          "key": "atoms/PlateLabel/step",
+          "layer": "atoms",
+          "name": "PlateLabel",
+          "state": "step"
+        },
+        {
+          "key": "molecules/CodePanel/status--dark",
+          "layer": "molecules",
+          "name": "CodePanel",
+          "state": "status--dark"
+        },
+        {
+          "key": "molecules/CodePanel/status",
+          "layer": "molecules",
+          "name": "CodePanel",
+          "state": "status"
+        },
+        {
+          "key": "molecules/CodePanel/terminal--dark",
+          "layer": "molecules",
+          "name": "CodePanel",
+          "state": "terminal--dark"
+        },
+        {
+          "key": "molecules/CodePanel/terminal",
+          "layer": "molecules",
+          "name": "CodePanel",
+          "state": "terminal"
+        },
+        {
+          "key": "molecules/CodePanel/yaml--dark",
+          "layer": "molecules",
+          "name": "CodePanel",
+          "state": "yaml--dark"
+        },
+        {
+          "key": "molecules/CodePanel/yaml",
+          "layer": "molecules",
+          "name": "CodePanel",
+          "state": "yaml"
+        },
+        {
+          "key": "molecules/DesignMdCard/default--dark",
+          "layer": "molecules",
+          "name": "DesignMdCard",
+          "state": "default--dark"
+        },
+        {
+          "key": "molecules/DesignMdCard/default",
+          "layer": "molecules",
+          "name": "DesignMdCard",
+          "state": "default"
+        },
+        {
+          "key": "molecules/FigureCaption/example--dark",
+          "layer": "molecules",
+          "name": "FigureCaption",
+          "state": "example--dark"
+        },
+        {
+          "key": "molecules/FigureCaption/example",
+          "layer": "molecules",
+          "name": "FigureCaption",
+          "state": "example"
+        },
+        {
+          "key": "molecules/FigureCaption/fig--dark",
+          "layer": "molecules",
+          "name": "FigureCaption",
+          "state": "fig--dark"
+        },
+        {
+          "key": "molecules/FigureCaption/fig",
+          "layer": "molecules",
+          "name": "FigureCaption",
+          "state": "fig"
+        },
+        {
+          "key": "molecules/FigureCaption/mono--dark",
+          "layer": "molecules",
+          "name": "FigureCaption",
+          "state": "mono--dark"
+        },
+        {
+          "key": "molecules/FigureCaption/mono",
+          "layer": "molecules",
+          "name": "FigureCaption",
+          "state": "mono"
+        },
+        {
+          "key": "molecules/ProofFrame/built-side--dark",
+          "layer": "molecules",
+          "name": "ProofFrame",
+          "state": "built-side--dark"
+        },
+        {
+          "key": "molecules/ProofFrame/built-side",
+          "layer": "molecules",
+          "name": "ProofFrame",
+          "state": "built-side"
+        },
+        {
+          "key": "molecules/ProofFrame/design-side--dark",
+          "layer": "molecules",
+          "name": "ProofFrame",
+          "state": "design-side--dark"
+        },
+        {
+          "key": "molecules/ProofFrame/design-side",
+          "layer": "molecules",
+          "name": "ProofFrame",
+          "state": "design-side"
+        },
+        {
+          "key": "molecules/ProofFrame/static--dark",
+          "layer": "molecules",
+          "name": "ProofFrame",
+          "state": "static--dark"
+        },
+        {
+          "key": "molecules/ProofFrame/static",
+          "layer": "molecules",
+          "name": "ProofFrame",
+          "state": "static"
+        },
+        {
+          "key": "molecules/ProofFrame/with-handle--dark",
+          "layer": "molecules",
+          "name": "ProofFrame",
+          "state": "with-handle--dark"
+        },
+        {
+          "key": "molecules/ProofFrame/with-handle",
+          "layer": "molecules",
+          "name": "ProofFrame",
+          "state": "with-handle"
+        },
+        {
+          "key": "molecules/ReleaseEntry/default--dark",
+          "layer": "molecules",
+          "name": "ReleaseEntry",
+          "state": "default--dark"
+        },
+        {
+          "key": "molecules/ReleaseEntry/default",
+          "layer": "molecules",
+          "name": "ReleaseEntry",
+          "state": "default"
+        },
+        {
+          "key": "molecules/ReleaseEntry/older--dark",
+          "layer": "molecules",
+          "name": "ReleaseEntry",
+          "state": "older--dark"
+        },
+        {
+          "key": "molecules/ReleaseEntry/older",
+          "layer": "molecules",
+          "name": "ReleaseEntry",
+          "state": "older"
+        },
+        {
+          "key": "molecules/ScanBox/default--dark",
+          "layer": "molecules",
+          "name": "ScanBox",
+          "state": "default--dark"
+        },
+        {
+          "key": "molecules/ScanBox/default",
+          "layer": "molecules",
+          "name": "ScanBox",
+          "state": "default"
+        },
+        {
+          "key": "molecules/StepCard/default--dark",
+          "layer": "molecules",
+          "name": "StepCard",
+          "state": "default--dark"
+        },
+        {
+          "key": "molecules/StepCard/default",
+          "layer": "molecules",
+          "name": "StepCard",
+          "state": "default"
+        },
+        {
+          "key": "molecules/StepCard/rail-not-reached--dark",
+          "layer": "molecules",
+          "name": "StepCard",
+          "state": "rail-not-reached--dark"
+        },
+        {
+          "key": "molecules/StepCard/rail-not-reached",
+          "layer": "molecules",
+          "name": "StepCard",
+          "state": "rail-not-reached"
+        },
+        {
+          "key": "molecules/StepCard/step-2-scaffold--dark",
+          "layer": "molecules",
+          "name": "StepCard",
+          "state": "step-2-scaffold--dark"
+        },
+        {
+          "key": "molecules/StepCard/step-2-scaffold",
+          "layer": "molecules",
+          "name": "StepCard",
+          "state": "step-2-scaffold"
+        },
+        {
+          "key": "molecules/StepCard/step-3-build--dark",
+          "layer": "molecules",
+          "name": "StepCard",
+          "state": "step-3-build--dark"
+        },
+        {
+          "key": "molecules/StepCard/step-3-build",
+          "layer": "molecules",
+          "name": "StepCard",
+          "state": "step-3-build"
+        },
+        {
+          "key": "molecules/StepCard/step-4-status--dark",
+          "layer": "molecules",
+          "name": "StepCard",
+          "state": "step-4-status--dark"
+        },
+        {
+          "key": "molecules/StepCard/step-4-status",
+          "layer": "molecules",
+          "name": "StepCard",
+          "state": "step-4-status"
+        },
+        {
+          "key": "molecules/ThreadRow/agent--dark",
+          "layer": "molecules",
+          "name": "ThreadRow",
+          "state": "agent--dark"
+        },
+        {
+          "key": "molecules/ThreadRow/agent",
+          "layer": "molecules",
+          "name": "ThreadRow",
+          "state": "agent"
+        },
+        {
+          "key": "molecules/ThreadRow/default--dark",
+          "layer": "molecules",
+          "name": "ThreadRow",
+          "state": "default--dark"
+        },
+        {
+          "key": "molecules/ThreadRow/default",
+          "layer": "molecules",
+          "name": "ThreadRow",
+          "state": "default"
+        },
+        {
+          "key": "molecules/TouchList/reads--dark",
+          "layer": "molecules",
+          "name": "TouchList",
+          "state": "reads--dark"
+        },
+        {
+          "key": "molecules/TouchList/reads",
+          "layer": "molecules",
+          "name": "TouchList",
+          "state": "reads"
+        },
+        {
+          "key": "molecules/TouchList/runs--dark",
+          "layer": "molecules",
+          "name": "TouchList",
+          "state": "runs--dark"
+        },
+        {
+          "key": "molecules/TouchList/runs",
+          "layer": "molecules",
+          "name": "TouchList",
+          "state": "runs"
+        },
+        {
+          "key": "molecules/TouchList/writes--dark",
+          "layer": "molecules",
+          "name": "TouchList",
+          "state": "writes--dark"
+        },
+        {
+          "key": "molecules/TouchList/writes",
+          "layer": "molecules",
+          "name": "TouchList",
+          "state": "writes"
+        },
+        {
+          "key": "organisms/DemoStats/default--dark",
+          "layer": "organisms",
+          "name": "DemoStats",
+          "state": "default--dark"
+        },
+        {
+          "key": "organisms/DemoStats/default",
+          "layer": "organisms",
+          "name": "DemoStats",
+          "state": "default"
+        },
+        {
+          "key": "organisms/DesignMdPromo/default--dark",
+          "layer": "organisms",
+          "name": "DesignMdPromo",
+          "state": "default--dark"
+        },
+        {
+          "key": "organisms/DesignMdPromo/default",
+          "layer": "organisms",
+          "name": "DesignMdPromo",
+          "state": "default"
+        },
+        {
+          "key": "organisms/DriftComparison/drifted--dark",
+          "layer": "organisms",
+          "name": "DriftComparison",
+          "state": "drifted--dark"
+        },
+        {
+          "key": "organisms/DriftComparison/drifted",
+          "layer": "organisms",
+          "name": "DriftComparison",
+          "state": "drifted"
+        },
+        {
+          "key": "organisms/DriftComparison/mid-drift--dark",
+          "layer": "organisms",
+          "name": "DriftComparison",
+          "state": "mid-drift--dark"
+        },
+        {
+          "key": "organisms/DriftComparison/mid-drift",
+          "layer": "organisms",
+          "name": "DriftComparison",
+          "state": "mid-drift"
+        },
+        {
+          "key": "organisms/DriftComparison/scroll-start--dark",
+          "layer": "organisms",
+          "name": "DriftComparison",
+          "state": "scroll-start--dark"
+        },
+        {
+          "key": "organisms/DriftComparison/scroll-start",
+          "layer": "organisms",
+          "name": "DriftComparison",
+          "state": "scroll-start"
+        },
+        {
+          "key": "organisms/EvolveThread/assembled--dark",
+          "layer": "organisms",
+          "name": "EvolveThread",
+          "state": "assembled--dark"
+        },
+        {
+          "key": "organisms/EvolveThread/assembled",
+          "layer": "organisms",
+          "name": "EvolveThread",
+          "state": "assembled"
+        },
+        {
+          "key": "organisms/EvolveThread/scroll-start--dark",
+          "layer": "organisms",
+          "name": "EvolveThread",
+          "state": "scroll-start--dark"
+        },
+        {
+          "key": "organisms/EvolveThread/scroll-start",
+          "layer": "organisms",
+          "name": "EvolveThread",
+          "state": "scroll-start"
+        },
+        {
+          "key": "organisms/Hero/default--dark",
+          "layer": "organisms",
+          "name": "Hero",
+          "state": "default--dark"
+        },
+        {
+          "key": "organisms/Hero/default",
+          "layer": "organisms",
+          "name": "Hero",
+          "state": "default"
+        },
+        {
+          "key": "organisms/Hero/headline-alternate--dark",
+          "layer": "organisms",
+          "name": "Hero",
+          "state": "headline-alternate--dark"
+        },
+        {
+          "key": "organisms/Hero/headline-alternate",
+          "layer": "organisms",
+          "name": "Hero",
+          "state": "headline-alternate"
+        },
+        {
+          "key": "organisms/InstallSection/claude--dark",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "claude--dark"
+        },
+        {
+          "key": "organisms/InstallSection/claude",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "claude"
+        },
+        {
+          "key": "organisms/InstallSection/codex--dark",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "codex--dark"
+        },
+        {
+          "key": "organisms/InstallSection/codex",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "codex"
+        },
+        {
+          "key": "organisms/InstallSection/cursor--dark",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "cursor--dark"
+        },
+        {
+          "key": "organisms/InstallSection/cursor",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "cursor"
+        },
+        {
+          "key": "organisms/InstallSection/grok--dark",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "grok--dark"
+        },
+        {
+          "key": "organisms/InstallSection/grok",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "grok"
+        },
+        {
+          "key": "organisms/InstallSection/opencode--dark",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "opencode--dark"
+        },
+        {
+          "key": "organisms/InstallSection/opencode",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "opencode"
+        },
+        {
+          "key": "organisms/InstallSection/pi--dark",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "pi--dark"
+        },
+        {
+          "key": "organisms/InstallSection/pi",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "pi"
+        },
+        {
+          "key": "organisms/InstallSection/scan-box--dark",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "scan-box--dark"
+        },
+        {
+          "key": "organisms/InstallSection/scan-box",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "scan-box"
+        },
+        {
+          "key": "organisms/LayerStack/resting--dark",
+          "layer": "organisms",
+          "name": "LayerStack",
+          "state": "resting--dark"
+        },
+        {
+          "key": "organisms/LayerStack/resting",
+          "layer": "organisms",
+          "name": "LayerStack",
+          "state": "resting"
+        },
+        {
+          "key": "organisms/LayerStack/scroll-start--dark",
+          "layer": "organisms",
+          "name": "LayerStack",
+          "state": "scroll-start--dark"
+        },
+        {
+          "key": "organisms/LayerStack/scroll-start",
+          "layer": "organisms",
+          "name": "LayerStack",
+          "state": "scroll-start"
+        },
+        {
+          "key": "organisms/LayerStack/separated--dark",
+          "layer": "organisms",
+          "name": "LayerStack",
+          "state": "separated--dark"
+        },
+        {
+          "key": "organisms/LayerStack/separated",
+          "layer": "organisms",
+          "name": "LayerStack",
+          "state": "separated"
+        },
+        {
+          "key": "organisms/ProofSlider/split-0--dark",
+          "layer": "organisms",
+          "name": "ProofSlider",
+          "state": "split-0--dark"
+        },
+        {
+          "key": "organisms/ProofSlider/split-0",
+          "layer": "organisms",
+          "name": "ProofSlider",
+          "state": "split-0"
+        },
+        {
+          "key": "organisms/ProofSlider/split-100--dark",
+          "layer": "organisms",
+          "name": "ProofSlider",
+          "state": "split-100--dark"
+        },
+        {
+          "key": "organisms/ProofSlider/split-100",
+          "layer": "organisms",
+          "name": "ProofSlider",
+          "state": "split-100"
+        },
+        {
+          "key": "organisms/ProofSlider/split-50--dark",
+          "layer": "organisms",
+          "name": "ProofSlider",
+          "state": "split-50--dark"
+        },
+        {
+          "key": "organisms/ProofSlider/split-50",
+          "layer": "organisms",
+          "name": "ProofSlider",
+          "state": "split-50"
+        },
+        {
+          "key": "organisms/SocialCard/default--dark",
+          "layer": "organisms",
+          "name": "SocialCard",
+          "state": "default--dark"
+        },
+        {
+          "key": "organisms/SocialCard/default",
+          "layer": "organisms",
+          "name": "SocialCard",
+          "state": "default"
+        },
+        {
+          "key": "organisms/StepsTimeline/complete--dark",
+          "layer": "organisms",
+          "name": "StepsTimeline",
+          "state": "complete--dark"
+        },
+        {
+          "key": "organisms/StepsTimeline/complete",
+          "layer": "organisms",
+          "name": "StepsTimeline",
+          "state": "complete"
+        },
+        {
+          "key": "organisms/StepsTimeline/halfway--dark",
+          "layer": "organisms",
+          "name": "StepsTimeline",
+          "state": "halfway--dark"
+        },
+        {
+          "key": "organisms/StepsTimeline/halfway",
+          "layer": "organisms",
+          "name": "StepsTimeline",
+          "state": "halfway"
+        },
+        {
+          "key": "organisms/StepsTimeline/scroll-start--dark",
+          "layer": "organisms",
+          "name": "StepsTimeline",
+          "state": "scroll-start--dark"
+        },
+        {
+          "key": "organisms/StepsTimeline/scroll-start",
+          "layer": "organisms",
+          "name": "StepsTimeline",
+          "state": "scroll-start"
+        },
+        {
+          "key": "screens/Changelog/default--dark",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Changelog/default",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/copied--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied--dark"
+        },
+        {
+          "key": "screens/Home/copied",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied"
+        },
+        {
+          "key": "screens/Home/default--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Home/default",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/faq-open--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open--dark"
+        },
+        {
+          "key": "screens/Home/faq-open",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open"
+        },
+        {
+          "key": "screens/Home/headline-alternate--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate--dark"
+        },
+        {
+          "key": "screens/Home/headline-alternate",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate"
+        },
+        {
+          "key": "screens/Home/install-claude--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude--dark"
+        },
+        {
+          "key": "screens/Home/install-claude",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude"
+        },
+        {
+          "key": "screens/Home/install-codex--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex--dark"
+        },
+        {
+          "key": "screens/Home/install-codex",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex"
+        },
+        {
+          "key": "screens/Home/install-cursor--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor--dark"
+        },
+        {
+          "key": "screens/Home/install-cursor",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor"
+        },
+        {
+          "key": "screens/Home/install-grok--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok--dark"
+        },
+        {
+          "key": "screens/Home/install-grok",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok"
+        },
+        {
+          "key": "screens/Home/install-opencode--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode--dark"
+        },
+        {
+          "key": "screens/Home/install-opencode",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode"
+        },
+        {
+          "key": "screens/Home/install-pi--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi--dark"
+        },
+        {
+          "key": "screens/Home/install-pi",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi"
+        },
+        {
+          "key": "screens/Home/phone--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone--dark"
+        },
+        {
+          "key": "screens/Home/phone",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone"
+        }
+      ],
+      "exit": 0,
+      "message": "Perturbed \"PlateLabel\": 134 stories moved"
+    },
+    {
+      "name": "InlineCode",
+      "reaches": [
+        {
+          "key": "screens/Changelog/default--dark",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Changelog/default",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/copied--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied--dark"
+        },
+        {
+          "key": "screens/Home/copied",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied"
+        },
+        {
+          "key": "screens/Home/default--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Home/default",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/faq-open--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open--dark"
+        },
+        {
+          "key": "screens/Home/faq-open",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open"
+        },
+        {
+          "key": "screens/Home/headline-alternate--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate--dark"
+        },
+        {
+          "key": "screens/Home/headline-alternate",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate"
+        },
+        {
+          "key": "screens/Home/install-claude--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude--dark"
+        },
+        {
+          "key": "screens/Home/install-claude",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude"
+        },
+        {
+          "key": "screens/Home/install-codex--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex--dark"
+        },
+        {
+          "key": "screens/Home/install-codex",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex"
+        },
+        {
+          "key": "screens/Home/install-cursor--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor--dark"
+        },
+        {
+          "key": "screens/Home/install-cursor",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor"
+        },
+        {
+          "key": "screens/Home/install-grok--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok--dark"
+        },
+        {
+          "key": "screens/Home/install-grok",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok"
+        },
+        {
+          "key": "screens/Home/install-opencode--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode--dark"
+        },
+        {
+          "key": "screens/Home/install-opencode",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode"
+        },
+        {
+          "key": "screens/Home/install-pi--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi--dark"
+        },
+        {
+          "key": "screens/Home/install-pi",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi"
+        },
+        {
+          "key": "screens/Home/phone--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone--dark"
+        },
+        {
+          "key": "screens/Home/phone",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone"
+        }
+      ],
+      "moved": [
+        {
+          "key": "atoms/InlineCode/block--dark",
+          "layer": "atoms",
+          "name": "InlineCode",
+          "state": "block--dark"
+        },
+        {
+          "key": "atoms/InlineCode/block",
+          "layer": "atoms",
+          "name": "InlineCode",
+          "state": "block"
+        },
+        {
+          "key": "atoms/InlineCode/command--dark",
+          "layer": "atoms",
+          "name": "InlineCode",
+          "state": "command--dark"
+        },
+        {
+          "key": "atoms/InlineCode/command",
+          "layer": "atoms",
+          "name": "InlineCode",
+          "state": "command"
+        },
+        {
+          "key": "atoms/InlineCode/default--dark",
+          "layer": "atoms",
+          "name": "InlineCode",
+          "state": "default--dark"
+        },
+        {
+          "key": "atoms/InlineCode/default",
+          "layer": "atoms",
+          "name": "InlineCode",
+          "state": "default"
+        },
+        {
+          "key": "atoms/InlineCode/heading--dark",
+          "layer": "atoms",
+          "name": "InlineCode",
+          "state": "heading--dark"
+        },
+        {
+          "key": "atoms/InlineCode/heading",
+          "layer": "atoms",
+          "name": "InlineCode",
+          "state": "heading"
+        },
+        {
+          "key": "atoms/InlineCode/in-muted-prose--dark",
+          "layer": "atoms",
+          "name": "InlineCode",
+          "state": "in-muted-prose--dark"
+        },
+        {
+          "key": "atoms/InlineCode/in-muted-prose",
+          "layer": "atoms",
+          "name": "InlineCode",
+          "state": "in-muted-prose"
+        },
+        {
+          "key": "atoms/SectionHeading/subhead--dark",
+          "layer": "atoms",
+          "name": "SectionHeading",
+          "state": "subhead--dark"
+        },
+        {
+          "key": "atoms/SectionHeading/subhead",
+          "layer": "atoms",
+          "name": "SectionHeading",
+          "state": "subhead"
+        },
+        {
+          "key": "molecules/CommandRow/copied--dark",
+          "layer": "molecules",
+          "name": "CommandRow",
+          "state": "copied--dark"
+        },
+        {
+          "key": "molecules/CommandRow/copied",
+          "layer": "molecules",
+          "name": "CommandRow",
+          "state": "copied"
+        },
+        {
+          "key": "molecules/CommandRow/default--dark",
+          "layer": "molecules",
+          "name": "CommandRow",
+          "state": "default--dark"
+        },
+        {
+          "key": "molecules/CommandRow/default",
+          "layer": "molecules",
+          "name": "CommandRow",
+          "state": "default"
+        },
+        {
+          "key": "molecules/CommandRow/long-command--dark",
+          "layer": "molecules",
+          "name": "CommandRow",
+          "state": "long-command--dark"
+        },
+        {
+          "key": "molecules/CommandRow/long-command",
+          "layer": "molecules",
+          "name": "CommandRow",
+          "state": "long-command"
+        },
+        {
+          "key": "molecules/CommandRow/selected--dark",
+          "layer": "molecules",
+          "name": "CommandRow",
+          "state": "selected--dark"
+        },
+        {
+          "key": "molecules/CommandRow/selected",
+          "layer": "molecules",
+          "name": "CommandRow",
+          "state": "selected"
+        },
+        {
+          "key": "molecules/CopyBlock/card--dark",
+          "layer": "molecules",
+          "name": "CopyBlock",
+          "state": "card--dark"
+        },
+        {
+          "key": "molecules/CopyBlock/card-copied--dark",
+          "layer": "molecules",
+          "name": "CopyBlock",
+          "state": "card-copied--dark"
+        },
+        {
+          "key": "molecules/CopyBlock/card-copied",
+          "layer": "molecules",
+          "name": "CopyBlock",
+          "state": "card-copied"
+        },
+        {
+          "key": "molecules/CopyBlock/card-selected--dark",
+          "layer": "molecules",
+          "name": "CopyBlock",
+          "state": "card-selected--dark"
+        },
+        {
+          "key": "molecules/CopyBlock/card-selected",
+          "layer": "molecules",
+          "name": "CopyBlock",
+          "state": "card-selected"
+        },
+        {
+          "key": "molecules/CopyBlock/card",
+          "layer": "molecules",
+          "name": "CopyBlock",
+          "state": "card"
+        },
+        {
+          "key": "molecules/CopyBlock/row--dark",
+          "layer": "molecules",
+          "name": "CopyBlock",
+          "state": "row--dark"
+        },
+        {
+          "key": "molecules/CopyBlock/row-copied--dark",
+          "layer": "molecules",
+          "name": "CopyBlock",
+          "state": "row-copied--dark"
+        },
+        {
+          "key": "molecules/CopyBlock/row-copied",
+          "layer": "molecules",
+          "name": "CopyBlock",
+          "state": "row-copied"
+        },
+        {
+          "key": "molecules/CopyBlock/row",
+          "layer": "molecules",
+          "name": "CopyBlock",
+          "state": "row"
+        },
+        {
+          "key": "molecules/CopyNextStep/default--dark",
+          "layer": "molecules",
+          "name": "CopyNextStep",
+          "state": "default--dark"
+        },
+        {
+          "key": "molecules/CopyNextStep/default",
+          "layer": "molecules",
+          "name": "CopyNextStep",
+          "state": "default"
+        },
+        {
+          "key": "molecules/FaqItem/closed--dark",
+          "layer": "molecules",
+          "name": "FaqItem",
+          "state": "closed--dark"
+        },
+        {
+          "key": "molecules/FaqItem/closed",
+          "layer": "molecules",
+          "name": "FaqItem",
+          "state": "closed"
+        },
+        {
+          "key": "molecules/FaqItem/open--dark",
+          "layer": "molecules",
+          "name": "FaqItem",
+          "state": "open--dark"
+        },
+        {
+          "key": "molecules/FaqItem/open",
+          "layer": "molecules",
+          "name": "FaqItem",
+          "state": "open"
+        },
+        {
+          "key": "molecules/GrowCard/add-platform--dark",
+          "layer": "molecules",
+          "name": "GrowCard",
+          "state": "add-platform--dark"
+        },
+        {
+          "key": "molecules/GrowCard/add-platform",
+          "layer": "molecules",
+          "name": "GrowCard",
+          "state": "add-platform"
+        },
+        {
+          "key": "molecules/GrowCard/default--dark",
+          "layer": "molecules",
+          "name": "GrowCard",
+          "state": "default--dark"
+        },
+        {
+          "key": "molecules/GrowCard/default",
+          "layer": "molecules",
+          "name": "GrowCard",
+          "state": "default"
+        },
+        {
+          "key": "molecules/GrowCard/refine--dark",
+          "layer": "molecules",
+          "name": "GrowCard",
+          "state": "refine--dark"
+        },
+        {
+          "key": "molecules/GrowCard/refine",
+          "layer": "molecules",
+          "name": "GrowCard",
+          "state": "refine"
+        },
+        {
+          "key": "molecules/ProofFrame/built-side--dark",
+          "layer": "molecules",
+          "name": "ProofFrame",
+          "state": "built-side--dark"
+        },
+        {
+          "key": "molecules/ProofFrame/built-side",
+          "layer": "molecules",
+          "name": "ProofFrame",
+          "state": "built-side"
+        },
+        {
+          "key": "molecules/ProofFrame/design-side--dark",
+          "layer": "molecules",
+          "name": "ProofFrame",
+          "state": "design-side--dark"
+        },
+        {
+          "key": "molecules/ProofFrame/design-side",
+          "layer": "molecules",
+          "name": "ProofFrame",
+          "state": "design-side"
+        },
+        {
+          "key": "molecules/ProofFrame/static--dark",
+          "layer": "molecules",
+          "name": "ProofFrame",
+          "state": "static--dark"
+        },
+        {
+          "key": "molecules/ProofFrame/static",
+          "layer": "molecules",
+          "name": "ProofFrame",
+          "state": "static"
+        },
+        {
+          "key": "molecules/ProofFrame/with-handle--dark",
+          "layer": "molecules",
+          "name": "ProofFrame",
+          "state": "with-handle--dark"
+        },
+        {
+          "key": "molecules/ProofFrame/with-handle",
+          "layer": "molecules",
+          "name": "ProofFrame",
+          "state": "with-handle"
+        },
+        {
+          "key": "molecules/ProofNote/invented-gray--dark",
+          "layer": "molecules",
+          "name": "ProofNote",
+          "state": "invented-gray--dark"
+        },
+        {
+          "key": "molecules/ProofNote/invented-gray",
+          "layer": "molecules",
+          "name": "ProofNote",
+          "state": "invented-gray"
+        },
+        {
+          "key": "molecules/ReleaseEntry/default--dark",
+          "layer": "molecules",
+          "name": "ReleaseEntry",
+          "state": "default--dark"
+        },
+        {
+          "key": "molecules/ReleaseEntry/default",
+          "layer": "molecules",
+          "name": "ReleaseEntry",
+          "state": "default"
+        },
+        {
+          "key": "molecules/ReleaseEntry/older--dark",
+          "layer": "molecules",
+          "name": "ReleaseEntry",
+          "state": "older--dark"
+        },
+        {
+          "key": "molecules/ReleaseEntry/older",
+          "layer": "molecules",
+          "name": "ReleaseEntry",
+          "state": "older"
+        },
+        {
+          "key": "molecules/StepCard/default--dark",
+          "layer": "molecules",
+          "name": "StepCard",
+          "state": "default--dark"
+        },
+        {
+          "key": "molecules/StepCard/default",
+          "layer": "molecules",
+          "name": "StepCard",
+          "state": "default"
+        },
+        {
+          "key": "molecules/StepCard/rail-not-reached--dark",
+          "layer": "molecules",
+          "name": "StepCard",
+          "state": "rail-not-reached--dark"
+        },
+        {
+          "key": "molecules/StepCard/rail-not-reached",
+          "layer": "molecules",
+          "name": "StepCard",
+          "state": "rail-not-reached"
+        },
+        {
+          "key": "molecules/StepCard/step-2-scaffold--dark",
+          "layer": "molecules",
+          "name": "StepCard",
+          "state": "step-2-scaffold--dark"
+        },
+        {
+          "key": "molecules/StepCard/step-2-scaffold",
+          "layer": "molecules",
+          "name": "StepCard",
+          "state": "step-2-scaffold"
+        },
+        {
+          "key": "molecules/StepCard/step-3-build--dark",
+          "layer": "molecules",
+          "name": "StepCard",
+          "state": "step-3-build--dark"
+        },
+        {
+          "key": "molecules/StepCard/step-3-build",
+          "layer": "molecules",
+          "name": "StepCard",
+          "state": "step-3-build"
+        },
+        {
+          "key": "molecules/StepCard/step-4-status--dark",
+          "layer": "molecules",
+          "name": "StepCard",
+          "state": "step-4-status--dark"
+        },
+        {
+          "key": "molecules/StepCard/step-4-status",
+          "layer": "molecules",
+          "name": "StepCard",
+          "state": "step-4-status"
+        },
+        {
+          "key": "molecules/ThreadRow/agent--dark",
+          "layer": "molecules",
+          "name": "ThreadRow",
+          "state": "agent--dark"
+        },
+        {
+          "key": "molecules/ThreadRow/agent",
+          "layer": "molecules",
+          "name": "ThreadRow",
+          "state": "agent"
+        },
+        {
+          "key": "molecules/ThreadRow/default--dark",
+          "layer": "molecules",
+          "name": "ThreadRow",
+          "state": "default--dark"
+        },
+        {
+          "key": "molecules/ThreadRow/default",
+          "layer": "molecules",
+          "name": "ThreadRow",
+          "state": "default"
+        },
+        {
+          "key": "molecules/TouchList/writes--dark",
+          "layer": "molecules",
+          "name": "TouchList",
+          "state": "writes--dark"
+        },
+        {
+          "key": "molecules/TouchList/writes",
+          "layer": "molecules",
+          "name": "TouchList",
+          "state": "writes"
+        },
+        {
+          "key": "organisms/DemoStats/default--dark",
+          "layer": "organisms",
+          "name": "DemoStats",
+          "state": "default--dark"
+        },
+        {
+          "key": "organisms/DemoStats/default",
+          "layer": "organisms",
+          "name": "DemoStats",
+          "state": "default"
+        },
+        {
+          "key": "organisms/DesignMdPromo/default--dark",
+          "layer": "organisms",
+          "name": "DesignMdPromo",
+          "state": "default--dark"
+        },
+        {
+          "key": "organisms/DesignMdPromo/default",
+          "layer": "organisms",
+          "name": "DesignMdPromo",
+          "state": "default"
+        },
+        {
+          "key": "organisms/DriftComparison/drifted--dark",
+          "layer": "organisms",
+          "name": "DriftComparison",
+          "state": "drifted--dark"
+        },
+        {
+          "key": "organisms/DriftComparison/drifted",
+          "layer": "organisms",
+          "name": "DriftComparison",
+          "state": "drifted"
+        },
+        {
+          "key": "organisms/DriftComparison/mid-drift--dark",
+          "layer": "organisms",
+          "name": "DriftComparison",
+          "state": "mid-drift--dark"
+        },
+        {
+          "key": "organisms/DriftComparison/mid-drift",
+          "layer": "organisms",
+          "name": "DriftComparison",
+          "state": "mid-drift"
+        },
+        {
+          "key": "organisms/DriftComparison/scroll-start--dark",
+          "layer": "organisms",
+          "name": "DriftComparison",
+          "state": "scroll-start--dark"
+        },
+        {
+          "key": "organisms/DriftComparison/scroll-start",
+          "layer": "organisms",
+          "name": "DriftComparison",
+          "state": "scroll-start"
+        },
+        {
+          "key": "organisms/EvolveThread/assembled--dark",
+          "layer": "organisms",
+          "name": "EvolveThread",
+          "state": "assembled--dark"
+        },
+        {
+          "key": "organisms/EvolveThread/assembled",
+          "layer": "organisms",
+          "name": "EvolveThread",
+          "state": "assembled"
+        },
+        {
+          "key": "organisms/EvolveThread/scroll-start--dark",
+          "layer": "organisms",
+          "name": "EvolveThread",
+          "state": "scroll-start--dark"
+        },
+        {
+          "key": "organisms/EvolveThread/scroll-start",
+          "layer": "organisms",
+          "name": "EvolveThread",
+          "state": "scroll-start"
+        },
+        {
+          "key": "organisms/FaqList/all-closed--dark",
+          "layer": "organisms",
+          "name": "FaqList",
+          "state": "all-closed--dark"
+        },
+        {
+          "key": "organisms/FaqList/all-closed",
+          "layer": "organisms",
+          "name": "FaqList",
+          "state": "all-closed"
+        },
+        {
+          "key": "organisms/FaqList/some-open--dark",
+          "layer": "organisms",
+          "name": "FaqList",
+          "state": "some-open--dark"
+        },
+        {
+          "key": "organisms/FaqList/some-open",
+          "layer": "organisms",
+          "name": "FaqList",
+          "state": "some-open"
+        },
+        {
+          "key": "organisms/Hero/default--dark",
+          "layer": "organisms",
+          "name": "Hero",
+          "state": "default--dark"
+        },
+        {
+          "key": "organisms/Hero/default",
+          "layer": "organisms",
+          "name": "Hero",
+          "state": "default"
+        },
+        {
+          "key": "organisms/Hero/headline-alternate--dark",
+          "layer": "organisms",
+          "name": "Hero",
+          "state": "headline-alternate--dark"
+        },
+        {
+          "key": "organisms/Hero/headline-alternate",
+          "layer": "organisms",
+          "name": "Hero",
+          "state": "headline-alternate"
+        },
+        {
+          "key": "organisms/InstallSection/claude--dark",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "claude--dark"
+        },
+        {
+          "key": "organisms/InstallSection/claude",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "claude"
+        },
+        {
+          "key": "organisms/InstallSection/codex--dark",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "codex--dark"
+        },
+        {
+          "key": "organisms/InstallSection/codex",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "codex"
+        },
+        {
+          "key": "organisms/InstallSection/cursor--dark",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "cursor--dark"
+        },
+        {
+          "key": "organisms/InstallSection/cursor",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "cursor"
+        },
+        {
+          "key": "organisms/InstallSection/grok--dark",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "grok--dark"
+        },
+        {
+          "key": "organisms/InstallSection/grok",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "grok"
+        },
+        {
+          "key": "organisms/InstallSection/opencode--dark",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "opencode--dark"
+        },
+        {
+          "key": "organisms/InstallSection/opencode",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "opencode"
+        },
+        {
+          "key": "organisms/InstallSection/pi--dark",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "pi--dark"
+        },
+        {
+          "key": "organisms/InstallSection/pi",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "pi"
+        },
+        {
+          "key": "organisms/InstallSection/scan-box--dark",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "scan-box--dark"
+        },
+        {
+          "key": "organisms/InstallSection/scan-box",
+          "layer": "organisms",
+          "name": "InstallSection",
+          "state": "scan-box"
+        },
+        {
+          "key": "organisms/ProofSlider/split-0--dark",
+          "layer": "organisms",
+          "name": "ProofSlider",
+          "state": "split-0--dark"
+        },
+        {
+          "key": "organisms/ProofSlider/split-0",
+          "layer": "organisms",
+          "name": "ProofSlider",
+          "state": "split-0"
+        },
+        {
+          "key": "organisms/ProofSlider/split-100--dark",
+          "layer": "organisms",
+          "name": "ProofSlider",
+          "state": "split-100--dark"
+        },
+        {
+          "key": "organisms/ProofSlider/split-100",
+          "layer": "organisms",
+          "name": "ProofSlider",
+          "state": "split-100"
+        },
+        {
+          "key": "organisms/ProofSlider/split-50--dark",
+          "layer": "organisms",
+          "name": "ProofSlider",
+          "state": "split-50--dark"
+        },
+        {
+          "key": "organisms/ProofSlider/split-50",
+          "layer": "organisms",
+          "name": "ProofSlider",
+          "state": "split-50"
+        },
+        {
+          "key": "organisms/SocialCard/default--dark",
+          "layer": "organisms",
+          "name": "SocialCard",
+          "state": "default--dark"
+        },
+        {
+          "key": "organisms/SocialCard/default",
+          "layer": "organisms",
+          "name": "SocialCard",
+          "state": "default"
+        },
+        {
+          "key": "organisms/StepsTimeline/complete--dark",
+          "layer": "organisms",
+          "name": "StepsTimeline",
+          "state": "complete--dark"
+        },
+        {
+          "key": "organisms/StepsTimeline/complete",
+          "layer": "organisms",
+          "name": "StepsTimeline",
+          "state": "complete"
+        },
+        {
+          "key": "organisms/StepsTimeline/halfway--dark",
+          "layer": "organisms",
+          "name": "StepsTimeline",
+          "state": "halfway--dark"
+        },
+        {
+          "key": "organisms/StepsTimeline/halfway",
+          "layer": "organisms",
+          "name": "StepsTimeline",
+          "state": "halfway"
+        },
+        {
+          "key": "organisms/StepsTimeline/scroll-start--dark",
+          "layer": "organisms",
+          "name": "StepsTimeline",
+          "state": "scroll-start--dark"
+        },
+        {
+          "key": "organisms/StepsTimeline/scroll-start",
+          "layer": "organisms",
+          "name": "StepsTimeline",
+          "state": "scroll-start"
+        },
+        {
+          "key": "screens/Changelog/default--dark",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Changelog/default",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/copied--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied--dark"
+        },
+        {
+          "key": "screens/Home/copied",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied"
+        },
+        {
+          "key": "screens/Home/default--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Home/default",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/faq-open--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open--dark"
+        },
+        {
+          "key": "screens/Home/faq-open",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open"
+        },
+        {
+          "key": "screens/Home/headline-alternate--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate--dark"
+        },
+        {
+          "key": "screens/Home/headline-alternate",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate"
+        },
+        {
+          "key": "screens/Home/install-claude--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude--dark"
+        },
+        {
+          "key": "screens/Home/install-claude",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude"
+        },
+        {
+          "key": "screens/Home/install-codex--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex--dark"
+        },
+        {
+          "key": "screens/Home/install-codex",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex"
+        },
+        {
+          "key": "screens/Home/install-cursor--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor--dark"
+        },
+        {
+          "key": "screens/Home/install-cursor",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor"
+        },
+        {
+          "key": "screens/Home/install-grok--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok--dark"
+        },
+        {
+          "key": "screens/Home/install-grok",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok"
+        },
+        {
+          "key": "screens/Home/install-opencode--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode--dark"
+        },
+        {
+          "key": "screens/Home/install-opencode",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode"
+        },
+        {
+          "key": "screens/Home/install-pi--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi--dark"
+        },
+        {
+          "key": "screens/Home/install-pi",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi"
+        },
+        {
+          "key": "screens/Home/phone--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone--dark"
+        },
+        {
+          "key": "screens/Home/phone",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone"
+        }
+      ],
+      "exit": 0,
+      "message": "Perturbed \"InlineCode\": 146 stories moved"
+    },
+    {
+      "name": "Logo",
+      "reaches": [
+        {
+          "key": "screens/Changelog/default--dark",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Changelog/default",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/copied--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied--dark"
+        },
+        {
+          "key": "screens/Home/copied",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied"
+        },
+        {
+          "key": "screens/Home/default--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Home/default",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/faq-open--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open--dark"
+        },
+        {
+          "key": "screens/Home/faq-open",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open"
+        },
+        {
+          "key": "screens/Home/headline-alternate--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate--dark"
+        },
+        {
+          "key": "screens/Home/headline-alternate",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate"
+        },
+        {
+          "key": "screens/Home/install-claude--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude--dark"
+        },
+        {
+          "key": "screens/Home/install-claude",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude"
+        },
+        {
+          "key": "screens/Home/install-codex--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex--dark"
+        },
+        {
+          "key": "screens/Home/install-codex",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex"
+        },
+        {
+          "key": "screens/Home/install-cursor--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor--dark"
+        },
+        {
+          "key": "screens/Home/install-cursor",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor"
+        },
+        {
+          "key": "screens/Home/install-grok--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok--dark"
+        },
+        {
+          "key": "screens/Home/install-grok",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok"
+        },
+        {
+          "key": "screens/Home/install-opencode--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode--dark"
+        },
+        {
+          "key": "screens/Home/install-opencode",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode"
+        },
+        {
+          "key": "screens/Home/install-pi--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi--dark"
+        },
+        {
+          "key": "screens/Home/install-pi",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi"
+        },
+        {
+          "key": "screens/Home/phone--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone--dark"
+        },
+        {
+          "key": "screens/Home/phone",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone"
+        }
+      ],
+      "moved": [
+        {
+          "key": "atoms/Logo/default--dark",
+          "layer": "atoms",
+          "name": "Logo",
+          "state": "default--dark"
+        },
+        {
+          "key": "atoms/Logo/default",
+          "layer": "atoms",
+          "name": "Logo",
+          "state": "default"
+        },
+        {
+          "key": "atoms/Logo/footer-mark--dark",
+          "layer": "atoms",
+          "name": "Logo",
+          "state": "footer-mark--dark"
+        },
+        {
+          "key": "atoms/Logo/footer-mark",
+          "layer": "atoms",
+          "name": "Logo",
+          "state": "footer-mark"
+        },
+        {
+          "key": "atoms/Logo/header-link--dark",
+          "layer": "atoms",
+          "name": "Logo",
+          "state": "header-link--dark"
+        },
+        {
+          "key": "atoms/Logo/header-link",
+          "layer": "atoms",
+          "name": "Logo",
+          "state": "header-link"
+        },
+        {
+          "key": "organisms/SiteFooter/default--dark",
+          "layer": "organisms",
+          "name": "SiteFooter",
+          "state": "default--dark"
+        },
+        {
+          "key": "organisms/SiteFooter/default",
+          "layer": "organisms",
+          "name": "SiteFooter",
+          "state": "default"
+        },
+        {
+          "key": "organisms/SiteHeader/default--dark",
+          "layer": "organisms",
+          "name": "SiteHeader",
+          "state": "default--dark"
+        },
+        {
+          "key": "organisms/SiteHeader/default",
+          "layer": "organisms",
+          "name": "SiteHeader",
+          "state": "default"
+        },
+        {
+          "key": "organisms/SocialCard/default--dark",
+          "layer": "organisms",
+          "name": "SocialCard",
+          "state": "default--dark"
+        },
+        {
+          "key": "organisms/SocialCard/default",
+          "layer": "organisms",
+          "name": "SocialCard",
+          "state": "default"
+        },
+        {
+          "key": "screens/Changelog/default--dark",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Changelog/default",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/copied--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied--dark"
+        },
+        {
+          "key": "screens/Home/copied",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied"
+        },
+        {
+          "key": "screens/Home/default--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Home/default",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/faq-open--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open--dark"
+        },
+        {
+          "key": "screens/Home/faq-open",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open"
+        },
+        {
+          "key": "screens/Home/headline-alternate--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate--dark"
+        },
+        {
+          "key": "screens/Home/headline-alternate",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate"
+        },
+        {
+          "key": "screens/Home/install-claude--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude--dark"
+        },
+        {
+          "key": "screens/Home/install-claude",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude"
+        },
+        {
+          "key": "screens/Home/install-codex--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex--dark"
+        },
+        {
+          "key": "screens/Home/install-codex",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex"
+        },
+        {
+          "key": "screens/Home/install-cursor--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor--dark"
+        },
+        {
+          "key": "screens/Home/install-cursor",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor"
+        },
+        {
+          "key": "screens/Home/install-grok--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok--dark"
+        },
+        {
+          "key": "screens/Home/install-grok",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok"
+        },
+        {
+          "key": "screens/Home/install-opencode--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode--dark"
+        },
+        {
+          "key": "screens/Home/install-opencode",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode"
+        },
+        {
+          "key": "screens/Home/install-pi--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi--dark"
+        },
+        {
+          "key": "screens/Home/install-pi",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi"
+        },
+        {
+          "key": "screens/Home/phone--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone--dark"
+        },
+        {
+          "key": "screens/Home/phone",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone"
+        }
+      ],
+      "exit": 0,
+      "message": "Perturbed \"Logo\": 36 stories moved"
+    },
+    {
+      "name": "TextLink",
+      "reaches": [
+        {
+          "key": "screens/Changelog/default--dark",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Changelog/default",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/copied--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied--dark"
+        },
+        {
+          "key": "screens/Home/copied",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied"
+        },
+        {
+          "key": "screens/Home/default--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Home/default",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/faq-open--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open--dark"
+        },
+        {
+          "key": "screens/Home/faq-open",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open"
+        },
+        {
+          "key": "screens/Home/headline-alternate--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate--dark"
+        },
+        {
+          "key": "screens/Home/headline-alternate",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate"
+        },
+        {
+          "key": "screens/Home/install-claude--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude--dark"
+        },
+        {
+          "key": "screens/Home/install-claude",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude"
+        },
+        {
+          "key": "screens/Home/install-codex--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex--dark"
+        },
+        {
+          "key": "screens/Home/install-codex",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex"
+        },
+        {
+          "key": "screens/Home/install-cursor--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor--dark"
+        },
+        {
+          "key": "screens/Home/install-cursor",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor"
+        },
+        {
+          "key": "screens/Home/install-grok--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok--dark"
+        },
+        {
+          "key": "screens/Home/install-grok",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok"
+        },
+        {
+          "key": "screens/Home/install-opencode--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode--dark"
+        },
+        {
+          "key": "screens/Home/install-opencode",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode"
+        },
+        {
+          "key": "screens/Home/install-pi--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi--dark"
+        },
+        {
+          "key": "screens/Home/install-pi",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi"
+        },
+        {
+          "key": "screens/Home/phone--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone--dark"
+        },
+        {
+          "key": "screens/Home/phone",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone"
+        }
+      ],
+      "moved": [
+        {
+          "key": "atoms/TextLink/default--dark",
+          "layer": "atoms",
+          "name": "TextLink",
+          "state": "default--dark"
+        },
+        {
+          "key": "atoms/TextLink/default",
+          "layer": "atoms",
+          "name": "TextLink",
+          "state": "default"
+        },
+        {
+          "key": "atoms/TextLink/external--dark",
+          "layer": "atoms",
+          "name": "TextLink",
+          "state": "external--dark"
+        },
+        {
+          "key": "atoms/TextLink/external",
+          "layer": "atoms",
+          "name": "TextLink",
+          "state": "external"
+        },
+        {
+          "key": "atoms/TextLink/footer--dark",
+          "layer": "atoms",
+          "name": "TextLink",
+          "state": "footer--dark"
+        },
+        {
+          "key": "atoms/TextLink/footer",
+          "layer": "atoms",
+          "name": "TextLink",
+          "state": "footer"
+        },
+        {
+          "key": "atoms/TextLink/mono--dark",
+          "layer": "atoms",
+          "name": "TextLink",
+          "state": "mono--dark"
+        },
+        {
+          "key": "atoms/TextLink/mono",
+          "layer": "atoms",
+          "name": "TextLink",
+          "state": "mono"
+        },
+        {
+          "key": "molecules/MetaStrip/default--dark",
+          "layer": "molecules",
+          "name": "MetaStrip",
+          "state": "default--dark"
+        },
+        {
+          "key": "molecules/MetaStrip/default",
+          "layer": "molecules",
+          "name": "MetaStrip",
+          "state": "default"
+        },
+        {
+          "key": "molecules/MetaStrip/narrow--dark",
+          "layer": "molecules",
+          "name": "MetaStrip",
+          "state": "narrow--dark"
+        },
+        {
+          "key": "molecules/MetaStrip/narrow",
+          "layer": "molecules",
+          "name": "MetaStrip",
+          "state": "narrow"
+        },
+        {
+          "key": "organisms/CloseCta/default--dark",
+          "layer": "organisms",
+          "name": "CloseCta",
+          "state": "default--dark"
+        },
+        {
+          "key": "organisms/CloseCta/default",
+          "layer": "organisms",
+          "name": "CloseCta",
+          "state": "default"
+        },
+        {
+          "key": "organisms/CloseCta/scroll-start--dark",
+          "layer": "organisms",
+          "name": "CloseCta",
+          "state": "scroll-start--dark"
+        },
+        {
+          "key": "organisms/CloseCta/scroll-start",
+          "layer": "organisms",
+          "name": "CloseCta",
+          "state": "scroll-start"
+        },
+        {
+          "key": "organisms/Hero/default--dark",
+          "layer": "organisms",
+          "name": "Hero",
+          "state": "default--dark"
+        },
+        {
+          "key": "organisms/Hero/default",
+          "layer": "organisms",
+          "name": "Hero",
+          "state": "default"
+        },
+        {
+          "key": "organisms/Hero/headline-alternate--dark",
+          "layer": "organisms",
+          "name": "Hero",
+          "state": "headline-alternate--dark"
+        },
+        {
+          "key": "organisms/Hero/headline-alternate",
+          "layer": "organisms",
+          "name": "Hero",
+          "state": "headline-alternate"
+        },
+        {
+          "key": "organisms/SiteFooter/default--dark",
+          "layer": "organisms",
+          "name": "SiteFooter",
+          "state": "default--dark"
+        },
+        {
+          "key": "organisms/SiteFooter/default",
+          "layer": "organisms",
+          "name": "SiteFooter",
+          "state": "default"
+        },
+        {
+          "key": "organisms/SiteHeader/default--dark",
+          "layer": "organisms",
+          "name": "SiteHeader",
+          "state": "default--dark"
+        },
+        {
+          "key": "organisms/SiteHeader/default",
+          "layer": "organisms",
+          "name": "SiteHeader",
+          "state": "default"
+        },
+        {
+          "key": "screens/Changelog/default--dark",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Changelog/default",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/copied--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied--dark"
+        },
+        {
+          "key": "screens/Home/copied",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied"
+        },
+        {
+          "key": "screens/Home/default--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Home/default",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/faq-open--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open--dark"
+        },
+        {
+          "key": "screens/Home/faq-open",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open"
+        },
+        {
+          "key": "screens/Home/headline-alternate--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate--dark"
+        },
+        {
+          "key": "screens/Home/headline-alternate",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate"
+        },
+        {
+          "key": "screens/Home/install-claude--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude--dark"
+        },
+        {
+          "key": "screens/Home/install-claude",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude"
+        },
+        {
+          "key": "screens/Home/install-codex--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex--dark"
+        },
+        {
+          "key": "screens/Home/install-codex",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex"
+        },
+        {
+          "key": "screens/Home/install-cursor--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor--dark"
+        },
+        {
+          "key": "screens/Home/install-cursor",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor"
+        },
+        {
+          "key": "screens/Home/install-grok--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok--dark"
+        },
+        {
+          "key": "screens/Home/install-grok",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok"
+        },
+        {
+          "key": "screens/Home/install-opencode--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode--dark"
+        },
+        {
+          "key": "screens/Home/install-opencode",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode"
+        },
+        {
+          "key": "screens/Home/install-pi--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi--dark"
+        },
+        {
+          "key": "screens/Home/install-pi",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi"
+        },
+        {
+          "key": "screens/Home/phone--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone--dark"
+        },
+        {
+          "key": "screens/Home/phone",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone"
+        }
+      ],
+      "exit": 0,
+      "message": "Perturbed \"TextLink\": 48 stories moved"
+    },
+    {
+      "name": "SectionHeading",
+      "reaches": [
+        {
+          "key": "screens/Changelog/default--dark",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Changelog/default",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/copied--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied--dark"
+        },
+        {
+          "key": "screens/Home/copied",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied"
+        },
+        {
+          "key": "screens/Home/default--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Home/default",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/faq-open--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open--dark"
+        },
+        {
+          "key": "screens/Home/faq-open",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open"
+        },
+        {
+          "key": "screens/Home/headline-alternate--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate--dark"
+        },
+        {
+          "key": "screens/Home/headline-alternate",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate"
+        },
+        {
+          "key": "screens/Home/install-claude--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude--dark"
+        },
+        {
+          "key": "screens/Home/install-claude",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude"
+        },
+        {
+          "key": "screens/Home/install-codex--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex--dark"
+        },
+        {
+          "key": "screens/Home/install-codex",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex"
+        },
+        {
+          "key": "screens/Home/install-cursor--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor--dark"
+        },
+        {
+          "key": "screens/Home/install-cursor",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor"
+        },
+        {
+          "key": "screens/Home/install-grok--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok--dark"
+        },
+        {
+          "key": "screens/Home/install-grok",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok"
+        },
+        {
+          "key": "screens/Home/install-opencode--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode--dark"
+        },
+        {
+          "key": "screens/Home/install-opencode",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode"
+        },
+        {
+          "key": "screens/Home/install-pi--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi--dark"
+        },
+        {
+          "key": "screens/Home/install-pi",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi"
+        },
+        {
+          "key": "screens/Home/phone--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone--dark"
+        },
+        {
+          "key": "screens/Home/phone",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone"
+        }
+      ],
+      "moved": [
+        {
+          "key": "atoms/SectionHeading/default--dark",
+          "layer": "atoms",
+          "name": "SectionHeading",
+          "state": "default--dark"
+        },
+        {
+          "key": "atoms/SectionHeading/default",
+          "layer": "atoms",
+          "name": "SectionHeading",
+          "state": "default"
+        },
+        {
+          "key": "atoms/SectionHeading/page-title--dark",
+          "layer": "atoms",
+          "name": "SectionHeading",
+          "state": "page-title--dark"
+        },
+        {
+          "key": "atoms/SectionHeading/page-title",
+          "layer": "atoms",
+          "name": "SectionHeading",
+          "state": "page-title"
+        },
+        {
+          "key": "atoms/SectionHeading/statement--dark",
+          "layer": "atoms",
+          "name": "SectionHeading",
+          "state": "statement--dark"
+        },
+        {
+          "key": "atoms/SectionHeading/statement",
+          "layer": "atoms",
+          "name": "SectionHeading",
+          "state": "statement"
+        },
+        {
+          "key": "atoms/SectionHeading/subhead--dark",
+          "layer": "atoms",
+          "name": "SectionHeading",
+          "state": "subhead--dark"
+        },
+        {
+          "key": "atoms/SectionHeading/subhead",
+          "layer": "atoms",
+          "name": "SectionHeading",
+          "state": "subhead"
+        },
+        {
+          "key": "organisms/DesignMdPromo/default--dark",
+          "layer": "organisms",
+          "name": "DesignMdPromo",
+          "state": "default--dark"
+        },
+        {
+          "key": "organisms/DesignMdPromo/default",
+          "layer": "organisms",
+          "name": "DesignMdPromo",
+          "state": "default"
+        },
+        {
+          "key": "organisms/PrinciplesGrid/default--dark",
+          "layer": "organisms",
+          "name": "PrinciplesGrid",
+          "state": "default--dark"
+        },
+        {
+          "key": "organisms/PrinciplesGrid/default",
+          "layer": "organisms",
+          "name": "PrinciplesGrid",
+          "state": "default"
+        },
+        {
+          "key": "screens/Changelog/default--dark",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Changelog/default",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/copied--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied--dark"
+        },
+        {
+          "key": "screens/Home/copied",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied"
+        },
+        {
+          "key": "screens/Home/default--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Home/default",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/faq-open--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open--dark"
+        },
+        {
+          "key": "screens/Home/faq-open",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open"
+        },
+        {
+          "key": "screens/Home/headline-alternate--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate--dark"
+        },
+        {
+          "key": "screens/Home/headline-alternate",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate"
+        },
+        {
+          "key": "screens/Home/install-claude--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude--dark"
+        },
+        {
+          "key": "screens/Home/install-claude",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude"
+        },
+        {
+          "key": "screens/Home/install-codex--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex--dark"
+        },
+        {
+          "key": "screens/Home/install-codex",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex"
+        },
+        {
+          "key": "screens/Home/install-cursor--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor--dark"
+        },
+        {
+          "key": "screens/Home/install-cursor",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor"
+        },
+        {
+          "key": "screens/Home/install-grok--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok--dark"
+        },
+        {
+          "key": "screens/Home/install-grok",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok"
+        },
+        {
+          "key": "screens/Home/install-opencode--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode--dark"
+        },
+        {
+          "key": "screens/Home/install-opencode",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode"
+        },
+        {
+          "key": "screens/Home/install-pi--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi--dark"
+        },
+        {
+          "key": "screens/Home/install-pi",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi"
+        },
+        {
+          "key": "screens/Home/phone--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone--dark"
+        },
+        {
+          "key": "screens/Home/phone",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone"
+        }
+      ],
+      "exit": 0,
+      "message": "Perturbed \"SectionHeading\": 36 stories moved"
+    },
+    {
+      "name": "SiteFooter",
+      "reaches": [
+        {
+          "key": "screens/Changelog/default--dark",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Changelog/default",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/copied--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied--dark"
+        },
+        {
+          "key": "screens/Home/copied",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied"
+        },
+        {
+          "key": "screens/Home/default--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Home/default",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/faq-open--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open--dark"
+        },
+        {
+          "key": "screens/Home/faq-open",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open"
+        },
+        {
+          "key": "screens/Home/headline-alternate--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate--dark"
+        },
+        {
+          "key": "screens/Home/headline-alternate",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate"
+        },
+        {
+          "key": "screens/Home/install-claude--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude--dark"
+        },
+        {
+          "key": "screens/Home/install-claude",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude"
+        },
+        {
+          "key": "screens/Home/install-codex--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex--dark"
+        },
+        {
+          "key": "screens/Home/install-codex",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex"
+        },
+        {
+          "key": "screens/Home/install-cursor--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor--dark"
+        },
+        {
+          "key": "screens/Home/install-cursor",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor"
+        },
+        {
+          "key": "screens/Home/install-grok--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok--dark"
+        },
+        {
+          "key": "screens/Home/install-grok",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok"
+        },
+        {
+          "key": "screens/Home/install-opencode--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode--dark"
+        },
+        {
+          "key": "screens/Home/install-opencode",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode"
+        },
+        {
+          "key": "screens/Home/install-pi--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi--dark"
+        },
+        {
+          "key": "screens/Home/install-pi",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi"
+        },
+        {
+          "key": "screens/Home/phone--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone--dark"
+        },
+        {
+          "key": "screens/Home/phone",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone"
+        }
+      ],
+      "moved": [
+        {
+          "key": "organisms/SiteFooter/default--dark",
+          "layer": "organisms",
+          "name": "SiteFooter",
+          "state": "default--dark"
+        },
+        {
+          "key": "organisms/SiteFooter/default",
+          "layer": "organisms",
+          "name": "SiteFooter",
+          "state": "default"
+        },
+        {
+          "key": "screens/Changelog/default--dark",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Changelog/default",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/copied--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied--dark"
+        },
+        {
+          "key": "screens/Home/copied",
+          "layer": "screens",
+          "name": "Home",
+          "state": "copied"
+        },
+        {
+          "key": "screens/Home/default--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Home/default",
+          "layer": "screens",
+          "name": "Home",
+          "state": "default"
+        },
+        {
+          "key": "screens/Home/faq-open--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open--dark"
+        },
+        {
+          "key": "screens/Home/faq-open",
+          "layer": "screens",
+          "name": "Home",
+          "state": "faq-open"
+        },
+        {
+          "key": "screens/Home/headline-alternate--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate--dark"
+        },
+        {
+          "key": "screens/Home/headline-alternate",
+          "layer": "screens",
+          "name": "Home",
+          "state": "headline-alternate"
+        },
+        {
+          "key": "screens/Home/install-claude--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude--dark"
+        },
+        {
+          "key": "screens/Home/install-claude",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-claude"
+        },
+        {
+          "key": "screens/Home/install-codex--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex--dark"
+        },
+        {
+          "key": "screens/Home/install-codex",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-codex"
+        },
+        {
+          "key": "screens/Home/install-cursor--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor--dark"
+        },
+        {
+          "key": "screens/Home/install-cursor",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-cursor"
+        },
+        {
+          "key": "screens/Home/install-grok--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok--dark"
+        },
+        {
+          "key": "screens/Home/install-grok",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-grok"
+        },
+        {
+          "key": "screens/Home/install-opencode--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode--dark"
+        },
+        {
+          "key": "screens/Home/install-opencode",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-opencode"
+        },
+        {
+          "key": "screens/Home/install-pi--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi--dark"
+        },
+        {
+          "key": "screens/Home/install-pi",
+          "layer": "screens",
+          "name": "Home",
+          "state": "install-pi"
+        },
+        {
+          "key": "screens/Home/phone--dark",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone--dark"
+        },
+        {
+          "key": "screens/Home/phone",
+          "layer": "screens",
+          "name": "Home",
+          "state": "phone"
+        }
+      ],
+      "exit": 0,
+      "message": "Perturbed \"SiteFooter\": 26 stories moved"
+    },
+    {
+      "name": "ReleaseEntry",
+      "reaches": [
+        {
+          "key": "screens/Changelog/default--dark",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Changelog/default",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default"
+        }
+      ],
+      "moved": [
+        {
+          "key": "molecules/ReleaseEntry/default--dark",
+          "layer": "molecules",
+          "name": "ReleaseEntry",
+          "state": "default--dark"
+        },
+        {
+          "key": "molecules/ReleaseEntry/default",
+          "layer": "molecules",
+          "name": "ReleaseEntry",
+          "state": "default"
+        },
+        {
+          "key": "molecules/ReleaseEntry/older--dark",
+          "layer": "molecules",
+          "name": "ReleaseEntry",
+          "state": "older--dark"
+        },
+        {
+          "key": "molecules/ReleaseEntry/older",
+          "layer": "molecules",
+          "name": "ReleaseEntry",
+          "state": "older"
+        },
+        {
+          "key": "screens/Changelog/default--dark",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default--dark"
+        },
+        {
+          "key": "screens/Changelog/default",
+          "layer": "screens",
+          "name": "Changelog",
+          "state": "default"
+        }
+      ],
+      "exit": 0,
+      "message": "Perturbed \"ReleaseEntry\": 6 stories moved"
+    }
+  ],
+  "platform": "web-desktop",
+  "goldens": "design/goldens/web-desktop",
+  "medium": "dom+png"
+}

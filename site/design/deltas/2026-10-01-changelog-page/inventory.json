@@ -1,0 +1,1988 @@
+{
+  "version": 1,
+  "status": "complete",
+  "sources": [
+    {
+      "ref": "../design/pixel-perfect Landing.dc.html",
+      "kind": "html-deck",
+      "hash": "sha256:865c17eca7d42fe1b22307989755f64d3de84f4f35008eda15b4326fa9398860",
+      "slug": "pixel-perfect-landing-dc",
+      "frame_selector": "auto:[data-screen-label]",
+      "frames": [
+        "pixel-perfect-landing-dc/01",
+        "pixel-perfect-landing-dc/02",
+        "pixel-perfect-landing-dc/03",
+        "pixel-perfect-landing-dc/04",
+        "pixel-perfect-landing-dc/05",
+        "pixel-perfect-landing-dc/06",
+        "pixel-perfect-landing-dc/07",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ]
+    },
+    {
+      "ref": "../design/Component sheet.dc.html",
+      "kind": "html-deck",
+      "hash": "sha256:9a1f2ca3cb1a1acc28b5107d1c7e0bb0e3f5f32e9e5eac37c937ff71324ac599",
+      "slug": "component-sheet-dc",
+      "frame_selector": "full-page",
+      "frames": [
+        "component-sheet-dc/01",
+        "component-sheet-dc/02",
+        "component-sheet-dc/03",
+        "component-sheet-dc/04"
+      ]
+    },
+    {
+      "ref": "../design/Social preview.dc.html",
+      "kind": "html-deck",
+      "hash": "sha256:65c57624e75ab56442c54bd2da8bf233decbb5af53ea089b50c216e95f3e9bdc",
+      "slug": "social-preview-dc",
+      "frame_selector": "auto:bordered",
+      "frames": [
+        "social-preview-dc/01",
+        "social-preview-dc/02",
+        "social-preview-dc/03"
+      ]
+    },
+    {
+      "ref": "../design/Logo.dc.html",
+      "kind": "html-deck",
+      "hash": "sha256:30f4b11ec6720f4ad32b2f44b9e537bc18c26c20897da0f67252cf6a2aba53f5",
+      "slug": "logo-dc",
+      "frame_selector": "full-page",
+      "frames": [
+        "logo-dc/01",
+        "logo-dc/02"
+      ]
+    },
+    {
+      "ref": "../design/uploads/pasted-1790742749159-0.png",
+      "kind": "image",
+      "hash": "sha256:0886579becfe191b583cf71f56a947233abdbfdefa02fce093297c2fe137b6ea",
+      "slug": "pasted-1790742749159-0",
+      "frame_selector": null,
+      "frames": [
+        "pasted-1790742749159-0/01"
+      ]
+    },
+    {
+      "ref": "../design/uploads/pasted-1790742949005-0.png",
+      "kind": "image",
+      "hash": "sha256:723ead76b512ed5aea31a690f218cf1f316126341431aacb147072ed243cd360",
+      "slug": "pasted-1790742949005-0",
+      "frame_selector": null,
+      "frames": [
+        "pasted-1790742949005-0/01"
+      ]
+    }
+  ],
+  "frames": [
+    {
+      "id": "pixel-perfect-landing-dc/01",
+      "png": "pixel-perfect-landing-dc/01.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "label": "Hero",
+      "viewport": "1264x1252",
+      "route": "/",
+      "state": "default",
+      "shows": [
+        "Hero",
+        "CropMark",
+        "SlugLine",
+        "ColorStrip",
+        "PlateText",
+        "InlineCode",
+        "CopyBlock",
+        "Button",
+        "TextLink",
+        "MetaStrip",
+        "ProofSlider",
+        "ProofFrame",
+        "PlateLabel",
+        "RegistrationTarget",
+        "SliderHandle",
+        "FigureCaption",
+        "LayerStack"
+      ]
+    },
+    {
+      "id": "pixel-perfect-landing-dc/02",
+      "png": "pixel-perfect-landing-dc/02.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "label": "Why",
+      "viewport": "1264x875",
+      "route": "/",
+      "state": "default",
+      "shows": [
+        "SectionHeading",
+        "DriftComparison",
+        "PlateLabel",
+        "CopyBlock",
+        "Button",
+        "ProofMark",
+        "ProofNote",
+        "InlineCode",
+        "FigureCaption",
+        "PrinciplesGrid",
+        "PrincipleCard"
+      ]
+    },
+    {
+      "id": "pixel-perfect-landing-dc/03",
+      "png": "pixel-perfect-landing-dc/03.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "label": "Build it",
+      "viewport": "1264x1741",
+      "route": "/",
+      "state": "default",
+      "shows": [
+        "SectionHeading",
+        "StepsTimeline",
+        "StepCard",
+        "PlateLabel",
+        "InlineCode",
+        "CodePanel",
+        "DemoStats",
+        "PlayButton",
+        "FigureCaption",
+        "StatGrid",
+        "Stat"
+      ]
+    },
+    {
+      "id": "pixel-perfect-landing-dc/04",
+      "png": "pixel-perfect-landing-dc/04.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "label": "Grow it",
+      "viewport": "1264x1182",
+      "route": "/",
+      "state": "default",
+      "shows": [
+        "SectionHeading",
+        "EvolveThread",
+        "ThreadRow",
+        "PlateLabel",
+        "InlineCode",
+        "ChangelogMini",
+        "VersionPill",
+        "FigureCaption",
+        "GrowCard",
+        "DesignMdPromo",
+        "DesignMdCard",
+        "Button"
+      ]
+    },
+    {
+      "id": "pixel-perfect-landing-dc/05",
+      "png": "pixel-perfect-landing-dc/05.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "label": "Install",
+      "viewport": "1264x1087",
+      "route": "/",
+      "state": "default",
+      "shows": [
+        "SectionHeading",
+        "TextLink",
+        "InstallSection",
+        "CopyBlock",
+        "InlineCode",
+        "Button",
+        "Tab",
+        "CommandRow",
+        "CopyNextStep",
+        "TouchList",
+        "ScanBox",
+        "PlateLabel"
+      ]
+    },
+    {
+      "id": "pixel-perfect-landing-dc/06",
+      "png": "pixel-perfect-landing-dc/06.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "label": "FAQ",
+      "viewport": "1264x701",
+      "route": "/",
+      "state": "default",
+      "shows": [
+        "SectionHeading",
+        "FaqList",
+        "FaqItem",
+        "DisclosureIcon"
+      ]
+    },
+    {
+      "id": "pixel-perfect-landing-dc/07",
+      "png": "pixel-perfect-landing-dc/07.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "label": "Close",
+      "viewport": "1264x484",
+      "route": "/",
+      "state": "default",
+      "shows": [
+        "CloseCta",
+        "PlateText",
+        "Button",
+        "TextLink",
+        "SiteFooter",
+        "Logo"
+      ]
+    },
+    {
+      "id": "pixel-perfect-landing-dc/08",
+      "png": "pixel-perfect-landing-dc/08.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "label": "full · 1440 · default",
+      "viewport": "1440x7381",
+      "route": "/",
+      "state": "default",
+      "shows": [
+        "Home",
+        "SiteHeader",
+        "Logo",
+        "NavLink",
+        "ThemeToggle",
+        "Hero",
+        "CropMark",
+        "SlugLine",
+        "ColorStrip",
+        "PlateText",
+        "InlineCode",
+        "CopyBlock",
+        "Button",
+        "TextLink",
+        "MetaStrip",
+        "ProofSlider",
+        "ProofFrame",
+        "PlateLabel",
+        "RegistrationTarget",
+        "SliderHandle",
+        "FigureCaption",
+        "LayerStack",
+        "SectionHeading",
+        "DriftComparison",
+        "ProofMark",
+        "ProofNote",
+        "PrinciplesGrid",
+        "PrincipleCard",
+        "StepsTimeline",
+        "StepCard",
+        "CodePanel",
+        "DemoStats",
+        "PlayButton",
+        "StatGrid",
+        "Stat",
+        "EvolveThread",
+        "ThreadRow",
+        "ChangelogMini",
+        "VersionPill",
+        "GrowCard",
+        "DesignMdPromo",
+        "DesignMdCard",
+        "InstallSection",
+        "Tab",
+        "CommandRow",
+        "CopyNextStep",
+        "TouchList",
+        "ScanBox",
+        "FaqList",
+        "FaqItem",
+        "DisclosureIcon",
+        "CloseCta",
+        "SiteFooter"
+      ]
+    },
+    {
+      "id": "pixel-perfect-landing-dc/09",
+      "png": "pixel-perfect-landing-dc/09.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "label": "full · 1440 · dark",
+      "viewport": "1440x7381",
+      "route": "/",
+      "state": "dark",
+      "shows": [
+        "Home",
+        "SiteHeader",
+        "Logo",
+        "NavLink",
+        "ThemeToggle",
+        "Hero",
+        "CropMark",
+        "SlugLine",
+        "ColorStrip",
+        "PlateText",
+        "InlineCode",
+        "CopyBlock",
+        "Button",
+        "TextLink",
+        "MetaStrip",
+        "ProofSlider",
+        "ProofFrame",
+        "PlateLabel",
+        "RegistrationTarget",
+        "SliderHandle",
+        "FigureCaption",
+        "LayerStack",
+        "SectionHeading",
+        "DriftComparison",
+        "ProofMark",
+        "ProofNote",
+        "PrinciplesGrid",
+        "PrincipleCard",
+        "StepsTimeline",
+        "StepCard",
+        "CodePanel",
+        "DemoStats",
+        "PlayButton",
+        "StatGrid",
+        "Stat",
+        "EvolveThread",
+        "ThreadRow",
+        "ChangelogMini",
+        "VersionPill",
+        "GrowCard",
+        "DesignMdPromo",
+        "DesignMdCard",
+        "InstallSection",
+        "Tab",
+        "CommandRow",
+        "CopyNextStep",
+        "TouchList",
+        "ScanBox",
+        "FaqList",
+        "FaqItem",
+        "DisclosureIcon",
+        "CloseCta",
+        "SiteFooter"
+      ]
+    },
+    {
+      "id": "pixel-perfect-landing-dc/10",
+      "png": "pixel-perfect-landing-dc/10.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "label": "full · 390 · default",
+      "viewport": "390x10890",
+      "route": "/",
+      "state": "default",
+      "shows": [
+        "Home",
+        "SiteHeader",
+        "Logo",
+        "ThemeToggle",
+        "Hero",
+        "CropMark",
+        "SlugLine",
+        "ColorStrip",
+        "PlateText",
+        "InlineCode",
+        "CopyBlock",
+        "Button",
+        "TextLink",
+        "MetaStrip",
+        "ProofSlider",
+        "ProofFrame",
+        "PlateLabel",
+        "RegistrationTarget",
+        "SliderHandle",
+        "FigureCaption",
+        "SectionHeading",
+        "DriftComparison",
+        "ProofMark",
+        "ProofNote",
+        "PrinciplesGrid",
+        "PrincipleCard",
+        "StepsTimeline",
+        "StepCard",
+        "CodePanel",
+        "DemoStats",
+        "PlayButton",
+        "StatGrid",
+        "Stat",
+        "EvolveThread",
+        "ThreadRow",
+        "ChangelogMini",
+        "VersionPill",
+        "GrowCard",
+        "DesignMdPromo",
+        "DesignMdCard",
+        "InstallSection",
+        "Tab",
+        "CommandRow",
+        "CopyNextStep",
+        "TouchList",
+        "ScanBox",
+        "FaqList",
+        "FaqItem",
+        "DisclosureIcon",
+        "CloseCta",
+        "SiteFooter"
+      ]
+    },
+    {
+      "id": "pixel-perfect-landing-dc/11",
+      "png": "pixel-perfect-landing-dc/11.png",
+      "source": "../design/pixel-perfect Landing.dc.html",
+      "label": "full · 390 · dark",
+      "viewport": "390x10890",
+      "route": "/",
+      "state": "dark",
+      "shows": [
+        "Home",
+        "SiteHeader",
+        "Logo",
+        "ThemeToggle",
+        "Hero",
+        "CropMark",
+        "SlugLine",
+        "ColorStrip",
+        "PlateText",
+        "InlineCode",
+        "CopyBlock",
+        "Button",
+        "TextLink",
+        "MetaStrip",
+        "ProofSlider",
+        "ProofFrame",
+        "PlateLabel",
+        "RegistrationTarget",
+        "SliderHandle",
+        "FigureCaption",
+        "SectionHeading",
+        "DriftComparison",
+        "ProofMark",
+        "ProofNote",
+        "PrinciplesGrid",
+        "PrincipleCard",
+        "StepsTimeline",
+        "StepCard",
+        "CodePanel",
+        "DemoStats",
+        "PlayButton",
+        "StatGrid",
+        "Stat",
+        "EvolveThread",
+        "ThreadRow",
+        "ChangelogMini",
+        "VersionPill",
+        "GrowCard",
+        "DesignMdPromo",
+        "DesignMdCard",
+        "InstallSection",
+        "Tab",
+        "CommandRow",
+        "CopyNextStep",
+        "TouchList",
+        "ScanBox",
+        "FaqList",
+        "FaqItem",
+        "DisclosureIcon",
+        "CloseCta",
+        "SiteFooter"
+      ]
+    },
+    {
+      "id": "component-sheet-dc/01",
+      "png": "component-sheet-dc/01.png",
+      "source": "../design/Component sheet.dc.html",
+      "label": null,
+      "viewport": "1440x1010",
+      "route": null,
+      "state": "light + dark side by side",
+      "shows": [
+        "SlugLine",
+        "Button",
+        "TextLink",
+        "RegistrationTarget",
+        "ColorStrip",
+        "CopyBlock",
+        "InlineCode",
+        "Tab",
+        "CodePanel",
+        "PlateLabel",
+        "ProofMark",
+        "ProofNote",
+        "FaqItem",
+        "DisclosureIcon"
+      ]
+    },
+    {
+      "id": "component-sheet-dc/02",
+      "png": "component-sheet-dc/02.png",
+      "source": "../design/Component sheet.dc.html",
+      "label": "full · 1440 · dark",
+      "viewport": "1440x1010",
+      "route": null,
+      "state": "dark (both halves)",
+      "shows": [
+        "SlugLine",
+        "Button",
+        "TextLink",
+        "RegistrationTarget",
+        "ColorStrip",
+        "CopyBlock",
+        "InlineCode",
+        "Tab",
+        "CodePanel",
+        "PlateLabel",
+        "ProofMark",
+        "ProofNote",
+        "FaqItem",
+        "DisclosureIcon"
+      ]
+    },
+    {
+      "id": "component-sheet-dc/03",
+      "png": "component-sheet-dc/03.png",
+      "source": "../design/Component sheet.dc.html",
+      "label": "full · 390 · default",
+      "viewport": "390x2720",
+      "route": null,
+      "state": "light + dark stacked",
+      "shows": [
+        "SlugLine",
+        "Button",
+        "TextLink",
+        "RegistrationTarget",
+        "ColorStrip",
+        "CopyBlock",
+        "InlineCode",
+        "Tab",
+        "CodePanel",
+        "PlateLabel",
+        "ProofMark",
+        "ProofNote",
+        "FaqItem",
+        "DisclosureIcon"
+      ]
+    },
+    {
+      "id": "component-sheet-dc/04",
+      "png": "component-sheet-dc/04.png",
+      "source": "../design/Component sheet.dc.html",
+      "label": "full · 390 · dark",
+      "viewport": "390x2720",
+      "route": null,
+      "state": "dark (both halves)",
+      "shows": [
+        "SlugLine",
+        "Button",
+        "TextLink",
+        "RegistrationTarget",
+        "ColorStrip",
+        "CopyBlock",
+        "InlineCode",
+        "Tab",
+        "CodePanel",
+        "PlateLabel",
+        "ProofMark",
+        "ProofNote",
+        "FaqItem",
+        "DisclosureIcon"
+      ]
+    },
+    {
+      "id": "social-preview-dc/01",
+      "png": "social-preview-dc/01.png",
+      "source": "../design/Social preview.dc.html",
+      "label": null,
+      "viewport": "440x276",
+      "route": null,
+      "state": "default (slider crop)",
+      "shows": [
+        "ProofFrame",
+        "CopyBlock",
+        "PlateLabel",
+        "RegistrationTarget",
+        "Button"
+      ]
+    },
+    {
+      "id": "social-preview-dc/02",
+      "png": "social-preview-dc/02.png",
+      "source": "../design/Social preview.dc.html",
+      "label": "full · 1440 · default",
+      "viewport": "1440x900",
+      "route": null,
+      "state": "default",
+      "shows": [
+        "SocialCard",
+        "CropMark",
+        "RegistrationTarget",
+        "PlateText",
+        "SlugLine",
+        "ProofFrame",
+        "CopyBlock",
+        "PlateLabel",
+        "Button"
+      ]
+    },
+    {
+      "id": "social-preview-dc/03",
+      "png": "social-preview-dc/03.png",
+      "source": "../design/Social preview.dc.html",
+      "label": "full · 390 · default",
+      "viewport": "390x2770",
+      "route": null,
+      "state": "default",
+      "shows": [
+        "SocialCard",
+        "CropMark",
+        "RegistrationTarget",
+        "PlateText",
+        "SlugLine",
+        "ProofFrame",
+        "CopyBlock",
+        "PlateLabel",
+        "Button"
+      ]
+    },
+    {
+      "id": "logo-dc/01",
+      "png": "logo-dc/01.png",
+      "source": "../design/Logo.dc.html",
+      "label": null,
+      "viewport": "1440x3600",
+      "route": null,
+      "state": "brand sheet",
+      "shows": [
+        "Logo"
+      ]
+    },
+    {
+      "id": "logo-dc/02",
+      "png": "logo-dc/02.png",
+      "source": "../design/Logo.dc.html",
+      "label": "full · 390 · default",
+      "viewport": "390x4379",
+      "route": null,
+      "state": "brand sheet",
+      "shows": [
+        "Logo"
+      ]
+    },
+    {
+      "id": "pasted-1790742749159-0/01",
+      "png": "pasted-1790742749159-0/01.png",
+      "source": "../design/uploads/pasted-1790742749159-0.png",
+      "label": null,
+      "viewport": null,
+      "route": null,
+      "state": "LayerStack separated (dark)",
+      "shows": [
+        "LayerStack"
+      ]
+    },
+    {
+      "id": "pasted-1790742949005-0/01",
+      "png": "pasted-1790742949005-0/01.png",
+      "source": "../design/uploads/pasted-1790742949005-0.png",
+      "label": null,
+      "viewport": null,
+      "route": "/",
+      "state": "hero, LayerStack separated (light)",
+      "shows": [
+        "MetaStrip",
+        "TextLink",
+        "ProofSlider",
+        "ProofFrame",
+        "CopyBlock",
+        "PlateLabel",
+        "RegistrationTarget",
+        "SliderHandle",
+        "FigureCaption",
+        "LayerStack",
+        "Button"
+      ]
+    }
+  ],
+  "screens": [
+    {
+      "name": "Home",
+      "route": "/",
+      "states": [
+        {
+          "name": "default",
+          "frames": [
+            "pixel-perfect-landing-dc/01",
+            "pixel-perfect-landing-dc/02",
+            "pixel-perfect-landing-dc/03",
+            "pixel-perfect-landing-dc/04",
+            "pixel-perfect-landing-dc/05",
+            "pixel-perfect-landing-dc/06",
+            "pixel-perfect-landing-dc/07",
+            "pixel-perfect-landing-dc/08",
+            "pixel-perfect-landing-dc/10"
+          ],
+          "note": "01-07 are 1264px section crops of the default light render; 08 is 1440, 10 is 390."
+        },
+        {
+          "name": "dark",
+          "frames": [
+            "pixel-perfect-landing-dc/09",
+            "pixel-perfect-landing-dc/11"
+          ],
+          "note": "The toggle label in these frames reads 'Dark'; the designed dark label is 'Light' (ui_states.theme_toggle)."
+        },
+        {
+          "name": "install-claude",
+          "frames": [
+            "pixel-perfect-landing-dc/05",
+            "pixel-perfect-landing-dc/08",
+            "pixel-perfect-landing-dc/09",
+            "pixel-perfect-landing-dc/10",
+            "pixel-perfect-landing-dc/11"
+          ],
+          "note": "The default tab; every frame draws it."
+        },
+        {
+          "name": "install-codex",
+          "undrawn": "Defined in the export's code (Landing.dc.html tab data line 422, panel template 362-370) but no frame shows it; every frame draws the Claude Code tab. Two commands plus the duplicate-install warning."
+        },
+        {
+          "name": "install-cursor",
+          "undrawn": "Defined in the export's code (Landing.dc.html tab data line 423, panel template 362-370) but no frame shows it; every frame draws the Claude Code tab. Two commands, a note and the symlink warning."
+        },
+        {
+          "name": "install-grok",
+          "undrawn": "Defined in the export's code (Landing.dc.html tab data line 424, panel template 362-370) but no frame shows it; every frame draws the Claude Code tab. Two commands and a note."
+        },
+        {
+          "name": "install-opencode",
+          "undrawn": "Defined in the export's code (Landing.dc.html tab data line 425, panel template 362-370) but no frame shows it; every frame draws the Claude Code tab. Three commands, no note."
+        },
+        {
+          "name": "install-pi",
+          "undrawn": "Defined in the export's code (Landing.dc.html tab data line 426, panel template 362-370) but no frame shows it; every frame draws the Claude Code tab. One command, no note."
+        },
+        {
+          "name": "faq-open",
+          "undrawn": "Designed in manifest ui_states.faq_open; the export never draws it open (the component sheet's item is marked open in source but renders closed)."
+        },
+        {
+          "name": "copied",
+          "undrawn": "Labels are in the export's code (Landing.dc.html:474, 'Copied ✓' / 'Selected'); button width and the screen-reader announcement are designed in manifest ui_states.copy. No frame draws a copied button."
+        },
+        {
+          "name": "headline-alternate",
+          "undrawn": "A prop in the export (Landing.dc.html:419 'headline' enum, markup 82-91; strategy D13); no frame renders the alternate headline."
+        }
+      ],
+      "composes": [
+        "SiteHeader",
+        "Hero",
+        "ProofSlider",
+        "LayerStack",
+        "SectionHeading",
+        "DriftComparison",
+        "PrinciplesGrid",
+        "StepsTimeline",
+        "DemoStats",
+        "EvolveThread",
+        "GrowCard",
+        "DesignMdPromo",
+        "TextLink",
+        "InstallSection",
+        "FaqList",
+        "CloseCta",
+        "SiteFooter"
+      ],
+      "evidence": "manifest platforms.web-desktop/web-mobile screens 'Home' '/'; strategy §9.1 order Hero, Why, Build it, Grow it, Install, FAQ, Close.",
+      "note": "One route serves web-desktop (1440) and web-mobile (390); at 390 every two-column row stacks and Fig. 1 hides, and the only structurally new mobile part is the designed header (SiteHeader mobile + SectionStrip), which no frame draws."
+    },
+    {
+      "name": "Changelog",
+      "route": "/changelog",
+      "states": [
+        {
+          "name": "default",
+          "undrawn": "No frame draws this page. It was added by evolve from the prose request 'add a changelog page' (design/deltas/2026-10-01-changelog-page/delta.md) and is built in the site's existing design language."
+        },
+        {
+          "name": "dark",
+          "undrawn": "No frame draws this page. The dark theme is the capture's dark pass of the default story, as for Home."
+        }
+      ],
+      "composes": [
+        "Logo",
+        "TextLink",
+        "SectionHeading",
+        "ReleaseEntry",
+        "SiteFooter"
+      ],
+      "evidence": "Prose request 'add a changelog page'; the landing names the page screens/Changelog (EvolveThread reply) and ChangelogMini draws it in miniature (Landing.dc.html:298-304).",
+      "note": "One route serves web-desktop (1440) and web-mobile (390). The page prints the repository's CHANGELOG.md, read at build time. It does not use SiteHeader, whose links are in-page anchors on Home; the lockup links home instead. Nothing on Home links to it (the footer link was left as it is at the E4 gate)."
+    }
+  ],
+  "organisms": [
+    {
+      "name": "SiteHeader",
+      "composes": [
+        "Logo",
+        "NavLink",
+        "ThemeToggle",
+        "TextLink",
+        "SectionStrip"
+      ],
+      "variants": [
+        "desktop: sticky 60px, lockup, six NavLinks, labelled ThemeToggle",
+        "mobile as exported (720px and below): lockup and labelled toggle only (frames 10, 11)",
+        "mobile as designed: lockup, mono 'Install' TextLink, icon-only toggle, then a non-sticky SectionStrip row (undrawn: manifest ui_states.mobile_header)"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "Header in every full-page frame (Landing.dc.html:42-57); section crops 01-07 exclude it.",
+      "note": "The designed mobile header replaces the exported one; its width at 390 is estimated at about 330 of 358px, confirm when built."
+    },
+    {
+      "name": "Hero",
+      "composes": [
+        "CropMark",
+        "SlugLine",
+        "ColorStrip",
+        "PlateText",
+        "CopyBlock",
+        "TextLink",
+        "Button",
+        "MetaStrip"
+      ],
+      "variants": [
+        "headline primary (drawn)",
+        "headline alternate (undrawn: export prop, Landing.dc.html:82-91 and 419, strategy D13); Fig. 1's caption then carries the primary line"
+      ],
+      "states": [
+        "default"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/01",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "pasted-1790742949005-0/01"
+      ],
+      "evidence": "Section 'Hero' (Landing.dc.html:60-169).",
+      "note": "The checklist folds the slider and Fig. 1 into Hero; the gate forbids an organism inside an organism, so Hero lays out a figure row that Home fills with ProofSlider and LayerStack. At 720px and below: one column, Fig. 1 hidden, slider kept. The install block must sit in the first screen at both widths (strategy §9.2)."
+    },
+    {
+      "name": "ProofSlider",
+      "composes": [
+        "ProofFrame",
+        "SliderHandle",
+        "CopyBlock",
+        "FigureCaption"
+      ],
+      "states": [
+        "split 50 (drawn)",
+        "split 0: the built component fills the pane (undrawn: ui_states.slider.ends)",
+        "split 100: the design frame fills the pane (undrawn: ui_states.slider.ends)",
+        "focus-visible on the handle (undrawn: ui_states.slider.focus)"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/01",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "pasted-1790742949005-0/01"
+      ],
+      "evidence": "Proof slider figure (Landing.dc.html:121-150).",
+      "note": "Owns split (0-100) through an invisible native range input: arrows ±1, Page Up/Down ±10, Home/End; aria-valuetext '{split}% design frame, {100 - split}% built component'; touch-action pan-y. The checklist cites the social preview; that draws the handle-less ProofFrame and is claimed there. The pair is real (owner's decision 2026-09-30): the install card as drawn in the export, cropped at 2x into static/proof/, beside the live CopyBlock; the drawn $24 card was placeholder content and PlanCard is removed. Both sides are staged at the card's design width (545px from the 1440 frame, 358px from the 390 frame) and zoomed together to fit the pane."
+    },
+    {
+      "name": "LayerStack",
+      "composes": [
+        "PlateLabel",
+        "FigureCaption"
+      ],
+      "states": [
+        "tilted: isometric, layers at resting depth (reduced-motion end state; frames 01, 08, 09)",
+        "separated: layers spread apart and the label list opened (drawn in both uploads: dark in pasted-1790742749159-0, light in pasted-1790742949005-0)"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/01",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pasted-1790742749159-0/01",
+        "pasted-1790742949005-0/01"
+      ],
+      "evidence": "Fig. 1 figure (Landing.dc.html:153-167); uploads show it separated.",
+      "note": "Five sheet plates (a token swatch row, atoms, molecules, organisms, screens with cyan/magenta blend bars) with the SCREENS…TOKENS label list and the FIG. 1 caption. Motion: fig1-tilt on load (flat to tilted) and fig1-separate on scroll (layers spread, label gap 8 to 24px); takes a progress prop. Hidden at 720px and below (absent from 10, 11)."
+    },
+    {
+      "name": "DriftComparison",
+      "composes": [
+        "PlateLabel",
+        "CopyBlock",
+        "ProofMark",
+        "ProofNote",
+        "FigureCaption"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/02",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "Why figure: APPROVED vs DRIFTED (Landing.dc.html:179-213).",
+      "note": "Columns side by side at 1440, stacked at 390. Motion why-drift drifts the card and pops the four ProofMarks in; takes a progress prop; the end state is fully drifted. The drifted card is the real CopyBlock with the four drifts layered on as ad-hoc overrides (padding 20, the drift gray, an outline button, radius 5); the approved card is the CopyBlock as built (owner's decision 2026-09-30, strategy §9.2)."
+    },
+    {
+      "name": "PrinciplesGrid",
+      "composes": [
+        "SectionHeading",
+        "PrincipleCard"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/02",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "Pivot line plus four principles (Landing.dc.html:216-222).",
+      "note": "Led by the statement line 'Your design survives your codebase.' and a rule; four columns at 1440, one at 390."
+    },
+    {
+      "name": "StepsTimeline",
+      "composes": [
+        "StepCard",
+        "CodePanel"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/03",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "Ordered list with the progress rail (Landing.dc.html:230-259).",
+      "note": "2px line rail with a magenta fill. Motion build-rail fills the rail with scroll and brightens each step; the end state is a full rail. Takes a progress prop."
+    },
+    {
+      "name": "DemoStats",
+      "composes": [
+        "PlayButton",
+        "FigureCaption",
+        "StatGrid",
+        "InlineCode"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/03",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "Second row of Build it: video poster beside the stats (Landing.dc.html:261-282).",
+      "note": "Sits in Build it (the checklist cites a review slice). Hatched 16:9 poster with PlayButton and caption, beside StatGrid and the 'No mockup yet? wireframe…' line; stacks at 390. Poster and numbers are placeholders until T8 and the dogfood run."
+    },
+    {
+      "name": "EvolveThread",
+      "composes": [
+        "ThreadRow",
+        "ChangelogMini",
+        "FigureCaption",
+        "InlineCode"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/04",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "Scripted thread figure (Landing.dc.html:291-308).",
+      "note": "Sheet card: the YOU command, the AGENT reply, the change-summary line 'reuse [n] · new [n] · [n] captured components moved', then ChangelogMini. Example until the real evolve run (T21)."
+    },
+    {
+      "name": "DesignMdPromo",
+      "composes": [
+        "SectionHeading",
+        "InlineCode",
+        "Button",
+        "DesignMdCard"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/04",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "'It writes a DESIGN.md too.' row (Landing.dc.html:317-331).",
+      "note": "h3, lede and the Grow it CTA 'Install pixel-perfect' (links #install) beside the DesignMdCard; stacks at 390."
+    },
+    {
+      "name": "InstallSection",
+      "composes": [
+        "CopyBlock",
+        "Tab",
+        "CommandRow",
+        "TabNote",
+        "CopyNextStep",
+        "TouchList",
+        "ScanBox"
+      ],
+      "states": [
+        "claude: the default tab (drawn)",
+        "codex, cursor, grok, opencode, pi (undrawn: defined in the export's code Landing.dc.html:420-427, panel template 362-370; open with #install-{id})",
+        "copied (undrawn: ui_states.copy)"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/05",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "Section 'Install' body (Landing.dc.html:342-385).",
+      "note": "Two CopyBlocks side by side (stacked at 390), a role=tablist of six Tabs that wraps to two rows at 390, the panel's CommandRows, TabNote and CopyNextStep, the stability line, then 'What it touches' (three TouchLists and ScanBox). Owns the selected tab: arrow, Home and End keys, roving tabindex, #install-{id} deep links, remembered on return (strategy §12). Home places the heading row ('Install it in your agent.' and 'View source ↗')."
+    },
+    {
+      "name": "FaqList",
+      "composes": [
+        "FaqItem"
+      ],
+      "states": [
+        "all closed (drawn)",
+        "one or more open (undrawn: ui_states.faq_open)"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/06",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "Eight FAQ items (Landing.dc.html:392-401).",
+      "note": "The 'Questions' heading sits beside the list at 1440 (1:2 grid) and above it at 390."
+    },
+    {
+      "name": "CloseCta",
+      "composes": [
+        "PlateText",
+        "Button",
+        "TextLink"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/07",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "Section 'Close' headline and actions (Landing.dc.html:407-411).",
+      "note": "Motion close-register (scroll). SiteFooter is a sibling, not a child."
+    },
+    {
+      "name": "SiteFooter",
+      "composes": [
+        "TextLink",
+        "Logo"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/07",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "'MIT · Changelog · Upgrade guides' with mark C (Landing.dc.html:412-415).",
+      "note": "Inside the Close section in the export; composed by Home as a sibling of CloseCta."
+    },
+    {
+      "name": "SocialCard",
+      "composes": [
+        "CropMark",
+        "Logo",
+        "PlateText",
+        "SlugLine",
+        "ProofFrame",
+        "CopyBlock"
+      ],
+      "variants": [
+        "1200x630, light theme only"
+      ],
+      "appears_on": [
+        "social-preview-dc/02",
+        "social-preview-dc/03"
+      ],
+      "evidence": "Social preview.dc.html (full page); manifest ui_states.social_card.",
+      "note": "Rendered to og.png at build (manifest deploy.static). The export's crosshair plus mono 'pixel-perfect' lockup becomes the Logo atom (mark A + wordmark) per D5; no frame draws the new lockup. The plate headline is statically misregistered. Frame 03 (the 390 capture) renders the same fixed 1200px card over empty background. The pair is real (owner's decision 2026-09-30): the install card as drawn in the export, cropped at 2x into static/proof/, beside the live CopyBlock; the drawn $24 card was placeholder content and PlanCard is removed."
+    }
+  ],
+  "molecules": [
+    {
+      "name": "CopyBlock",
+      "composes": [
+        "InlineCode",
+        "Button"
+      ],
+      "variants": [
+        "card: sheet background, command plus helper line 'Paste into any of the six agents.', primary Copy (the paste-to-agent line)",
+        "row: bare outline, one line, secondary Copy (npx skills add)"
+      ],
+      "states": [
+        "default: 'Copy'",
+        "copied: 'Copied ✓' for 2 s (undrawn: Landing.dc.html:474, manifest ui_states.copy)",
+        "selected: clipboard blocked, the command text is selected and the label reads 'Selected' (undrawn: ui_states.copy)",
+        "focus-visible on the button (undrawn: ui_states.focus)"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/01",
+        "pixel-perfect-landing-dc/05",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "component-sheet-dc/01",
+        "component-sheet-dc/02",
+        "component-sheet-dc/03",
+        "component-sheet-dc/04"
+      ],
+      "evidence": "Hero install stack (01), the Install section pair (05), sheet 'Copy block'.",
+      "note": "A visually hidden aria-live region announces 'Copied to clipboard' or the select fallback. CopyBlock and CommandRow share one copy helper (clipboard, select fallback, 2 s label, announcement); that is a function, not a component. At 390 the command wraps; the button stays right."
+    },
+    {
+      "name": "CommandRow",
+      "composes": [
+        "InlineCode",
+        "Button"
+      ],
+      "states": [
+        "default",
+        "copied / selected (undrawn: ui_states.copy)",
+        "focus-visible: code-focus outline, no cyan plate (undrawn: ui_states.focus)"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/05",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "Two dark rows under the Claude Code tab (Landing.dc.html:364-367).",
+      "note": "The checklist calls it 'numbered'; no frame draws numbers, and order comes from stacking only. code-bg in both themes; the command wraps at 390."
+    },
+    {
+      "name": "CodePanel",
+      "composes": [
+        "PlateLabel"
+      ],
+      "variants": [
+        "yaml: code-key keys, code-value values, code-comment comments (manifest.yaml, inventory.yaml excerpt)",
+        "terminal: code-success 'created' lines",
+        "status: 'gate passed' / 'building' / 'waiting' rows"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/03",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "component-sheet-dc/01",
+        "component-sheet-dc/02",
+        "component-sheet-dc/03",
+        "component-sheet-dc/04"
+      ],
+      "evidence": "Four output panels in Build it (Landing.dc.html:235-257); sheet 'Code panel'.",
+      "note": "Header: filename plus an 'Example output' tag (PlateLabel on-code). Dark in both themes. At 390 the body scrolls sideways and clips and long headers wrap (frames 10, 11); strategy §9.3 asks that the 'Check the proof' status block not clip. Content is example output until the dogfood run (§11.1)."
+    },
+    {
+      "name": "StepCard",
+      "composes": [
+        "PlateLabel",
+        "InlineCode"
+      ],
+      "variants": [
+        "step 1 init",
+        "step 2 scaffold",
+        "step 3 build",
+        "step 4 status"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/03",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "Four list items: label, command, description (Landing.dc.html:231-257).",
+      "note": "The checklist folds the output into the card; a molecule cannot hold the CodePanel molecule, so StepsTimeline pairs each StepCard with its CodePanel (side by side at 1440, stacked at 390). Motion build-rail brightens each step from 50% opacity as the rail reaches it; the end state is full opacity."
+    },
+    {
+      "name": "ProofNote",
+      "composes": [
+        "InlineCode"
+      ],
+      "variants": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/02",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "component-sheet-dc/01",
+        "component-sheet-dc/02",
+        "component-sheet-dc/03",
+        "component-sheet-dc/04"
+      ],
+      "evidence": "Numbered notes under the drift cards (Landing.dc.html:205-210); sheet pairs a mark with note 1.",
+      "note": "Mono magenta-ink number plus a muted 14px note; note 2 carries '#8A8F96' as InlineCode. Two columns at 1440, one at 390."
+    },
+    {
+      "name": "GrowCard",
+      "composes": [
+        "InlineCode"
+      ],
+      "variants": [
+        "evolve: 'with a new mock'",
+        "refine: 'with a token change' plus the mono cascade line the cascade line, measured from this build (run.json)",
+        "add-platform: no qualifier"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/04",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "Three rule-topped blocks beside the thread (Landing.dc.html:311-313)."
+    },
+    {
+      "name": "ThreadRow",
+      "composes": [
+        "PlateLabel",
+        "InlineCode"
+      ],
+      "variants": [
+        "you: speaker label YOU and the command",
+        "agent: speaker label AGENT and the reply"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/04",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "YOU / AGENT lines of the scripted thread (Landing.dc.html:293-296)."
+    },
+    {
+      "name": "MetaStrip",
+      "composes": [
+        "TextLink"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/01",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "pasted-1790742949005-0/01"
+      ],
+      "evidence": "'MIT · by Justin Rich · View source ↗ · Works in six agents · Frameworks: …' between rules (Landing.dc.html:115-117).",
+      "note": "One row at 1440; wraps to three rows at 390 (frames 10, 11)."
+    },
+    {
+      "name": "StatGrid",
+      "composes": [
+        "Stat"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/03",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "dl of five stats (Landing.dc.html:272-279).",
+      "note": "Auto-fit columns: 4 + 1 at 1440, 3 + 2 at 390. Carries the mono footnote 'Measured at launch from the dogfood build.'"
+    },
+    {
+      "name": "FaqItem",
+      "composes": [
+        "DisclosureIcon",
+        "InlineCode"
+      ],
+      "states": [
+        "closed (drawn)",
+        "open: the answer shows under the question and the glyph becomes a magenta-ink minus (undrawn: manifest ui_states.faq_open; the component sheet's source marks its item open but the render draws it closed)",
+        "hover (undrawn: ui_states.hover)",
+        "focus-visible on the summary (undrawn: ui_states.focus)"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/06",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "component-sheet-dc/01",
+        "component-sheet-dc/02",
+        "component-sheet-dc/03",
+        "component-sheet-dc/04"
+      ],
+      "evidence": "Eight details rows (Landing.dc.html:393-400); sheet 'FAQ item'.",
+      "note": "Native details/summary; several may be open. Answers contain InlineCode ('evolve'). The sheet draws a compact 16px size; the landing's 17px size is the target."
+    },
+    {
+      "name": "TouchList",
+      "composes": [
+        "PlateLabel",
+        "InlineCode"
+      ],
+      "variants": [
+        "reads",
+        "writes",
+        "runs"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/05",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "'What it touches' columns (Landing.dc.html:380-382).",
+      "note": "Auto-fit with ScanBox as the fourth column at 1440; one column at 390."
+    },
+    {
+      "name": "ScanBox",
+      "composes": [
+        "PlateLabel"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/05",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "'SECURITY SCAN' label over a dashed box (Landing.dc.html:383).",
+      "note": "'Third-party scan results — pending.' is a placeholder until real scan results (strategy §11.8, T18)."
+    },
+    {
+      "name": "FigureCaption",
+      "composes": [
+        "PlateLabel"
+      ],
+      "variants": [
+        "fig: mono 'FIG. 1' lead plus muted text",
+        "example: muted text with a trailing mono note ('Example — replaced by the real pair at launch.')",
+        "plain: muted 14px ('One run, start to finish: init, scaffold, build, status.')",
+        "mono: mono 12px only ('Example.', 'Example thread — replaced by the real run at launch.')"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/01",
+        "pixel-perfect-landing-dc/02",
+        "pixel-perfect-landing-dc/03",
+        "pixel-perfect-landing-dc/04",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "pasted-1790742949005-0/01"
+      ],
+      "evidence": "Captions under the slider, Fig. 1, drift notes, video and thread."
+    },
+    {
+      "name": "ChangelogMini",
+      "composes": [
+        "VersionPill"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/04",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "The assembled 'Changelog' page inside the thread (Landing.dc.html:298-304).",
+      "note": "Bar, title, three rows (v9.1 filled, v9.0 and v8.4 outline) with line placeholders. Motion grow-assemble flies the five parts in from scattered offsets; the end state is assembled. Takes a progress prop."
+    },
+    {
+      "name": "DesignMdCard",
+      "composes": [
+        "PlateLabel"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/04",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "'DESIGN.md · GENERATED · EXAMPLE' panel (Landing.dc.html:323-330).",
+      "note": "Sheet panel with mono 13px lines and the shadow-doc shadow; example content."
+    },
+    {
+      "name": "SectionStrip",
+      "composes": [
+        "NavLink"
+      ],
+      "undrawn": "Designed in manifest ui_states.mobile_header.row_2; at 720px and below the export hides the nav with no replacement, so no frame draws it.",
+      "evidence": "manifest ui_states.mobile_header.row_2",
+      "note": "'WHY · BUILD IT · GROW IT · INSTALL · FAQ · GITHUB ↗' styled as a slug line; not sticky; scrolls sideways with no visible scrollbar; 1px line under it."
+    },
+    {
+      "name": "CopyNextStep",
+      "composes": [
+        "InlineCode"
+      ],
+      "states": [
+        "static: always shown under the Install tab panel in body type (drawn; decided at B-inv)"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/05",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "'Next: open a project that has your design and run /pixel-perfect:init.' (Landing.dc.html:371).",
+      "note": "Decided at B-inv: always shown under the Install tabs in body type, as the export draws it; no copy-triggered reveal and no next-step line under the hero."
+    },
+    {
+      "name": "ProofFrame",
+      "composes": [
+        "PlateLabel",
+        "RegistrationTarget"
+      ],
+      "variants": [
+        "with handle: inside ProofSlider",
+        "static: fixed 50% split, no handle (SocialCard)"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/01",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "social-preview-dc/01",
+        "social-preview-dc/02",
+        "social-preview-dc/03",
+        "pasted-1790742949005-0/01"
+      ],
+      "evidence": "social-preview-dc/01 draws the slider pane with no handle; Landing.dc.html:122-146 is the same pane plus handle and range input.",
+      "note": "Not on the checklist. A 16:10 sheet pane: hatched design side (stripe token), built side clipped at the split, 2px magenta divider, DESIGN FRAME / BUILT COMPONENT labels, four small RegistrationTargets; the pair is passed in. Added so SocialCard can show the slider without composing the ProofSlider organism (the gate forbids an organism inside an organism)."
+    },
+    {
+      "name": "ReleaseEntry",
+      "composes": [
+        "VersionPill",
+        "PlateLabel",
+        "InlineCode"
+      ],
+      "variants": [
+        "latest: filled pill (the newest release)",
+        "older: outline pill"
+      ],
+      "undrawn": "No frame draws a release at full size; ChangelogMini draws the row in miniature (a pill and a line). Added by evolve for the Changelog screen.",
+      "evidence": "ChangelogMini rows (Landing.dc.html:301-303) set the pill rule: newest filled, older outlined. design/deltas/2026-10-01-changelog-page/delta.md.",
+      "note": "One release: the version pill and date in the margin, then each group of changes (Added, Changed, Fixed, Removed) as a plate label over a bulleted list. Backticked runs in a change render as InlineCode."
+    }
+  ],
+  "atoms": [
+    {
+      "name": "Button",
+      "library_primitive": null,
+      "variants": [
+        "primary: ink fill, paper text (hero and Install copy buttons, 'Install pixel-perfect' as a link to #install)",
+        "secondary: outline in the line colour ('See it build', the npx copy button)",
+        "small-on-code: 13px, code-control-border on code-bg (CommandRow copy button)"
+      ],
+      "states": [
+        "default: label 'Copy' or the action text",
+        "copied: 'Copied ✓' for 2 s, or 'Selected' when the clipboard is blocked (undrawn: labels in the export's code Landing.dc.html:474, layout in manifest ui_states.copy)",
+        "hover (undrawn: manifest ui_states.hover; primary goes magenta-ink, secondary border goes ink, code button border goes code-fg)",
+        "focus-visible (undrawn: manifest ui_states.focus; code-focus outline and no cyan plate on code panels)"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/01",
+        "pixel-perfect-landing-dc/02",
+        "pixel-perfect-landing-dc/04",
+        "pixel-perfect-landing-dc/05",
+        "pixel-perfect-landing-dc/07",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "component-sheet-dc/01",
+        "component-sheet-dc/02",
+        "component-sheet-dc/03",
+        "component-sheet-dc/04",
+        "social-preview-dc/01",
+        "social-preview-dc/02",
+        "social-preview-dc/03",
+        "pasted-1790742949005-0/01"
+      ],
+      "evidence": "Component sheet 'Buttons' row draws primary and secondary; landing 05 draws the small copy button on the dark command rows.",
+      "note": "Renders as <a> when given an href. As wide as its label, as designed; a copy button widens while its feedback shows (ui_states.copy, decided 2026-09-30). The drifted card's outline button (DriftComparison) is the deliberate 'fifth button style' and is NOT a Button variant; size sm, drawn for the example card's 'Choose plan', is unused since that card became the real install card."
+    },
+    {
+      "name": "ThemeToggle",
+      "library_primitive": null,
+      "variants": [
+        "labelled: 10px dot plus the word, 1px line border, radius 3",
+        "icon-only at 720px and below: the dot in a 40x40 square, word visually hidden (undrawn: manifest ui_states.theme_toggle.mobile; frames 10 and 11 still draw the labelled form)"
+      ],
+      "states": [
+        "light theme: dark dot + 'Dark'",
+        "dark theme: light dot + 'Light' (undrawn: frames 09 and 11 read 'Dark' in the dark theme because the renderer forced data-theme without the export's state; the designed label is in manifest ui_states.theme_toggle.label)",
+        "hover (undrawn: ui_states.hover, border line to ink)",
+        "focus-visible (undrawn: ui_states.focus)"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "Header right edge in every full-page frame; label logic Landing.dc.html:55 and 495.",
+      "note": "aria-label 'Switch to dark theme' / 'Switch to light theme'. The atom only renders; the theme lives on <html data-theme> and is saved in localStorage (manifest theme)."
+    },
+    {
+      "name": "TextLink",
+      "library_primitive": null,
+      "variants": [
+        "inline: magenta-ink, 1px underline offset 3px ('Prefer your agent's own commands? See every install option.')",
+        "external: trailing ↗ ('View source ↗', 'GitHub ↗')",
+        "footer: 14px ('Changelog', 'Upgrade guides')",
+        "mono: 13px mono magenta-ink 'Install' in the mobile header (undrawn: manifest ui_states.mobile_header.row_1)"
+      ],
+      "states": [
+        "default",
+        "hover: magenta-ink to ink (export rule Landing.dc.html:26; not drawn)",
+        "focus-visible: outline only, no plate (undrawn: ui_states.focus)"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/01",
+        "pixel-perfect-landing-dc/05",
+        "pixel-perfect-landing-dc/07",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "component-sheet-dc/01",
+        "component-sheet-dc/02",
+        "component-sheet-dc/03",
+        "component-sheet-dc/04",
+        "pasted-1790742949005-0/01"
+      ],
+      "evidence": "Hero install link and MetaStrip 'View source ↗' (01), Install heading link (05), close and footer links (07), sheet 'GitHub ↗'."
+    },
+    {
+      "name": "NavLink",
+      "library_primitive": null,
+      "variants": [
+        "header: 15px ink, no underline (Why, Build it, Grow it, Install, FAQ, GitHub ↗)",
+        "strip: mono caps 11px muted with a 44px tall touch target, inside SectionStrip (undrawn: manifest ui_states.mobile_header.row_2)"
+      ],
+      "states": [
+        "default",
+        "hover: 2px magenta underline 6px below the text (undrawn: ui_states.hover)",
+        "focus-visible (undrawn: ui_states.focus)"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09"
+      ],
+      "evidence": "Header nav in frames 08 and 09; hidden at 390 (frames 10 and 11 draw no nav, Landing.dc.html:47 data-hide-m).",
+      "note": "The checklist lists a 'current' state; no frame draws one and manifest ui_states designs none, so it is not recorded. Add it only if it gets designed."
+    },
+    {
+      "name": "Logo",
+      "library_primitive": null,
+      "variants": [
+        "lockup: mark A (stacked plates, 28px) + Anybody 700 wdth 105 wordmark with a square-ended dash (header, SocialCard)",
+        "mark C alone: the registered P, 24px, alt 'pixel-perfect' (footer)",
+        "light and dark artwork swap (mark-*-light.svg / mark-*-dark.svg)"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/07",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "logo-dc/01",
+        "logo-dc/02"
+      ],
+      "evidence": "Header lockup and footer mark in the full-page frames; the Logo sheet (logo-dc/01, 02) defines marks A, B, C and the lockup.",
+      "note": "Strategy D5: mark A in the header and social image, mark C in the footer, mark B only as the favicon PNGs (a static copy, manifest deploy.static, not rendered by this atom). The Logo sheet's single-colour marks, size check, alternate social-image layout, README banner and construction sheet are brand artwork and are not built; the SocialCard keeps the Social preview layout (manifest ui_states.social_card). logo.js names Anybody 800 wdth 112 but the sheet and header render 700/105; the header follows the landing export (manifest tokens.typography.note)."
+    },
+    {
+      "name": "CropMark",
+      "library_primitive": null,
+      "variants": [
+        "hero: 16px corner, 1px muted, 12px inset, four corners of the proof sheet",
+        "social: 20px corner, 20px inset (SocialCard)"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/01",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "social-preview-dc/02",
+        "social-preview-dc/03"
+      ],
+      "evidence": "Four corner marks around the hero (Landing.dc.html:61-64) and around the social card (Social preview.dc.html:16-19).",
+      "note": "aria-hidden."
+    },
+    {
+      "name": "RegistrationTarget",
+      "library_primitive": null,
+      "variants": [
+        "small: 14px muted crosshair and circle, four per ProofFrame pane",
+        "large: 40px ink crosshair with a 4px magenta centre pixel (component sheet 'Registration target (mark)')"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/01",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "component-sheet-dc/01",
+        "component-sheet-dc/02",
+        "component-sheet-dc/03",
+        "component-sheet-dc/04",
+        "social-preview-dc/01",
+        "social-preview-dc/02",
+        "social-preview-dc/03",
+        "pasted-1790742949005-0/01"
+      ],
+      "evidence": "Slider pane corners (Landing.dc.html:143-146) and the component sheet's mark.",
+      "note": "A print device, not the logo (manifest ui_states.component_sheet). The social export uses the large target as its logo; that lockup is retired for the Logo atom (D5), so on the SocialCard the target survives only on the slider pane."
+    },
+    {
+      "name": "ColorStrip",
+      "library_primitive": null,
+      "variants": [
+        "hero: eight 16x10 swatches (cyan, magenta, yellow, ink, then each at 50%)",
+        "sheet: 20x14 swatches"
+      ],
+      "states": [
+        "tints follow the theme tokens (both themes drawn)"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/01",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "component-sheet-dc/01",
+        "component-sheet-dc/02",
+        "component-sheet-dc/03",
+        "component-sheet-dc/04"
+      ],
+      "evidence": "Right end of the hero slug line (Landing.dc.html:67) and the component sheet.",
+      "note": "aria-hidden. At 390 it wraps under the SlugLine (frames 10, 11). Fig. 1's base-plate swatches are part of LayerStack, not this atom."
+    },
+    {
+      "name": "SlugLine",
+      "library_primitive": null,
+      "variants": [
+        "job line: 'PIXEL-PERFECT · V9 · PROOF SHEET · 2026-09-29', mono 12px muted",
+        "agent line: 'AN AGENT SKILL · CLAUDE CODE · … · PI', mono 14px (SocialCard)",
+        "sheet header: 'PIXEL-PERFECT · COMPONENT SHEET · light/dark'"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/01",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "component-sheet-dc/01",
+        "component-sheet-dc/02",
+        "component-sheet-dc/03",
+        "component-sheet-dc/04",
+        "social-preview-dc/02",
+        "social-preview-dc/03"
+      ],
+      "evidence": "Hero top line (Landing.dc.html:66), sheet header, social agent line.",
+      "note": "The mobile SectionStrip reuses this styling (manifest ui_states.mobile_header)."
+    },
+    {
+      "name": "PlateLabel",
+      "library_primitive": null,
+      "variants": [
+        "muted: mono caps 11-12px (DESIGN FRAME, BUILT COMPONENT, APPROVED, TEAM PLAN, STEP 1 · READ THE DESIGN, READS, WRITES, RUNS, SECURITY SCAN, YOU, AGENT, DESIGN.md · GENERATED · EXAMPLE, FIG. 1, the Fig. 1 layer names)",
+        "accent: magenta-ink (DRIFTED)",
+        "on-code: code-comment colour in CodePanel headers"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/01",
+        "pixel-perfect-landing-dc/02",
+        "pixel-perfect-landing-dc/03",
+        "pixel-perfect-landing-dc/04",
+        "pixel-perfect-landing-dc/05",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "component-sheet-dc/01",
+        "component-sheet-dc/02",
+        "component-sheet-dc/03",
+        "component-sheet-dc/04",
+        "social-preview-dc/01",
+        "social-preview-dc/02",
+        "social-preview-dc/03",
+        "pasted-1790742949005-0/01"
+      ],
+      "evidence": "Mono caps labels on the slider, drift cards, steps, stats, touch list, thread and DESIGN.md card.",
+      "note": "Stat and TabNote reuse its type recipe; atoms do not compose each other."
+    },
+    {
+      "name": "ProofMark",
+      "library_primitive": null,
+      "variants": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/02",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "component-sheet-dc/01",
+        "component-sheet-dc/02",
+        "component-sheet-dc/03",
+        "component-sheet-dc/04"
+      ],
+      "evidence": "Four numbered discs on the drifted card (Landing.dc.html:197-200); sheet 'Proofreader's mark'.",
+      "note": "22px magenta-ink disc, mark-fg numeral. Motion why-drift pops them in one by one (p = .25, .40, .55, .70), owned by DriftComparison; the end state shows all four."
+    },
+    {
+      "name": "VersionPill",
+      "library_primitive": null,
+      "variants": [
+        "filled: magenta, mark-fg text (v9.1)",
+        "outline: line border (v9.0, v8.4)"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/04",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "ChangelogMini rows (Landing.dc.html:301-303)."
+    },
+    {
+      "name": "Stat",
+      "library_primitive": null,
+      "variants": [
+        "label + value: mono caps 11px label over an Anybody 700 30px value"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/03",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "TOKENS, MINUTES, FRAMES, GATES, COMPONENTS (Landing.dc.html:272-278).",
+      "note": "Values are '[n]' placeholders until the dogfood run is measured (strategy §11.2)."
+    },
+    {
+      "name": "InlineCode",
+      "library_primitive": null,
+      "variants": [
+        "inline: mono 13-14px in prose (wireframe, build, #8A8F96, screens/Changelog, .pixel-perfect/, /pixel-perfect:init, evolve)",
+        "block: mono 14px command line (StepCard, ThreadRow YOU line)",
+        "command: 13.5px, wraps, inside CopyBlock and CommandRow",
+        "heading: mono 19px inside 'It writes a DESIGN.md too.'"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/01",
+        "pixel-perfect-landing-dc/02",
+        "pixel-perfect-landing-dc/03",
+        "pixel-perfect-landing-dc/04",
+        "pixel-perfect-landing-dc/05",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "component-sheet-dc/01",
+        "component-sheet-dc/02",
+        "component-sheet-dc/03",
+        "component-sheet-dc/04"
+      ],
+      "evidence": "Mono runs in the hero install block, drift note 2, steps, thread, DESIGN.md heading and Install panel."
+    },
+    {
+      "name": "PlayButton",
+      "library_primitive": null,
+      "variants": [
+        "56px sheet circle, ink border, ink triangle on the hatched poster"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/03",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "Demo video poster in the Build it section (Landing.dc.html:265).",
+      "note": "The export makes it aria-hidden on a placeholder poster ('demo video · 60–90 s · poster frame'). The build must wire it to the real T8 video (or use the native <video> control); it must never ship as a non-functional button."
+    },
+    {
+      "name": "SliderHandle",
+      "library_primitive": null,
+      "states": [
+        "default: 28px sheet circle, 2px magenta border, '◂▸' in magenta-ink",
+        "focus-visible: the range input is invisible, so focus is drawn on the handle via peer-focus-visible (undrawn: manifest ui_states.slider.focus)",
+        "clamped at the ends so the whole circle stays inside the pane (undrawn: ui_states.slider.ends)"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/01",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "pasted-1790742949005-0/01"
+      ],
+      "evidence": "Handle on the split line (Landing.dc.html:140)."
+    },
+    {
+      "name": "Tab",
+      "library_primitive": null,
+      "states": [
+        "selected: ink, 600, 2px ink bottom border",
+        "unselected: muted, 400",
+        "hover: muted to ink (undrawn: ui_states.hover)",
+        "focus-visible (undrawn: ui_states.focus)"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/05",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "component-sheet-dc/01",
+        "component-sheet-dc/02",
+        "component-sheet-dc/03",
+        "component-sheet-dc/04"
+      ],
+      "evidence": "Six agent tabs (Landing.dc.html:357-360); sheet 'Tab list'.",
+      "note": "Link-tabs (href #install-{id}) inside a role=tablist; the row wraps to two lines at 390."
+    },
+    {
+      "name": "DisclosureIcon",
+      "library_primitive": null,
+      "states": [
+        "closed: mono '+' muted",
+        "open: minus sign U+2212 in magenta-ink (undrawn: manifest ui_states.faq_open; the export's + never changes)",
+        "hover: '+' turns magenta-ink (undrawn: ui_states.hover)"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/06",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "component-sheet-dc/01",
+        "component-sheet-dc/02",
+        "component-sheet-dc/03",
+        "component-sheet-dc/04"
+      ],
+      "evidence": "Right end of every FAQ summary.",
+      "note": "aria-hidden; native details announces expanded/collapsed."
+    },
+    {
+      "name": "PlateText",
+      "library_primitive": null,
+      "variants": [
+        "hero-primary: muted lead line 'Your mockup is a picture.' over the plated 'Ship the system inside it.' (Anybody 800 wdth 118)",
+        "hero-alternate: 'Turn a mockup into a design system your agent keeps building on.' (undrawn: export prop 'headline', Landing.dc.html:82-91 and 419, strategy D13)",
+        "close: 'Your next mockup has a system inside it.'",
+        "social: fixed misregistration (cyan -5/3, magenta 4/-2, yellow 1/4), no motion"
+      ],
+      "states": [
+        "registered: ink only, the end state every landing frame draws",
+        "misregistered: the three plate copies visibly offset, drawn statically on the social frames"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/01",
+        "pixel-perfect-landing-dc/07",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11",
+        "social-preview-dc/02",
+        "social-preview-dc/03"
+      ],
+      "evidence": "Hero h1 and close h2 carry three aria-hidden plate copies (Landing.dc.html:74-78, 407); the social h1 draws them offset.",
+      "note": "Motion: hero-plates-register (load, 1.7 s) and close-register (scroll) slide the plates into registration and fade them. Plates blend with --blend (multiply light, screen dark); reduced motion renders ink only. Takes a progress prop for stories (manifest motion.verify)."
+    },
+    {
+      "name": "SectionHeading",
+      "variants": [
+        "section: h2 Anybody 800 wdth 115, clamp(30px,3.4vw,46px) (Why, Build it, Grow it, Install, 'Questions')",
+        "statement: Anybody 700 wdth 110, clamp(24px,2.6vw,34px) ('Your design survives your codebase.')",
+        "subhead: h3 Anybody 700 wdth 110, 22px ('It writes a DESIGN.md too.')",
+        "section as h1: the same recipe on a page title (the Changelog screen's 'Changelog'; undrawn)"
+      ],
+      "library_primitive": null,
+      "appears_on": [
+        "pixel-perfect-landing-dc/02",
+        "pixel-perfect-landing-dc/03",
+        "pixel-perfect-landing-dc/04",
+        "pixel-perfect-landing-dc/05",
+        "pixel-perfect-landing-dc/06",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "Same display recipe at Landing.dc.html:175, 227, 287, 337, 391 plus the pivot line (216) and the DESIGN.md h3 (319).",
+      "note": "Not on the checklist; added because one recipe repeats seven times. Plain text only; PlateText owns the plate effect."
+    },
+    {
+      "name": "PrincipleCard",
+      "library_primitive": null,
+      "variants": [
+        "Consistency through composability",
+        "Make it real",
+        "Rapid iteration",
+        "Language agnostic"
+      ],
+      "appears_on": [
+        "pixel-perfect-landing-dc/02",
+        "pixel-perfect-landing-dc/08",
+        "pixel-perfect-landing-dc/09",
+        "pixel-perfect-landing-dc/10",
+        "pixel-perfect-landing-dc/11"
+      ],
+      "evidence": "Four principle blocks under the pivot line (Landing.dc.html:218-221).",
+      "note": "The checklist lists it as a molecule. It composes no atom (17px 600 title over a muted 15px paragraph), so it is recorded as an atom."
+    },
+    {
+      "name": "TabNote",
+      "library_primitive": null,
+      "variants": [
+        "note: a plain 15px line (Cursor 'Then reload the window.', Grok 'Then enable it in Grok's /plugins view.')",
+        "warning: a 14px line led by a mono magenta-ink 'Note' label (Codex duplicate installs, Cursor 'Copy, don't symlink.')"
+      ],
+      "undrawn": "Defined in the export's code (Landing.dc.html tab data 420-427, panel template 369-370; manifest ui_states.install_tabs), but every frame shows the Claude Code tab, which has neither a note nor a warning.",
+      "evidence": "export markup Landing.dc.html:369-370; open with #install-codex or #install-cursor.",
+      "note": "The checklist lists it as a molecule. It composes no atom (a text line with an optional mono lead), so it is recorded as an atom. Cursor shows both a note and a warning; OpenCode and Pi show neither."
+    }
+  ],
+  "notes": "Resolved at B-inv: the 'Next: … /pixel-perfect:init' line is always shown under the Install tabs, as the export draws it. The gate forbids organisms inside organisms, so Hero takes ProofSlider and LayerStack as slotted children placed by Home, CloseCta and SiteFooter are siblings, and a new ProofFrame molecule (the slider's handle-less pane, drawn alone in social-preview-dc/01) lets SocialCard show the slider. Frames 09 and 11 show the theme toggle reading 'Dark' in the dark theme, a render artifact; the designed dark label is 'Light' (ui_states.theme_toggle)."
+}
