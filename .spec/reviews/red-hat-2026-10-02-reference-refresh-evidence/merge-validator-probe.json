@@ -1,0 +1,23 @@
+{
+  "kind": "direct-production-function-contract-probe",
+  "notARealConsumerRefresh": true,
+  "requestedPrimary": "#eeeeee",
+  "actualPrimary": "#111111",
+  "inventoryFrames": 5,
+  "renderedFrames": 1,
+  "verdict": {
+    "exit": 0,
+    "violations": [],
+    "warnings": [],
+    "summary": {
+      "frames": 5,
+      "claimed": 4,
+      "unclaimed": 1,
+      "atoms": 7,
+      "molecules": 4,
+      "organisms": 2,
+      "screens": 3,
+      "states": 4
+    }
+  }
+}

@@ -1,0 +1,10 @@
+  ✔ real capture writes shot+ax+console for the matrix and a RENDER blocker for /broken (6070.360208ms)
+✔ capture-polish (6084.459375ms)
+ℹ tests 1
+ℹ suites 1
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6174.289333

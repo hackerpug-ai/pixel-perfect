@@ -1,0 +1,32 @@
+✔ normalizeCapture strips timestamps, abs paths, and hash suffixes (2.88025ms)
+✔ fingerprint is stable for identical content (0.462042ms)
+✔ --baseline writes goldens at the planned path layout (85.71775ms)
+✔ --check exits 0 when capture matches goldens (158.443417ms)
+✔ deliberate content change makes --check exit 1 (161.119625ms)
+✔ --accept then --check exits 0 after intentional change (261.499ms)
+✔ zero-story root exits 3 (vacuous, never a pass) (2.088ms)
+✔ bad args / missing mode exit 2 (0.174833ms)
+✔ --blast Button moves Button, Card, and Home — not Badge (155.755834ms)
+✔ --blast Badge moves only Badge (140.270834ms)
+✔ --reach Button reports Home as a live root (143.243917ms)
+✔ --reach UnusedChip reaches no live roots (dead inventory) (143.243833ms)
+✔ exported modes agree with CLI for baseline→check on a temp tree (45.866917ms)
+✔ script file is the shipped plugin path used by workflows (0.619875ms)
+✔ --check --layer blocks an inventoried component that has no captured story (71.974625ms)
+✔ findCatalogSources resolves nested and flat component layouts, never a story file (4.416667ms)
+✔ --perturb-dir is parsed (it was documented but ignored) (0.50325ms)
+✔ consumer fixture ships a real capture command (2.087625ms)
+✔ consumer: baseline → mutate → check=1 → accept → check=0 (1226.506708ms)
+✔ consumer: capture.command is executed (not silent catalog-only path) (356.791291ms)
+✔ evolve workflow requires E4 confirm-before-write and E6 prove matrix (1.380666ms)
+✔ evolve add: new entity goldens appear; prior goldens undisturbed (973.938917ms)
+✔ evolve remove + orphan sweep: removed gone; remaining goldens unchanged (839.804292ms)
+✔ deprecate writes deprecations, badges story, and check fails on composition (634.550292ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2526.410292

@@ -1,0 +1,73 @@
+✖ --blast Button moves Button, Card, and Home — not Badge (63.070542ms)
+✖ --blast Badge moves only Badge (66.852834ms)
+✖ --reach Button reports Home as a live root (67.678375ms)
+✔ --reach UnusedChip reaches no live roots (dead inventory) (80.080875ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 1
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 314.954875
+
+✖ failing tests:
+
+test at test/catalog.test.mjs:204:1
+✖ --blast Button moves Button, Card, and Home — not Badge (63.070542ms)
+  AssertionError [ERR_ASSERTION]: Button should move:
+      at TestContext.<anonymous> (file:///private/tmp/pixel-perfect-redhat.6n6Emo/worktree/test/catalog.test.mjs:211:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test/catalog.test.mjs:221:1
+✖ --blast Badge moves only Badge (66.852834ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+  + []
+  - [
+  -   'atoms/Badge/default'
+  - ]
+
+      at TestContext.<anonymous> (file:///private/tmp/pixel-perfect-redhat.6n6Emo/worktree/test/catalog.test.mjs:228:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ 'atoms/Badge/default' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test/catalog.test.mjs:234:1
+✖ --reach Button reports Home as a live root (67.678375ms)
+  AssertionError [ERR_ASSERTION]: expected Home in reaches:
+      at TestContext.<anonymous> (file:///private/tmp/pixel-perfect-redhat.6n6Emo/worktree/test/catalog.test.mjs:242:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
