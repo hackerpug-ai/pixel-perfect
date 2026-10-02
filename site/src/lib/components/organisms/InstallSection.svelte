@@ -167,7 +167,7 @@
 			aria-labelledby="tab-{agent.id}"
 			tabindex="0"
 			hidden={agent.id !== selected}
-			class="flex flex-col gap-3 pt-6 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-focus"
+			class="scroll-mt-16 flex flex-col gap-3 pt-6 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-focus"
 		>
 			{#each agent.steps as step (step)}<CommandRow command={step} />{/each}
 			{#if agent.note}<TabNote text={agent.note} />{/if}

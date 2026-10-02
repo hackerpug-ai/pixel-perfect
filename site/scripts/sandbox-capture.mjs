@@ -120,6 +120,7 @@ async function capture(page, { s, layer, name, theme, state }) {
 			const c = getComputedStyle(el);
 			const parts = [`color:${c.color}`, `bg:${c.backgroundColor}`];
 			if (parseFloat(c.borderTopWidth) > 0) parts.push(`border:${c.borderTopWidth} ${c.borderTopColor}`);
+			parts.push(`radius:${c.borderTopLeftRadius}`);
 			parts.push(`font:${c.fontWeight} ${c.fontStretch} ${c.fontSize}/${c.lineHeight} ${c.fontFamily.split(',')[0]}`);
 			el.setAttribute('data-cs', parts.join(';'));
 			// Canonical attribute order, so the order attributes happened to be set in never reads as drift.

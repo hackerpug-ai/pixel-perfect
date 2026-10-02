@@ -1,0 +1,27 @@
+PASS og:title pixel-perfect — Your mockup is a picture. Ship the system inside it.
+PASS og:description An agent skill for Claude Code, Codex, Cursor, Grok, OpenCode, and Pi that turns a high-fidelity mockup into a checked component system in your framework, then keeps building on it.
+PASS og:image ./og.png
+PASS og:image:width 1200
+PASS og:image:height 630
+PASS og:type website
+PASS twitter:card summary_large_image
+PASS twitter:title pixel-perfect — Your mockup is a picture. Ship the system inside it.
+PASS twitter:description An agent skill for Claude Code, Codex, Cursor, Grok, OpenCode, and Pi that turns a high-fidelity mockup into a checked component system in your framework, then keeps building on it.
+PASS twitter:image ./og.png
+PASS og:image:width is 1200
+PASS og:image:height is 630
+PASS og:type is website
+PASS twitter:card is summary_large_image
+PASS og:title matches the title element
+PASS og:description matches the description
+PASS favicon-32 link present
+PASS apple-touch-icon link present
+PASS og:image ./og.png -> /pixel-perfect/og.png
+PASS twitter:image ./og.png -> /pixel-perfect/og.png
+PASS link icon ./favicon-16.png -> /pixel-perfect/favicon-16.png
+PASS link icon ./favicon-32.png -> /pixel-perfect/favicon-32.png
+PASS link icon ./favicon-64.png -> /pixel-perfect/favicon-64.png
+PASS link apple-touch-icon ./apple-touch-icon.png -> /pixel-perfect/apple-touch-icon.png
+PASS og.png HTTP 200 IHDR 1200×630
+PASS favicon-32.png HTTP 200 bytes match design/logo/favicon-32.png
+PASS apple-touch-icon.png HTTP 200 bytes match design/logo/favicon-180.png

@@ -1,0 +1,93 @@
+{
+  "pageUrl": "http://127.0.0.1:4177/pixel-perfect/",
+  "runs": [
+    {
+      "width": 1440,
+      "agent": "opencode",
+      "name": "OpenCode",
+      "mode": "fresh",
+      "headerBottom": 61,
+      "commandTop": 87.53125,
+      "selected": true,
+      "scrollY": 5492,
+      "pass": true
+    },
+    {
+      "width": 1440,
+      "agent": "opencode",
+      "name": "OpenCode",
+      "mode": "hashchange",
+      "headerBottom": 61,
+      "commandTop": 87.53125,
+      "selected": true,
+      "scrollY": 5492,
+      "pass": true
+    },
+    {
+      "width": 1440,
+      "agent": "claude",
+      "name": "Claude Code",
+      "mode": "fresh",
+      "headerBottom": 61,
+      "commandTop": 87.53125,
+      "selected": true,
+      "scrollY": 5492,
+      "pass": true
+    },
+    {
+      "width": 1440,
+      "agent": "claude",
+      "name": "Claude Code",
+      "mode": "hashchange",
+      "headerBottom": 61,
+      "commandTop": 87.53125,
+      "selected": true,
+      "scrollY": 5492,
+      "pass": true
+    },
+    {
+      "width": 390,
+      "agent": "opencode",
+      "name": "OpenCode",
+      "mode": "fresh",
+      "headerBottom": 61,
+      "commandTop": 88.484375,
+      "selected": true,
+      "scrollY": 8625,
+      "pass": true
+    },
+    {
+      "width": 390,
+      "agent": "opencode",
+      "name": "OpenCode",
+      "mode": "hashchange",
+      "headerBottom": 61,
+      "commandTop": 88.484375,
+      "selected": true,
+      "scrollY": 8625,
+      "pass": true
+    },
+    {
+      "width": 390,
+      "agent": "claude",
+      "name": "Claude Code",
+      "mode": "fresh",
+      "headerBottom": 61,
+      "commandTop": 88.484375,
+      "selected": true,
+      "scrollY": 8625,
+      "pass": true
+    },
+    {
+      "width": 390,
+      "agent": "claude",
+      "name": "Claude Code",
+      "mode": "hashchange",
+      "headerBottom": 61,
+      "commandTop": 88.484375,
+      "selected": true,
+      "scrollY": 8625,
+      "pass": true
+    }
+  ]
+}

@@ -11,7 +11,23 @@ export default defineConfig({
 				// Force runes mode for the project, except for libraries. Can be removed in svelte 6.
 				runes: ({ filename }) => filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
-			adapter: adapter()
+			adapter: adapter(),
+			paths: { base: '/pixel-perfect' },
+			// export:social writes these after this build. Prerender crawls the new
+			// links, and a missing file here is not a broken page.
+			prerender: {
+				handleHttpError: ({ path, message }) => {
+					const writtenAfterBuild = new Set([
+						'/pixel-perfect/og.png',
+						'/pixel-perfect/favicon-16.png',
+						'/pixel-perfect/favicon-32.png',
+						'/pixel-perfect/favicon-64.png',
+						'/pixel-perfect/apple-touch-icon.png'
+					]);
+					if (path && writtenAfterBuild.has(path)) return;
+					throw new Error(message);
+				}
+			}
 		})
 	]
 });

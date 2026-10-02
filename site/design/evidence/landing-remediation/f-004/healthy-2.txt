@@ -1,0 +1,9 @@
+> node scripts/verify-landing.mjs http://127.0.0.1:4177/pixel-perfect/
+PASS install-deeplink 1440 opencode fresh headerBottom=61 commandTop=87.53125 pass | 1440 opencode hashchange headerBottom=61 commandTop=87.53125 pass | 1440 claude fresh headerBottom=61 commandTop=87.53125 pass | 1440 claude hashchange headerBottom=61 commandTop=87.53125 pass | 390 opencode fresh headerBottom=61 commandTop=88.484375 pass | 390 opencode hashchange headerBottom=61 commandTop=88.484375 pass | 390 claude fresh headerBottom=61 commandTop=88.484375 pass | 390 claude hashchange headerBottom=61 commandTop=88.484375 pass
+PASS clipboard grant read="/plugin marketplace add hackerpug-ai/pixel-perfect" expected="/plugin marketplace add hackerpug-ai/pixel-perfect" denySelection="/plugin marketplace add hackerpug-ai/pixel-perfect" announce="Copied to clipboard"
+PASS tabs-hash-persistence stored=grok selected=tab-grok errors=0
+PASS slider end=100 home=0
+PASS faq opened=true visible=true closed=true hidden=true
+PASS motion-normal t0=plate 1 matrix(1, 0, 0, 1, -16, 8) t1=plate 1 matrix(1, 0, 0, 1, -1.47346, 0.736731)
+PASS motion-reduced plate=none 0 ink=1 part=none 1
+PASS fidelity-radius computed=4px concept=4px frames=11

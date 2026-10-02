@@ -13,7 +13,9 @@
 		"storybook": "storybook dev -p 6006",
 		"build-storybook": "storybook build",
 		"sandbox": "storybook dev -p 6006",
-		"sandbox:capture": "storybook build --quiet >/dev/null && node scripts/sandbox-capture.mjs"
+		"sandbox:capture": "storybook build --quiet >/dev/null && node scripts/sandbox-capture.mjs",
+		"export:social": "node scripts/export-social-card.mjs",
+		"verify:landing": "node scripts/verify-landing.mjs"
 	},
 	"devDependencies": {
 		"@fontsource-variable/anybody": "^5.3.0",
