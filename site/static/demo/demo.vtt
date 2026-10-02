@@ -1,23 +1,27 @@
 WEBVTT
 
-00:00:00.500 --> 00:00:04.000
+00:00:00.500 --> 00:00:06.000
 changelog-before absent
 design/manifest.json already exists (phase: compose).
+INIT_REFUSED: --force was not passed
 INIT_EXIT: 2
 
-00:00:04.000 --> 00:00:20.000
-built in 1.12s
-BUILD_EXIT: 0
+00:00:06.000 --> 00:00:14.000
 Command: /pixel-perfect:evolve "add a changelog page"
-changelog-after present
+wrote site/src/lib/components/screens/Changelog.svelte
+wrote site/vite.config.ts entries /changelog
+changelog-after written
+BUILD_EXIT: 0
 
-00:00:20.000 --> 00:01:05.000
+00:00:14.000 --> 00:00:54.000
 catalog check: Drift: 2 new stories
 new story screens/Changelog/default--dark
 new story screens/Changelog/default
 
-00:01:05.000 --> 00:01:24.000
+00:00:54.000 --> 00:01:02.500
+changelog-after written
 reuse: 4
 new: 1
 capturedMoved: 0
 Result route: /changelog
+EVOLVE_EXIT: 0

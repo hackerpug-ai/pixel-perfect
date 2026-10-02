@@ -1,17 +1,17 @@
 run 1 exit 0
 PASS counts reuse=4 new=1 capturedMoved=0 added=screens/Changelog
 PASS result-route HTTP 200 /pixel-perfect/changelog
-PASS playback-pointer currentTime 0.011809 -> 0.510036
-PASS caption-pointer cue: "changelog-before absent\ndesign/manifest.json already exists (phase: compose).\nINIT_EXIT: 2\nbuilt in 1.12s\nBUILD_EXIT: 0\nCommand: /pixel-perfect:evolve \"add a changelog page\"\nchangelog-after present\ncatalog check: Drift: 2 new stories\nnew story screens/Changelog/default--dark\nnew story screens/Changelog/default\nreuse: 4\nnew: 1\ncapturedMoved: 0\nResult route: /changelog"
-PASS playback-keyboard currentTime 0.012524 -> 0.517079
-PASS caption-keyboard cue: "changelog-before absent\ndesign/manifest.json already exists (phase: compose).\nINIT_EXIT: 2\nbuilt in 1.12s\nBUILD_EXIT: 0\nCommand: /pixel-perfect:evolve \"add a changelog page\"\nchangelog-after present\ncatalog check: Drift: 2 new stories\nnew story screens/Changelog/default--dark\nnew story screens/Changelog/default\nreuse: 4\nnew: 1\ncapturedMoved: 0\nResult route: /changelog"
+PASS playback-pointer currentTime 0.101713 -> 0.607609
+PASS caption-pointer cue: "changelog-before absent\ndesign/manifest.json already exists (phase: compose).\nINIT_REFUSED: --force was not passed\nINIT_EXIT: 2\nCommand: /pixel-perfect:evolve \"add a changelog page\"\nwrote site/src/lib/components/screens/Changelog.svelte\nwrote site/vite.config.ts entries /changelog\nchangelog-after written\nBUILD_EXIT: 0\ncatalog check: Drift: 2 new stories\nnew story screens/Changelog/default--dark\nnew story screens/Changelog/default\nchangelog-after written\nreuse: 4\nnew: 1\ncapturedMoved: 0\nResult route: /changelog\nEVOLVE_EXIT: 0"
+PASS playback-keyboard currentTime 0.06039 -> 0.564073
+PASS caption-keyboard cue: "changelog-before absent\ndesign/manifest.json already exists (phase: compose).\nINIT_REFUSED: --force was not passed\nINIT_EXIT: 2\nCommand: /pixel-perfect:evolve \"add a changelog page\"\nwrote site/src/lib/components/screens/Changelog.svelte\nwrote site/vite.config.ts entries /changelog\nchangelog-after written\nBUILD_EXIT: 0\ncatalog check: Drift: 2 new stories\nnew story screens/Changelog/default--dark\nnew story screens/Changelog/default\nchangelog-after written\nreuse: 4\nnew: 1\ncapturedMoved: 0\nResult route: /changelog\nEVOLVE_EXIT: 0"
 PASS no [n]
 
 run 2 exit 0
 PASS counts reuse=4 new=1 capturedMoved=0 added=screens/Changelog
 PASS result-route HTTP 200 /pixel-perfect/changelog
-PASS playback-pointer currentTime 0.010735 -> 0.515668
-PASS caption-pointer cue: "changelog-before absent\ndesign/manifest.json already exists (phase: compose).\nINIT_EXIT: 2\nbuilt in 1.12s\nBUILD_EXIT: 0\nCommand: /pixel-perfect:evolve \"add a changelog page\"\nchangelog-after present\ncatalog check: Drift: 2 new stories\nnew story screens/Changelog/default--dark\nnew story screens/Changelog/default\nreuse: 4\nnew: 1\ncapturedMoved: 0\nResult route: /changelog"
-PASS playback-keyboard currentTime 0.013095 -> 0.51586
-PASS caption-keyboard cue: "changelog-before absent\ndesign/manifest.json already exists (phase: compose).\nINIT_EXIT: 2\nbuilt in 1.12s\nBUILD_EXIT: 0\nCommand: /pixel-perfect:evolve \"add a changelog page\"\nchangelog-after present\ncatalog check: Drift: 2 new stories\nnew story screens/Changelog/default--dark\nnew story screens/Changelog/default\nreuse: 4\nnew: 1\ncapturedMoved: 0\nResult route: /changelog"
+PASS playback-pointer currentTime 0.061718 -> 0.566302
+PASS caption-pointer cue: "changelog-before absent\ndesign/manifest.json already exists (phase: compose).\nINIT_REFUSED: --force was not passed\nINIT_EXIT: 2\nCommand: /pixel-perfect:evolve \"add a changelog page\"\nwrote site/src/lib/components/screens/Changelog.svelte\nwrote site/vite.config.ts entries /changelog\nchangelog-after written\nBUILD_EXIT: 0\ncatalog check: Drift: 2 new stories\nnew story screens/Changelog/default--dark\nnew story screens/Changelog/default\nchangelog-after written\nreuse: 4\nnew: 1\ncapturedMoved: 0\nResult route: /changelog\nEVOLVE_EXIT: 0"
+PASS playback-keyboard currentTime 0.060176 -> 0.565055
+PASS caption-keyboard cue: "changelog-before absent\ndesign/manifest.json already exists (phase: compose).\nINIT_REFUSED: --force was not passed\nINIT_EXIT: 2\nCommand: /pixel-perfect:evolve \"add a changelog page\"\nwrote site/src/lib/components/screens/Changelog.svelte\nwrote site/vite.config.ts entries /changelog\nchangelog-after written\nBUILD_EXIT: 0\ncatalog check: Drift: 2 new stories\nnew story screens/Changelog/default--dark\nnew story screens/Changelog/default\nchangelog-after written\nreuse: 4\nnew: 1\ncapturedMoved: 0\nResult route: /changelog\nEVOLVE_EXIT: 0"
 PASS no [n]

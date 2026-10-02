@@ -136,10 +136,10 @@ async function clipboard(browser) {
 	let announced = '';
 	let label = '';
 	try {
-		// Permissions-Policy makes the real writeText throw. During the click, Chrome's
-		// execCommand('copy') still returns true and the control would say the text was
-		// copied. That command returns false once transient activation expires, so this
-		// deny waits the activation out and then calls the real writeText.
+		// Permissions-Policy makes the real writeText throw, so copyText reaches
+		// document.execCommand('copy'). That command returns true while transient
+		// activation is active and false once it expires. Waiting it out, then
+		// calling the real writeText, makes the real execCommand return false.
 		await denyPage.addInitScript(() => {
 			const writeText = navigator.clipboard.writeText.bind(navigator.clipboard);
 			navigator.clipboard.writeText = async (text) => {
