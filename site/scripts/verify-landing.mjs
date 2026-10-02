@@ -134,9 +134,19 @@ async function clipboard(browser) {
 	const denyPage = await denied.newPage();
 	let selection = '';
 	let announced = '';
+	let label = '';
 	try {
-		// A permissions policy is the refusal Chrome actually enforces. A denied
-		// clipboard permission still lets a user gesture call writeText.
+		// Permissions-Policy makes the real writeText throw. During the click, Chrome's
+		// execCommand('copy') still returns true and the control would say the text was
+		// copied. That command returns false once transient activation expires, so this
+		// deny waits the activation out and then calls the real writeText.
+		await denyPage.addInitScript(() => {
+			const writeText = navigator.clipboard.writeText.bind(navigator.clipboard);
+			navigator.clipboard.writeText = async (text) => {
+				await new Promise((resolve) => setTimeout(resolve, 5500));
+				return writeText(text);
+			};
+		});
 		await denyPage.route('**/*', async (route) => {
 			const response = await route.fetch();
 			const headers = { ...response.headers(), 'permissions-policy': 'clipboard-write=(), clipboard-read=()' };
@@ -144,25 +154,25 @@ async function clipboard(browser) {
 		});
 		await denyPage.goto(pageUrl, { waitUntil: 'networkidle' });
 		await denyPage.locator('#install-claude .rounded-md').first().getByRole('button', { name: 'Copy' }).click();
-		await denyPage.waitForFunction(() => (document.querySelector('#install-claude [aria-live]')?.textContent ?? '').trim().length > 0);
+		await denyPage.waitForFunction(
+			() => (document.querySelector('#install-claude [aria-live]')?.textContent ?? '').trim().length > 0,
+			null,
+			{ timeout: 15000 }
+		);
 		selection = (await denyPage.evaluate(() => getSelection()?.toString() ?? '')).trim();
 		announced = (await denyPage.locator('#install-claude [aria-live]').first().innerText()).trim();
+		label = (await denyPage.locator('#install-claude button').first().innerText()).trim();
 	} finally {
 		await denied.close();
 	}
-	// writeText throws, so copyText selects the command. This Chrome's execCommand('copy')
-	// then returns true, and the control says "Copied to clipboard". When that legacy
-	// command returns false, the control says to press Command-C. Either string means
-	// the fallback ran. The selection is what writeText's success path does not do.
-	const fallbackAnnouncements = new Set([
-		'Copied to clipboard',
-		'Command selected. Press Command-C or Control-C to copy.'
-	]);
-	const denyOk = selection === expected && fallbackAnnouncements.has(announced);
+	const denyOk =
+		selection === expected &&
+		label === 'Selected' &&
+		announced === 'Command selected. Press Command-C or Control-C to copy.';
 	report(
 		'clipboard',
 		grantOk && denyOk,
-		`grant read=${JSON.stringify(read)} expected=${JSON.stringify(expected)} denySelection=${JSON.stringify(selection)} announce=${JSON.stringify(announced)}`
+		`grant read=${JSON.stringify(read)} expected=${JSON.stringify(expected)} denySelection=${JSON.stringify(selection)} label=${JSON.stringify(label)} announce=${JSON.stringify(announced)}`
 	);
 }
 
