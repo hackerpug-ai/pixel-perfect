@@ -1,15 +1,43 @@
 FAIL closed F-002
-evolve sentence: /pixel-perfect:evolve "add a changelog page"
-E4 confirmation: not produced. The evolve workflow writes nothing until that confirmation.
-T8 recording: not produced. cmux-cua is installed, and no recording of init, build, sandbox, and one evolve was made.
-verify-demo.mjs: absent. It is not created while the evidence files are missing.
-MISSING site/design/evolve-run/transcript.md
-MISSING site/design/evolve-run/counts.json
-MISSING site/design/evolve-run/result-path.txt
-MISSING site/design/evolve-run/inventory-before.json
-MISSING site/design/evolve-run/inventory-after.json
-MISSING site/static/demo/demo.mp4
-MISSING site/static/demo/demo.vtt
-MISSING site/static/demo/poster.png
-missing=8 of 8
-EXIT1:1
+init: refused. design/manifest.json already exists (phase: compose). --force was not used.
+build: npm run build exited 0
+sandbox: npm run sandbox reached HTTP ready on 127.0.0.1:6006 and was then stopped
+evolve: refused before any write. screens: Home. changelog screens: none.
+reason: the sentence does not name the page contents, and evolve writes nothing before the confirmation gate.
+recorder: cmux-cua start_recording returned video_active true. stop_recording finalized recording.mp4 duration 307s size 49MB.
+The recording is not the T8 demo: it is over 8 MB, it has no captions, and evolve did not run. It was not copied to site/static/demo.
+verify-demo.mjs: absent
+organisms: unwired
+--- start_recording ---
+{
+  "enabled": true,
+  "last_error": null,
+  "last_video_path": null,
+  "next_turn": 1,
+  "output_dir": "/Users/justinrich/Projects/pixel-perfect/site/design/evidence/landing-remediation/f-002/cua-recording",
+  "owner": null,
+  "recording": true,
+  "video_active": true
+}
+START_EXIT:0
+--- stop_recording ---
+{
+  "enabled": false,
+  "last_error": null,
+  "last_video_path": "/Users/justinrich/Projects/pixel-perfect/site/design/evidence/landing-remediation/f-002/cua-recording/recording.mp4",
+  "next_turn": 1,
+  "output_dir": null,
+  "owner": null,
+  "recording": false,
+  "video_active": false
+}
+STOP_EXIT:0
+--- evolve lines from the visible scene ---
+4:INIT_EXIT:2
+120:BUILD_EXIT:0
+127:SANDBOX_READY:1 pid:8910
+128:SANDBOX_EXIT:stopped
+131:changelog screens: (none)
+132:EVOLVE_EXIT: refused
+133:reason: the sentence does not name the page contents, and evolve writes nothing before the confirmation gate.
+135:SCENE_DONE
