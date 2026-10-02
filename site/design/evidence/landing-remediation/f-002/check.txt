@@ -1,17 +1,8 @@
-run 1
+run 1 exit 1
 PASS counts reuse=4 new=1 capturedMoved=0 added=screens/Changelog
 PASS result-route HTTP 200 /pixel-perfect/changelog
-PASS playback-pointer currentTime 0.046737 -> 0.553654
-PASS caption-pointer cue: "/pixel-perfect:init\ndesign/manifest.json already exists (phase: compose).\nINIT_EXIT:2\nnpm run build\nBUILD_EXIT:0\nnpm run sandbox -- --no-open\nSANDBOX_READY:1\n/pixel-perfect:evolve \"add a changelog page\"\nreuse: 4\nnew: 1\ncapturedMoved: 0\nresult route: /changelog"
-PASS playback-keyboard currentTime 0.014741 -> 0.524801
-PASS caption-keyboard cue: "/pixel-perfect:init\ndesign/manifest.json already exists (phase: compose).\nINIT_EXIT:2\nnpm run build\nBUILD_EXIT:0\nnpm run sandbox -- --no-open\nSANDBOX_READY:1\n/pixel-perfect:evolve \"add a changelog page\"\nreuse: 4\nnew: 1\ncapturedMoved: 0\nresult route: /changelog"
-PASS no [n]
-
-run 2
+FAIL rendered page contains [n] during pointer
+run 2 exit 1
 PASS counts reuse=4 new=1 capturedMoved=0 added=screens/Changelog
 PASS result-route HTTP 200 /pixel-perfect/changelog
-PASS playback-pointer currentTime 0.050411 -> 0.554528
-PASS caption-pointer cue: "/pixel-perfect:init\ndesign/manifest.json already exists (phase: compose).\nINIT_EXIT:2\nnpm run build\nBUILD_EXIT:0\nnpm run sandbox -- --no-open\nSANDBOX_READY:1\n/pixel-perfect:evolve \"add a changelog page\"\nreuse: 4\nnew: 1\ncapturedMoved: 0\nresult route: /changelog"
-PASS playback-keyboard currentTime 0.016351 -> 0.522653
-PASS caption-keyboard cue: "/pixel-perfect:init\ndesign/manifest.json already exists (phase: compose).\nINIT_EXIT:2\nnpm run build\nBUILD_EXIT:0\nnpm run sandbox -- --no-open\nSANDBOX_READY:1\n/pixel-perfect:evolve \"add a changelog page\"\nreuse: 4\nnew: 1\ncapturedMoved: 0\nresult route: /changelog"
-PASS no [n]
+FAIL rendered page contains [n] during pointer

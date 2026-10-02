@@ -40,7 +40,7 @@ DELTA — +1 screen
   sweep: none
 ```
 
-The screen was written by an earlier run that recorded this gate as passed without a user choice. That sentence is not the confirmation. This invocation writes nothing further until the gate is answered. The shipped demo ends on `SCENE_DONE` after a scene script printed these counts. It is not a recording of `/pixel-perfect:evolve`.
+The screen was written by an earlier run that recorded this gate as passed without a user choice. That sentence is not the confirmation. This invocation writes nothing further until the gate is answered. The scene-script clip was removed. Playback stays on the inactive poster, and the thread stays the example, until a real recording exists.
 
 ## E5 — Apply
 
