@@ -1,504 +1,301 @@
-<p align="center">
-  <img src="plugins/pixel-perfect/assets/banner.png" alt="pixel-perfect banner" width="100%">
-</p>
+<p align="center"><a href="https://hackerpug-ai.github.io/pixel-perfect/"><img src="site/static/og.png" alt="pixel-perfect. Your mockup is a picture. Ship the system inside it. A design frame on the left and the component built from it on the right, lined up at the corner marks." width="100%"></a></p>
 
 # pixel-perfect
 
-A version-locked plugin and Pi package for Claude Code, Codex, Cursor, Grok, OpenCode, and Pi that generates and maintains a **high-fidelity production design system** — semantic tokens, atoms, molecules, organisms, screens — as real code in your target framework, browsable in a **native sandbox** it builds from scratch.
+An agent skill for Claude Code, Codex, Cursor, Grok, OpenCode, and Pi.
 
-It exists to close one gap: the one between a beautiful AI-generated design and UI code you can actually ship.
-
----
-
-## Refresh an existing library
-
-Use `evolve --refresh <source...> [--platform <name>] [--reanalyze]` to reassess completed UI against updated HTML/image exports or extracted bundles. Confirm one change plan, then resume with `evolve --resume <run-id>` and inspect evidence with `verify --refresh <run-id>`. Use `refine` for a specific named correction. Refresh preserves component identities, history, and unrelated progress; incomplete or stale evidence keeps the run open.
-
-See the packaged `docs/RETURNING-PROJECT.md` and `docs/REFRESH-CONTRACT.md` for the recovery sequence and helper contract. `polish` remains an internal lens pack, not a public command.
-
-## The Gap
-
-AI has gotten very good at producing designs. Ask for a dashboard and you get a gorgeous one — a Figma frame, an HTML export, a screenshot, an image.
-
-None of it is your product. Someone still has to read that picture and write the code, and the translation is where the design dies. Spacing gets eyeballed. Colors get hardcoded. The same card is re-implemented four times with four different paddings. Six weeks later nothing on screen matches what was approved, and there is no way to say what "correct" would even mean — because there was never a system, only a picture of one.
-
-The generation half is solved. The **systematization** half is not, and that is the half that decides whether a design survives contact with a codebase.
-
-pixel-perfect makes the design system the artifact instead of the picture.
-
-## Atomic Design as the Execution Order
-
-Atomic design here is not a diagram in a slide deck. It is the order the work happens in, and the order the gates fire in:
-
-**tokens → atoms → molecules → organisms → screens**
-
-Every level is real code in your framework. Every component gets a sandbox story with each prop wired to a live control. Every level has a gate that must pass before the next one starts, so a screen is never built on an atom that does not render.
-
-That ordering is what makes the output a *system* rather than a pile of components. Nothing above a level can drift from it: change a token and it propagates; change an atom and every molecule and screen composing it is re-verified. A styling contract makes it stricter still — the declared style system is enforced by a deterministic gate, so a build cannot quietly invent a parallel one.
-
-## Generating Is the Easy Part; Maintaining Is the Point
-
-A design system that is generated once and then hand-edited is just a slower way to arrive at drift. `design/manifest.json` holds the state — what exists, what is verified, which gates have passed, which library each component wraps and why. Refinement flows back through the same levels with the same gates, so an iteration re-verifies what it touched instead of leaving it to rot.
-
-## Designs Are Inputs, Not Deliverables
-
-Bringing a design *in* is a first-class path, not a compromise. List a Claude Design deck, an HTML export, a URL, a screenshot, or a wireframes folder in the manifest's references, and `build` reads it before it plans: every frame is rendered, read once, and turned into `design/inventory.json` — the atoms, molecules, organisms, and screen states to make, each tied to the frame that justifies it. Those frames are the **targets** the real components are built to match, pixel for pixel.
-
-There is no mockup step in between. The design is the reference and the component is the deliverable; nothing is generated that is not shipped.
-
-## Why a Sandbox Makes This Work
-
-The unlock is the **sandbox** — a small component browser that renders each piece in isolation, themed, with its props exposed. It is what turns "a design system exists" from a claim into something you can look at.
-
-Storybook is one web implementation of that idea, not the idea itself. An AI agent can generate one from scratch in *any* framework — React, SvelteKit, Expo, GPUI, Ratatui, SwiftUI — which is why every stack gets one here, not just the web.
-
----
-
-## The 7-Phase Process
-
-| Phase | What Happens | Gate Checks |
-|-------|--------------|-------------|
-| **DISCOVER** | Define goal + vibe from PRD | Goal statement exists, vibe captured |
-| **TARGET** | Select platforms + framework | Platform/framework declared |
-| **EQUIP** | Select style + component libraries | Adapters validated |
-| **SCAFFOLD** | Install tools, create theme, generate token stories | Theme renders, sandbox runs |
-| **ATOMS** | Build individual components | Each component has story + controls |
-| **MOLECULES** | Build functional atom compositions (optional) | Each molecule has story + state scenarios |
-| **ORGANISMS** | Build complex stateful compositions (optional) | Each organism has story + state scenarios |
-| **COMPOSE** | Assemble screens from organisms, molecules, atoms | Screens render with real data shapes |
-| **INTEGRATE** | Wire navigation + state | App navigates, state persists |
-
-Each phase has a **gate** that must pass before you proceed. The plugin tracks state in `design/manifest.json` and blocks forward progress until gates clear.
-
----
-
-## Quick Start
-
-Version 9.3.0 projects the same runtime into all six harnesses.
-
-**Upgrading from 7.x:** see [`plugins/pixel-perfect/docs/UPGRADING-8.0.md`](plugins/pixel-perfect/docs/UPGRADING-8.0.md) — add a capture command, run `--baseline` once, drop composition-edge/`controls` authority; inventory changes use `evolve`.
-
-### Claude Code
+pixel-perfect is an agent skill that reads every frame of a high-fidelity mockup and turns it into real components in your framework: tokens, atoms, molecules, organisms, and screens. Each layer is checked against the frames it came from before the next layer starts. After that, every new screen, from a mock or a single sentence, is built from the parts you already have.
 
 ```text
-/plugin marketplace add hackerpug-ai/pixel-perfect
-/plugin install pixel-perfect@pixel-perfect
+Install pixel-perfect: fetch and follow https://raw.githubusercontent.com/hackerpug-ai/pixel-perfect/main/INSTALL.md
 ```
 
-Invoke capabilities as `/pixel-perfect:init`, `/pixel-perfect:build`, and so on. Upgrade with:
+Paste into any of the six agents. Prefer your agent's own commands? [See every install option](#install).
+
+[Why](#why) · [Build it](#build) · [Grow it](#grow) · [Install](#install) · [FAQ](#faq) · [Site ↗](https://hackerpug-ai.github.io/pixel-perfect/)
+
+MIT · by Justin Rich · Works in six agents · Frameworks: SvelteKit, React, Expo, SwiftUI, GPUI, Ratatui, and any stack with a docs URL
+
+<a name="why"></a>
+## Designs die in translation.
+
+You paste a screenshot into your agent and say "build this." The first screen comes out well. The second screen's card has different padding, a gray that isn't in the design, and a button that's almost the same. Nobody wrote down which colors are tokens, so the agent guessed.
+
+Six weeks later there are four slightly different cards and no way to say which one is correct. The mockup is still right. The code drifted, one screen at a time.
+
+**Your design survives your codebase.**
+
+- **Consistency through composability.** Every screen is assembled from the same parts, so one card can't quietly become four.
+- **Make it real.** No mockup step, no spec format, no throwaway files. The design is the reference, and the code in your repository is the deliverable.
+- **Rapid iteration.** Add a screen with one sentence, and it's built from the parts you already have. Change a token and it flows everywhere. Change a component and everything built on it re-checks.
+- **Language agnostic.** Works in whatever UI stack you use. Storybook if you want it, a native sandbox if you don't.
+
+<a name="build"></a>
+## From mockup to system in four commands.
+
+Point it at the design, scaffold a sandbox, build the layers, and read the report. Each layer is checked against its frames before the next one starts, so the report is the proof.
+
+`TOKENS · ATOMS · MOLECULES · ORGANISMS · SCREENS`
+
+One mockup, separated into five layers. Each layer is built and checked before the next.
+
+1. **Read the design**
+
+   ```text
+   /pixel-perfect:init my designs are in design/deck.html
+   ```
+
+   Finds the frames, detects your framework, writes the manifest.
+
+   `design/manifest.json` (excerpt), from the landing site's own build:
+
+   ```text
+   {
+     "spec": "../.spec/prds/landing/strategy.md",
+     "references": [6 design files],
+     "framework": "sveltekit",
+     "sandbox": "storybook",
+     "platforms": ["web-desktop", "web-mobile"]
+   ```
+
+2. **Scaffold the sandbox**
+
+   ```text
+   /pixel-perfect:scaffold
+   ```
+
+   A component browser in your framework, with the token stories already in it.
+
+   Terminal output, from the landing site's own build:
+
+   ```text
+   created  src/app.css
+   created  .storybook/main.ts
+   created  src/lib/design-system/Colors.stories.svelte
+   created  src/lib/design-system/Typography.stories.svelte
+   sandbox  http://localhost:6006
+   ```
+
+3. **Build the layers**
+
+   ```text
+   /pixel-perfect:build
+   ```
+
+   Writes the inventory first. Every item names the frames that justify it and the parts it composes. Then it builds, bottom layer first.
+
+   `design/inventory.json` (excerpt), from the landing site's own build:
+
+   ```text
+   "atoms": [
+     { "name": "Button",
+       "appears_on": ["pixel-perfect-landing-dc/01", … 17 frames] }, …
+   "molecules": [
+     { "name": "CopyBlock",
+       "composes": ["InlineCode", "Button"],
+       "appears_on": ["pixel-perfect-landing-dc/01", … 10 frames] }, …
+   ```
+
+4. **Check the proof**
+
+   ```text
+   /pixel-perfect:status
+   ```
+
+   A gate is a check of one layer against its frames. It runs once per layer, so the next layer starts from parts that already match.
+
+   `status` output (excerpt), from the landing site's own build:
+
+   ```text
+   tokens    gate passed  25 colours
+   atoms     gate passed  22 components
+   molecules gate passed  18 components
+   organisms gate passed  15 components
+   screens   building
+   ```
+
+| Tokens | Minutes | Frames | Gates | Components |
+|--------|---------|--------|-------|------------|
+| 10.0M | 326 | 22 | 34 | 55 |
+
+Measured on the landing site's own build. Tokens counts new tokens; see the [FAQ](#faq).
+
+Recorded run, sped up: build, then status. 13 minutes in 66 seconds. [Watch it on the site](https://hackerpug-ai.github.io/pixel-perfect/#build).
+
+No mockup yet? `wireframe` turns a PRD into wireframes that `build` reads the same way.
+
+<a name="grow"></a>
+## Your next screen starts from the parts you already have.
+
+The system is the deliverable, so it keeps going. Describe a page, or drop in a new mock, and the agent reuses what exists before it invents anything.
 
 ```text
-/plugin marketplace update pixel-perfect
-/plugin update pixel-perfect@pixel-perfect
+YOU    /pixel-perfect:evolve "add a changelog page"
+AGENT  EVOLVE proved — add Changelog · SiteHeader+home · TouchList+inline code · check clean · 0 pre-existing goldens moved
+       reuse 6 · new 1 · 0 captured components moved
 ```
 
-### Codex
+This thread is the recorded run.
+
+| Command | When | What it does |
+|---------|------|--------------|
+| `/pixel-perfect:evolve` | with a new mock | Sorts each element into reuse, variant, new, promote, or remove, with an orphan sweep for removals. Confirms once. Proves by re-capture. |
+| `/pixel-perfect:refine` | with a token change | Change a token. Every component that uses it updates, and the gates confirm nothing else moved. |
+| `/pixel-perfect:add-platform` | | The same system on a second platform, built from the same inventory. |
+
+**It writes a `DESIGN.md` too.**
+
+A plain document of your tokens and components, kept current on every build, so your other tools and your teammates read the same system.
+
+```text
+DESIGN.md · GENERATED · EXAMPLE
+## tokens
+color.ink       #111316
+color.accent    #E0007A
+space.4         16px
+radius.sm       4px
+## components
+Button    primary, secondary
+PlanCard  composes Heading, Price, Button
+Header    composes Logo, NavLink
+```
+
+<a name="install"></a>
+## Install it in your agent.
+
+Read the skill before you install it. It's a folder of markdown and scripts in the open. You need one of the six agents, a project in your framework, and your design as files or a URL. HTML and URL designs also need Chrome, which renders their frames.
+
+Run the commands for your agent in a terminal.
+
+**Claude Code**
+
+```bash
+claude plugin marketplace add hackerpug-ai/pixel-perfect
+claude plugin install pixel-perfect@pixel-perfect
+```
+
+**Codex**
 
 ```bash
 codex plugin marketplace add hackerpug-ai/pixel-perfect
 codex plugin add pixel-perfect@pixel-perfect
 ```
 
-Invoke capabilities as `$pixel-perfect:init`, `$pixel-perfect:build`, and so on. Upgrade with:
+**Grok.** Skip this if the Claude Code install is on the same machine, because Grok already reads it. `--trust` skips Grok's confirmation prompt.
 
 ```bash
-codex plugin marketplace upgrade pixel-perfect
-codex plugin add pixel-perfect@pixel-perfect
+grok plugin install hackerpug-ai/pixel-perfect#plugins/pixel-perfect --trust
 ```
 
-If the older personal installation is enabled, remove it before installing the Git marketplace version:
+**Cursor, OpenCode, and Pi** install from the newest release tag. Follow the steps for [Cursor](INSTALL.md#cursor), [OpenCode](INSTALL.md#opencode), or [Pi](INSTALL.md#pi). [`INSTALL.md`](INSTALL.md) also has upgrade and uninstall steps for every agent.
 
-```bash
-codex plugin remove pixel-perfect@personal
-codex plugin add pixel-perfect@pixel-perfect
-```
+Next: open a project that has your design and run `/pixel-perfect:init`.
 
-Keep the personal marketplace itself if it contains other plugins. `codex plugin list` should show only one installed Pixel Perfect source; two enabled sources create duplicate `$pixel-perfect:*` namespaces.
+| Agent | Run a command as |
+|-------|------------------|
+| Claude Code, Grok | `/pixel-perfect:init` |
+| Codex | `$pixel-perfect:init` |
+| Cursor, OpenCode | `/init` |
+| Pi | `/skill:pixel-perfect-init` |
 
-### Cursor
+Releases are version-locked across all six agents. Every breaking release ships an upgrade guide. Upgrading from 7.x? Read the [8.0 guide](plugins/pixel-perfect/docs/UPGRADING-8.0.md). From 8.x? Read the [9.0 guide](plugins/pixel-perfect/docs/UPGRADING-9.0.md). Returning to a project you built earlier? Read [returning to a project](plugins/pixel-perfect/docs/RETURNING-PROJECT.md).
 
-Cursor loads local plugins from `~/.cursor/plugins/local/`. **Copy** the package (do not symlink — Cursor has known failures loading symlinked local plugins):
-
-```bash
-git clone --branch v9.3.0 --depth 1 https://github.com/hackerpug-ai/pixel-perfect.git /tmp/pixel-perfect
-mkdir -p ~/.cursor/plugins/local
-rm -rf ~/.cursor/plugins/local/pixel-perfect
-cp -R /tmp/pixel-perfect/plugins/pixel-perfect ~/.cursor/plugins/local/pixel-perfect
-```
-
-Reload Cursor (Command Palette → “Developer: Reload Window”). Invoke capabilities as slash commands (`/init`, `/build`, `/status`, …) from the installed plugin. Skills under `skills/` are also declared for convention discovery.
-
-To upgrade, check out a newer `v*` tag in the clone and re-copy into `~/.cursor/plugins/local/pixel-perfect`. Marketplace submission at [cursor.com/marketplace/publish](https://cursor.com/marketplace/publish) is a separate manual step when you are ready — the manifests in this repo are submission-ready.
-
-### Grok
-
-Install Pixel Perfect through the Claude marketplace steps above, then open Grok's `/plugins` extension view and enable it if needed. Grok natively reads Claude Code marketplaces and plugins, so it uses the Claude manifest and marketplace version; there is intentionally no second Grok catalog or version field.
-
-Invoke capabilities as `/pixel-perfect:init`, `/pixel-perfect:build`, and so on. Upgrading the Claude marketplace installation upgrades the version Grok consumes.
-
-### OpenCode
-
-OpenCode consumes the tagged Git checkout and its versioned adapter package. From the target project:
-
-```bash
-git clone --branch v9.3.0 --depth 1 https://github.com/hackerpug-ai/pixel-perfect.git .pixel-perfect
-mkdir -p .opencode
-ln -s ../.pixel-perfect/plugins/pixel-perfect/.opencode/commands .opencode/commands
-ln -s ../.pixel-perfect/plugins/pixel-perfect/.opencode/skills .opencode/skills
-```
-
-Invoke capabilities as `/init`, `/build`, `/status`, and so on. To upgrade to a later release, fetch tags in `.pixel-perfect`, check out the desired `v<version>` tag, and restart OpenCode. The Pixel Perfect product version is in `plugins/pixel-perfect/.opencode/package.json`; the `@opencode-ai/plugin` dependency version is independent.
-
-### Pi
-
-Install the npm package with Pi's package manager:
-
-```bash
-pi install npm:@hackerpug-ai/pixel-perfect
-```
-
-For local development from this repository, run `pi install ./plugins/pixel-perfect`.
-
-Invoke a capability through its namespaced skill, such as `/skill:pixel-perfect-init`, `/skill:pixel-perfect-build`, or `/skill:pixel-perfect-status`. Upgrade with `pi update npm:@hackerpug-ai/pixel-perfect`.
-
-### First Project
-
-```bash
-# 0. (Optional) Have a design already? Keep it where it is — init records it as a
-#    reference, and build reads every frame of it once before planning.
-
-# 1. Set up your project (phases 1-3)
-/pixel-perfect:init
-
-# 2. Scaffold tools, theme, token stories (phase 4)
-/pixel-perfect:scaffold
-
-# 3. Build components and screens (phases 5-7)
-/pixel-perfect:build
-
-# Check progress anytime
-/pixel-perfect:status
-```
-
-> **OpenCode users**: commands are available without the `pixel-perfect:` prefix (e.g., `/init`, `/build`, `/status`).
-
-> **Cursor users**: slash commands from the local plugin use the short form (e.g., `/init`, `/build`, `/status`).
-
-> **Codex users**: replace the leading slash form with `$pixel-perfect:<name>`.
-
-> **Pi users**: replace the leading slash form with `/skill:pixel-perfect-<name>`.
-
-Init walks you through:
-1. **Where are your requirements?** (auto-detects PRD.md)
-2. **What's the goal?** (one sentence)
-3. **What's the design vibe?** (clean, bold, playful, etc.)
-4. **What platforms?** (web-desktop, web-mobile, mobile-ios, mobile-android)
-5. **What framework?** (React, Next.js, Vite, SvelteKit, React Native, Expo, or provide docs URL)
-6. **What style system?** (Tailwind, NativeWind, CSS Modules, or provide docs URL)
-7. **What component library?** (shadcn, shadcn-svelte, Bits UI, Skeleton, Paper, Mantine, none, or provide docs URL)
-
-The UI library is completely flexible — use whatever you want or build from scratch. Pixel Perfect uses each harness's native input mechanism to follow your lead.
-
----
-
-## The Sandbox — a spec, not a tool
-
-A **sandbox** is just a component browser: it catalogs your components by layer and renders each one in isolation, themed. Storybook is *one* implementation of that idea (for the web) — not the idea. So pixel-perfect treats the sandbox as a **spec** ([`plugins/pixel-perfect/docs/sandbox-spec.md`](plugins/pixel-perfect/docs/sandbox-spec.md)) and, by default, **builds one from scratch in your target framework** — rendering the *real* components, nothing extra to install. An off-the-shelf tool is used only if you ask.
-
-The spec is ~7 small pieces (a layer-keyed story registry · isolated render · a two-pane navigator · token codegen from `theme.*.json` · a run command · pixel-target refs). It's derived from two real, running sandboxes built from scratch in Rust — a GPUI desktop one and a Ratatui TUI one — the same concept in totally different paradigms.
-
-### Why custom (v6 default)
-
-**Storybook is great — for web projects that want Storybook.** But pixel-perfect builds UI in *any* framework: React, SvelteKit, React Native, Expo, GPUI, Ratatui, SwiftUI. Shoehorning all of those into Storybook means fighting Storybook — native-web shimming, addon incompatibilities, version conflicts, and an entire toolchain that doesn't apply outside a browser.
-
-The agentic development model changes the calculus. An AI agent can generate a sandbox from scratch in ~60 lines — a registry + a two-pane shell + token codegen + a run command — *in whatever language and framework you're actually using*. That's cheaper than installing, configuring, and maintaining Storybook in a project where it's a poor fit.
-
-**Why this works better cross-platform:**
-
-| Concern | Storybook | Custom sandbox (v6 default) |
-|---------|-----------|----------------------------|
-| React web | ✅ native fit | ✅ tiny Vite browser, same result |
-| SvelteKit | ⚠️ needs adapter, some rough edges | ✅ generated in Svelte, native |
-| React Native / Expo | ⚠️ web shimming required | ✅ runs on-device in your framework |
-| TUI (Ratatui / Bubbletea) | ❌ impossible | ✅ terminal-native, derived from real Rust sandboxes |
-| Desktop (GPUI, SwiftUI) | ❌ impossible | ✅ platform-native |
-| Maintenance burden | Storybook upgrades, addon compat, version pinning | ~60 lines you own; agent can regenerate anytime |
-| Install footprint | ~200 deps, 30s+ cold start | ~0 deps, instant |
-
-The agent **generates the sandbox during scaffold** — it's not a manual step. The spec (`plugins/pixel-perfect/docs/sandbox-spec.md`) is small and stable; the implementation varies by framework. Two real sandboxes (GPUI + Ratatui) prove the spec works across entirely different rendering paradigms.
-
-Storybook remains a **first-class opt-in** for web projects that want it. Set `"sandbox": "storybook"` in the manifest and the scaffold step installs and configures it normally. But it's no longer the default — because the default should work for *every* platform.
-
-| `tools.sandbox` | What you get | Launch |
-|-----------------|-------------|--------|
-| **`custom`** (default) | a native component browser generated in your framework | `npm run sandbox` / `make sandbox` |
-| `storybook` | off-the-shelf Storybook (web) | `pnpm storybook` → localhost:6006 |
-| `storybook-native` | on-device Storybook (RN/Expo) | `pnpm storybook` → simulator |
-| `tui-sandbox` | terminal browser (experimental) | `tsbx dev` |
-
-> **v6 (breaking):** the default sandbox is now `custom`, not Storybook. Existing projects that want to keep Storybook: set `"sandbox": "storybook"` under the platform's `tools` in `design/manifest.json`.
-
-The scaffold phase generates the sandbox and sets everything up. Run `npm run sandbox` (or `make sandbox` / `pnpm storybook` if you opted into Storybook) and start building.
-
-### Sidebar Organization
-
-```
-Design System/          ← Token reference stories (scaffold phase)
-  Colors
-  Typography
-  Spacing
-  Icons
-Components/             ← Atomic components (atoms phase)
-Molecules/               ← Molecule compositions (molecules phase, optional)
-Organisms/               ← Complex stateful compositions (organisms phase, optional)
-Screens/                ← Composed screens (compose phase)
-  TodayFeed
-  JobDetail
-```
-
-### Controls
-
-Every component prop is wired to sandbox controls (`argTypes` in Storybook; labeled variants in a custom sandbox). This makes every component interactive — you can tweak props directly in the browser or terminal.
-
----
+| What it touches | Items |
+|-----------------|-------|
+| READS | Your design files or URL · package.json and the framework config · DESIGN.md, if one exists |
+| WRITES | Components in your source tree · Sandbox stories · `design/` and `DESIGN.md` |
+| RUNS | Your package manager · A headless browser, for capture · Your existing lint and test scripts |
 
 ## Commands
 
-| Command | Phases | What It Does |
-|---------|--------|-------------|
-| `/pixel-perfect:wireframe` | 0 (optional) | Low-fi: ASCII wireframes from plans/targets into `design/wireframes/` — a structural source for build's design inventory |
-| `/pixel-perfect:assimilate` | any (optional) | Analyze a new mockup or a UI you admire with the same design analysis build uses, read the report, and fold what you confirm into your system — adopted, never copied |
-| `/pixel-perfect:init` | 1-3 | DISCOVER goal + vibe, TARGET platforms + framework + tools, EQUIP |
-| `/pixel-perfect:scaffold` | 4 | Install tools, create theme, generate design token stories, verify hello-world, write first catalog golden |
-| `/pixel-perfect:build` | 4a-7 | Inventory the designs (render every frame, read once, gate, confirm), then build atoms, compose screens, wire integration (layer goldens + composition mutation check) |
-| `/pixel-perfect:verify` | any | Check regression, reference fidelity, and affected behavior; repair only with --fix |
-| `/pixel-perfect:status` | any | Inspect progress, reference freshness, unfinished refresh work, and next command |
-| `/pixel-perfect:research` | any | Research design patterns, competitors, and ecosystem libraries (`--libraries`) |
-| `/pixel-perfect:refine` | 5+ | Apply a specific correction to a named component, screen, or theme |
-| `/pixel-perfect:evolve` | 5+ | Reconcile updated designs with an existing UI; plan visual and inventory changes, resume, and verify |
-| `/pixel-perfect:add-platform` | 1-3 | Add and equip another target platform without resetting existing platform progress |
+The commands below use the Claude Code and Grok form, `/pixel-perfect:<name>`. Your agent's form is in the "Run a command as" table under [Install](#install).
 
-### Command Flow
+**Build it**
 
-```
-wireframe (ASCII, optional)   designs (decks, URLs, shots)   research (optional)
-        \                          |                              |
-         v                         v                              v
-        init  ──▶  scaffold  ──▶  build  ─────────────────────▶  verify
-        (1-3)      (4)           (4a inventory · 5-7 build)      (gates)
-                                  |
-                    ┌─────────────┼─────────────┐
-                    v             v             v
-                 refine        evolve        status
-              (implement)   (inventory)   (drift/dead)
-```
+| Command | What it does |
+|---------|--------------|
+| `/pixel-perfect:init` | Initialize a new UI project and record its goals, platforms, and toolchain. |
+| `/pixel-perfect:scaffold` | Set up the selected framework, tokens, component sandbox, and capture tooling before building product components. |
+| `/pixel-perfect:build` | Implement or resume the confirmed component and screen plan. |
+| `/pixel-perfect:status` | Inspect current progress, reference freshness, unfinished refresh work, and the next appropriate command without changing project configuration. |
+| `/pixel-perfect:verify` | Check implementation, reference fidelity, and affected behavior; record evidence and incomplete work. |
 
----
+**Grow it**
 
-## Starting From Existing UI or Designs
+| Command | What it does |
+|---------|--------------|
+| `/pixel-perfect:evolve` | Reconcile an existing UI system with updated designs or requirements, plan visual and inventory changes, and coordinate implementation and verification. |
+| `/pixel-perfect:refine` | Apply a specific correction to named components, screens, or theme using feedback or a reference. |
+| `/pixel-perfect:add-platform` | Add a target platform to an existing project while preserving its existing platform configuration and progress. |
 
-Not every project starts from a written PRD. If you already have a design — Claude Design decks, a screenshot, an HTML export — point `init` at it: each source is recorded in the manifest's `references`, untouched and in place. (A site you only admire is not your design: `/pixel-perfect:assimilate` learns from it without copying it.) Then `build`'s first phase, **DESIGN INVENTORY**, does the reading:
+**Before you build**
 
-1. `render-frames.mjs` renders every reference to per-frame PNGs under `design/reference/` (sources are loaded where they live, so decks that import sibling partials keep working);
-2. one whole-design read — every frame image, every source, the spec — returns `design/inventory.json`: atoms, molecules, organisms, and screens with their states, each naming the frames that justify it and what it composes;
-3. `verify-inventory.mjs` proves every rendered frame is claimed or excused and every composition names things one layer down;
-4. you confirm the inventory once, and every later phase builds from it.
+| Command | What it does |
+|---------|--------------|
+| `/pixel-perfect:wireframe` | Create low-fidelity layouts and state maps from requirements or concepts before implementation. |
+| `/pixel-perfect:research` | Research UI patterns, products, or libraries and save findings for later design decisions. |
+| `/pixel-perfect:assimilate` | Analyze new mockups or inspiration and propose additions to the design system. |
 
-Component lists come from looking at the designs, not from grepping the spec — the difference between finding the mobile tab bar and shipping without one. The read happens once, up front; the frames stay as pixel-targets; nothing is generated that is not shipped.
+<a name="faq"></a>
+## Questions
 
-### Wireframe first (the low-fi rung)
+<details><summary>Why not just prompt my agent?</summary>
 
-When you're starting from **plans** rather than existing UI, run `/pixel-perfect:wireframe` first. It turns a PRD / sprint plan / spec (or a one-line concept) into **ASCII box-drawing wireframes** in `design/wireframes/` — one per screen, desktop + mobile, annotated and mapped to the components they imply. No renderer, no pixels: it commits the *structure* (layout, IA, hierarchy, states) cheaply. That gives the full **fidelity ladder**:
+Prompting works for one screen and breaks on the second. The agent has no record of which values are tokens and which parts already exist, so each screen is a fresh guess. pixel-perfect writes that record down as code, then checks every new layer against the design before moving on.
 
-> **wireframe** (ASCII, structure) → **inventory** (`design/inventory.json`, what to make) → **component** (real, in your framework's native sandbox)
+</details>
 
-Each rung is a *target* the next is built to match. A wireframes folder is itself a design reference — `init` detects it and pre-fills your screen list, and `build`'s inventory phase reads it alongside any high-fi designs.
+<details><summary>What happens when the design changes?</summary>
 
----
+Run `evolve` with the new mock. Each element is sorted into reuse, variant, new, promote, or remove, you confirm once, and a re-capture shows exactly which components moved.
 
-## Adapter System
+</details>
 
-Adapters are reference docs that teach the AI how to scaffold, build, and verify for specific tools. They're loaded based on the user's choices during init. The commands themselves are tool-agnostic.
+<details><summary>How many tokens does it use?</summary>
 
-| Category | What It Controls | Loaded When |
-|----------|-----------------|-------------|
-| **Style** | Visual styling | User selects a style system |
-| **Components** | UI component library | User selects a component library |
-| **Sandbox** | Component browser | `custom` by default (Storybook opt-in) |
+The landing site's own build read a 22-frame design and used 10.0M new tokens across 326 active minutes, plus 444.4M tokens of cached context re-read between turns. Frames are read once and cached, so evolve and refine runs cost a fraction of the first build.
 
-### Included Adapters
+</details>
 
-| Adapter | Category | Status |
-|---------|----------|--------|
-| SvelteKit | framework (web) | stable |
-| Tailwind / NativeWind | style | stable |
-| shadcn/ui | components (web) | stable |
-| shadcn-svelte / Bits UI / Skeleton | components (Svelte) | stable |
-| React Native Paper | components (mobile) | stable |
-| Custom Sandbox | sandbox (**default**) | stable |
-| Storybook / Storybook Native | sandbox (opt-in) | stable |
-| tui-sandbox | sandbox (opt-in, TUI/CLI) | experimental |
-| Lipgloss / Rich / Ink | style (TUI) | experimental |
-| Bubbletea / Textual / Ink | components (TUI) | experimental |
-| Generic | fallback | stable |
+<details><summary>Does it work with my stack?</summary>
 
-No specific library is required. Select "None" or "Other" with a docs URL, and the AI adapts.
+If your stack has a docs URL, yes. SvelteKit, React, Expo, SwiftUI, GPUI, and Ratatui have been built with it. Where Storybook doesn't run, it generates a native sandbox in your framework instead.
 
----
+</details>
 
-## The Manifest
+<details><summary>Will it lock me in?</summary>
 
-`design/manifest.json` is the single source of truth for process state:
+No. The output is plain code in your repository plus a DESIGN.md. Delete the skill and everything it built still works, because nothing depends on it at runtime.
 
-```json
-{
-  "version": "4.0",
-  "created": "2026-03-01",
-  "goal": "Dashboard for monitoring real-time analytics",
-  "vibe": "clean, data-dense, dark mode",
-  "spec": "PRD.md",
-  "ecosystemMode": "suggest",
-  "platforms": ["web-desktop"],
-  "tools": {
-    "framework": "vite",
-    "style": "tailwind",
-    "components": "shadcn",
-    "sandbox": "custom"
-  },
-  "phase": "atoms",
-  "gates": {
-    "discover": "passed",
-    "target": "passed",
-    "equip": "passed",
-    "scaffold": "passed",
-    "atoms": "in-progress",
-    "compose": "pending",
-    "integrate": "pending"
-  },
-  "atoms": [
-    {
-      "name": "StatusBadge",
-      "file": "src/components/StatusBadge.tsx",
-      "story": "src/components/StatusBadge.stories.tsx",
-      "status": "verified"
-    },
-    {
-      "name": "DataTable",
-      "file": "src/components/DataTable.tsx",
-      "story": "src/components/DataTable.stories.tsx",
-      "status": "verified",
-      "ecosystemLib": {
-        "package": "@tanstack/react-table",
-        "version": "^8.20.0",
-        "purpose": "Headless table logic",
-        "vetting": {
-          "score": "8/8",
-          "researchDate": "2026-06-04"
-        }
-      }
-    }
-  ],
-  "molecules": [],
-  "organisms": [
-    {
-      "name": "DataTable",
-      "file": "src/organisms/DataTable.tsx",
-      "story": "src/organisms/DataTable.stories.tsx",
-      "status": "verified",
-      "molecules": ["SearchBar"],
-      "atoms": ["Pagination", "TableRow"],
-      "state": {
-        "declared": [
-          { "name": "sortColumn", "type": "string | null" },
-          { "name": "sortDirection", "type": "'asc' | 'desc'" },
-          { "name": "currentPage", "type": "number" }
-        ],
-        "scenarios": ["default-sort", "custom-sort", "page-2", "rows-selected", "empty"]
-      }
-    }
-  ],
-  "screens": [
-    {
-      "name": "TodayFeed",
-      "route": "/today",
-      "states": ["default", "empty", "loading"],
-      "file": "src/screens/TodayFeed.tsx",
-      "story": "src/screens/TodayFeed.stories.tsx",
-      "status": "pending",
-      "atoms": ["StatusBadge", "JobCard", "DateChip", "SectionHeader"],
-      "molecules": ["JobRow"],
-      "organisms": []
-    }
-  ]
-}
-```
+</details>
 
----
+<details><summary>It's at version 9. Is it stable?</summary>
 
-## Design Execution
+The command surface is stable and version-locked across all six agents. The major number counts breaking changes to the inventory format, and each one ships with an upgrade guide.
 
-Pixel Perfect bundles one design contract for every harness. When the named `frontend-designer` agent is available, it executes that contract. Otherwise the primary agent executes the same contract directly. Pixel Perfect never substitutes a generic design subagent, and aesthetic review never replaces compilation, rendering, tests, or deterministic gates.
+</details>
 
----
+<details><summary>Don't gates make this slow?</summary>
 
-## Manifest-Aware Process Context
+They make the next step faster. A gate runs once per layer, so every layer is built on parts that already match, and later changes are cheap: change a token, every component that uses it updates, and the gates confirm nothing else moved.
 
-Unsupported `autoActivate` metadata is not used. Every public entry adapter checks for `design/manifest.json` or legacy `design/manifest.yaml` and explicitly loads the bundled **process-context** skill before executing. It then:
+</details>
 
-- Knows the current build phase
-- Follows adapter conventions for the chosen tools
-- Uses theme tokens instead of hardcoded values
-- Wires all props to sandbox controls (Storybook `argTypes` or custom sandbox variants)
-- Respects gate requirements before advancing phases
+<details><summary>How is this different from v0, Claude Design, or Figma's MCP?</summary>
 
-## Releasing
+Those produce the design. pixel-perfect starts where they stop: it takes their output as input and turns it into a component system in your repository that keeps growing with every screen.
 
-`plugin-release.json` is the only manually selected product version. Product version lockstep covers Claude, Codex, Cursor, Grok (via Claude marketplace), OpenCode, and Pi. All releases must use:
+</details>
 
-```bash
-node scripts/release.mjs prepare <version>
-node scripts/release.mjs verify <version>
-node scripts/release.mjs publish <version>
-```
+## Docs
 
-Direct version edits, hand-created tags, and manual GitHub releases are unsupported. `prepare` synchronizes product-version fields, including the Cursor metadata and Pi package, without changing OpenCode dependency versions. `verify` is read-only. `publish` requires clean `main`, `HEAD === origin/main`, a matching non-empty changelog section, valid package content, an absent tag, and authenticated `gh` before creating an annotated tag or GitHub release. Publishing the npm artifact remains a separate authorized release action.
+- [`INSTALL.md`](INSTALL.md): install, upgrade, and uninstall steps for all six agents.
+- [`sandbox-spec.md`](plugins/pixel-perfect/docs/sandbox-spec.md): what a sandbox must do, and how pixel-perfect builds one in your framework.
+- [`adapters/README.md`](plugins/pixel-perfect/docs/adapters/README.md): how adapters teach the agent your framework, styles, and component library.
+- [`RETURNING-PROJECT.md`](plugins/pixel-perfect/docs/RETURNING-PROJECT.md): how to refresh a project you already built.
+- [`REFRESH-CONTRACT.md`](plugins/pixel-perfect/docs/REFRESH-CONTRACT.md): the inputs, saved state, and evidence rules for `evolve --refresh`.
+- [`plugins/pixel-perfect/docs/`](plugins/pixel-perfect/docs/): every other reference, including state patterns and Storybook conventions.
 
----
+**Your next mockup has a system inside it.**
 
-## Documentation
-
-- [Adapter System](plugins/pixel-perfect/docs/adapters/README.md) - How adapters work and compose
-- [State Patterns](plugins/pixel-perfect/docs/state-patterns.md) - Framework-by-framework state patterns for molecules and organisms
-- [Storybook Conventions](plugins/pixel-perfect/docs/storybook-conventions.md) - Controls, token stories, organization (Storybook opt-in)
-- [Sandbox Spec](plugins/pixel-perfect/docs/sandbox-spec.md) - The seven-piece spec every sandbox implements (custom default)
-- [Library Vetting Rubric](plugins/pixel-perfect/docs/library-vetting-rubric.md) - 8-criteria rubric for evaluating ecosystem libraries
-- [Ecosystem Patterns](plugins/pixel-perfect/docs/ecosystem-patterns.md) - Pattern map, search guardrails, and reputational scoring for library recommendations
-- [Design Systems](plugins/pixel-perfect/docs/design-systems/README.md) - Supported design system references
-- [Icon Libraries](plugins/pixel-perfect/docs/icon-libraries/README.md) - Supported icon library references
-
----
-
-## Migration from v2
-
-v4 is a clean break from v2. There is no incremental migration path.
-
-- **v2 users**: Stay on the v2 git tag. Your YAML artifacts remain valid.
-- **v4+**: Starts fresh with the 7-phase process. Real code is the artifact, the sandbox is generated natively in your framework.
-- **Research**: `/pixel-perfect:research` output is compatible with both versions.
-
----
-
-## Requirements
-
-- **Claude Code**, **Codex**, **Cursor**, or **Grok** with plugin support; **OpenCode** with command/skill support; or **Pi** with package support
-- A project directory with requirements (PRD.md or similar)
-
----
-
-## License
-
-MIT
-
----
-
-*The best mockup of a component is the component. Stop pointing at the moon -- go there.*
+[Install pixel-perfect](#install) · [MIT](LICENSE) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Issues](https://github.com/hackerpug-ai/pixel-perfect/issues)

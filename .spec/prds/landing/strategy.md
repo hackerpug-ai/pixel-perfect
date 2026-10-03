@@ -867,7 +867,7 @@ The plan has a **launch set** (§16.1) and an **after-launch set** (§16.2). Sit
 | ID | Fact | Source |
 |---|---|---|
 | E1 | Version 9.1.0 released 2026-09-02; Pi package added with a real packed-artifact integration test | `CHANGELOG.md`, `plugin-release.json` |
-| E2 | Six release channels (Claude, Codex, Cursor, Grok, OpenCode, Pi) | `plugin-release.json`; `README.md` "Quick Start" |
+| E2 | Six release channels (Claude, Codex, Cursor, Grok, OpenCode, Pi) | `plugin-release.json`; `INSTALL.md` |
 | E3 | Public since 2026-01-30; 0 stars; 1 fork (checked 2026-09-29) | `gh api repos/hackerpug-ai/pixel-perfect` |
 | E4 | Last 14 days: 0 views; 9 clones (7 unique); no referrers (checked 2026-09-29) | `gh api .../traffic/views`, `.../traffic/clones`, `.../traffic/popular/referrers` |
 | E5 | Breaking majors: v5.0.0 (2026-03-31), v6.0.0 (2026-05-30), v8.0.0 (2026-08-12), v9.0.0 (2026-08-30) | `git log --tags --simplify-by-decoration`; `gh release list` |
@@ -875,13 +875,13 @@ The plan has a **launch set** (§16.1) and an **after-launch set** (§16.2). Sit
 | E7 | `@hackerpug-ai/pixel-perfect` not found on npm (checked 2026-09-29) | `npm view @hackerpug-ai/pixel-perfect version` → 404 |
 | E8 | Upgrade guides exist for 8.0 and 9.0 | `plugins/pixel-perfect/docs/UPGRADING-8.0.md`, `UPGRADING-9.0.md` |
 | E9 | Field note: 8 molecules found vs 13 drawn; mobile tab bar missed; four user interventions; two ~900K-token recovery passes | `plugins/pixel-perfect/docs/INVENTORY-CONTRACT.md`, "Why one read, before anything is built" |
-| E10 | Manifest gates block forward progress until they pass | `README.md` "The 7-Phase Process"; `design/manifest.json` schema |
+| E10 | Manifest gates block forward progress until they pass | `plugins/pixel-perfect/workflows/build.md` (Phase 4a exit gate); `design/manifest.json` schema |
 | E11 | Catalog capture and the composition mutation check | `CHANGELOG.md` 8.0.0; `plugins/pixel-perfect/scripts/verify-catalog.mjs` |
-| E12 | The sandbox is a spec, generated natively per framework | `plugins/pixel-perfect/docs/sandbox-spec.md`; `README.md` "The Sandbox" |
+| E12 | The sandbox is a spec, generated natively per framework | `plugins/pixel-perfect/docs/sandbox-spec.md` |
 | E13 | MIT license | `LICENSE` |
-| E14 | SvelteKit framework adapter status: stable | `README.md` "Included Adapters" |
-| E15 | "There is no mockup step in between. The design is the reference and the component is the deliverable." | `README.md` "Designs Are Inputs, Not Deliverables" |
-| E16 | "Change a token and it propagates; change an atom and every molecule and screen composing it is re-verified." | `README.md` "Atomic Design as the Execution Order" |
+| E14 | SvelteKit framework adapter status: stable | `README.md` at commit `7fa8a4d`, "Included Adapters" |
+| E15 | "There is no mockup step in between. The design is the reference and the component is the deliverable." | `README.md` at commit `7fa8a4d`, "Designs Are Inputs, Not Deliverables" |
+| E16 | "Change a token and it propagates; change an atom and every molecule and screen composing it is re-verified." | `README.md` at commit `7fa8a4d`, "Atomic Design as the Execution Order" |
 | E17 | Composition mutation check: "a non-moving dependent is a copy, not a composition" | `CHANGELOG.md` 8.0.0 |
 | E18 | 10 of 11 `SKILL.md` files link to `../../workflows/`, outside their own folder | `grep -l "../../workflows" plugins/pixel-perfect/skills/*/SKILL.md` |
 | E19 | `evolve` takes a file, URL, screenshot, directory, or a plain sentence (`evolve "add a settings screen with profile and billing tabs"`). It sorts each element into reuse, variant, new, promote, remove, or token change against the captured catalog, confirms the whole change once, and proves it by re-capture. It also covers `--replace`, `--deprecate`, and removal with an orphan sweep. | `plugins/pixel-perfect/workflows/evolve.md` |
