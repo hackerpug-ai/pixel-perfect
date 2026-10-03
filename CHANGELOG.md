@@ -17,7 +17,7 @@ All notable changes to Pixel Perfect are documented here.
 
 ### Validation and acceptance
 
-Reference-refresh workflow and helpers shipped; plugin checks passed; Ruthwell application acceptance deferred to the user. Automated plugin validation covers real filesystem, HTTP, Chrome, package installation/discovery, conflict and freshness gates, and strengthened mutation oracles. Full model-driven application refresh is deferred. Ruthwell was not modified, launched, or refreshed.
+- Reference-refresh workflow and helpers shipped; plugin checks passed; Ruthwell application acceptance deferred to the user. Automated plugin validation covers real filesystem, HTTP, Chrome, package installation/discovery, conflict and freshness gates, and strengthened mutation oracles. Full model-driven application refresh is deferred. Ruthwell was not modified, launched, or refreshed.
 
 ## [9.2.0] - 2026-10-01
 
