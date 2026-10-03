@@ -1,5 +1,5 @@
 ---
-description: "Evolve a Pixel Perfect design system inventory — absorb a new screen or mock, extend an entity, promote a repeated pattern, or shed a screen with an orphan sweep, proved by catalog capture."
+description: "Reconcile an existing UI system with updated designs or requirements, plan visual and inventory changes, and coordinate implementation and verification."
 ---
 
 # Pixel Perfect: Evolve
@@ -15,3 +15,8 @@ Confirm the full delta before any write or delete; hand additions to build; prov
 Collect every decision through the harness's structured question mechanism as the runtime contract's user choice protocol specifies — `AskUserQuestion` in Claude Code, one call per declared batch. Never print a decision as prose and end the turn.
 
 Follow the runtime contract's turn shape. Open with a status digest of twelve lines or fewer — where the project stands, what the next move is, what is being asked — and put any longer analysis in the artifact the workflow names. Run no web search, no install, and no generation before the decision that authorizes it. When the invocation input does not resolve to exactly one thing, ask which was meant instead of guessing.
+
+Select when: Updated exports or requirements require broad reassessment of built work.
+Inputs and prerequisites: Existing project; --refresh <source...> [--platform <name>] [--reanalyze], --resume <run-id>, or an inventory delta.
+Outputs and side effects: Stages revisions and one change plan; accepted edits create resumable progress and evidence.
+Handoffs: pixel-perfect:refine, pixel-perfect:build, pixel-perfect:verify, pixel-perfect:status. Example: `pixel-perfect:evolve --refresh ./exports --platform web-desktop`.

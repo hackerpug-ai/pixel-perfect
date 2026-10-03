@@ -2,6 +2,10 @@
 
 The main orchestration command. Reads requirements, identifies components, builds them as real code, composes them into screens, and wires up navigation and data flow.
 
+## Pending refresh work
+
+Before phase selection or rerendering active references, run `refresh-run.mjs status <project>` when `design/refresh/` exists. An accepted unfinished run controls its selected scope, including previously completed items it reopened. The accepted refresh plan replaces B-inv, B-plan, and per-layer inventory confirmations for this scope; do not repeat those decisions. Read `docs/REFRESH-CONTRACT.md`; implement additions/extensions from that worklist and return their evidence to the run. Preserve unrelated progress and platform configuration. Visual updates use the shared refinement path. Historical phase passes cannot complete current refresh work. For projects with refresh receipts, use the refresh helper's current rendered-revision result for freshness; a render-neutral entry-file edit must not trigger another inventory confirmation based only on its raw hash. Updated exports requiring reassessment route to `evolve --refresh`, rather than overwriting active references through Phase 4a.
+
 ## Usage
 
 ```

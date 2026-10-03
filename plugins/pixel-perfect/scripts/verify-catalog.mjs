@@ -753,12 +753,7 @@ function modeReach(projectRoot, captureCfg, names, layerFilter) {
     const liveRoots = (blast.moved || []).filter(
       (m) => m.layer === "screens" || m.layer === "views" || m.layer === "Screens" || m.layer === "Views",
     );
-    // If no screen layer exists in this catalog, treat any non-self story as a "live root"
-    // for fixture projects that only model atoms/molecules.
-    const roots =
-      liveRoots.length > 0
-        ? liveRoots
-        : (blast.moved || []).filter((m) => m.name !== name);
+    const roots = liveRoots;
     results.push({
       name,
       reaches: roots,

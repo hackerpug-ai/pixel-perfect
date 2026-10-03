@@ -4,6 +4,21 @@ All notable changes to Pixel Perfect are documented here.
 
 ## [Unreleased]
 
+## [9.3.0] - 2026-10-02
+
+### Existing-project reference refresh
+
+- Added `evolve --refresh <source...> [--platform <name>] [--reanalyze]`, `evolve --resume <run-id>`, and `verify --refresh <run-id>`.
+- Stage freshly rendered exports, resolve explicit source/frame mappings, preserve identities and history, and confirm one complete change plan. Partial exports and ambiguous mappings keep work unresolved.
+- Journal accepted edits, resume interrupted writes, block conflicting outside edits, and reopen only affected progress. Visual updates share refine's execution path; additions/extensions use build.
+- Separate implementation regression, accepted-reference fidelity, and affected consumer behavior. Current captures, revisions, implementation fingerprints, explicit judgments, and real check receipts govern completion. Browser capture of React Native remains browser evidence.
+- Updated selection metadata and descriptions for all 11 public commands across all 44 generated adapter surfaces. Polish remains an internal lens pack.
+- Added a returning-project recovery recipe that inspects manifest shape and capture readiness and preserves validated configuration.
+
+### Validation and acceptance
+
+Reference-refresh workflow and helpers shipped; plugin checks passed; Ruthwell application acceptance deferred to the user. Automated plugin validation covers real filesystem, HTTP, Chrome, package installation/discovery, conflict and freshness gates, and strengthened mutation oracles. Full model-driven application refresh is deferred. Ruthwell was not modified, launched, or refreshed.
+
 ## [9.2.0] - 2026-10-01
 
 ### Added

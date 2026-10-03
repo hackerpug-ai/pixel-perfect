@@ -12,6 +12,10 @@ pixel-perfect:status [directory]
 
 - `[directory]`: Directory to check. Defaults to current directory.
 
+## Returning projects and refresh status
+
+Inspect manifest shape and capture readiness without migration or installation; use `docs/RETURNING-PROJECT.md`. When `design/refresh/` exists, run `refresh-run.mjs status <project>`. Report reference freshness, accepted scope, unfinished work, and historical versus current passes. Recommend `evolve --resume <run-id>` for unfinished work, `evolve --refresh <sources>` for refreshed designs, `refine` for a named correction, and `verify --refresh <run-id>` for current evidence. A source-input or implementation change makes prior evidence stale even if a historical status says complete. Do not change configuration during inspection.
+
 ## What It Shows
 
 Reads `design/manifest.json` **and** runs catalog capture when goldens exist:
@@ -158,4 +162,4 @@ Status is informational only — it reads the manifest and capture, and displays
 Use it:
 - Before starting work to see where things stand
 - After running build, evolve, or verify to confirm progress
-- To determine what command to run next (`evolve` when inventory must change; `refine` when only implementation changes)
+- To determine what command to run next (`evolve` for broad reassessment or inventory changes; `refine` for specific corrections)

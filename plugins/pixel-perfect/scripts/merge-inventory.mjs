@@ -12,6 +12,8 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 
+import { replaceReferences } from "./reference-revisions.mjs";
+
 const unique = (xs) => [...new Set(xs)];
 const byKey = (items, key) => new Map((items || []).map((x) => [x[key], x]));
 
@@ -49,7 +51,22 @@ function mergeDeep(prior = {}, delta = {}) {
   return out;
 }
 
-export function mergeInventories(prior, delta) {
+export function mergeInventories(prior, delta, options = {}) {
+  if (options.mode === "replace") {
+    if (!options.frames || !options.reconciliation) throw new Error("Replacement requires staged frames and explicit reconciliation");
+    prior = replaceReferences(prior, options.frames, options.reconciliation);
+    // Refresh observations override old observations; identities and omitted states survive.
+    const merged = mergeInventories(prior, delta);
+    for (const layer of ["atoms", "molecules", "organisms", "screens"]) {
+      merged[layer] = merged[layer].map((item) => {
+        const observed = (delta[layer] ?? []).find((d) => d.name === item.name);
+        return observed ? { ...item, ...observed, ...(layer === "screens" ? { states: mergeScreen(item, observed).states } : { states: unique([...(item.states ?? []), ...(observed.states ?? [])]), appears_on: unique([...(item.appears_on ?? []), ...(observed.appears_on ?? [])]) }) } : item;
+      });
+    }
+    merged.tokens_observed = { ...prior.tokens_observed, ...delta.tokens_observed };
+    return merged;
+  }
+  if (options.mode && options.mode !== "additive") throw new Error("Unknown inventory merge mode");
   const merged = {
     version: 1,
     status: prior.status === "blocked" || delta.status === "blocked" ? "blocked" : "complete",

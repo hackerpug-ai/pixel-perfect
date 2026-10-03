@@ -1,5 +1,5 @@
 ---
-description: "Scaffold a Pixel Perfect project by installing selected tools, creating the theme and sandbox, generating token stories, and verifying a real hello-world component."
+description: "Set up the selected framework, tokens, component sandbox, and capture tooling before building product components."
 ---
 
 # Pixel Perfect: Scaffold
@@ -15,3 +15,8 @@ Preserve every installation, render, and verification gate. Translate only the n
 Collect every decision through the harness's structured question mechanism as the runtime contract's user choice protocol specifies — `AskUserQuestion` in Claude Code, one call per declared batch. Never print a decision as prose and end the turn.
 
 Follow the runtime contract's turn shape. Open with a status digest of twelve lines or fewer — where the project stands, what the next move is, what is being asked — and put any longer analysis in the artifact the workflow names. Run no web search, no install, and no generation before the decision that authorizes it. When the invocation input does not resolve to exactly one thing, ask which was meant instead of guessing.
+
+Select when: Tool selections are confirmed and the platform needs setup.
+Inputs and prerequisites: Initialized manifest and selected platform/toolchain.
+Outputs and side effects: Installs tools and writes theme, sandbox, and capture setup.
+Handoffs: pixel-perfect:build, pixel-perfect:verify. Example: `pixel-perfect:scaffold --platform web-desktop`.

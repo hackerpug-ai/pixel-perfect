@@ -1,6 +1,6 @@
 ---
 name: evolve
-description: Evolve a Pixel Perfect design system inventory — absorb a new screen or mock, extend an entity, promote a repeated pattern, or shed a screen with an orphan sweep, proved by catalog capture.
+description: "Reconcile an existing UI system with updated designs or requirements, plan visual and inventory changes, and coordinate implementation and verification."
 ---
 
 # Pixel Perfect: Evolve
@@ -10,3 +10,8 @@ Read [the runtime contract](../../workflows/RUNTIME-CONTRACT.md). If `design/man
 Confirm the full delta before any write or delete; hand additions to build; prove with re-capture; never silent-duplicate or silent-sweep.
 
 Invoke with the active harness's syntax from the harness mappings table in the runtime contract, treat the user's remaining text as input, collect choices through that harness's input mechanism one call per declared batch, never printing a decision as prose and ending the turn, and represent transient workflow tasks with its planning tools. Follow the runtime contract's turn shape: open with a status digest of twelve lines or fewer, write longer analysis to the artifact the workflow names, run no search, install, or generation before the decision authorizing it, and ask when the input does not resolve to exactly one thing. Durable completion comes only from the manifest and required evidence.
+
+Select when: Updated exports or requirements require broad reassessment of built work.
+Inputs and prerequisites: Existing project; --refresh <source...> [--platform <name>] [--reanalyze], --resume <run-id>, or an inventory delta.
+Outputs and side effects: Stages revisions and one change plan; accepted edits create resumable progress and evidence.
+Handoffs: pixel-perfect:refine, pixel-perfect:build, pixel-perfect:verify, pixel-perfect:status. Example: `pixel-perfect:evolve --refresh ./exports --platform web-desktop`.

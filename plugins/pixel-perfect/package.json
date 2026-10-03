@@ -1,7 +1,7 @@
 {
   "name": "@hackerpug-ai/pixel-perfect",
-  "version": "9.2.0",
-  "description": "Pixel Perfect design-system workflows packaged for the Pi coding agent",
+  "version": "9.3.0",
+  "description": "Build and refresh real UI systems from requirements and design exports, with resumable implementation and reference verification.",
   "license": "MIT",
   "author": {
     "name": "Justin Rich"
@@ -17,7 +17,9 @@
     "design",
     "design-system",
     "ui",
-    "agent-skills"
+    "agent-skills",
+    "existing-project",
+    "reference-refresh"
   ],
   "files": [
     ".pi/",

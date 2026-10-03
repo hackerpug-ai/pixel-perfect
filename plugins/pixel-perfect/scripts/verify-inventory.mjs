@@ -699,6 +699,22 @@ export function verifyInventory(inventory, options = {}) {
   // Check J: Frames coverage (with --frames option)
   if (options.frames) {
     const renderedFrameIds = new Set(options.frames.frames?.map((f) => f.id) || []);
+    for (const frame of inventory.frames) {
+      if (!renderedFrameIds.has(frame.id)) violations.push({ class: 'frames-coverage', path: frame.id, message: 'inventory frame is absent from rendered index' });
+    }
+    for (const source of inventory.sources) {
+      const rendered = options.frames.sources?.find((s) => s.ref === source.ref);
+      if (!rendered || rendered.hash !== source.hash || rendered.revision !== source.revision) {
+        violations.push({ class: 'source-revision', path: source.ref, message: 'inventory source revision differs from rendered source' });
+      }
+    }
+    for (const frame of options.frames.frames ?? []) {
+      const source = options.frames.sources?.find((s) => s.ref === frame.source);
+      if (!source?.frames?.includes(frame.id)) violations.push({ class: 'frame-mapping', path: frame.id, message: 'frame has no corresponding source mapping' });
+    }
+    for (const source of options.frames.sources ?? []) {
+      for (const id of source.frames ?? []) if (!options.frames.frames.some((f) => f.id === id && f.source === source.ref)) violations.push({ class: 'frame-mapping', path: id, message: 'source names a missing or differently owned frame' });
+    }
     for (const frameId of renderedFrameIds) {
       if (!frameIds.has(frameId) && !unclaimedIds.has(frameId)) {
         violations.push({

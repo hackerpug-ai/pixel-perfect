@@ -53,6 +53,22 @@ export async function loadCapabilities(root = REPOSITORY_ROOT) {
   if (!Array.isArray(capabilities) || capabilities.length === 0) {
     throw new AdapterBuildError(["capabilities.json must be a non-empty array"]);
   }
+  const names = new Set(capabilities.map((entry) => entry.name));
+  const expected = ['add-platform', 'assimilate', 'build', 'evolve', 'init', 'refine', 'research', 'scaffold', 'status', 'verify', 'wireframe'];
+  if (names.size !== expected.length || capabilities.length !== names.size || expected.some((name) => !names.has(name))) {
+    throw new AdapterBuildError(['capabilities must define exactly the 11 public commands']);
+  }
+  for (const entry of capabilities) {
+    for (const field of ['title', 'description', 'preservation', 'selection', 'inputs', 'outputs', 'example']) {
+      if (typeof entry[field] !== 'string' || !entry[field].trim() || /[\r\n]/.test(entry[field])) {
+        throw new AdapterBuildError([`${entry.name}.${field} must be nonempty single-line text`]);
+      }
+    }
+    if (!Array.isArray(entry.handoffs) || !entry.handoffs.length || entry.handoffs.some((name) => !names.has(name) || name === entry.name) || new Set(entry.handoffs).size !== entry.handoffs.length) {
+      throw new AdapterBuildError([`${entry.name}.handoffs must name distinct related public commands`]);
+    }
+    if (!entry.example.startsWith(`pixel-perfect:${entry.name}`)) throw new AdapterBuildError([`${entry.name}.example must invoke its command`]);
+  }
   return capabilities;
 }
 
@@ -67,12 +83,17 @@ export async function renderAdapters(root = REPOSITORY_ROOT) {
   const files = new Map();
   for (const capability of capabilities) {
     const { name, title, description, preservation, interactive } = capability;
+    const guidance = {
+      description_yaml: JSON.stringify(description),
+      selection_guidance: `Select when: ${capability.selection}\nInputs and prerequisites: ${capability.inputs}\nOutputs and side effects: ${capability.outputs}\nHandoffs: ${capability.handoffs.map((next) => `pixel-perfect:${next}`).join(', ')}. Example: \`${capability.example}\`.`,
+    };
     if (!name || !title || !description || !preservation || typeof interactive !== "boolean") {
       throw new AdapterBuildError([`invalid capability entry: ${JSON.stringify(capability)}`]);
     }
 
     const commandBody = normalizeBody(
       renderTemplate(commandTemplate, {
+        ...guidance,
         name,
         title,
         description,
@@ -84,6 +105,7 @@ export async function renderAdapters(root = REPOSITORY_ROOT) {
     const skillFooter = renderTemplate(interactive ? INTERACTIVE_SKILL_FOOTER : SILENT_SKILL_FOOTER, { name });
     const skillBody = normalizeBody(
       renderTemplate(skillTemplate, {
+        ...guidance,
         name,
         title,
         description,
@@ -93,6 +115,7 @@ export async function renderAdapters(root = REPOSITORY_ROOT) {
     );
     const piSkillBody = normalizeBody(
       renderTemplate(piSkillTemplate, {
+        ...guidance,
         name,
         title,
         description,

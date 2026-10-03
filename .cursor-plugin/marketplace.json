@@ -5,14 +5,14 @@
     "email": "justin@hackerpug.com"
   },
   "metadata": {
-    "description": "Build real UIs in your target framework with a native sandbox (Storybook optional). Start from a PRD, wireframes, or an existing design: build inventories every design frame first, then builds real components against them.",
-    "version": "9.2.0"
+    "description": "Build and refresh real UI systems from requirements and design exports, with resumable implementation and reference verification.",
+    "version": "9.3.0"
   },
   "plugins": [
     {
       "name": "pixel-perfect",
       "source": "./plugins/pixel-perfect",
-      "description": "Gated build process → real components in your target framework, browsable in a native sandbox built from scratch (Storybook optional). Start from a PRD, ASCII wireframes, or an existing design — every design frame is rendered, inventoried, and confirmed before anything is built.",
+      "description": "Build and refresh real UI systems from requirements and design exports, with resumable implementation and reference verification.",
       "category": "design",
       "keywords": [
         "design",
@@ -27,7 +27,10 @@
         "design-inventory",
         "wireframe",
         "sandbox",
-        "native"
+        "native",
+        "existing-project",
+        "reference-refresh",
+        "design-system"
       ],
       "logo": "./plugins/pixel-perfect/assets/icon.png"
     }

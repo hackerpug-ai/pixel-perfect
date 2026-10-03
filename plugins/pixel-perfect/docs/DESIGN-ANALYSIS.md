@@ -102,3 +102,7 @@ Build records in place (`OUT` is `design/`). The other callers fold the run into
 4. **Swap** — replace `design/reference/` with the staged one, write `design/inventory.json` from the candidate with `confirmed` set, and delete `<OUT>/stage/`.
 
 The caller then records its receipt (see its workflow).
+
+## Reference metadata
+
+Copy rendered `sources[].hash`, `revision`, `render_config`, `inputs`, and frame `hash` fields exactly into the inventory. They are deterministic provenance, not analysis fields. `verify-inventory --frames` validates source revisions and mappings in both directions. For existing-library refresh, stage through `docs/REFRESH-CONTRACT.md`; do not use additive persistence to supersede active references.

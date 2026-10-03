@@ -6,6 +6,7 @@ Run verification checks appropriate for the current build phase. Reports pass/fa
 
 ```
 pixel-perfect:verify [directory] [options]
+pixel-perfect:verify --refresh <run-id>
 ```
 
 ## Arguments
@@ -23,6 +24,12 @@ pixel-perfect:verify [directory] [options]
 ## Gate Check
 
 **Requires:** `design/manifest.json` exists.
+
+## Refresh verification
+
+With `--refresh`, read `docs/REFRESH-CONTRACT.md` and run `refresh-run.mjs verify <project> <run-id>`. Report implementation regression, accepted-reference fidelity, and affected consumer behavior separately. Run the accepted `check` commands when current check evidence is missing or stale, then verify again. Missing captures or judgments remain incomplete; do not invent them. Repairs require `--fix`, which uses the accepted scope and shared refinement path. Explicitly report actual capture medium; React Native in a browser is browser evidence.
+
+For ordinary verification, inspect pending refresh runs first. Older manifest passes remain historical when references or implementation fingerprints changed. Never advance an affected phase by relying on stale receipts or accepting goldens alone.
 
 ## What It Does
 

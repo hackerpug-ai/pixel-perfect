@@ -239,7 +239,7 @@ test("--reach Button reports Home as a live root", () => {
     const report = JSON.parse(stdout);
     assert.equal(report.results.length, 1);
     const reaches = report.results[0].reaches.map((r) => r.key);
-    assert.ok(reaches.some((k) => k.includes("Home")), `expected Home in reaches: ${reaches}`);
+    assert.deepEqual(reaches, ["screens/Home/default"]);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -340,4 +340,17 @@ test("--perturb-dir is parsed (it was documented but ignored)", () => {
   const { parseArgs } = verifyCatalogModule;
   assert.equal(parseArgs(["--blast", "Button", ".", "--perturb-dir", "src/lib/components"]).perturbDir, "src/lib/components");
   assert.throws(() => parseArgs(["--blast", "Button", ".", "--perturb-dir"]), /requires a path/);
+});
+
+
+test("--reach does not mistake an intermediate component for a screen when no screen moves", () => {
+  const dir = cloneFixture();
+  try {
+    rmSync(path.join(dir, "sandbox/catalog/screens"), { recursive: true });
+    const { code, stdout } = runCli(["--reach", "Button", dir]);
+    assert.equal(code, 0, stdout);
+    const result = JSON.parse(stdout).results[0];
+    assert.ok(result.moved.some((m) => m.name === "Card"));
+    assert.deepEqual(result.reaches, []);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });

@@ -58,7 +58,7 @@ async function packPackage(directory) {
 test("pi package manifest exposes only namespaced Pixel Perfect skills", async () => {
   const manifest = JSON.parse(await readFile(path.join(PACKAGE_ROOT, "package.json"), "utf8"));
   assert.equal(manifest.name, "@hackerpug-ai/pixel-perfect");
-  assert.equal(manifest.version, "9.2.0");
+  assert.equal(manifest.version, "9.3.0");
   assert.ok(manifest.keywords.includes("pi-package"));
   assert.deepEqual(manifest.pi, { skills: ["./.pi/skills"] });
   assert.equal(manifest.publishConfig.access, "public");
@@ -73,6 +73,7 @@ test("npm pack contains the canonical runtime and every pi adapter", async () =>
     assert.equal(result.code, 0, result.stderr);
     const entries = new Set(result.stdout.trim().split("\n"));
     assert.ok(entries.has("package/package.json"));
+    for (const file of ["scripts/refresh-run.mjs", "scripts/reference-revisions.mjs", "scripts/capture-refresh-browser.mjs", "docs/REFRESH-CONTRACT.md", "docs/REFINEMENT-EXECUTION.md", "docs/RETURNING-PROJECT.md"]) assert.ok(entries.has(`package/${file}`), file);
     assert.ok(entries.has("package/workflows/RUNTIME-CONTRACT.md"));
     assert.ok(entries.has("package/skills/process-context/SKILL.md"));
     for (const capability of CAPABILITIES) {
@@ -134,7 +135,9 @@ test("the real pi package manager installs the packed artifact and discovers eve
       .map((command) => command.name)
       .sort();
     assert.deepEqual(commands, PI_COMMANDS);
+    const catalog = JSON.parse(await readFile(path.join(ROOT, "scripts/adapters/capabilities.json"), "utf8"));
     for (const command of packageCommands) {
+      assert.equal(command.description, catalog.find((entry) => command.name === `skill:pixel-perfect-${entry.name}`).description);
       assert.ok(command.sourceInfo.path.startsWith(packageRoot), command.sourceInfo.path);
     }
   } finally {

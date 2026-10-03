@@ -129,7 +129,8 @@ async function assertCaptureRun(dir, runId) {
   assert.match(brokenAx.html, /id="root"/, "broken route must load the real app document, not a server stub");
   assert.doesNotMatch(brokenAx.html, /<title>Broken<\/title>/);
   const judgedSlugs = report.judged.map((p) => path.basename(p, ".png"));
-  assert.equal(judgedSlugs.includes("broken.default"), false, "broken shot must not be judged");
+  assert.deepEqual(judgedSlugs.sort(), required.filter((entry) => entry.slug !== "broken.default").map((entry) => entry.slug).sort(), "judge every successfully rendered selected state exactly once");
+  assert.ok(judgedSlugs.length > 0);
   for (const shot of report.judged) {
     const abs = path.join(dir, shot);
     assert.ok(existsSync(abs), `missing shot ${shot}`);

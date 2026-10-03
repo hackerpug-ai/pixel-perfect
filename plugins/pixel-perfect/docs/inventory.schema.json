@@ -27,6 +27,9 @@
           "role": { "enum": ["own", "inspiration"], "default": "own", "description": "own: the project's design, whose frames are pixel targets. inspiration: a source the user admires; it may shape components and tokens but never defines the project's screens (verify-inventory Check N)." },
           "kind": { "enum": ["html-deck", "url", "image", "wireframes", "code"] },
           "hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+          "revision": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+          "render_config": { "type": "object" },
+          "inputs": { "type": "array", "items": { "type": "object", "required": ["file", "hash"], "properties": { "file": { "type": "string" }, "hash": { "type": "string" } } } },
           "slug": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
           "frame_selector": { "type": ["string", "null"] },
           "frames": { "type": "array", "items": { "$ref": "#/$defs/frameId" } }
@@ -43,6 +46,7 @@
         "properties": {
           "id": { "$ref": "#/$defs/frameId" },
           "png": { "type": "string" },
+          "hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
           "source": { "type": "string" },
           "label": { "type": ["string", "null"] },
           "viewport": { "type": ["string", "null"], "description": "WxH as rendered, e.g. 1440x900 or 390x844." },

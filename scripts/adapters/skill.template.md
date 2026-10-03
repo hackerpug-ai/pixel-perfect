@@ -1,6 +1,6 @@
 ---
 name: {{name}}
-description: {{description}}
+description: {{description_yaml}}
 ---
 
 # Pixel Perfect: {{title}}
@@ -10,3 +10,5 @@ Read [the runtime contract](../../workflows/RUNTIME-CONTRACT.md). If `design/man
 {{preservation}}.
 
 {{skill_footer}}
+
+{{selection_guidance}}

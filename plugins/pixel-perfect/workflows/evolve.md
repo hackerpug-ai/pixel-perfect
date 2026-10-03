@@ -1,4 +1,4 @@
-# Evolve (Inventory Change)
+# Evolve (Existing System Changes)
 
 Absorb a new screen, extend an existing entity, promote a repeated pattern, or shed a screen along with the components unique to it. **Add and remove are one operation**: a change to the system's inventory, with a computed blast radius, gated on confirmation, proved by re-capture.
 
@@ -7,6 +7,8 @@ Absorb a new screen, extend an existing entity, promote a repeated pattern, or s
 ## Usage
 
 ```
+pixel-perfect:evolve --refresh <source...> [--platform <name>] [--reanalyze]
+pixel-perfect:evolve --resume <run-id>
 pixel-perfect:evolve <input>
 pixel-perfect:evolve ./progress-modal.png
 pixel-perfect:evolve "add a settings screen with profile and billing tabs"
@@ -46,7 +48,8 @@ EVOLVE — drop Settings · candidates: Settings screen + 2 sweep atoms
 |-------|-------|-----------|-------|
 | E2-ask | E2 | which existing entity a low-confidence match refers to | only when classifier confidence is not decisive |
 | E3-ask | E3 | whether an ambiguous sweep candidate is dead or pinned | only when reachability is inconclusive or pinned status is unclear |
-| E4 | E4 | confirm the whole delta (reuse / add / promote / remove / sweep) | always before any write, install, or delete |
+| E4 | E4 | confirm the whole delta (reuse / add / promote / remove / sweep) | before legacy inventory edits |
+| E-refresh | refresh | accept the complete refresh plan | once before product edits; staging is already authorized |
 
 Worst case is three calls; a high-confidence single-screen drop or add with a clear catalog match is one (E4 only).
 
@@ -55,11 +58,32 @@ Worst case is three calls; a high-confidence single-screen drop or add with a cl
 | Command | Changes |
 |---------|---------|
 | **`refine`** | An existing entity's **implementation** — "make the badge more rounded". Nothing added, removed, or extended. |
-| **`evolve`** | **What exists** — add, variant, promote, remove, token inventory change. |
+| **`evolve`** | Broad reassessment of updated designs or requirements, including visual updates and inventory changes. |
 
 If `refine` detects an inventory-level request, it routes here rather than doing half of it.
 
 ---
+
+## Reference refresh branch
+
+Resolve `--refresh` and `--resume` before E1. Read `docs/REFRESH-CONTRACT.md` and execute its helper sequence. These options use the refresh branch instead of the additive E1–E6 sequence.
+
+Explicit refresh invocation authorizes analysis and staged artifacts. Inspect returning-project readiness using `docs/RETURNING-PROJECT.md`. Stage references with `refresh-run.mjs stage`, analyze the rendered exports and current implementation, then present one complete plan. Classification includes unchanged, existing visual update, addition/extension, removal candidate, and unresolved conflict. Ask only for genuine source/frame ambiguity and the one plan confirmation. Do not ask whether to start analysis.
+
+```user_choice
+batch: E-refresh — accept complete refresh scope
+- header: Refresh
+  question: Apply the staged refresh plan and verify all selected states?
+  options:
+    - label: Apply plan (Recommended)
+      description: Accepts the complete listed visual and inventory scope, preserves existing identities, and runs implementation plus evidence checks.
+    - label: Revise scope
+      description: Keeps the staged references and current implementation intact while you adjust the selected scope or resolve ambiguous mappings.
+```
+
+After confirmation, call `accept`, capture the selected before states, and execute visual updates with `docs/REFINEMENT-EXECUTION.md`. Hand additions/extensions to build with the accepted worklist. Preserve the existing explicit removal confirmation path. Use `apply` for journaled writes and `capture`, `judge`, and `check` for evidence. Run `verify`, then `complete` only when it passes. Update progress through helpers, never hand-edit the run status.
+
+`--resume` calls `resume`, reads the stored plan/worklist, and continues the first unfinished dependency. Preserve accepted decisions and completed work. Outside edits block writes until reconciliation; never reset the project to a prior snapshot. An unchanged rerun returns without tracked changes; `--reanalyze` requests fresh analysis explicitly.
 
 ## Phases
 

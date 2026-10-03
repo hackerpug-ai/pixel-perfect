@@ -1,5 +1,5 @@
 ---
-description: "Add a platform to an existing Pixel Perfect project by running TARGET and EQUIP for that platform and recording its gated build state."
+description: "Add a target platform to an existing project while preserving its existing platform configuration and progress."
 ---
 
 # Pixel Perfect: Add Platform
@@ -15,3 +15,8 @@ Preserve every selection, validation, and manifest gate. Translate only the neut
 Collect every decision through the harness's structured question mechanism as the runtime contract's user choice protocol specifies — `AskUserQuestion` in Claude Code, one call per declared batch. Never print a decision as prose and end the turn.
 
 Follow the runtime contract's turn shape. Open with a status digest of twelve lines or fewer — where the project stands, what the next move is, what is being asked — and put any longer analysis in the artifact the workflow names. Run no web search, no install, and no generation before the decision that authorizes it. When the invocation input does not resolve to exactly one thing, ask which was meant instead of guessing.
+
+Select when: An initialized project needs another platform.
+Inputs and prerequisites: Existing manifest and target platform.
+Outputs and side effects: Adds one platform and its setup gates.
+Handoffs: pixel-perfect:scaffold, pixel-perfect:status. Example: `pixel-perfect:add-platform mobile-ios`.

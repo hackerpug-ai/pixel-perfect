@@ -58,6 +58,8 @@ Worst case is four calls for an open-ended interactive session; a targeted refin
 pixel-perfect:refine --component StatusBadge "Make the badge more rounded, use a subtle gradient background"
 ```
 
+Use `docs/REFINEMENT-EXECUTION.md` as the shared execution path. The steps below retain the targeted command behavior; evolve refresh delegates visual edits to the same path. Broad reassessment of refreshed designs routes to evolve even when component names stay the same.
+
 1. Load the component file and its story
 2. Load adapter context and theme
 3. Load `docs/DESIGN-CONTRACT.md` and run `DESIGN_EXECUTE` with the current surface plus the feedback

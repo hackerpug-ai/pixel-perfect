@@ -85,3 +85,31 @@ test("buildAdapters --check fails with the mutated path", async () => {
   }
   await buildAdapters(ROOT, { check: true });
 });
+
+test('selection metadata is complete and every surface includes it with escaped YAML descriptions', async () => {
+  const temp = await mkdtemp(path.join(tmpdir(), 'pp-metadata-'));
+  try {
+    await mkdir(path.join(temp, 'scripts'), { recursive: true });
+    await cp(path.join(ROOT, 'scripts/adapters'), path.join(temp, 'scripts/adapters'), { recursive: true });
+    const file = path.join(temp, 'scripts/adapters/capabilities.json');
+    const catalog = await loadCapabilities(temp);
+    catalog[0].description = 'Use "quotes": C:\\design and #tags safely';
+    await writeFile(file, JSON.stringify(catalog));
+    const { files } = await renderAdapters(temp);
+    for (const entry of catalog) {
+      for (const content of [...files.entries()].filter(([file]) => file.endsWith(`/${entry.name}.md`) || file.includes(`/${entry.name}/`) || file.includes(`/pixel-perfect-${entry.name}/`)).map(([, content]) => content)) {
+        const description = content.split('\n').find((line) => line.startsWith('description: ')).slice(13);
+        assert.equal(JSON.parse(description), entry.description);
+        assert.ok(content.includes(entry.selection));
+        assert.ok(content.includes(entry.inputs));
+        assert.ok(content.includes(entry.outputs));
+        assert.ok(content.includes(entry.example));
+        for (const name of entry.handoffs) assert.ok(content.includes(`pixel-perfect:${name}`));
+      }
+    }
+    catalog[0].handoffs = ['polish']; await writeFile(file, JSON.stringify(catalog));
+    await assert.rejects(loadCapabilities(temp), /adapter build failed/);
+    catalog[0].handoffs = ['status']; delete catalog[0].inputs; await writeFile(file, JSON.stringify(catalog));
+    await assert.rejects(loadCapabilities(temp), /adapter build failed/);
+  } finally { await rm(temp, { recursive: true, force: true }); }
+});

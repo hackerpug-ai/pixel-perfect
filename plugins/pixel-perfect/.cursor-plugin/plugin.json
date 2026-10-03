@@ -1,8 +1,8 @@
 {
   "name": "pixel-perfect",
   "displayName": "Pixel Perfect",
-  "version": "9.2.0",
-  "description": "Process orchestrator for building real UIs in your target framework, browsable in a native sandbox built from scratch (Storybook optional). Start from a PRD, ASCII wireframes, or an existing design — build inventories every frame of it before planning, then builds real components against those frames. Web (React, Next.js, Vite, SvelteKit), mobile (React Native, Expo), and any framework via a custom sandbox.",
+  "version": "9.3.0",
+  "description": "Build and refresh real UI systems from requirements and design exports, with resumable implementation and reference verification.",
   "author": {
     "name": "Justin Rich"
   },
@@ -25,7 +25,10 @@
     "design-tokens",
     "wireframe",
     "sandbox",
-    "native"
+    "native",
+    "existing-project",
+    "reference-refresh",
+    "design-system"
   ],
   "logo": "assets/icon.png",
   "commands": "./commands/",

@@ -10,6 +10,12 @@ It exists to close one gap: the one between a beautiful AI-generated design and 
 
 ---
 
+## Refresh an existing library
+
+Use `evolve --refresh <source...> [--platform <name>] [--reanalyze]` to reassess completed UI against updated HTML/image exports or extracted bundles. Confirm one change plan, then resume with `evolve --resume <run-id>` and inspect evidence with `verify --refresh <run-id>`. Use `refine` for a specific named correction. Refresh preserves component identities, history, and unrelated progress; incomplete or stale evidence keeps the run open.
+
+See the packaged `docs/RETURNING-PROJECT.md` and `docs/REFRESH-CONTRACT.md` for the recovery sequence and helper contract. `polish` remains an internal lens pack, not a public command.
+
 ## The Gap
 
 AI has gotten very good at producing designs. Ask for a dashboard and you get a gorgeous one — a Figma frame, an HTML export, a screenshot, an image.
@@ -68,7 +74,7 @@ Each phase has a **gate** that must pass before you proceed. The plugin tracks s
 
 ## Quick Start
 
-Version 9.2.0 projects the same runtime into all six harnesses.
+Version 9.3.0 projects the same runtime into all six harnesses.
 
 **Upgrading from 7.x:** see [`plugins/pixel-perfect/docs/UPGRADING-8.0.md`](plugins/pixel-perfect/docs/UPGRADING-8.0.md) — add a capture command, run `--baseline` once, drop composition-edge/`controls` authority; inventory changes use `evolve`.
 
@@ -114,7 +120,7 @@ Keep the personal marketplace itself if it contains other plugins. `codex plugin
 Cursor loads local plugins from `~/.cursor/plugins/local/`. **Copy** the package (do not symlink — Cursor has known failures loading symlinked local plugins):
 
 ```bash
-git clone --branch v9.2.0 --depth 1 https://github.com/hackerpug-ai/pixel-perfect.git /tmp/pixel-perfect
+git clone --branch v9.3.0 --depth 1 https://github.com/hackerpug-ai/pixel-perfect.git /tmp/pixel-perfect
 mkdir -p ~/.cursor/plugins/local
 rm -rf ~/.cursor/plugins/local/pixel-perfect
 cp -R /tmp/pixel-perfect/plugins/pixel-perfect ~/.cursor/plugins/local/pixel-perfect
@@ -135,7 +141,7 @@ Invoke capabilities as `/pixel-perfect:init`, `/pixel-perfect:build`, and so on.
 OpenCode consumes the tagged Git checkout and its versioned adapter package. From the target project:
 
 ```bash
-git clone --branch v9.2.0 --depth 1 https://github.com/hackerpug-ai/pixel-perfect.git .pixel-perfect
+git clone --branch v9.3.0 --depth 1 https://github.com/hackerpug-ai/pixel-perfect.git .pixel-perfect
 mkdir -p .opencode
 ln -s ../.pixel-perfect/plugins/pixel-perfect/.opencode/commands .opencode/commands
 ln -s ../.pixel-perfect/plugins/pixel-perfect/.opencode/skills .opencode/skills
@@ -265,11 +271,11 @@ Every component prop is wired to sandbox controls (`argTypes` in Storybook; labe
 | `/pixel-perfect:init` | 1-3 | DISCOVER goal + vibe, TARGET platforms + framework + tools, EQUIP |
 | `/pixel-perfect:scaffold` | 4 | Install tools, create theme, generate design token stories, verify hello-world, write first catalog golden |
 | `/pixel-perfect:build` | 4a-7 | Inventory the designs (render every frame, read once, gate, confirm), then build atoms, compose screens, wire integration (layer goldens + composition mutation check) |
-| `/pixel-perfect:verify` | any | Run gate checks for current phase (contracts + catalog capture) |
-| `/pixel-perfect:status` | any | Show phase progress, catalog drift, dead inventory, and component tracking |
+| `/pixel-perfect:verify` | any | Check regression, reference fidelity, and affected behavior; repair only with --fix |
+| `/pixel-perfect:status` | any | Inspect progress, reference freshness, unfinished refresh work, and next command |
 | `/pixel-perfect:research` | any | Research design patterns, competitors, and ecosystem libraries (`--libraries`) |
-| `/pixel-perfect:refine` | 5+ | Iterate on an existing entity's implementation (not inventory) |
-| `/pixel-perfect:evolve` | 5+ | Change inventory — absorb a screen/mock, promote a pattern, or shed a screen with orphan sweep |
+| `/pixel-perfect:refine` | 5+ | Apply a specific correction to a named component, screen, or theme |
+| `/pixel-perfect:evolve` | 5+ | Reconcile updated designs with an existing UI; plan visual and inventory changes, resume, and verify |
 | `/pixel-perfect:add-platform` | 1-3 | Add and equip another target platform without resetting existing platform progress |
 
 ### Command Flow

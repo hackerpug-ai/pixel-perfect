@@ -19,3 +19,8 @@ Start a workflow with `/skill:pixel-perfect-<name>`. For example:
 ```
 
 The package includes the complete workflow, design contract, validators, and reference documentation. Pi loads thin namespaced adapters from `.pi/skills`; each adapter delegates to the same canonical runtime used by the other supported harnesses.
+## Refresh an existing library
+
+Use `evolve --refresh <source...> [--platform <name>] [--reanalyze]` to reassess completed UI against updated HTML/image exports or extracted bundles. Confirm one change plan, then resume with `evolve --resume <run-id>` and inspect evidence with `verify --refresh <run-id>`. Use `refine` for a specific named correction. Refresh preserves component identities, history, and unrelated progress; incomplete or stale evidence keeps the run open.
+
+See the packaged `docs/RETURNING-PROJECT.md` and `docs/REFRESH-CONTRACT.md` for the recovery sequence and helper contract. `polish` remains an internal lens pack, not a public command.

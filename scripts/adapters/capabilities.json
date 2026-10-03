@@ -2,78 +2,178 @@
   {
     "name": "add-platform",
     "title": "Add Platform",
-    "description": "Add a platform to an existing Pixel Perfect project by running TARGET and EQUIP for that platform and recording its gated build state.",
+    "description": "Add a target platform to an existing project while preserving its existing platform configuration and progress.",
     "preservation": "Preserve every selection, validation, and manifest gate",
-    "interactive": true
+    "interactive": true,
+    "selection": "An initialized project needs another platform.",
+    "inputs": "Existing manifest and target platform.",
+    "outputs": "Adds one platform and its setup gates.",
+    "handoffs": [
+      "scaffold",
+      "status"
+    ],
+    "example": "pixel-perfect:add-platform mobile-ios"
   },
   {
     "name": "assimilate",
     "title": "Assimilate",
-    "description": "Assimilate a new mockup or a UI you admire into a Pixel Perfect design system — one shared design analysis with the bundled aesthetic lens, a report, and a persist decision.",
+    "description": "Analyze new mockups or inspiration and propose additions to the design system. Use evolve to reconcile refreshed designs with built components.",
     "preservation": "Run the complete shared design analysis and gate, write the report, and persist only what the user confirms",
-    "interactive": true
+    "interactive": true,
+    "selection": "New inspiration or mockups need design analysis.",
+    "inputs": "HTML/image exports, extracted bundles, URLs, or inspiration.",
+    "outputs": "Writes an analysis report; persists confirmed additions.",
+    "handoffs": [
+      "evolve",
+      "build"
+    ],
+    "example": "pixel-perfect:assimilate ./inspiration"
   },
   {
     "name": "build",
     "title": "Build",
-    "description": "Build a Pixel Perfect project through planning, atoms, molecules, organisms, screens, and integration using real components and required verification gates.",
+    "description": "Implement or resume the confirmed component and screen plan. Use evolve when updated designs require reassessing completed work.",
     "preservation": "Do not summarize, replace, or stub any implementation, test, sandbox, or gate",
-    "interactive": true
+    "interactive": true,
+    "selection": "A confirmed plan has unfinished implementation.",
+    "inputs": "Scaffolded project, confirmed inventory, and optional platform.",
+    "outputs": "Writes components, screens, stories, and verification records.",
+    "handoffs": [
+      "evolve",
+      "refine",
+      "verify",
+      "status"
+    ],
+    "example": "pixel-perfect:build --platform web-desktop"
   },
   {
     "name": "evolve",
     "title": "Evolve",
-    "description": "Evolve a Pixel Perfect design system inventory — absorb a new screen or mock, extend an entity, promote a repeated pattern, or shed a screen with an orphan sweep, proved by catalog capture.",
+    "description": "Reconcile an existing UI system with updated designs or requirements, plan visual and inventory changes, and coordinate implementation and verification.",
     "preservation": "Confirm the full delta before any write or delete; hand additions to build; prove with re-capture; never silent-duplicate or silent-sweep",
-    "interactive": true
+    "interactive": true,
+    "selection": "Updated exports or requirements require broad reassessment of built work.",
+    "inputs": "Existing project; --refresh <source...> [--platform <name>] [--reanalyze], --resume <run-id>, or an inventory delta.",
+    "outputs": "Stages revisions and one change plan; accepted edits create resumable progress and evidence.",
+    "handoffs": [
+      "refine",
+      "build",
+      "verify",
+      "status"
+    ],
+    "example": "pixel-perfect:evolve --refresh ./exports --platform web-desktop"
   },
   {
     "name": "init",
     "title": "Init",
-    "description": "Initialize a Pixel Perfect project through DISCOVER, TARGET, and EQUIP, capturing goal, platforms, framework, styling, libraries, and sandbox choices.",
+    "description": "Initialize a new UI project and record its goals, platforms, and toolchain. For an existing project, inspect status and resume its workflow.",
     "preservation": "Preserve every discovery, selection, validation, and manifest gate",
-    "interactive": true
+    "interactive": true,
+    "selection": "Starting a project without a confirmed setup.",
+    "inputs": "Project goals and directory; existing manifests are inspected first.",
+    "outputs": "Records confirmed project and platform setup.",
+    "handoffs": [
+      "status",
+      "add-platform",
+      "scaffold"
+    ],
+    "example": "pixel-perfect:init"
   },
   {
     "name": "refine",
     "title": "Refine",
-    "description": "Refine Pixel Perfect components, screens, or theme from targeted feedback, update real code, and rerun the affected verification gates.",
+    "description": "Apply a specific correction to named components, screens, or theme using feedback or a reference. Use evolve for broad reassessment or inventory changes.",
     "preservation": "Do not substitute mockups or placeholders for requested product changes",
-    "interactive": true
+    "interactive": true,
+    "selection": "A known target needs a specific correction.",
+    "inputs": "Scaffolded project and named component, screen, theme, feedback, or reference.",
+    "outputs": "Edits the target and reruns affected verification.",
+    "handoffs": [
+      "evolve",
+      "verify",
+      "status"
+    ],
+    "example": "pixel-perfect:refine --component Button \"Increase the corner radius\""
   },
   {
     "name": "research",
     "title": "Research",
-    "description": "Research UI patterns, competitors, trends, or ecosystem libraries and save evidence-backed findings into the project's design research library.",
+    "description": "Research UI patterns, products, or libraries and save findings for later design decisions.",
     "preservation": "Use current sources and preserve every required evidence field and output",
-    "interactive": false
+    "interactive": false,
+    "selection": "Evidence is needed before choosing a design or library.",
+    "inputs": "Topic, product, URL, or library question.",
+    "outputs": "Writes sourced research findings.",
+    "handoffs": [
+      "assimilate",
+      "wireframe",
+      "init"
+    ],
+    "example": "pixel-perfect:research accessible checkout patterns"
   },
   {
     "name": "scaffold",
     "title": "Scaffold",
-    "description": "Scaffold a Pixel Perfect project by installing selected tools, creating the theme and sandbox, generating token stories, and verifying a real hello-world component.",
+    "description": "Set up the selected framework, tokens, component sandbox, and capture tooling before building product components.",
     "preservation": "Preserve every installation, render, and verification gate",
-    "interactive": true
+    "interactive": true,
+    "selection": "Tool selections are confirmed and the platform needs setup.",
+    "inputs": "Initialized manifest and selected platform/toolchain.",
+    "outputs": "Installs tools and writes theme, sandbox, and capture setup.",
+    "handoffs": [
+      "build",
+      "verify"
+    ],
+    "example": "pixel-perfect:scaffold --platform web-desktop"
   },
   {
     "name": "status",
     "title": "Status",
-    "description": "Inspect and report a Pixel Perfect project's current phase, gate status, component coverage, sandbox state, and next required action.",
+    "description": "Inspect current progress, reference freshness, unfinished refresh work, and the next appropriate command without changing project configuration.",
     "preservation": "Report actual state without inventing progress",
-    "interactive": false
+    "interactive": false,
+    "selection": "Returning to a project or deciding the next command.",
+    "inputs": "Project directory and existing manifest, if present.",
+    "outputs": "Reports shape, capture readiness, historical passes, and pending work; never migrates.",
+    "handoffs": [
+      "init",
+      "scaffold",
+      "build",
+      "evolve",
+      "verify"
+    ],
+    "example": "pixel-perfect:status"
   },
   {
     "name": "verify",
     "title": "Verify",
-    "description": "Run Pixel Perfect verification gates for the current phase, report concrete evidence, and advance only when every required check passes.",
+    "description": "Check implementation, reference fidelity, and affected behavior; record evidence and incomplete work. Apply repairs only when requested with --fix.",
     "preservation": "Never fake evidence, weaken a gate, or report a partial check as complete",
-    "interactive": false
+    "interactive": false,
+    "selection": "Current evidence or outstanding work needs checking.",
+    "inputs": "Existing project; optional --refresh <run-id>, --platform <name>, or --fix.",
+    "outputs": "Reports current checks and incomplete work; --fix authorizes repairs.",
+    "handoffs": [
+      "refine",
+      "evolve",
+      "build",
+      "status"
+    ],
+    "example": "pixel-perfect:verify --refresh refresh-20261002"
   },
   {
     "name": "wireframe",
     "title": "Wireframe",
-    "description": "Generate low-fidelity ASCII wireframes from plans, targets, specs, or concepts as governed structural input to higher-fidelity work.",
+    "description": "Create low-fidelity layouts and state maps from requirements or concepts before implementation.",
     "preservation": "Produce the complete required wireframe set, states, annotations, and mappings",
-    "interactive": true
+    "interactive": true,
+    "selection": "Requirements need a structural design before building.",
+    "inputs": "Requirements, concept, or specification.",
+    "outputs": "Writes layouts, state maps, and design mappings.",
+    "handoffs": [
+      "assimilate",
+      "build"
+    ],
+    "example": "pixel-perfect:wireframe ./requirements.md"
   }
 ]

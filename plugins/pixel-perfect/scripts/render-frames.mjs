@@ -25,6 +25,8 @@ import { dirname, extname, join, resolve, basename } from "node:path";
 import { pathToFileURL } from "node:url";
 import { findChrome, sleep, launchChrome, startStaticServer } from "./chrome.mjs";
 
+import { digest, sourceRevision } from "./reference-revisions.mjs";
+
 const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47]);
 
 function usage() {
@@ -189,6 +191,10 @@ async function loadAndSettle(cdp, url, settleMs) {
   await cdp.send("Page.navigate", { url });
   await cdp.waitFor("Page.loadEventFired");
 
+  await cdp.send("Runtime.evaluate", {
+    expression: "document.fonts.ready.then(() => Promise.all(Array.from(document.images).map(i => i.decode().catch(() => {}))))",
+    awaitPromise: true,
+  });
   // Settle: poll innerText length and element count until stable
   let prevLength = -1;
   let prevCount = -1;
@@ -479,6 +485,7 @@ async function renderUrl(cdp, url, widths) {
 }
 
 export async function main(args = process.argv.slice(2)) {
+  const quiet = args.includes("--quiet");
   const refs = [];
   let outDir = null;
   let selector = "auto";
@@ -619,6 +626,10 @@ export async function main(args = process.argv.slice(2)) {
 
       sourceSlugsToRemove.add(refSlug);
       const framesForSource = [];
+      const observed = new Set();
+      if (session) session.cdp.onEvent = (message) => {
+        if (message.method === "Network.requestWillBeSent") observed.add(message.params.request.url);
+      };
 
       const source = { ref, kind, hash: "", slug: refSlug, frame_selector: null, frames: [] };
 
@@ -679,7 +690,7 @@ export async function main(args = process.argv.slice(2)) {
           if (result.warning) {
             console.error(`⚠ ${refSlug} — ${result.warning}`);
           }
-          console.log(`✓ ${refSlug} — ${framesForSource.length} frames (${result.resolvedSelector})`);
+          if (!quiet) console.log(`✓ ${refSlug} — ${framesForSource.length} frames (${result.resolvedSelector})`);
         } else if (kind === "url") {
           const html = await (await fetch(ref)).text();
           source.hash = sha256(html);
@@ -706,7 +717,7 @@ export async function main(args = process.argv.slice(2)) {
               state: f.state,
             });
           }
-          console.log(`✓ ${refSlug} — ${framesForSource.length} frames (desktop, mobile)`);
+          if (!quiet) console.log(`✓ ${refSlug} — ${framesForSource.length} frames (desktop, mobile)`);
         } else if (kind === "image") {
           if (!existsSync(ref)) {
             console.error(`✗ ${refSlug} — unreadable: file not found`);
@@ -735,13 +746,29 @@ export async function main(args = process.argv.slice(2)) {
             route: null,
             state: null,
           });
-          console.log(`✓ ${refSlug} — 1 frame (image)`);
+          if (!quiet) console.log(`✓ ${refSlug} — 1 frame (image)`);
         } else if (kind === "wireframes") {
-          console.log(`⚠ ${refSlug} — wireframes directory (no frames rendered)`);
+          if (!quiet) console.log(`⚠ ${refSlug} — wireframes directory (no frames rendered)`);
           source.frames = [];
         }
 
         source.frames = framesForSource;
+        source.inputs = [];
+        if (kind === "html-deck" || kind === "image") {
+          const files = new Set([resolve(ref)]);
+          const server = deckServers.get(dirname(resolve(ref)));
+          if (server) for (const url of observed) {
+            const parsed = new URL(url);
+            if (parsed.origin === `http://127.0.0.1:${server.port}`) {
+              const file = resolve(dirname(resolve(ref)), `.${decodeURIComponent(parsed.pathname)}`);
+              if (existsSync(file) && statSync(file).isFile()) files.add(file);
+            }
+          }
+          source.inputs = [...files].sort().map((file) => ({ file, hash: digest(readFileSync(file)) }));
+        }
+        source.render_config = { version: 1, selector, settleMs, width, mobileWidth, deviceScaleFactor: 1, medium: kind === "image" ? "export-image" : "chrome" };
+        for (const frame of newFrames.filter((f) => f.source === ref)) frame.hash = digest(readFileSync(join(outDir, frame.png)));
+        source.revision = sourceRevision(source, newFrames.filter((f) => f.source === ref));
         source.status = kind === "wireframes" ? "text" : "rendered";
 
         // Update existing sources, removing old version if present
@@ -769,7 +796,7 @@ export async function main(args = process.argv.slice(2)) {
 
     // Write frames.json (always — --json additionally prints it)
     writeFileSync(framesPath, JSON.stringify(existing, null, 2) + "\n");
-    if (jsonOnly) console.log(JSON.stringify(existing, null, 2));
+    if (jsonOnly) if (!quiet) console.log(JSON.stringify(existing, null, 2));
 
     // Exit precedence: 2 unreadable ref · 1 a source blank/failed (everything else written) ·
     // 3 nothing rendered at all · 0 every source rendered

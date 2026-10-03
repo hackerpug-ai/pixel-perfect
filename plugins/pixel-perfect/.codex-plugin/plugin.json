@@ -1,7 +1,7 @@
 {
   "name": "pixel-perfect",
-  "version": "9.2.0",
-  "description": "Process orchestrator for building real, verified UI components in a target framework from a PRD, wireframes, or an existing design.",
+  "version": "9.3.0",
+  "description": "Build and refresh real UI systems from requirements and design exports, with resumable implementation and reference verification.",
   "author": {
     "name": "Justin Rich",
     "url": "https://github.com/hackerpug-ai"
@@ -16,13 +16,16 @@
     "components",
     "wireframe",
     "sandbox",
-    "design-inventory"
+    "design-inventory",
+    "existing-project",
+    "reference-refresh",
+    "design-system"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Pixel Perfect",
-    "shortDescription": "Build real UI components through a verified design workflow",
-    "longDescription": "Turn a PRD, wireframes, or an existing design into production UI components in the target framework. Pixel Perfect governs discovery, tool selection, scaffolding, atomic components, composition, integration, and verification through explicit phase gates.",
+    "shortDescription": "Build and refresh UI systems with verified design references",
+    "longDescription": "Build and refresh real UI systems from requirements and design exports, with resumable implementation and reference verification.",
     "developerName": "Justin Rich",
     "category": "Design",
     "capabilities": [
@@ -33,8 +36,8 @@
     "websiteURL": "https://github.com/hackerpug-ai/pixel-perfect",
     "defaultPrompt": [
       "Use Pixel Perfect to initialize this UI project",
-      "Inventory these design frames and build the components they need",
-      "Show the current Pixel Perfect phase and gate status"
+      "Refresh this existing component library from updated design exports",
+      "Show unfinished refresh work and current verification evidence"
     ],
     "brandColor": "#7C3AED",
     "composerIcon": "./assets/icon.png",

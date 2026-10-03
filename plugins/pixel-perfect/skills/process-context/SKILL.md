@@ -1,15 +1,19 @@
 ---
 name: process-context
-description: "Manifest-aware context for Pixel Perfect projects. Entry adapters load it explicitly to apply phase awareness, migrations, and adapter conventions."
+description: "Manifest-aware context for Pixel Perfect projects. Entry adapters load it explicitly to inspect phase awareness, manifest shape, and adapter conventions."
 ---
 
 # pixel-perfect Process Context
 
 You are working in a project managed by **pixel-perfect**, a 6-phase build process orchestrator that produces real code in the target framework, browsable in a **sandbox** — a `custom` native component browser by default (see `docs/sandbox-spec.md`), or Storybook only if `tools.sandbox` says so. An entry adapter loaded this context because a Pixel Perfect manifest exists in the project.
 
+## Inspection and conversion boundary
+
+Loading process context is read-only. In particular, status must not migrate, install, or rewrite configuration. Detect actual manifest shape and capture readiness rather than comparing plugin versions. The conversions below apply only when the active mutating workflow needs them. Write a candidate first, preserve the original manifest, validate the candidate and platform/tool choices, then promote it. A failed conversion leaves the original active. Existing refresh receipts add progress without requiring reinitialization. Read `docs/RETURNING-PROJECT.md` for recovery.
+
 ## Legacy YAML Migration
 
-If `design/manifest.yaml` exists but `design/manifest.json` does not, **auto-migrate** before proceeding:
+If `design/manifest.yaml` exists but `design/manifest.json` does not, prepare a validated conversion when a mutating workflow requires it:
 
 1. Read `design/manifest.yaml`
 2. Parse the YAML content into a JSON structure
@@ -22,11 +26,11 @@ Migrated design/manifest.yaml → design/manifest.json
   All data preserved. YAML file removed.
 ```
 
-This migration is automatic and transparent. No user confirmation needed — JSON is the canonical format going forward.
+Preserve the YAML original until the JSON candidate validates. Status reports the needed conversion without performing it.
 
 ## Legacy v4.x Manifest Migration
 
-If `design/manifest.json` exists and its `platforms` field is an **array** (v4.x format), auto-migrate to v5.0 object format before proceeding:
+If `design/manifest.json` exists and its `platforms` field is an **array** (v4.x format), prepare a validated object-format conversion when needed:
 
 1. Read the existing manifest
 2. Create a `platforms` object. For each platform name in the array, create a key with:
@@ -48,11 +52,11 @@ Migrated manifest to v5.0.0 (multi-platform format).
   All data preserved.
 ```
 
-This migration is automatic and transparent. No user confirmation needed.
+Preserve the original until the candidate validates. Status never performs conversion.
 
 ## Legacy pre-8.0 Manifest Migration (living design system)
 
-If `design/manifest.json` exists and any platform **lacks** a `capture` object while components already have sandbox stories (post-scaffold), migrate for v8 catalog capture before trusting status/verify:
+If `design/manifest.json` exists and any platform **lacks** a `capture` object while components already have sandbox stories (post-scaffold), report missing capture readiness; configure capture in an authorized mutating workflow before trusting verification:
 
 1. Ensure a capture command exists (`npm run sandbox:capture` or platform equivalent) per `docs/sandbox-spec.md` piece #8 and `docs/adapters/custom-sandbox.md`.
 2. Write per platform:
