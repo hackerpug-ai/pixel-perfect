@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Produce og.png from the prerendered SocialCard, copy the mark-B icons, and
-// place both where `npm run preview` actually reads (output/client).
+// place both where `pnpm preview` actually reads (output/client).
 //
 //   node scripts/export-social-card.mjs
 //   node scripts/export-social-card.mjs --check http://127.0.0.1:4177/pixel-perfect/
@@ -108,7 +108,7 @@ function pngSize(buf) {
 
 function copyPublicFiles() {
 	for (const dir of [clientDir, buildDir]) {
-		if (!existsSync(dir)) fail(`missing ${dir}; run npm run build before export:social`);
+		if (!existsSync(dir)) fail(`missing ${dir}; run pnpm build before export:social`);
 	}
 	mkdirSync(staticDir, { recursive: true });
 	for (const [from, to] of ICONS) {

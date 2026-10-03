@@ -2,11 +2,12 @@
   "name": "pixel-perfect-repository",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.32.1",
   "scripts": {
     "test": "node --test test/*.test.mjs",
     "verify": "node scripts/release.mjs verify",
     "validate": "node scripts/build-adapters.mjs --check && node scripts/validate-plugin.mjs && node scripts/validate-skills.mjs && node scripts/check-runtime-paths.mjs && node scripts/validate-workflows.mjs && node scripts/validate-contracts.mjs && node scripts/validate-package.mjs",
-    "ci": "npm run verify && npm run validate && npm test"
+    "ci": "pnpm verify && pnpm validate && pnpm test"
   },
   "dependencies": {
     "@google/design.md": "0.4.0"

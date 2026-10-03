@@ -1018,7 +1018,7 @@
         }
       ],
       "capture": {
-        "command": "npm run sandbox:capture -- --width 1440",
+        "command": "pnpm sandbox:capture -- --width 1440",
         "medium": "dom+png",
         "goldens": "design/goldens/web-desktop",
         "captured_at": "2026-10-02",
@@ -1649,7 +1649,7 @@
         }
       ],
       "capture": {
-        "command": "npm run sandbox:capture -- --width 390",
+        "command": "pnpm sandbox:capture -- --width 390",
         "medium": "dom+png",
         "goldens": "design/goldens/web-mobile",
         "captured_at": "2026-10-02",
@@ -1765,8 +1765,8 @@
     "theme": "src/app.css — the only stylesheet (styling contract). Colours are written once with light-dark(); color-scheme follows the system until the toggle sets data-theme on <html> (src/app.html applies a saved choice before first paint). A block-form dark variant covers both the toggle and the no-JS system case. Tailwind's default palette is removed (--color-*: initial).",
     "token_names": "Decided at scaffold (semantic-colour check): surfaces keep their print names (paper, sheet, ink, muted, line, stripe); the four inks are plates (plate-cyan, plate-cyan-ink, plate-magenta, plate-magenta-ink, plate-yellow) for plate effects and the colour strip only; interaction uses roles: accent (plate-magenta), accent-text (plate-magenta-ink), on-accent (was mark-fg), focus (plate-magenta-ink). Code-panel, drift, and shadow tokens keep their names.",
     "fonts": "Self-hosted Fontsource packages imported in app.css: @fontsource-variable/anybody (wdth.css, width 50-150%), @fontsource-variable/libre-franklin, @fontsource/ibm-plex-mono 400 and 500.",
-    "sandbox": "npm run sandbox (Storybook on :6006). Stories: Design System/Colors, Typography, Spacing; Components/HelloWorld (scaffold reference, not part of the landing).",
-    "capture": "npm run sandbox:capture builds Storybook, renders every story in light and dark, and writes normalized DOM with each element's resolved colours and type (the golden) plus a PNG (review). Proven stable run to run; a one-token change drifts exactly the stories that use it.",
+    "sandbox": "pnpm sandbox (Storybook on :6006). Stories: Design System/Colors, Typography, Spacing; Components/HelloWorld (scaffold reference, not part of the landing).",
+    "capture": "pnpm sandbox:capture builds Storybook, renders every story in light and dark, and writes normalized DOM with each element's resolved colours and type (the golden) plus a PNG (review). Proven stable run to run; a one-token change drifts exactly the stories that use it.",
     "color_gate": "passed 2026-09-30 (user checked Design System/Colors in both themes)"
   }
 }
