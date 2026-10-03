@@ -17,10 +17,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: pnpm
 
       - name: Assert tag equals release authority
         run: >-
@@ -32,7 +36,7 @@ jobs:
           }"
 
       - name: Install pinned dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Recheck every release channel and package gate
-        run: npm run ci
+        run: pnpm run ci
