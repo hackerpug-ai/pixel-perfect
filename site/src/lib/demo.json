@@ -1,0 +1,15 @@
+{
+	"recorded": "2026-10-03T04:31:10.000Z",
+	"version": "9.3.0",
+	"commands": [
+		"/pixel-perfect:build",
+		"/pixel-perfect:status"
+	],
+	"cols": 96,
+	"rows": 24,
+	"duration": 65.8,
+	"realSeconds": 807,
+	"bytes": 1338788,
+	"redactions": 33,
+	"rawSha256": "735a576a5453d0d52d4813a539a8596ffe65b1bd73b982e5654ac3a1ae884ad4"
+}

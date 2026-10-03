@@ -12,7 +12,7 @@
 			docs: {
 				description: {
 					component:
-						"The recorded demo beside the build stats (this site's own build) and the wireframe line. Play starts the recorded run."
+						"The terminal recording beside the build stats (this site's own build) and the wireframe line. It loops by itself once scrolled into view; with reduced motion it waits for Play, which is the state the catalog captures."
 				}
 			}
 		},

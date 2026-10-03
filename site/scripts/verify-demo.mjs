@@ -1,6 +1,8 @@
 #!/usr/bin/env node
-// Drive the built landing preview in Chrome and check the recorded evolve demo.
+// Drive the built landing preview in Chrome and check the evolve thread's recorded counts and the
+// looping terminal demo (DemoStats). Serve the build on the address you pass:
 //
+//   pnpm build && pnpm exec vite preview --host 127.0.0.1 --port 4177
 //   node scripts/verify-demo.mjs http://127.0.0.1:4177/pixel-perfect/
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -9,6 +11,7 @@ import { chromium } from 'playwright-core';
 
 const siteDir = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const evolveDir = resolve(siteDir, 'design/evolve-run');
+const demo = JSON.parse(readFileSync(resolve(siteDir, 'src/lib/demo.json'), 'utf8'));
 
 function fail(message) {
 	console.error(`FAIL ${message}`);
@@ -104,84 +107,144 @@ if (routeResponse.status !== 200) fail(`result route ${routeUrl.href} returned H
 
 const browser = await chromium.launch({ channel: 'chrome' });
 
-async function playback(mode) {
-	const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+// One page on the landing, loaded and still at the top. `requests` is every URL it has asked for.
+async function open(reducedMotion) {
+	const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion });
 	const page = await context.newPage();
+	const requests = [];
+	page.on('request', (request) => requests.push(request.url()));
 	await page.goto(pageUrl, { waitUntil: 'networkidle' });
-	const bodyText = await page.locator('body').innerText();
-	if (bodyText.includes('[n]')) fail(`rendered page contains [n] during ${mode}`);
-	const shown = [
-		`reuse ${counts.reuse}`,
-		`new ${counts.new}`,
-		`${counts.capturedMoved} captured components moved`
-	];
-	for (const line of shown) {
-		if (!bodyText.includes(line)) fail(`${mode} page does not show ${line}`);
-	}
-	const button = page.getByRole('button', { name: 'Play the demo' });
-	if (mode === 'pointer') await button.click();
-	else {
-		await button.focus();
-		await page.keyboard.press('Enter');
-	}
-	const video = page.locator('video');
-	await video.evaluate(
-		(node) =>
-			new Promise((resolve, reject) => {
-				// A just-started video can still report currentTime 0 after `playing` has fired.
-				// Waiting for that event then misses it. A later sample still has to move forward.
-				if (!node.paused) {
-					resolve(true);
-					return;
-				}
-				const done = () => resolve(true);
-				node.addEventListener('playing', done, { once: true });
-				setTimeout(() => reject(new Error('video did not start playing')), 5000);
-			})
-	);
-	const first = await video.evaluate((node) => node.currentTime);
-	await page.waitForTimeout(500);
-	const second = await video.evaluate((node) => node.currentTime);
-	const cue = await video.evaluate(
-		(node) =>
-			new Promise((resolve) => {
-				const track = node.textTracks && node.textTracks[0];
-				if (!track) {
-					resolve('');
-					return;
-				}
-				track.mode = 'showing';
-				const text = () =>
-					track.cues ? Array.from(track.cues).map((item) => item.text).join('\n') : '';
-				if (text()) {
-					resolve(text());
-					return;
-				}
-				const element = node.querySelector('track');
-				const finish = () => resolve(text());
-				element?.addEventListener('load', finish, { once: true });
-				setTimeout(finish, 2000);
-			})
-	);
-	console.log(`PASS playback-${mode} currentTime ${first} -> ${second}`);
-	console.log(`PASS caption-${mode} cue: ${JSON.stringify(cue)}`);
-	if (!(second > first)) fail(`${mode} currentTime did not advance (${first} -> ${second})`);
-	if (!cue.includes('reuse:') || !cue.includes(String(counts.reuse))) {
-		fail(`${mode} caption cue does not include the recorded reuse count`);
-	}
-	await context.close();
+	const figure = page.locator('figure[data-demo-state]');
+	const state = () => figure.getAttribute('data-demo-state');
+	const until = (want) =>
+		page
+			.waitForFunction((w) => document.querySelector('figure[data-demo-state]')?.getAttribute('data-demo-state') === w, want, { timeout: 15000 })
+			.catch(async () => fail(`the demo is ${await state()}, expected ${want}`));
+	// What the terminal shows now, and whether that changes within `ms`.
+	const screen = () => figure.locator('[aria-hidden="true"]').first().evaluate((node) => node.textContent);
+	const moving = async (ms) => {
+		const first = await screen();
+		for (let waited = 0; waited < ms; waited += 250) {
+			await page.waitForTimeout(250);
+			if ((await screen()) !== first) return true;
+		}
+		return false;
+	};
+	return { context, page, requests, figure, state, until, moving };
 }
 
+const isRecording = (url) => url.includes('/demo/demo.cast');
+const isPlayer = (url) => /asciinema-player[^/]*\.css/.test(url); // the player's stylesheet arrives with its code
+
 try {
-	await playback('pointer');
-	await playback('keyboard');
-	const home = await browser.newContext({ viewport: { width: 1440, height: 900 } });
-	const page = await home.newPage();
-	await page.goto(pageUrl, { waitUntil: 'networkidle' });
-	const text = await page.locator('body').innerText();
-	if (text.includes('[n]')) fail('rendered page contains [n]');
-	console.log('PASS no [n]');
-	await home.close();
+	// The page's own text: the evolve thread prints the recorded counts and no placeholder is left.
+	const d = await open('no-preference');
+	const text = await d.page.locator('body').innerText();
+	if (text.includes('[n]')) fail('the rendered page contains [n]');
+	for (const line of [`reuse ${counts.reuse}`, `new ${counts.new}`, `${counts.capturedMoved} captured components moved`]) {
+		if (!text.includes(line)) fail(`the page does not show "${line}"`);
+	}
+	console.log('PASS counts-shown, no [n]');
+
+	// lazy: a page load fetches neither the recording nor the player.
+	if ((await d.state()) !== 'idle') fail(`lazy: the demo is ${await d.state()} before any scrolling`);
+	if (d.requests.some(isRecording)) fail('lazy: the recording was requested on page load');
+	if (d.requests.some(isPlayer)) fail('lazy: the player was requested on page load');
+	console.log(`PASS lazy idle after load, ${d.requests.length} requests, none for the recording or the player`);
+
+	// autoplay: scrolled into view it starts by itself, and that is when the player and the recording arrive.
+	const scrollIn = () => d.figure.scrollIntoViewIfNeeded();
+	const scrollOut = () => d.page.evaluate(() => window.scrollTo(0, 0));
+	await scrollIn();
+	await d.until('playing');
+	const began = Date.now();
+	// The player asks for the recording a moment after it mounts.
+	for (let waited = 0; waited < 5000 && !d.requests.some(isRecording); waited += 100) await d.page.waitForTimeout(100);
+	if (!d.requests.some(isRecording)) fail('autoplay: the recording was never requested');
+	if (!d.requests.some(isPlayer)) fail('autoplay: the player was never requested');
+	if (!(await d.moving(4000))) fail('autoplay: the terminal text did not change');
+	console.log('PASS autoplay playing after scroll; the player and the recording arrived then');
+
+	// loop: nothing has paused it yet, so one full recording later it is on its second pass. The recording
+	// ends on a 4 s still frame, so without the loop the text would have stopped for good.
+	await d.page.waitForTimeout(Math.max(0, demo.duration * 1000 + 3000 - (Date.now() - began)));
+	if ((await d.state()) !== 'playing') fail(`loop: the demo is ${await d.state()} after one full recording`);
+	if (!(await d.moving(6000))) fail('loop: the terminal text stopped after one pass');
+	console.log(`PASS loop still moving ${Math.round((Date.now() - began) / 1000)} s after the start of a ${demo.duration} s recording`);
+
+	// scroll: out of view it pauses, back in view it resumes.
+	await scrollOut();
+	await d.until('paused');
+	await scrollIn();
+	await d.until('playing');
+	if (!(await d.moving(6000))) fail('scroll: the terminal text did not move after scrolling back');
+	console.log('PASS scroll paused out of view, resumed in view');
+
+	// pause, by pointer and by keyboard: the text stops, then moves again. No still stretch in the
+	// recording is longer than 4 s, so 5 s without a change is a real pause.
+	const press = async (name, mode) => {
+		const button = d.figure.getByRole('button', { name, exact: true });
+		if (mode === 'pointer') await button.click();
+		else {
+			await button.focus();
+			await d.page.keyboard.press('Enter');
+		}
+	};
+	for (const mode of ['pointer', 'keyboard']) {
+		await press('Pause', mode);
+		await d.until('paused');
+		if (await d.moving(5000)) fail(`pause-${mode}: the terminal text changed while paused`);
+		await press('Play', mode);
+		await d.until('playing');
+		if (!(await d.moving(6000))) fail(`pause-${mode}: the terminal text did not move after Play`);
+		console.log(`PASS pause-${mode} stopped, then resumed`);
+	}
+
+	// held: a pause the visitor asked for survives scrolling away and back.
+	await press('Pause', 'pointer');
+	await d.until('paused');
+	await scrollOut();
+	await d.page.waitForTimeout(500);
+	await scrollIn();
+	await d.page.waitForTimeout(1500);
+	if ((await d.state()) !== 'paused') fail(`held: the demo is ${await d.state()} after scrolling away and back; the visitor had paused it`);
+	console.log('PASS held stays paused across a scroll away and back');
+
+	// off-screen play: with under half the frame in view, Play still plays, and scrolling it fully away stops it.
+	await d.page.evaluate(() => {
+		const box = document.querySelector('figure[data-demo-state] > div').getBoundingClientRect();
+		window.scrollBy(0, box.top + box.height * 0.7); // the bottom 30% of the frame, and the button under it
+	});
+	await d.page.waitForTimeout(500);
+	await press('Play', 'keyboard');
+	await d.until('playing');
+	await scrollOut();
+	await d.until('paused');
+	await scrollIn();
+	await d.until('playing');
+	console.log('PASS off-screen play stops once the frame is gone, resumes on return');
+
+	// focus: the terminal is display only, so Tab must never land inside it (the player's own markup is focusable).
+	await d.figure.getByRole('button', { name: 'Pause', exact: true }).focus();
+	await d.page.keyboard.press('Shift+Tab');
+	if (await d.page.evaluate(() => !!document.activeElement.closest('figure[data-demo-state] [aria-hidden="true"]'))) fail('focus: Shift+Tab from Pause landed inside the hidden terminal');
+	console.log('PASS focus stays out of the terminal');
+	await d.context.close();
+
+	// reduced motion: nothing starts or loads until Play is pressed, and the keyboard keeps its place.
+	const r = await open('reduce');
+	await r.figure.scrollIntoViewIfNeeded();
+	await r.page.waitForTimeout(2000);
+	if ((await r.state()) !== 'idle') fail(`reduced-motion: the demo is ${await r.state()} without a press`);
+	if (r.requests.some(isRecording) || r.requests.some(isPlayer)) fail('reduced-motion: the recording or the player was requested without a press');
+	await r.figure.getByRole('button', { name: 'Play the demo' }).focus();
+	await r.page.keyboard.press('Enter');
+	await r.until('playing');
+	if (!(await r.moving(4000))) fail('reduced-motion: the terminal text did not change after Play');
+	const focused = await r.page.evaluate(() => document.activeElement?.textContent?.trim());
+	if (focused !== 'Pause') fail(`reduced-motion: after Play, focus is on "${focused}", expected the Pause button`);
+	console.log('PASS reduced-motion idle until Play, then playing with focus on Pause');
+	await r.context.close();
 } finally {
 	await browser.close();
 }

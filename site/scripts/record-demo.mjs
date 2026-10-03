@@ -17,8 +17,8 @@
 //   this checkout's path. The raw cast goes to design/.captures/demo/ and is never committed.
 // - cut: only rescales time and merges neighbouring output. It never drops or rewrites output,
 //   because the interface redraws relative to what it printed before; `cut` proves this by comparing
-//   the published bytes with the raw ones. Typing plays at recorded speed. Each command's working
-//   stretch is compressed to its budget. Everything after the last command (the exit) is cut off.
+//   the published bytes with the recorded ones up to the exit. Typing plays at recorded speed. Each command's working
+//   stretch is compressed to its budget, except that a confirmation prompt stays up for 1.5 s. Everything after the last command (the exit) is cut off.
 //   One redaction: this machine's user name (file listings print it as the owner) is replaced by a
 //   stand-in of the same length, so no column moves.
 // - scrub: fails if the cast names this machine's user, host, home directory, or email, or holds a
@@ -41,6 +41,7 @@ const META = join(site, 'src/lib/demo.json');
 const PLUGIN = '/tmp/plugins/pixel-perfect'; // a copy, so the picture shows no personal path
 const HOLD_BETWEEN = 2.5; // seconds a finished command stays on screen before the next is typed
 const HOLD_END = 4; // seconds the last frame stays before the loop restarts
+const HOLD_PROMPT = 1.5; // seconds a confirmation prompt stays readable before its answer
 const IDLE_CAP = 2; // a real pause longer than this is shortened to this before scaling
 const FRAME = 1 / 15; // output closer together than this is merged into one event
 
@@ -90,7 +91,8 @@ async function launch(dir, recordTo) {
 	const claude = `claude --plugin-dir ${PLUGIN} --setting-sources project,local --strict-mcp-config`;
 	const command = recordTo ? `asciinema rec --quiet --overwrite --capture-input --window-size ${COLS}x${ROWS} -c '${claude}' '${recordTo}'` : claude;
 	tmux('kill-server');
-	const started = tmux('new-session', '-d', '-s', 'demo', '-x', String(COLS), '-y', String(ROWS), '-c', dir, command);
+	// focus-events on: without it Claude Code prints a tmux configuration hint in its footer.
+	const started = tmux('start-server', ';', 'set', '-g', 'focus-events', 'on', ';', 'new-session', '-d', '-s', 'demo', '-x', String(COLS), '-y', String(ROWS), '-c', dir, command);
 	if (started.status !== 0) fail(`tmux did not start: ${started.stderr}`);
 	for (let i = 0; i < 60; i++) {
 		await sleep(1000);
@@ -220,6 +222,7 @@ function cut() {
 	// The one redaction: the user name, same length, applied to the joined stream so a name split
 	// across two events is still caught, then sliced back into the same events.
 	const user = userInfo().username;
+	if (user.length < 5) fail(`the user name "${user}" is too short to redact safely; it would rewrite ordinary words`);
 	const standIn = 'local-user'.padEnd(user.length, '0').slice(0, user.length);
 	const joined = output.map((e) => e.data).join('');
 	const redacted = joined.replaceAll(user, standIn);
@@ -232,10 +235,13 @@ function cut() {
 		return { k, working: k >= 0 && at > typed[k].submit };
 	};
 	const gaps = output.map((e, i) => Math.min(e.at - (i ? output[i - 1].at : 0), IDLE_CAP));
+	// A prompt answered while a command worked: Enter was pressed between this output and the one before.
+	const enters = keys.filter((k) => k.ch === '\r' && !typed.some((t) => t.submit === k.at)).map((k) => k.at);
+	const answered = output.map((e, i) => i > 0 && segment(e.at).working && enters.some((at) => at > output[i - 1].at && at <= e.at));
 	const realWork = typed.map(() => 0);
 	output.forEach((e, i) => {
 		const s = segment(e.at);
-		if (s.working) realWork[s.k] += gaps[i];
+		if (s.working && !answered[i]) realWork[s.k] += gaps[i];
 	});
 	const scale = realWork.map((real, k) => Math.max(1, real / (budgets[k] ?? 20)));
 	const out = [];
@@ -244,7 +250,7 @@ function cut() {
 	output.forEach((e, i) => {
 		const s = segment(e.at);
 		const first = i > 0 && s.k !== segment(output[i - 1].at).k; // the first keystroke of a command
-		clock += first && s.k > 0 ? HOLD_BETWEEN : s.working ? gaps[i] / scale[s.k] : Math.min(gaps[i], 1);
+		clock += first && s.k > 0 ? HOLD_BETWEEN : answered[i] ? HOLD_PROMPT : s.working ? gaps[i] / scale[s.k] : Math.min(gaps[i], 1);
 		if (clock - last < FRAME && out.length) out.at(-1).data += e.data;
 		else {
 			out.push({ at: clock, data: e.data });
@@ -269,7 +275,7 @@ function cut() {
 		cols: header.term.cols,
 		rows: header.term.rows,
 		duration: Number(out.at(-1).at.toFixed(1)),
-		realSeconds: Math.round(end - typed[0].start),
+		realSeconds: Math.round(output.at(-1).at - typed[0].start),
 		bytes: readFileSync(CAST).length,
 		redactions: joined.split(user).length - 1,
 		rawSha256: createHash('sha256').update(readFileSync(RAW)).digest('hex')
@@ -301,7 +307,8 @@ function scrub() {
 	};
 	const email = git('user.email');
 	const names = [userInfo().username, hostname().split('.')[0], homedir(), email, email.split('@')[0], git('user.name')].filter((n) => n.length >= 4);
-	const found = names.filter((n) => [raw, printed].some((text) => text.toLowerCase().includes(n.toLowerCase())));
+	// Also without line breaks: a long path wraps at the terminal's edge.
+	const found = names.filter((n) => [raw, printed, printed.replace(/[\r\n]/g, '')].some((text) => text.toLowerCase().includes(n.toLowerCase())));
 	const keys = [/sk-ant-[\w-]{10,}/, /gh[pousr]_\w{20,}/, /AKIA[0-9A-Z]{16}/, /Bearer\s+[\w.-]{20,}/].filter((re) => re.test(raw) || re.test(printed));
 	for (const n of found) console.error(`FAIL scrub: the cast contains "${n}"`);
 	for (const re of keys) console.error(`FAIL scrub: the cast matches ${re}`);

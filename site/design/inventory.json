@@ -975,7 +975,8 @@
         "PlayButton",
         "FigureCaption",
         "StatGrid",
-        "InlineCode"
+        "InlineCode",
+        "Button"
       ],
       "appears_on": [
         "pixel-perfect-landing-dc/03",
@@ -985,7 +986,7 @@
         "pixel-perfect-landing-dc/11"
       ],
       "evidence": "Second row of Build it: video poster beside the stats (Landing.dc.html:261-282).",
-      "note": "Sits in Build it (the checklist cites a review slice). Hatched 16:9 poster with PlayButton and caption, beside StatGrid and the 'No mockup yet? wireframe…' line; stacks at 390. Poster and numbers are placeholders until T8 and the dogfood run."
+      "note": "Sits in Build it (the checklist cites a review slice). Hatched 16:9 poster with PlayButton until the terminal recording starts (static/demo/demo.cast, played by asciinema-player): when the frame scrolls into view, or on Play for a visitor who prefers reduced motion. It then loops; the Pause/Play Button sits in the caption row, and the caption states the commands, the real duration, and the played duration. Beside StatGrid and the 'No mockup yet? wireframe…' line; stacks at 390."
     },
     {
       "name": "EvolveThread",
@@ -1844,7 +1845,7 @@
         "pixel-perfect-landing-dc/11"
       ],
       "evidence": "Demo video poster in the Build it section (Landing.dc.html:265).",
-      "note": "The export makes it aria-hidden on a placeholder poster ('demo video · 60–90 s · poster frame'). The build must wire it to the real T8 video (or use the native <video> control); it must never ship as a non-functional button."
+      "note": "The export makes it aria-hidden on a placeholder poster ('demo video · 60–90 s · poster frame'). The build wires it to start the terminal recording in DemoStats; it must never ship as a non-functional button."
     },
     {
       "name": "SliderHandle",
