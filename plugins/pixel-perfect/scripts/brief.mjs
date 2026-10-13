@@ -342,9 +342,9 @@ function renderSection({ root, platformId, layer, name, config }) {
     ? `This platform renders text, not pixels (${capture.pixels_reason.trim()}). The command writes one text artifact per state under ${where}. Read each artifact, and compare its text render with its frame.`
     : `It writes one image per state at ${where}<state>.png. Open each image, and compare it with its frame.`;
   return [
-    "Run this command from the project root. It first deletes the output folder, so every render you read was written by this run:",
+    "Run this command from the project root. It first deletes this item's output folder, so every render you read for it was written by this run:",
     "",
-    `    rm -rf ${shellQuote(out)} && ${env} ${command}`,
+    `    rm -rf ${shellQuote(join(out, layer, name))} && ${env} ${command}`,
     "",
     `${output} A capture command that ignores the filter renders every story: it is slower, and its output is still correct.`,
   ].join("\n");

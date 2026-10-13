@@ -1147,7 +1147,7 @@ describe("brief: quoting, fallbacks, and screens without frames", () => {
       assert.equal(code, 0, stderr);
       const content = readFileSync(briefPath(root, "web-desktop", "atoms", "Button"), "utf8");
       const out = path.join(root, "design/.captures/web-desktop-item");
-      const renderLine = `    rm -rf '${out}' && PIXEL_PERFECT_CAPTURE_OUT='${out}' PIXEL_PERFECT_CAPTURE_ONLY=atoms/Button npm run sandbox:capture`;
+      const renderLine = `    rm -rf '${out}/atoms/Button' && PIXEL_PERFECT_CAPTURE_OUT='${out}' PIXEL_PERFECT_CAPTURE_ONLY=atoms/Button npm run sandbox:capture`;
       assert.ok(sectionOf(content, "Render").split("\n").includes(renderLine), `exact render line missing:\n${sectionOf(content, "Render")}`);
       const gateLine = `    node ${path.join(PLUGIN, "scripts/verify-styling-contract.mjs")} ${path.join(PLUGIN, "docs/styling-contracts/tailwind-web.md")} '${root}'`;
       assert.ok(sectionOf(content, "Gates").split("\n").includes(gateLine), `exact gate line missing:\n${sectionOf(content, "Gates")}`);
@@ -1214,7 +1214,7 @@ describe("brief: render semantics (pixels field) and stale output", () => {
       const content = readFileSync(briefPath(root, "web-desktop", "atoms", "Button"), "utf8");
       const out = path.join(root, "design/.captures/web-desktop-item");
       const render = sectionOf(content, "Render");
-      assert.ok(render.split("\n").includes(`    rm -rf ${out} && PIXEL_PERFECT_CAPTURE_OUT=${out} PIXEL_PERFECT_CAPTURE_ONLY=atoms/Button npm run sandbox:capture`), render);
+      assert.ok(render.split("\n").includes(`    rm -rf ${out}/atoms/Button && PIXEL_PERFECT_CAPTURE_OUT=${out} PIXEL_PERFECT_CAPTURE_ONLY=atoms/Button npm run sandbox:capture`), render);
       assert.ok(render.includes(`It writes one image per state at ${out}/atoms/Button/<state>.png.`), render);
       assert.ok(!render.includes("text artifact"), "an image platform must not be described as text");
     } finally {
@@ -1230,7 +1230,7 @@ describe("brief: render semantics (pixels field) and stale output", () => {
       const content = readFileSync(briefPath(root, "terminal-cli", "atoms", "Button"), "utf8");
       const out = path.join(root, "design/.captures/terminal-cli-item");
       const render = sectionOf(content, "Render");
-      assert.ok(render.split("\n").includes(`    rm -rf ${out} && PIXEL_PERFECT_CAPTURE_OUT=${out} PIXEL_PERFECT_CAPTURE_ONLY=atoms/Button npm run sandbox:capture`), render);
+      assert.ok(render.split("\n").includes(`    rm -rf ${out}/atoms/Button && PIXEL_PERFECT_CAPTURE_OUT=${out} PIXEL_PERFECT_CAPTURE_ONLY=atoms/Button npm run sandbox:capture`), render);
       assert.ok(render.includes(`one text artifact per state under ${out}/atoms/Button/`), render);
       assert.ok(render.includes("compare its text render with its frame"), render);
       assert.ok(!render.includes("<state>.png"), "a text platform must not promise PNG images");
