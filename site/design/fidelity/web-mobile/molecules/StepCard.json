@@ -3,8 +3,8 @@
   "component": "molecules/StepCard",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:c6a060d60b015c4d1d7714614d2a5bd364d16840ab4e650568efd5006f71295a",

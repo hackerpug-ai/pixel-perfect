@@ -3,8 +3,8 @@
   "component": "organisms/PrinciplesGrid",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:94826ba50c86da9523af939848967b83a2438349b5c7518298108c9ef50c9880",

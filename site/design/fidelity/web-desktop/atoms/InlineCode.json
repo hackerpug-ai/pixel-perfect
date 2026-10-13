@@ -3,8 +3,8 @@
   "component": "atoms/InlineCode",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:11f823a1221c8aa9e3ba66af261a7dfd8ee25ccaed5f38733c0cc4f0717b80a9",

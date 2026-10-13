@@ -3,8 +3,8 @@
   "component": "atoms/Button",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:453252eb3cb158f87a8406ed0b4eea1cba3bfdc70164e06c82f91ef8c6c4b4a8",

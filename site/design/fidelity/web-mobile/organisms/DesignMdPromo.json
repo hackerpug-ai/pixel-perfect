@@ -3,8 +3,8 @@
   "component": "organisms/DesignMdPromo",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:13bfeb4536dc1fdb5380b83439a1c6f00343c8912ca9718aab195b5a6f35e56d",

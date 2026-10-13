@@ -3,8 +3,8 @@
   "component": "organisms/CloseCta",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:19bd38322bc35d5d5ce9a0877b9618aa0be703452869fb90ce7a14a7cef2cf08",

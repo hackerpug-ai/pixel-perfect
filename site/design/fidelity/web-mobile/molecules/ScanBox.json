@@ -3,8 +3,8 @@
   "component": "molecules/ScanBox",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:49fa3ea6d2c9be0c869ad9966fae1fe72e39dcf15ad2f84fd4383c90ce270d5e",

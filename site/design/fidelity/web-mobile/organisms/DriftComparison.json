@@ -3,8 +3,8 @@
   "component": "organisms/DriftComparison",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:e6360defe181ac449c50c1e6bfff4fe4e9dc79d687edb87aa83d990a5ade3bbb",

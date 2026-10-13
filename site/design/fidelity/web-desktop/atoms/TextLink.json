@@ -3,8 +3,8 @@
   "component": "atoms/TextLink",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:fe97f8dc49724db8f8710f9214b8ab1077031624ace45817624d882756ac053f",

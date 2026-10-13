@@ -3,8 +3,8 @@
   "component": "atoms/PrincipleCard",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:48b50b5ce3fc92238a59637a25b794e08f8341a44a6ff72e7b179fca34b60f03",

@@ -3,8 +3,8 @@
   "component": "molecules/FigureCaption",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:8bc1d7ae3dfea8c0b972897ad96598db90da8aa7a606902b0450f7365d8c7e81",

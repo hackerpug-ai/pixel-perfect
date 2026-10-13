@@ -3,8 +3,8 @@
   "component": "atoms/ColorStrip",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:c2fe0727ba035d7564137bbe47c7bb324289085dfaa7db227ab0a6774c063c1a",

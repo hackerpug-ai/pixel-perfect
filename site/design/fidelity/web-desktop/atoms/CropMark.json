@@ -3,8 +3,8 @@
   "component": "atoms/CropMark",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:030efd45b3cf365b9d6544270600130a2a9723c2bbe4a88fddef90cace0e5108",
@@ -12,6 +12,6 @@
     "story": "sha256:54e68a8fedc66f441c47ed75f46834e2ea116193a4582e997d373ed0507fa474",
     "frames": "sha256:3727452360109e93dce20c7c3e0e9e2c5439fc0c7b9d9141dbaab510b271cc3f",
     "render": "sha256:0782b3911e97b2a6eb700f366cfd91295b3a3e3451e939f41604f9cc4029025e",
-    "goldenOnDisk": "sha256:cbf0258aa63852e92826d7e0241d608bdc5225cd32e12f6b38954b3509eec22c"
+    "goldenOnDisk": "sha256:030efd45b3cf365b9d6544270600130a2a9723c2bbe4a88fddef90cace0e5108"
   }
 }

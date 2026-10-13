@@ -3,8 +3,8 @@
   "component": "organisms/FaqList",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:d3440f01495e4fa2cc3df40f418708e1840b636e95d1cfddfeb285c23e6dddd6",

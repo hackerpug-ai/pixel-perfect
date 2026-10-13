@@ -3,8 +3,8 @@
   "component": "organisms/LayerStack",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:e006e3ed0a124da737d19d8d2b8fd9f434c5c57bbcfeb00a3e616950fc66b6c2",

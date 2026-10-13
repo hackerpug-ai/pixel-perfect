@@ -3,8 +3,8 @@
   "component": "molecules/ChangelogMini",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:82e2937865cf177d2c506367e123c74288ed502412d88a32101966cc68e6ee49",

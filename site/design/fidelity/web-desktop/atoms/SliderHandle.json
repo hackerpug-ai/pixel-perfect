@@ -3,8 +3,8 @@
   "component": "atoms/SliderHandle",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:44fd406fa7db7799c3ecf0e068e61aaf11940cf2e938430a4c5b1cfa4ec4713c",

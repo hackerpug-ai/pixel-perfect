@@ -3,8 +3,8 @@
   "component": "organisms/EvolveThread",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:3bf00c8e8768ff3f2d5d6bba404a85180ee58ce91ac21bdb39831e31f51a3ee5",
@@ -12,6 +12,6 @@
     "story": "sha256:b4ac08e8410073ec35f3620a21588aa251a46992113295b9a9be2861e62bf883",
     "frames": "sha256:2a0a078da17e1a464df9d1973a1169084c46ca46a2a2a8e047e2756f117a888c",
     "render": "sha256:5db553bf6ebd027f668ed635fd0312db8fec38faafdf8f4f2fd1dc14720393f5",
-    "goldenOnDisk": "sha256:e1bac35bea1cfc33c22fc5efa9a2b3273833cc26f1c06fbd46563d156fe65fd8"
+    "goldenOnDisk": "sha256:3bf00c8e8768ff3f2d5d6bba404a85180ee58ce91ac21bdb39831e31f51a3ee5"
   }
 }

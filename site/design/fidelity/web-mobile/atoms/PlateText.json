@@ -3,8 +3,8 @@
   "component": "atoms/PlateText",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:68756908ccff4975932bfc688a6ee61cb0243483e06291cda8347f02cd14ff12",

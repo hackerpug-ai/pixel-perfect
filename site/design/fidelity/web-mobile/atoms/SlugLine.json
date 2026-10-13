@@ -3,8 +3,8 @@
   "component": "atoms/SlugLine",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:e1612d1256e11f2f39a078ef66d3e438b2bca760a22fdc8332f881ad4a0d301c",

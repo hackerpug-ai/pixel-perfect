@@ -3,8 +3,8 @@
   "component": "organisms/StepsTimeline",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:879407e2c1268a90c319a40041e05ba0d989045559f0999375bdd6088dd66a71",

@@ -3,8 +3,8 @@
   "component": "molecules/CodePanel",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:cc3ce4208afc7bf3342da33b4d7dc4269df59788999d4b3842136675c94c5d51",

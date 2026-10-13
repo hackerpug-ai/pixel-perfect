@@ -3,8 +3,8 @@
   "component": "organisms/ProofSlider",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:added8a0a4e104040c91557b3cd71edd78d8d4a24e378358ac346b6c9c863f69",

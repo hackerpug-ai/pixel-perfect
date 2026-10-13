@@ -3,8 +3,8 @@
   "component": "atoms/TabNote",
   "kind": "contract-review",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:79e6e7e4ee322770a6f143faef38e7a5b0652f9d14dbe170f5122c924596c103",

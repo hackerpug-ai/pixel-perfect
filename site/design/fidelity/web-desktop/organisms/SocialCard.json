@@ -3,8 +3,8 @@
   "component": "organisms/SocialCard",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:3aaec70237317dde0f6525b53653c440ff8c358583059e1ed5dbaf0a1286a0de",

@@ -3,8 +3,8 @@
   "component": "molecules/ThreadRow",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:0bbfc4fff6a5fdd87c050cb11ee0d3280170ebbad8764ee8e498c63547e0acfc",

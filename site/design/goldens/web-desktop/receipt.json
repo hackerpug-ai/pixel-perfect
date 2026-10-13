@@ -5919,6 +5919,94 @@
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
+    },
+    "tokens/Colors/palette": {
+      "hash": "4b4dde9994fcc810",
+      "ext": ".html",
+      "mode": "baseline",
+      "png": {
+        "hash": "sha256:2854b20caf050ae09385230ddae6a6dc7ed9be3f1098e0d0086c841baa7b5a9b",
+        "width": 1440,
+        "height": 1606,
+        "inkPixels": 634058
+      }
+    },
+    "tokens/Colors/palette--dark": {
+      "hash": "005ac1c8686d5518",
+      "ext": ".html",
+      "mode": "baseline",
+      "png": {
+        "hash": "sha256:88450cfeaa85dfeb1a25a2c619189bec53e413a6b28adea2e3516b49de1d274a",
+        "width": 1440,
+        "height": 1606,
+        "inkPixels": 622655
+      }
+    },
+    "tokens/Motion/tokens": {
+      "hash": "fc4592d3157d89fe",
+      "ext": ".html",
+      "mode": "baseline",
+      "png": {
+        "hash": "sha256:159fddbfdac6f04369b0d1c3bc93cab8a8c5f84b315c45650ad1bffe715fcee9",
+        "width": 1440,
+        "height": 1785,
+        "inkPixels": 75814
+      }
+    },
+    "tokens/Motion/tokens--dark": {
+      "hash": "391575ffed099e1e",
+      "ext": ".html",
+      "mode": "baseline",
+      "png": {
+        "hash": "sha256:b4e351dda227c912c77bdfa00fef707c71a93ca7867f2390227ebabfe608d7d4",
+        "width": 1440,
+        "height": 1785,
+        "inkPixels": 75814
+      }
+    },
+    "tokens/Spacing/scale": {
+      "hash": "fec33c86d6b151ba",
+      "ext": ".html",
+      "mode": "baseline",
+      "png": {
+        "hash": "sha256:9c9efc7d9662296264322675cd71a458f2d11b6e89c083300881e9778a33b641",
+        "width": 1440,
+        "height": 900,
+        "inkPixels": 29366
+      }
+    },
+    "tokens/Spacing/scale--dark": {
+      "hash": "74d3bc7c4d9db200",
+      "ext": ".html",
+      "mode": "baseline",
+      "png": {
+        "hash": "sha256:d6c9181120abe615e812811abeb8edb1a37c64c3f25404da8b67ada00de65237",
+        "width": 1440,
+        "height": 900,
+        "inkPixels": 29366
+      }
+    },
+    "tokens/Typography/scale": {
+      "hash": "24f1d1f99a4daab9",
+      "ext": ".html",
+      "mode": "baseline",
+      "png": {
+        "hash": "sha256:e56e25f0840fde81ffc3810eb3da4e7a2a1616b08353f805f0a815f98b5c2988",
+        "width": 1440,
+        "height": 1210,
+        "inkPixels": 152741
+      }
+    },
+    "tokens/Typography/scale--dark": {
+      "hash": "96a490265cfe2fe9",
+      "ext": ".html",
+      "mode": "baseline",
+      "png": {
+        "hash": "sha256:4caf996127c162c2d4b88a1712139c75b87bbd509966b29486200744c55b077c",
+        "width": 1440,
+        "height": 1210,
+        "inkPixels": 152741
+      }
     }
   }
 }

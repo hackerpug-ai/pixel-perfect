@@ -3,8 +3,8 @@
   "component": "atoms/VersionPill",
   "kind": "frames",
   "verdict": "pass",
-  "reviewer": "gate",
-  "reason": "re-baseline of the captured render",
+  "reviewer": "rebaseline",
+  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
     "golden": "sha256:ea33ed752d3560b890dfb956683b5875b001cf5c969507f6677dd791484f977d",
