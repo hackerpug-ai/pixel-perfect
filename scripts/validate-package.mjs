@@ -107,6 +107,7 @@ export async function validatePackage(root = REPOSITORY_ROOT) {
     "docs/inventory.schema.json",
     "docs/frontend-design/FRONTEND-DESIGN.md",
     "docs/frontend-design/LICENSE.txt",
+    "agents/designer.md",
     "skills/process-context/SKILL.md",
     "workflows/RUNTIME-CONTRACT.md",
   ];
