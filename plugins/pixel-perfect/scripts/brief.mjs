@@ -12,9 +12,9 @@
 //   node brief.mjs build <project-root> --platform <id> --layer <atoms|molecules|organisms|screens> --name <Name> [--findings <file.json>]
 //   node brief.mjs wrap  <project-root> --slug <short-name> <task-brief-file | ->
 
-import { existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
-import { dirname, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { loadManifest, resolvePlatform } from "./verify-catalog.mjs";
 import { inside } from "./reference-revisions.mjs";
@@ -68,6 +68,9 @@ export function parseArgs(argv) {
     if (positional.length !== 1) fail(`build takes one project root\n${USAGE}`);
     for (const key of ["platform", "layer", "name"]) if (!parsed[key]) fail(`build needs --${key}\n${USAGE}`);
     if (!LAYERS.includes(parsed.layer)) fail(`unknown layer "${parsed.layer}"; use ${LAYERS.join(", ")}`);
+    // Both values become path segments of the brief file name, so they must be plain names.
+    safeName(parsed.platform, "--platform");
+    safeName(parsed.name, "--name");
     return { command, root: resolve(positional[0]), platform: parsed.platform, layer: parsed.layer, name: parsed.name, findings: parsed.findings };
   }
   if (positional.length !== 2) fail(`wrap takes a project root and a task file (or -)\n${USAGE}`);
@@ -321,19 +324,29 @@ function composesSection(item, layer, name, config, sourceRoot) {
   return ["## Composes: build on these, do not rebuild them", "", ...lines].join("\n");
 }
 
+// Text-rendered platforms (terminal UIs) need both fields. Anything else is image-required.
+function rendersText(capture) {
+  return capture.pixels === "none" && typeof capture.pixels_reason === "string" && capture.pixels_reason.trim() !== "";
+}
+
 function renderSection({ root, platformId, layer, name, config }) {
-  const command = config.capture?.command;
+  const capture = config.capture ?? {};
+  const command = capture.command;
   if (!command) {
     return "No render command is configured for this platform (capture.command is missing from design/manifest.json). Return status blocked with reason no-render-command.";
   }
   const out = join(root, "design/.captures", `${platformId}-item`);
-  const env = `PIXEL_PERFECT_CAPTURE_OUT=${shellQuote(out)} PIXEL_PERFECT_CAPTURE_ONLY=${layer}/${name}`;
+  const where = `${out}/${layer}/${name}/`;
+  const env = `PIXEL_PERFECT_CAPTURE_OUT=${shellQuote(out)} PIXEL_PERFECT_CAPTURE_ONLY=${shellQuote(`${layer}/${name}`)}`;
+  const output = rendersText(capture)
+    ? `This platform renders text, not pixels (${capture.pixels_reason.trim()}). The command writes one text artifact per state under ${where}. Read each artifact, and compare its text render with its frame.`
+    : `It writes one image per state at ${where}<state>.png. Open each image, and compare it with its frame.`;
   return [
-    "Run this command from the project root:",
+    "Run this command from the project root. It first deletes the output folder, so every render you read was written by this run:",
     "",
-    `    ${env} ${command}`,
+    `    rm -rf ${shellQuote(out)} && ${env} ${command}`,
     "",
-    `It writes one image per state at ${out}/${layer}/${name}/<state>.png. Open each image, and compare it with its frame. A capture command that ignores the filter renders every story: it is slower, and its output is still correct.`,
+    `${output} A capture command that ignores the filter renders every story: it is slower, and its output is still correct.`,
   ].join("\n");
 }
 
@@ -443,11 +456,33 @@ export function wrapBrief({ root, slug, taskFile }) {
   };
 }
 
-function writeAtomic(file, content) {
-  mkdirSync(dirname(file), { recursive: true });
-  const temp = `${file}.${randomUUID()}.tmp`;
-  writeFileSync(temp, content, "utf8");
-  renameSync(temp, file);
+// Writes one brief under <root>/design/.briefs. Symlinks on the way are refused, as refresh-run.mjs
+// refuses them: a link could send the write anywhere. The temp file is removed if the rename fails.
+function writeBrief(root, file, content) {
+  const rel = relative(join(root, "design/.briefs"), resolve(file));
+  if (rel === "" || rel.startsWith("..") || isAbsolute(rel)) fail(`refusing to write outside design/.briefs: ${file}`);
+  const parts = rel.split(sep);
+  let current = root;
+  for (const part of ["design", ".briefs", ...parts.slice(0, -1)]) {
+    current = join(current, part);
+    if (existsSync(current)) {
+      const stat = lstatSync(current);
+      if (stat.isSymbolicLink()) fail(`refusing to write through a symlink: ${current}`);
+      if (!stat.isDirectory()) fail(`not a directory: ${current}`);
+    } else {
+      mkdirSync(current);
+    }
+  }
+  const target = join(current, parts.at(-1));
+  if (existsSync(target) && lstatSync(target).isSymbolicLink()) fail(`refusing to replace a symlink: ${target}`);
+  const temp = `${target}.${randomUUID()}.tmp`;
+  try {
+    writeFileSync(temp, content, "utf8");
+    renameSync(temp, target);
+  } catch (error) {
+    rmSync(temp, { force: true });
+    fail(`cannot write ${target}: ${error.code ?? error.message}`);
+  }
 }
 
 export function main(argv) {
@@ -455,7 +490,7 @@ export function main(argv) {
     const args = parseArgs(argv);
     if (!existsSync(args.root) || !statSync(args.root).isDirectory()) fail(`project root not found: ${args.root}`);
     const result = args.command === "build" ? buildBrief(args) : wrapBrief(args);
-    writeAtomic(result.file, result.content);
+    writeBrief(args.root, result.file, result.content);
     process.stdout.write(
       `Read ${result.file} and follow it exactly. It is your complete assignment; return the result it asks for.\n`,
     );
