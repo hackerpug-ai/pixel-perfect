@@ -71,8 +71,9 @@ Build analyzes a whole codebase against a whole spec, so it has more to say than
 | B-mol | 5b | the molecule list · their state declarations | only when MOLECULES is ACTIVE |
 | B-org | 5c | the organism list | only when ORGANISMS is ACTIVE |
 | B-screens | 6 | the route map | only when the collapse is significant or a route is ambiguous |
+| B-item | 5, 5b, 5c, 6 | the item the designer could not finish | only after two re-assignments fail, or after a blocker the orchestrator cannot clear |
 
-Worst case is nine calls across a greenfield multi-platform build with designs and libraries; the common case on a scaffolded single-platform project is two — `B-plan`, then `B-screens` — or three with designs, `B-inv` first. A level whose list the plan already settled spends no call on re-confirming it, and a project with a confirmed inventory never fires `B-atoms`, `B-mol`, or `B-org` at all.
+Worst case is nine calls across a greenfield multi-platform build with designs and libraries, plus one `B-item` call for each item the designer cannot finish; the common case on a scaffolded single-platform project is two — `B-plan`, then `B-screens` — or three with designs, `B-inv` first. A level whose list the plan already settled spends no call on re-confirming it, and a project with a confirmed inventory never fires `B-atoms`, `B-mol`, or `B-org` at all.
 
 ## Overview
 
@@ -119,7 +120,7 @@ One PNG per drawn frame, cropped from the rendered source, plus `design/referenc
 
 ### Step 2: One whole-design read (probabilistic)
 
-`DESIGN_EXECUTE` with `docs/INVENTORY-CONTRACT.md` (`<<CALLER>>` and `<<ANALYSIS_EXTRAS>>` as `docs/DESIGN-ANALYSIS.md` Step 2 gives them for build), substituting: the frames index and every frame image, the source files, `manifest.spec`, the platform's existing atoms/molecules/organisms/screens (names are reused, never re-invented), `scaffold.components[]` (library primitives are recorded, not re-created), and the prior `design/inventory.json` when re-running. **One dispatch, strongest available vision-capable model** — do not split the read per source; cross-source compositions are what a split loses. The designer returns `design/inventory.json` (`docs/inventory.schema.json`).
+`DESIGN_EXECUTE` with `docs/INVENTORY-CONTRACT.md` (`<<CALLER>>` and `<<ANALYSIS_EXTRAS>>` as `docs/DESIGN-ANALYSIS.md` Step 2 gives them for build), substituting: the frames index and every frame image, the source files, `manifest.spec`, the platform's existing atoms/molecules/organisms/screens (names are reused, never re-invented), `scaffold.components[]` (library primitives are recorded, not re-created), and the prior `design/inventory.json` when re-running. **One dispatch, to the packaged designer with slug `inventory-read`, on the session's model** — do not split the read per source; cross-source compositions are what a split loses. The designer returns `design/inventory.json` (`docs/inventory.schema.json`).
 
 **Adopted components.** Before the gate, add each component in `manifest.assimilations[].adopted.components` that the read did not return — in the layer its receipt records, with `undrawn: "adopted from inspiration — assimilation <run>"` and the receipt's `evidence` — so what the user adopted through `pixel-perfect:assimilate` is planned and built like everything else.
 
@@ -422,6 +423,128 @@ BUILD PLAN is confirmed by the user. Manifest has `"plan": "passed"`. Subsequent
 
 ---
 
+## The Item Loop (Phases 5, 5b, 5c, and 6)
+
+Each component and screen in a layer is built by the packaged designer, one child per item. The orchestrator never writes an item's files. It records the item, assigns it, checks what the child returns, and records the outcome.
+
+The child's rules are not in this file. `scripts/brief.mjs` puts them into each child's assignment: the item's facts, its frames, its stack, its contracts, its gate commands, and the rules for its layer. Those rules live in `docs/BUILD-BRIEF.md`.
+
+### Assign one item
+
+Run `brief.mjs build` for the item. It writes the child's assignment and prints one line. Start one packaged designer child with that line as its whole prompt. Do not paraphrase the line or add to it. Each phase gives the exact command.
+
+If the command exits non-zero, stop and read its error. The usual causes are an item with no `file` or `story` in the manifest (record them, then run again) and a composed item that is still `pending` (build that item first).
+
+### Accept the result
+
+The child returns one JSON object. Read `status` first.
+
+| Child returns | You do |
+|---------------|--------|
+| `status: blocked` | Read `reason` and `needs`. Clear each one: install the named package, add the named token, record a missing `file` or `story`, fix `capture.command`, or pull a library primitive with the library's CLI. Run the same brief command again. For `reason: contract-missing`, re-run the Resolve step for that contract in `workflows/init.md`, and set its enforcement to `off` only when the user asks for it. A blocker only the user can resolve goes to `USER_CHOICE` (batch `B-item`). |
+| `status: complete` | Run the checks below. Any failed check is a finding. |
+
+For `status: complete`, check in this order:
+
+1. Every path in `files_written` exists. Each path is the item's recorded `file`, its recorded `story`, or the one sandbox registry line the sandbox adapter allows.
+2. Every `renders[].path` exists on disk.
+3. Both contract gates pass for the item's files (commands below).
+4. Every `compared[].differences_remaining` is empty.
+5. Open one render and its frame yourself. A difference the child did not report is a finding.
+
+The gate commands run from the project root. Run the component line only when `component_contract_source` is not `"none"` or absent.
+
+```
+node <plugin-root>/scripts/verify-styling-contract.mjs <style-contract.md> <project-root> [--allow GLOB ...]
+node <plugin-root>/scripts/verify-styling-contract.mjs <component-contract.md> <project-root> [--allow GLOB ...]
+```
+
+Pass the contract path from `tools.style_contract` or `tools.component_contract`. Pass one `--allow <glob>` for each override in `tools.style_contract_overrides` or `tools.component_contract_overrides`. Pass the project root, never `src/`. Exit codes: `0` pass; `1` violations; `2` contract or usage error; `3` vacuous scan. Under `hard-fail` (the default), any non-zero exit is a finding. Under `warn`, record the violations and pass the item. Under `off`, the gate does not run.
+
+### Findings and re-assignment
+
+When a result fails a check, write the failures to `design/.briefs/{platform}/{layer}-{Name}.findings.json`:
+
+```json
+{
+  "item": "{layer}/{Name}",
+  "findings": ["src/components/Button.tsx: title is 17pt regular; the frame shows 22pt semibold"]
+}
+```
+
+Then run the brief command again with `--findings` pointing at that file, and start a new child. Two re-assignments at most. After the second one still fails, ask through `USER_CHOICE` (batch `B-item`).
+
+### B-item
+
+```user_choice
+batch: B-item — an item the designer could not finish
+- header: Item
+  question: {Name} is still not finished after two re-assignments. How should it be handled?
+  options:
+    - label: Accept with the differences recorded
+      description: Marks the item verified and writes the remaining differences into its manifest entry as notes. The gap stays on the record, and later levels build on the item as it is. Choose Other to name a different fix instead.
+    - label: Stop this layer
+      description: Leaves the item pending and stops the layer here. Nothing above it is built until you run build again after the cause is fixed.
+```
+
+### Record the item
+
+Set the item's `status` to `verified` in `design/manifest.json`. Write decisions and receipts only: no authored composition-edge arrays and no `controls` authority field. Controls coverage comes from catalog capture.
+
+```json
+{
+  "atoms": [
+    {
+      "name": "StatusBadge",
+      "file": "src/components/StatusBadge.tsx",
+      "story": "src/components/StatusBadge.stories.tsx",
+      "status": "verified"
+    }
+  ]
+}
+```
+
+For atoms wrapping an ecosystem library, the entry also carries the `ecosystemLib` record from the build plan, with its vetting:
+
+```json
+{
+  "name": "DataTable",
+  "file": "src/components/DataTable.tsx",
+  "story": "src/components/DataTable.stories.tsx",
+  "status": "verified",
+  "ecosystemLib": {
+    "package": "@tanstack/react-table",
+    "version": "^8.20.0",
+    "purpose": "Headless table logic (sorting, filtering, pagination)",
+    "vetting": {
+      "maintenance": "PASS",
+      "popularity": "STRONG",
+      "compatibility": "PASS",
+      "bundleSize": "SMALL",
+      "accessibility": "YES",
+      "license": "COMPATIBLE",
+      "tests": "HIGH",
+      "community": "ACTIVE",
+      "score": "8/8",
+      "researchDate": "2026-06-04"
+    },
+    "tradeoffs": "Headless — requires UI wrapper. shadcn/ui provides a built-in wrapper."
+  }
+}
+```
+
+Then print the progress line for the layer (see its Progress Tracking).
+
+### Never write an item yourself
+
+Never write or finish an item yourself while a child is available. The one exception is the inline row in `RUNTIME-CONTRACT.md` ("Packaged agents"), which applies only when no child can be started. Then read the brief file yourself, and follow it one item at a time, re-reading it for each item.
+
+### Report the design engine
+
+Report the route once per run, as the table in `RUNTIME-CONTRACT.md` ("Packaged agents") gives it.
+
+---
+
 ## Phase 5: ATOMS
 
 Build individual, reusable components.
@@ -449,242 +572,33 @@ batch: B-atoms — the atom list
       description: Choose Other and name the atoms to add or drop. Worth doing now: an atom missing here surfaces as a gap during the molecule phase, which is a more expensive place to discover it.
 ```
 
-Update manifest with the component list (all `status: pending`).
+Step 2 records each atom in the manifest, with its `file` and `story`.
 
-### Step 2: Build Each Atom
+### Step 2: Prepare the Layer
 
-For each component, in order:
+Do this once, before the first atom. The orchestrator does it. No child does.
 
-1. **Load context:**
+1. **Record every atom.** Add each atom to `manifest.platforms[platform].atoms` with `name`, `file`, `story`, and `status: "pending"`. Choose the paths like this:
+   - `file`: `src/components/{Name}.tsx`, with the framework's extension.
+   - `story`: beside the component, named by the sandbox adapter (`docs/adapters/{sandbox}.md`), for example `src/components/{Name}.stories.tsx`.
+   - If `build_plan.atoms.ecosystemLibs` holds a record for this atom, copy it onto the entry as `ecosystemLib`.
+2. **Pull library primitives.** Skip this when `component_contract_source` is `"none"` or absent. Otherwise, for each atom whose inventory entry sets `library_primitive` and whose primitive is not in `manifest.platforms[platform].scaffold.components[]`, pull it with the library's CLI. The components adapter (`docs/adapters/{components}.md`) gives the command. Add the name to that list.
+3. **Install approved packages.** For each library approved at `B-eco`, install it at its recorded version (`npm install {package}@{version}`, or the project's package manager). Check that its import resolves.
+4. **Add theme tokens.** When the approved plan calls for a theme token this layer uses, add it to the theme file before the first atom. The style adapter (`docs/adapters/{style}.md`) gives the file format.
 
-   Resolve every adapter from the manifest by field — do not infer which file to read. Same table `scaffold` uses:
+5. **Report unenforced styles.** If `style_contract_source` is `"none"`, tell the user once that styles are not enforced, and that the styling gate does not run for this platform.
 
-   | Manifest field | Adapter to load |
-   |----------------|-----------------|
-   | `platforms[platform].tools.framework` | `docs/adapters/{framework}.md` (optional — load only if it exists; React/Next/Vite have none, which is expected) |
-   | `platforms[platform].tools.style` | `docs/adapters/{style}.md` |
-   | `platforms[platform].tools.components` | `docs/adapters/{components}.md` — defines the composition patterns for the chosen component library |
-   | `platforms[platform].tools.sandbox` | `docs/adapters/{sandbox}.md` |
+Do only what `B-plan`, `B-eco`, or `B-val` approved.
 
-   The framework adapter defines the component file extension and story format. If no adapter exists for a style, components, or sandbox tool, load `docs/adapters/generic.md`.
+### Step 3: Build Each Atom, One at a Time
 
-   - **Styling contract** for this platform's style system (`manifest.platforms[platform].tools.style_contract`). Load `docs/styling-contracts/{id}.md` when `style_contract_source` is `builtin`/`manual`, or `design/research/styling/{id}.md` when `researched`. This is a **hard constraint** on how styles are emitted (Step 1b) — not optional guidance. If `style_contract_source: "none"`, no contract is loaded (styles are unenforced; flag this to the user).
-   - **Component contract** for this platform's component library (`manifest.platforms[platform].tools.component_contract`). Load `docs/component-contracts/{id}.md` when `component_contract_source` is `builtin`/`manual`, or `design/research/libraries/{id}.md` when `researched`. This is a **hard constraint** on what the component is built on (Step 1c) — not optional guidance. If `component_contract_source` is `"none"` or absent, **no contract is loaded and nothing is printed** — a project with no component library is a normal project, and Step 1c and its gate are skipped entirely.
-   - Project theme file
-   - The bundled design contract (`docs/DESIGN-CONTRACT.md`) and the result of `DESIGN_EXECUTE` for this atom
-   - **Inventory target** (if `design/inventory.json` exists): the frames this atom's `appears_on` names (`design/reference/{slug}/{NN}.png`) and its `states`, `variants`, and `evidence` — look at the frame images and build the real component to match their structure, tokens, and states. A source deck's markup and CSS are a pixel reference only
+Build the atoms one at a time, in manifest order. Finish one before you start the next.
 
-### Step 1b: Apply Styling Contract
-
-Before writing the component, read the loaded styling contract and treat it as a **hard constraint**, not a suggestion. This is precisely what prevents the drift where a build silently bypasses the declared style system — e.g. inventing a parallel global-CSS system of custom `.atom-*` / `.mol-*` classes ported from a mockup's `<style>` block, the failure that motivated contracts.
-
-**If a contract should apply but failed to load** (no `style_contract` in the manifest, or the contract file is missing/malformed): STOP and report to the user — do not build the component against an unknown styling basis. Re-run the EQUIP "Resolve Styling Contract" step (built-in / research / manual) or proceed only if the user explicitly set `style_contract_enforcement: "off"`.
-
-From the contract, you MUST:
-- **Emit styles via `<emitMethod>`** — e.g. Tailwind utility classes on `className`; colocated `StyleSheet.create`; `import styles from './X.module.css'`. No other mechanism for static styles.
-- **Place styles per `<filePlacement.rule>`** — e.g. colocated; never a top-level `styles/` of global CSS.
-- **Bind tokens via `<tokenBinding.mechanism>`** — e.g. CSS custom properties → Tailwind theme; theme object → `StyleSheet.create`. The theme flows through the chosen system, not a side channel.
-
-You MUST NOT:
-- Use any **forbidden pattern** in the contract's `checks` block (e.g. global custom-class CSS, inline `style={{}}` for static values, hardcoded color literals). These are blocking — Step 4's gate fails the layer on any.
-- **Port a design source's `<style>` block verbatim into the project.** A reference frame's source CSS is a *pixel reference only*; translate every style into the contract's emit method. (The gate would block the verbatim port anyway.)
-
-The styling contract governs the **styling mechanism**. What the component is *built on* is governed by the component contract — Step 1c. Both apply, and neither can catch the other's failure.
-
-### Step 1c: Apply Component Contract
-
-**Skip this step entirely when `component_contract_source` is `"none"` or absent.** No contract, no constraint, no output. Building every primitive by hand is the correct behavior for a project with no component library.
-
-Otherwise: read the loaded component contract and treat it as a **hard constraint**, not a suggestion. This is what prevents the drift where a build declares a component library, lets `scaffold` install it, and then hand-rolls every primitive anyway — emitting correct-looking styled code that composes none of the library. That drift passes every styling contract, because styled-but-hand-rolled markup is still correctly styled.
-
-**If a contract should apply but failed to load** (`tools.components` names a library but no `component_contract` is recorded, or the contract file is missing/malformed): STOP and report to the user — do not build the component against an unknown composition basis. Re-run the EQUIP "Resolve Component Contract" step (built-in / research / manual) or proceed only if the user explicitly set `component_contract_enforcement: "off"`.
-
-From the contract, you MUST:
-- **Compose the library's primitive** for anything in its inventory. A `vendored` library was copied into the repo by the CLI at scaffold time — those files are the project's primitive layer, already wired to the theme, to variants, and to accessibility. A `package` library is imported from `importRoot`. Either way the library's component is the basis; your atom configures it.
-- **Check what scaffold actually installed** before deciding something is unavailable. `manifest.platforms[platform].scaffold.components[]` is the inventory the CLI pulled. If the primitive you need is missing from it, pull it with the library's CLI rather than hand-rolling a replacement.
-
-You MUST NOT:
-- **Re-implement a primitive the library already provides.** Importing `Pressable` and `Text` from `react-native` to build a button, when `components/ui/button.tsx` is sitting in the tree, is the exact defect this contract exists to stop. These are blocking — Step 4's gate fails the layer on any.
-- **Translate a mockup's DOM structure straight into framework primitives.** A design reference tells you what the component must *look like*; it does not tell you what to build it *on*. Read the target for its visual contract, then express that contract by configuring the library's component — the two are not in tension, and a faithful rebuild on the library's primitive is the deliverable.
-
-The contract's `Free primitives` section is as binding as its ban list: layout and platform primitives (`View`, `ScrollView`, `<div>`, `<span>`) are always yours to use directly. A genuine exception to the ban list is recorded in `tools.component_contract_overrides` as `{ComponentName: "reason"}` — a decision on the record, not an invisible default.
-
-### Step 2: Build Each Atom (continued)
-
-2. **Write component file:**
-   - Real component code (`.tsx`, `.vue`, `.svelte`, etc.)
-   - **Emits styles exactly per the styling contract (Step 1b)** — emit method, file placement, token binding, and no forbidden patterns
-   - **Composes the component library exactly per the component contract (Step 1c)** — the library's primitive is the basis; this component configures it rather than re-deriving it. Skip when no component contract is in force.
-   - Uses theme tokens (not hardcoded values)
-   - Follows the composition patterns in `docs/adapters/{components}.md`
-   - Applies the `DESIGN_EXECUTE` decisions for distinctive typography, intentional color hierarchy, and considered motion
-   - **If an ecosystem library was approved** (the atom has an `ecosystemLibs` entry in the build plan):
-     1. Install the package: `npm install {package}@{version}` (or pnpm/yarn as appropriate)
-     2. Build a **wrapper component** that wraps the library's API and applies:
-        - The project's theme tokens (colors, spacing, typography)
-        - Adapter conventions (follow the same patterns as hand-built components)
-        - Any domain-specific props or defaults the spec requires
-     3. The wrapper is the atom — it has the same story file, controls, and manifest entry as any other atom. The library is an implementation detail, not a leaky abstraction
-
-3. **Write story file:**
-   - Registered in the project's sandbox (the sandbox adapter defines the format — for `custom`, a registry entry in the target language per `docs/sandbox-spec.md`; for Storybook, CSF3)
-   - Shows all states (default, loading, error, disabled, etc.)
-   - Uses realistic mock data
-   - **Story title MUST use `Components/` prefix** (e.g., `title: 'Components/StatusBadge'`)
-   - Includes `parameters.docs.description` for auto-generated docs
-   - **ALL props MUST be exposed to the sandbox's controls** (Storybook `argTypes`; or rendered as labeled variants in a `custom` sandbox)
-   - Controls use the appropriate type for each prop:
-     - `select` for enums / union types
-     - `boolean` for flags
-     - `text` for strings
-     - `number` for numeric values
-     - `color` for color values
-
-   **argTypes example:**
-
-   ```tsx
-   // StatusBadge.stories.tsx
-   import type { Meta, StoryObj } from '@storybook/react';
-   import { StatusBadge } from './StatusBadge';
-
-   const meta: Meta<typeof StatusBadge> = {
-     title: 'Components/StatusBadge',
-     component: StatusBadge,
-     parameters: {
-       docs: {
-         description: {
-           component: 'Colored badge indicating job status. Supports open, in-progress, and complete states with semantic color mapping.',
-         },
-       },
-     },
-     argTypes: {
-       status: {
-         control: { type: 'select' },
-         options: ['open', 'in-progress', 'complete'],
-         description: 'Current status of the job',
-       },
-       label: {
-         control: { type: 'text' },
-         description: 'Override the default label text',
-       },
-       size: {
-         control: { type: 'select' },
-         options: ['sm', 'md', 'lg'],
-         description: 'Badge size variant',
-       },
-       pulsing: {
-         control: { type: 'boolean' },
-         description: 'Whether the badge pulses to draw attention',
-       },
-     },
-     args: {
-       status: 'open',
-       size: 'md',
-       pulsing: false,
-     },
-   };
-
-   export default meta;
-   type Story = StoryObj<typeof StatusBadge>;
-
-   export const Default: Story = {};
-
-   export const InProgress: Story = {
-     args: { status: 'in-progress', pulsing: true },
-   };
-
-   export const Complete: Story = {
-     args: { status: 'complete' },
-   };
-   ```
-
-   **Framework story format (React shown above; other frameworks differ):**
-
-   The story file's language, extension, and imports follow the **framework adapter**. The example above is React (`StatusBadge.stories.tsx`, `@storybook/react`, JSX). For **SvelteKit**, write `StatusBadge.stories.svelte` using native Svelte CSF (`defineMeta` + `<Story>` from `@storybook/addon-svelte-csf`) — or `StatusBadge.stories.ts` importing `Meta`/`StoryObj` from `@storybook/svelte`. The `argTypes`/`args`/controls conventions are identical across frameworks. See `docs/adapters/{framework}.md` and `docs/storybook-conventions.md`.
-
-   **React Native polyfill decorator:**
-
-   For React Native projects rendering in web Storybook, add a polyfill disclaimer decorator to the story preview or individual stories where RN primitives need web shimming:
-
-   ```tsx
-   // .storybook/preview.tsx — global decorator for RN-in-web
-   import { View, Text } from 'react-native-web';
-
-   const withRNWeb: Decorator = (Story) => (
-     <View style={{ padding: 16 }}>
-       <Story />
-     </View>
-   );
-
-   export const decorators = [withRNWeb];
-   ```
-
-4. **Verify:**
-   - File exists at path recorded in manifest
-   - Story file exists alongside component
-   - Compilation succeeds (no type errors, no import errors)
-   - Component renders in the sandbox (in isolation, under its layer)
-   - All props are exposed to the sandbox's controls / variants
-   - **Styling contract gate** (unless `style_contract_enforcement: "off"`): run
-     `node {plugin}/scripts/verify-styling-contract.mjs <contract.md> <project-root> [--allow GLOB ...]`
-     where `<contract.md>` is the resolved contract path and `<project-root>` is the **project root** (the directory containing `src/`; usually `.`). **Do not pass `src/` itself** — contract globs are written relative to the project root, so pointing at `src/` makes them match zero files and the gate fails the run (exit `3`, vacuous scan). Pass one `--allow <glob>` per active override in `tools.style_contract_overrides` (component files legitimately exempted). If the script exits non-zero (`1` = violations, `2` = contract/usage error, `3` = vacuous scan — treat **all** as blocking):
-     - `hard-fail` (default): **block this atom** — print the violations (file, line, pattern, rationale) and fix the component to comply before continuing. Do NOT mark the atom verified. (Exit `2` = malformed/missing contract; exit `3` = wrong source-root — stop and fix the cause before building.)
-     - `warn`: print the violations and continue (the atom is still verified).
-     - Non-Node target, or the script path unresolvable: run the contract's `checks` block detections directly with `grep`/`glob` against `<project-root>` and apply the same pass/fail rule. The decision is deterministic either way — the LLM only formats the report.
-   - **Component contract gate** — skip entirely when `component_contract_source` is `"none"`/absent or `component_contract_enforcement: "off"`. Otherwise run the **same script** against the component contract:
-     `node {plugin}/scripts/verify-styling-contract.mjs <component-contract.md> <project-root> [--allow GLOB ...]`
-     where `<component-contract.md>` is the resolved component-contract path. The `<project-root>` rule is identical — pass the project root, never `src/`, or the globs match nothing and the run fails as a vacuous scan. Pass one `--allow <glob>` per active override in `tools.component_contract_overrides`. Exit codes and handling match the styling gate exactly (`1` = violations, `2` = contract/usage error, `3` = vacuous scan — all blocking):
-     - `hard-fail` (default): **block this atom** — print the violations (file, pattern, rationale) and rebuild the component on the library's primitive before continuing. Do NOT mark the atom verified.
-     - `warn`: print the violations and continue (the atom is still verified).
-     - The two gates are independent and both must pass. A styling-contract pass says nothing about composition: hand-rolled markup with correct utility classes satisfies every styling contract in the repo. This is the gate that would have caught a component library declared, installed, and then ignored.
-   - If the inventory names frames for this atom: the rendered component matches the frames' structure, tokens, and states (the literal pixel-perfect goal)
-
-5. **Aesthetic gate** (always active through the bundled design contract):
-   - Component uses the project font pairing
-   - Color usage follows the vibe's hierarchy (not arbitrary)
-   - Interactive components have intentional motion (not default browser transitions)
-   - Spacing uses the theme scale
-
-6. **Update manifest** (decisions and receipts only — no authored composition-edge arrays, no `controls` authority field; controls coverage comes from catalog capture):
-   ```json
-   {
-     "atoms": [
-       {
-         "name": "StatusBadge",
-         "file": "src/components/StatusBadge.tsx",
-         "story": "src/components/StatusBadge.stories.tsx",
-         "status": "verified"
-       }
-     ]
-   }
-   ```
-For atoms wrapping an ecosystem library, the entry includes the `ecosystemLib` record from the build plan with vetting:
-    ```json
-    {
-      "name": "DataTable",
-      "file": "src/components/DataTable.tsx",
-      "story": "src/components/DataTable.stories.tsx",
-      "status": "verified",
-      "ecosystemLib": {
-        "package": "@tanstack/react-table",
-        "version": "^8.20.0",
-        "purpose": "Headless table logic (sorting, filtering, pagination)",
-        "vetting": {
-          "maintenance": "PASS",
-          "popularity": "STRONG",
-          "compatibility": "PASS",
-          "bundleSize": "SMALL",
-          "accessibility": "YES",
-          "license": "COMPATIBLE",
-          "tests": "HIGH",
-          "community": "ACTIVE",
-          "score": "8/8",
-          "researchDate": "2026-06-04"
-        },
-        "tradeoffs": "Headless — requires UI wrapper. shadcn/ui provides a built-in wrapper."
-      }
-    }
-    ```
+1. **Assign.** `SUBAGENT(designer, node <plugin-root>/scripts/brief.mjs build <project-root> --platform {platform} --layer atoms --name {Name})`. Start one child with the line the command prints.
+2. **Accept.** Follow "Accept the result" in The Item Loop.
+3. **Re-assign on failure.** Write the failures to `design/.briefs/{platform}/atoms-{Name}.findings.json`. Run the brief command again with `--findings` pointing at that file, then start a new child. Two re-assignments at most. After the second one still fails, ask through `USER_CHOICE` (batch `B-item`).
+4. **Record.** When the atom passes, set its `status` to `verified` (see "Record the item").
+5. **Print the progress line** (see Progress Tracking).
 
 ### Progress Tracking
 
@@ -732,7 +646,7 @@ Update manifest:
 
 Record `atoms_component_contract: "n/a"` when `component_contract_source` is `"none"`/absent — the key is always written so a later reader can tell "no library" apart from "gate skipped".
 
-> **Both contract gates (Step 4) run for every layer.** Molecules (5b), organisms (5c), and compose (6) each load the same two contracts (their Step 1), apply them (Steps 1b and 1c), and run the same `verify-styling-contract.mjs` gate against each before their exit gate opens. Each layer records `{layer}_styling_contract` and `{layer}_component_contract`. When enforcement is `hard-fail` (default), a layer whose emitted files violate either contract is **blocked** until fixed or a per-component override is recorded in `tools.style_contract_overrides` / `tools.component_contract_overrides`.
+> **Both contract gates run for every layer.** Each item's brief names the gate commands for its platform, and The Item Loop runs them after each child returns. Each layer records `{layer}_styling_contract` and `{layer}_component_contract`. When enforcement is `hard-fail` (default), a layer whose emitted files violate either contract is **blocked** until fixed or a per-component override is recorded in `tools.style_contract_overrides` / `tools.component_contract_overrides`.
 >
 > The two catch different failures and neither substitutes for the other. The styling gate would have caught a parallel global-CSS system before it shipped. The component gate would have caught a component library that was chosen, installed, and then never composed — 18 atoms built from raw framework primitives while the vendored library sat unused in the same tree, every styling check green.
 
@@ -833,154 +747,20 @@ Write state declarations into the manifest (**no authored composition-edge autho
 }
 ```
 
-### Step 2: Build Each Molecule
+### Step 2: Prepare the Layer
 
-For each molecule, in order:
+1. **Record every molecule.** Add each molecule to `manifest.platforms[platform].molecules` with `name`, `file`, `story`, `status: "pending"`, and the `state` declared in Step 1b. Paths: `src/molecules/{Name}.tsx`, and its story beside it, named by the sandbox adapter. If `build_plan.molecules.ecosystemLibs` holds a record for this molecule, copy it onto the entry as `ecosystemLib`.
+2. **Check the atoms.** Every atom a molecule composes must already be `verified`. The brief exits 2 while a composed item is still `pending`.
 
-1. **Load context:**
-   - Atom files this molecule composes
-   - Project theme file
-   - **Adapter docs for the chosen tools**, resolved by manifest field per the table in Phase 5 Step 1 — including `docs/adapters/{components}.md` for `tools.components`
-   - **Styling contract and component contract** — the same two resolved in Phase 5 Step 1 (`tools.style_contract`, `tools.component_contract`). Both remain hard constraints at this layer: apply them per Steps 1b and 1c, and both gates run at Step 4. A component contract that is `"none"`/absent stays silent here too.
-   - **If molecule has declared state:** Read `docs/state-patterns.md` for the project's framework. Apply the appropriate state pattern (useState, $state, @State, Entity, Model+Update, etc.)
+### Step 3: Build Each Molecule, One at a Time
 
-2. **Write molecule file:**
-   - Composes 2-3 atoms — does NOT re-implement atom internals
-   - Accepts props that delegate to constituent atoms
-   - Uses the same style system and theme tokens as the atoms
-   - File location: `src/molecules/MoleculeName.tsx` (or equivalent per framework)
+Build the molecules one at a time, in manifest order. Finish one before you start the next.
 
-3. **Write story file:**
-   - Registered in the project's sandbox (the sandbox adapter defines the format — for `custom`, a registry entry in the target language per `docs/sandbox-spec.md`; for Storybook, CSF3)
-   - **Story title MUST use `Molecules/` prefix** (e.g., `title: 'Molecules/JobRow'`)
-   - Shows molecule in realistic context with all variant combinations
-   - All molecule-level props wired to `argTypes` controls
-   - **For stateful molecules:** Includes a named story export for EVERY declared state scenario. Each scenario exercises a specific internal state configuration.
-
-   **State scenario example:**
-   ```tsx
-   // SearchBar.stories.tsx — stateful molecule with 4 scenarios
-   import type { Meta, StoryObj } from '@storybook/react';
-   import { userEvent, within } from '@storybook/test';
-   import { SearchBar } from './SearchBar';
-
-   const meta: Meta<typeof SearchBar> = {
-     title: 'Molecules/SearchBar',
-     component: SearchBar,
-     parameters: {
-       docs: {
-         description: {
-           component: 'Search input with debounced query and suggestion dropdown.',
-         },
-       },
-     },
-     argTypes: {
-       placeholder: { control: { type: 'text' } },
-       onSearch: { action: 'searched' },
-     },
-     args: {
-       placeholder: 'Search jobs...',
-     },
-   };
-
-   export default meta;
-   type Story = StoryObj<typeof SearchBar>;
-
-   export const Empty: Story = {};
-
-   export const Typing: Story = {
-     play: async ({ canvasElement }) => {
-       const canvas = within(canvasElement);
-       const input = canvas.getByRole('textbox');
-       await userEvent.type(input, 'hva');
-     },
-   };
-
-   export const ResultsVisible: Story = {
-     args: {
-       initialQuery: 'hvac',
-       suggestions: mockSuggestions,
-     },
-   };
-
-   export const NoResults: Story = {
-     args: {
-       initialQuery: 'xyz',
-       suggestions: [],
-     },
-   };
-
-   export const Error: Story = {
-     args: {
-       initialQuery: 'hvac',
-       error: 'Search failed. Try again.',
-     },
-   };
-   ```
-
-   For non-React frameworks, follow `docs/state-patterns.md` for the equivalent pattern:
-   - **Svelte**: Pass initial values via props; use component args to set up `$state()`.
-   - **Bubbletea**: Initialize model instances to target state values.
-   - **GPUI**: Create Entity instances with specific initial values.
-   - **Textual**: Set `reactive` initial values in story setup.
-   - **Ink**: Same as React (Ink uses React hooks).
-
-   **Example:**
-   ```tsx
-   // JobRow.stories.tsx
-   import type { Meta, StoryObj } from '@storybook/react';
-   import { JobRow } from './JobRow';
-
-   const meta: Meta<typeof JobRow> = {
-     title: 'Molecules/JobRow',
-     component: JobRow,
-     parameters: {
-       docs: {
-         description: {
-           component: 'Job summary row combining status badge and date chip. Used on feed and list screens.',
-         },
-       },
-     },
-     argTypes: {
-       status: { control: { type: 'select' }, options: ['open', 'in-progress', 'complete'] },
-       date: { control: { type: 'text' } },
-       jobTitle: { control: { type: 'text' } },
-     },
-     args: {
-       status: 'open',
-       date: 'Today, 9:00 AM',
-       jobTitle: 'Annual HVAC Service',
-     },
-   };
-
-   export default meta;
-   type Story = StoryObj<typeof JobRow>;
-
-   export const Default: Story = {};
-   export const InProgress: Story = { args: { status: 'in-progress' } };
-   export const Complete: Story = { args: { status: 'complete' } };
-   ```
-
-4. **Verify:**
-   - Molecule renders without errors
-   - Constituent atoms are composed (not re-implemented)
-   - Registered in the sandbox under the `Molecules/` layer
-   - All props wired to argTypes controls
-   - **Both contract gates** pass for the molecule files — same script, same invocation, same exit-code handling as Phase 5 Step 4. The component gate is skipped when no component contract is in force.
-
-5. **Update manifest:**
-   ```json
-   {
-     "molecules": [
-       {
-         "name": "JobRow",
-         "file": "src/molecules/JobRow.tsx",
-         "story": "src/molecules/JobRow.stories.tsx",
-         "status": "verified"
-       }
-     ]
-   }
-   ```
+1. **Assign.** `SUBAGENT(designer, node <plugin-root>/scripts/brief.mjs build <project-root> --platform {platform} --layer molecules --name {Name})`. Start one child with the line the command prints.
+2. **Accept.** Follow "Accept the result" in The Item Loop.
+3. **Re-assign on failure.** Write the failures to `design/.briefs/{platform}/molecules-{Name}.findings.json`. Run the brief command again with `--findings` pointing at that file, then start a new child. Two re-assignments at most. After the second one still fails, ask through `USER_CHOICE` (batch `B-item`).
+4. **Record.** When the molecule passes, set its `status` to `verified` (see "Record the item").
+5. **Print the progress line** (see Progress Tracking).
 
 ### Progress Tracking
 
@@ -1079,64 +859,21 @@ Update manifest with organism list (all `status: pending`):
 }
 ```
 
-### Step 2: Build Each Organism
+### Step 2: Prepare the Layer
 
-For each organism, in order:
+1. **Record every organism.** Step 1 wrote each entry with `name`, `file`, `story`, `status: "pending"`, and `state`. Confirm each `file` and `story` path: `src/organisms/{Name}.tsx`, and its story beside it, named by the sandbox adapter. If `build_plan.organisms.ecosystemLibs` holds a record for this organism, copy it onto the entry as `ecosystemLib`.
+2. **Install approved packages.** For each library approved at `B-eco` for an organism, install it at its recorded version, and check that its import resolves. Do only what `B-eco` or `B-val` approved.
+3. **Check the molecules and atoms.** Every item an organism composes must already be `verified`. The brief exits 2 while a composed item is still `pending`.
 
-1. **Load context:**
-   - Molecule and atom files this organism composes
-   - Project theme file
-   - **Adapter docs for the chosen tools**, resolved by manifest field per the table in Phase 5 Step 1 — including `docs/adapters/{components}.md` for `tools.components`
-   - **Styling contract and component contract** — the same two resolved in Phase 5 Step 1 (`tools.style_contract`, `tools.component_contract`). Both remain hard constraints at this layer: apply them per Steps 1b and 1c, and both gates run at Step 4. A component contract that is `"none"`/absent stays silent here too.
-   - `docs/state-patterns.md` for the project's framework
+### Step 3: Build Each Organism, One at a Time
 
-2. **Write organism file:**
-   - Composes molecules and atoms — does NOT re-implement internals
-   - Manages declared internal state using the framework-appropriate pattern from `docs/state-patterns.md`
-   - Accepts props for configuration and callback events (onSortChange, onRowSelect, etc.)
-   - Uses theme tokens, and composes the component library per the component contract (Step 1c) rather than re-deriving its primitives
-   - File location: `src/organisms/OrganismName.tsx` (or equivalent per framework)
-   - **If an ecosystem library was approved** (the organism has an `ecosystemLibs` entry): install the package and build a wrapper, same pattern as atoms
+Build the organisms one at a time, in manifest order. Finish one before you start the next.
 
-3. **Write story file:**
-   - Registered in the project's sandbox under `Organisms/` layer
-   - **Story title MUST use `Organisms/` prefix** (e.g., `title: 'Organisms/DataTable'`)
-   - Includes a named story export for EVERY declared state scenario
-   - All organism-level props wired to `argTypes` controls
-   - Shows realistic data (not minimal stubs)
-   - Follow the same state scenario story patterns as Phase 5b molecules
-
-4. **Verify:**
-   - Organism renders without errors
-   - Constituent molecules/atoms are composed (not re-implemented)
-   - **Both contract gates** pass for the organism files — same script, same invocation, same exit-code handling as Phase 5 Step 4. The component gate is skipped when no component contract is in force.
-   - Registered in the sandbox under `Organisms/` layer
-   - All declared state scenarios have corresponding named story exports
-   - All props wired to argTypes controls
-
-5. **Update manifest:**
-   ```json
-   {
-     "organisms": [
-       {
-         "name": "DataTable",
-         "file": "src/organisms/DataTable.tsx",
-         "story": "src/organisms/DataTable.stories.tsx",
-         "status": "verified",
-         "state": {
-           "declared": [
-             { "name": "sortColumn", "type": "string | null", "initial": "null" },
-             { "name": "sortDirection", "type": "'asc' | 'desc'", "initial": "'asc'" },
-             { "name": "currentPage", "type": "number", "initial": "1" },
-             { "name": "selectedRows", "type": "Set<string>", "initial": "new Set()" },
-             { "name": "filterQuery", "type": "string", "initial": "''" }
-           ],
-           "scenarios": ["default-sort", "custom-sort", "page-2", "rows-selected", "empty", "filtered"]
-         }
-       }
-     ]
-   }
-   ```
+1. **Assign.** `SUBAGENT(designer, node <plugin-root>/scripts/brief.mjs build <project-root> --platform {platform} --layer organisms --name {Name})`. Start one child with the line the command prints.
+2. **Accept.** Follow "Accept the result" in The Item Loop.
+3. **Re-assign on failure.** Write the failures to `design/.briefs/{platform}/organisms-{Name}.findings.json`. Run the brief command again with `--findings` pointing at that file, then start a new child. Two re-assignments at most. After the second one still fails, ask through `USER_CHOICE` (batch `B-item`).
+4. **Record.** When the organism passes, set its `status` to `verified` (see "Record the item").
+5. **Print the progress line** (see Progress Tracking).
 
 ### Progress Tracking
 
@@ -1235,112 +972,22 @@ The middle options exist because collapsing is a judgment call: **Split a route*
 
 #### Step 1e: Record screens
 
-Write the confirmed screens to the manifest (all `status: pending`), each with its `route` and `states` list. Single-state routes carry `states: ["default"]`.
+Write the confirmed screens to the manifest (all `status: pending`), each with its `route`, its `file` and `story` paths (`src/screens/{Name}.tsx`, and its story beside it, named by the sandbox adapter), and its `states` list. Single-state routes carry `states: ["default"]`.
 
-### Step 2: Build Each Screen
+### Step 2: Prepare the Layer
 
-For each screen:
+1. **Check the records.** Every screen from Step 1e must be in `manifest.platforms[platform].screens` with `name`, `route`, `file`, `story`, `states`, and `status: "pending"`.
+2. **Check the components.** Every atom, molecule, and organism a screen composes must already be `verified`. The brief exits 2 while a composed item is still `pending`.
 
-1. **Load context:**
-   - All atom files this screen composes
-   - All molecule files this screen composes (if applicable)
-   - All organism files this screen composes (if applicable)
-   - **Adapter docs for the chosen tools**, resolved by manifest field per the table in Phase 5 Step 1 — including `docs/adapters/{components}.md` for `tools.components`
-   - **Styling contract and component contract** — the same two resolved in Phase 5 Step 1 (`tools.style_contract`, `tools.component_contract`). Both remain hard constraints at this layer: apply them per Steps 1b and 1c, and both gates run at Step 4. A component contract that is `"none"`/absent stays silent here too.
-   - Theme file
-   - The bundled design contract and the result of `DESIGN_EXECUTE` for this screen
-   - **Target (fidelity precedence)** — build the screen to match the highest-fidelity reference available: the state's **reference frames** (`design/inventory.json` → `screens[].states[].frames`, rendered under `design/reference/`) if present; otherwise the screen's **wireframe** (`design/wireframes/{screen}.md`, structural — match its layout/IA/regions). If both exist, the frames govern pixels while the wireframe still informs structure.
+### Step 3: Build Each Screen, One at a Time
 
-2. **Write screen file:**
-   - Composes atoms into a complete layout
-   - Uses theme spacing and layout tokens
-   - Follows platform conventions (ScrollView for mobile, flex layouts for web, etc.)
-   - Applies the `DESIGN_EXECUTE` decisions for intentional visual hierarchy, considered negative space, and eye-flow guidance
-   - **If the screen has more than one state** (its `states` list has >1 entry): own the internal state that switches between those states, using the framework's state pattern (`docs/state-patterns.md`). The screen must be **drivable into any listed state** so each renders as its own story — wire whatever override/controlled mechanism the framework and adapter favor (the prop shape, naming, and precedence are your implementation choice; the plan does not prescribe them). In the real app the screen uses its own internal state; the sandbox stories drive it into each named state.
+Build the screens one at a time, in route-map order. Finish one before you start the next.
 
-3. **Write screen story:**
-   - Registered in the project's sandbox (the sandbox adapter defines the format — for `custom`, a registry entry in the target language per `docs/sandbox-spec.md`; for Storybook, CSF3)
-   - **Story title MUST use `Screens/` prefix** (e.g., `title: 'Screens/TodayFeed'`)
-   - Realistic mock data
-   - **One named story per entry in the screen's `states` list**, each driving the screen into that state — the same convention molecules/organisms use (`docs/storybook-conventions.md`, `docs/sandbox-spec.md`). A single-state screen (`["default"]`) has just a Default story. The example below drives the screen into each state via story args; the exact mechanism is the implementer's/adapter's choice.
-   - **Set viewport to match target platform** in story parameters:
-
-   ```tsx
-   // TodayFeed.stories.tsx
-   import type { Meta, StoryObj } from '@storybook/react';
-   import { TodayFeed } from './TodayFeed';
-
-   const meta: Meta<typeof TodayFeed> = {
-     title: 'Screens/TodayFeed',
-     component: TodayFeed,
-     parameters: {
-       docs: {
-         description: {
-           component: 'Main dashboard showing today\'s scheduled jobs with status overview and quick actions.',
-         },
-       },
-       // Match target platform viewport
-       viewport: {
-         defaultViewport: 'mobile1',  // for mobile projects
-       },
-       layout: 'fullscreen',
-     },
-   };
-
-   export default meta;
-   type Story = StoryObj<typeof TodayFeed>;
-
-   export const Default: Story = {
-     args: {
-       jobs: mockJobs,
-     },
-   };
-
-   export const Empty: Story = {
-     args: {
-       jobs: [],
-     },
-   };
-
-   export const Loading: Story = {
-     args: {
-       isLoading: true,
-     },
-   };
-   ```
-
-   For **web-desktop** projects, use standard desktop viewports. For **mobile** projects (mobile-ios, mobile-android, web-mobile), set viewport to a mobile breakpoint so screens render at realistic dimensions.
-
-4. **Verify:**
-   - Screen renders without errors
-   - All listed atoms are used correctly
-   - Layout responds to viewport changes (if applicable)
-   - No hardcoded spacing or colors (uses theme)
-   - **Both contract gates** pass across the built component/screen files — same script, same invocation, same exit-code handling as Phase 5 Step 4. The component gate is skipped when no component contract is in force.
-   - If a target exists for this screen (its reference frames, or else the wireframe): the layout matches it — structure, spacing rhythm, responsive behavior (and pixels too when the target is a rendered frame)
-
-5. **Aesthetic gate** (always active through the bundled design contract):
-   - Layout has intentional hierarchy (not uniform spacing)
-   - Visual flow guides attention to primary content
-   - Negative space is deliberate, not leftover
-   - Component arrangement creates rhythm
-
-6. **Update manifest:**
-   ```json
-   {
-"screens": [
-    {
-      "name": "TodayFeed",
-      "route": "/today",
-      "states": ["default", "empty", "loading"],
-      "file": "src/screens/TodayFeed.tsx",
-      "story": "src/screens/TodayFeed.stories.tsx",
-      "status": "verified"
-    }
-  ]
-   }
-   ```
-   `route` is the page identity / dedup key; `states` lists the named states for that route (one sandbox story each). See `docs/state-patterns.md`. Do not author composition-edge arrays as authority.
+1. **Assign.** `SUBAGENT(designer, node <plugin-root>/scripts/brief.mjs build <project-root> --platform {platform} --layer screens --name {Name})`. Start one child with the line the command prints.
+2. **Accept.** Follow "Accept the result" in The Item Loop.
+3. **Re-assign on failure.** Write the failures to `design/.briefs/{platform}/screens-{Name}.findings.json`. Run the brief command again with `--findings` pointing at that file, then start a new child. Two re-assignments at most. After the second one still fails, ask through `USER_CHOICE` (batch `B-item`).
+4. **Record.** When the screen passes, set its `status` to `verified` (see "Record the item").
+5. **Print one line:** the count of screens verified, and the next screen.
 
 ### Phase 6 Exit Gate
 

@@ -458,12 +458,12 @@ test("the three route strings are defined in the runtime contract and only they 
   }
 });
 
-test("no shipped workflow or doc keeps the retired design wording (build.md is exempt until its rewrite)", () => {
+test("no shipped workflow or doc keeps the retired design wording", () => {
   const forbidden = /strongest available|bundled (design )?contract|if the harness exposes|general-purpose (agent|subagent|child)/i;
   const hits = [];
   for (const dir of ["workflows", "docs"]) {
     for (const file of readdirSync(path.join(PLUGIN, dir))) {
-      if (!file.endsWith(".md") || (dir === "workflows" && file === "build.md")) continue;
+      if (!file.endsWith(".md")) continue;
       readFileSync(path.join(PLUGIN, dir, file), "utf8")
         .split("\n")
         .forEach((line, index) => {
@@ -494,4 +494,79 @@ test("wireframe states the no-spawning-tool route as its built-in generator, rec
   assert.match(text, /no spawning tool/);
   assert.match(text, /built-in generator \(Step 2B\)/);
   assert.match(text, /engine `builtin`/);
+});
+
+// --- Build: the packaged designer builds every item, one at a time ---
+
+const BUILD_LOOPS = [
+  { heading: "## Phase 5: ATOMS", layer: "atoms" },
+  { heading: "## Phase 5b: MOLECULES", layer: "molecules" },
+  { heading: "## Phase 5c: ORGANISMS", layer: "organisms" },
+  { heading: "## Phase 6: COMPOSE", layer: "screens" },
+];
+
+// One phase's text, from its "## " heading to the next "## " heading.
+function buildPhase(heading) {
+  const lines = readPlugin("workflows/build.md").split("\n");
+  const start = lines.indexOf(heading);
+  assert.ok(start >= 0, `build.md must contain the heading "${heading}"`);
+  const end = lines.findIndex((line, index) => index > start && line.startsWith("## "));
+  return lines.slice(start, end === -1 ? undefined : end).join("\n");
+}
+
+test("each build phase assigns every item to the packaged designer with its own layer", () => {
+  for (const { heading, layer } of BUILD_LOOPS) {
+    const section = buildPhase(heading);
+    assert.match(
+      section,
+      new RegExp(`SUBAGENT\\(designer, node <plugin-root>/scripts/brief\\.mjs build <project-root> --platform \\{platform\\} --layer ${layer} --name \\{Name\\}\\)`),
+      `${heading} must assign each item with --layer ${layer}`,
+    );
+    for (const other of BUILD_LOOPS.map((loop) => loop.layer).filter((name) => name !== layer)) {
+      assert.doesNotMatch(section, new RegExp(`--layer ${other} `), `${heading} must not name the ${other} layer`);
+    }
+  }
+});
+
+test("each build loop states that items run one at a time, in its body text", () => {
+  for (const { heading } of BUILD_LOOPS) {
+    // A heading such as "Step 3: Build Each Atom, One at a Time" does not count as the statement.
+    const body = buildPhase(heading).split("\n").filter((line) => !line.startsWith("#"));
+    assert.ok(body.some((line) => /one at a time/i.test(line)), `${heading} must say its items run one at a time`);
+  }
+});
+
+test("each build loop caps re-assignment at two and sends findings through the layer's findings file", () => {
+  for (const { heading, layer } of BUILD_LOOPS) {
+    const section = buildPhase(heading);
+    assert.match(section, /two re-assignments/i, `${heading} must cap re-assignment at two`);
+    assert.match(section, /--findings/, `${heading} must re-run the brief with --findings`);
+    assert.match(
+      section,
+      new RegExp(`design/\\.briefs/\\{platform\\}/${layer}-\\{Name\\}\\.findings\\.json`),
+      `${heading} must write findings to its layer's findings file`,
+    );
+    assert.match(section, /USER_CHOICE/, `${heading} must ask the user after the cap`);
+  }
+});
+
+test("no build loop has the primary agent write an item's files itself", () => {
+  const writesItem = /Write (component|molecule|organism|screen|story|atom)[a-z ]*(file|story)/i;
+  for (const { heading } of BUILD_LOOPS) {
+    const section = buildPhase(heading);
+    assert.doesNotMatch(section, writesItem, `${heading} still has a write-the-file step`);
+    assert.doesNotMatch(section, /Load context/, `${heading} still loads context itself`);
+  }
+});
+
+test("build declares the item-failure batch in its asks table", () => {
+  const build = readPlugin("workflows/build.md");
+  assert.match(build, /^\| B-item \|/m, "the asks table must list B-item");
+  assert.match(build, /batch: B-item/, "B-item must be declared as a user_choice batch");
+});
+
+test("process-context never says the primary agent creates or writes components", () => {
+  const pc = readPlugin("skills/process-context/SKILL.md");
+  assert.doesNotMatch(pc, /When you create or modify components/);
+  assert.doesNotMatch(pc, /\byou (create|write|build) (the |each |a |an )?(component|screen|molecule|organism|atom)/i);
 });

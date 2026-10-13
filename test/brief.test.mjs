@@ -23,7 +23,8 @@ const BUILD_BRIEF_SRC = path.join(PLUGIN, "docs/BUILD-BRIEF.md");
 const SUCCESS_LINE = (file) =>
   `Read ${file} and follow it exactly. It is your complete assignment; return the result it asks for.\n`;
 
-const EXPECTED_PLACEHOLDERS = ["COMPOSES", "FILES", "FRAMES", "GATES", "ITEM", "ITEM_ID", "PLATFORM", "PRIOR_FINDINGS", "RENDER", "STACK"];
+const EXPECTED_PLACEHOLDERS = ["COMPOSES", "FILES", "FRAMES", "GATES", "ITEM", "ITEM_ID", "LIBRARY", "PLATFORM", "PRIOR_FINDINGS", "RENDER", "RULES", "STACK", "STATE"];
+const LAYERS = ["atoms", "molecules", "organisms", "screens"];
 
 function cloneFixture() {
   const dir = mkdtempSync(path.join(tmpdir(), "pp-brief-"));
@@ -476,10 +477,10 @@ describe("brief build: determinism and fixture integrity", () => {
     }
   });
 
-  test("docs/BUILD-BRIEF.md holds one fenced block whose placeholders are exactly the documented set", () => {
+  test("docs/BUILD-BRIEF.md opens its task with one fenced template whose placeholders are exactly the documented set", () => {
     const lines = readFileSync(BUILD_BRIEF_SRC, "utf8").split("\n");
     const fenceAt = lines.flatMap((line, i) => (line.startsWith("```") ? [i] : []));
-    assert.equal(fenceAt.length, 2, "BUILD-BRIEF.md must hold exactly one fenced block");
+    assert.ok(fenceAt.length >= 2, "BUILD-BRIEF.md must hold a fenced task template");
     const block = lines.slice(fenceAt[0] + 1, fenceAt[1]).join("\n");
     const names = [...new Set([...block.matchAll(/<<([A-Z_]+)>>/g)].map((m) => m[1]))].sort();
     assert.deepEqual(names, EXPECTED_PLACEHOLDERS);
@@ -1292,6 +1293,213 @@ describe("brief: render semantics (pixels field) and stale output", () => {
       const steps = sectionOf(content, "Steps");
       assert.ok(steps.includes("the components this brief lists to build on"), steps);
       assert.ok(!steps.includes("under Composes"), "the reuse step must not point at a section that may be absent");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+// --- Per-layer rules, installed primitives, declared state, library wrappers ---
+
+const LAYER_ITEM = { atoms: "Button", molecules: "SearchBar", organisms: "Panel", screens: "Library" };
+// Each layer's story-title rule, as BUILD-BRIEF.md words it. Unique to its layer.
+const LAYER_RULE = {
+  atoms: "`Components/` prefix",
+  molecules: "`Molecules/` prefix",
+  organisms: "`Organisms/` prefix",
+  screens: "`Screens/` prefix",
+};
+const STATE_PATTERNS = path.join(PLUGIN, "docs/state-patterns.md");
+
+function patchManifest(root, mutate) {
+  const manifestPath = path.join(root, "design/manifest.json");
+  const manifest = readJson(manifestPath);
+  mutate(manifest.platforms);
+  writeJson(manifestPath, manifest);
+}
+
+// The fixture has no organism, and its molecule and screen compose atoms that are still
+// pending. Add the organism and verify the composed items so every layer's brief can be built.
+function prepareFixture(root) {
+  const inventoryPath = path.join(root, "design/inventory.json");
+  const inventory = readJson(inventoryPath);
+  if (!(inventory.organisms ?? []).some((entry) => entry.name === "Panel")) {
+    inventory.organisms = [...(inventory.organisms ?? []), { name: "Panel", composes: [] }];
+    writeJson(inventoryPath, inventory);
+  }
+  patchManifest(root, (platforms) => {
+    const organisms = platforms["web-desktop"].organisms ?? [];
+    if (!organisms.some((entry) => entry.name === "Panel")) {
+      organisms.push({ name: "Panel", file: "src/components/Panel.tsx", story: "src/components/Panel.stories.tsx", status: "pending" });
+    }
+    platforms["web-desktop"].organisms = organisms;
+  });
+  setItemStatus(root, "atoms", "Button", "verified");
+  setItemStatus(root, "molecules", "SearchBar", "verified");
+}
+
+function buildLayer(root, layer, platform = "web-desktop") {
+  prepareFixture(root);
+  const result = runCli(buildArgs(root, { "--platform": platform, "--layer": layer, "--name": LAYER_ITEM[layer] }));
+  assert.equal(result.code, 0, result.stderr);
+  return readFileSync(briefPath(root, platform, layer, LAYER_ITEM[layer]), "utf8");
+}
+
+describe("brief build: per-layer rules", () => {
+  test("each layer's brief carries the shared rules once and its own layer rules", () => {
+    const root = cloneFixture();
+    try {
+      for (const layer of LAYERS) {
+        const content = buildLayer(root, layer);
+        assert.equal(content.split("## Rules for every layer").length - 1, 1, `${layer}: the shared rules appear once`);
+        assert.ok(content.includes(`## Rules for ${layer}\n`), `${layer}: its own rules heading is present`);
+        assert.ok(content.includes(LAYER_RULE[layer]), `${layer}: its story-title rule is present`);
+      }
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("no layer's brief carries another layer's rules", () => {
+    const root = cloneFixture();
+    try {
+      for (const layer of LAYERS) {
+        const content = buildLayer(root, layer);
+        for (const other of LAYERS.filter((name) => name !== layer)) {
+          assert.ok(!content.includes(`## Rules for ${other}\n`), `${layer} brief must not carry the ${other} rules`);
+          assert.ok(!content.includes(LAYER_RULE[other]), `${layer} brief must not carry the ${other} story-title rule`);
+        }
+      }
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("two builds of a screen and of a molecule produce byte-identical briefs", () => {
+    const root = cloneFixture();
+    try {
+      for (const layer of ["screens", "molecules"]) {
+        const first = buildLayer(root, layer);
+        const second = buildLayer(root, layer);
+        assert.equal(first, second, `${layer} brief must not vary between builds`);
+      }
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("the stack names the primitives scaffold installed when a component contract is in force", () => {
+    const root = cloneFixture();
+    try {
+      patchManifest(root, (platforms) => {
+        platforms["web-desktop"].scaffold = { components: ["Button", "Input"] };
+      });
+      assert.ok(buildLayer(root, "atoms").includes("- Installed library primitives: Button, Input.\n"));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a component contract in force with no scaffold record says none recorded", () => {
+    const root = cloneFixture();
+    try {
+      assert.ok(buildLayer(root, "atoms").includes("- Installed library primitives: none recorded.\n"));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a platform with no component library gets no installed-primitive line and says no contract is in force", () => {
+    const root = cloneFixture();
+    try {
+      const result = runCli(buildArgs(root, { "--platform": "terminal-cli", "--layer": "atoms", "--name": "Button" }));
+      assert.equal(result.code, 0, result.stderr);
+      const content = readFileSync(briefPath(root, "terminal-cli", "atoms", "Button"), "utf8");
+      assert.ok(!content.includes("Installed library primitives"));
+      assert.ok(content.includes("- Component contract: none in force"));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a stateful molecule gets its declared state, its scenarios, and the state-patterns path", () => {
+    const root = cloneFixture();
+    try {
+      patchManifest(root, (platforms) => {
+        platforms["web-desktop"].molecules[0].state = {
+          declared: [{ name: "query", type: "string", initial: "''" }],
+          scenarios: ["empty", "typing"],
+        };
+      });
+      const section = sectionOf(buildLayer(root, "molecules"), "Declared state");
+      assert.ok(section.includes('"scenarios"'), section);
+      assert.ok(section.includes('"typing"'), section);
+      assert.ok(section.includes(STATE_PATTERNS), section);
+      assert.ok(existsSync(STATE_PATTERNS));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a pure-composition molecule says it declares no state", () => {
+    const root = cloneFixture();
+    try {
+      patchManifest(root, (platforms) => {
+        platforms["web-desktop"].molecules[0].state = null;
+      });
+      assert.ok(sectionOf(buildLayer(root, "molecules"), "Declared state").includes("This item declares no state."));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a screen lists its states and the state-patterns path", () => {
+    const root = cloneFixture();
+    try {
+      patchManifest(root, (platforms) => {
+        platforms["web-desktop"].screens[0].states = ["default", "empty"];
+      });
+      const section = sectionOf(buildLayer(root, "screens"), "States");
+      assert.ok(section.includes("default, empty"), section);
+      assert.ok(section.includes(STATE_PATTERNS), section);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("an atom with no declared state or states gets neither state section", () => {
+    const root = cloneFixture();
+    try {
+      const content = buildLayer(root, "atoms");
+      assert.ok(!content.includes("## Declared state"));
+      assert.ok(!content.includes("## States"));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("an item with an approved ecosystem library gets the wrapper rules and the library record", () => {
+    const root = cloneFixture();
+    try {
+      patchManifest(root, (platforms) => {
+        platforms["web-desktop"].atoms[0].ecosystemLib = {
+          package: "@tanstack/react-table",
+          version: "^8.20.0",
+          purpose: "Headless table logic",
+        };
+      });
+      const content = buildLayer(root, "atoms");
+      assert.ok(content.includes("## Rules for a library wrapper"), "the wrapper rules are missing");
+      assert.ok(content.includes('"package": "@tanstack/react-table"'), "the library record is missing");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("an item with no ecosystem library record gets no wrapper rules", () => {
+    const root = cloneFixture();
+    try {
+      assert.ok(!buildLayer(root, "atoms").includes("## Rules for a library wrapper"));
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

@@ -80,7 +80,7 @@ See **Upgrading to 8.0** in the plugin README / `docs/UPGRADING-8.0.md`.
 1. **Respect the current phase** - Don't skip ahead. If the project is in ATOMS, build atoms before composing screens.
 2. **Follow adapter conventions** - Components should match the tool stack's patterns.
 3. **Use the theme** - Never hardcode colors, fonts, or spacing. Always reference theme tokens.
-4. **Track in manifest** - When you create or modify components/screens, update `design/manifest.json` with **decisions and receipts only** (`status`, `file`, `story`, `capture`, `pinned`, `deprecations`, gate keys). Do **not** author composition-edge arrays or `controls: true` as gate authority.
+4. **Track in manifest** - The orchestrator records every component and screen in `design/manifest.json`. A packaged designer child builds each one; the orchestrator never writes it. Record **decisions and receipts only** (`status`, `file`, `story`, `capture`, `pinned`, `deprecations`, gate keys). Do **not** author composition-edge arrays or `controls: true` as gate authority.
 5. **Wire controls in the sandbox** - Every component prop must be exposed to the sandbox's controls (Storybook `argType`, or a labeled variant in a `custom` sandbox). Coverage is **verified by catalog capture**, not a stored `controls` flag.
 6. **Organize by layer** - Register each component under the correct sandbox layer (`Tokens`/`Design System`, `Components`, `Molecules`, `Organisms`, `Screens`).
 7. **Respect state levels** - Atoms are stateless (pure render from props). Molecules may be stateful (manage interaction state). Organisms and screens are stateful (manage complex domain/UI state). Follow `docs/state-patterns.md` for framework-specific state idioms.

@@ -100,6 +100,39 @@ export function extractTemplate(markdown) {
 }
 
 /**
+ * One "## " section of docs/BUILD-BRIEF.md, heading line included, from its heading to the next
+ * heading. A line inside a code fence never starts a section, so a fenced example is safe.
+ */
+export function ruleSection(markdown, title) {
+  const heading = `## ${title}`;
+  const lines = markdown.split("\n");
+  let inFence = false;
+  let start = -1;
+  let end = lines.length;
+  for (const [index, line] of lines.entries()) {
+    if (line.startsWith("```")) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence || !line.startsWith("## ")) continue;
+    if (start === -1) {
+      if (line === heading) start = index;
+      continue;
+    }
+    end = index;
+    break;
+  }
+  if (start === -1) fail(`docs/BUILD-BRIEF.md has no "${heading}" section`);
+  return lines.slice(start, end).join("\n").trim();
+}
+
+/** The rules one child gets for one layer: the rules every layer shares, then that layer's own. */
+export function layerRules(markdown, layer) {
+  if (!LAYERS.includes(layer)) fail(`no rules for layer "${layer}"`);
+  return [ruleSection(markdown, "Rules for every layer"), ruleSection(markdown, `Rules for ${layer}`)].join("\n\n");
+}
+
+/**
  * Fill <<NAME>> placeholders in one pass. A placeholder alone on its line with an empty value
  * removes that line. A placeholder with no value is a configuration error. Inserted text is
  * never scanned again, so data that happens to contain "<<X>>" cannot break the fill.
@@ -279,7 +312,13 @@ function contractLines(contract) {
   return [`${head}${off}`, ...overrides];
 }
 
-function stackSection({ platformId, sourceRoot, tools, contracts }) {
+// The primitives scaffold pulled from the component library (scaffold.components[] is a list of names).
+function installedLine(config) {
+  const names = config.scaffold?.components ?? [];
+  return names.length ? `- Installed library primitives: ${names.join(", ")}.` : "- Installed library primitives: none recorded.";
+}
+
+function stackSection({ platformId, sourceRoot, tools, contracts, config }) {
   return [
     `- Platform: ${platformId}. Source root: ${sourceRoot} (the directory that contains src/).`,
     toolLine("Framework", "framework", tools),
@@ -296,6 +335,41 @@ function stackSection({ platformId, sourceRoot, tools, contracts }) {
     "",
     ...contractLines(contracts.style),
     ...contractLines(contracts.component),
+    ...(contracts.component.inForce ? [installedLine(config)] : []),
+  ].join("\n");
+}
+
+// The declared state of a molecule or organism, or the story states of a screen. Empty for an
+// item that declares neither, so the section is removed from its brief.
+function stateSection(entry, statePatterns) {
+  const read = `State patterns for this framework: ${statePatterns}. Read it before you write.`;
+  if (entry.state === null) return "## Declared state\n\nThis item declares no state. It is a pure composition: one default story.";
+  if (entry.state !== undefined) {
+    return [
+      "## Declared state",
+      "",
+      "Keep this state in the component. Each scenario below gets one named story.",
+      "",
+      fencedJson(entry.state),
+      "",
+      read,
+    ].join("\n");
+  }
+  if (Array.isArray(entry.states) && entry.states.length > 0) {
+    return ["## States", "", `One named story for each: ${entry.states.join(", ")}.`, "", read].join("\n");
+  }
+  return "";
+}
+
+// The approved library record, with the wrapper rules that go with it. Empty for hand-built items.
+function librarySection(entry, markdown) {
+  if (!entry.ecosystemLib) return "";
+  return [
+    ruleSection(markdown, "Rules for a library wrapper"),
+    "",
+    "The library record from the build plan:",
+    "",
+    fencedJson(entry.ecosystemLib),
   ].join("\n");
 }
 
@@ -410,15 +484,18 @@ export function buildBrief({ root, platform, layer, name, findings }) {
     style: resolveContract("style", { root, tools }),
     component: resolveContract("component", { root, tools }),
   };
-  const template = extractTemplate(readFileSync(join(PLUGIN_ROOT, "docs/BUILD-BRIEF.md"), "utf8"));
-  const task = fillTemplate(template, {
+  const brief = readFileSync(join(PLUGIN_ROOT, "docs/BUILD-BRIEF.md"), "utf8");
+  const task = fillTemplate(extractTemplate(brief), {
     ITEM_ID: `${layer}/${name}`,
     PLATFORM: platformId,
     ITEM: fencedJson(item),
     FRAMES: framesSection(item, layer, index),
-    STACK: stackSection({ platformId, sourceRoot, tools, contracts }),
+    STACK: stackSection({ platformId, sourceRoot, tools, contracts, config }),
     FILES: filesSection(entry, sourceRoot),
     COMPOSES: composesSection(item, layer, name, config, sourceRoot),
+    STATE: stateSection(entry, join(PLUGIN_ROOT, "docs/state-patterns.md")),
+    LIBRARY: librarySection(entry, brief),
+    RULES: layerRules(brief, layer),
     RENDER: renderSection({ root, platformId, layer, name, config }),
     GATES: gatesSection({ sourceRoot, contracts }),
     PRIOR_FINDINGS: findingsSection(findings === undefined ? undefined : readFindings(findings)),
