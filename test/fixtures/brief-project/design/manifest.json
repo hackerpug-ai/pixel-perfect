@@ -1,0 +1,53 @@
+{
+  "goal": "Library screen fixture for scripts/brief.mjs",
+  "version": "9.0.0",
+  "inventory": {
+    "file": "design/inventory.json",
+    "reference": "design/reference"
+  },
+  "platforms": {
+    "web-desktop": {
+      "root": ".",
+      "phase": "atoms",
+      "tools": {
+        "framework": "vite",
+        "style": "tailwind",
+        "style_docs": "https://tailwindcss.com/docs",
+        "components": "shadcn",
+        "components_docs": "https://ui.shadcn.com/docs",
+        "icons": "lucide-react",
+        "sandbox": "custom",
+        "style_contract": "tailwind-web",
+        "style_contract_source": "builtin",
+        "style_contract_enforcement": "hard-fail",
+        "style_contract_overrides": {},
+        "component_contract": "shadcn",
+        "component_contract_source": "builtin",
+        "component_contract_enforcement": "hard-fail",
+        "component_contract_overrides": {}
+      },
+      "capture": {
+        "command": "npm run sandbox:capture",
+        "medium": "text",
+        "goldens": "design/goldens/web-desktop",
+        "catalog": "sandbox/stories",
+        "staging": "design/.captures/web-desktop"
+      },
+      "pinned": [],
+      "deprecations": {},
+      "atoms": [
+        { "name": "Button", "file": "src/components/Button.tsx", "story": "src/components/Button.stories.tsx", "status": "pending" },
+        { "name": "Input", "file": "src/components/Input.tsx", "story": "src/components/Input.stories.tsx", "status": "verified" },
+        { "name": "Icon", "file": "src/components/Icon.tsx", "story": "src/components/Icon.stories.tsx", "status": "verified" },
+        { "name": "Badge", "file": "src/components/Badge.tsx", "story": "src/components/Badge.stories.tsx", "status": "pending" }
+      ],
+      "molecules": [
+        { "name": "SearchBar", "file": "src/components/SearchBar.tsx", "story": "src/components/SearchBar.stories.tsx", "status": "pending" }
+      ],
+      "organisms": [],
+      "screens": [
+        { "name": "Library", "route": "/library", "file": "src/screens/Library.tsx", "story": "src/screens/Library.stories.tsx", "status": "pending" }
+      ]
+    }
+  }
+}

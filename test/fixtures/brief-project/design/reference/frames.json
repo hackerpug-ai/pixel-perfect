@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "rendered_at": "2026-10-13T13:36:05.786Z",
+  "chrome": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  "sources": [
+    {
+      "ref": "design/source/brief-deck.html",
+      "kind": "html-deck",
+      "hash": "sha256:25c7ca25e3d39ddeb4a836e8561e1f748c1d000679f0f349d41a11f8e57aa386",
+      "slug": "brief-deck",
+      "frame_selector": "auto:.fr",
+      "frames": [
+        "brief-deck/01",
+        "brief-deck/02",
+        "brief-deck/03",
+        "brief-deck/04"
+      ],
+      "inputs": [
+        {
+          "file": "design/source/brief-deck.html",
+          "hash": "sha256:25c7ca25e3d39ddeb4a836e8561e1f748c1d000679f0f349d41a11f8e57aa386"
+        }
+      ],
+      "render_config": {
+        "version": 1,
+        "selector": "auto",
+        "settleMs": 3000,
+        "width": 1440,
+        "mobileWidth": 390,
+        "deviceScaleFactor": 1,
+        "medium": "chrome"
+      },
+      "revision": "sha256:0d9c011747aad20fa491fe15e8b9394c6dcc1b2cb55317dd5175540baf14184e",
+      "status": "rendered"
+    }
+  ],
+  "frames": [
+    {
+      "id": "brief-deck/01",
+      "png": "brief-deck/01.png",
+      "source": "design/source/brief-deck.html",
+      "index": 1,
+      "label": "Library search",
+      "viewport": "720x166",
+      "width": 720,
+      "height": 166,
+      "route": "/library",
+      "state": "default",
+      "hash": "sha256:a85472a0bbc569cdfeb176de166c69dff47a7256a0ccb73546fe2e20ed793ba7"
+    },
+    {
+      "id": "brief-deck/02",
+      "png": "brief-deck/02.png",
+      "source": "design/source/brief-deck.html",
+      "index": 2,
+      "label": "Library results",
+      "viewport": "720x276",
+      "width": 720,
+      "height": 276,
+      "route": "/library",
+      "state": "results",
+      "hash": "sha256:29c40c744577e396b7427d92c3a8ceb053175555995c90f628cda4ff1fef315c"
+    },
+    {
+      "id": "brief-deck/03",
+      "png": "brief-deck/03.png",
+      "source": "design/source/brief-deck.html",
+      "index": 3,
+      "label": "full \u00b7 1440 \u00b7 default",
+      "viewport": "1440x900",
+      "width": 1440,
+      "height": 900,
+      "route": null,
+      "state": "default",
+      "hash": "sha256:47a4ca591e8f1a47a5d03f7b9ce31ab8c8850a7628921b31febbf462bde087ae"
+    },
+    {
+      "id": "brief-deck/04",
+      "png": "brief-deck/04.png",
+      "source": "design/source/brief-deck.html",
+      "index": 4,
+      "label": "full \u00b7 390 \u00b7 default",
+      "viewport": "390x900",
+      "width": 390,
+      "height": 900,
+      "route": null,
+      "state": "default",
+      "hash": "sha256:c9875cbc071938bf8774989bbf5d7b8135612a3cc44caf5f3216963c6bcc791f"
+    }
+  ]
+}

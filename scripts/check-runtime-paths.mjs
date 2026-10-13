@@ -100,6 +100,7 @@ export async function checkRuntimePaths(root = REPOSITORY_ROOT) {
     "docs/component-contracts/README.md",
     "docs/DESIGN-ANALYSIS.md",
     "docs/INVENTORY-CONTRACT.md",
+    "docs/BUILD-BRIEF.md",
     "docs/frontend-design/FRONTEND-DESIGN.md",
   ];
   for (const relativePath of pathBearingFiles) {
