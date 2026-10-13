@@ -76,12 +76,60 @@ The gate (`scripts/verify-styling-contract.mjs`) parses this fenced block and ru
 
 ## How the gate runs (determinism)
 
-The contract's `checks` block is the single source of truth. The BUILD gate executes it via `scripts/verify-styling-contract.mjs <contract-path> <source-root>`:
+The contract's `checks` block is the single source of truth. The gate executes it deterministically. The LLM only formats the report and suggests fixes. The pass/fail decision is never the LLM's.
 
-- exit `0` + JSON report `{"violations":[],"passed":[...]}` → layer proceeds.
-- exit `1` + report listing every violation (file, line, pattern id, rationale) → **layer blocks** until fixed or a per-component override is recorded in the manifest (`tools.style_contract_overrides`).
+The gate has two invocations.
 
-Non-Node targets run the equivalent `grep`/`glob` commands directly (the build command documents the fallback). The LLM only formats the report and suggests fixes — the pass/fail decision is deterministic.
+### Manifest mode
+
+```bash
+node scripts/verify-styling-contract.mjs --manifest <project-root> --platform <id> --kind styling \
+  [--layer atoms|molecules|organisms|screens] [--files <path>...] [--json]
+```
+
+Manifest mode reads `<project-root>/design/manifest.json` and resolves everything from it:
+
+| Concern | Rule |
+|---------|------|
+| Contract | `tools.style_contract` with `tools.style_contract_source`. `builtin` or `manual` loads `docs/styling-contracts/{id}.md` from the plugin. `researched` loads `design/research/styling/{id}.md` from the project. `none` (the literal string) is the only value that means no contract is in force: exit `0`, report `"inForce": false`, and print `GATE DID NOT RUN: ...`. An absent source is always exit `2`, whatever else is recorded. A missing `tools` object is exit `2`. |
+| Enforcement | `tools.style_contract_enforcement` is `hard-fail` (default), `warn` or `off`. It is validated whenever present, even when no contract is in force: any other value exits `2`. `off` exits `0` without scanning, prints `GATE DID NOT RUN: ...`, and reports `"enforcement": "off"`. The scan root and the contract file are still validated under `off`, so a broken configuration exits `2`. `warn` reports violations and exits `0`. |
+| Scan root | `platforms[<id>].root`, relative to the project root. Default `.`. In a monorepo, set it to the app folder (for example `apps/site`). A root that does not exist exits `2`. |
+| Overrides | Each key of `tools.style_contract_overrides` is one exemption, and its value must be a non-empty string reason (otherwise exit `2`, naming the key). A key of exactly `<layer>/<Name>` (for example `atoms/Button`) names one item. A key that contains `/` or a glob character is a glob, used as written and matched against paths relative to the scan root. Any other key is a component name. It must match exactly one item among the platform's `atoms`, `molecules`, `organisms` and `screens`; a name that matches none exits `2`, and a name that matches more than one exits `2` and asks for the `layer/Name` form. The item's manifest `file` is exempted. A name whose item records no file, or whose file lies outside the scan root, also exits `2`. Text mode prints one line per override with its key, form, reason and exempted files. If the overrides exempt every recorded component file, the gate exits `3`. |
+| Coverage | Each built item in the scope must (a) record a `file` and the file must exist, (b) lie under the scan root, and (c) be in scope of at least one check: the check's `glob` matches it and its own `exclude` does not. A file that an override exempts counts as covered. A file that is inside a skipped directory (`node_modules`, `dist`, `build`, and similar) is not scanned and fails (c). An item is **not built yet only when its `status` is `pending` and its recorded file is absent on disk**. Any other item is built: an item with no `status` but a `file` is built, and an item with no `file` that is not pending exits `2`. A missing built file exits `2`. A file that fails (b) or (c) exits `3`, with the message "N component files are outside every check's scope" and the list. Pending items are listed under `coverage.pending` and do not need a file on disk. |
+| Scope | `--layer` limits the coverage set to one layer. A layer with no recorded items exits `3`. `--layer` does not narrow the violation report. `--files` replaces the coverage set with the listed files, and it also limits the violation report to those files. `--files` paths are relative to the project root. `--layer` and `--files` together exit `2`. |
+| No built files | When the scope has no built items, coverage does not apply. The vacuous-scan guard applies instead: if the checks match zero files, the gate exits `3`. |
+| Unrecorded files | Files that some check scopes but that no manifest item records are counted on the summary line and listed in JSON as `unrecordedInScope`. This is not a failure. |
+
+Text mode is the default and prints to stderr. JSON goes to stdout only with `--json`. The first line is the summary: the scan root, the files walked and in scope, the built coverage, the pending items (named when there are five or fewer), and the unrecorded files in scope. Override lines, violations, failures and the vacuous-check `note:` line follow:
+
+```
+verify-styling-contract: scan root apps/site — 4 files walked, 3 in scope, 2 of 3 built component file(s) covered, 2 pending (organisms/Later, screens/Home), 0 unrecorded in scope
+override Badge (name): "legacy raw button" exempts 1 file(s): apps/site/src/components/atoms/Badge.tsx
+✓ shadcn: component contract satisfied (0 violations).
+```
+
+Each entry in the JSON `checks` array reports `scoped` (files the check covered) and `vacuous` (true when it covered zero files). Text mode prints a `note:` line naming vacuous checks. A vacuous check alone does not fail the run. Coverage decides that. Shipped contracts carry alternative globs such as `components/**`, `app/**` and `pages/**`, and some of those match nothing in a given project. A per-check rule would fail those projects.
+
+### Positional mode
+
+```bash
+node scripts/verify-styling-contract.mjs <contract.md> <source-root> [--allow GLOB]... [--json]
+```
+
+The contract and the root are named directly. `--allow` adds raw exclude globs. Positional mode reads no manifest, so it has no coverage rule. It keeps the global vacuous-scan guard. A missing `<source-root>` exits `2`.
+
+### Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Clean. Also: `GATE DID NOT RUN` (source `none`, or enforcement `off`), or enforcement `warn` with violations only. |
+| `1` | Violations found under `hard-fail`. |
+| `2` | Usage, configuration or contract error. Includes a missing scan root, a missing contract file, an unknown enforcement value, an absent contract source, a missing `tools` object, an override with no reason or with an ambiguous name, a built item with no `file`, and a built item's file that is missing or not a regular file. |
+| `3` | Scope failure. A recorded component file lies outside every check's scope; or overrides exempt every recorded component file; or `--layer` names a layer with no items; or no built component files are recorded and the checks matched zero files. |
+
+A run with both violations and a scope failure exits `3`. `warn` does not waive a scope failure.
+
+Non-Node targets run the equivalent `grep`/`glob` commands directly (the build command documents the fallback).
 
 ## Authoring a manual contract
 

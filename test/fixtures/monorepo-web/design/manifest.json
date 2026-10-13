@@ -1,0 +1,29 @@
+{
+  "goal": "Monorepo fixture: the web app lives under apps/site, not at the repo root",
+  "platforms": {
+    "web-desktop": {
+      "root": "apps/site",
+      "phase": "atoms",
+      "tools": {
+        "framework": "react",
+        "style": "tailwind",
+        "style_contract": "tailwind-web",
+        "style_contract_source": "builtin",
+        "style_contract_overrides": {},
+        "components": "shadcn",
+        "component_contract": "shadcn",
+        "component_contract_source": "builtin",
+        "component_contract_overrides": {}
+      },
+      "atoms": [
+        { "name": "Button", "status": "verified", "file": "apps/site/src/components/atoms/Button.tsx" },
+        { "name": "Badge", "status": "verified", "file": "apps/site/src/components/atoms/Badge.tsx" }
+      ],
+      "molecules": [
+        { "name": "Toolbar", "status": "verified", "file": "apps/site/src/components/molecules/Toolbar.tsx" }
+      ],
+      "organisms": [],
+      "screens": []
+    }
+  }
+}
