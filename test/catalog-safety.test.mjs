@@ -246,3 +246,18 @@ test("a capture command that edits design/manifest.json is refused (exit 2)", ()
     removeDirs(dir);
   }
 });
+
+test("a command that ignores PIXEL_PERFECT_CAPTURE_LAYER cannot put another layer into the goldens", () => {
+  const dir = writeCommandProject(
+    scratchProject(),
+    `${STAGE_SCRIPT_HEAD}put("atoms/Thing/default.txt", "Thing\\nx=1\\n");\nput("molecules/Other/default.txt", "Other\\nx=1\\n");\n`,
+  );
+  try {
+    const { code, stderr } = runCli(["--baseline", dir, "--platform", "web-desktop", "--layer", "atoms"]);
+    assert.equal(code, 0, stderr);
+    assert.ok(existsSync(path.join(dir, GOLDENS, "atoms/Thing/default.txt")));
+    assert.equal(existsSync(path.join(dir, GOLDENS, "molecules")), false, "nothing outside the layer may be written");
+  } finally {
+    removeDirs(dir);
+  }
+});
