@@ -206,7 +206,7 @@ test("a manifest component file outside the scan root exits 3", () => {
 test("a manifest component file that does not exist exits 2 and names it", () => {
   const dir = cloneMonorepo();
   editPlatform(dir, (p) => {
-    p.atoms.push({ name: "Ghost", status: "pending", file: "apps/site/src/components/atoms/Ghost.tsx" });
+    p.atoms.push({ name: "Ghost", status: "built", file: "apps/site/src/components/atoms/Ghost.tsx" });
   });
   const r = runManifest(dir, "component");
   assert.equal(r.status, 2, r.stderr);
@@ -254,12 +254,17 @@ test("--files limits violations to the named files and still applies coverage to
 test("a manifest with no recorded component files falls back to the global guard", () => {
   const dir = cloneMonorepo();
   editPlatform(dir, (p) => {
-    for (const layer of ["atoms", "molecules"]) for (const entry of p[layer]) delete entry.file;
+    for (const layer of ["atoms", "molecules"]) {
+      for (const entry of p[layer]) {
+        delete entry.file;
+        entry.status = "pending";
+      }
+    }
   });
   const styling = runManifest(dir, "styling");
   assert.equal(styling.status, 1, styling.stderr);
   assert.equal(styling.report.coverage.applied, false);
-  assert.match(styling.report.coverage.reason, /no component files/);
+  assert.match(styling.report.coverage.reason, /no built component files/);
 
   // A scan root with no component globs at all: the old vacuous guard still fails the run.
   writeProjectFile(dir, "apps/site/src/screens/Home.tsx", CLEAN_SCREEN);
@@ -386,6 +391,7 @@ test("an absent contract source resolves to no contract in force and exits 0", (
   const dir = cloneMonorepo();
   editPlatform(dir, (p) => {
     delete p.tools.component_contract_source;
+    p.tools.components = "none";
   });
   const r = runManifest(dir, "component");
   assert.equal(r.status, 0, r.stderr);
@@ -452,4 +458,132 @@ test("runManifestGate rejects an unknown kind with an error carrying exitCode 2"
     () => gate.runManifestGate({ projectRoot: MONOREPO, platform: "web-desktop", kind: "bogus" }),
     (e) => e.exitCode === 2 && /kind/.test(e.message)
   );
+});
+
+// ---------------------------------------------------------------------------
+// Absent contract source, enforcement typos, and unbuilt items
+// ---------------------------------------------------------------------------
+
+const CLEAN_BADGE = `import { Button } from "@/components/ui/button";
+
+export function StatusBadge({ label }: { label: string }) {
+  return <Button className="px-2" variant="outline" size="sm">{label}</Button>;
+}
+`;
+
+test("an absent style source while a style system is selected exits 2 and names the field", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    delete p.tools.style_contract_source;
+  });
+  const r = runManifest(dir, "styling");
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stderr, /a style system is selected \(tailwind\)/);
+  assert.match(r.stderr, /style_contract_source/);
+});
+
+test("an absent component source while a library is selected exits 2 and names the field", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    delete p.tools.component_contract_source;
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stderr, /a component library is selected \(shadcn\)/);
+  assert.match(r.stderr, /component_contract_source/);
+});
+
+test("an absent source with no selected tool (none or missing) exits 0 with no contract in force", () => {
+  const none = cloneMonorepo();
+  editPlatform(none, (p) => {
+    delete p.tools.component_contract_source;
+    p.tools.components = "none";
+  });
+  const noneRun = runManifest(none, "component");
+  assert.equal(noneRun.status, 0, noneRun.stderr);
+  assert.equal(noneRun.report.inForce, false);
+
+  const missing = cloneMonorepo();
+  editPlatform(missing, (p) => {
+    delete p.tools.component_contract_source;
+    delete p.tools.components;
+  });
+  const missingRun = runManifest(missing, "component");
+  assert.equal(missingRun.status, 0, missingRun.stderr);
+  assert.equal(missingRun.report.inForce, false);
+});
+
+test("an explicit source of none exits 0 even when a library is selected", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.tools.component_contract_source = "none";
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(r.report.inForce, false);
+});
+
+test("an enforcement typo exits 2 even when the contract is skipped", () => {
+  const explicitNone = cloneMonorepo();
+  editPlatform(explicitNone, (p) => {
+    p.tools.component_contract_source = "none";
+    p.tools.component_contract_enforcement = "hardfail";
+  });
+  const a = runManifest(explicitNone, "component");
+  assert.equal(a.status, 2, a.stderr);
+  assert.match(a.stderr, /enforcement/);
+
+  const absentTool = cloneMonorepo();
+  editPlatform(absentTool, (p) => {
+    delete p.tools.component_contract_source;
+    p.tools.components = "none";
+    p.tools.component_contract_enforcement = "hardfail";
+  });
+  const b = runManifest(absentTool, "component");
+  assert.equal(b.status, 2, b.stderr);
+  assert.match(b.stderr, /enforcement/);
+});
+
+test("pending items are left out of coverage and listed; a whole-platform run still passes", () => {
+  const dir = cloneMonorepo();
+  // Make the built components clean so the run has no violations of its own.
+  writeProjectFile(dir, "apps/site/src/components/atoms/Badge.tsx", CLEAN_BADGE);
+  editPlatform(dir, (p) => {
+    p.organisms.push({ name: "Later", status: "pending" });
+    p.screens.push({ name: "Home", status: "pending", file: "apps/site/src/screens/Home.tsx" });
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(r.report.coverage.required, 3, "only the built components are required");
+  assert.equal(r.report.coverage.failures.length, 0);
+  assert.deepEqual(
+    r.report.coverage.pending.map((p) => [p.name, p.layer, p.file]),
+    [
+      ["Later", "organisms", null],
+      ["Home", "screens", "apps/site/src/screens/Home.tsx"],
+    ]
+  );
+});
+
+test("an item with status built or verified and no file exits 2 and names the item", () => {
+  for (const status of ["built", "verified"]) {
+    const dir = cloneMonorepo();
+    editPlatform(dir, (p) => {
+      p.molecules.push({ name: "Orphan", status });
+    });
+    const r = runManifest(dir, "component");
+    assert.equal(r.status, 2, `${status}: ${r.stderr}`);
+    assert.match(r.stderr, /Orphan/, `${status}: names the item`);
+    assert.match(r.stderr, /records no file/, `${status}: says why`);
+  }
+});
+
+test("--files still checks exactly the named files, whatever their status", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.screens.push({ name: "Home", status: "pending", file: "apps/site/src/screens/Home.tsx" });
+  });
+  const r = runManifest(dir, "component", ["--files", "apps/site/src/screens/Home.tsx"]);
+  assert.equal(r.status, 2, "a named file that does not exist is exit 2 even when pending");
+  assert.match(r.stderr, /Home\.tsx/);
 });

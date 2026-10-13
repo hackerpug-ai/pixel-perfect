@@ -105,7 +105,7 @@ What differs for component contracts:
 | Manifest fields | `tools.component_contract`, `tools.component_contract_source`, `tools.component_contract_enforcement`, `tools.component_contract_overrides` |
 | Built-in contract | `docs/component-contracts/{id}.md` in the plugin |
 | Researched contract | `design/research/libraries/{id}.md` in the project |
-| No gate | `component_contract_source` of `none` or absent: exit `0`, report `"inForce": false`. The gate does not run. |
+| No gate | `component_contract_source` of `none`: exit `0`, report `"inForce": false`. An absent source means the same only when `tools.components` is absent or `none`. When a library is selected and the source is absent, the gate exits `2`. |
 
 Exit codes:
 

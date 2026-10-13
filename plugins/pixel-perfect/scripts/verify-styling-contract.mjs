@@ -337,27 +337,53 @@ const GLOB_CHARS = /[*?[\]{}]/;
 
 // Per kind: the manifest field prefix and where each contract source lives.
 // builtin and manual contracts ship in the plugin; researched ones are cached per project.
+// toolField names the tool that selects the contract's family; toolLabel names it in messages.
 const KINDS = {
   styling: {
     prefix: "style_contract",
+    toolField: "style",
+    toolLabel: "style system",
     builtinDir: "styling-contracts",
     researchedDir: "design/research/styling",
   },
   component: {
     prefix: "component_contract",
+    toolField: "components",
+    toolLabel: "component library",
     builtinDir: "component-contracts",
     researchedDir: "design/research/libraries",
   },
 };
 
+// A tool value selects a family when it is set and is not "none".
+const isSelected = (value) => value !== undefined && value !== null && value !== "" && value !== "none";
+
 // Resolves the contract for a kind from the platform's tools block.
-// source absent or "none" means no contract in force; the gate then does nothing.
+// - source "none": no contract in force (explicit opt-out).
+// - source absent: no contract in force only when the matching tool is unselected
+//   (absent, "none"). A selected tool with no recorded source is an error, so deleting
+//   one key cannot switch the gate off.
+// enforcement is validated whenever it is present, even when no contract is in force.
 export function resolveContract(projectRoot, kind, tools) {
-  const { prefix, builtinDir, researchedDir } = KINDS[kind];
+  const { prefix, toolField, toolLabel, builtinDir, researchedDir } = KINDS[kind];
   const id = tools[prefix] ?? null;
   const source = tools[`${prefix}_source`] ?? null;
-  const enforcement = tools[`${prefix}_enforcement`] ?? "hard-fail";
-  if (source === null || source === "none") {
+  const rawEnforcement = tools[`${prefix}_enforcement`];
+  if (rawEnforcement !== undefined && !ENFORCEMENT.includes(rawEnforcement)) {
+    throw new GateError(`tools.${prefix}_enforcement must be hard-fail, warn or off (got ${JSON.stringify(rawEnforcement)})`);
+  }
+  const enforcement = rawEnforcement ?? "hard-fail";
+  if (source === "none") {
+    return { id, source, enforcement, inForce: false, path: null };
+  }
+  if (source === null) {
+    const selected = tools[toolField];
+    if (isSelected(selected)) {
+      throw new GateError(
+        `a ${toolLabel} is selected (${selected}) but no ${kind} contract is recorded; ` +
+        `record one or set tools.${prefix}_source to "none"`
+      );
+    }
     return { id, source, enforcement, inForce: false, path: null };
   }
   if (!["builtin", "researched", "manual"].includes(source)) {
@@ -365,9 +391,6 @@ export function resolveContract(projectRoot, kind, tools) {
   }
   if (typeof id !== "string" || !CONTRACT_ID.test(id)) {
     throw new GateError(`tools.${prefix} must name a contract id (got ${JSON.stringify(id)})`);
-  }
-  if (!ENFORCEMENT.includes(enforcement)) {
-    throw new GateError(`tools.${prefix}_enforcement must be hard-fail, warn or off (got ${JSON.stringify(enforcement)})`);
   }
   const path = source === "researched"
     ? join(projectRoot, researchedDir, `${id}.md`)
@@ -382,7 +405,8 @@ function platformEntries(platformCfg) {
     const list = Array.isArray(platformCfg[layer]) ? platformCfg[layer] : [];
     for (const entry of list) {
       const file = typeof entry?.file === "string" && entry.file.length > 0 ? entry.file : null;
-      entries.push({ layer, name: entry?.name ?? null, file });
+      const status = typeof entry?.status === "string" ? entry.status : null;
+      entries.push({ layer, name: entry?.name ?? null, status, file });
     }
   }
   return entries;
@@ -499,13 +523,30 @@ export function runManifestGate({ projectRoot, platform, kind, layer = null, fil
   const entries = platformEntries(cfg);
   const overrides = resolveOverrides(tools[`${prefix}_overrides`], entries, root, scanRoot, prefix);
 
-  // Coverage set: exactly --files when given, otherwise the scope's recorded component files.
+  // Coverage set: exactly --files when given. Otherwise the built items of the scope.
+  // An item with status pending (or no status) is not built yet: it is listed under
+  // coverage.pending and its file is not required. Any other status must record a file.
   const scopeLabel = files !== null ? "--files" : (layer ?? "all layers");
   const inScopeEntries = entries.filter((e) => layer === null || e.layer === layer);
-  const noFile = files !== null ? 0 : inScopeEntries.filter((e) => e.file === null).length;
+  const pending = [];
+  const built = [];
+  if (files === null) {
+    for (const e of inScopeEntries) {
+      if (e.status === null || e.status === "pending") {
+        pending.push({ file: e.file, layer: e.layer, name: e.name, status: e.status ?? "pending" });
+      } else if (e.file === null) {
+        throw new GateError(
+          `manifest item "${e.name ?? "(unnamed)"}" (${e.layer}, status "${e.status}") records no file; ` +
+          `record its file, or set its status to "pending" until it is built`
+        );
+      } else {
+        built.push({ file: e.file, layer: e.layer, name: e.name });
+      }
+    }
+  }
   const targets = files !== null
     ? files.map((f) => ({ file: relative(root, resolve(root, f)), layer: null, name: null }))
-    : inScopeEntries.filter((e) => e.file !== null).map((e) => ({ file: e.file, layer: e.layer, name: e.name }));
+    : built;
 
   const missing = targets.filter((t) => !isFile(resolve(root, t.file))).map((t) => t.file);
   if (missing.length > 0) {
@@ -545,14 +586,11 @@ export function runManifestGate({ projectRoot, platform, kind, layer = null, fil
   const coverageApplied = targets.length > 0;
   let vacuous = false;
   if (!coverageApplied) {
-    warnings.push(`no component files are recorded for ${scopeLabel}: applying the global vacuous-scan guard only`);
+    warnings.push(`no built component files are recorded for ${scopeLabel}: applying the global vacuous-scan guard only`);
     if (checks.length > 0 && scoped.size === 0) {
       vacuous = true;
       warnings.push(VACUOUS_WARNING(allFiles.length, scanRoot));
     }
-  }
-  if (noFile > 0) {
-    warnings.push(`${noFile} manifest component entr${noFile === 1 ? "y" : "ies"} for ${scopeLabel} record no file and are not checked`);
   }
 
   let exitCode = 0;
@@ -584,11 +622,12 @@ export function runManifestGate({ projectRoot, platform, kind, layer = null, fil
     coverage: {
       applied: coverageApplied,
       scope: scopeLabel,
-      reason: coverageApplied ? null : `the manifest records no component files for ${scopeLabel}`,
+      reason: coverageApplied ? null : `the manifest records no built component files for ${scopeLabel}`,
       required: targets.length,
       covered: covered.length,
       files: coverage,
       failures,
+      pending,
     },
     warnings,
     message,
