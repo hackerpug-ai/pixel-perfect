@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
@@ -349,4 +349,149 @@ test("assimilate asks intent first, reports before persisting, and runs the shar
   assert.ok(at("## Phase 3: REPORT") < at("batch: A1"), "the report is written before the persist question");
   const build = readFileSync(path.join(ROOT, "plugins/pixel-perfect/workflows/build.md"), "utf8");
   assert.ok(build.includes("docs/DESIGN-ANALYSIS.md"), "build Phase 4a runs the shared analysis");
+});
+
+// --- Packaged agents: the plugin starts only the designer it ships ---
+
+const PACKAGED_SECTION = "## Packaged agents";
+const BINARY_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".gif", ".ico", ".woff", ".woff2"]);
+
+function listFiles(directory) {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const full = path.join(directory, entry.name);
+    return entry.isDirectory() ? listFiles(full) : [full];
+  });
+}
+
+test("frontend-designer is named under the plugin only in the wireframe legacy-value note", () => {
+  const hits = listFiles(PLUGIN)
+    .filter((file) => !BINARY_EXTENSIONS.has(path.extname(file)))
+    .map((file) => [path.relative(PLUGIN, file), readFileSync(file, "utf8").split("frontend-designer").length - 1])
+    .filter(([, count]) => count > 0);
+  assert.deepEqual(hits, [["workflows/wireframe.md", 1]]);
+});
+
+function packagedSection() {
+  const contract = readPlugin("workflows/RUNTIME-CONTRACT.md");
+  const start = contract.indexOf(PACKAGED_SECTION);
+  assert.ok(start >= 0, `RUNTIME-CONTRACT.md must contain "${PACKAGED_SECTION}"`);
+  const next = contract.indexOf("\n## ", start + PACKAGED_SECTION.length);
+  return contract.slice(start, next < 0 ? undefined : next);
+}
+
+// Each table row as [first cell, second cell]; indented rows inside list items count too.
+function tableRows(section) {
+  return section
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith("|"))
+    .map((line) => line.split("|").slice(1, -1).map((cell) => cell.trim()));
+}
+
+test("the packaged-agent table keeps a row for every spawning tool, and each row names its agent type", () => {
+  const section = packagedSection();
+  const rows = tableRows(section);
+  const typeFor = (key) => {
+    const cells = rows.find((row) => row[0].includes(key));
+    assert.ok(cells, `the packaged-agent table lost its row for ${key}`);
+    return cells[1];
+  };
+  assert.match(typeFor("`Agent`"), /pixel-perfect:<agent>/);
+  assert.match(typeFor("`Agent`"), /leave the type out/);
+  assert.match(typeFor("`spawn_subagent`"), /pixel-perfect:<agent>/);
+  assert.match(typeFor("`spawn_subagent`"), /leave `subagent_type` out/);
+  assert.match(typeFor("`spawn_subagent`"), /`background: false`/);
+  assert.match(typeFor("`spawn_agent`"), /`default`/);
+  assert.match(typeFor("`spawn_agent`"), /fork_turns: "none"/);
+  assert.match(typeFor("`task`"), /`general`/);
+  assert.match(typeFor("none of these"), /No child/);
+  assert.match(typeFor("none of these"), /Read the brief file yourself/);
+  assert.match(section, /Set no model/);
+  assert.match(section, /pixel-perfect:designer/);
+});
+
+test("the exact-name rule is scoped to pixel-perfect agents and exempts the built-in generic types", () => {
+  const section = packagedSection();
+  assert.match(section, /Only ever set a type that appears in your tool's list, character for character\./);
+  assert.match(section, /This applies to `pixel-perfect:<agent>`\. `default` and `general` are the tools' built-in generic values\. Use them as written\./);
+});
+
+test("the route table reports three routes, and only a pixel-perfect:designer type counts as registered", () => {
+  const rows = tableRows(packagedSection());
+  const route = (text) => {
+    const cells = rows.find((row) => row[1]?.includes(text));
+    assert.ok(cells, `the route table lost its row for "${text}"`);
+    return cells[0];
+  };
+  assert.match(route("(registered)"), /exactly `pixel-perfect:designer`/);
+  assert.match(route("(in brief)"), /no type/);
+  assert.match(route("(in brief)"), /`default`/);
+  assert.match(route("(in brief)"), /`general`/);
+  assert.match(route("(inline)"), /No child/);
+});
+
+test("the runtime contract states the step, the failure rule, and the brief path", () => {
+  const section = packagedSection();
+  assert.match(section, /`<project-root>` is the directory that holds `design\/manifest\.json`/);
+  assert.match(section, /design\/\.briefs\/<slug>\.task\.md/);
+  assert.match(section, /lowercase letters, digits and hyphens/);
+  assert.match(section, /must name every file the child may write and the result it must return/);
+  assert.match(section, /If the `brief\.mjs` command exits non-zero, stop and report its error\./);
+  assert.match(section, /Never write the brief by hand/);
+  assert.match(section, /without the printed line/);
+  assert.match(section, /If the spawn call itself fails, report the error/);
+  assert.match(section, /then start the child again with the same brief command/);
+  assert.match(section, /`background: false` so the call waits for the result \(it defaults to true\)/);
+});
+
+test("the three route strings are defined in the runtime contract and only they name the design engine", () => {
+  const contract = readPlugin("workflows/RUNTIME-CONTRACT.md");
+  const routes = ["packaged designer (registered)", "packaged designer (in brief)", "packaged designer (inline)"];
+  for (const route of routes) assert.ok(contract.includes(`design engine: ${route}`), `contract must define "${route}"`);
+  for (const file of ["workflows/status.md", "docs/DESIGN-CONTRACT.md"]) {
+    const text = readPlugin(file);
+    const named = [...text.matchAll(/design engine:\s*([^`\n]+)/g)].map((match) => match[1].trim());
+    assert.ok(named.length > 0, `${file} must report the design engine`);
+    for (const value of named) {
+      assert.match(value, /^packaged designer \((registered|in brief|inline)\)/, `${file} names an unknown engine: "${value}"`);
+    }
+  }
+});
+
+test("no shipped workflow or doc keeps the retired design wording (build.md is exempt until its rewrite)", () => {
+  const forbidden = /strongest available|bundled (design )?contract|if the harness exposes|general-purpose (agent|subagent|child)/i;
+  const hits = [];
+  for (const dir of ["workflows", "docs"]) {
+    for (const file of readdirSync(path.join(PLUGIN, dir))) {
+      if (!file.endsWith(".md") || (dir === "workflows" && file === "build.md")) continue;
+      readFileSync(path.join(PLUGIN, dir, file), "utf8")
+        .split("\n")
+        .forEach((line, index) => {
+          if (forbidden.test(line)) hits.push(`${dir}/${file}:${index + 1}`);
+        });
+    }
+  }
+  assert.deepEqual(hits, []);
+});
+
+test("each design call site names its slug and what the child returns to the workflow", () => {
+  const sites = {
+    "workflows/refine.md": ["`refine-<component>`", "`refine-theme`", "may write", "returns"],
+    "docs/REFINEMENT-EXECUTION.md": ["`refine-<component>`", "`refresh-<screen>`", "may write", "returns"],
+    "workflows/verify.md": ["`aesthetic-review`", "change nothing", "returns"],
+    "workflows/wireframe.md": ["`wireframe-<screen>`", "`design/wireframes/{screen}.md`", "may write", "returns"],
+  };
+  for (const [file, needles] of Object.entries(sites)) {
+    const text = readPlugin(file);
+    for (const needle of needles) assert.ok(text.includes(needle), `${file} must contain ${needle}`);
+  }
+  assert.ok(readPlugin("workflows/scaffold.md").includes("`theme`"), "scaffold.md must name the theme slug");
+  assert.ok(readPlugin("docs/DESIGN-ANALYSIS.md").includes("`inventory-read`"), "DESIGN-ANALYSIS.md must name the inventory slug");
+});
+
+test("wireframe states the no-spawning-tool route as its built-in generator, recorded as engine builtin", () => {
+  const text = readPlugin("workflows/wireframe.md");
+  assert.match(text, /no spawning tool/);
+  assert.match(text, /built-in generator \(Step 2B\)/);
+  assert.match(text, /engine `builtin`/);
 });

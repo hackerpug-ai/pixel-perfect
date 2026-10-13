@@ -15,7 +15,8 @@ Never stub product logic, invent render or test evidence, substitute placeholder
 - `USER_CHOICE(batch)` means present a batch of related decisions through the harness's structured input mechanism and wait for the answer. A workflow never prints a decision as prose and never ends a turn on analysis. See "User choice protocol" below — it binds every workflow and every adapter.
 - `TASK_CREATE`, `TASK_UPDATE`, `TASK_LIST`, and `TASK_RESET` mean use the harness's transient planning surface. Preserve the workflow's dependencies and statuses; do not write a second durable state file.
 - `LOAD_SKILL(name, input)` means load the bundled skill from this plugin and pass the stated input.
-- `DESIGN_EXECUTE(brief)` means follow the design execution rule below.
+- `SUBAGENT(agent, brief command)` means start one packaged child agent with a brief. See "Packaged agents".
+- `DESIGN_EXECUTE(brief)` means always the packaged designer. Write the task brief to a file, then run `SUBAGENT(designer, brief.mjs wrap <project-root> --slug <short-name> <brief-file>)`. During `pixel-perfect:build`, one component or screen uses `brief.mjs build` in place of `wrap`. See "Packaged agents".
 
 ## Turn shape
 
@@ -77,11 +78,44 @@ batch: B3 — where it runs and what it is built on
 
 **Every interactive workflow declares its batches up front.** A `## How this workflow asks` section near the top lists every batch in a table — id, phase, the decisions it carries, and when it fires — followed by the worst-case and common-case call counts. This is what makes the round-trip cost of a workflow visible and reviewable rather than emergent. A workflow whose table shows more calls than it can justify is a workflow to re-batch.
 
-**Degradation.** If the harness exposes no structured input, ask the batch as a numbered plain-text list as the last thing in the turn, and wait. Never assume an answer to a decision that changes product behavior.
+**Degradation.** If the harness has no structured input, ask the batch as a numbered plain-text list as the last thing in the turn, and wait. Never assume an answer to a decision that changes product behavior.
 
-## Design execution
+## Packaged agents
 
-Always load `docs/DESIGN-CONTRACT.md` for design authoring or design review. If the harness exposes the named `frontend-designer` agent, dispatch that agent with the complete contract and task brief. If it is unavailable, the primary agent executes the same contract directly. Do not substitute another design subagent, weaken the contract, or skip deterministic gates.
+The plugin ships its own agents under `agents/`. Every child agent a workflow starts is one of them. Today there is one: `designer` (`agents/designer.md`). Harnesses that load plugin agents register it as `pixel-perfect:designer`. A workflow never starts an agent the plugin does not ship. That includes a client agent with a similar name and any other name from the harness's agent list.
+
+`SUBAGENT(agent, brief command)` means:
+
+1. **Write the assignment.** Run the `brief.mjs` command the workflow states. `<project-root>` is the directory that holds `design/manifest.json`.
+   - `build` (one component or screen during `pixel-perfect:build`): `node <plugin-root>/scripts/brief.mjs build <project-root> --platform <id> --layer <layer> --name <Name>`. The build workflow supplies `--platform`, `--layer`, and `--name`.
+   - `wrap` (every other design brief): write the task brief to `<project-root>/design/.briefs/<slug>.task.md`, or pipe it on stdin with `-`. Then run `node <plugin-root>/scripts/brief.mjs wrap <project-root> --slug <slug> <task-brief-file | ->`. The slug is lowercase letters, digits and hyphens. Use one slug per dispatch, named for the work: for example `inventory-read`, `theme`, `wireframe-<screen>`, or `refine-<component>`. The task brief must name every file the child may write and the result it must return.
+
+   The command writes one file that holds the packaged agent's full prompt, the design contract, and the task. It prints one line: the prompt for the child. Use that line unchanged as the child's whole prompt. Do not paraphrase it, add to it, or paste the brief into it.
+
+   **Failure rule.** If the `brief.mjs` command exits non-zero, stop and report its error. Never write the brief by hand, and never start a child without the printed line. If the spawn call itself fails, report the error. Do not switch to the inline row.
+2. **Start one child.** Use the agent-spawning tool you have. Set the agent type from this table. Set no model. The child runs on the session's model.
+
+   | Tool you have | Agent type |
+   |---------------|------------|
+   | `Agent` or `Task` | `pixel-perfect:<agent>` if your tool's list of agent types contains exactly that name. Otherwise leave the type out. |
+   | `spawn_subagent` | `pixel-perfect:<agent>` if the tool's listed types contain exactly that name. Otherwise leave `subagent_type` out. Set `background: false` so the call waits for the result (it defaults to true). |
+   | `spawn_agent` | `default`, with `fork_turns: "none"` (older builds: `fork_context: false`) so the child starts with a fresh context. This instruction is the explicit request for delegation. |
+   | `task` | `general` |
+   | none of these | No child. Read the brief file yourself and follow it, one item at a time, re-reading it for each item. |
+
+   Only ever set a type that appears in your tool's list, character for character. Some harnesses replace a name that is not in the list with a different listed agent. So naming an unlisted agent starts the wrong one. This applies to `pixel-perfect:<agent>`. `default` and `general` are the tools' built-in generic values. Use them as written.
+
+3. **Wait for the child.** Use its result. The child cannot ask the user and does not start other agents. If it returns `status: blocked`, resolve the blocker, or put it to the user through `USER_CHOICE`, then start the child again with the same brief command. Do not finish its work from memory.
+
+Whichever row applies, the child reads the same packaged prompt. It reads that prompt as its system prompt where the harness registered the agent, and as the top of the brief file everywhere. Report the route once per run:
+
+| Route | Report as |
+|-------|-----------|
+| Started with the type exactly `pixel-perfect:designer` | `design engine: packaged designer (registered)` |
+| Started with no type, `default`, or `general`, so the brief file carries the prompt | `design engine: packaged designer (in brief)` |
+| No child, so the orchestrator followed the brief file itself | `design engine: packaged designer (inline)` |
+
+Never weaken the design contract or skip a deterministic gate. Do not start another design agent in the designer's place. Always load `docs/DESIGN-CONTRACT.md` for design authoring or design review.
 
 ## Harness mappings
 
@@ -94,8 +128,8 @@ Always load `docs/DESIGN-CONTRACT.md` for design authoring or design review. If 
 
 ### Grok
 
-- Invocation: `/pixel-perfect:<name>` through Claude Code plugin compatibility.
-- User choices and task tracking: Grok's native mechanisms, one call per declared batch as above. Never a printed question followed by an ended turn.
+- Invocation: `/<name>`. Grok lists an enabled skill under its bare name, so use the bare name. Use `/pixel-perfect:<name>` only when the bare name collides with a built-in command or another skill. Both forms run.
+- User choices and task tracking: Grok's native mechanisms, one call per declared batch as above. Never a printed question followed by an ended turn. Grok stops waiting for an answer after 30 minutes by default; `INSTALL.md` shows how to turn that timeout off. A return of "User declined to answer the questions" with no text the user typed is that timeout, not an answer. At a gate, never proceed on best judgment. End the turn with the batch as a numbered plain-text list, the last thing in the turn, and wait for the reply.
 - Plugin paths: resolve from the enabled Claude-compatible plugin root.
 
 ### Codex

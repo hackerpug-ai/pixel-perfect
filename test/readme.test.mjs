@@ -113,6 +113,30 @@ test("README.md lists exactly the shipped /pixel-perfect: commands", () => {
   assert.ok(!missing.length && !extra.length, `README.md commands differ from capabilities.json. missing: [${missing}] extra: [${extra}]`);
 });
 
+test("README.md pairs Grok with the bare /init form, not the qualified form", () => {
+  const rows = stripFences(read("README.md"))
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith("|"));
+  const grok = rows.find((line) => line.split("|")[1]?.includes("Grok"));
+  assert.ok(grok, "README.md has no invocation-table row for Grok");
+  assert.match(grok, /`\/init`/);
+  assert.doesNotMatch(grok, /\/pixel-perfect:/);
+});
+
+test("INSTALL.md's Grok section tells the user the bare command, and the qualified form only in the slash-command note", () => {
+  const text = read("INSTALL.md");
+  const start = text.indexOf("## Grok");
+  const end = text.indexOf('<a name="opencode"></a>', start);
+  assert.ok(start >= 0 && end > start, "INSTALL.md has no bounded Grok section");
+  const section = text.slice(start, end);
+  assert.match(section, /Next step:.*run `\/init`/);
+  const qualified = section.split("\n").filter((line) => line.includes("/pixel-perfect:"));
+  assert.equal(qualified.length, 1, `Grok section must mention the qualified form in one note only; found ${qualified.length}`);
+  assert.match(qualified[0], /Slash commands:/);
+  assert.match(qualified[0], /Both forms run/);
+});
+
 test("README.md and INSTALL.md follow the voice rules", () => {
   const rules = [
     [/Pixel Perfect/g, "title-case name (write pixel-perfect)"],

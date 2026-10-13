@@ -62,9 +62,9 @@ Use `docs/REFINEMENT-EXECUTION.md` as the shared execution path. The steps below
 
 1. Load the component file and its story
 2. Load adapter context and theme
-3. Load `docs/DESIGN-CONTRACT.md` and run `DESIGN_EXECUTE` with the current surface plus the feedback
-4. Regenerate the component with the resulting decisions applied
-5. Regenerate the story — ensure all props remain wired to `argTypes` controls
+3. Load `docs/DESIGN-CONTRACT.md` and run `DESIGN_EXECUTE` with the current surface plus the feedback. Slug: `refine-<component>`. The task brief names the component file and its story as the only files the child may write. It asks the child for one JSON object that returns the files it changed and any control it could not wire. The child does steps 4 and 5 below. Refine then runs step 6 on exactly the files that result lists, and it reports every control the child could not wire.
+4. Regenerate the component with the resulting decisions applied (the child, per step 3)
+5. Regenerate the story — ensure all props remain wired to `argTypes` controls (the child, per step 3)
 6. Run verification for the affected component (compile, render, controls check)
 7. **Re-capture** so drift and cascade are measured, not guessed:
    ```
@@ -204,7 +204,7 @@ pixel-perfect:refine --vibe "More industrial, less corporate. Think construction
 1. Update the vibe in manifest (top-level — shared across all platforms)
 2. For the selected platform (or prompt if multiple): regenerate theme file with new vibe interpretation
 3. Regenerate Design Token stories (Colors, Typography, Spacing) for the selected platform
-4. Run `DESIGN_EXECUTE` with the bundled design contract to re-derive aesthetic decisions
+4. Run `DESIGN_EXECUTE` with `docs/DESIGN-CONTRACT.md` to re-derive aesthetic decisions. Slug: `refine-theme`. The task brief names the theme file as the only file the child may write. The child returns the re-derived decisions as one JSON object, and step 5 uses that object to decide which components may look different.
 5. List components on the selected platform that may look different with the new theme
 6. Prompt: regenerate all components with new theme, or one at a time?
 7. If multiple platforms exist, ask: propagate vibe to other platforms too?

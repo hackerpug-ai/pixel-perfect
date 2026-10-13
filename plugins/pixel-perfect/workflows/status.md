@@ -28,7 +28,7 @@ Reads `design/manifest.json` **and** runs catalog capture when goldens exist:
    - entities with missing goldens
    - deprecated entities that still have live dependents (`--reach`)
    - **dead inventory** — entities that reach no live root (screen)
-5. **Design engine** - Whether `frontend-designer` or the bundled design contract will execute aesthetic work
+5. **Design engine** - The route the next design run would take: packaged designer (registered), (in brief), or (inline). See "Design Engine Detection"
 6. **Design artifacts** - Whether wireframes (`design/wireframes/` + `wireframed: true`) or a design inventory (`design/inventory.json` + the manifest's `inventory` receipt — frame count, per-layer counts, confirmed date, and whether any reference's hash has drifted since) seed this project
 7. **Next action** - What to do next based on platform states
 
@@ -127,7 +127,7 @@ Platforms:
     Icons:      Lucide React Native (adapter: n/a)
     Sandbox:    Custom            (adapter: custom-sandbox.md)
 
-design engine:   frontend-designer (bundled contract loaded)
+design engine:   packaged designer (registered) — the next design run would use it
 wireframes:     design/wireframes/ (3 screens) — structural targets
 inventory:      design/inventory.json — 9 frames · 4 atoms · 2 molecules · 1 organism · 2 screens (confirmed 2026-08-30)
 
@@ -153,7 +153,13 @@ Next: pixel-perfect:init
 
 ## Design Engine Detection
 
-The status command checks whether the named `frontend-designer` agent is available at runtime. If it is, report `design engine: frontend-designer`. Otherwise report `design engine: bundled contract`. Aesthetic gates remain active in both cases because the primary agent executes `docs/DESIGN-CONTRACT.md` directly when delegation is unavailable.
+Status starts no child, so it never observes a route. It reports the route the next design run would take, using the table in `workflows/RUNTIME-CONTRACT.md`, section "Packaged agents":
+
+1. The spawning tool lists `pixel-perfect:designer` exactly as written. Report `design engine: packaged designer (registered)`.
+2. A spawning tool exists, but the list does not contain that name. Report `design engine: packaged designer (in brief)`.
+3. No spawning tool exists. Report `design engine: packaged designer (inline)`.
+
+Say "would use" in the digest, never "used". Aesthetic gates stay active on every route. On the inline route, the orchestrator reads the brief file and follows it itself.
 
 ## Workflow Integration
 

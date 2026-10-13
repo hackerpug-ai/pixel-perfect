@@ -57,13 +57,15 @@ One call. Generation follows the answer; nothing is written before it.
 
 ### Step 0: Detect engine
 
-Check whether the **`frontend-designer`** agent is available.
-- **Available** → delegate generation to it (Step 2A) with a strict ASCII override brief.
-- **Not available** → run the **built-in inline generator** (Step 2B).
+Choose the engine from the spawning tool you have, using the table in `workflows/RUNTIME-CONTRACT.md`, section "Packaged agents".
+- **A spawning tool exists** → engine `designer`. Delegate generation to the packaged designer (Step 2A) with a strict ASCII override brief.
+- **Otherwise** → engine `builtin`.
+
+When there is no spawning tool, wireframe uses its built-in generator (Step 2B). This is wireframe's form of the inline route in `workflows/RUNTIME-CONTRACT.md`, and it is recorded as engine `builtin`.
 
 Name the engine in the opening digest — one clause, not a section. No renderer is needed; ASCII is plain text. Never silently substitute a stub.
 
-> The `frontend-designer` agent normally produces high-fidelity UI. For wireframes its brief must **force low-fidelity ASCII** (Step 2A). The inline generator (Step 2B) applies the same bundled contract whenever the agent is absent **or** returns non-ASCII output.
+> The packaged designer normally produces high-fidelity UI. For wireframes its brief must **force low-fidelity ASCII** (Step 2A). The inline generator (Step 2B) applies the same ASCII wireframe contract whenever no child can start **or** the child returns non-ASCII output.
 
 ### Step 1: Acquire the target + derive the screen list
 
@@ -72,7 +74,7 @@ Name the engine in the opening digest — one clause, not a section. No renderer
 3. **Confirm the screen list with the user** before generating (as `init` and `build` do). Digest it as one line per screen — its name and its purpose — and fire `W1` in the same turn:
 
    ```
-   Screens from PRD.md — engine: frontend-designer
+   Screens from PRD.md — engine: designer
 
      TodayFeed   job list for today, status, quick actions
      JobDetail   single job, actions, history
@@ -94,7 +96,7 @@ Name the engine in the opening digest — one clause, not a section. No renderer
 
    If a source genuinely yields no screens, **stop and report** — never fabricate.
 
-### Step 2A: Generate via `frontend-designer` (when available)
+### Step 2A: Generate via the packaged designer (engine `designer`)
 
 For **each screen, sequentially**, call the design primitive with a low-fidelity override brief:
 
@@ -103,7 +105,7 @@ DESIGN_EXECUTE(<ASCII WIREFRAME CONTRACT below>
       + screen excerpt + width + desktop/mobile flag)
 ```
 
-The brief MUST open with the override (the agent defaults to high-fi React — this turns it off):
+The brief MUST open with the override (the designer defaults to high-fi React — this turns it off):
 
 ```
 LOW-FIDELITY ASCII WIREFRAME ONLY.
@@ -115,9 +117,11 @@ LOW-FIDELITY ASCII WIREFRAME ONLY.
 - Produce the exact file shape in the ASCII WIREFRAME CONTRACT.
 ```
 
-**Validate** each returned file: it must contain box-drawing characters and **must not** contain `<…>` tags or CSS braces. If it drifted into HTML/React, discard it and generate that screen via Step 2B. Report any screen that fell back.
+**Slug and result, per screen.** Slug: `wireframe-<screen>`, one per screen, so each screen gets its own brief. The task brief names `design/wireframes/{screen}.md` as the only file the child may write. The child writes that file and returns one JSON object with `file` and `status`.
 
-### Step 2B: Inline generator (when the agent is absent or drifted)
+**Validate** each returned file, which means the file named in the brief: it must contain box-drawing characters and **must not** contain `<…>` tags or CSS braces. If it drifted into HTML/React, discard it and generate that screen via Step 2B. Report any screen that fell back.
+
+### Step 2B: Inline generator (engine `builtin`: no child can start, or the child drifted)
 
 The orchestrator generates the wireframes directly using the **same** ASCII WIREFRAME CONTRACT. This is real output, just without the designer's layout sensibility. State that `engine: builtin` ran.
 
@@ -196,7 +200,7 @@ Also write `design/wireframes/index.md` — a legend (box-drawing key) + a galle
 1. Write **`design/wireframes.json`** — the inventory + section→future-component mapping:
    ```json
    {
-     "engine": "frontend-designer",
+     "engine": "designer",
      "source": { "type": "plan", "ref": "PRD.md" },
      "screens": [
        { "name": "TodayFeed", "file": "design/wireframes/TodayFeed.md",
@@ -205,14 +209,14 @@ Also write `design/wireframes/index.md` — a legend (box-drawing key) + a galle
      ]
    }
    ```
-2. **Manifest markers** — if `design/manifest.json` exists, set top-level `"wireframed": true`, `"wireframes": "design/wireframes"`, `"wireframes_engine": "frontend-designer" | "builtin"`, and append each wireframe file to `references`. If no manifest exists, leave the files for `init` to detect.
+2. **Manifest markers** — if `design/manifest.json` exists, set top-level `"wireframed": true`, `"wireframes": "design/wireframes"`, `"wireframes_engine": "designer" | "builtin"`, and append each wireframe file to `references`. If no manifest exists, leave the files for `init` to detect. A manifest that already says `"wireframes_engine": "frontend-designer"` stays readable: read that value as `designer`, with no migration.
 
 ### Step 4: Report + next step
 
 Name what was written and what comes next. The wireframes are in the files; do not reproduce them here. Say which screens fell back to the inline generator, if any — that is the part the user cannot see from the file list.
 
 ```
-Wireframed PRD.md — 3 screens, engine: frontend-designer
+Wireframed PRD.md — 3 screens, engine: designer
 
   design/wireframes/{TodayFeed,JobDetail,Settings}.md + index.md + wireframes.json
 
@@ -227,7 +231,7 @@ Wireframed PRD.md — 3 screens, engine: frontend-designer
 | Case | Handling |
 |------|----------|
 | Target missing / yields no screens | Stop and report; suggest a valid plan/target. Never fabricate screens. |
-| `frontend-designer` agent absent | Run the inline generator (Step 2B); state `engine: builtin`. |
+| No spawning tool, so no child can start | Run the inline generator (Step 2B); state `engine: builtin`. |
 | Agent returns HTML/React (drift) | Discard that screen's output, regenerate it inline, and report which screens fell back. |
 | Existing `design/wireframes/` | Without `--force`, ask which screens to regenerate; preserve the rest. |
 | Very large plan (many screens) | Wireframe the primary screens; **log included vs deferred** in the report. |
