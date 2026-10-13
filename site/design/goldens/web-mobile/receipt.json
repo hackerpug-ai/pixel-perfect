@@ -2690,40 +2690,6 @@
         "storyHash": "sha256:2a59ab4dd1d763467ae5740d6661ea66ec1d7ead96c148c811937e07ef8e83b2"
       }
     },
-    "molecules/ChangelogMini/scattered": {
-      "hash": "4fe0202b1ef32d5c",
-      "ext": ".html",
-      "mode": "baseline",
-      "png": {
-        "hash": "sha256:89429072c2739586ca0fbecc56279d73610feaf4431c4e34ee31a14e8e022562",
-        "width": 393,
-        "height": 900,
-        "inkPixels": 9965
-      },
-      "source": {
-        "file": "src/lib/components/molecules/ChangelogMini.svelte",
-        "fileHash": "sha256:293b5ffbcf4034432fd6633ee91067e562d2e84ae315607f735788885ee75944",
-        "story": "src/lib/components/molecules/ChangelogMini.stories.svelte",
-        "storyHash": "sha256:2a59ab4dd1d763467ae5740d6661ea66ec1d7ead96c148c811937e07ef8e83b2"
-      }
-    },
-    "molecules/ChangelogMini/scattered--dark": {
-      "hash": "0da59f2255778e66",
-      "ext": ".html",
-      "mode": "baseline",
-      "png": {
-        "hash": "sha256:6e4ef33994b74c945530ee9e79d25a9d68ad92a5f8554a107b3d559373f34fff",
-        "width": 393,
-        "height": 900,
-        "inkPixels": 9961
-      },
-      "source": {
-        "file": "src/lib/components/molecules/ChangelogMini.svelte",
-        "fileHash": "sha256:293b5ffbcf4034432fd6633ee91067e562d2e84ae315607f735788885ee75944",
-        "story": "src/lib/components/molecules/ChangelogMini.stories.svelte",
-        "storyHash": "sha256:2a59ab4dd1d763467ae5740d6661ea66ec1d7ead96c148c811937e07ef8e83b2"
-      }
-    },
     "molecules/CodePanel/status": {
       "hash": "a624bc016aa66242",
       "ext": ".html",
@@ -5848,28 +5814,6 @@
         "width": 390,
         "height": 900,
         "inkPixels": 29388
-      }
-    },
-    "tokens/Typography/scale": {
-      "hash": "22e41e6c52f184c8",
-      "ext": ".html",
-      "mode": "baseline",
-      "png": {
-        "hash": "sha256:9217c607026a8af69f8e1d618ae5d70648277f26ddc8d7940d2e12c393ca22d7",
-        "width": 428,
-        "height": 1839,
-        "inkPixels": 60994
-      }
-    },
-    "tokens/Typography/scale--dark": {
-      "hash": "6e18dc8f32674a12",
-      "ext": ".html",
-      "mode": "baseline",
-      "png": {
-        "hash": "sha256:0b9963cf6ebe7042dc5238f4ba50193f310f5b964ea52af3017928f3c09e625c",
-        "width": 428,
-        "height": 1839,
-        "inkPixels": 60994
       }
     }
   }

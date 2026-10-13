@@ -1631,7 +1631,7 @@
       "capture": {
         "command": "pnpm sandbox:capture -- --width 390",
         "medium": "dom+png",
-        "viewport": "428x844",
+        "viewport": "390x844",
         "pixels": "required",
         "goldens": "design/goldens/web-mobile",
         "captured_at": "2026-10-02",

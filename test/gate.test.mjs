@@ -398,6 +398,31 @@ test("audit does not capture and names each planted defect", () => {
   }
 });
 
+test("audit names each empty dialog by its story key", () => {
+  const dir = scratchProject("pp-gate-");
+  const stories = [
+    "atoms/AlertDialog/default",
+    "atoms/AlertDialog/open",
+    "atoms/Dialog/default",
+    "atoms/Dialog/open",
+    "organisms/SearchDialog/no-results",
+    "organisms/SearchDialog/results",
+  ];
+  try {
+    project(dir, { stories: {}, items: {} });
+    for (const key of stories) {
+      writeIn(dir, `design/goldens/web-desktop/${key}.html`, "<div class=\"sheet\">closed</div>\n");
+    }
+    const { code, report } = run(["audit", dir, "--platform", "web-desktop"]);
+    assert.equal(code, 1, report?.message);
+    assert.equal(report.captured, false);
+    assert.match(report.message, /6 empty dialog captures:/);
+    for (const key of stories) assert.match(report.message, new RegExp(key.replaceAll("/", "\\/")));
+  } finally {
+    removeDirs(dir);
+  }
+});
+
 test("scaffold fails with no PNG and passes with one real PNG", () => {
   const dir = scratchProject("pp-gate-");
   try {

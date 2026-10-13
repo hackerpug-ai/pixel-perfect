@@ -7,11 +7,11 @@
   "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
   "discrepancies": [],
   "hashes": {
-    "golden": "sha256:82e2937865cf177d2c506367e123c74288ed502412d88a32101966cc68e6ee49",
+    "golden": "sha256:f4f2213061bba9d7b64de1dabb35f6a95586e1bc1bb9f5eee5977e9b43a320c1",
     "file": "sha256:293b5ffbcf4034432fd6633ee91067e562d2e84ae315607f735788885ee75944",
     "story": "sha256:2a59ab4dd1d763467ae5740d6661ea66ec1d7ead96c148c811937e07ef8e83b2",
     "frames": "sha256:2a0a078da17e1a464df9d1973a1169084c46ca46a2a2a8e047e2756f117a888c",
-    "render": "sha256:49e4044eb48b76a1863ba1e2ecda018f6b96b14a885bf592d403191c2dbf51d0",
-    "goldenOnDisk": "sha256:82e2937865cf177d2c506367e123c74288ed502412d88a32101966cc68e6ee49"
+    "render": "sha256:07d1591ae1f76247e9d1ba8d5b03c8faa945e8bd764d70bc269c872030d2a86e",
+    "goldenOnDisk": "sha256:f4f2213061bba9d7b64de1dabb35f6a95586e1bc1bb9f5eee5977e9b43a320c1"
   }
 }

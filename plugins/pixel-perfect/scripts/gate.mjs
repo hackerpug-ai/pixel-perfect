@@ -583,7 +583,7 @@ function auditPlatform(root, id, config) {
   if (emptyDialogs.length) {
     findings.push({
       kind: "empty-dialog",
-      reason: `${emptyDialogs.length} empty dialog captures: ${emptyDialogs.map((golden) => golden.key).join(", ")}`,
+      reason: `${emptyDialogs.length} empty dialog captures: ${emptyDialogs.map((golden) => storyKey(golden)).join(", ")}`,
     });
   }
   if (captureCfg.pixels !== "none" && inventoryDir(root, captureCfg.goldens).length > 0 && !(catalog.noPixelEvidence ?? []).length && !existsSync(join(root, captureCfg.goldens, "receipt.json"))) {
