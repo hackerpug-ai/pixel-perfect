@@ -43,16 +43,19 @@
 import {
   copyFileSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   readFileSync,
   readdirSync,
+  realpathSync,
   renameSync,
   rmSync,
   statSync,
   writeFileSync,
 } from "node:fs";
 import { createHash } from "node:crypto";
-import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { tmpdir } from "node:os";
+import { basename, dirname, isAbsolute, join, parse, relative, resolve, sep } from "node:path";
 import { spawnSync } from "node:child_process";
 import { digest } from "./reference-revisions.mjs";
 import { inspectPng } from "./png.mjs";
@@ -289,6 +292,7 @@ export function resolveCaptureConfig(platformConfig, platformId) {
     ...resolvePixels(capture),
     viewport: parseViewport(capture.viewport),
     scale: parseScale(capture.scale),
+    timeoutMs: parseTimeout(capture.timeout_ms),
     items: manifestItems(platformConfig),
   };
 }
@@ -311,6 +315,13 @@ function parseViewport(value) {
   const m = /^(\d+)x(\d+)$/.exec(String(value));
   if (!m) throw new Error(`capture.viewport must be "WxH", got ${JSON.stringify(value)}`);
   return { width: Number(m[1]), height: Number(m[2]) };
+}
+
+function parseTimeout(value) {
+  if (value === undefined) return 600000;
+  const n = Number(value);
+  if (!Number.isInteger(n) || n <= 0) throw new Error(`capture.timeout_ms must be a positive whole number of milliseconds, got ${JSON.stringify(value)}`);
+  return n;
 }
 
 function parseScale(value) {
@@ -379,7 +390,7 @@ function readComposee(catalogRoot, name) {
   return readFileSync(hits[0], "utf8");
 }
 
-function storyRecord(layer, name, state, rel, content) {
+function storyRecord(layer, name, state, rel, content, png = null) {
   return {
     layer,
     name,
@@ -388,6 +399,7 @@ function storyRecord(layer, name, state, rel, content) {
     hash: fingerprint(content),
     bytes: Buffer.byteLength(content, "utf8"),
     empty: content.trim() === "",
+    png,
   };
 }
 
@@ -410,6 +422,7 @@ export function captureFromCatalog(projectRoot, catalogRel, stagingRel, layerFil
 
   const files = walkFiles(catalogRoot);
   const stories = [];
+  const seen = new Map();
   for (const full of files) {
     const rel = relPosix(catalogRoot, full);
     const parts = rel.split("/");
@@ -422,6 +435,9 @@ export function captureFromCatalog(projectRoot, catalogRel, stagingRel, layerFil
     const state = file.slice(0, dot);
     const ext = file.slice(dot);
     if (!STRUCTURAL_EXTS.has(ext)) continue;
+    const key = `${layer}/${name}/${state}`;
+    if (seen.has(key)) throw new Error(`two structural artifacts for ${key}: ${seen.get(key)} and ${rel}; one story state has one structural artifact`);
+    seen.set(key, rel);
     const raw = readFileSync(full, "utf8");
     const composed = resolveCompositions(raw, catalogRoot, [name]);
     const normalized = normalizeCapture(composed, projectRoot);
@@ -438,7 +454,11 @@ export function captureFromCatalog(projectRoot, catalogRel, stagingRel, layerFil
     ensureDir(dirname(outFull));
     copyFileSync(full, outFull);
   }
-  return { stories, stagingRel, count: stories.length };
+  for (const s of stories) {
+    const pngFull = join(stagingRoot, s.layer, s.name, `${s.state}.png`);
+    s.png = existsSync(pngFull) ? pngFull : null;
+  }
+  return { stories, stagingRel, count: stories.length, ignoredFiles: [] };
 }
 
 function setOrUnset(env, key, value) {
@@ -446,8 +466,34 @@ function setOrUnset(env, key, value) {
   else delete env[key];
 }
 
-function runCaptureCommand(projectRoot, command, stagingRel, { layer = null, onlyKey = null } = {}) {
+const MAX_COMMAND_OUTPUT = 64 * 1024 * 1024;
+
+function fileDigest(full) {
+  return createHash("sha256").update(readFileSync(full)).digest("hex");
+}
+
+/** Hashes of every file the gate reads and must not see changed by the capture command. */
+function gateInputs(projectRoot, goldensRel) {
+  const goldensAbs = under(projectRoot, goldensRel);
+  const files = [
+    join(projectRoot, "design", "manifest.json"),
+    join(projectRoot, "design", "inventory.json"),
+    join(goldensAbs, RECEIPT_FILE),
+    ...(existsSync(goldensAbs) ? walkFiles(goldensAbs) : []),
+  ];
+  const digests = new Map();
+  for (const full of files) if (existsSync(full)) digests.set(relPosix(projectRoot, full), fileDigest(full));
+  return digests;
+}
+
+function changedInputs(before, after) {
+  const names = new Set([...before.keys(), ...after.keys()]);
+  return [...names].filter((n) => before.get(n) !== after.get(n)).sort();
+}
+
+function runCaptureCommand(projectRoot, command, stagingRel, { layer = null, onlyKey = null, goldens, timeoutMs }) {
   const stagingRoot = under(projectRoot, stagingRel);
+  const inputsBefore = gateInputs(projectRoot, goldens);
   if (existsSync(stagingRoot)) rmSync(stagingRoot, { recursive: true, force: true });
   ensureDir(stagingRoot);
   const env = { ...process.env, PIXEL_PERFECT_CAPTURE_OUT: stagingRoot };
@@ -458,29 +504,56 @@ function runCaptureCommand(projectRoot, command, stagingRel, { layer = null, onl
     env,
     shell: true,
     encoding: "utf8",
+    timeout: timeoutMs,
+    maxBuffer: MAX_COMMAND_OUTPUT,
   });
+  if (result.error?.code === "ETIMEDOUT") {
+    throw new Error(`capture command timed out after ${timeoutMs} ms (capture.timeout_ms)`);
+  }
+  if (result.error) throw new Error(`capture command could not run: ${result.error.message}`);
   if (result.status !== 0) {
     const err = (result.stderr || result.stdout || "").trim() || `exit ${result.status}`;
     throw new Error(`capture command failed: ${err}`);
   }
-  // inventory what landed
-  const files = walkFiles(stagingRoot);
-  const stories = [];
-  for (const full of files) {
+  const changed = changedInputs(inputsBefore, gateInputs(projectRoot, goldens));
+  if (changed.length) {
+    throw new Error(`the capture command modified gate inputs: ${changed.join(", ")}. Capture must only write to its staging folder.`);
+  }
+
+  // Inventory what landed. One structural artifact per story state; PNGs found case-insensitively.
+  const structural = new Map();
+  const pngs = new Map();
+  const ignoredFiles = [];
+  for (const full of walkFiles(stagingRoot)) {
     const rel = relPosix(stagingRoot, full);
     const parts = rel.split("/");
-    if (parts.length < 3) continue;
-    const [l, name, file] = parts;
+    const file = parts[parts.length - 1];
     const dot = file.lastIndexOf(".");
-    if (dot === -1) continue;
+    if (parts.length !== 3 || dot <= 0) {
+      ignoredFiles.push(rel);
+      continue;
+    }
+    const [l, name] = parts;
     const state = file.slice(0, dot);
     const ext = file.slice(dot);
-    if (ext === ".png") continue; // pixel evidence is checked by pixelGate, never compared
+    const key = `${l}/${name}/${state}`;
+    if (ext.toLowerCase() === ".png") {
+      pngs.set(key, full);
+      continue;
+    }
+    if (!STRUCTURAL_EXTS.has(ext)) {
+      ignoredFiles.push(rel);
+      continue;
+    }
+    if (structural.has(key)) {
+      throw new Error(`two structural artifacts for ${key}: ${structural.get(key).rel} and ${rel}; one story state has one structural artifact`);
+    }
     const content = normalizeCapture(readFileSync(full, "utf8"), projectRoot);
     writeText(full, content);
-    stories.push(storyRecord(l, name, state, rel, content));
+    structural.set(key, storyRecord(l, name, state, rel, content));
   }
-  return { stories, stagingRel, count: stories.length };
+  const stories = [...structural.entries()].map(([key, s]) => ({ ...s, png: pngs.get(key) ?? null }));
+  return { stories, stagingRel, count: stories.length, ignoredFiles: ignoredFiles.sort() };
 }
 
 const byKey = (a, b) => (storyKey(a) < storyKey(b) ? -1 : storyKey(a) > storyKey(b) ? 1 : 0);
@@ -496,7 +569,12 @@ export function runCapture(projectRoot, captureCfg, layerFilter = null, opts = {
   let captured;
   if (captureCfg.command) {
     // Prefer an explicit capture.command when present (real consumer sandboxes).
-    captured = runCaptureCommand(projectRoot, captureCfg.command, captureCfg.staging, { layer: layerFilter, onlyKey });
+    captured = runCaptureCommand(projectRoot, captureCfg.command, captureCfg.staging, {
+      layer: layerFilter,
+      onlyKey,
+      goldens: captureCfg.goldens,
+      timeoutMs: captureCfg.timeoutMs,
+    });
   } else if (existsSync(join(projectRoot, captureCfg.catalogDir))) {
     // Fall back to structural catalog walk for fixtures without a shell command.
     captured = captureFromCatalog(projectRoot, captureCfg.catalogDir, captureCfg.staging, layerFilter);
@@ -509,7 +587,7 @@ export function runCapture(projectRoot, captureCfg, layerFilter = null, opts = {
     .filter((s) => !layerFilter || s.layer === layerFilter)
     .filter((s) => !only || (s.layer === only.layer && s.name === only.name))
     .sort(byKey);
-  return { stories, stagingRel: captureCfg.staging, count: stories.length };
+  return { stories, stagingRel: captureCfg.staging, count: stories.length, ignoredFiles: captured.ignoredFiles };
 }
 
 // ---------------------------------------------------------------------------
@@ -534,7 +612,7 @@ export function pixelGate(stories, stagingAbs, captureCfg) {
       continue;
     }
     const pngRel = `${s.layer}/${s.name}/${s.state}.png`;
-    const pngPath = join(stagingAbs, pngRel);
+    const pngPath = s.png ?? join(stagingAbs, pngRel);
     pngPaths.set(key, pngPath);
     if (!existsSync(pngPath)) {
       violations.push({ kind: "missing-png", key, rel: pngRel, reason: "no PNG was captured beside this structural artifact" });
@@ -600,10 +678,15 @@ export function structureGate(stories) {
 }
 
 /** Both gates over one capture run. */
-export function gateCapture(stories, stagingAbs, captureCfg) {
+export function gateCapture(stories, stagingAbs, captureCfg, ignoredFiles = []) {
   const pixel = pixelGate(stories, stagingAbs, captureCfg);
   const structure = structureGate(stories);
-  return { violations: [...pixel.violations, ...structure.violations], duplicates: structure.duplicates, pixel };
+  return {
+    violations: [...pixel.violations, ...structure.violations],
+    duplicates: structure.duplicates,
+    pixel,
+    ignoredFiles,
+  };
 }
 
 function gateFields(captureCfg, gate) {
@@ -612,6 +695,7 @@ function gateFields(captureCfg, gate) {
     pixelsReason: captureCfg.pixelsReason,
     violations: gate.violations,
     duplicates: gate.duplicates,
+    ignoredFiles: gate.ignoredFiles,
   };
 }
 
@@ -824,7 +908,7 @@ export function modeBaseline(projectRoot, captureCfg, layerFilter = null, opts =
     };
   }
   const stagingAbs = under(projectRoot, captureCfg.staging);
-  const gate = gateCapture(cap.stories, stagingAbs, captureCfg);
+  const gate = gateCapture(cap.stories, stagingAbs, captureCfg, cap.ignoredFiles);
   if (gate.violations.length) return blocked("baseline", captureCfg, cap, gate);
 
   // Receipts are computed before any golden moves, so a missing source file leaves nothing half-written.
@@ -874,7 +958,7 @@ export function modeCheck(projectRoot, captureCfg, layerFilter, deprecations = {
     };
   }
   const stagingAbs = under(projectRoot, captureCfg.staging);
-  const gate = gateCapture(cap.stories, stagingAbs, captureCfg);
+  const gate = gateCapture(cap.stories, stagingAbs, captureCfg, cap.ignoredFiles);
   const goldens = inventoryDir(projectRoot, captureCfg.goldens);
   const scoped = goldens.filter((g) => !layerFilter || g.layer === layerFilter);
   const goldenByKey = new Map(goldens.map((g) => [storyKey(g), g]));
@@ -964,7 +1048,7 @@ export function modeAccept(projectRoot, captureCfg, globPattern, layerFilter = n
     };
   }
   const stagingAbs = under(projectRoot, captureCfg.staging);
-  const gate = gateCapture(cap.stories, stagingAbs, captureCfg);
+  const gate = gateCapture(cap.stories, stagingAbs, captureCfg, cap.ignoredFiles);
   if (gate.violations.length) return { ...blocked("accept", captureCfg, cap, gate), accepted: [] };
 
   const chosen = cap.stories.filter((s) => match(s.rel) || match(storyKey(s)) || match(`${s.layer}/${s.name}/**`));
@@ -1451,6 +1535,7 @@ function parseArgs(argv) {
     if (a.startsWith("--")) throw new Error(`Unknown option: ${a}`);
     positional.push(a);
   }
+  if (only && mode !== "render") throw new Error("--only is valid only with --render");
   return {
     help: false,
     mode,
@@ -1467,13 +1552,63 @@ function parseArgs(argv) {
   };
 }
 
-/** A staging directory that would contain the project root is refused: rendering must never wipe the project. */
-function checkedStaging(projectRoot, out) {
-  const abs = resolve(projectRoot, out);
-  if (abs === projectRoot || projectRoot.startsWith(abs + sep)) {
-    throw new Error(`--out ${out} would contain the project root; give a dedicated directory`);
+const inside = (p, root) => p === root || p.startsWith(root + sep);
+
+function isSymlink(p) {
+  try {
+    return lstatSync(p).isSymbolicLink();
+  } catch {
+    return false;
   }
-  return out;
+}
+
+/** The nearest existing ancestor of abs, resolved through symbolic links, with the missing rest appended. */
+function realpathNearest(abs) {
+  let cur = abs;
+  const rest = [];
+  while (!existsSync(cur)) {
+    rest.unshift(basename(cur));
+    const parent = dirname(cur);
+    if (parent === cur) break;
+    cur = parent;
+  }
+  return join(realpathSync(cur), ...rest);
+}
+
+/**
+ * A staging directory is deleted before each capture, so it must be unambiguous. It is accepted only
+ * when, after realpath, it lies inside <project>/design/.captures/ or the system temporary directory.
+ * It must not be the filesystem root, the project, anything containing the project or design/, or
+ * overlap the goldens. A symbolic link on the path inside the project is refused. Throws before anything
+ * is deleted.
+ */
+export function assertStagingAllowed(projectRoot, stagingRel, label, goldensRel) {
+  const proj = resolve(projectRoot);
+  const abs = resolve(proj, stagingRel);
+  const refuse = (why) => {
+    throw new Error(`${label} ${stagingRel} is not an allowed staging directory: ${why}`);
+  };
+  if (abs === parse(abs).root) refuse("it is the filesystem root");
+  const relToProj = relative(proj, abs);
+  if (relToProj && !relToProj.startsWith("..") && !isAbsolute(relToProj)) {
+    let cur = proj;
+    for (const seg of relToProj.split(sep)) {
+      cur = join(cur, seg);
+      if (isSymlink(cur)) refuse(`a symbolic link is on the path (${relative(proj, cur)})`);
+    }
+  }
+  const real = realpathNearest(abs);
+  const realProj = realpathSync(proj);
+  const designDir = join(realProj, "design");
+  const capDir = join(designDir, ".captures");
+  const goldensReal = realpathNearest(resolve(proj, goldensRel));
+  const tmp = realpathSync(tmpdir());
+  if (inside(realProj, real)) refuse("it would contain the project root");
+  if (inside(designDir, real)) refuse("it would contain design/");
+  if (inside(real, goldensReal) || inside(goldensReal, real)) refuse("it overlaps the goldens folder");
+  if (inside(real, designDir) && !inside(real, capDir)) refuse("it is inside design/ but outside design/.captures/");
+  if (inside(real, capDir) || inside(real, tmp)) return stagingRel;
+  return refuse("it must be inside design/.captures/ or the system temporary directory");
 }
 
 const AUDIT_AND_BASELINE_MODES = new Set(["baseline", "check", "accept", "audit"]);
@@ -1507,7 +1642,9 @@ export function main(argv) {
     const { id: platformId, config: platformConfig } = resolvePlatform(manifest, parsed.platform);
     const captureCfg = resolveCaptureConfig(platformConfig, platformId);
     if (parsed.perturbDir) captureCfg.catalogDir = parsed.perturbDir;
-    if (parsed.out) captureCfg.staging = checkedStaging(projectRoot, parsed.out);
+    const stagingRel = parsed.out ?? captureCfg.staging;
+    assertStagingAllowed(projectRoot, stagingRel, parsed.out ? "--out" : "capture.staging", captureCfg.goldens);
+    captureCfg.staging = stagingRel;
 
     const deprecations = platformConfig.deprecations || {};
     const opts = { only: parsed.only };

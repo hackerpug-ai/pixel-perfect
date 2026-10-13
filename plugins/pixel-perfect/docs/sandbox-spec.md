@@ -165,6 +165,14 @@ The **structural** artifact is the gate for drift. The **image** is required evi
 
 A command may ignore the last two and capture everything. The script still keeps only what the run asked for. `--out <dir>` sets the staging directory for one run, so rendering one story does not wipe the main staging folder. `--out` may not name the project root.
 
+#### Staging, timeout and tamper rules
+
+- The staging folder is deleted before each capture. So `--out` and `capture.staging` are accepted only when, after `realpath`, they lie inside `design/.captures/` or the system temporary directory. A symbolic link on the path, the filesystem root, the project root, anything containing `design/`, and anything overlapping the goldens are refused with exit 2 before anything is deleted.
+- `--only <layer>/<Name>` is valid only with `--render`.
+- A story state has one structural artifact. Two files for one state are a config error. A PNG is found by its extension in any case (`.png`, `.PNG`). A file with any other extension is listed under `ignoredFiles` and never rewritten.
+- `capture.timeout_ms` bounds the capture command (default 600000). A timeout is exit 2.
+- The capture command may write only to its staging folder. The gate hashes `design/manifest.json`, `design/inventory.json`, the goldens and `receipt.json` before and after it runs. A change is exit 2: "the capture command modified gate inputs".
+
 #### Determinism requirements
 
 Capture is worthless if it is noisy. The generated capture command must:

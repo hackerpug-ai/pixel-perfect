@@ -61,7 +61,7 @@ test("the layer and single-story variables reach the command; the script restric
       "--only",
       "atoms/Env",
       "--out",
-      "design/.render/env",
+      "design/.captures/render-env",
     ]);
     assert.equal(code, 0, stderr);
     assert.deepEqual(report.states.map((s) => s.key), ["atoms/Env/default"], "probe wrote four stories; only Env is kept");
@@ -76,7 +76,7 @@ test("the layer and single-story variables reach the command; the script restric
 test("--layer is not forwarded as a stale variable when it is not given", () => {
   const dir = writeProbeProject(scratchProject(), {});
   try {
-    const { code, report } = runCli(["--render", dir, "--platform", "web-desktop", "--only", "atoms/Env", "--out", "design/.render/env"]);
+    const { code, report } = runCli(["--render", dir, "--platform", "web-desktop", "--only", "atoms/Env", "--out", "design/.captures/render-env"]);
     assert.equal(code, 0);
     const text = readFileSync(report.states[0].structural, "utf8");
     assert.match(text, /layer=\n/, "no layer variable may leak in from the parent environment");
@@ -100,11 +100,11 @@ test("--only renders one story into --out and leaves the main staging folder int
       "--only",
       "atoms/Button",
       "--out",
-      "design/.render/button",
+      "design/.captures/render-button",
     ]);
     assert.equal(code, 0, stderr);
     assert.equal(report.states.length, 1);
-    const renderDir = path.join(dir, "design/.render/button");
+    const renderDir = path.join(dir, "design/.captures/render-button");
     const rendered = readdirSync(renderDir, { recursive: true }).filter((f) => f.endsWith(".dom"));
     assert.deepEqual(rendered, [path.join("atoms", "Button", "default.dom")]);
     const mainAfter = readdirSync(path.join(dir, STAGING), { recursive: true }).filter((f) => f.endsWith(".dom")).sort();

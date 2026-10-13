@@ -190,3 +190,29 @@ export function writeProbeProject(dir, sources = {}) {
   for (const [rel, body] of Object.entries(sources)) writeIn(dir, `sandbox/stories/${rel}`, body);
   return dir;
 }
+
+// A project whose capture command is the given script (a file under sandbox/). `capture` overrides
+// the default text-only capture block; an undefined value removes the key.
+export function writeCommandProject(dir, script, capture = {}, items = {}) {
+  writeIn(dir, "sandbox/cmd.mjs", script);
+  const block = {
+    command: "node sandbox/cmd.mjs",
+    medium: "text",
+    goldens: "design/goldens/web-desktop",
+    catalog: "sandbox/stories",
+    staging: "design/.captures/web-desktop",
+    pixels: "none",
+    pixels_reason: "command test project: text output only",
+    ...capture,
+  };
+  for (const key of Object.keys(block)) if (block[key] === undefined) delete block[key];
+  writeIn(dir, "design/manifest.json", JSON.stringify({ platforms: { "web-desktop": { capture: block, ...items } } }, null, 2));
+  return dir;
+}
+
+// Writes `files` (rel → body) into the staging folder the command receives, at the current directory.
+export const STAGE_SCRIPT_HEAD = `import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+const out = process.env.PIXEL_PERFECT_CAPTURE_OUT;
+const put = (rel, body) => { mkdirSync(dirname(join(out, rel)), { recursive: true }); writeFileSync(join(out, rel), body); };
+`;

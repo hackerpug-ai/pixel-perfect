@@ -315,7 +315,7 @@ test("--render --only writes no goldens and prints the structural and PNG path p
       "--only",
       "atoms/Button",
       "--out",
-      "design/.render/button",
+      "design/.captures/render-button",
     ]);
     assert.equal(code, 0, stderr);
     assert.equal(report.mode, "render");
