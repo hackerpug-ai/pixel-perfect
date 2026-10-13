@@ -177,7 +177,7 @@ Based on the tools in the manifest, follow these conventions:
 - Register each component under its layer; render it in isolation; show variants × states together.
 - Codegen tokens (build.rs / CSS vars / `Palette`) — components reference tokens, never hardcode.
 - Each story names its pixel-target (`// Target: design/reference/{slug}/{NN}.png` — the frame `design/inventory.json` ties to it).
-- Record `platforms[name].capture` and keep goldens under `design/goldens/{platform}/` current via `verify-catalog.mjs`.
+- Record `platforms[name].capture` and keep goldens under `design/goldens/{platform}/` current via `gate.mjs`. `gate.mjs` is the only writer of a layer gate and of an item's verified status. `brief.mjs` gate commands use `verify-styling-contract.mjs --manifest`.
 
 ### When `platforms[name].tools.sandbox` is storybook:
 - Co-locate stories with components — `ComponentName.stories.tsx` (React) or `ComponentName.stories.svelte` / `.stories.ts` (SvelteKit; follow the framework adapter)

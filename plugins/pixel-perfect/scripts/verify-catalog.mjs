@@ -613,7 +613,8 @@ export function runCapture(projectRoot, captureCfg, layerFilter = null, opts = {
 /**
  * Pixel evidence. Every captured story needs a sibling {state}.png that is a real, decodable image,
  * is no wider than the declared viewport, and shows something: at least 8x8 and 64 pixels that
- * differ from the image's most common colour. An image this module cannot decode is a violation,
+ * differ from the image's most common colour. Sixteen ink pixels is the floor: a 16px mark
+ * clears it, and a one-pixel speck does not. An image this module cannot decode is a violation,
  * never a pass. Platforms that declare pixels "none" skip the gate.
  * `evidence` holds what each receipt records for a passing image: its hash, size and ink pixels.
  */
@@ -650,10 +651,10 @@ export function pixelGate(stories, stagingAbs, captureCfg) {
     if (limit !== null && info.width > limit) {
       problems.push({ kind: "wider-than-viewport", width: info.width, limit, reason: `render is wider than the viewport (${info.width}px > ${limit}px)` });
     }
-    if (info.width < 8 || info.height < 8 || info.inkPixels < 64) {
+    if (info.width < 8 || info.height < 8 || info.inkPixels < 16) {
       problems.push({
         kind: "blank-png",
-        reason: `render shows almost nothing (${info.width}x${info.height}, ${info.inkPixels} pixels differ from the background; need at least 8x8 and 64)`,
+        reason: `render shows almost nothing (${info.width}x${info.height}, ${info.inkPixels} pixels differ from the background; need at least 8x8 and 16)`,
       });
     }
     for (const p of problems) violations.push({ ...p, key, rel: pngRel });

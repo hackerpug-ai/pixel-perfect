@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "molecules/CopyNextStep",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:9fe9a8f6de7359729c89cc44dc92303dea839b7f76a4b71fdf51a61cb1e84ec8",
+    "file": "sha256:891d1e23cc66b4fa631ae3369dedd71a6d4eb033a7ea5c0710b082ad5f20b06e",
+    "story": "sha256:ec399d56ecdf66f6eec6f8bab26b2eecdf551d3a6d256d335faacf690dbc73e3",
+    "frames": "sha256:30588a8353df1ac7725f4c18b65418f5f23b0b1f0657d33f651802af16ec4bd1",
+    "render": "sha256:4312f4d488bdceaf6c8cf6b8401eb3531a152b948313c363e8e500757e30e367",
+    "goldenOnDisk": "sha256:9fe9a8f6de7359729c89cc44dc92303dea839b7f76a4b71fdf51a61cb1e84ec8"
+  }
+}

@@ -17,7 +17,7 @@ import { randomUUID } from "node:crypto";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { loadManifest, resolvePlatform } from "./verify-catalog.mjs";
-import { inside } from "./reference-revisions.mjs";
+import { digest, inside } from "./reference-revisions.mjs";
 import { GateError, resolveContract as resolveGateContract } from "./verify-styling-contract.mjs";
 
 const PLUGIN_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -26,6 +26,7 @@ const LAYERS = ["atoms", "molecules", "organisms", "screens"];
 const SLUG_PATTERN = /^[a-z0-9-]+$/;
 const USAGE =
   "Usage: brief.mjs build <project-root> --platform <id> --layer <atoms|molecules|organisms|screens> --name <Name> [--findings <file.json>]\n" +
+  "       brief.mjs judge <project-root> --platform <id> --layer <atoms|molecules|organisms|screens>\n" +
   "       brief.mjs wrap  <project-root> --slug <short-name> <task-brief-file | ->";
 const NO_FRAME = "No frame shows this item. The design contract and the project's theme tokens are the target.";
 const NO_INVENTORY = "No inventory entry for this item: the spec is the source.";
@@ -50,10 +51,12 @@ const fail = (message) => {
 
 export function parseArgs(argv) {
   const [command, ...rest] = argv;
-  if (command !== "build" && command !== "wrap") fail(USAGE);
-  const flags = command === "build"
-    ? { "--platform": "platform", "--layer": "layer", "--name": "name", "--findings": "findings" }
-    : { "--slug": "slug" };
+  if (command !== "build" && command !== "wrap" && command !== "judge") fail(USAGE);
+  const flags = command === "wrap"
+    ? { "--slug": "slug" }
+    : command === "judge"
+      ? { "--platform": "platform", "--layer": "layer" }
+      : { "--platform": "platform", "--layer": "layer", "--name": "name", "--findings": "findings" };
   const parsed = {};
   const positional = [];
   for (let i = 0; i < rest.length; i++) {
@@ -77,6 +80,13 @@ export function parseArgs(argv) {
     safeName(parsed.name, "--name");
     return { command, root: resolve(positional[0]), platform: parsed.platform, layer: parsed.layer, name: parsed.name, findings: parsed.findings };
   }
+  if (command === "judge") {
+    if (positional.length !== 1) fail(`judge takes one project root\n${USAGE}`);
+    for (const key of ["platform", "layer"]) if (!parsed[key]) fail(`judge needs --${key}\n${USAGE}`);
+    if (!LAYERS.includes(parsed.layer)) fail(`unknown layer "${parsed.layer}"; use ${LAYERS.join(", ")}`);
+    safeName(parsed.platform, "--platform");
+    return { command, root: resolve(positional[0]), platform: parsed.platform, layer: parsed.layer };
+  }
   if (positional.length !== 2) fail(`wrap takes a project root and a task file (or -)\n${USAGE}`);
   if (!parsed.slug) fail(`wrap needs --slug\n${USAGE}`);
   return { command, root: resolve(positional[0]), slug: parsed.slug, taskFile: positional[1] };
@@ -87,9 +97,9 @@ export function parseArgs(argv) {
 // ---------------------------------------------------------------------------
 
 /** The packaged agent prompt: the markdown body after its YAML frontmatter. */
-export function packagedPrompt(markdown) {
+export function packagedPrompt(markdown, label = "agents/designer.md") {
   const match = /^---\n[\s\S]*?\n---\n/.exec(markdown);
-  if (!match) fail("agents/designer.md has no YAML frontmatter block");
+  if (!match) fail(`${label} has no YAML frontmatter block`);
   return markdown.slice(match[0].length).trim();
 }
 
@@ -660,11 +670,96 @@ function writeBrief(root, file, content) {
   }
 }
 
+const VERDICT_SHAPE = [
+  "{",
+  '  "kind": "frames or contract-review",',
+  '  "verdict": "pass or fail",',
+  '  "reviewer": "judge",',
+  '  "reason": "one sentence",',
+  '  "discrepancies": [{ "description": "what differs", "accepted": false }],',
+  '  "hashes": { "golden": "sha256:...", "file": "sha256:...", "story": "sha256:...", "frames": "sha256:... or none", "render": "sha256:... or none" }',
+  "}",
+].join("\n");
+
+function listNamed(dir, accept) {
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir).filter(accept).sort().map((name) => join(dir, name));
+}
+
+function hashFiles(files) {
+  return digest(Buffer.concat(files.map((file) => readFileSync(file))));
+}
+
+function judgeBlock({ root, manifest, platformId, layer, item }) {
+  const renderDir = join(root, "design", ".captures", platformId, layer, item.name);
+  const renders = listNamed(renderDir, (name) => name.toLowerCase().endsWith(".png"));
+  const structural = listNamed(renderDir, (name) => !name.toLowerCase().endsWith(".png"));
+  const inventory = readInventoryIfPresent(root);
+  const fromInventory = inventory ? (inventory[layer] ?? []).find((entry) => entry && entry.name === item.name) : null;
+  const source = fromInventory ?? item;
+  const ids = layer === "screens" ? (source.states ?? []).flatMap((state) => state.frames ?? []) : (source.appears_on ?? []);
+  const frames = [];
+  if (ids.length > 0) {
+    const index = loadFrameIndex(root, manifest);
+    for (const id of ids) {
+      const frame = index.byId.get(id);
+      if (!frame) fail(`frame ${id} is not in the frames index ${index.file}`);
+      const png = inside(index.dir, frame.png);
+      if (!existsSync(png)) fail(`PNG for frame ${id} is not on disk: ${png}`);
+      frames.push(png);
+    }
+  }
+  const filePath = join(root, item.file);
+  if (!existsSync(filePath)) fail(`component file is not on disk: ${filePath}`);
+  const storyPath = item.story ? join(root, item.story) : null;
+  if (storyPath && !existsSync(storyPath)) fail(`story file is not on disk: ${storyPath}`);
+  return [
+    `## ${layer}/${item.name}`,
+    "",
+    "Render PNGs. Open every file.",
+    ...(renders.length ? renders.map((file) => `- ${file}`) : ["- no render PNG is on disk"]),
+    "",
+    frames.length ? "Frame PNGs. Open every file." : "No frame shows this component. Return kind contract-review.",
+    ...frames.map((file) => `- ${file}`),
+    "",
+    "Copy these hashes into hashes. A hash that does not match is rejected.",
+    `- golden: ${structural.length ? hashFiles(structural) : "none"}`,
+    `- file: ${digest(readFileSync(filePath))}`,
+    `- story: ${storyPath ? digest(readFileSync(storyPath)) : "none"}`,
+    `- frames: ${frames.length ? hashFiles([...frames].sort()) : "none"}`,
+    `- render: ${renders.length ? hashFiles(renders) : "none"}`,
+  ].join("\n");
+}
+
+export function judgeBrief({ root, platform, layer }) {
+  const manifest = loadManifest(root);
+  const { id: platformId, config } = resolvePlatform(manifest, platform);
+  const items = (config[layer] ?? []).filter((item) => item && item.name && item.file);
+  const chosen = items.slice(0, 6);
+  const rest = items.length - chosen.length;
+  const doc = readFileSync(join(PLUGIN_ROOT, "docs/FIDELITY-BRIEF.md"), "utf8");
+  const task = fillTemplate(extractTemplate(doc), {
+    PLATFORM: platformId,
+    LAYER: layer,
+    COUNT: String(chosen.length),
+    REMAINING: rest > 0 ? `${rest} more components are not in this brief. Judge these, then run the command again.` : "",
+    COMPONENTS: chosen.map((item) => judgeBlock({ root, manifest, platformId, layer, item })).join("\n\n"),
+    VERDICT: VERDICT_SHAPE,
+  });
+  if (task.includes("<<")) fail("judge brief left a placeholder unfilled");
+  const prompt = packagedPrompt(readFileSync(join(PLUGIN_ROOT, "agents/judge.md"), "utf8"), "agents/judge.md");
+  const middle = doc.split("## The task")[0].trim();
+  return {
+    file: join(root, "design", ".briefs", platformId, `judge-${layer}.md`),
+    content: assembleBrief({ prompt, contract: middle, task }),
+  };
+}
+
 export function main(argv) {
   try {
     const args = parseArgs(argv);
     if (!existsSync(args.root) || !statSync(args.root).isDirectory()) fail(`project root not found: ${args.root}`);
-    const result = args.command === "build" ? buildBrief(args) : wrapBrief(args);
+    const result = args.command === "build" ? buildBrief(args) : args.command === "judge" ? judgeBrief(args) : wrapBrief(args);
     writeBrief(args.root, result.file, result.content);
     process.stdout.write(
       `Read ${result.file} and follow it exactly. It is your complete assignment; return the result it asks for.\n`,

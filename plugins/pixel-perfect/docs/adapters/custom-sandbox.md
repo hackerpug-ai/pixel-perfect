@@ -68,7 +68,7 @@ Mirror `../mega-button/sandbox/`: a workspace with a `sandbox` bin crate (`app.r
 Mirror `../get-spoke/.tui-storybook/`: a `tuikit` primitives crate + a `tui-storybook` bin (`registry/`, `app.rs`, `ui/{navigator,preview,footer}.rs`, `event.rs`, `selfcheck.rs`). `make sandbox` (interactive) + `make sandbox-check` (headless `--check` → stdout).
 
 ### Native-mobile (SwiftUI / Compose)
-A `Sandbox` build target/scheme: a `List` of stories grouped by layer → a `NavigationStack`/detail that renders the component in isolation (SwiftUI `#Preview` catalog or a dedicated sandbox app target; Compose `@Preview` gallery / a sandbox activity).
+A `Sandbox` build target/scheme: a `List` of stories grouped by layer → a `NavigationStack`/detail that renders the component in isolation (SwiftUI `#Preview` catalog or a dedicated sandbox app target; Compose `@Preview` gallery / a sandbox activity). The SwiftUI capture command is the package in `docs/adapters/swiftui.md`: `swift run` writes a real PNG, and `verify-catalog.mjs` accepts that PNG.
 
 ---
 

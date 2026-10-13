@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "atoms/TextLink",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:fe97f8dc49724db8f8710f9214b8ab1077031624ace45817624d882756ac053f",
+    "file": "sha256:e10f9b2a928aa25f9d680c08c859ae43621d48a0a0a947934fd03d1705465c8e",
+    "story": "sha256:5a84f1282ed08e0e492e6950a24da0edb66bf71c9fc92bb043e8c6895b9df83f",
+    "frames": "sha256:dbc1372bc1a32432d5d5e0534667eeaa7bce69265f8622ea5958a336dc231064",
+    "render": "sha256:8ba62bbd62f3481a8b1a83ac8084f42bd949fa15df4dfb03845a93d1af890ffd",
+    "goldenOnDisk": "sha256:fe97f8dc49724db8f8710f9214b8ab1077031624ace45817624d882756ac053f"
+  }
+}

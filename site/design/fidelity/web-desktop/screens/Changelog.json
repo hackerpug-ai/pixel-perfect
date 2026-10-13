@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "screens/Changelog",
+  "kind": "contract-review",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:262aae1b194e742a271f63ac61e83a24ccd002d4c4b5c3c33b86edf306849e05",
+    "file": "sha256:7358bf9673fc23d99005280bb4fb46e66aeaef34e6e7638018652043bb0af6ba",
+    "story": "sha256:250d4449cae30cbe10ae2b47828b2d0d3d0fcdd0893dfe237da2b8a9133075f4",
+    "frames": "none",
+    "render": "sha256:29e65b2507f48c4731e74d6020f3a4a84aa217534a2e2090e379668dbc7dd083",
+    "goldenOnDisk": "sha256:fd49d73691b811aaed7d4d2372226ffd95f913b0a6b55f0797b4b7f33f525057"
+  }
+}

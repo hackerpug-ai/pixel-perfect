@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "atoms/PrincipleCard",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:48b50b5ce3fc92238a59637a25b794e08f8341a44a6ff72e7b179fca34b60f03",
+    "file": "sha256:cf2a0e450d17a41f475233c602d41f23f270f10839c530011a29313ed5e26ab8",
+    "story": "sha256:0a4966e771594d7fe83f4c3a5eafd1717de8c3919224d46d460b5cffad3cc645",
+    "frames": "sha256:647c113f91933cc0a6c01d9e9fe1b500ca4dd4d426a1ff12f701f3dc097ba2c2",
+    "render": "sha256:0c89db15fb5c62717757ce7eb4240c46a6f56bde89e3bf0c404ab870f8685f70",
+    "goldenOnDisk": "sha256:48b50b5ce3fc92238a59637a25b794e08f8341a44a6ff72e7b179fca34b60f03"
+  }
+}

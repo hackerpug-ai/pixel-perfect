@@ -82,7 +82,7 @@ batch: B3 — where it runs and what it is built on
 
 ## Packaged agents
 
-The plugin ships its own agents under `agents/`. Every child agent a workflow starts is one of them. Today there is one: `designer` (`agents/designer.md`). Harnesses that load plugin agents register it as `pixel-perfect:designer`. A workflow never starts an agent the plugin does not ship. That includes a client agent with a similar name and any other name from the harness's agent list.
+The plugin ships its own agents under `agents/`. Every child agent a workflow starts is one of them. There are two: `designer` (`agents/designer.md`) and `judge` (`agents/judge.md`). Harnesses that load plugin agents register them as `pixel-perfect:designer` and `pixel-perfect:judge`. A workflow never starts an agent the plugin does not ship. That includes a client agent with a similar name and any other name from the harness's agent list. A type is named only when the tool lists it. Grok must not be given an unlisted type; the brief still carries the prompt.
 
 `SUBAGENT(agent, brief command)` means:
 

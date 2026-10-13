@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "atoms/ProofMark",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:482d4a38b068d49e8198b848d2af679ccfc400a0f1e8d0e2ae79f344e490b44f",
+    "file": "sha256:b7b3f7c6892d8f3812a397d60699a881e23e8862a8b97f8121e54be0ff6db06a",
+    "story": "sha256:75673099dffa785533c24664ecadfa0ccbe219c8dc8d8a2b6fca3007a1033f54",
+    "frames": "sha256:543c8d5a57a0b181386e8830bb6ec80a7bc5d9c10dc4c55a50ebc4dafcad0323",
+    "render": "sha256:fe16260a8de79ede3819f687405ea1b62cb6b2c573c103170b9e19f4efa0124d",
+    "goldenOnDisk": "sha256:8b68c7d76da524aabb339d78a79b9553bcce8b3dd5b82f5d9db34f073efd2823"
+  }
+}

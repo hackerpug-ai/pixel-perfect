@@ -179,4 +179,5 @@ SH
 
 - From 7.x: <https://github.com/hackerpug-ai/pixel-perfect/blob/main/plugins/pixel-perfect/docs/UPGRADING-8.0.md>
 - From 8.x: <https://github.com/hackerpug-ai/pixel-perfect/blob/main/plugins/pixel-perfect/docs/UPGRADING-9.0.md>
+- From 9.x: <https://github.com/hackerpug-ai/pixel-perfect/blob/main/plugins/pixel-perfect/docs/UPGRADING-10.0.md>
 - Returning to an existing project: <https://github.com/hackerpug-ai/pixel-perfect/blob/main/plugins/pixel-perfect/docs/RETURNING-PROJECT.md>

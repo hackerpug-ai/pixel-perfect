@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "atoms/PlateText",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:68756908ccff4975932bfc688a6ee61cb0243483e06291cda8347f02cd14ff12",
+    "file": "sha256:0ace7885649447d53e11463e9980b76ed0963b289a13271da11eabcff8865ee1",
+    "story": "sha256:337135ad5287937d63e07bd74a86e7b1f721b2f6e5079031e04eb22f1f72c97c",
+    "frames": "sha256:f79eb0468e8b584de4fd7a37d9b59b10cd671891949e2d2c0f88e1a2e791c6f4",
+    "render": "sha256:6f9cd1eec97a5b27ae4de6908e3c04df07a0a44a702bf29e9106dceba8eba3ce",
+    "goldenOnDisk": "sha256:68756908ccff4975932bfc688a6ee61cb0243483e06291cda8347f02cd14ff12"
+  }
+}

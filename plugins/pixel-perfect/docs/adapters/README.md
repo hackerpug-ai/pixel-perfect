@@ -62,6 +62,7 @@ Each adapter follows this structure:
 | Adapter | Category | Platforms |
 |---------|----------|-----------|
 | [SvelteKit](sveltekit.md) | framework | web |
+| [SwiftUI](swiftui.md) | framework | mobile-ios, desktop |
 | [Tailwind](tailwind.md) | style | web, mobile (via NativeWind) |
 | [shadcn/ui](shadcn.md) | components | web |
 | [shadcn-svelte](shadcn-svelte.md) | components | web (SvelteKit) |

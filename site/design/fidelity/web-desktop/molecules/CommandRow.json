@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "molecules/CommandRow",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:5666d8a3989614486be959a4b52385b3f545af4f70b6d38935f85be6e2d24892",
+    "file": "sha256:d85a9525bf6654e2f653b521a0e8b62bdb2107202db484dd6520d831aab95df9",
+    "story": "sha256:2c2d8bc198d54f2f4efd116edeb88cdaf3cc388a4f93fe80500cf21c907bcdc6",
+    "frames": "sha256:30588a8353df1ac7725f4c18b65418f5f23b0b1f0657d33f651802af16ec4bd1",
+    "render": "sha256:a257aff9a902759f1fb4112fe9fa683fbd52d062e85c91eb5b2022af516f4160",
+    "goldenOnDisk": "sha256:5666d8a3989614486be959a4b52385b3f545af4f70b6d38935f85be6e2d24892"
+  }
+}

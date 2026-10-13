@@ -287,14 +287,38 @@ test("evolve workflow covers E1–E6, confirm-before-write, and prove matrix", (
 });
 
 test("scaffold, build, verify, refine, status, custom-sandbox wire capture", () => {
-  assert.match(readPlugin("workflows/scaffold.md"), /verify-catalog\.mjs --baseline/);
+  assert.match(readPlugin("workflows/scaffold.md"), /gate\.mjs layer/);
   assert.match(readPlugin("workflows/build.md"), /atoms_capture/);
   assert.match(readPlugin("workflows/build.md"), /Composition mutation check/);
-  assert.match(readPlugin("workflows/verify.md"), /verify-catalog\.mjs --check/);
+  assert.match(readPlugin("workflows/verify.md"), /gate\.mjs layer/);
   assert.match(readPlugin("workflows/refine.md"), /pixel-perfect:evolve/);
   assert.match(readPlugin("workflows/status.md"), /Dead inventory/);
   assert.match(readPlugin("docs/adapters/custom-sandbox.md"), /sandbox:capture/);
   assert.match(readPlugin("docs/adapters/custom-sandbox.md"), /Catalog capture \(piece #8/);
+});
+
+test("build's four exit gates are one gate.mjs command and nobody is told to type passed or verified", () => {
+  const build = readPlugin("workflows/build.md");
+  for (const heading of ["### Phase 5 Exit Gate", "### Phase 5b Exit Gate", "### Phase 5c Exit Gate", "### Phase 6 Exit Gate"]) {
+    const start = build.indexOf(heading);
+    const next = build.indexOf("\n### ", start + heading.length);
+    const section = build.slice(start, next === -1 ? build.length : next);
+    assert.match(section, /gate\.mjs layer/, heading);
+    assert.doesNotMatch(section, /verify-catalog\.mjs --baseline/, heading);
+  }
+  const writeTold = /set (its|the item's) `status` to `verified`|Record `[^`\n]*passed`|"status": "verified"/i;
+  for (const file of ["workflows/build.md", "workflows/scaffold.md", "workflows/verify.md", "workflows/refine.md", "workflows/evolve.md", "workflows/status.md"]) {
+    assert.doesNotMatch(readPlugin(file), writeTold, file);
+  }
+  assert.match(build, /SUBAGENT\(judge/);
+  assert.match(build, /Two builder retries at most/);
+  assert.match(build, /ask the user/);
+  for (const file of ["workflows/verify.md", "workflows/status.md"]) {
+    const text = readPlugin(file);
+    assert.match(text, /SUBAGENT\(judge/, file);
+    assert.match(text, /Two builder retries at most/, file);
+    assert.match(text, /ask the user/, file);
+  }
 });
 
 test("manifest schema examples prefer capture/pinned/deprecations over controls authority", () => {

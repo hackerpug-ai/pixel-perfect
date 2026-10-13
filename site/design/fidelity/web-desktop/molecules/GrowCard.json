@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "molecules/GrowCard",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:32ca7994955cadebd83e2c8fce464b1a2b24b7c4525a1cd214b4d03f25675598",
+    "file": "sha256:394ee6ec304058d02d0a926d9f17af512946bc2e60e987f9e4ed3b24ba01925a",
+    "story": "sha256:43f2bac2e1fe2014fd3e628683c32ae39b609a2ba81265d3508fb73e90622868",
+    "frames": "sha256:2a0a078da17e1a464df9d1973a1169084c46ca46a2a2a8e047e2756f117a888c",
+    "render": "sha256:9938794bddf516f918275e3f266400dd3cd9831f8e26b10a9b60d06f1ea39ffe",
+    "goldenOnDisk": "sha256:32ca7994955cadebd83e2c8fce464b1a2b24b7c4525a1cd214b4d03f25675598"
+  }
+}

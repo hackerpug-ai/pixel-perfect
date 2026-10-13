@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "atoms/VersionPill",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:ea33ed752d3560b890dfb956683b5875b001cf5c969507f6677dd791484f977d",
+    "file": "sha256:9e5a45057b86fbb0c28e2c746051675cab9b704f474d5cf8c114d4861cb93ae2",
+    "story": "sha256:c4346d5dca54629bdf356d720056af7254e201b7eadbc499d93d8e30851546dc",
+    "frames": "sha256:2a0a078da17e1a464df9d1973a1169084c46ca46a2a2a8e047e2756f117a888c",
+    "render": "sha256:7ef39811d1999d2005e02686eb9e9f0f25bd093c070b225a9898098a6a71128e",
+    "goldenOnDisk": "sha256:ea33ed752d3560b890dfb956683b5875b001cf5c969507f6677dd791484f977d"
+  }
+}

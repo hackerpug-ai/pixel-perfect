@@ -199,7 +199,7 @@ Next: open a project that has your design and run `/pixel-perfect:init`.
 | Cursor, OpenCode | `/init` |
 | Pi | `/skill:pixel-perfect-init` |
 
-Releases are version-locked across all six agents. Every breaking release ships an upgrade guide. Upgrading from 7.x? Read the [8.0 guide](plugins/pixel-perfect/docs/UPGRADING-8.0.md). From 8.x? Read the [9.0 guide](plugins/pixel-perfect/docs/UPGRADING-9.0.md). Returning to a project you built earlier? Read [returning to a project](plugins/pixel-perfect/docs/RETURNING-PROJECT.md).
+Releases are version-locked across all six agents. Every breaking release ships an upgrade guide. Upgrading from 7.x? Read the [8.0 guide](plugins/pixel-perfect/docs/UPGRADING-8.0.md). From 8.x? Read the [9.0 guide](plugins/pixel-perfect/docs/UPGRADING-9.0.md). From 9.x? Read the [10.0 guide](plugins/pixel-perfect/docs/UPGRADING-10.0.md). Returning to a project you built earlier? Read [returning to a project](plugins/pixel-perfect/docs/RETURNING-PROJECT.md).
 
 | What it touches | Items |
 |-----------------|-------|

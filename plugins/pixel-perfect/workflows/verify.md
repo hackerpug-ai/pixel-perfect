@@ -92,11 +92,15 @@ Verifies all atomic components with sandbox controls.
 
 *Aesthetic checks always run through `docs/DESIGN-CONTRACT.md`; `DESIGN_EXECUTE` runs them through the packaged designer (see `workflows/RUNTIME-CONTRACT.md`, "Packaged agents"). Slug: `aesthetic-review`. The task brief asks for a review and says change nothing, so the child writes no file. The brief names each rendered screenshot and the frame it must compare with. The child returns one JSON object: `status`, and `differences`, one checkable statement per difference. Verify copies each difference into its report with the state it came from. The Aesthetic row reads pass only when `differences` is empty. A `status: blocked` result is reported as blocked, never as pass.
 
-The **styling contract, component contract, and catalog capture** rows are the checks whose verdict is not the reviewing agent's opinion — run the script and report its exit code. Catalog capture:
+The **styling contract, component contract, and catalog capture** rows are the checks whose verdict is not the reviewing agent's opinion. `verify` judges anything unjudged or stale, then runs one gate:
 
 ```
-node {plugin}/scripts/verify-catalog.mjs --check <project-root> --platform {platform} --layer atoms
+node {plugin}/scripts/brief.mjs judge <project-root> --platform {platform} --layer atoms
+node {plugin}/scripts/gate.mjs record <project-root> --platform {platform} --layer atoms --name {Name} --judgment <file>
+node {plugin}/scripts/gate.mjs layer <project-root> --platform {platform} --layer atoms
 ```
+
+Dispatch `SUBAGENT(judge, the brief command)`. A component the layer report names as failing goes back to a builder with the judge's list. Two builder retries at most. When the second retry still fails, ask the user and stop. Do not type a gate or `verified` into the manifest. The same judge dispatch, the same two builder retries, and the same ask-the-user stop apply to molecules, organisms, and screens.
 
 Note that `ecosystemLib` covers only packages approved by the Phase 4b ecosystem scan (TanStack Table and the like); the project's own component library from `tools.components` never produces an `ecosystemLib` entry, which is why it needs its own row.
 
@@ -361,18 +365,4 @@ StatusBadge:
 
 ## Manifest Updates
 
-On full phase pass, verify updates the selected platform's manifest entry:
-
-```json
-{
-  "platforms": {
-    "{platform}": {
-      "gates": {
-        "atoms": "passed"
-      }
-    }
-  }
-}
-```
-
-On failure, the gate remains unchanged and the manifest is not modified.
+`gate.mjs layer` writes the manifest and the receipt together when the phase passes. On failure it leaves the manifest byte-identical. Do not edit the manifest to record the result. Paste the command's report as written.

@@ -1943,3 +1943,67 @@ describe("brief build: rules and reasons every child gets", () => {
     }
   });
 });
+
+describe("brief.mjs judge", () => {
+  const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
+
+  function judgeProject() {
+    const root = mkdtempSync(path.join(tmpdir(), "pp-judge-"));
+    const atoms = ["One", "Two", "Three", "Four", "Five", "Six", "Seven"].map((name) => ({
+      name,
+      file: `src/${name}.tsx`,
+      story: `src/${name}.stories.tsx`,
+      status: "built",
+      appears_on: ["frame-a"],
+    }));
+    mkdirSync(path.join(root, "design/reference"), { recursive: true });
+    writeFileSync(
+      path.join(root, "design/manifest.json"),
+      JSON.stringify({
+        goal: "judge fixture",
+        inventory: { reference: "design/reference" },
+        platforms: { "web-desktop": { atoms, capture: { viewport: "32x32", pixels: "required" } } },
+      }, null, 2),
+    );
+    writeFileSync(path.join(root, "design/reference/frames.json"), JSON.stringify({ frames: [{ id: "frame-a", png: "frame-a.png" }] }));
+    writeFileSync(path.join(root, "design/reference/frame-a.png"), PNG);
+    mkdirSync(path.join(root, "src"), { recursive: true });
+    for (const atom of atoms) {
+      writeFileSync(path.join(root, atom.file), `export const ${atom.name} = () => null;\n`);
+      writeFileSync(path.join(root, atom.story), "export const Default = {};\n");
+      const renderDir = path.join(root, "design/.captures/web-desktop/atoms", atom.name);
+      mkdirSync(renderDir, { recursive: true });
+      writeFileSync(path.join(renderDir, "default.png"), PNG);
+      writeFileSync(path.join(renderDir, "default.txt"), `${atom.name}\n`);
+    }
+    return root;
+  }
+
+  test("a judge brief names at most six components, their real PNGs, and the verdict shape, with identical bytes", () => {
+    const root = judgeProject();
+    try {
+      const first = runCli(["judge", root, "--platform", "web-desktop", "--layer", "atoms"]);
+      assert.equal(first.code, 0, first.stderr);
+      const file = path.join(root, "design/.briefs/web-desktop/judge-atoms.md");
+      assert.equal(existsSync(file), true);
+      const text = readFileSync(file, "utf8");
+      assert.equal(text.includes("<<"), false);
+      assert.match(text, /"verdict": "pass or fail"/);
+      assert.match(text, /"discrepancies"/);
+      assert.match(text, /hashes/);
+      for (const name of ["One", "Two", "Three", "Four", "Five", "Six"]) {
+        assert.ok(text.includes(`atoms/${name}`), name);
+        assert.ok(text.includes(path.join(root, "design/.captures/web-desktop/atoms", name, "default.png")));
+        assert.ok(text.includes(path.join(root, "design/reference/frame-a.png")));
+      }
+      assert.equal(text.includes("atoms/Seven"), false);
+      assert.match(text, /1 more components are not in this brief/);
+      const second = runCli(["judge", root, "--platform", "web-desktop", "--layer", "atoms"]);
+      assert.equal(second.code, 0, second.stderr);
+      assert.equal(readFileSync(file, "utf8"), text);
+      assert.equal(first.stdout, second.stdout);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});

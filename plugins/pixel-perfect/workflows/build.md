@@ -490,14 +490,14 @@ batch: B-item — an item the designer could not finish
   question: {Name} is still not finished after two re-assignments. How should it be handled?
   options:
     - label: Accept with the differences recorded
-      description: Marks the item verified and writes the remaining differences into its manifest entry as notes. The gap stays on the record, and later levels build on the item as it is. Choose Other to name a different fix instead.
+      description: Writes the remaining differences into a judgment file as accepted, then runs gate.mjs record. The gap stays on the record. The gate, not this step, decides the item's status. Choose Other to name a different fix instead.
     - label: Stop this layer
       description: Leaves the item pending and stops the layer here. Nothing above it is built until you run build again after the cause is fixed.
 ```
 
 ### Record the item
 
-Set the item's `status` to `verified` in `design/manifest.json`. Write decisions and receipts only: no authored composition-edge arrays and no `controls` authority field. Controls coverage comes from catalog capture.
+Run `node {plugin}/scripts/gate.mjs item <project-root> --platform {platform} --layer {layer} --name {Name}`. It sets `built` only when the component file and the story file exist, the contract checks pass, and the story captured a real PNG. It does not write a layer gate, and it does not write `verified`. Write decisions and receipts only: no authored composition-edge arrays and no `controls` authority field. Controls coverage comes from catalog capture.
 
 ```json
 {
@@ -505,8 +505,7 @@ Set the item's `status` to `verified` in `design/manifest.json`. Write decisions
     {
       "name": "StatusBadge",
       "file": "src/components/StatusBadge.tsx",
-      "story": "src/components/StatusBadge.stories.tsx",
-      "status": "verified"
+      "story": "src/components/StatusBadge.stories.tsx"
     }
   ]
 }
@@ -519,7 +518,6 @@ For atoms wrapping an ecosystem library, the entry also carries the `ecosystemLi
   "name": "DataTable",
   "file": "src/components/DataTable.tsx",
   "story": "src/components/DataTable.stories.tsx",
-  "status": "verified",
   "ecosystemLib": {
     "package": "@tanstack/react-table",
     "version": "^8.20.0",
@@ -601,7 +599,7 @@ Build the atoms one at a time, in manifest order. Finish one before you start th
 1. **Assign.** `SUBAGENT(designer, node <plugin-root>/scripts/brief.mjs build <project-root> --platform {platform} --layer atoms --name {Name})`. Start one child with the line the command prints.
 2. **Accept.** Follow "Accept the result" in The Item Loop.
 3. **Re-assign on failure.** Write the failures to `design/.briefs/{platform}/atoms-{Name}.findings-N.json`, where N is the attempt: 1, then 2. Run the brief command again with `--findings <absolute path to that file>`, then start a new child. Two re-assignments at most, counting every re-run. After the second one still fails, ask through `USER_CHOICE` (batch `B-item`).
-4. **Record.** When the atom passes, set its `status` to `verified` (see "Record the item").
+4. **Record.** Run `gate.mjs item` for this atom (see "Record the item").
 5. **Print the progress line** (see Progress Tracking).
 
 After the last atom, print the collected flags once (see The Item Loop).
@@ -614,43 +612,27 @@ One line after each atom — the count, and what is next. Not a re-listing of wh
 Atoms 3/5 — StatusBadge, JobCard, DateChip verified. Building SectionHeader.
 ```
 
+### Judge, then one gate
+
+At each layer exit, judge before the gate. `gate.mjs` is the only command that writes a layer gate or `verified`. Do not type either value into the manifest.
+
+1. Run `node {plugin}/scripts/brief.mjs judge <project-root> --platform {platform} --layer {layer}`. The brief holds at most six components. Dispatch `SUBAGENT(judge, that command)` and start one child with the line the command prints.
+2. For each JSON judgment the child returns, run `node {plugin}/scripts/gate.mjs record <project-root> --platform {platform} --layer {layer} --name {Name} --judgment <file>`.
+3. Run the one layer command below. Paste its report as written.
+4. A component the report names as failing goes back to a builder with the judge's list (`brief.mjs build --findings`). Two builder retries at most. When the second retry still fails, ask the user through `USER_CHOICE` and stop. Do not dispatch a third builder.
+5. When the brief names components that were not in this batch of six, repeat from step 1.
+
+`verify` uses the same judge dispatch, the same two builder retries, and the same ask-the-user stop for anything unjudged or stale. `status` reports that loop and does not run it.
+
 ### Phase 5 Exit Gate
 
-All atoms in the manifest have `status: verified`, both contract gates pass for the atom files (or the corresponding enforcement is `"off"`/`"warn"`, or no contract of that kind is in force), **and catalog capture is green**. Controls coverage is derived from the capture (props/variants present in the structural artifact), not a stored `controls: true` field.
+One command. It reads the atoms layer from the manifest, runs the contract checks and `verify-catalog.mjs`, and requires a fresh passing judgment for every atom. On success it writes the manifest and the receipt together and records `atoms`, `atoms_styling_contract`, `atoms_component_contract`, and `atoms_capture`. On failure the manifest is left byte-identical. When `component_contract_source` is `"none"`, `atoms_component_contract` is recorded as not run, so a later reader can tell "no library" apart from "gate skipped".
 
-**Catalog capture gate (deterministic):**
 ```
-node {plugin}/scripts/verify-catalog.mjs --baseline <project-root> --platform {platform} --layer atoms
-```
-Writes goldens under `design/goldens/{platform}/atoms/…`. Record `atoms_capture: "passed"` beside the contract gate keys.
-
-**Composition mutation check** (replaces the "composed, not re-implemented" LLM judgment): for any atom that molecules claim to compose, run
-```
-node {plugin}/scripts/verify-catalog.mjs --blast <AtomName> <project-root> --platform {platform}
-```
-Every declared dependent must appear in `moved`. A dependent that does not move is a copy, not a composition — rebuild it to compose the atom before the layer gate opens.
-
-Update manifest:
-```json
-{
-  "phase": "atoms",
-  "gates": {
-    "plan": "passed",
-    "atoms": "passed",
-    "atoms_styling_contract": "passed",
-    "atoms_component_contract": "passed",
-    "atoms_capture": "passed"
-  },
-  "capture": {
-    "command": "npm run sandbox:capture",
-    "medium": "dom+png",
-    "goldens": "design/goldens/{platform}",
-    "captured_at": "<ISO-8601>"
-  }
-}
+node {plugin}/scripts/gate.mjs layer <project-root> --platform {platform} --layer atoms
 ```
 
-Record `atoms_component_contract: "n/a"` when `component_contract_source` is `"none"`/absent — the key is always written so a later reader can tell "no library" apart from "gate skipped".
+**Composition mutation check** (a report, not the gate): for any atom that molecules claim to compose, `verify-catalog.mjs --blast <AtomName>` still lists what moved. A comment-only blast does not prove composition. `--composes` does, and the layer command does not replace it.
 
 > **Both contract gates run for every layer.** Each item's brief names the gate commands for its platform, and The Item Loop runs them after each child returns. Each layer records `{layer}_styling_contract` and `{layer}_component_contract`. When enforcement is `hard-fail` (default), a layer whose emitted files violate either contract is **blocked** until fixed or a per-component override is recorded in `tools.style_contract_overrides` / `tools.component_contract_overrides`.
 >
@@ -767,7 +749,7 @@ Build the molecules one at a time, in manifest order. Finish one before you star
 1. **Assign.** `SUBAGENT(designer, node <plugin-root>/scripts/brief.mjs build <project-root> --platform {platform} --layer molecules --name {Name})`. Start one child with the line the command prints.
 2. **Accept.** Follow "Accept the result" in The Item Loop.
 3. **Re-assign on failure.** Write the failures to `design/.briefs/{platform}/molecules-{Name}.findings-N.json`, where N is the attempt: 1, then 2. Run the brief command again with `--findings <absolute path to that file>`, then start a new child. Two re-assignments at most, counting every re-run. After the second one still fails, ask through `USER_CHOICE` (batch `B-item`).
-4. **Record.** When the molecule passes, set its `status` to `verified` (see "Record the item").
+4. **Record.** Run `gate.mjs item` for this molecule (see "Record the item").
 5. **Print the progress line** (see Progress Tracking).
 
 After the last molecule, print the collected flags once (see The Item Loop).
@@ -781,23 +763,10 @@ Molecules 1/2 — JobRow verified. Building ActionPanel (ActionButton + StatusBa
 
 ### Phase 5b Exit Gate
 
-All molecules in the manifest have `status: verified`, both contract gates pass for the molecule files (Step 4 gates; `hard-fail` blocks), **and catalog capture is green**. Composition is proved by the mutation check (`--blast` each composed atom; dependents must move) — not by authored `molecules[].atoms` arrays.
+One command, after the judge loop above. It records `molecules`, `molecules_styling_contract`, `molecules_component_contract`, and `molecules_capture`. Composition is `--composes` on the real source, not a stored `molecules[].atoms` array.
 
 ```
-node {plugin}/scripts/verify-catalog.mjs --baseline <project-root> --platform {platform} --layer molecules
-```
-
-Update manifest:
-```json
-{
-  "phase": "molecules",
-  "gates": {
-    "molecules": "passed",
-    "molecules_styling_contract": "passed",
-    "molecules_component_contract": "passed",
-    "molecules_capture": "passed"
-  }
-}
+node {plugin}/scripts/gate.mjs layer <project-root> --platform {platform} --layer molecules
 ```
 
 ---
@@ -883,7 +852,7 @@ Build the organisms one at a time, in manifest order. Finish one before you star
 1. **Assign.** `SUBAGENT(designer, node <plugin-root>/scripts/brief.mjs build <project-root> --platform {platform} --layer organisms --name {Name})`. Start one child with the line the command prints.
 2. **Accept.** Follow "Accept the result" in The Item Loop.
 3. **Re-assign on failure.** Write the failures to `design/.briefs/{platform}/organisms-{Name}.findings-N.json`, where N is the attempt: 1, then 2. Run the brief command again with `--findings <absolute path to that file>`, then start a new child. Two re-assignments at most, counting every re-run. After the second one still fails, ask through `USER_CHOICE` (batch `B-item`).
-4. **Record.** When the organism passes, set its `status` to `verified` (see "Record the item").
+4. **Record.** Run `gate.mjs item` for this organism (see "Record the item").
 5. **Print the progress line** (see Progress Tracking).
 
 After the last organism, print the collected flags once (see The Item Loop).
@@ -897,23 +866,10 @@ Organisms 1/2 — DataTable verified (6 state scenarios). Building CommandPalett
 
 ### Phase 5c Exit Gate
 
-All organisms in the manifest have `status: verified` AND all declared state scenarios have corresponding stories, AND both contract gates pass for the organism files (Step 4 gates; `hard-fail` blocks), **and catalog capture is green** (`organisms_capture`).
+One command, after the judge loop above. It records `organisms`, `organisms_styling_contract`, `organisms_component_contract`, and `organisms_capture`.
 
 ```
-node {plugin}/scripts/verify-catalog.mjs --baseline <project-root> --platform {platform} --layer organisms
-```
-
-Update manifest:
-```json
-{
-  "phase": "organisms",
-  "gates": {
-    "organisms": "passed",
-    "organisms_styling_contract": "passed",
-    "organisms_component_contract": "passed",
-    "organisms_capture": "passed"
-  }
-}
+node {plugin}/scripts/gate.mjs layer <project-root> --platform {platform} --layer organisms
 ```
 
 ---
@@ -1000,31 +956,18 @@ Build the screens one at a time, in route-map order. Finish one before you start
 1. **Assign.** `SUBAGENT(designer, node <plugin-root>/scripts/brief.mjs build <project-root> --platform {platform} --layer screens --name {Name})`. Start one child with the line the command prints.
 2. **Accept.** Follow "Accept the result" in The Item Loop.
 3. **Re-assign on failure.** Write the failures to `design/.briefs/{platform}/screens-{Name}.findings-N.json`, where N is the attempt: 1, then 2. Run the brief command again with `--findings <absolute path to that file>`, then start a new child. Two re-assignments at most, counting every re-run. After the second one still fails, ask through `USER_CHOICE` (batch `B-item`).
-4. **Record.** When the screen passes, set its `status` to `verified` (see "Record the item").
+4. **Record.** Run `gate.mjs item` for this screen (see "Record the item").
 5. **Print one line:** the count of screens verified, and the next screen. After the last screen, print the collected flags once (see The Item Loop).
 
 ### Phase 6 Exit Gate
 
-All screens have `status: verified`, **and** every screen has one sandbox story per entry in its `states` list (each driving the screen into that state), **and** both contract gates pass across all built component/screen files (Step 4 gates; `hard-fail` blocks), **and catalog capture is green** (`compose_capture` / screens layer).
+One command, after the judge loop above. It records `compose`, `compose_styling_contract`, `compose_component_contract`, and `compose_capture`.
 
 ```
-node {plugin}/scripts/verify-catalog.mjs --baseline <project-root> --platform {platform} --layer screens
+node {plugin}/scripts/gate.mjs layer <project-root> --platform {platform} --layer screens
 ```
 
-Do not author `screens[].atoms` / `screens[].molecules` / `screens[].organisms` composition edges as authority — blast/reach from capture is the dependency oracle. Optional inventory hints may remain for human readability but are never the gate.
-
-Update manifest:
-```json
-{
-  "phase": "compose",
-  "gates": {
-    "compose": "passed",
-    "compose_styling_contract": "passed",
-    "compose_component_contract": "passed",
-    "compose_capture": "passed"
-  }
-}
-```
+Do not author `screens[].atoms` / `screens[].molecules` / `screens[].organisms` composition edges as authority. `--composes` reads the source. Optional inventory hints may remain for human readability but are never the gate.
 
 ---
 

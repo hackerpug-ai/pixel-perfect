@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "organisms/ProofSlider",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:a521b7a313ff89f9476f35a851223bcfd619a88b4c71cc7e88101f8e30465e7e",
+    "file": "sha256:47807041a426055e4d3e9110b3db5fe3340f036027ce8a61cd16c828dce1d648",
+    "story": "sha256:a296b6cb5e5e8a86efa4e262b2e9d08a6c5b3f67e21aea3dc703819b8d345742",
+    "frames": "sha256:78bb2f5432a1b36f5db5674e612f9da33eb77ac682ff0e2751c7583419fc4f50",
+    "render": "sha256:413bde50494687af866e5bce50ab89074274b74e5da8d0d420c84a18d745018e",
+    "goldenOnDisk": "sha256:a521b7a313ff89f9476f35a851223bcfd619a88b4c71cc7e88101f8e30465e7e"
+  }
+}

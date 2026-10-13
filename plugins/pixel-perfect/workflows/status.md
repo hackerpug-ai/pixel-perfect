@@ -43,10 +43,12 @@ Reads `design/manifest.json` **and** runs catalog capture when goldens exist:
 
 ## Catalog drift section
 
-When `platforms[platform].capture` is configured (or goldens exist under `design/goldens/`), run:
+When `platforms[platform].capture` is configured (or goldens exist under `design/goldens/`), run `gate.mjs audit`. It does not capture. Paste its report as written. It names an empty golden, a copied golden, an out-of-order layer, missing pixels, an empty styling scope, and a hand-typed pass. An item marked verified with no judgment is reported as recorded before 10.0, not judged.
+
+`build` and `verify` own the repair: `brief.mjs judge`, then `SUBAGENT(judge, that command)`, then `gate.mjs record`. A failing component goes back to a builder. Two builder retries at most, then ask the user and stop. Status reports that loop. It does not dispatch it, and it does not write a gate.
 
 ```
-node {plugin}/scripts/verify-catalog.mjs --check <project-root> --platform {platform}
+node {plugin}/scripts/gate.mjs audit <project-root> --platform {platform}
 node {plugin}/scripts/verify-catalog.mjs --reach <each inventory name> <project-root> --platform {platform}
 ```
 

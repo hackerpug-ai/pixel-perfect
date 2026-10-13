@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "organisms/StepsTimeline",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:879407e2c1268a90c319a40041e05ba0d989045559f0999375bdd6088dd66a71",
+    "file": "sha256:e59ff80ce6c2bffb14bc3e56d62189ba2c6b7ac223e1f65bc75fd7980f47607c",
+    "story": "sha256:744ab82bcdaa0421d1a1175ba6a2e21f598539ae94bbc1a9a25ab314c28c6bde",
+    "frames": "sha256:305d727c9ff1172b1840d10ae374cf44be4cdf2692e8f7f760daec67c9ac3dbb",
+    "render": "sha256:2a26d57d0ff2d35af45b25c75eb31425263a1a1536e59fe3f5a409904ee59dd2",
+    "goldenOnDisk": "sha256:879407e2c1268a90c319a40041e05ba0d989045559f0999375bdd6088dd66a71"
+  }
+}

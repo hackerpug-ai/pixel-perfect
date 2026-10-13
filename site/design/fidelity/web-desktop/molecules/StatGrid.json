@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "molecules/StatGrid",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:9d38d2fa663b33d98a489113d393bc58b1c55adf77759d23a2467974934082d9",
+    "file": "sha256:9390aa44ba3c1938a3068e54234bf4d7b3d6fe08773a34775d3cf7d808dbad5b",
+    "story": "sha256:1a7c1cbce11641e230481630e6c5e9d9c52b23a43268bd9db6390d5c8c72b92b",
+    "frames": "sha256:305d727c9ff1172b1840d10ae374cf44be4cdf2692e8f7f760daec67c9ac3dbb",
+    "render": "sha256:3e657cce2c27000b7b9a86169028f396955cdcd453630edd3a652f56b54dcbc2",
+    "goldenOnDisk": "sha256:9d38d2fa663b33d98a489113d393bc58b1c55adf77759d23a2467974934082d9"
+  }
+}

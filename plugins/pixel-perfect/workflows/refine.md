@@ -262,30 +262,7 @@ batch: R4 — the cascade
 
 ## Manifest Updates
 
-Refine updates the manifest to reflect changed items. Manifest stores decisions and receipts only — **no `controls` authority field**, no authored composition edges. After a successful refine, re-baseline or `--accept` the refined story's golden.
-
-```json
-{
-  "atoms": [
-    {
-      "name": "StatusBadge",
-      "file": "src/components/StatusBadge.tsx",
-      "story": "src/components/StatusBadge.stories.tsx",
-      "status": "verified"
-    }
-  ],
-  "capture": {
-    "captured_at": "<ISO-8601 after re-capture>"
-  }
-}
-```
-
-If verification fails after refinement, status reverts to `in-progress`:
-```json
-{
-  "status": "in-progress"
-}
-```
+Refine does not write a gate or an item status. Manifest stores decisions and receipts only — **no `controls` authority field**, no authored composition edges. After a successful refine, run `gate.mjs item` for the refined item and then the judge loop in `build`: `brief.mjs judge`, `SUBAGENT(judge, ...)`, `gate.mjs record`, `gate.mjs layer`. A failing component goes back to a builder twice, then ask the user. The layer command is the only writer of the result.
 
 ## Examples
 

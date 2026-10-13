@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Build and refresh real UI systems from requirements and design exports, with resumable implementation and reference verification.",
-    "version": "9.3.0"
+    "version": "10.0.0"
   },
   "plugins": [
     {

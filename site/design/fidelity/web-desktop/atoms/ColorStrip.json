@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "atoms/ColorStrip",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:c2fe0727ba035d7564137bbe47c7bb324289085dfaa7db227ab0a6774c063c1a",
+    "file": "sha256:7f407c7ed08dcf23fe7456ab786b836197593c46d7115fe2df5843935adbe33c",
+    "story": "sha256:e808ccfc94011e6db919cc38ca748d4ec077b53a292ad4387ccbd345485ab37b",
+    "frames": "sha256:385fe9244d185985a05df5e58b4cf071b7511d9391d645c3d39e970cf1af450f",
+    "render": "sha256:63603a25f7c0038ee6affea8373d2b50d5543f50c3088c76296ea872b25cfbfd",
+    "goldenOnDisk": "sha256:c2fe0727ba035d7564137bbe47c7bb324289085dfaa7db227ab0a6774c063c1a"
+  }
+}

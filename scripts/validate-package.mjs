@@ -110,6 +110,11 @@ export async function validatePackage(root = REPOSITORY_ROOT) {
     "docs/frontend-design/FRONTEND-DESIGN.md",
     "docs/frontend-design/LICENSE.txt",
     "agents/designer.md",
+    "agents/judge.md",
+    "docs/FIDELITY-BRIEF.md",
+    "docs/UPGRADING-10.0.md",
+    "docs/adapters/swiftui.md",
+    "scripts/gate.mjs",
     "skills/process-context/SKILL.md",
     "workflows/RUNTIME-CONTRACT.md",
   ];

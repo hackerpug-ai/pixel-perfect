@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "atoms/NavLink",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:0c5bb3f6672327c98bb92a7116fc82124749e86027804f5a5aba1294a3ccf84a",
+    "file": "sha256:b969315b6155bd2287dcb65496f78cb582cc3a12f2be562a70a8ba8fdd2560eb",
+    "story": "sha256:de4d165f882cfb2e70030157ce655367f76d3e7dc2df615b282abea3de9de0b7",
+    "frames": "sha256:d6454c17b205a34499f4fe9e27b666ccaa532efd6e367f0fc9cadc2c8b37bc5f",
+    "render": "sha256:044d7ae33e585fa92deafca2cb2061dab2faf532e86a0ab8c9c26deba042f9cb",
+    "goldenOnDisk": "sha256:0c5bb3f6672327c98bb92a7116fc82124749e86027804f5a5aba1294a3ccf84a"
+  }
+}

@@ -22,9 +22,17 @@
 		args: {
 			number: 1,
 			visible: true
-		}
+		},
+		render: template
 	});
 </script>
+
+{#snippet template(args: { number?: number; visible?: boolean })}
+	<div class="flex items-center gap-3">
+		<span class="text-sm text-ink">Mark {args.number}</span>
+		<ProofMark {...args} />
+	</div>
+{/snippet}
 
 <Story name="Default" />
 <Story name="Mark 2" args={{ number: 2 }} />

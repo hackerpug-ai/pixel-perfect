@@ -506,24 +506,26 @@
         "plan": "passed",
         "atoms": "passed",
         "molecules": "passed",
-        "compose": "pending",
+        "compose": "passed",
         "tokens_capture": "passed",
         "atoms_styling_contract": "passed",
-        "atoms_component_contract": "n/a",
+        "atoms_component_contract": "passed",
         "atoms_capture": "passed",
         "molecules_styling_contract": "passed",
-        "molecules_component_contract": "n/a",
+        "molecules_component_contract": "passed",
         "molecules_capture": "passed",
         "molecules_composition": "passed",
         "organisms": "passed",
         "organisms_styling_contract": "passed",
-        "organisms_component_contract": "n/a",
+        "organisms_component_contract": "passed",
         "organisms_capture": "passed",
         "organisms_composition": "passed",
         "screens_styling_contract": "passed",
         "screens_component_contract": "n/a",
         "compose_capture": "passed",
-        "screens_composition": "passed"
+        "screens_composition": "passed",
+        "compose_styling_contract": "passed",
+        "compose_component_contract": "passed"
       },
       "screens": [
         {
@@ -542,7 +544,7 @@
             "copied",
             "headline-alternate"
           ],
-          "status": "built",
+          "status": "verified",
           "states_note": "One route. The install tabs deep-link with #install-{id} on the same page (same data, instant toggle, shared layout), so they are states, not routes. dark renders Home in the dark theme; headline-alternate is the strategy D13 headline test.",
           "file": "src/lib/components/screens/Home.svelte",
           "story": "src/lib/components/screens/Home.stories.svelte",
@@ -1020,6 +1022,8 @@
       "capture": {
         "command": "pnpm sandbox:capture -- --width 1440",
         "medium": "dom+png",
+        "viewport": "1440x900",
+        "pixels": "required",
         "goldens": "design/goldens/web-desktop",
         "captured_at": "2026-10-02",
         "catalog": "src/lib/components"
@@ -1137,24 +1141,26 @@
         "plan": "passed",
         "atoms": "passed",
         "molecules": "passed",
-        "compose": "pending",
+        "compose": "passed",
         "tokens_capture": "passed",
         "atoms_styling_contract": "passed",
-        "atoms_component_contract": "n/a",
+        "atoms_component_contract": "passed",
         "atoms_capture": "passed",
         "molecules_styling_contract": "passed",
-        "molecules_component_contract": "n/a",
+        "molecules_component_contract": "passed",
         "molecules_capture": "passed",
         "molecules_composition": "passed",
         "organisms": "passed",
         "organisms_styling_contract": "passed",
-        "organisms_component_contract": "n/a",
+        "organisms_component_contract": "passed",
         "organisms_capture": "passed",
         "organisms_composition": "passed",
         "screens_styling_contract": "passed",
         "screens_component_contract": "n/a",
         "compose_capture": "passed",
-        "screens_composition": "passed"
+        "screens_composition": "passed",
+        "compose_styling_contract": "passed",
+        "compose_component_contract": "passed"
       },
       "screens": [
         {
@@ -1173,7 +1179,7 @@
             "copied",
             "headline-alternate"
           ],
-          "status": "built",
+          "status": "verified",
           "states_note": "One route. The install tabs deep-link with #install-{id} on the same page (same data, instant toggle, shared layout), so they are states, not routes. dark renders Home in the dark theme; headline-alternate is the strategy D13 headline test.",
           "file": "src/lib/components/screens/Home.svelte",
           "story": "src/lib/components/screens/Home.stories.svelte",
@@ -1548,13 +1554,6 @@
           }
         },
         {
-          "name": "LayerStack",
-          "file": "src/lib/components/organisms/LayerStack.svelte",
-          "story": "src/lib/components/organisms/LayerStack.stories.svelte",
-          "status": "verified",
-          "state": null
-        },
-        {
           "name": "DriftComparison",
           "file": "src/lib/components/organisms/DriftComparison.svelte",
           "story": "src/lib/components/organisms/DriftComparison.stories.svelte",
@@ -1639,18 +1638,13 @@
           "story": "src/lib/components/organisms/SiteFooter.stories.svelte",
           "status": "verified",
           "state": null
-        },
-        {
-          "name": "SocialCard",
-          "file": "src/lib/components/organisms/SocialCard.svelte",
-          "story": "src/lib/components/organisms/SocialCard.stories.svelte",
-          "status": "verified",
-          "state": null
         }
       ],
       "capture": {
         "command": "pnpm sandbox:capture -- --width 390",
         "medium": "dom+png",
+        "viewport": "400x844",
+        "pixels": "required",
         "goldens": "design/goldens/web-mobile",
         "captured_at": "2026-10-02",
         "catalog": "src/lib/components"

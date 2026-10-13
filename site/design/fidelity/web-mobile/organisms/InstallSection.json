@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "organisms/InstallSection",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:7f9fd3bc34102b4028e50525f14fbbfb568b1a8e90ec49ee2548224b973ae667",
+    "file": "sha256:7587db0e8e75d6f7c913cf221bad92eceba565d07f1eca420f79714ef6627fcb",
+    "story": "sha256:841782155ed3c411958803a0ff1958d5c8c66c7e2e21d0129036c4a83741e352",
+    "frames": "sha256:30588a8353df1ac7725f4c18b65418f5f23b0b1f0657d33f651802af16ec4bd1",
+    "render": "sha256:94e29e34a1c35fff00775dd9d6cf4704d0f2bca23c56a85013d8757631db90c1",
+    "goldenOnDisk": "sha256:7f9fd3bc34102b4028e50525f14fbbfb568b1a8e90ec49ee2548224b973ae667"
+  }
+}

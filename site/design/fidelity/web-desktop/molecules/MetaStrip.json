@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "molecules/MetaStrip",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:c584d5914c21432f7572cf3e5c00b12b39e67bbef8c054896a28168550f48e3b",
+    "file": "sha256:19eccb0c90417013d8082938e0dad0588520bf0a8472cb4d00d532b9aad84855",
+    "story": "sha256:ff0d7a375229f2377237c4f1bad06b9396f1271135ecc62d829b877bb6c1893b",
+    "frames": "sha256:78bb2f5432a1b36f5db5674e612f9da33eb77ac682ff0e2751c7583419fc4f50",
+    "render": "sha256:d6124820096d061eeca978c6a2107e0c476cabf4712165b18bdf3693ff0add7b",
+    "goldenOnDisk": "sha256:c584d5914c21432f7572cf3e5c00b12b39e67bbef8c054896a28168550f48e3b"
+  }
+}

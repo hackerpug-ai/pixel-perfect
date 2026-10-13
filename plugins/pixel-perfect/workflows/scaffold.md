@@ -289,7 +289,7 @@ The hello-world story is a **reference example** for all future component storie
 
 ### Step 7: Verify
 
-Confirm every one of these before the gate advances: the sandbox runs; Colors, Typography, Spacing (and Icons, when an icon library was selected) each render; HelloWorld — or every pulled CLI-library component — renders with its controls wired; the theme colors are actually applied; **and the catalog capture command exists and has produced a hello-world golden** (sandbox-spec piece #8).
+Confirm every one of these before the gate advances: the sandbox runs; Colors, Typography, Spacing (and Icons, when an icon library was selected) each render; HelloWorld — or every pulled CLI-library component — renders with its controls wired; the theme colors are actually applied; **and one story has rendered a real PNG** (sandbox-spec piece #8). A platform that declares `capture.pixels` `"none"` is exempt from the PNG.
 
 **Catalog capture (piece #8).** Generate `sandbox:capture` (or the platform equivalent) per `docs/adapters/custom-sandbox.md` / the sandbox adapter. Record on the platform:
 
@@ -301,13 +301,13 @@ Confirm every one of these before the gate advances: the sandbox runs; Colors, T
 }
 ```
 
-Then run the deterministic gate so the first golden exists before the first atom:
+Then run the one scaffold command. It fails when no story produced a real PNG, and it is the only writer of the scaffold gate. Do not type the gate value into the manifest.
 
 ```
-node {plugin}/scripts/verify-catalog.mjs --baseline <project-root> --platform {platform}
+node {plugin}/scripts/gate.mjs layer <project-root> --platform {platform} --layer scaffold
 ```
 
-Exit `0` required. Exit `3` (zero stories) means the capture command is not producing artifacts — fix it before advancing scaffold. Goldens commit under `design/goldens/{platform}/…`.
+Exit `0` required. A failure that names no PNG, or exit `3` (zero stories), means the capture command is not producing a render — fix it before advancing scaffold. Goldens commit under `design/goldens/{platform}/…`.
 
 **Token changelog template.** Create `design/system/tokens/CHANGELOG.json` if missing (scaffold template):
 
@@ -328,19 +328,7 @@ Verified: sandbox runs · 4 token stories render · HelloWorld renders with cont
 
 ### Step 8: Update Manifest
 
-On success, update the selected platform's gates:
-```json
-{
-  "platforms": {
-    "{platform}": {
-      "phase": "scaffold",
-      "gates": {
-        "scaffold": "passed"
-      }
-    }
-  }
-}
-```
+On success the scaffold command has already written the gate. Do not edit the manifest to record it. Read the command's report and paste it as written.
 
 ---
 

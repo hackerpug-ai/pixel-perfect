@@ -4,6 +4,15 @@ All notable changes to Pixel Perfect are documented here.
 
 ## [Unreleased]
 
+## [10.0.0] - 2026-10-13
+
+### Gates fail closed
+
+- Capture must emit a real PNG for every story, unless the platform declares `capture.pixels` `"none"` with a reason.
+- Only `scripts/gate.mjs` writes `passed` and `verified`. A mark of `verified` from before 10.0 is reported as recorded before 10.0 and not judged until `verify` judges it.
+- The plugin ships `agents/judge.md`. `brief.mjs judge` sends at most six components to that judge. A failing component goes back to a builder twice, then the workflow asks the user.
+- SwiftUI projects render a PNG with the package in `docs/adapters/swiftui.md`.
+
 ## [9.3.0] - 2026-10-02
 
 ### Existing-project reference refresh

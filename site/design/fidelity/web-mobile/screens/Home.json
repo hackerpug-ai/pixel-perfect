@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "screens/Home",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:7bdfaeeaa74b9e53847698412b371a8613f224822c230c2ef9ac12152d440e23",
+    "file": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+    "story": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c",
+    "frames": "sha256:222a1c236e87dcd9ccb341421e0b09f775d0328ed4b63d1de7b903ea9f9a9054",
+    "render": "sha256:45f786e8a6f36cbf820ea0280d6546d669521c726d19cf2a305e4673dc8e030c",
+    "goldenOnDisk": "sha256:4c32df7f4b41080ded504637b38018e3b4ce1cb3bfc16a5c2d22b8a1f8111369"
+  }
+}

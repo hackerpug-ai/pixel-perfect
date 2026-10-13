@@ -1,0 +1,302 @@
+{
+  "version": 1,
+  "platform": "web-desktop",
+  "layers": {
+    "atoms": {
+      "items": [
+        "Button",
+        "ThemeToggle",
+        "TextLink",
+        "NavLink",
+        "Logo",
+        "CropMark",
+        "RegistrationTarget",
+        "ColorStrip",
+        "SlugLine",
+        "PlateLabel",
+        "ProofMark",
+        "VersionPill",
+        "Stat",
+        "InlineCode",
+        "PlayButton",
+        "SliderHandle",
+        "Tab",
+        "DisclosureIcon",
+        "PlateText",
+        "SectionHeading",
+        "PrincipleCard",
+        "TabNote"
+      ]
+    },
+    "atoms_styling_contract": {
+      "items": [
+        "Button",
+        "ThemeToggle",
+        "TextLink",
+        "NavLink",
+        "Logo",
+        "CropMark",
+        "RegistrationTarget",
+        "ColorStrip",
+        "SlugLine",
+        "PlateLabel",
+        "ProofMark",
+        "VersionPill",
+        "Stat",
+        "InlineCode",
+        "PlayButton",
+        "SliderHandle",
+        "Tab",
+        "DisclosureIcon",
+        "PlateText",
+        "SectionHeading",
+        "PrincipleCard",
+        "TabNote"
+      ]
+    },
+    "atoms_component_contract": {
+      "items": [
+        "Button",
+        "ThemeToggle",
+        "TextLink",
+        "NavLink",
+        "Logo",
+        "CropMark",
+        "RegistrationTarget",
+        "ColorStrip",
+        "SlugLine",
+        "PlateLabel",
+        "ProofMark",
+        "VersionPill",
+        "Stat",
+        "InlineCode",
+        "PlayButton",
+        "SliderHandle",
+        "Tab",
+        "DisclosureIcon",
+        "PlateText",
+        "SectionHeading",
+        "PrincipleCard",
+        "TabNote"
+      ]
+    },
+    "atoms_capture": {
+      "items": [
+        "Button",
+        "ThemeToggle",
+        "TextLink",
+        "NavLink",
+        "Logo",
+        "CropMark",
+        "RegistrationTarget",
+        "ColorStrip",
+        "SlugLine",
+        "PlateLabel",
+        "ProofMark",
+        "VersionPill",
+        "Stat",
+        "InlineCode",
+        "PlayButton",
+        "SliderHandle",
+        "Tab",
+        "DisclosureIcon",
+        "PlateText",
+        "SectionHeading",
+        "PrincipleCard",
+        "TabNote"
+      ]
+    },
+    "molecules": {
+      "items": [
+        "CopyBlock",
+        "CommandRow",
+        "CodePanel",
+        "StepCard",
+        "ProofNote",
+        "GrowCard",
+        "ThreadRow",
+        "MetaStrip",
+        "StatGrid",
+        "FaqItem",
+        "TouchList",
+        "ScanBox",
+        "FigureCaption",
+        "ChangelogMini",
+        "DesignMdCard",
+        "SectionStrip",
+        "CopyNextStep",
+        "ProofFrame",
+        "ReleaseEntry"
+      ]
+    },
+    "molecules_styling_contract": {
+      "items": [
+        "CopyBlock",
+        "CommandRow",
+        "CodePanel",
+        "StepCard",
+        "ProofNote",
+        "GrowCard",
+        "ThreadRow",
+        "MetaStrip",
+        "StatGrid",
+        "FaqItem",
+        "TouchList",
+        "ScanBox",
+        "FigureCaption",
+        "ChangelogMini",
+        "DesignMdCard",
+        "SectionStrip",
+        "CopyNextStep",
+        "ProofFrame",
+        "ReleaseEntry"
+      ]
+    },
+    "molecules_component_contract": {
+      "items": [
+        "CopyBlock",
+        "CommandRow",
+        "CodePanel",
+        "StepCard",
+        "ProofNote",
+        "GrowCard",
+        "ThreadRow",
+        "MetaStrip",
+        "StatGrid",
+        "FaqItem",
+        "TouchList",
+        "ScanBox",
+        "FigureCaption",
+        "ChangelogMini",
+        "DesignMdCard",
+        "SectionStrip",
+        "CopyNextStep",
+        "ProofFrame",
+        "ReleaseEntry"
+      ]
+    },
+    "molecules_capture": {
+      "items": [
+        "CopyBlock",
+        "CommandRow",
+        "CodePanel",
+        "StepCard",
+        "ProofNote",
+        "GrowCard",
+        "ThreadRow",
+        "MetaStrip",
+        "StatGrid",
+        "FaqItem",
+        "TouchList",
+        "ScanBox",
+        "FigureCaption",
+        "ChangelogMini",
+        "DesignMdCard",
+        "SectionStrip",
+        "CopyNextStep",
+        "ProofFrame",
+        "ReleaseEntry"
+      ]
+    },
+    "organisms": {
+      "items": [
+        "SiteHeader",
+        "Hero",
+        "ProofSlider",
+        "LayerStack",
+        "DriftComparison",
+        "PrinciplesGrid",
+        "StepsTimeline",
+        "DemoStats",
+        "EvolveThread",
+        "DesignMdPromo",
+        "InstallSection",
+        "FaqList",
+        "CloseCta",
+        "SiteFooter",
+        "SocialCard"
+      ]
+    },
+    "organisms_styling_contract": {
+      "items": [
+        "SiteHeader",
+        "Hero",
+        "ProofSlider",
+        "LayerStack",
+        "DriftComparison",
+        "PrinciplesGrid",
+        "StepsTimeline",
+        "DemoStats",
+        "EvolveThread",
+        "DesignMdPromo",
+        "InstallSection",
+        "FaqList",
+        "CloseCta",
+        "SiteFooter",
+        "SocialCard"
+      ]
+    },
+    "organisms_component_contract": {
+      "items": [
+        "SiteHeader",
+        "Hero",
+        "ProofSlider",
+        "LayerStack",
+        "DriftComparison",
+        "PrinciplesGrid",
+        "StepsTimeline",
+        "DemoStats",
+        "EvolveThread",
+        "DesignMdPromo",
+        "InstallSection",
+        "FaqList",
+        "CloseCta",
+        "SiteFooter",
+        "SocialCard"
+      ]
+    },
+    "organisms_capture": {
+      "items": [
+        "SiteHeader",
+        "Hero",
+        "ProofSlider",
+        "LayerStack",
+        "DriftComparison",
+        "PrinciplesGrid",
+        "StepsTimeline",
+        "DemoStats",
+        "EvolveThread",
+        "DesignMdPromo",
+        "InstallSection",
+        "FaqList",
+        "CloseCta",
+        "SiteFooter",
+        "SocialCard"
+      ]
+    },
+    "compose": {
+      "items": [
+        "Home",
+        "Changelog"
+      ]
+    },
+    "compose_styling_contract": {
+      "items": [
+        "Home",
+        "Changelog"
+      ]
+    },
+    "compose_component_contract": {
+      "items": [
+        "Home",
+        "Changelog"
+      ]
+    },
+    "compose_capture": {
+      "items": [
+        "Home",
+        "Changelog"
+      ]
+    }
+  }
+}

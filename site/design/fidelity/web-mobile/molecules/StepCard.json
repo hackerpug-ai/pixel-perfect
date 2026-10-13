@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "molecules/StepCard",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:c6a060d60b015c4d1d7714614d2a5bd364d16840ab4e650568efd5006f71295a",
+    "file": "sha256:fb933597dbc90e6e7bd8d9814c41f98b3e65d384d4c375f4f479e5a1d304621f",
+    "story": "sha256:d814a49f39233e34a4a74c9b93857df66008f831cecfbbaeface6627822e7fe5",
+    "frames": "sha256:305d727c9ff1172b1840d10ae374cf44be4cdf2692e8f7f760daec67c9ac3dbb",
+    "render": "sha256:ba8389afda8dc125614d46900563f1ffe399837acfb4c854a088dd15f8fdcecb",
+    "goldenOnDisk": "sha256:c6a060d60b015c4d1d7714614d2a5bd364d16840ab4e650568efd5006f71295a"
+  }
+}

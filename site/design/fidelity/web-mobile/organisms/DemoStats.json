@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "organisms/DemoStats",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:5d95e84ced24dcce60730dbe0456079f14da4316627b18b968b3625a089562cc",
+    "file": "sha256:bbad5f6311a987d6ce6f79b33b8cb01e922e693086aaea3f26ddd23de37bf3b4",
+    "story": "sha256:998b97e2855cac593ed6b62a060227a5cb625f61c29bf163ee02d4b6aada6763",
+    "frames": "sha256:305d727c9ff1172b1840d10ae374cf44be4cdf2692e8f7f760daec67c9ac3dbb",
+    "render": "sha256:de15da727c78455e9b44f038136da31c49b346334537a7ef98571a55a88e3000",
+    "goldenOnDisk": "sha256:5d95e84ced24dcce60730dbe0456079f14da4316627b18b968b3625a089562cc"
+  }
+}

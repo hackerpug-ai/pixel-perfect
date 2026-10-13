@@ -257,7 +257,7 @@ export function applyAddition(projectRoot, platformId, { layer, name, state = "d
       name,
       file: file || `src/${invKey}/${name}.tsx`,
       story: story || `src/${invKey}/${name}.stories.tsx`,
-      status: "verified",
+      status: "pending",
     });
   }
   if (manifest.platforms) manifest.platforms[id] = config;

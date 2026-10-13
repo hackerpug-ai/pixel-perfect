@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "molecules/ProofFrame",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:48b530ccdc3f382f25d9b5c0520b7bbef80a4d65451f3902dda52cef0d8bd4be",
+    "file": "sha256:116242e37468929106b3ba513b94e12280b0d54496775747d85d7ae8db1b0cac",
+    "story": "sha256:faf4bb0ede6de451ccf26da11fd3ae6720cc51e19ea9034ea5d7330295b10b6a",
+    "frames": "sha256:6dbb1dcef62cb2c42745470dc92e0e0707103a71438269cf682af011b04cd686",
+    "render": "sha256:f788cb00c28aa6bd1b28e0998f28d0221fee5319dbc1e0ee5e0da67bfb5068de",
+    "goldenOnDisk": "sha256:48b530ccdc3f382f25d9b5c0520b7bbef80a4d65451f3902dda52cef0d8bd4be"
+  }
+}

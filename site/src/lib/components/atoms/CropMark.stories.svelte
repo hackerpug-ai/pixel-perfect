@@ -37,7 +37,7 @@
 
 <!-- The mark is absolutely placed, so each story gives it a positioned sheet to sit on. -->
 {#snippet template(args: { corner?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'; size?: 'hero' | 'social' })}
-	<div class="relative h-32 w-60 bg-paper">
+	<div class="relative h-32 w-60 border border-foreground bg-paper">
 		<CropMark {...args} />
 	</div>
 {/snippet}

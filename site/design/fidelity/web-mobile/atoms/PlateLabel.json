@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "atoms/PlateLabel",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:0465a8d6fa767221792e9ab779ba301d96afbd9c6f1eafc4a6880ff5fb73c4db",
+    "file": "sha256:9918b0a67757fb6cb0e34b5065bdf56f1d9a8a73ab626069b4028be7c8b3a020",
+    "story": "sha256:1e9cb93642bca315ad1ca464b9f0aa049146582efa0da7c8ca1c9951bf8b97bb",
+    "frames": "sha256:73199b8277b8bb49ce090d9cb0b827f13fec2f98ec12fa4590ef31cacbb96821",
+    "render": "sha256:2a6f1be6ee37823fe629681f767c52d004ac01732ba2fc64085068607c9e31f7",
+    "goldenOnDisk": "sha256:0465a8d6fa767221792e9ab779ba301d96afbd9c6f1eafc4a6880ff5fb73c4db"
+  }
+}

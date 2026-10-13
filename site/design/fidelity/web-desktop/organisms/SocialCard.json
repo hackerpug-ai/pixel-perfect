@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "organisms/SocialCard",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:3aaec70237317dde0f6525b53653c440ff8c358583059e1ed5dbaf0a1286a0de",
+    "file": "sha256:aaf6096460531b99733e42fa1b0f573a223d65bb85db9bc8265022f1fab34464",
+    "story": "sha256:4132cec81e8ba1970551007885c94e9e17286870c546c9304d364ec9af9cc520",
+    "frames": "sha256:c5dd657053fe000516b4f470b2a8953e278b0d957a24ab249dd490644c4581f9",
+    "render": "sha256:44dae33f10479c4d142f00371b9d56cb044c0e6e1b5f0ade8d6120f4cf5b865e",
+    "goldenOnDisk": "sha256:3aaec70237317dde0f6525b53653c440ff8c358583059e1ed5dbaf0a1286a0de"
+  }
+}

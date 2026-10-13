@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "component": "molecules/DesignMdCard",
+  "kind": "frames",
+  "verdict": "pass",
+  "reviewer": "gate",
+  "reason": "re-baseline of the captured render",
+  "discrepancies": [],
+  "hashes": {
+    "golden": "sha256:f08fda9755aa610b4439df4fa98d6351264bf2852318951daf6fd0c4b497801b",
+    "file": "sha256:6506575b19fb7995c8f10e3406cba02bdf4e5421337c2c657d8d116a6f5b24fc",
+    "story": "sha256:76fd32581e66b2f2557b9ab38a8bf97fcf321ef2a45dc4224cf586e4bfdbcbcf",
+    "frames": "sha256:2a0a078da17e1a464df9d1973a1169084c46ca46a2a2a8e047e2756f117a888c",
+    "render": "sha256:18a4e76cceb77acf401802044a8a7ff7941962aaff8e71137962232c43c4f8e4",
+    "goldenOnDisk": "sha256:f08fda9755aa610b4439df4fa98d6351264bf2852318951daf6fd0c4b497801b"
+  }
+}
