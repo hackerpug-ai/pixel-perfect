@@ -91,7 +91,7 @@ Manifest mode reads `<project-root>/design/manifest.json` and resolves everythin
 
 | Concern | Rule |
 |---------|------|
-| Contract | `tools.style_contract` with `tools.style_contract_source`. `builtin` or `manual` loads `docs/styling-contracts/{id}.md` from the plugin. `researched` loads `design/research/styling/{id}.md` from the project. `none` (the literal string) is the only value that means no contract is in force: exit `0`, report `"inForce": false`, and print `GATE DID NOT RUN: ...`. An absent source is always exit `2`, whatever else is recorded. A missing `tools` object is exit `2`. |
+| Contract | `tools.style_contract` with `tools.style_contract_source`. `builtin` loads `docs/styling-contracts/{id}.md` from the plugin. `manual` loads `docs/styling-contracts/{id}.md` from the project (the plugin's copy is the fallback). `researched` loads `design/research/styling/{id}.md` from the project. `none` (the literal string) is the only value that means no contract is in force: exit `0`, report `"inForce": false`, and print `GATE DID NOT RUN: ...`. An absent source is always exit `2`, whatever else is recorded. A missing `tools` object is exit `2`. |
 | Enforcement | `tools.style_contract_enforcement` is `hard-fail` (default), `warn` or `off`. It is validated whenever present, even when no contract is in force: any other value exits `2`. `off` exits `0` without scanning, prints `GATE DID NOT RUN: ...`, and reports `"enforcement": "off"`. The scan root and the contract file are still validated under `off`, so a broken configuration exits `2`. `warn` reports violations and exits `0`. |
 | Scan root | `platforms[<id>].root`, relative to the project root. Default `.`. In a monorepo, set it to the app folder (for example `apps/site`). A root that does not exist exits `2`. |
 | Overrides | Each key of `tools.style_contract_overrides` is one exemption, and its value must be a non-empty string reason (otherwise exit `2`, naming the key). A key of exactly `<layer>/<Name>` (for example `atoms/Button`) names one item. A key that contains `/` or a glob character is a glob, used as written and matched against paths relative to the scan root. Any other key is a component name. It must match exactly one item among the platform's `atoms`, `molecules`, `organisms` and `screens`; a name that matches none exits `2`, and a name that matches more than one exits `2` and asks for the `layer/Name` form. The item's manifest `file` is exempted. A name whose item records no file, or whose file lies outside the scan root, also exits `2`. Text mode prints one line per override with its key, form, reason and exempted files. If the overrides exempt every recorded component file, the gate exits `3`. |
@@ -133,7 +133,7 @@ Non-Node targets run the equivalent `grep`/`glob` commands directly (the build c
 
 ## Authoring a manual contract
 
-1. Copy `tailwind-web.md` as a template.
+1. Copy `tailwind-web.md` to `docs/styling-contracts/<id>.md` in your project. A manual contract lives in the project, not in the plugin.
 2. Fill the frontmatter (`source: manual`, `canonicalDocs`, `lastUpdated`).
 3. Write the body sections from the official docs of the system.
 4. Write the `checks` block. Run `node scripts/verify-styling-contract.mjs docs/styling-contracts/<id>.md <sample-source>` against a known-good and a known-bad source to confirm the checks fire correctly (real execution — do not assume).

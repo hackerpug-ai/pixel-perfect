@@ -117,7 +117,7 @@ The LLM formats the report; the pass/fail decision is deterministic.
 
 ## Authoring a contract
 
-1. Copy the built-in closest to your library's **distribution** shape (`vendored` → `react-native-reusables.md`; `package` → `react-native-paper.md`).
+1. Copy the built-in closest to your library's **distribution** shape (`vendored` → `react-native-reusables.md`; `package` → `react-native-paper.md`) to `docs/component-contracts/<id>.md` in your project. A manual contract lives in the project, not in the plugin; the gate loads it from there.
 2. Fill the frontmatter (`source: manual`, `importRoot`, `canonicalDocs`, `lastUpdated`).
 3. List the vendored inventory **and** the free primitives. Ban only what the library genuinely replaces.
 4. Write the `checks` block. Run the gate against a known-good and a known-bad tree and confirm both verdicts — real execution, do not assume.

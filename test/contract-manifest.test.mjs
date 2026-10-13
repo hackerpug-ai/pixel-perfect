@@ -329,6 +329,52 @@ test("a researched styling contract that is not on disk exits 2 and names it", (
   assert.match(r.stderr, /absent-research\.md/);
 });
 
+test("a manual styling contract resolves to the project's docs/styling-contracts/{id}.md", () => {
+  const dir = cloneMonorepo();
+  writeProjectFile(dir, "docs/styling-contracts/house-style.md", miniContract());
+  editPlatform(dir, (p) => {
+    p.tools.style_contract = "house-style";
+    p.tools.style_contract_source = "manual";
+  });
+  const r = runManifest(dir, "styling");
+  assert.equal(r.report.contract.path, path.join(dir, "docs/styling-contracts/house-style.md"));
+  assert.equal(r.status, 1, r.stderr);
+  assert.deepEqual(violationFiles(r.report), ["src/components/molecules/Toolbar.tsx"]);
+});
+
+test("a manual component contract resolves to the project's docs/component-contracts/{id}.md", () => {
+  const dir = cloneMonorepo();
+  writeProjectFile(dir, "docs/component-contracts/house-kit.md", readFileSync(SHADCN, "utf8"));
+  editPlatform(dir, (p) => {
+    p.tools.component_contract = "house-kit";
+    p.tools.component_contract_source = "manual";
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.report.contract.path, path.join(dir, "docs/component-contracts/house-kit.md"));
+  assert.equal(r.status, 1, r.stderr);
+});
+
+test("a manual contract the project does not hold falls back to the plugin's copy", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.tools.style_contract = "tailwind-web";
+    p.tools.style_contract_source = "manual";
+  });
+  const r = runManifest(dir, "styling");
+  assert.match(r.report.contract.path, /plugins\/pixel-perfect\/docs\/styling-contracts\/tailwind-web\.md$/);
+});
+
+test("a manual contract that is in neither place exits 2 and names the project path", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.tools.style_contract = "nowhere";
+    p.tools.style_contract_source = "manual";
+  });
+  const r = runManifest(dir, "styling");
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stderr, /docs\/styling-contracts\/nowhere\.md/);
+});
+
 test("a researched component contract resolves to design/research/libraries/{id}.md", () => {
   const dir = cloneMonorepo();
   writeProjectFile(dir, "design/research/libraries/shadcn-copy.md", readFileSync(SHADCN, "utf8"));

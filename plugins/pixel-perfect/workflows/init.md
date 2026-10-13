@@ -530,7 +530,7 @@ batch: B5 — lock it in
 ```
 
 - **Yes →** research synthesizes a contract, vets it against `docs/styling-convention-rubric.md` (≥6/7, no-contradiction auto-reject), caches it to `design/research/styling/{id}.md`. Record `style_contract_source: "researched"`.
-- **Manual →** the user authors `docs/styling-contracts/{id}.md` (validate it loads in the gate before recording). Record `style_contract_source: "manual"`.
+- **Manual →** the user authors `docs/styling-contracts/{id}.md` in the project (validate it loads in the gate before recording). Record `style_contract_source: "manual"`.
 - **Proceed without →** explicit opt-out only. Record `style_contract_source: "none"`, `style_contract_enforcement: "off"`. Flag at every subsequent build that styles are unenforced. This is never the default and never silent.
 
 **Step 3 — Fail closed.** If research cannot produce a rubric-passing contract, do **not** fabricate one and do **not** silently proceed. Offer: provide a better docs URL / author manually / choose a supported system from the menu / explicit proceed-without (above). A missing contract is an honest blocker.

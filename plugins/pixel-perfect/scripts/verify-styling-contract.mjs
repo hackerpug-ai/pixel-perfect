@@ -337,7 +337,8 @@ const GLOB_CHARS = /[*?[\]{}]/;
 const QUALIFIED_KEY = /^(atoms|molecules|organisms|screens)\/(.+)$/;
 
 // Per kind: the manifest field prefix and where each contract source lives.
-// builtin and manual contracts ship in the plugin; researched ones are cached per project.
+// builtin contracts ship in the plugin. researched ones are cached per project. A manual one
+// is authored in the project at docs/{builtinDir}/{id}.md; the plugin's folder is the fallback.
 const KINDS = {
   styling: {
     prefix: "style_contract",
@@ -378,9 +379,11 @@ export function resolveContract(platformId, projectRoot, kind, tools) {
   if (typeof id !== "string" || !CONTRACT_ID.test(id)) {
     throw new GateError(`tools.${prefix} must name a contract id (got ${JSON.stringify(id)})`);
   }
-  const path = source === "researched"
-    ? join(projectRoot, researchedDir, `${id}.md`)
-    : join(PLUGIN_ROOT, "docs", builtinDir, `${id}.md`);
+  const shipped = join(PLUGIN_ROOT, "docs", builtinDir, `${id}.md`);
+  const authored = join(projectRoot, "docs", builtinDir, `${id}.md`);
+  let path = shipped;
+  if (source === "researched") path = join(projectRoot, researchedDir, `${id}.md`);
+  else if (source === "manual") path = isFile(authored) || !isFile(shipped) ? authored : shipped;
   return { id, source, enforcement, inForce: true, path };
 }
 
