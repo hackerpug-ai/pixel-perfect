@@ -336,7 +336,7 @@ function manifestItems(platformConfig) {
   const items = {};
   for (const layer of ITEM_LAYERS) {
     for (const item of platformConfig[layer] || []) {
-      if (item && item.name) items[`${layer}/${item.name}`] = { file: item.file, story: item.story };
+      if (item && item.name) items[`${layer}/${item.name}`] = { file: item.file, story: item.story, status: item.status };
     }
   }
   return items;
@@ -599,11 +599,13 @@ export function runCapture(projectRoot, captureCfg, layerFilter = null, opts = {
  * is no wider than the declared viewport, and shows something: at least 8x8 and 64 pixels that
  * differ from the image's most common colour. An image this module cannot decode is a violation,
  * never a pass. Platforms that declare pixels "none" skip the gate.
+ * `evidence` holds what each receipt records for a passing image: its hash, size and ink pixels.
  */
 export function pixelGate(stories, stagingAbs, captureCfg) {
   const violations = [];
   const statuses = new Map();
   const pngPaths = new Map();
+  const evidence = new Map();
   for (const s of stories) {
     const key = storyKey(s);
     if (captureCfg.pixels === "none") {
@@ -619,7 +621,8 @@ export function pixelGate(stories, stagingAbs, captureCfg) {
       statuses.set(key, "missing-png");
       continue;
     }
-    const info = inspectPng(readFileSync(pngPath));
+    const bytes = readFileSync(pngPath);
+    const info = inspectPng(bytes);
     if (info.status === "invalid" || info.status === "undecodable") {
       const kind = info.status === "invalid" ? "invalid-png" : "undecodable-png";
       violations.push({ kind, key, rel: pngRel, reason: info.reason });
@@ -639,14 +642,22 @@ export function pixelGate(stories, stagingAbs, captureCfg) {
     }
     for (const p of problems) violations.push({ ...p, key, rel: pngRel });
     statuses.set(key, problems[0]?.kind ?? "ok");
+    if (problems.length === 0) {
+      evidence.set(key, {
+        hash: `sha256:${createHash("sha256").update(bytes).digest("hex")}`,
+        width: info.width,
+        height: info.height,
+        inkPixels: info.inkPixels,
+      });
+    }
   }
-  return { violations, statuses, pngPaths };
+  return { violations, statuses, pngPaths, evidence };
 }
 
 /**
  * Structural evidence. An empty artifact is a violation. Identical bodies for different
  * components are a violation (the wrapper-only signature). Identical bodies across states of
- * one component are reported as duplicates and do not fail.
+ * one component are reported as duplicates (basis "structure") and do not fail.
  */
 export function structureGate(stories) {
   const violations = [];
@@ -671,19 +682,47 @@ export function structureGate(stories) {
         reason: "identical bodies for different components: the capture is a wrapper, not the components",
       });
     } else {
-      duplicates.push({ hash, keys, reason: "identical bodies across states of one component (reported, not a failure)" });
+      duplicates.push({ basis: "structure", hash, keys, reason: "identical bodies across states of one component (reported, not a failure)" });
     }
   }
   return { violations, duplicates };
 }
 
-/** Both gates over one capture run. */
+/** PNG-level duplicates: identical pixels for different components fail; one component's states are reported. */
+function pngDuplicates(stories, evidence) {
+  const byHash = new Map();
+  for (const s of stories) {
+    const e = evidence.get(storyKey(s));
+    if (e) byHash.set(e.hash, [...(byHash.get(e.hash) || []), s]);
+  }
+  const violations = [];
+  const duplicates = [];
+  for (const [hash, group] of byHash) {
+    if (group.length < 2) continue;
+    const keys = group.map(storyKey).sort();
+    const components = new Set(group.map((s) => `${s.layer}/${s.name}`));
+    if (components.size > 1) {
+      violations.push({
+        kind: "cross-component-png-duplicate",
+        hash,
+        keys,
+        reason: "identical pixels for different components: the render does not show the component",
+      });
+    } else {
+      duplicates.push({ basis: "png", hash, keys, reason: "identical pixels across states of one component (reported, not a failure)" });
+    }
+  }
+  return { violations, duplicates };
+}
+
+/** Both gates over one capture run, plus the PNG-level duplicate check. */
 export function gateCapture(stories, stagingAbs, captureCfg, ignoredFiles = []) {
   const pixel = pixelGate(stories, stagingAbs, captureCfg);
   const structure = structureGate(stories);
+  const png = pngDuplicates(stories, pixel.evidence);
   return {
-    violations: [...pixel.violations, ...structure.violations],
-    duplicates: structure.duplicates,
+    violations: [...pixel.violations, ...structure.violations, ...png.violations],
+    duplicates: [...structure.duplicates, ...png.duplicates],
     pixel,
     ignoredFiles,
   };
@@ -783,7 +822,7 @@ export function inventoryDir(root, baseRel) {
     if (ext === ".png") continue;
     let content;
     try {
-      content = readFileSync(full, "utf8");
+      content = readFileSync(full, "utf8").replace(/\r\n/g, "\n");
     } catch {
       continue;
     }
@@ -811,7 +850,7 @@ export function storyKey(s) {
 const NOT_RECEIPTED = "golden was not written by --baseline or --accept";
 const EDITED_AFTER_RECEIPT =
   "golden differs from the hash its receipt recorded (edited by hand after --baseline or --accept)";
-const NO_RECEIPT_FILE = "no receipt.json beside the goldens: goldens were not written by --baseline or --accept";
+const NO_RECEIPT_FILE = "no receipt.json beside the goldens: run --baseline to stamp them, or --accept <glob> for a changed one";
 
 function receiptPath(projectRoot, captureCfg) {
   return join(under(projectRoot, captureCfg.goldens), RECEIPT_FILE);
@@ -833,9 +872,16 @@ export function readReceipts(projectRoot, captureCfg) {
   return receipt;
 }
 
-/** The receipt entry for one captured story. Source digests come from the manifest item, when it names files. */
-function receiptEntry(projectRoot, captureCfg, story, mode) {
+/**
+ * The receipt entry for one captured story. Pixels-required platforms also record the PNG evidence.
+ * Source digests come from the manifest item, when it names files.
+ */
+export function receiptEntry(projectRoot, captureCfg, story, mode, evidence = null) {
   const entry = { hash: story.hash, ext: story.rel.slice(story.rel.lastIndexOf(".")), mode };
+  if (captureCfg.pixels === "required") {
+    if (!evidence) throw new Error(`no pixel evidence for ${storyKey(story)}; the pixel gate should have refused it`);
+    entry.png = evidence;
+  }
   const item = captureCfg.items[`${story.layer}/${story.name}`];
   if (item && (item.file || item.story)) {
     const source = {};
@@ -860,14 +906,25 @@ function digestOf(projectRoot, rel, field) {
   return digest(readFileSync(abs));
 }
 
-/** Merge entries into receipt.json atomically. Entries not named here keep their prior values. */
-function writeReceipts(projectRoot, captureCfg, entries) {
+/**
+ * Merge entries into receipt.json atomically, with the platform's pixel decision at the top.
+ * Entries whose golden file is gone are pruned. `prior` must be read before any golden moves.
+ */
+export function writeReceipts(projectRoot, captureCfg, entries, prior = readReceipts(projectRoot, captureCfg)) {
   const file = receiptPath(projectRoot, captureCfg);
+  const goldensAbs = under(projectRoot, captureCfg.goldens);
   ensureDir(dirname(file));
-  const prior = readReceipts(projectRoot, captureCfg);
   const merged = { ...(prior?.goldens || {}), ...entries };
-  const goldens = Object.fromEntries(Object.keys(merged).sort().map((k) => [k, merged[k]]));
-  const body = JSON.stringify({ version: 1, platform: captureCfg.platform, goldens }, null, 2) + "\n";
+  const kept = Object.keys(merged)
+    .sort()
+    .filter((k) => existsSync(join(goldensAbs, `${k}${merged[k].ext}`)));
+  const goldens = Object.fromEntries(kept.map((k) => [k, merged[k]]));
+  const body =
+    JSON.stringify(
+      { version: 1, platform: captureCfg.platform, pixels: captureCfg.pixels, pixelsReason: captureCfg.pixelsReason, goldens },
+      null,
+      2,
+    ) + "\n";
   const tmp = `${file}.${process.pid}.tmp`;
   writeFileSync(tmp, body, "utf8");
   renameSync(tmp, file);
@@ -889,10 +946,55 @@ function unreceiptedFor(goldens, receipts) {
   return out;
 }
 
+/** Which stories are new, unchanged, or changed against the goldens on disk. Hashes are line-ending-normalized. */
+export function planGoldens(projectRoot, captureCfg, stories) {
+  const goldensAbs = under(projectRoot, captureCfg.goldens);
+  const plan = { added: [], unchanged: [], changed: [] };
+  for (const s of stories) {
+    const dst = join(goldensAbs, s.rel);
+    const key = storyKey(s);
+    if (!existsSync(dst)) plan.added.push(key);
+    else if (goldenHash(dst) === s.hash) plan.unchanged.push(key);
+    else plan.changed.push(key);
+  }
+  return plan;
+}
+
+function goldenHash(full) {
+  return fingerprint(readFileSync(full, "utf8").replace(/\r\n/g, "\n"));
+}
+
+/** Copy the given captured stories from staging into the goldens folder. Returns their rel paths. */
+export function writeGoldenSet(projectRoot, captureCfg, stories) {
+  const stagingAbs = under(projectRoot, captureCfg.staging);
+  const goldensAbs = under(projectRoot, captureCfg.goldens);
+  ensureDir(goldensAbs);
+  const written = [];
+  for (const s of stories) {
+    const dst = join(goldensAbs, s.rel);
+    ensureDir(dirname(dst));
+    copyFileSync(join(stagingAbs, s.rel), dst);
+    written.push(s.rel);
+  }
+  return written;
+}
+
+/** Capture once and gate the result, without writing anything. For scripts that apply their own policy. */
+export function captureAndGate(projectRoot, captureCfg, layerFilter = null, opts = {}) {
+  const capture = runCapture(projectRoot, captureCfg, layerFilter, opts);
+  const gate = gateCapture(capture.stories, under(projectRoot, captureCfg.staging), captureCfg, capture.ignoredFiles);
+  return { capture, gate };
+}
+
 // ---------------------------------------------------------------------------
 // Modes
 // ---------------------------------------------------------------------------
 
+/**
+ * --baseline never blesses drift. Stories with no golden are added. A golden that already matches the
+ * capture is stamped with a receipt. A golden that differs is refused: nothing is written, and the
+ * changed keys are listed for --accept.
+ */
 export function modeBaseline(projectRoot, captureCfg, layerFilter = null, opts = {}) {
   const cap = runCapture(projectRoot, captureCfg, layerFilter, opts);
   if (cap.count === 0) {
@@ -903,6 +1005,9 @@ export function modeBaseline(projectRoot, captureCfg, layerFilter = null, opts =
       message: `Zero stories captured under ${captureCfg.catalogDir || captureCfg.command}`,
       stories: [],
       written: [],
+      added: [],
+      unchanged: [],
+      changed: [],
       violations: [],
       duplicates: [],
     };
@@ -911,32 +1016,41 @@ export function modeBaseline(projectRoot, captureCfg, layerFilter = null, opts =
   const gate = gateCapture(cap.stories, stagingAbs, captureCfg, cap.ignoredFiles);
   if (gate.violations.length) return blocked("baseline", captureCfg, cap, gate);
 
-  // Receipts are computed before any golden moves, so a missing source file leaves nothing half-written.
-  const entries = {};
-  for (const s of cap.stories) entries[storyKey(s)] = receiptEntry(projectRoot, captureCfg, s, "baseline");
-  const goldensRoot = under(projectRoot, captureCfg.goldens);
-  ensureDir(goldensRoot);
-  const written = [];
-  for (const s of cap.stories) {
-    const dst = join(goldensRoot, s.rel);
-    ensureDir(dirname(dst));
-    copyFileSync(join(stagingAbs, s.rel), dst);
-    written.push(s.rel);
+  const prior = readReceipts(projectRoot, captureCfg);
+  const plan = planGoldens(projectRoot, captureCfg, cap.stories);
+  if (plan.changed.length) {
+    return {
+      mode: "baseline",
+      exit: 1,
+      vacuous: false,
+      message:
+        `${plan.changed.length} golden(s) differ from the capture: ${plan.changed.join(", ")}. ` +
+        `Nothing was written; use --accept <glob> to accept a changed golden.`,
+      stories: cap.stories,
+      written: [],
+      ...plan,
+      ...gateFields(captureCfg, gate),
+    };
   }
-  writeReceipts(projectRoot, captureCfg, entries);
+  // Receipt entries are built before any golden moves, so a missing source file leaves nothing half-written.
+  const entries = {};
+  for (const s of cap.stories) entries[storyKey(s)] = receiptEntry(projectRoot, captureCfg, s, "baseline", gate.pixel.evidence.get(storyKey(s)));
+  const added = cap.stories.filter((s) => plan.added.includes(storyKey(s)));
+  const written = writeGoldenSet(projectRoot, captureCfg, added);
+  writeReceipts(projectRoot, captureCfg, entries, prior);
   return {
     mode: "baseline",
     exit: 0,
     vacuous: false,
-    message: `Wrote ${written.length} golden(s) under ${captureCfg.goldens}`,
+    message: `Added ${plan.added.length} golden(s); stamped ${plan.unchanged.length} matching golden(s) under ${captureCfg.goldens}`,
     stories: cap.stories,
     written,
+    ...plan,
     ...gateFields(captureCfg, gate),
   };
 }
 
-const RECEIPT_HELP =
-  "run --check to see drift, then --baseline to write receipts for the approved captures";
+const RECEIPT_HELP = "run --baseline to stamp goldens that match and add new ones; changed goldens need --accept <glob>";
 
 export function modeCheck(projectRoot, captureCfg, layerFilter, deprecations = {}, opts = {}) {
   const cap = runCapture(projectRoot, captureCfg, layerFilter, opts);
@@ -1062,18 +1176,11 @@ export function modeAccept(projectRoot, captureCfg, globPattern, layerFilter = n
       ...gateFields(captureCfg, gate),
     };
   }
+  const prior = readReceipts(projectRoot, captureCfg);
   const entries = {};
-  for (const s of chosen) entries[storyKey(s)] = receiptEntry(projectRoot, captureCfg, s, "accept");
-  const goldensRoot = under(projectRoot, captureCfg.goldens);
-  ensureDir(goldensRoot);
-  const accepted = [];
-  for (const s of chosen) {
-    const dst = join(goldensRoot, s.rel);
-    ensureDir(dirname(dst));
-    copyFileSync(join(stagingAbs, s.rel), dst);
-    accepted.push(s.rel);
-  }
-  writeReceipts(projectRoot, captureCfg, entries);
+  for (const s of chosen) entries[storyKey(s)] = receiptEntry(projectRoot, captureCfg, s, "accept", gate.pixel.evidence.get(storyKey(s)));
+  const accepted = writeGoldenSet(projectRoot, captureCfg, chosen);
+  writeReceipts(projectRoot, captureCfg, entries, prior);
   return {
     mode: "accept",
     exit: 0,
@@ -1259,8 +1366,10 @@ export function modeReach(projectRoot, captureCfg, names, layerFilter) {
 }
 
 /**
- * --audit core: every golden must be receipted, non-empty, and not a copy of another component's
- * body; every receipted source must still match the file on disk. Runs no capture.
+ * --audit core. Every golden must be receipted, non-empty, and not a copy of another component's body.
+ * Every receipted source must still match the file on disk. Where pixels are required, every receipt
+ * entry must carry PNG evidence, and a built item that names a source must have its source hashes.
+ * Runs no capture.
  */
 export function auditGoldens(projectRoot, platformConfig, platformId = "default") {
   const captureCfg = resolveCaptureConfig(platformConfig, platformId);
@@ -1272,26 +1381,57 @@ export function auditGoldens(projectRoot, platformConfig, platformId = "default"
     .map((g) => ({ key: storyKey(g), rel: g.rel }));
   const crossComponentDuplicates = groupGoldensByHash(goldens);
   const staleSources = staleSourcesOf(projectRoot, receipts);
-  const failing = unreceipted.length + empty.length + crossComponentDuplicates.length + staleSources.length;
+  const noPixelEvidence =
+    captureCfg.pixels === "required"
+      ? Object.keys(receipts?.goldens || {})
+          .sort()
+          .filter((key) => !receipts.goldens[key].png)
+          .map((key) => ({ key, reason: "golden has no pixel evidence" }))
+      : [];
+  const noSourceHashes = noSourceHashesOf(captureCfg, receipts);
+  const failing =
+    unreceipted.length +
+    empty.length +
+    crossComponentDuplicates.length +
+    staleSources.length +
+    noPixelEvidence.length +
+    noSourceHashes.length;
   const exit = goldens.length === 0 ? 3 : failing > 0 ? 1 : 0;
+  const pixelNote = captureCfg.pixels === "none" ? ` (pixels not required: ${captureCfg.pixelsReason})` : "";
   return {
     mode: "audit",
     platform: platformId,
     exit,
     vacuous: goldens.length === 0,
+    pixels: captureCfg.pixels,
+    pixelsReason: captureCfg.pixelsReason,
     message:
       goldens.length === 0
         ? `No goldens under ${captureCfg.goldens} to audit`
         : failing === 0
-          ? `Audit clean: ${goldens.length} golden(s) receipted, non-empty, distinct; sources unchanged`
-          : `Audit failed: ${unreceipted.length} unreceipted, ${empty.length} empty, ${crossComponentDuplicates.length} cross-component duplicate group(s), ${staleSources.length} stale source(s)`,
-    goldens: goldens.length,
+          ? `Audit clean: ${goldens.length} golden(s) receipted, non-empty, distinct; sources unchanged${pixelNote}`
+          : `Audit failed: ${unreceipted.length} unreceipted, ${empty.length} empty, ${crossComponentDuplicates.length} cross-component duplicate group(s), ${staleSources.length} stale source(s), ${noPixelEvidence.length} without pixel evidence, ${noSourceHashes.length} without source hashes${pixelNote}`,
+    goldenCount: goldens.length,
     receiptMissing: goldens.length > 0 && receipts === null,
     unreceipted,
     empty,
     crossComponentDuplicates,
     staleSources,
+    noPixelEvidence,
+    noSourceHashes,
   };
+}
+
+function noSourceHashesOf(captureCfg, receipts) {
+  const out = [];
+  for (const key of Object.keys(receipts?.goldens || {}).sort()) {
+    const [layer, name] = key.split("/");
+    const item = captureCfg.items[`${layer}/${name}`];
+    if (!item || item.status === "pending" || !(item.file || item.story)) continue;
+    if (receipts.goldens[key].source) continue;
+    out.push({ key, reason: `receipt has no source hashes for ${key}` });
+  }
+  return out;
 }
 
 function groupGoldensByHash(goldens) {
@@ -1642,6 +1782,7 @@ export function main(argv) {
     const { id: platformId, config: platformConfig } = resolvePlatform(manifest, parsed.platform);
     const captureCfg = resolveCaptureConfig(platformConfig, platformId);
     if (parsed.perturbDir) captureCfg.catalogDir = parsed.perturbDir;
+    if (captureCfg.pixels === "none") process.stderr.write(`PIXELS NOT REQUIRED: ${captureCfg.pixelsReason}\n`);
     const stagingRel = parsed.out ?? captureCfg.staging;
     assertStagingAllowed(projectRoot, stagingRel, parsed.out ? "--out" : "capture.staging", captureCfg.goldens);
     captureCfg.staging = stagingRel;
@@ -1725,7 +1866,7 @@ function describeReport(report) {
   for (const line of lines) process.stderr.write(`${line}\n`);
 }
 
-export { findCatalogSources, braceExpand, globToRegex, makeMatcher, parseArgs };
+export { findCatalogSources, braceExpand, globToRegex, makeMatcher, parseArgs, pngDuplicates };
 
 const isMain = import.meta.url === `file://${process.argv[1]}`;
 if (isMain) process.exit(main(process.argv.slice(2)));

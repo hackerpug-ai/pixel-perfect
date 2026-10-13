@@ -6,7 +6,16 @@ import { existsSync, readFileSync, rmSync, writeFileSync, copyFileSync, mkdirSyn
 import path from "node:path";
 import test from "node:test";
 import { digest } from "../plugins/pixel-perfect/scripts/reference-revisions.mjs";
-import { auditGoldens, fingerprint, resolvePlatform, loadManifest } from "../plugins/pixel-perfect/scripts/verify-catalog.mjs";
+import {
+  auditGoldens,
+  captureAndGate,
+  fingerprint,
+  loadManifest,
+  planGoldens,
+  resolveCaptureConfig,
+  resolvePlatform,
+  writeReceipts,
+} from "../plugins/pixel-perfect/scripts/verify-catalog.mjs";
 import {
   PIXEL_FIXTURE,
   cloneFixture,
@@ -146,8 +155,8 @@ test("goldens with no receipt.json fail --check and name the fix", () => {
     assert.equal(code, 1, stderr);
     assert.equal(report.receiptMissing, true);
     assert.match(report.message, /receipt\.json/);
-    assert.match(report.message, /--check/);
-    assert.match(report.message, /--baseline/);
+    assert.match(report.message, /run --baseline to stamp goldens that match and add new ones/);
+    assert.match(report.message, /changed goldens need --accept <glob>/);
   } finally {
     removeDirs(dir);
   }
@@ -160,7 +169,7 @@ test("a layer-restricted baseline updates only its layer's receipt entries and k
     const before = receiptOf(dir).goldens;
     writeIn(dir, "sandbox/stories/atoms/Button/default.html", "<button>Moved</button>\n");
     writeIn(dir, "sandbox/stories/molecules/Card/default.html", "<section>Card moved</section>\n");
-    const r = runCli(["--baseline", dir, "--platform", "web-desktop", "--layer", "atoms"]);
+    const r = runCli(["--accept", "atoms/Button/**", dir, "--platform", "web-desktop", "--layer", "atoms"]);
     assert.equal(r.code, 0, r.stderr);
     const after = receiptOf(dir).goldens;
     assert.deepEqual(after["molecules/Card/default"], before["molecules/Card/default"], "molecules receipt entry must be kept");
@@ -239,7 +248,141 @@ test("auditGoldens is importable and needs no capture run", () => {
     const audit = auditGoldens(dir, config, id);
     assert.deepEqual(audit.unreceipted, []);
     assert.equal(audit.exit, 0);
-    assert.ok(audit.goldens >= 4);
+    assert.ok(audit.goldenCount >= 4);
+  } finally {
+    removeDirs(dir);
+  }
+});
+
+// --- S4: receipt hygiene ---
+
+test("a corrupt receipt is exit 2 and nothing is written, before any golden is copied", () => {
+  const dir = pixelClone();
+  try {
+    baselineOk(dir);
+    rmSync(path.join(dir, GOLDENS, "atoms/Badge/default.dom"));
+    writeIn(dir, RECEIPT, "{not json");
+    const { code, stderr } = runCli(["--baseline", dir, "--platform", "web-desktop"]);
+    assert.equal(code, 2, stderr);
+    assert.equal(existsSync(path.join(dir, GOLDENS, "atoms/Badge/default.dom")), false, "no golden may be copied over a corrupt receipt");
+  } finally {
+    removeDirs(dir);
+  }
+});
+
+test("a receipt entry whose golden file is gone is pruned on the next write", () => {
+  const dir = pixelClone();
+  try {
+    baselineOk(dir);
+    rmSync(path.join(dir, GOLDENS, "molecules/Card/default.dom"));
+    const { code, stderr } = runCli(["--baseline", dir, "--platform", "web-desktop", "--layer", "atoms"]);
+    assert.equal(code, 0, stderr);
+    assert.equal(receiptOf(dir).goldens["molecules/Card/default"], undefined, "the pruned entry must not remain");
+    assert.ok(receiptOf(dir).goldens["atoms/Button/default"], "entries with a golden are kept");
+  } finally {
+    removeDirs(dir);
+  }
+});
+
+test("a golden saved with CRLF line endings matches its receipt", () => {
+  const dir = pixelClone();
+  try {
+    baselineOk(dir);
+    const golden = path.join(dir, GOLDENS, "atoms/Badge/default.dom");
+    writeFileSync(golden, readFileSync(golden, "utf8").replace(/\n/g, "\r\n"));
+    const check = runCli(["--check", dir, "--platform", "web-desktop"]);
+    assert.equal(check.code, 0, check.stderr);
+    const audit = runCli(["--audit", dir, "--platform", "web-desktop"]);
+    assert.equal(audit.code, 0, JSON.stringify(audit.report));
+  } finally {
+    removeDirs(dir);
+  }
+});
+
+test("audit reports the golden count as goldenCount and keeps goldens as the folder path", () => {
+  const dir = pixelClone();
+  try {
+    baselineOk(dir);
+    const { report } = runCli(["--audit", dir, "--platform", "web-desktop"]);
+    assert.equal(report.goldenCount, 4);
+    assert.equal(report.goldens, GOLDENS);
+  } finally {
+    removeDirs(dir);
+  }
+});
+
+test("audit flags a receipt with no source hashes once the manifest names a file for a built item", () => {
+  const dir = pixelClone();
+  try {
+    baselineOk(dir);
+    writeIn(dir, "src/Button.tsx", "export const Button = 1;\n");
+    editManifest(dir, (m) => {
+      m.platforms["web-desktop"].atoms.find((e) => e.name === "Button").file = "src/Button.tsx";
+    });
+    const { code, report } = runCli(["--audit", dir, "--platform", "web-desktop"]);
+    assert.equal(code, 1);
+    assert.deepEqual(report.noSourceHashes, [
+      { key: "atoms/Button/default", reason: "receipt has no source hashes for atoms/Button/default" },
+    ]);
+  } finally {
+    removeDirs(dir);
+  }
+});
+
+// --- S5: baseline never blesses drift ---
+
+test("baseline refuses a changed golden, names it, and writes nothing", () => {
+  const dir = pixelClone();
+  try {
+    baselineOk(dir);
+    const goldenBefore = readIn(dir, `${GOLDENS}/atoms/Button/default.dom`);
+    const receiptBefore = readIn(dir, RECEIPT);
+    writeIn(dir, "sandbox/stories/atoms/Button/default.html", "<button>Changed</button>\n");
+    const { code, report, stderr } = runCli(["--baseline", dir, "--platform", "web-desktop"]);
+    assert.equal(code, 1, stderr);
+    assert.ok(report.changed.includes("atoms/Button/default"), JSON.stringify(report.changed));
+    assert.deepEqual(report.written, []);
+    assert.match(report.message, /use --accept <glob> to accept a changed golden/);
+    assert.equal(readIn(dir, `${GOLDENS}/atoms/Button/default.dom`), goldenBefore);
+    assert.equal(readIn(dir, RECEIPT), receiptBefore);
+  } finally {
+    removeDirs(dir);
+  }
+});
+
+test("baseline adds new goldens and stamps receipts for goldens that already match", () => {
+  const dir = pixelClone();
+  try {
+    baselineOk(dir);
+    rmSync(path.join(dir, GOLDENS, "atoms/Badge/default.dom"));
+    rmSync(path.join(dir, RECEIPT));
+    const { code, report, stderr } = runCli(["--baseline", dir, "--platform", "web-desktop"]);
+    assert.equal(code, 0, stderr);
+    assert.deepEqual(report.added, ["atoms/Badge/default"]);
+    assert.ok(report.unchanged.includes("atoms/Button/default"));
+    assert.deepEqual(report.changed, []);
+    assert.deepEqual(Object.keys(receiptOf(dir).goldens).sort(), [
+      "atoms/Badge/default",
+      "atoms/Button/default",
+      "molecules/Card/default",
+      "screens/Home/default",
+    ]);
+  } finally {
+    removeDirs(dir);
+  }
+});
+
+test("the lower-level functions are exported so another script can apply its own policy", () => {
+  const dir = pixelClone();
+  try {
+    const { id, config } = resolvePlatform(loadManifest(dir), "web-desktop");
+    const cfg = resolveCaptureConfig(config, id);
+    const { capture, gate } = captureAndGate(dir, cfg, null, {});
+    assert.equal(capture.stories.length, 4);
+    assert.deepEqual(gate.violations, []);
+    const plan = planGoldens(dir, cfg, capture.stories);
+    assert.equal(plan.added.length, 4);
+    assert.equal(typeof writeReceipts, "function");
   } finally {
     removeDirs(dir);
   }

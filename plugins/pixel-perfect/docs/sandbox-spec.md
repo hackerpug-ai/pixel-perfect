@@ -146,12 +146,36 @@ The **structural** artifact is the gate for drift. The **image** is required evi
 
 #### Receipts
 
-`--baseline` and `--accept` write `{goldens}/receipt.json`, one entry per golden: its hash, its extension, the mode that wrote it, and, when the manifest item names a `file` or `story`, the sha256 of each. No timestamps, so diffs stay quiet. The write is atomic.
+`receipt.json` sits beside the goldens. It records the platform's pixel decision at its top level (`pixels`, and `pixelsReason` when pixels are "none"). Each golden has one entry:
 
-- `--check` fails any golden that has no receipt entry, or whose hash differs from its receipt (`unreceipted`): "golden was not written by --baseline or --accept". A golden copied in by hand is refused.
-- A missing `receipt.json` beside existing goldens fails `--check`. The message says to run `--check` to see drift, then `--baseline`.
-- `--audit` reads goldens, receipts and sources and runs **no capture**. It reports unreceipted goldens, empty goldens, cross-component duplicate groups, and receipted sources edited after their golden was written (`staleSources`).
+```json
+{
+  "version": 1,
+  "platform": "web-desktop",
+  "pixels": "required",
+  "pixelsReason": null,
+  "goldens": {
+    "atoms/Button/default": {
+      "hash": "a1b2c3d4e5f60718",
+      "ext": ".dom",
+      "mode": "baseline",
+      "png": { "hash": "sha256:…", "width": 390, "height": 300, "inkPixels": 810 },
+      "source": { "file": "src/Button.tsx", "fileHash": "sha256:…", "story": "sandbox/stories/atoms/Button/default.html", "storyHash": "sha256:…" }
+    }
+  }
+}
+```
+
+- `png` is the evidence the gate judged for that story. It is omitted when pixels are "none". `source` appears only when the manifest item names a `file` or `story`. There are no timestamps, so diffs stay quiet. Writes are atomic.
+- Line endings are normalized to LF before any hash is taken.
+- `--baseline` never blesses drift. A story with no golden is added. A golden that already matches the capture is stamped with a receipt. A golden that differs is refused: nothing is written, the changed keys are listed, and the mode says to use `--accept <glob>`.
+- `--accept <glob>` is the only write that moves a changed golden.
+- Each write reads and validates the prior receipt before it copies any golden. A corrupt receipt is exit 2, with nothing written. Entries whose golden file is gone are pruned.
+- `--check` fails any golden that has no receipt entry, or whose hash differs from its receipt (`unreceipted`). A missing `receipt.json` beside existing goldens fails `--check` too, and the message says to run `--baseline` to stamp matching goldens and add new ones.
+- `--audit` reads goldens, receipts and sources and runs **no capture**. It reports unreceipted goldens, empty goldens, cross-component duplicate groups, and receipted sources edited after their golden was written (`staleSources`). Where pixels are required, it also reports receipt entries with no PNG evidence (`golden has no pixel evidence`) and built items whose receipt has no source hashes (`receipt has no source hashes`).
 - A manifest source path that does not exist blocks `--baseline` (exit 2). A receipt cannot pin a file that is not there.
+
+A receipt is a record of what a mode wrote. It is not proof that the render is faithful. A forger who hand-writes a receipt and large, distinct PNGs can pass `--check` and `--audit`. The fidelity review that compares renders against the design target is the gate for that residue.
 
 #### Capture command environment
 

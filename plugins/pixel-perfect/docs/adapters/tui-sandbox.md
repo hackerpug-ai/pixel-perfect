@@ -275,7 +275,8 @@ A terminal UI has no pixels to compare. Its render is the text buffer, so the st
 ```
 
 - Each story's frame is written as `{staging}/{layer}/{name}/{state}.txt` (or the frame's structural extension). No PNG is written.
-- `pixels: "none"` without a `pixels_reason` is a config error (exit 2). The report names the reason.
+- `pixels: "none"` without a `pixels_reason` is a config error (exit 2).
+- Every mode prints `PIXELS NOT REQUIRED: <reason>` on stderr, and `receipt.json` records `pixels: "none"` with the reason at its top level. `--audit` reports both.
 - Write goldens only through `verify-catalog.mjs --baseline`. `--check` refuses a golden it did not receive from a baseline or accept.
 
 Gate commands: `--baseline`, `--check`, `--accept <glob>`, `--render --only <layer>/<Name>`, `--audit`, `--blast <Name>`, `--reach <Name...>`, `--composes`. See `docs/sandbox-spec.md` §8.

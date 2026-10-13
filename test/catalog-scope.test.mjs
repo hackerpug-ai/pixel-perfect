@@ -32,10 +32,11 @@ test("--layer with a capture command baselines only that layer; another layer's 
     writeIn(dir, "sandbox/stories/atoms/Button/default.html", "<button>Send</button>\n");
     writeIn(dir, "sandbox/stories/molecules/Card/default.html", "<section>Changed card</section>\n");
 
-    const { code, stderr, report } = runCli(["--baseline", dir, "--platform", "web-desktop", "--layer", "atoms"]);
+    // A changed golden is accepted, never baselined: --accept is the only write that moves one.
+    const { code, stderr, report } = runCli(["--accept", "atoms/**", dir, "--platform", "web-desktop", "--layer", "atoms"]);
     assert.equal(code, 0, stderr);
-    assert.ok(report.written.length > 0);
-    assert.ok(report.written.every((rel) => rel.startsWith("atoms/")), JSON.stringify(report.written));
+    assert.ok(report.accepted.length > 0);
+    assert.ok(report.accepted.every((rel) => rel.startsWith("atoms/")), JSON.stringify(report.accepted));
     assert.match(readIn(dir, `${GOLDENS}/atoms/Button/default.dom`), /Send/);
     assert.equal(readIn(dir, `${GOLDENS}/molecules/Card/default.dom`), cardBefore, "molecules golden must not move");
 
