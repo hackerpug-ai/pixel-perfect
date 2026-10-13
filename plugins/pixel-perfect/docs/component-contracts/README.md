@@ -88,7 +88,7 @@ Contracts must match both common project layouts, because the framework decides:
 
 Every glob list below carries both. Getting this wrong produces a vacuous scan (exit `3`), not a silent pass — the gate guards against it — but it still blocks the build, so get it right.
 
-In a monorepo the app usually lives in a subfolder, such as `apps/site`. Root-anchored globs match nothing when the scan starts at the repo root. Set `platforms[<id>].root` in the manifest to the app folder. Manifest mode then scans the app's files, and it refuses to pass while any recorded component file lies outside every check's scope.
+In a monorepo the app usually lives in a subfolder, such as `apps/site`. Root-anchored globs match nothing when the scan starts at the repo root. Set `platforms[<id>].root` in the manifest to the app folder. Manifest mode then scans the app's files, and it refuses to pass while any recorded component file is reached by no check's glob. A glob may match a file's path from the scan root or from the project root, so a contract written from the repo root keeps working. A component the contract's own `exclude` leaves out (one placed in the vendored primitive folder, for example) is listed as `NOT CHECKED` in the report, not failed.
 
 ## How the gate runs
 

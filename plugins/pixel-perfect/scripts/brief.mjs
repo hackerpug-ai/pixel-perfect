@@ -451,11 +451,26 @@ function filesSection(entry, sourceRoot) {
   ].join("\n");
 }
 
-function composesSection(item, layer, name, config, sourceRoot) {
+// The last path segment of an inventory library_primitive ("shadcn/button" -> "button"), which is
+// the form scaffold.components[] records.
+function primitiveSlug(primitive) {
+  return String(primitive).split("/").pop().toLowerCase();
+}
+
+function composesSection(item, layer, name, config, sourceRoot, inventory) {
   const names = item.composes ?? [];
   if (names.length === 0) return "";
+  const installed = new Set((config.scaffold?.components ?? []).map((c) => String(c).toLowerCase()));
   const lines = names.map((dep) => {
     const entry = LAYERS.flatMap((l) => config[l] ?? []).find((candidate) => candidate.name === dep);
+    // A primitive the component library provides is never built as a manifest item: the
+    // inventory names it with library_primitive and scaffold installs it.
+    const primitive = LAYERS.flatMap((l) => inventory?.[l] ?? []).find((candidate) => candidate.name === dep)?.library_primitive;
+    if (!entry && typeof primitive === "string" && primitive.length > 0) {
+      return installed.has(primitiveSlug(primitive))
+        ? `- ${dep}: library primitive ${primitive} (installed by scaffold). Import it the way the component contract says.`
+        : `- ${dep}: library primitive ${primitive} (not installed: return it under needs).`;
+    }
     if (!entry || !entry.file) fail(`${layer}/${name} composes ${dep}, which has no manifest entry; build ${dep} first`);
     if (entry.status === undefined || entry.status === "pending") fail(`${layer}/${name} composes ${dep}, which is still pending; build ${dep} first`);
     return `- ${dep}: ${inside(sourceRoot, entry.file)}`;
@@ -575,7 +590,7 @@ export function buildBrief({ root, platform, layer, name, findings }) {
     STACK: stackSection({ platformId, sourceRoot, tools, contracts, config }),
     CONTEXT: contextSection(root, manifest),
     FILES: filesSection(entry, sourceRoot),
-    COMPOSES: composesSection(inInventory ?? entry, layer, name, config, sourceRoot),
+    COMPOSES: composesSection(inInventory ?? entry, layer, name, config, sourceRoot, inventory),
     STATE: stateSection(entry, join(PLUGIN_ROOT, "docs/state-patterns.md"), `${layer}/${name}`),
     LIBRARY: librarySection(entry, brief),
     RULES: layerRules(brief, layer),

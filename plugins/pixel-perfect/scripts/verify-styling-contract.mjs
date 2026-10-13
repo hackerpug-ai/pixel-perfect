@@ -220,9 +220,19 @@ function parseContract(path) {
 // ---------------------------------------------------------------------------
 
 // A file is in a check's scope when the check's glob matches it and its own exclude does not.
-function inCheckScope(check, file) {
-  if (!check._include(file)) return false;
-  return !(check._exclude && check._exclude(file));
+// `alt` is the same file's path from the project root, given when the scan root is a folder
+// inside the project. A shipped contract names paths from the app root ("src/**"); a contract
+// authored in a monorepo names them from the repo root ("apps/site/src/**"). A glob or an
+// exclude may match either form.
+function inCheckScope(check, file, alt = null) {
+  const hits = (matcher) => matcher(file) || (alt !== null && matcher(alt));
+  if (!hits(check._include)) return false;
+  return !(check._exclude && hits(check._exclude));
+}
+
+// True when the check's glob reaches the file, whether or not its exclude then removes it.
+function reachedByCheck(check, file, alt = null) {
+  return check._include(file) || (alt !== null && check._include(alt));
 }
 
 const VACUOUS_WARNING = (scanned, root) =>
@@ -230,8 +240,9 @@ const VACUOUS_WARNING = (scanned, root) =>
   `A vacuous pass — likely the wrong source-root. Pass the PROJECT ROOT (the dir containing src/), not src/.`;
 
 // Runs every check over allFiles. `exempt(file)` is true for files an override excludes;
-// they are never scoped and never evaluated.
-function runChecks(parsed, sourceRoot, allFiles, exempt) {
+// they are never scoped and never evaluated. `altOf(file)` gives the file's project-root
+// path when that differs from its scan-root path (see inCheckScope).
+function runChecks(parsed, sourceRoot, allFiles, exempt, altOf = () => null) {
   const { forbiddenPatterns, mustInclude } = parsed.checks;
   const violations = [];
   const scoped = new Set(); // files that at least one check evaluated
@@ -245,7 +256,7 @@ function runChecks(parsed, sourceRoot, allFiles, exempt) {
   for (const c of forbiddenPatterns) {
     counts.set(c, 0);
     for (const file of allFiles) {
-      if (exempt(file) || !inCheckScope(c, file)) continue;
+      if (exempt(file) || !inCheckScope(c, file, altOf(file))) continue;
       visit(c, file);
       const forbidden = { type: "forbidden", checkId: c.id, file, rationale: c.rationale || "" };
       if (c.mode === "exists") { violations.push(forbidden); continue; }
@@ -269,7 +280,7 @@ function runChecks(parsed, sourceRoot, allFiles, exempt) {
   for (const c of mustInclude) {
     counts.set(c, 0);
     for (const file of allFiles) {
-      if (exempt(file) || !inCheckScope(c, file)) continue;
+      if (exempt(file) || !inCheckScope(c, file, altOf(file))) continue;
       visit(c, file);
       const content = readText(sourceRoot, file);
       if (!content.split("\n").some((line) => c._re.test(line))) {
@@ -452,7 +463,7 @@ const COVERAGE_REASON = {
   "outside-root": "outside the scan root",
   "not-scanned": "not scanned: the path lies in a directory the scanner skips (node_modules, dist, build, .next, .turbo, coverage, .cache) or in a .design* path",
   "case-mismatch": "recorded path differs from the file on disk only by letter case",
-  "out-of-scope": "no check's glob matches it, or every match is excluded",
+  "out-of-scope": "no check's glob matches it",
 };
 
 // Runs the gate for one contract kind on one platform of a project manifest.
@@ -568,6 +579,8 @@ export function runManifestGate({ projectRoot, platform, kind, layer = null, fil
   const walked = new Set(allFiles);
   const walkedByLowerCase = new Map(allFiles.map((f) => [f.toLowerCase(), f]));
   const exempt = (file) => overrides.some((o) => o.match(file));
+  // The file's path from the project root, when the scan root is a folder inside the project.
+  const altOf = scanRoot === root ? () => null : (file) => relative(root, join(scanRoot, file));
 
   const coverage = targets.map((t) => {
     const scanFile = scanRelative(root, scanRoot, t.file);
@@ -575,11 +588,15 @@ export function runManifestGate({ projectRoot, platform, kind, layer = null, fil
     if (scanFile === null) status = "outside-root";
     else if (!walked.has(scanFile)) status = walkedByLowerCase.has(scanFile.toLowerCase()) ? "case-mismatch" : "not-scanned";
     else if (exempt(scanFile)) status = "exempted";
-    else if (checks.some((c) => inCheckScope(c, scanFile))) status = "in-scope";
+    else if (checks.some((c) => inCheckScope(c, scanFile, altOf(scanFile)))) status = "in-scope";
+    // The scan reached the file, and the contract's own exclude list leaves it out (a
+    // vendored primitive folder, say). That is the contract's decision, not a scan that
+    // missed the file, so it is not a coverage failure. It is reported by name.
+    else if (checks.some((c) => reachedByCheck(c, scanFile, altOf(scanFile)))) status = "contract-excluded";
     else status = "out-of-scope";
     return { file: t.file, layer: t.layer, name: t.name, scanFile, status };
   });
-  const isCovered = (c) => c.status === "in-scope" || c.status === "exempted";
+  const isCovered = (c) => c.status === "in-scope" || c.status === "exempted" || c.status === "contract-excluded";
   const covered = coverage.filter(isCovered);
   const failures = coverage.filter((c) => !isCovered(c)).map((c) => ({
     file: c.file,
@@ -591,7 +608,7 @@ export function runManifestGate({ projectRoot, platform, kind, layer = null, fil
     : `${failures.length} component files are outside every check's scope: ${failures.map((f) => f.file).join(", ")}`;
   const allExempt = coverage.length > 0 && coverage.every((c) => c.status === "exempted");
 
-  const { violations: allViolations, scoped, checks: checkReport } = runChecks(parsed, scanRoot, allFiles, exempt);
+  const { violations: allViolations, scoped, checks: checkReport } = runChecks(parsed, scanRoot, allFiles, exempt, altOf);
   const scopedFiles = files !== null ? new Set(coverage.map((c) => c.scanFile).filter((f) => f !== null)) : null;
   const violations = scopedFiles === null ? allViolations : allViolations.filter((v) => scopedFiles.has(v.file));
 
@@ -599,7 +616,7 @@ export function runManifestGate({ projectRoot, platform, kind, layer = null, fil
   // reader can see what the manifest does not account for.
   const recorded = new Set(entries.map((e) => (e.file === null ? null : scanRelative(root, scanRoot, e.file))).filter((f) => f !== null));
   const unrecordedInScope = allFiles
-    .filter((f) => !recorded.has(f) && checks.some((c) => inCheckScope(c, f)))
+    .filter((f) => !recorded.has(f) && checks.some((c) => inCheckScope(c, f, altOf(f))))
     .map((f) => relative(root, join(scanRoot, f)));
   const vacuousChecks = checkReport.filter((c) => c.vacuous).map((c) => c.id);
 
@@ -783,10 +800,14 @@ function writeManifestText(r) {
     : "no built component files (global guard)";
   const s = r.summary;
   const u = r.unrecordedInScope;
+  const excluded = c.files.filter((file) => file.status === "contract-excluded").map((file) => file.file);
   process.stderr.write(
     `verify-styling-contract: scan root ${r.scanRootRel} — ${s.filesScanned} files walked, ${s.filesInScope} in scope, ` +
     `${coverageText}, ${pendingText}, ${u.length} unrecorded in scope\n`
   );
+  if (excluded.length > 0) {
+    process.stderr.write(`  NOT CHECKED, excluded by the contract's own exclude list (${excluded.length}): ${excluded.join(", ")}\n`);
+  }
   if (u.length > 0) {
     const more = u.length > 5 ? `, and ${u.length - 5} more` : "";
     process.stderr.write(`  unrecorded in scope: ${u.slice(0, 5).join(", ")}${more}\n`);

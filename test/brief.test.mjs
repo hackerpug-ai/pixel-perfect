@@ -288,6 +288,51 @@ describe("brief build: atom with frames", () => {
 });
 
 describe("brief build: molecule, screen, and dependencies", () => {
+  test("a composed library primitive needs no manifest entry and is listed as the library's", () => {
+    const root = cloneFixture();
+    try {
+      // Icon becomes what it is in a real project: a primitive the library provides, which the
+      // inventory names with library_primitive and which nobody builds as a manifest atom.
+      const inventoryFile = path.join(root, "design/inventory.json");
+      const inventory = readJson(inventoryFile);
+      inventory.atoms.find((a) => a.name === "Icon").library_primitive = "shadcn/icon";
+      writeJson(inventoryFile, inventory);
+      patchManifest(root, (platforms) => {
+        const platform = platforms["web-desktop"];
+        platform.atoms = platform.atoms.filter((a) => a.name !== "Icon");
+        platform.scaffold = { ...(platform.scaffold ?? {}), components: ["icon"] };
+      });
+      const { code, stderr } = runCli(buildArgs(root, { "--layer": "molecules", "--name": "SearchBar" }));
+      assert.equal(code, 0, stderr);
+      const composes = sectionOf(readFileSync(briefPath(root, "web-desktop", "molecules", "SearchBar"), "utf8"), "Composes");
+      assert.ok(composes.includes(path.join(root, "src/components/Input.tsx")), "Input is still a built component");
+      assert.match(composes, /- Icon: library primitive shadcn\/icon \(installed by scaffold\)\. Import it the way the component contract says\./);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a composed library primitive that scaffold did not install is flagged, not refused", () => {
+    const root = cloneFixture();
+    try {
+      const inventoryFile = path.join(root, "design/inventory.json");
+      const inventory = readJson(inventoryFile);
+      inventory.atoms.find((a) => a.name === "Icon").library_primitive = "shadcn/icon";
+      writeJson(inventoryFile, inventory);
+      patchManifest(root, (platforms) => {
+        const platform = platforms["web-desktop"];
+        platform.atoms = platform.atoms.filter((a) => a.name !== "Icon");
+        platform.scaffold = { ...(platform.scaffold ?? {}), components: [] };
+      });
+      const { code, stderr } = runCli(buildArgs(root, { "--layer": "molecules", "--name": "SearchBar" }));
+      assert.equal(code, 0, stderr);
+      const composes = sectionOf(readFileSync(briefPath(root, "web-desktop", "molecules", "SearchBar"), "utf8"), "Composes");
+      assert.match(composes, /- Icon: library primitive shadcn\/icon \(not installed: return it under needs\)\./);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("a molecule lists the file of each composed component", () => {
     const root = cloneFixture();
     try {

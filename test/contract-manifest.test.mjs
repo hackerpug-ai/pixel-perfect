@@ -342,6 +342,44 @@ test("a manual styling contract resolves to the project's docs/styling-contracts
   assert.deepEqual(violationFiles(r.report), ["src/components/molecules/Toolbar.tsx"]);
 });
 
+test("a project-authored contract written from the repo root still scopes the app's files", () => {
+  // A hand-written contract in a monorepo names paths from the repo root
+  // ("apps/site/src/**"), while shipped contracts name them from the app root ("src/**").
+  // One platform root has to serve both, so a glob may match either form of a file's path.
+  const dir = cloneMonorepo();
+  const checks = {
+    forbiddenPatterns: [
+      {
+        id: "inline-style-objects",
+        mode: "content",
+        glob: ["apps/site/src/**/*.tsx"],
+        exclude: ["apps/site/src/components/atoms/**"],
+        regex: "\\bstyle=\\{\\{",
+        rationale: "Inline style objects bypass design tokens.",
+      },
+    ],
+    mustInclude: [],
+  };
+  writeProjectFile(
+    dir,
+    "docs/styling-contracts/repo-rooted.md",
+    `---\nid: repo-rooted\nname: Repo-rooted contract\nsource: manual\n---\n\n## Checks\n\n\`\`\`json\n${JSON.stringify(checks, null, 2)}\n\`\`\`\n`
+  );
+  editPlatform(dir, (p) => {
+    p.tools.style_contract = "repo-rooted";
+    p.tools.style_contract_source = "manual";
+  });
+  const r = runManifest(dir, "styling");
+  assert.equal(r.report.scanRootRel, "apps/site");
+  assert.equal(r.status, 1, "the scan reaches every recorded file, so coverage passes and the violation decides: " + r.stderr);
+  assert.deepEqual(violationFiles(r.report), ["src/components/molecules/Toolbar.tsx"], "the planted violation in Toolbar is found through the repo-rooted glob");
+  const statuses = Object.fromEntries(r.report.coverage.files.map((f) => [f.name, f.status]));
+  assert.equal(statuses.Toolbar, "in-scope");
+  assert.equal(statuses.Button, "contract-excluded", "the repo-rooted exclude applies too, and is the contract's own decision");
+  const text = runManifestText(dir, "styling");
+  assert.match(text.stderr, /NOT CHECKED, excluded by the contract's own exclude list \(2\): apps\/site\/src\/components\/atoms\/Button\.tsx, apps\/site\/src\/components\/atoms\/Badge\.tsx/);
+});
+
 test("a manual component contract resolves to the project's docs/component-contracts/{id}.md", () => {
   const dir = cloneMonorepo();
   writeProjectFile(dir, "docs/component-contracts/house-kit.md", readFileSync(SHADCN, "utf8"));
