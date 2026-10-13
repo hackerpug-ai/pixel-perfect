@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "status": "complete",
+  "sources": [
+    {
+      "ref": "design/source/brief-deck.html",
+      "role": "own",
+      "kind": "html-deck",
+      "hash": "sha256:25c7ca25e3d39ddeb4a836e8561e1f748c1d000679f0f349d41a11f8e57aa386",
+      "revision": "sha256:0d9c011747aad20fa491fe15e8b9394c6dcc1b2cb55317dd5175540baf14184e",
+      "slug": "brief-deck",
+      "frames": ["brief-deck/01", "brief-deck/02", "brief-deck/03", "brief-deck/04"]
+    }
+  ],
+  "frames": [
+    {
+      "id": "brief-deck/01",
+      "png": "design/reference/brief-deck/01.png",
+      "hash": "sha256:a85472a0bbc569cdfeb176de166c69dff47a7256a0ccb73546fe2e20ed793ba7",
+      "source": "design/source/brief-deck.html",
+      "label": "Library search",
+      "viewport": "720x166",
+      "route": "/library",
+      "state": "default",
+      "shows": ["Library", "SearchBar", "Input", "Icon", "Button"]
+    },
+    {
+      "id": "brief-deck/02",
+      "png": "design/reference/brief-deck/02.png",
+      "hash": "sha256:29c40c744577e396b7427d92c3a8ceb053175555995c90f628cda4ff1fef315c",
+      "source": "design/source/brief-deck.html",
+      "label": "Library results",
+      "viewport": "720x276",
+      "route": "/library",
+      "state": "results",
+      "shows": ["Library", "SearchBar", "Input", "Icon", "Button"]
+    },
+    {
+      "id": "brief-deck/03",
+      "png": "design/reference/brief-deck/03.png",
+      "hash": "sha256:47a4ca591e8f1a47a5d03f7b9ce31ab8c8850a7628921b31febbf462bde087ae",
+      "source": "design/source/brief-deck.html",
+      "label": "full · 1440 · default",
+      "viewport": "1440x900",
+      "state": "default",
+      "shows": []
+    },
+    {
+      "id": "brief-deck/04",
+      "png": "design/reference/brief-deck/04.png",
+      "hash": "sha256:c9875cbc071938bf8774989bbf5d7b8135612a3cc44caf5f3216963c6bcc791f",
+      "source": "design/source/brief-deck.html",
+      "label": "full · 390 · default",
+      "viewport": "390x900",
+      "state": "default",
+      "shows": []
+    }
+  ],
+  "unclaimed_frames": [
+    {
+      "id": "brief-deck/03",
+      "reason": "full-page capture of the whole deck at desktop width; the product frames are 01 and 02"
+    },
+    {
+      "id": "brief-deck/04",
+      "reason": "full-page capture of the whole deck at phone width; the product frames are 01 and 02"
+    }
+  ],
+  "screens": [
+    {
+      "name": "Library",
+      "route": "/library",
+      "composes": ["SearchBar", "Button"],
+      "states": [
+        { "name": "default", "frames": ["brief-deck/01"] },
+        { "name": "results", "frames": ["brief-deck/02"] },
+        { "name": "empty", "undrawn": "The spec requires an empty library state; no frame draws it." }
+      ],
+      "evidence": "frames 01 and 02 draw the library search and its results at /library"
+    }
+  ],
+  "organisms": [],
+  "molecules": [
+    {
+      "name": "SearchBar",
+      "composes": ["Input", "Icon"],
+      "states": ["default"],
+      "appears_on": ["brief-deck/01", "brief-deck/02"],
+      "evidence": "a search field with a magnifier glyph, at the top of both library frames"
+    }
+  ],
+  "atoms": [
+    {
+      "name": "Button",
+      "states": ["default"],
+      "appears_on": ["brief-deck/01", "brief-deck/02"],
+      "library_primitive": "shadcn/button",
+      "evidence": "the blue Search button beside the search field in both library frames"
+    },
+    {
+      "name": "Input",
+      "states": ["default"],
+      "appears_on": ["brief-deck/01", "brief-deck/02"],
+      "evidence": "the bordered search field in both library frames"
+    },
+    {
+      "name": "Icon",
+      "states": ["default"],
+      "appears_on": ["brief-deck/01", "brief-deck/02"],
+      "library_primitive": "lucide/search",
+      "evidence": "the magnifier glyph inside the search field"
+    },
+    {
+      "name": "Badge",
+      "undrawn": "The spec names status badges, but no frame in this deck draws one."
+    }
+  ]
+}
