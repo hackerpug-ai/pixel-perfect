@@ -289,6 +289,9 @@
         "Home",
         "Changelog"
       ]
+    },
+    "scaffold": {
+      "items": []
     }
   }
 }
