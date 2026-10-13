@@ -30,12 +30,23 @@ function pixelClone() {
 
 // --- M3: staging is accepted only inside design/.captures/ or the system temp directory ---
 
-test("--out of / is refused before anything is deleted", () => {
+// SAFETY: these cases call the guard function only. They never run the CLI with a real path
+// outside a temp project. On 2026-10-13 a CLI test passed "--out /" to code whose guard did not
+// refuse it, and the script's recursive delete ran against the real file system. A test must
+// never hand a path it does not own to code that deletes.
+test("the staging guard refuses /, the project root, a parent, and the home directory", async () => {
+  const { assertStagingAllowed } = await import(
+    pathToFileURL(path.join(ROOT, "plugins/pixel-perfect/scripts/verify-catalog.mjs")).href
+  );
   const dir = pixelClone();
   try {
-    const { code, stderr } = runCli(["--render", dir, "--platform", "web-desktop", "--only", "atoms/Button", "--out", "/"]);
-    assert.equal(code, 2, stderr);
-    assert.match(stderr, /--out/);
+    for (const dangerous of ["/", dir, path.dirname(dir), process.env.HOME, "/usr/local", "/Library"]) {
+      assert.throws(
+        () => assertStagingAllowed(dir, dangerous, "--out", GOLDENS),
+        /--out/,
+        `the guard must refuse ${dangerous}`
+      );
+    }
   } finally {
     removeDirs(dir);
   }
@@ -65,12 +76,14 @@ test("--out pointing at the goldens folder is refused and the goldens survive", 
   }
 });
 
-test("--out outside the project and outside the temp directory is refused", () => {
+test("the staging guard refuses a path outside the project and outside the temp directory", async () => {
+  const { assertStagingAllowed } = await import(
+    pathToFileURL(path.join(ROOT, "plugins/pixel-perfect/scripts/verify-catalog.mjs")).href
+  );
   const dir = pixelClone();
   const outside = path.join("/usr/local", "pp-not-allowed-" + process.pid);
   try {
-    const { code, stderr } = runCli(["--render", dir, "--platform", "web-desktop", "--only", "atoms/Button", "--out", outside]);
-    assert.equal(code, 2, stderr);
+    assert.throws(() => assertStagingAllowed(dir, outside, "--out", GOLDENS), /--out/);
     assert.equal(existsSync(outside), false, "a refused staging directory must not be created");
   } finally {
     removeDirs(dir);
@@ -120,6 +133,52 @@ test("a manifest capture.staging that points at the goldens is refused before th
     assert.equal(code, 2, stderr);
     assert.match(stderr, /capture\.staging/);
     assert.equal(readIn(dir, `${GOLDENS}/atoms/Button/default.dom`), before);
+  } finally {
+    removeDirs(dir);
+  }
+});
+
+test("the catalog walk delete refuses a symlink staging directory and leaves the target", async () => {
+  const { captureFromCatalog } = await import(
+    pathToFileURL(path.join(ROOT, "plugins/pixel-perfect/scripts/verify-catalog.mjs")).href
+  );
+  const dir = pixelClone();
+  const victim = scratchProject("pp-victim-");
+  try {
+    writeIn(victim, "keep.txt", "keep me\n");
+    mkdirSync(path.join(dir, "design/.captures"), { recursive: true });
+    symlinkSync(victim, path.join(dir, "design/.captures/link"));
+    assert.throws(
+      () => captureFromCatalog(dir, "sandbox/stories", "design/.captures/link", null, GOLDENS),
+      /symbolic link/,
+    );
+    assert.equal(readFileSync(path.join(victim, "keep.txt"), "utf8"), "keep me\n");
+  } finally {
+    removeDirs(dir, victim);
+  }
+});
+
+test("the capture-command delete refuses a staging path that overlaps the goldens", async () => {
+  const { runCapture } = await import(
+    pathToFileURL(path.join(ROOT, "plugins/pixel-perfect/scripts/verify-catalog.mjs")).href
+  );
+  const dir = pixelClone();
+  const marker = path.join(dir, "command-ran.txt");
+  try {
+    writeIn(dir, `${GOLDENS}/atoms/Button/default.dom`, "<p>keep</p>\n");
+    assert.throws(
+      () =>
+        runCapture(dir, {
+          command: `node -e ${JSON.stringify(`require("fs").writeFileSync(${JSON.stringify(marker)}, "ran")`)}`,
+          staging: GOLDENS,
+          goldens: GOLDENS,
+          catalogDir: "sandbox/stories",
+          timeoutMs: 5000,
+        }),
+      /overlaps the goldens/,
+    );
+    assert.equal(readIn(dir, `${GOLDENS}/atoms/Button/default.dom`), "<p>keep</p>\n");
+    assert.equal(existsSync(marker), false, "a refused staging path must not run the capture command");
   } finally {
     removeDirs(dir);
   }

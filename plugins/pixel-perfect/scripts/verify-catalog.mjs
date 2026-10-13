@@ -427,14 +427,13 @@ function storyRecord(layer, name, state, rel, content, png = null) {
  * `@compose` / `--- composed:Name ---` markers so blast/reach measure real reachability.
  * A PNG found beside a structural artifact is copied into staging with it.
  */
-export function captureFromCatalog(projectRoot, catalogRel, stagingRel, layerFilter = null) {
+export function captureFromCatalog(projectRoot, catalogRel, stagingRel, layerFilter = null, goldensRel = "design/goldens") {
   const catalogRoot = join(projectRoot, catalogRel);
   if (!existsSync(catalogRoot)) {
     throw new Error(`Catalog directory not found: ${catalogRel} (under ${projectRoot})`);
   }
-  const stagingRoot = under(projectRoot, stagingRel);
-  // clean staging for this run
-  if (existsSync(stagingRoot)) rmSync(stagingRoot, { recursive: true, force: true });
+  // The allow-check runs here, at the delete, so a caller that skips the CLI cannot remove another path.
+  const stagingRoot = clearStaging(projectRoot, stagingRel, "capture.staging", goldensRel);
   ensureDir(stagingRoot);
 
   const files = walkFiles(catalogRoot);
@@ -509,9 +508,9 @@ function changedInputs(before, after) {
 }
 
 function runCaptureCommand(projectRoot, command, stagingRel, { layer = null, onlyKey = null, goldens, timeoutMs }) {
-  const stagingRoot = under(projectRoot, stagingRel);
   const inputsBefore = gateInputs(projectRoot, goldens);
-  if (existsSync(stagingRoot)) rmSync(stagingRoot, { recursive: true, force: true });
+  // Same allow-check as the CLI, at this delete. A refused path is not created and nothing outside it is removed.
+  const stagingRoot = clearStaging(projectRoot, stagingRel, "capture.staging", goldens);
   ensureDir(stagingRoot);
   const env = { ...process.env, PIXEL_PERFECT_CAPTURE_OUT: stagingRoot };
   setOrUnset(env, "PIXEL_PERFECT_CAPTURE_LAYER", layer);
@@ -594,7 +593,7 @@ export function runCapture(projectRoot, captureCfg, layerFilter = null, opts = {
     });
   } else if (existsSync(join(projectRoot, captureCfg.catalogDir))) {
     // Fall back to structural catalog walk for fixtures without a shell command.
-    captured = captureFromCatalog(projectRoot, captureCfg.catalogDir, captureCfg.staging, layerFilter);
+    captured = captureFromCatalog(projectRoot, captureCfg.catalogDir, captureCfg.staging, layerFilter, captureCfg.goldens);
   } else {
     throw new Error(
       `No capture.command in manifest and no catalog at ${captureCfg.catalogDir} — cannot capture`,
@@ -1872,6 +1871,17 @@ export function assertStagingAllowed(projectRoot, stagingRel, label, goldensRel)
   if (inside(real, designDir) && !inside(real, capDir)) refuse("it is inside design/ but outside design/.captures/");
   if (inside(real, capDir) || inside(real, tmp)) return stagingRel;
   return refuse("it must be inside design/.captures/ or the system temporary directory");
+}
+
+/**
+ * Delete a staging directory only after assertStagingAllowed. Both capture deletes call this,
+ * so the refusal does not depend on the CLI having already checked the path.
+ */
+function clearStaging(projectRoot, stagingRel, label, goldensRel) {
+  assertStagingAllowed(projectRoot, stagingRel, label, goldensRel);
+  const stagingRoot = under(projectRoot, stagingRel);
+  if (existsSync(stagingRoot)) rmSync(stagingRoot, { recursive: true, force: true });
+  return stagingRoot;
 }
 
 const AUDIT_AND_BASELINE_MODES = new Set(["baseline", "check", "accept", "audit"]);
