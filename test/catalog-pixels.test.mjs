@@ -5,8 +5,8 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { deflateSync } from "node:zlib";
 import test from "node:test";
+import { buildPng, inkImage, sampleBytes } from "./helpers/png.mjs";
 import {
   CATALOG_FIXTURE,
   PIXEL_FIXTURE,
@@ -176,16 +176,42 @@ test("an unknown pixels value is a config error (exit 2), never a silent pass", 
   }
 });
 
-test("a PNG format the decoder cannot read is skipped for the blank test and named in the report", () => {
-  const dir = writeCatalogProject(scratchProject(), { "atoms/Palette/default.txt": "Palette\n" });
+test("an interlaced PNG is an undecodable-png violation that says how to fix it", () => {
+  const dir = writeCatalogProject(scratchProject(), { "atoms/Badge/default.txt": "Badge\ntone=info\n" });
   try {
-    writeIn(dir, "sandbox/catalog/atoms/Palette/default.png", paletteIndexedPng());
+    writeIn(dir, "sandbox/catalog/atoms/Badge/default.png", buildPng({ width: 16, height: 16, colorType: 2, samples: sampleBytes(16 * 16 * 3, 21), interlace: 1 }));
     const { code, stderr, report } = runCli(["--baseline", dir, "--platform", "web-desktop"]);
-    assert.equal(code, 0, stderr);
-    assert.deepEqual(report.violations, []);
-    const skipped = report.pixelSkipped.find((s) => s.key === "atoms/Palette/default");
-    assert.ok(skipped, JSON.stringify(report.pixelSkipped));
-    assert.match(skipped.reason, /colou?r type 3|palette/i);
+    assert.equal(code, 1, stderr);
+    const [v] = violationsOf(report, "undecodable-png");
+    assert.equal(v.key, "atoms/Badge/default");
+    assert.match(v.reason, /cannot verify this image; write a non-interlaced 8- or 16-bit PNG/);
+    assert.equal(existsSync(path.join(dir, GOLDENS)), false);
+  } finally {
+    removeDirs(dir);
+  }
+});
+
+test("a one-pixel-different image is a blank-png violation: the render shows almost nothing", () => {
+  const dir = writeCatalogProject(scratchProject(), { "atoms/Badge/default.txt": "Badge\ntone=info\n" }, { viewport: "16x16" });
+  try {
+    writeIn(dir, "sandbox/catalog/atoms/Badge/default.png", inkImage({ width: 16, height: 16, inkCount: 1 }));
+    const { code, report } = runCli(["--baseline", dir, "--platform", "web-desktop"]);
+    assert.equal(code, 1);
+    const [v] = violationsOf(report, "blank-png");
+    assert.equal(v.key, "atoms/Badge/default");
+    assert.match(v.reason, /render shows almost nothing/);
+  } finally {
+    removeDirs(dir);
+  }
+});
+
+test("a 4x4 image is a blank-png violation even when it has ink", () => {
+  const dir = writeCatalogProject(scratchProject(), { "atoms/Badge/default.txt": "Badge\ntone=info\n" }, { viewport: "16x16" });
+  try {
+    writeIn(dir, "sandbox/catalog/atoms/Badge/default.png", inkImage({ width: 4, height: 4, inkCount: 16 }));
+    const { code, report } = runCli(["--baseline", dir, "--platform", "web-desktop"]);
+    assert.equal(code, 1);
+    assert.deepEqual(violationsOf(report, "blank-png").map((v) => v.key), ["atoms/Badge/default"]);
   } finally {
     removeDirs(dir);
   }
@@ -328,38 +354,3 @@ test("--render for a pixels-none platform writes no PNG requirement and exits 0"
     removeDirs(dir);
   }
 });
-
-// Minimal palette-indexed PNG (color type 3, 8-bit, non-interlaced). The decoder must decline it.
-function paletteIndexedPng() {
-  const crcTable = Array.from({ length: 256 }, (_, n) => {
-    let c = n;
-    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    return c >>> 0;
-  });
-  const crc = (buf) => {
-    let c = 0xffffffff;
-    for (const b of buf) c = crcTable[(c ^ b) & 0xff] ^ (c >>> 8);
-    return (c ^ 0xffffffff) >>> 0;
-  };
-  const chunk = (type, data) => {
-    const len = Buffer.alloc(4);
-    len.writeUInt32BE(data.length);
-    const body = Buffer.concat([Buffer.from(type, "ascii"), data]);
-    const sum = Buffer.alloc(4);
-    sum.writeUInt32BE(crc(body));
-    return Buffer.concat([len, body, sum]);
-  };
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(4, 0);
-  ihdr.writeUInt32BE(4, 4);
-  ihdr[8] = 8;
-  ihdr[9] = 3;
-  const raw = Buffer.alloc(4 * (1 + 4));
-  return Buffer.concat([
-    Buffer.from(PNG_SIGNATURE),
-    chunk("IHDR", ihdr),
-    chunk("PLTE", Buffer.from([0, 0, 0])),
-    chunk("IDAT", deflateSync(raw)),
-    chunk("IEND", Buffer.alloc(0)),
-  ]);
-}

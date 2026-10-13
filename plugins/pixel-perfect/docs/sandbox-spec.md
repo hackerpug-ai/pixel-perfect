@@ -129,10 +129,12 @@ The **structural** artifact is the gate for drift. The **image** is required evi
 #### Pixel rules
 
 - Every captured story needs a sibling `{state}.png`. A missing PNG fails the gate and names the story.
-- The PNG must be a real image (signature and header, via the shared `pngValid` check) and must not be blank. A PNG whose every pixel equals its first pixel fails.
-- The blank test reads 8-bit truecolour and truecolour + alpha, non-interlaced PNGs (what Chrome and AppKit write). A format the gate does not decode skips the blank test, and the JSON report names it under `pixelSkipped`. The gate never fails a format it cannot read.
+- The PNG must be a well-formed chunk stream: IHDR first, at least one IDAT, IEND last. A file without pixel data fails. Corrupt or truncated compressed data fails with the reason, never with an uncaught error.
+- The gate decodes colour types 0 (grey), 2 (RGB), 3 (palette), 4 (grey + alpha) and 6 (RGBA), at bit depths 8 and 16, non-interlaced. Any other PNG is a violation (`undecodable-png`): "cannot verify this image; write a non-interlaced 8- or 16-bit PNG". The gate never passes an image it did not read.
+- An image is blank when it is narrower or shorter than 8 pixels, or when fewer than 64 pixels differ from its most common colour (`blank-png`: "render shows almost nothing").
 - When the manifest declares `capture.viewport` as `"WxH"`, a PNG wider than `W × capture.scale` (scale defaults to 1) fails with "render is wider than the viewport". A render that overflows its viewport is a finding, not a screenshot detail.
-- The exemption is explicit and never inferred: `capture.pixels: "none"` plus a non-empty `capture.pixels_reason`. `"none"` without a reason is a config error (exit 2). The report states `pixels` (`"required"` or `"none"`) and the reason.
+- Pixels are required by default. A platform that renders pixels must declare `capture.viewport`; without it the gate exits 2 and says how to fix it.
+- The exemption is explicit: `capture.pixels: "none"` plus a non-empty `capture.pixels_reason`. `"none"` without a reason is a config error (exit 2). Every mode prints `PIXELS NOT REQUIRED: <reason>` on stderr, and `receipt.json` records `pixels` and the reason.
 - PNGs never become goldens.
 
 #### Empty and duplicate rules

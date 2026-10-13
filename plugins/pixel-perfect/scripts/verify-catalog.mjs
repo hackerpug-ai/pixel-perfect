@@ -517,13 +517,13 @@ export function runCapture(projectRoot, captureCfg, layerFilter = null, opts = {
 // ---------------------------------------------------------------------------
 
 /**
- * Pixel evidence. Every captured story needs a sibling {state}.png that is a real image, is not
- * blank, and is no wider than the declared viewport. Platforms that declare pixels "none" skip it.
- * A PNG format this module cannot decode is never failed; it is listed in pixelSkipped.
+ * Pixel evidence. Every captured story needs a sibling {state}.png that is a real, decodable image,
+ * is no wider than the declared viewport, and shows something: at least 8x8 and 64 pixels that
+ * differ from the image's most common colour. An image this module cannot decode is a violation,
+ * never a pass. Platforms that declare pixels "none" skip the gate.
  */
 export function pixelGate(stories, stagingAbs, captureCfg) {
   const violations = [];
-  const pixelSkipped = [];
   const statuses = new Map();
   const pngPaths = new Map();
   for (const s of stories) {
@@ -542,24 +542,27 @@ export function pixelGate(stories, stagingAbs, captureCfg) {
       continue;
     }
     const info = inspectPng(readFileSync(pngPath));
-    if (!info.valid) {
-      violations.push({ kind: "invalid-png", key, rel: pngRel, reason: info.reason });
-      statuses.set(key, "invalid-png");
+    if (info.status === "invalid" || info.status === "undecodable") {
+      const kind = info.status === "invalid" ? "invalid-png" : "undecodable-png";
+      violations.push({ kind, key, rel: pngRel, reason: info.reason });
+      statuses.set(key, kind);
       continue;
     }
-    if (!info.decodable) pixelSkipped.push({ key, rel: pngRel, reason: info.reason });
     const problems = [];
     const limit = captureCfg.viewport ? captureCfg.viewport.width * captureCfg.scale : null;
     if (limit !== null && info.width > limit) {
       problems.push({ kind: "wider-than-viewport", width: info.width, limit, reason: `render is wider than the viewport (${info.width}px > ${limit}px)` });
     }
-    if (info.blank === true) {
-      problems.push({ kind: "blank-png", reason: "every pixel is the same colour: the render is blank" });
+    if (info.width < 8 || info.height < 8 || info.inkPixels < 64) {
+      problems.push({
+        kind: "blank-png",
+        reason: `render shows almost nothing (${info.width}x${info.height}, ${info.inkPixels} pixels differ from the background; need at least 8x8 and 64)`,
+      });
     }
     for (const p of problems) violations.push({ ...p, key, rel: pngRel });
     statuses.set(key, problems[0]?.kind ?? "ok");
   }
-  return { violations, pixelSkipped, statuses, pngPaths };
+  return { violations, statuses, pngPaths };
 }
 
 /**
@@ -607,7 +610,6 @@ function gateFields(captureCfg, gate) {
   return {
     pixels: captureCfg.pixels,
     pixelsReason: captureCfg.pixelsReason,
-    pixelSkipped: gate.pixel.pixelSkipped,
     violations: gate.violations,
     duplicates: gate.duplicates,
   };
@@ -1034,7 +1036,6 @@ export function modeRender(projectRoot, captureCfg, layerFilter = null, opts = {
     states,
     pixels: captureCfg.pixels,
     pixelsReason: captureCfg.pixelsReason,
-    pixelSkipped: pixel.pixelSkipped,
     violations: pixel.violations,
   };
 }
