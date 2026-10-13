@@ -137,6 +137,11 @@ The **structural** artifact is the gate for drift. The **image** is required evi
 - The exemption is explicit: `capture.pixels: "none"` plus a non-empty `capture.pixels_reason`. `"none"` without a reason is a config error (exit 2). Every mode prints `PIXELS NOT REQUIRED: <reason>` on stderr, and `receipt.json` records `pixels` and the reason.
 - PNGs never become goldens.
 
+#### Coverage rules
+
+- In `--baseline` and `--check`, with or without `--layer`, every manifest item that is not `pending` (a missing `status` counts as built) must have at least one captured story, in any of the four layers. A built item with no story fails: "no story captured for <layer>/<Name>".
+- A platform that requires pixels must declare `capture.viewport` as `"WxH"`. Without it the gate exits 2 and names the fix: `declare platforms.<id>.capture.viewport, for example "390x844"`.
+
 #### Empty and duplicate rules
 
 - A structural artifact that is empty or whitespace-only after normalization fails.
@@ -218,7 +223,7 @@ node {plugin}/scripts/verify-catalog.mjs <mode> <project-root> [options]
   --audit               read goldens, receipts and sources; runs no capture
   --blast <name>        perturb <name>, report which stories move        (downstream)
   --reach <name...>     report which live roots each name reaches         (upstream)
-  --composes            check each composing item's source names what it composes
+  --composes            check each composing item's source uses what it composes
 
   options: --platform <id>  --layer <layer>  --only <layer>/<Name>  --out <dir>  --json
 ```
@@ -253,7 +258,7 @@ A terminal UI declares its exemption instead of a PNG:
 
 A molecule that *claims* to compose `StatusBadge` but re-implemented its internals will not move when `StatusBadge` moves. So: perturb an atom (`--blast StatusBadge`), re-capture, and assert its declared dependents changed. A dependent that does not move is not composing — it is a copy.
 
-A compiled stack cannot be checked this way. A comment-only perturbation does not change a compiled render, so `--blast` reports a `note` and zero moved stories. Use `--composes` on those stacks. It reads each composing item's source with comments removed, and it requires every composed name to appear there as an identifier. Known limit: a component reached only through a re-export under another name is not seen.
+A compiled stack cannot be checked this way. A comment-only perturbation does not change a compiled render, so `--blast` reports a `note` and zero moved stories. Use `--composes` on those stacks. It reads each composing item's source with comments, string literals and import lines removed, using the comment syntax of the file's extension. It requires a use of every composed name: `<Name` in markup, `Name(` or `Name {` for a call or trailing closure, or `Name.` for member access. A bare word, a string, a comment, an import, or a longer identifier does not count. An inventory entry whose item is not built (pending, or its file missing) fails with `--layer` and is listed under `notBuilt` without it. Zero entries checked is exit 3. The JSON `note` states the limits: a component reached only through a re-export under another name, a name built at run time, and a use that is only a type or a value are not seen.
 
 ### State Scenarios for Molecules, Organisms, and Screens
 

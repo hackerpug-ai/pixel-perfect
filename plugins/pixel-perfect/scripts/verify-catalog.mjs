@@ -55,7 +55,7 @@ import {
 } from "node:fs";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
-import { basename, dirname, isAbsolute, join, parse, relative, resolve, sep } from "node:path";
+import { basename, dirname, extname, isAbsolute, join, parse, relative, resolve, sep } from "node:path";
 import { spawnSync } from "node:child_process";
 import { digest } from "./reference-revisions.mjs";
 import { inspectPng } from "./png.mjs";
@@ -289,7 +289,7 @@ export function resolveCaptureConfig(platformConfig, platformId) {
     catalogDir,
     staging,
     captured_at: capture.captured_at || null,
-    ...resolvePixels(capture),
+    ...resolvePixels(capture, platformId),
     viewport: parseViewport(capture.viewport),
     scale: parseScale(capture.scale),
     timeoutMs: parseTimeout(capture.timeout_ms),
@@ -297,9 +297,14 @@ export function resolveCaptureConfig(platformConfig, platformId) {
   };
 }
 
-function resolvePixels(capture) {
+function resolvePixels(capture, platformId) {
   const declared = capture.pixels;
-  if (declared === undefined || declared === "required") return { pixels: "required", pixelsReason: null };
+  if (declared === undefined || declared === "required") {
+    if (!parseViewport(capture.viewport)) {
+      throw new Error(`pixels are required, so declare platforms.${platformId}.capture.viewport, for example "390x844"`);
+    }
+    return { pixels: "required", pixelsReason: null };
+  }
   if (declared === "none") {
     const reason = typeof capture.pixels_reason === "string" ? capture.pixels_reason.trim() : "";
     if (!reason) {
@@ -329,6 +334,18 @@ function parseScale(value) {
   const n = Number(value);
   if (!(n > 0)) throw new Error(`capture.scale must be a positive number, got ${JSON.stringify(value)}`);
   return n;
+}
+
+/** Built items (not pending) that have no captured story, within the layers in scope. */
+function uncapturedItems(captureCfg, stories, layerFilter) {
+  const captured = new Set(stories.map((s) => `${s.layer}/${s.name}`));
+  const out = [];
+  for (const [key, item] of Object.entries(captureCfg.items)) {
+    if (layerFilter && key.split("/")[0] !== layerFilter) continue;
+    if (item.status === "pending" || captured.has(key)) continue;
+    out.push({ kind: "uncaptured-item", key, reason: `no story captured for ${key}` });
+  }
+  return out;
 }
 
 /** Manifest items by "layer/name", carrying the file and story paths receipts hash. */
@@ -1014,6 +1031,7 @@ export function modeBaseline(projectRoot, captureCfg, layerFilter = null, opts =
   }
   const stagingAbs = under(projectRoot, captureCfg.staging);
   const gate = gateCapture(cap.stories, stagingAbs, captureCfg, cap.ignoredFiles);
+  gate.violations.push(...uncapturedItems(captureCfg, cap.stories, layerFilter));
   if (gate.violations.length) return blocked("baseline", captureCfg, cap, gate);
 
   const prior = readReceipts(projectRoot, captureCfg);
@@ -1073,6 +1091,7 @@ export function modeCheck(projectRoot, captureCfg, layerFilter, deprecations = {
   }
   const stagingAbs = under(projectRoot, captureCfg.staging);
   const gate = gateCapture(cap.stories, stagingAbs, captureCfg, cap.ignoredFiles);
+  gate.violations.push(...uncapturedItems(captureCfg, cap.stories, layerFilter));
   const goldens = inventoryDir(projectRoot, captureCfg.goldens);
   const scoped = goldens.filter((g) => !layerFilter || g.layer === layerFilter);
   const goldenByKey = new Map(goldens.map((g) => [storyKey(g), g]));
@@ -1471,21 +1490,101 @@ function staleSourcesOf(projectRoot, receipts) {
 // --composes: does each composing item's source actually name what it composes?
 // ---------------------------------------------------------------------------
 
-/**
- * Remove comments so a reference that exists only in a comment cannot satisfy the check.
- * Known limit: this is a text scan, not a parser. A string literal that contains "//" or "/*" can
- * be cut short, and a string containing a comment marker is treated as a comment.
- */
-export function stripComments(text) {
-  return text
-    .replace(/\/\*[\s\S]*?\*\//g, " ")
-    .replace(/<!--[\s\S]*?-->/g, " ")
-    .replace(/(^|[^:\\])\/\/[^\n]*/g, "$1");
+const C_LIKE_EXT = new Set([".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".mts", ".cts", ".swift", ".kt", ".kts", ".java", ".go", ".rs", ".c", ".h", ".cc", ".cpp", ".hpp", ".cs", ".dart", ".scala", ".m", ".mm", ".groovy"]);
+const MARKUP_EXT = new Set([".html", ".htm", ".svelte", ".vue", ".astro", ".xml"]);
+const HASH_EXT = new Set([".py", ".rb", ".ex", ".exs", ".sh", ".bash", ".pl", ".yml", ".yaml", ".r"]);
+const DASH_EXT = new Set([".lua", ".sql", ".hs"]);
+const IMPORT_LINE = /^\s*(import\b|use\s|using\s|require\b|from\s+\S+\s+import\b|package\s|#include|@import\b|export\s*\{[^}]*\}\s*from\b)/;
+
+/** Blank out comments and string literals, keeping line breaks, so only code is searched. */
+function scanCode(text, { line, block }) {
+  let out = "";
+  let i = 0;
+  const n = text.length;
+  while (i < n) {
+    const c = text[i];
+    if (line && text.startsWith(line, i)) {
+      while (i < n && text[i] !== "\n") {
+        out += " ";
+        i++;
+      }
+      continue;
+    }
+    if (block && text.startsWith("/*", i)) {
+      const end = text.indexOf("*/", i + 2);
+      const stop = end < 0 ? n : end + 2;
+      out += text.slice(i, stop).replace(/[^\n]/g, " ");
+      i = stop;
+      continue;
+    }
+    if (c === '"' || c === "'" || (block && c === "`")) {
+      let j = i + 1;
+      while (j < n && text[j] !== c) {
+        if (text[j] === "\\") j++;
+        if (text[j] === "\n" && c !== "`") break;
+        j++;
+      }
+      const stop = Math.min(j + 1, n);
+      out += text.slice(i, stop).replace(/[^\n]/g, " ");
+      i = stop;
+      continue;
+    }
+    out += c;
+    i++;
+  }
+  return out;
 }
 
-const COMPOSES_LIMIT =
-  "A component reached only through a re-export under another name is not seen: the source must name the composed component itself.";
+/** Drop import, use, require and re-export lines: naming a component there is not using it. */
+function dropImports(code) {
+  return code
+    .split("\n")
+    .map((l) => (IMPORT_LINE.test(l) || /\brequire\s*\(/.test(l) ? "" : l))
+    .join("\n");
+}
 
+/**
+ * The code of one source file, with comments, string literals and import lines removed. Comment
+ * syntax follows the file extension. Markup files take <!-- --> comments; their <script> blocks take
+ * the C-like rules.
+ */
+export function stripCode(text, file) {
+  const ext = extname(file).toLowerCase();
+  if (MARKUP_EXT.has(ext)) {
+    const noMarkupComments = text.replace(/<!--[\s\S]*?-->/g, (m) => m.replace(/[^\n]/g, " "));
+    return noMarkupComments.replace(
+      /(<script\b[^>]*>)([\s\S]*?)(<\/script>)/gi,
+      (_, open, body, close) => open + dropImports(scanCode(body, { line: "//", block: true })) + close,
+    );
+  }
+  if (HASH_EXT.has(ext)) return dropImports(scanCode(text, { line: "#", block: false }));
+  if (DASH_EXT.has(ext)) return dropImports(scanCode(text, { line: "--", block: false }));
+  return dropImports(scanCode(text, { line: "//", block: true }));
+}
+
+/**
+ * Does the code use the name? A use is <Name (markup, incl. </Name>), Name( or Name { (call or trailing
+ * closure), or Name. (member access). It is not a bare word, and not part of a longer identifier.
+ */
+export function usesName(code, name) {
+  const n = escapeRe(name);
+  const pattern = new RegExp(
+    `<${n}(?=[\\s/>])|<\\/${n}\\s*>|(?<![\\w$.\\-])${n}\\s*[({]|(?<![\\w$.\\-])${n}\\.`,
+  );
+  return pattern.test(code);
+}
+
+const COMPOSES_NOTE =
+  "Checks syntax, not types. A use is a name written as <Name, Name( or Name {, or Name. A bare word, a string, a comment, " +
+  "an import, or a longer identifier does not count. Not seen: a component reached only through a re-export under another " +
+  "name; a name built at run time; a use that is only a type or a value, with no call, markup or member access. Comment and " +
+  "string stripping is a text scan: approximate for Python, Ruby, Lua, SQL and Haskell, and Rust lifetimes are read as quotes.";
+
+/**
+ * --composes: for each inventory entry that lists composes, the manifest item must be built (not pending,
+ * with a file that exists) and its source must use every composed name. Unbuilt entries are a failure with
+ * --layer, and are listed under notBuilt without it. Zero entries checked is exit 3.
+ */
 export function modeComposes(projectRoot, platformConfig, layerFilter = null) {
   const invPath = join(projectRoot, "design", "inventory.json");
   if (!existsSync(invPath)) {
@@ -1497,38 +1596,62 @@ export function modeComposes(projectRoot, platformConfig, layerFilter = null) {
   } catch (e) {
     throw new Error(`design/inventory.json is not valid JSON: ${e.message}`);
   }
-  const checkedItems = [];
+  const checked = [];
+  const notBuilt = [];
   const violations = [];
   for (const layer of ITEM_LAYERS) {
     if (layerFilter && layer !== layerFilter) continue;
-    for (const item of platformConfig[layer] || []) {
-      const entry = (inventory[layer] || []).find((e) => e.name === item.name);
-      const composes = Array.isArray(entry?.composes) ? entry.composes : [];
-      if (composes.length === 0) continue;
-      if (!item.file) throw new Error(`${layer}/${item.name} declares composes but its manifest item has no file`);
-      const abs = join(projectRoot, item.file);
-      if (!existsSync(abs)) throw new Error(`${layer}/${item.name} source file not found: ${item.file}`);
-      const code = stripComments(readFileSync(abs, "utf8"));
-      const missing = composes.filter((name) => !new RegExp(`\\b${escapeRe(name)}\\b`).test(code));
-      checkedItems.push(`${layer}/${item.name}`);
-      if (missing.length) violations.push({ item: item.name, layer, composes, missing, file: item.file });
+    for (const entry of inventory[layer] || []) {
+      if (!Array.isArray(entry.composes) || entry.composes.length === 0) continue;
+      const key = `${layer}/${entry.name}`;
+      const item = (platformConfig[layer] || []).find((i) => i && i.name === entry.name);
+      const built = Boolean(item && item.status !== "pending" && item.file && existsSync(join(projectRoot, item.file)));
+      if (!built) {
+        if (layerFilter) {
+          violations.push({
+            kind: "not-built",
+            item: entry.name,
+            layer,
+            composes: entry.composes,
+            file: item?.file ?? null,
+            reason: `${key} lists composes but is not built or not recorded`,
+          });
+        } else {
+          notBuilt.push(key);
+        }
+        continue;
+      }
+      const code = stripCode(readFileSync(join(projectRoot, item.file), "utf8"), item.file);
+      const missing = entry.composes.filter((name) => !usesName(code, name));
+      checked.push(key);
+      if (missing.length) {
+        violations.push({
+          kind: "composes-not-used",
+          item: entry.name,
+          layer,
+          composes: entry.composes,
+          missing,
+          file: item.file,
+          reason: `${key} does not use ${missing.join(", ")} in ${item.file}`,
+        });
+      }
     }
   }
-  const exit = violations.length ? 1 : 0;
+  const exit = violations.length ? 1 : checked.length ? 0 : 3;
   return {
     mode: "composes",
     exit,
-    vacuous: false,
+    vacuous: exit === 3,
     message: violations.length
-      ? `${violations.length} item(s) do not name what they compose`
-      : checkedItems.length
-        ? `Composition matches source for ${checkedItems.length} item(s)`
-        : "No manifest item declares composes",
-    checked: checkedItems.length,
-    checkedItems,
+      ? `${violations.length} item(s) do not use what they compose`
+      : checked.length
+        ? `Composition uses what it composes for ${checked.length} item(s)`
+        : "No built item declares composes; nothing was checked",
+    checked: checked.length,
+    checkedItems: checked,
+    notBuilt,
     violations,
-    limit: COMPOSES_LIMIT,
-    ...(checkedItems.length === 0 ? { note: "no manifest item declares composes; nothing to check" } : {}),
+    note: checked.length ? COMPOSES_NOTE : `No built item declares composes; nothing was checked. ${COMPOSES_NOTE}`,
   };
 }
 
@@ -1841,7 +1964,7 @@ function describeReport(report) {
   const lines = [];
   if (report.mode === "composes") {
     for (const v of report.violations) {
-      lines.push(`  composes  ${v.layer}/${v.item} does not name ${v.missing.join(", ")} in ${v.file}`);
+      lines.push(`  composes  ${v.reason}`);
     }
   } else {
     for (const d of report.drifted || []) lines.push(`  drift  ${d.key}`);

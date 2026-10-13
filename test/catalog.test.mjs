@@ -181,6 +181,8 @@ test("zero-story root exits 3 (vacuous, never a pass)", () => {
           web: {
             capture: {
               medium: "text",
+              pixels: "none",
+              pixels_reason: "zero-story fixture: no stories exist to render",
               goldens: "design/goldens/web",
               catalog: "sandbox/catalog",
               staging: "design/.captures/web",

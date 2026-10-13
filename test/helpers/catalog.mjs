@@ -121,6 +121,7 @@ export function writeCatalogProject(dir, stories, capture = {}) {
               goldens: "design/goldens/web-desktop",
               catalog: "sandbox/catalog",
               staging: "design/.captures/web-desktop",
+              viewport: "390x300",
               ...capture,
             },
             atoms: Object.keys(stories)

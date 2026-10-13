@@ -101,12 +101,25 @@ test("--composes --layer checks only that layer", () => {
   }
 });
 
-test("--composes exits 2 when a composing item's source file is missing", () => {
+test("--composes with --layer: a composing item whose source is not recorded is exit 1", () => {
   const dir = composeProject();
   try {
-    const { code, stderr } = runCli(["--composes", dir, "--platform", "web-desktop"]);
-    assert.equal(code, 2, stderr);
-    assert.match(stderr, /src\/Card\.tsx/, "the message must name the missing source");
+    const { code, report } = runCli(["--composes", dir, "--platform", "web-desktop", "--layer", "molecules"]);
+    assert.equal(code, 1, JSON.stringify(report));
+    assert.equal(report.violations[0].kind, "not-built");
+    assert.equal(report.violations[0].reason, "molecules/Card lists composes but is not built or not recorded");
+  } finally {
+    removeDirs(dir);
+  }
+});
+
+test("--composes without --layer lists an unbuilt composing item under notBuilt; it is not a failure", () => {
+  const dir = composeProject();
+  try {
+    const { code, report, stderr } = runCli(["--composes", dir, "--platform", "web-desktop"]);
+    assert.equal(code, 0, stderr);
+    assert.deepEqual(report.notBuilt, ["molecules/Card"]);
+    assert.equal(report.checked, 1, "Home is built and was checked");
   } finally {
     removeDirs(dir);
   }
@@ -124,25 +137,70 @@ test("--composes exits 2 when the inventory is missing", () => {
   }
 });
 
-test("--composes with no item that declares composes exits 0 with a note", () => {
+test("--composes with nothing checked is exit 3 (vacuous) with a note", () => {
   const dir = composeProject();
   try {
     writeIn(dir, "design/inventory.json", JSON.stringify({ molecules: [{ name: "Card" }], screens: [] }));
     const { code, report } = runCli(["--composes", dir, "--platform", "web-desktop"]);
-    assert.equal(code, 0);
+    assert.equal(code, 3);
     assert.equal(report.checked, 0);
-    assert.match(report.note, /no manifest item declares composes/);
+    assert.match(report.note, /No built item declares composes; nothing was checked/);
   } finally {
     removeDirs(dir);
   }
 });
 
-test("--composes names the limit it cannot see (re-exports under another name)", () => {
+test("--composes states what it cannot see in its JSON note", () => {
   const dir = composeProject();
   try {
     writeIn(dir, "src/Card.tsx", 'import { Button } from "./Button";\n');
     const { report } = runCli(["--composes", dir, "--platform", "web-desktop"]);
-    assert.match(report.limit, /re-export/);
+    assert.match(report.note, /re-export/);
+    assert.match(report.note, /run time/);
+  } finally {
+    removeDirs(dir);
+  }
+});
+
+// A use is a name in markup, a call or trailing closure, or member access. A mention is not.
+const USE_CASES = [
+  ["markup <Button />", "export const Card = () => <Button />;\n", true],
+  ["call Button(", "export const Card = () => Button({});\n", true],
+  ["trailing closure Button {", "export const Card = () => { Button { }; };\n", true],
+  ["member Button.Icon", "export const Card = () => Button.Icon;\n", true],
+  ["bare word Button", "export const Card = () => Button;\n", false],
+  ["a string literal", 'export const Card = () => "Button";\n', false],
+  ["a longer identifier MyButton(", "export const Card = () => MyButton();\n", false],
+  ["a hyphenated my-Button(", "export const Card = () => my-Button();\n", false],
+  ["an import only", 'import { Button } from "./Button";\nexport const Card = () => null;\n', false],
+  ["a type-only import with no use", 'import type { Button } from "./Button";\nexport const Card = () => null;\n', false],
+  ["a use in a block comment", "/* <Button /> */\nexport const Card = () => null;\n", false],
+  ["a use in a line comment", "// Button()\nexport const Card = () => null;\n", false],
+];
+
+test("--composes needs a use of the name, not a mention of it", () => {
+  const dir = composeProject();
+  try {
+    for (const [label, source, expectPass] of USE_CASES) {
+      writeIn(dir, "src/Card.tsx", source);
+      const { code } = runCli(["--composes", dir, "--platform", "web-desktop", "--layer", "molecules"]);
+      assert.equal(code === 0, expectPass, `${label}: exit ${code}`);
+    }
+  } finally {
+    removeDirs(dir);
+  }
+});
+
+test("--composes reads Svelte markup comments as comments, and markup as a use", () => {
+  const dir = composeProject();
+  try {
+    editManifest(dir, (m) => {
+      m.platforms["web-desktop"].molecules.find((e) => e.name === "Card").file = "src/Card.svelte";
+    });
+    writeIn(dir, "src/Card.svelte", "<!-- <Button /> -->\n<section></section>\n");
+    assert.equal(runCli(["--composes", dir, "--platform", "web-desktop", "--layer", "molecules"]).code, 1);
+    writeIn(dir, "src/Card.svelte", "<section><Button /></section>\n");
+    assert.equal(runCli(["--composes", dir, "--platform", "web-desktop", "--layer", "molecules"]).code, 0);
   } finally {
     removeDirs(dir);
   }
