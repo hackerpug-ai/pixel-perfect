@@ -354,7 +354,7 @@ The plugin ships no capture script for Storybook Native. The project supplies it
 - The PNG is required and is checked for a real, non-blank image within the declared viewport. Where the project cannot take a screenshot, it declares `capture.pixels: "none"` with a `capture.pixels_reason` that says why. It never omits the PNG silently.
 - Record `capture.command`, `capture.medium`, `capture.viewport`, and `capture.goldens`. Write goldens only through `verify-catalog.mjs --baseline`.
 
-Gate commands: `--baseline`, `--check`, `--accept <glob>`, `--render --only <layer>/<Name>`, `--audit`, `--blast <Name>`, `--reach <Name...>`. See `docs/sandbox-spec.md` §8.
+Gate commands: `--baseline`, `--check`, `--accept <glob>`, `--render --only <layer>/<Name>`, `--audit`, `--blast <Name>`, `--reach <Name...>`, `--composes`. See `docs/sandbox-spec.md` §8.
 
 ## Sandbox
 

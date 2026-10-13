@@ -114,6 +114,7 @@ node {plugin}/scripts/verify-catalog.mjs --render --only <layer>/<Name> --out <d
 node {plugin}/scripts/verify-catalog.mjs --audit <project-root>     # goldens, receipts and sources; runs no capture
 node {plugin}/scripts/verify-catalog.mjs --blast <Name> <project-root>
 node {plugin}/scripts/verify-catalog.mjs --reach <Name...> <project-root>
+node {plugin}/scripts/verify-catalog.mjs --composes <project-root>  # does each composing source name what it composes
 ```
 
 Goldens land at `design/goldens/{platform}/{layer}/{name}/{state}.{ext}` and are committed. Manifest:

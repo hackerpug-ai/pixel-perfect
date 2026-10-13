@@ -246,7 +246,7 @@ The plugin ships no capture script for Storybook. The project supplies its own c
 }
 ```
 
-Gate commands: `--baseline`, `--check`, `--accept <glob>`, `--render --only <layer>/<Name>`, `--audit`, `--blast <Name>`, `--reach <Name...>`.
+Gate commands: `--baseline`, `--check`, `--accept <glob>`, `--render --only <layer>/<Name>`, `--audit`, `--blast <Name>`, `--reach <Name...>`, `--composes`.
 
 ## Sandbox
 

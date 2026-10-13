@@ -278,7 +278,7 @@ A terminal UI has no pixels to compare. Its render is the text buffer, so the st
 - `pixels: "none"` without a `pixels_reason` is a config error (exit 2). The report names the reason.
 - Write goldens only through `verify-catalog.mjs --baseline`. `--check` refuses a golden it did not receive from a baseline or accept.
 
-Gate commands: `--baseline`, `--check`, `--accept <glob>`, `--render --only <layer>/<Name>`, `--audit`, `--blast <Name>`, `--reach <Name...>`. See `docs/sandbox-spec.md` §8.
+Gate commands: `--baseline`, `--check`, `--accept <glob>`, `--render --only <layer>/<Name>`, `--audit`, `--blast <Name>`, `--reach <Name...>`, `--composes`. See `docs/sandbox-spec.md` §8.
 
 ## Sandbox
 

@@ -184,6 +184,7 @@ node {plugin}/scripts/verify-catalog.mjs <mode> <project-root> [options]
   --audit               read goldens, receipts and sources; runs no capture
   --blast <name>        perturb <name>, report which stories move        (downstream)
   --reach <name...>     report which live roots each name reaches         (upstream)
+  --composes            check each composing item's source names what it composes
 
   options: --platform <id>  --layer <layer>  --only <layer>/<Name>  --out <dir>  --json
 ```
@@ -218,6 +219,7 @@ A terminal UI declares its exemption instead of a PNG:
 
 A molecule that *claims* to compose `StatusBadge` but re-implemented its internals will not move when `StatusBadge` moves. So: perturb an atom (`--blast StatusBadge`), re-capture, and assert its declared dependents changed. A dependent that does not move is not composing — it is a copy.
 
+A compiled stack cannot be checked this way. A comment-only perturbation does not change a compiled render, so `--blast` reports a `note` and zero moved stories. Use `--composes` on those stacks. It reads each composing item's source with comments removed, and it requires every composed name to appear there as an identifier. Known limit: a component reached only through a re-export under another name is not seen.
 
 ### State Scenarios for Molecules, Organisms, and Screens
 

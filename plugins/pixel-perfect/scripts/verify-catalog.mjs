@@ -23,6 +23,7 @@
 //   --audit               read goldens, receipts and sources; runs NO capture
 //   --blast <name>        perturb <name>, report which stories move (downstream)
 //   --reach <name...>     report which live roots each name reaches (upstream)
+//   --composes            check each composing item's source names what the inventory says it composes
 //
 // Options:
 //   --platform <id>       platform key in design/manifest.json (default: sole platform, else required)
@@ -1124,6 +1125,13 @@ export function modeBlast(projectRoot, captureCfg, name, layerFilter) {
       moved,
       beforeCount: before.count,
       afterCount: after.count,
+      ...(moved.length === 0
+        ? {
+            note:
+              "A comment-only perturbation does not change a compiled render, so no story moving here does not mean " +
+              "nothing depends on this component. --composes is the composition gate.",
+          }
+        : {}),
     };
   } finally {
     for (const b of backups) writeFileSync(b.full, b.content, "utf8");
@@ -1235,6 +1243,71 @@ function staleSourcesOf(projectRoot, receipts) {
 }
 
 // ---------------------------------------------------------------------------
+// --composes: does each composing item's source actually name what it composes?
+// ---------------------------------------------------------------------------
+
+/**
+ * Remove comments so a reference that exists only in a comment cannot satisfy the check.
+ * Known limit: this is a text scan, not a parser. A string literal that contains "//" or "/*" can
+ * be cut short, and a string containing a comment marker is treated as a comment.
+ */
+export function stripComments(text) {
+  return text
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/(^|[^:\\])\/\/[^\n]*/g, "$1");
+}
+
+const COMPOSES_LIMIT =
+  "A component reached only through a re-export under another name is not seen: the source must name the composed component itself.";
+
+export function modeComposes(projectRoot, platformConfig, layerFilter = null) {
+  const invPath = join(projectRoot, "design", "inventory.json");
+  if (!existsSync(invPath)) {
+    throw new Error(`--composes needs design/inventory.json; none found under ${projectRoot}`);
+  }
+  let inventory;
+  try {
+    inventory = JSON.parse(readFileSync(invPath, "utf8"));
+  } catch (e) {
+    throw new Error(`design/inventory.json is not valid JSON: ${e.message}`);
+  }
+  const checkedItems = [];
+  const violations = [];
+  for (const layer of ITEM_LAYERS) {
+    if (layerFilter && layer !== layerFilter) continue;
+    for (const item of platformConfig[layer] || []) {
+      const entry = (inventory[layer] || []).find((e) => e.name === item.name);
+      const composes = Array.isArray(entry?.composes) ? entry.composes : [];
+      if (composes.length === 0) continue;
+      if (!item.file) throw new Error(`${layer}/${item.name} declares composes but its manifest item has no file`);
+      const abs = join(projectRoot, item.file);
+      if (!existsSync(abs)) throw new Error(`${layer}/${item.name} source file not found: ${item.file}`);
+      const code = stripComments(readFileSync(abs, "utf8"));
+      const missing = composes.filter((name) => !new RegExp(`\\b${escapeRe(name)}\\b`).test(code));
+      checkedItems.push(`${layer}/${item.name}`);
+      if (missing.length) violations.push({ item: item.name, layer, composes, missing, file: item.file });
+    }
+  }
+  const exit = violations.length ? 1 : 0;
+  return {
+    mode: "composes",
+    exit,
+    vacuous: false,
+    message: violations.length
+      ? `${violations.length} item(s) do not name what they compose`
+      : checkedItems.length
+        ? `Composition matches source for ${checkedItems.length} item(s)`
+        : "No manifest item declares composes",
+    checked: checkedItems.length,
+    checkedItems,
+    violations,
+    limit: COMPOSES_LIMIT,
+    ...(checkedItems.length === 0 ? { note: "no manifest item declares composes; nothing to check" } : {}),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Cross-platform identity (informational)
 // ---------------------------------------------------------------------------
 
@@ -1277,7 +1350,7 @@ export function identicalAcrossPlatforms(projectRoot, manifest) {
 function usage() {
   process.stderr.write(
     "Usage: verify-catalog.mjs <mode> <project-root> [options]\n" +
-      "  Modes: --baseline | --check | --accept <glob> | --render | --audit | --blast <name> | --reach <name...>\n" +
+      "  Modes: --baseline | --check | --accept <glob> | --render | --audit | --blast <name> | --reach <name...> | --composes\n" +
       "  Options: --platform <id>  --layer <layer>  --only <layer>/<Name>  --out <dir>  --json\n" +
       "  Exit: 0 pass · 1 drift or violation · 2 config/usage · 3 vacuous (zero stories)\n",
   );
@@ -1331,7 +1404,7 @@ function parseArgs(argv) {
       if (!perturbDir || perturbDir.startsWith("--")) throw new Error("--perturb-dir requires a path");
       continue;
     }
-    if (a === "--baseline" || a === "--check" || a === "--render" || a === "--audit") {
+    if (a === "--baseline" || a === "--check" || a === "--render" || a === "--audit" || a === "--composes") {
       if (mode) throw new Error("Only one mode is allowed");
       mode = a.slice(2);
       continue;
@@ -1453,6 +1526,9 @@ export function main(argv) {
       case "audit":
         report = auditGoldens(projectRoot, platformConfig, platformId);
         break;
+      case "composes":
+        report = modeComposes(projectRoot, platformConfig, parsed.layer);
+        break;
       case "blast":
         report = modeBlast(projectRoot, captureCfg, parsed.blastName, parsed.layer);
         break;
@@ -1484,24 +1560,30 @@ export function main(argv) {
 
 function describeReport(report) {
   const lines = [];
-  for (const d of report.drifted || []) lines.push(`  drift  ${d.key}`);
-  for (const m of report.missing || []) lines.push(`  missing golden  ${m.key}`);
-  for (const e of report.extra || []) lines.push(`  new story  ${e.key}`);
-  for (const u of report.uncatalogued || []) lines.push(`  no story  ${u.key} (inventoried)`);
-  for (const u of report.unreceipted || []) lines.push(`  unreceipted  ${u.key}: ${u.reason}`);
-  for (const v of report.violations || []) lines.push(`  violation  ${v.kind}  ${describeViolation(v)}  ${v.reason}`);
-  for (const e of report.empty || []) lines.push(`  empty golden  ${e.key}`);
-  for (const g of report.crossComponentDuplicates || []) lines.push(`  identical across components  ${g.keys.join(" = ")}`);
-  for (const s of report.staleSources || []) lines.push(`  stale source  ${s.key} ${s.field} ${s.path}: ${s.reason}`);
-  for (const s of report.states || []) {
-    lines.push(`  state  ${s.key}  structural=${s.structural}  png=${s.png ?? "(not required)"}  ${s.status}`);
+  if (report.mode === "composes") {
+    for (const v of report.violations) {
+      lines.push(`  composes  ${v.layer}/${v.item} does not name ${v.missing.join(", ")} in ${v.file}`);
+    }
+  } else {
+    for (const d of report.drifted || []) lines.push(`  drift  ${d.key}`);
+    for (const m of report.missing || []) lines.push(`  missing golden  ${m.key}`);
+    for (const e of report.extra || []) lines.push(`  new story  ${e.key}`);
+    for (const u of report.uncatalogued || []) lines.push(`  no story  ${u.key} (inventoried)`);
+    for (const u of report.unreceipted || []) lines.push(`  unreceipted  ${u.key}: ${u.reason}`);
+    for (const v of report.violations || []) lines.push(`  violation  ${v.kind}  ${describeViolation(v)}  ${v.reason}`);
+    for (const e of report.empty || []) lines.push(`  empty golden  ${e.key}`);
+    for (const g of report.crossComponentDuplicates || []) lines.push(`  identical across components  ${g.keys.join(" = ")}`);
+    for (const s of report.staleSources || []) lines.push(`  stale source  ${s.key} ${s.field} ${s.path}: ${s.reason}`);
+    for (const s of report.states || []) {
+      lines.push(`  state  ${s.key}  structural=${s.structural}  png=${s.png ?? "(not required)"}  ${s.status}`);
+    }
+    for (const m of report.moved || []) lines.push(`  moved  ${m.key}`);
+    for (const d of report.deprecatedUsage || []) lines.push(`  deprecated  ${d.file} composes ${d.deprecated}`);
+    for (const r of report.results || []) {
+      lines.push(`  ${r.name} reaches: ${(r.reaches || []).map((x) => x.key).join(", ") || "(none)"}`);
+    }
+    if (report.note) lines.push(`  note  ${report.note}`);
   }
-  for (const m of report.moved || []) lines.push(`  moved  ${m.key}`);
-  for (const d of report.deprecatedUsage || []) lines.push(`  deprecated  ${d.file} composes ${d.deprecated}`);
-  for (const r of report.results || []) {
-    lines.push(`  ${r.name} reaches: ${(r.reaches || []).map((x) => x.key).join(", ") || "(none)"}`);
-  }
-  if (report.note) lines.push(`  note  ${report.note}`);
   for (const line of lines) process.stderr.write(`${line}\n`);
 }
 
