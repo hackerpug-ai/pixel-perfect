@@ -1,0 +1,455 @@
+// Behavioral tests for the gate's manifest mode and its coverage rule.
+//
+// Every test runs the real script as a subprocess against real files on disk, because
+// the exit code is the contract with workflows/build.md. Tests that write into a
+// project copy the monorepo fixture into a temp directory first; the shipped fixture is
+// never modified.
+//
+// The monorepo fixture keeps the web app under apps/site. The planted violations are
+// Badge.tsx (shadcn: a bare <button>) and Toolbar.tsx (Tailwind: an inline style object).
+
+import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import test, { after } from "node:test";
+import * as gate from "../plugins/pixel-perfect/scripts/verify-styling-contract.mjs";
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const GATE = path.join(ROOT, "plugins/pixel-perfect/scripts/verify-styling-contract.mjs");
+const MONOREPO = path.join(ROOT, "test/fixtures/monorepo-web");
+const TAILWIND = path.join(ROOT, "plugins/pixel-perfect/docs/styling-contracts/tailwind-web.md");
+const SHADCN = path.join(ROOT, "plugins/pixel-perfect/docs/component-contracts/shadcn.md");
+
+const CLEAN_SCREEN = "export function Home() {\n  return <main className=\"p-4\">Home</main>;\n}\n";
+
+// A researched contract with a forbidden check that matches Toolbar and a mustInclude
+// check whose glob matches nothing in the fixture, so it scopes zero files.
+const MINI_CHECKS = {
+  forbiddenPatterns: [
+    {
+      id: "inline-style-objects",
+      mode: "content",
+      glob: ["**/*.tsx"],
+      regex: "\\bstyle=\\{\\{",
+      rationale: "Inline style objects bypass design tokens.",
+    },
+  ],
+  mustInclude: [
+    {
+      id: "layout-testid",
+      glob: ["src/layouts/**/*.tsx"],
+      regex: "data-testid=",
+      description: "Layouts carry a test id.",
+    },
+  ],
+};
+const miniContract = () =>
+  `---\nid: mini\nname: Mini researched contract\nsource: researched\n---\n\n## Checks\n\n\`\`\`json\n${JSON.stringify(MINI_CHECKS, null, 2)}\n\`\`\`\n`;
+
+const scratch = [];
+after(() => {
+  for (const dir of scratch) rmSync(dir, { recursive: true, force: true });
+});
+
+function cloneMonorepo() {
+  const dir = mkdtempSync(path.join(tmpdir(), "pp-manifest-"));
+  scratch.push(dir);
+  cpSync(MONOREPO, dir, { recursive: true });
+  return dir;
+}
+
+function readManifest(dir) {
+  return JSON.parse(readFileSync(path.join(dir, "design/manifest.json"), "utf8"));
+}
+
+function editPlatform(dir, edit) {
+  const manifest = readManifest(dir);
+  edit(manifest.platforms["web-desktop"]);
+  writeFileSync(path.join(dir, "design/manifest.json"), JSON.stringify(manifest, null, 2));
+}
+
+function writeProjectFile(dir, rel, text) {
+  const abs = path.join(dir, rel);
+  mkdirSync(path.dirname(abs), { recursive: true });
+  writeFileSync(abs, text);
+}
+
+function runGate(args) {
+  const r = spawnSync(process.execPath, [GATE, ...args], { encoding: "utf8" });
+  return {
+    status: r.status,
+    stdout: r.stdout,
+    stderr: r.stderr,
+    report: r.stdout.trim() ? JSON.parse(r.stdout) : null,
+  };
+}
+
+function runManifest(dir, kind, extra = []) {
+  return runGate(["--manifest", dir, "--platform", "web-desktop", "--kind", kind, ...extra]);
+}
+
+const violationFiles = (report) => report.violations.map((v) => v.file);
+
+// ---------------------------------------------------------------------------
+// Positional mode: missing-root fix and the summary line
+// ---------------------------------------------------------------------------
+
+test("positional: a missing source root exits 2 instead of passing as a vacuous scan", () => {
+  const r = runGate([TAILWIND, path.join(MONOREPO, "does-not-exist")]);
+  assert.equal(r.status, 2, `expected exit 2, got ${r.status}: ${r.stderr}`);
+  assert.match(r.stderr, /source root not found/i);
+});
+
+test("positional: text mode prints the scan root, files walked and files in scope on one line", () => {
+  const r = runGate([TAILWIND, path.join(MONOREPO, "apps/site")]);
+  const summary = r.stderr.split("\n")[0];
+  assert.match(summary, /apps\/site/, `summary line missing the scan root: ${summary}`);
+  assert.match(summary, /4 files walked/, `summary line missing files walked: ${summary}`);
+  assert.match(summary, /3 in scope/, `summary line missing files in scope: ${summary}`);
+});
+
+// ---------------------------------------------------------------------------
+// Monorepo: the scan root is platforms[p].root, not the repo root
+// ---------------------------------------------------------------------------
+
+test("monorepo: manifest mode scans apps/site and finds the planted styling violation", () => {
+  const r = runManifest(MONOREPO, "styling");
+  assert.equal(r.status, 1, r.stderr);
+  assert.deepEqual(violationFiles(r.report), ["src/components/molecules/Toolbar.tsx"]);
+  assert.equal(r.report.violations[0].checkId, "inline-style-objects");
+  assert.equal(r.report.summary.filesScanned, 4);
+  assert.equal(r.report.summary.filesInScope, 3);
+});
+
+test("monorepo: manifest mode finds the planted component violation and defaults to hard-fail", () => {
+  const r = runManifest(MONOREPO, "component");
+  assert.equal(r.status, 1, r.stderr);
+  assert.equal(r.report.enforcement, "hard-fail");
+  assert.deepEqual(violationFiles(r.report), ["src/components/atoms/Badge.tsx"]);
+  assert.equal(r.report.violations[0].checkId, "raw-interactive-element");
+});
+
+test("monorepo: the positional form from the repo root misses both violations", () => {
+  for (const contract of [TAILWIND, SHADCN]) {
+    const r = runGate([contract, MONOREPO]);
+    assert.equal(r.status, 3, "root-anchored globs match nothing at the repo root: a vacuous scan");
+    assert.equal(r.report.violations.length, 0);
+  }
+});
+
+test("monorepo: the positional form pointed at apps/site finds the same component violation", () => {
+  const r = runGate([SHADCN, path.join(MONOREPO, "apps/site")]);
+  assert.equal(r.status, 1, r.stderr);
+  assert.deepEqual(violationFiles(r.report), ["src/components/atoms/Badge.tsx"]);
+});
+
+test("monorepo: manifest text mode prints one summary line with the scan root and both counts", () => {
+  const r = runManifest(MONOREPO, "component");
+  const summary = r.stderr.split("\n")[0];
+  assert.match(summary, /apps\/site/, `summary line missing the scan root: ${summary}`);
+  assert.match(summary, /4 files walked/, `summary line missing files walked: ${summary}`);
+  assert.match(summary, /3 in scope/, `summary line missing files in scope: ${summary}`);
+});
+
+test("monorepo: a missing platform root exits 2 and names it", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.root = "apps/nope";
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stderr, /apps\/nope/);
+});
+
+// ---------------------------------------------------------------------------
+// Coverage: every recorded component file must be in some check's scope
+// ---------------------------------------------------------------------------
+
+test("a manifest component outside every check's scope exits 3 and names the file", () => {
+  const dir = cloneMonorepo();
+  writeProjectFile(dir, "apps/site/src/screens/Home.tsx", CLEAN_SCREEN);
+  editPlatform(dir, (p) => {
+    p.screens.push({ name: "Home", status: "verified", file: "apps/site/src/screens/Home.tsx" });
+  });
+
+  const component = runManifest(dir, "component");
+  assert.equal(component.status, 3, component.stderr);
+  assert.equal(component.report.coverage.failures.length, 1);
+  assert.equal(component.report.coverage.failures[0].file, "apps/site/src/screens/Home.tsx");
+  assert.equal(component.report.coverage.failures[0].status, "out-of-scope");
+  assert.match(component.report.message, /1 component files are outside every check's scope/);
+  assert.match(component.report.message, /apps\/site\/src\/screens\/Home\.tsx/);
+
+  // The styling contract's globs do cover src/screens, so the same file is covered there.
+  const styling = runManifest(dir, "styling");
+  assert.equal(styling.status, 1, "Home is covered by the styling contract, so only Toolbar blocks");
+  assert.equal(styling.report.coverage.failures.length, 0);
+});
+
+test("a manifest component file outside the scan root exits 3", () => {
+  const dir = cloneMonorepo();
+  writeProjectFile(dir, "packages/shared/Thing.tsx", CLEAN_SCREEN);
+  editPlatform(dir, (p) => {
+    p.molecules.push({ name: "Thing", status: "verified", file: "packages/shared/Thing.tsx" });
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 3, r.stderr);
+  assert.deepEqual(
+    r.report.coverage.failures.map((f) => [f.file, f.status]),
+    [["packages/shared/Thing.tsx", "outside-root"]]
+  );
+});
+
+test("a manifest component file that does not exist exits 2 and names it", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.atoms.push({ name: "Ghost", status: "pending", file: "apps/site/src/components/atoms/Ghost.tsx" });
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stderr, /Ghost\.tsx/);
+});
+
+test("--layer limits coverage to the named layer's manifest files", () => {
+  const dir = cloneMonorepo();
+  writeProjectFile(dir, "apps/site/src/screens/Home.tsx", CLEAN_SCREEN);
+  editPlatform(dir, (p) => {
+    p.screens.push({ name: "Home", status: "verified", file: "apps/site/src/screens/Home.tsx" });
+  });
+
+  const molecules = runManifest(dir, "component", ["--layer", "molecules"]);
+  assert.equal(molecules.report.coverage.scope, "molecules");
+  assert.equal(molecules.report.coverage.files.length, 1, "only the molecule is covered");
+  assert.equal(molecules.report.coverage.failures.length, 0, "the screen is outside the layer, so it is not required");
+  assert.notEqual(molecules.status, 3, "the uncovered screen does not fail a molecules-only run");
+  // --layer narrows coverage only. The violation report still covers the whole scan root;
+  // --files is the option that narrows violations.
+  assert.deepEqual(violationFiles(molecules.report), ["src/components/atoms/Badge.tsx"]);
+
+  const everything = runManifest(dir, "component");
+  assert.equal(everything.status, 3, "without --layer the screen is covered and fails");
+});
+
+test("--files limits violations to the named files and still applies coverage to them", () => {
+  const clean = runManifest(MONOREPO, "component", ["--files", "apps/site/src/components/atoms/Button.tsx"]);
+  assert.equal(clean.status, 0, clean.stderr);
+  assert.deepEqual(clean.report.violations, [], "Badge's violation is outside --files");
+
+  const flagged = runManifest(MONOREPO, "component", ["--files", "apps/site/src/components/atoms/Badge.tsx"]);
+  assert.equal(flagged.status, 1, flagged.stderr);
+  assert.deepEqual(violationFiles(flagged.report), ["src/components/atoms/Badge.tsx"]);
+
+  const dir = cloneMonorepo();
+  writeProjectFile(dir, "apps/site/src/screens/Home.tsx", CLEAN_SCREEN);
+  const uncovered = runManifest(dir, "component", ["--files", "apps/site/src/screens/Home.tsx"]);
+  assert.equal(uncovered.status, 3, "a file named by --files is still subject to the coverage rule");
+
+  const missing = runManifest(MONOREPO, "component", ["--files", "apps/site/src/nope.tsx"]);
+  assert.equal(missing.status, 2, "a --files entry that does not exist is exit 2");
+});
+
+test("a manifest with no recorded component files falls back to the global guard", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    for (const layer of ["atoms", "molecules"]) for (const entry of p[layer]) delete entry.file;
+  });
+  const styling = runManifest(dir, "styling");
+  assert.equal(styling.status, 1, styling.stderr);
+  assert.equal(styling.report.coverage.applied, false);
+  assert.match(styling.report.coverage.reason, /no component files/);
+
+  // A scan root with no component globs at all: the old vacuous guard still fails the run.
+  writeProjectFile(dir, "apps/site/src/screens/Home.tsx", CLEAN_SCREEN);
+  editPlatform(dir, (p) => {
+    p.root = "apps/site/src/screens";
+  });
+  const vacuous = runManifest(dir, "component");
+  assert.equal(vacuous.status, 3, vacuous.stderr);
+  assert.match(vacuous.report.warnings.join(" "), /vacuous/i);
+});
+
+// ---------------------------------------------------------------------------
+// Per-check reporting
+// ---------------------------------------------------------------------------
+
+test("a mustInclude check that scopes zero files is reported vacuous, and vacuity alone does not fail", () => {
+  const dir = cloneMonorepo();
+  writeProjectFile(dir, "design/research/styling/mini.md", miniContract());
+  editPlatform(dir, (p) => {
+    p.tools.style_contract = "mini";
+    p.tools.style_contract_source = "researched";
+  });
+  const r = runManifest(dir, "styling");
+  const layout = r.report.checks.find((c) => c.id === "layout-testid");
+  assert.equal(layout.scoped, 0);
+  assert.equal(layout.vacuous, true);
+  assert.equal(r.report.coverage.failures.length, 0, "vacuity is not a coverage failure");
+  assert.equal(r.status, 1, "the planted inline style in Toolbar still blocks");
+  assert.deepEqual(violationFiles(r.report), ["src/components/molecules/Toolbar.tsx"]);
+});
+
+// ---------------------------------------------------------------------------
+// Contract resolution and enforcement
+// ---------------------------------------------------------------------------
+
+test("a researched styling contract resolves to design/research/styling/{id}.md", () => {
+  const dir = cloneMonorepo();
+  writeProjectFile(dir, "design/research/styling/mini.md", miniContract());
+  editPlatform(dir, (p) => {
+    p.tools.style_contract = "mini";
+    p.tools.style_contract_source = "researched";
+  });
+  const r = runManifest(dir, "styling");
+  assert.equal(r.report.contract.path, path.join(dir, "design/research/styling/mini.md"));
+  assert.equal(r.status, 1, r.stderr);
+});
+
+test("a researched styling contract that is not on disk exits 2 and names it", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.tools.style_contract = "absent-research";
+    p.tools.style_contract_source = "researched";
+  });
+  const r = runManifest(dir, "styling");
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stderr, /absent-research\.md/);
+});
+
+test("a researched component contract resolves to design/research/libraries/{id}.md", () => {
+  const dir = cloneMonorepo();
+  writeProjectFile(dir, "design/research/libraries/shadcn-copy.md", readFileSync(SHADCN, "utf8"));
+  editPlatform(dir, (p) => {
+    p.tools.component_contract = "shadcn-copy";
+    p.tools.component_contract_source = "researched";
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.report.contract.path, path.join(dir, "design/research/libraries/shadcn-copy.md"));
+  assert.equal(r.status, 1, r.stderr);
+  assert.deepEqual(violationFiles(r.report), ["src/components/atoms/Badge.tsx"]);
+});
+
+test("enforcement off exits 0 without scanning", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.tools.component_contract_enforcement = "off";
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(r.report.enforcement, "off");
+  assert.equal(r.report.scanned, false);
+  assert.deepEqual(r.report.violations, []);
+});
+
+test("warn reports violations and exits 0, but does not waive the coverage rule", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.tools.component_contract_enforcement = "warn";
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(r.report.enforcement, "warn");
+  assert.equal(r.report.violations.length, 1, "the violation is still reported");
+
+  writeProjectFile(dir, "apps/site/src/screens/Home.tsx", CLEAN_SCREEN);
+  editPlatform(dir, (p) => {
+    p.screens.push({ name: "Home", status: "verified", file: "apps/site/src/screens/Home.tsx" });
+  });
+  const uncovered = runManifest(dir, "component");
+  assert.equal(uncovered.status, 3, "coverage failures still exit 3 under warn");
+});
+
+test("an unknown enforcement value exits 2", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.tools.component_contract_enforcement = "strict";
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stderr, /enforcement/);
+});
+
+test("contract source none resolves to no contract in force and exits 0", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.tools.component_contract_source = "none";
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(r.report.inForce, false);
+  assert.equal(r.report.scanned, false);
+});
+
+test("an absent contract source resolves to no contract in force and exits 0", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    delete p.tools.component_contract_source;
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(r.report.inForce, false);
+});
+
+// ---------------------------------------------------------------------------
+// Overrides
+// ---------------------------------------------------------------------------
+
+test("a name-form override exempts the file the component resolves to and reports it", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.tools.component_contract_overrides = { Badge: "legacy raw button, tracked for migration" };
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 0, r.stderr);
+  assert.deepEqual(r.report.violations, []);
+  const override = r.report.overrides.find((o) => o.key === "Badge");
+  assert.equal(override.form, "name");
+  assert.deepEqual(override.files, ["src/components/atoms/Badge.tsx"]);
+  const covered = r.report.coverage.files.find((f) => f.file === "apps/site/src/components/atoms/Badge.tsx");
+  assert.equal(covered.status, "exempted", "an exempted file counts as covered");
+});
+
+test("a glob-form override is used as written, relative to the scan root", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.tools.component_contract_overrides = { "src/components/atoms/Badge.tsx": "legacy raw button" };
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 0, r.stderr);
+  const override = r.report.overrides.find((o) => o.key === "src/components/atoms/Badge.tsx");
+  assert.equal(override.form, "glob");
+  assert.deepEqual(override.files, ["src/components/atoms/Badge.tsx"]);
+});
+
+test("an override key that resolves to no manifest component exits 2 and names the key", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.tools.component_contract_overrides = { Nonexistent: "no such component" };
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stderr, /Nonexistent/);
+});
+
+// ---------------------------------------------------------------------------
+// Direct caller: the function the next script will call
+// ---------------------------------------------------------------------------
+
+test("runManifestGate returns the result object to a caller that is not the CLI", () => {
+  const result = gate.runManifestGate({ projectRoot: MONOREPO, platform: "web-desktop", kind: "component" });
+  assert.equal(result.exitCode, 1);
+  assert.equal(result.inForce, true);
+  assert.equal(result.enforcement, "hard-fail");
+  assert.deepEqual(result.violations.map((v) => v.file), ["src/components/atoms/Badge.tsx"]);
+  assert.equal(result.coverage.files.length, 3);
+  assert.ok(result.checks.every((c) => typeof c.scoped === "number" && typeof c.vacuous === "boolean"));
+});
+
+test("runManifestGate rejects an unknown kind with an error carrying exitCode 2", () => {
+  assert.throws(
+    () => gate.runManifestGate({ projectRoot: MONOREPO, platform: "web-desktop", kind: "bogus" }),
+    (e) => e.exitCode === 2 && /kind/.test(e.message)
+  );
+});

@@ -88,19 +88,32 @@ Contracts must match both common project layouts, because the framework decides:
 
 Every glob list below carries both. Getting this wrong produces a vacuous scan (exit `3`), not a silent pass — the gate guards against it — but it still blocks the build, so get it right.
 
+In a monorepo the app usually lives in a subfolder, such as `apps/site`. Root-anchored globs match nothing when the scan starts at the repo root. Set `platforms[<id>].root` in the manifest to the app folder. Manifest mode then scans the app's files, and it refuses to pass while any recorded component file lies outside every check's scope.
+
 ## How the gate runs
 
-Same script, same determinism as styling:
+Same script, same determinism as styling. The shared rules are in `docs/styling-contracts/README.md` under "How the gate runs": manifest mode, the scan root, override resolution, the coverage rule, and the exit codes. For component contracts the manifest mode call is:
 
 ```
-node scripts/verify-styling-contract.mjs docs/component-contracts/<id>.md <project-root> [--allow GLOB]...
+node scripts/verify-styling-contract.mjs --manifest <project-root> --platform <id> --kind component [--layer <layer>] [--files <path>...]
 ```
+
+What differs for component contracts:
+
+| Concern | Component value |
+|---------|-----------------|
+| Manifest fields | `tools.component_contract`, `tools.component_contract_source`, `tools.component_contract_enforcement`, `tools.component_contract_overrides` |
+| Built-in contract | `docs/component-contracts/{id}.md` in the plugin |
+| Researched contract | `design/research/libraries/{id}.md` in the project |
+| No gate | `component_contract_source` of `none` or absent: exit `0`, report `"inForce": false`. The gate does not run. |
+
+Exit codes:
 
 - exit `0` → layer proceeds.
 - exit `1` → **layer blocks** until fixed or a per-component override is recorded in `tools.component_contract_overrides`.
-- exit `2` (malformed contract) / exit `3` (vacuous scan — wrong source-root) → also blocking.
+- exit `2` (malformed contract, or a missing scan root or component file) / exit `3` (a recorded component file is outside every check's scope, or the vacuous-scan guard fired) → also blocking.
 
-Pass one `--allow <glob>` per active override. The LLM formats the report; the pass/fail decision is deterministic.
+The LLM formats the report; the pass/fail decision is deterministic.
 
 ## Authoring a contract
 
@@ -118,7 +131,7 @@ A gate that fires on correct code gets switched off. Two rules:
 - **Ban re-implementation, not use.** `mustInclude`-style rules ("every component must import from the library") fire on genuinely primitive components — a hairline rule, a spacer, a scrim. The high-signal check is the inverse: forbid importing a primitive the library already vendored.
 - **Leave layout alone.** `View`, `ScrollView`, `FlatList`, `SafeAreaView`, `<div>`, `<span>` are structure, not components a library replaces.
 
-Genuine exceptions go in `tools.component_contract_overrides` as `{ComponentName: "reason"}`, which BUILD passes to the gate as `--allow` globs. The exception becomes a recorded decision instead of an invisible default — which is the entire point.
+Genuine exceptions go in `tools.component_contract_overrides` as `{ComponentName: "reason"}`. Manifest mode resolves each name to that component's manifest `file` and exempts it. A key that contains `/` or a glob character is not a name. The gate uses it as a glob, relative to the scan root. A name that matches no manifest component exits `2`. The report lists the files each override exempted. The exception becomes a recorded decision instead of an invisible default — which is the entire point.
 
 ## Index of built-in contracts
 
