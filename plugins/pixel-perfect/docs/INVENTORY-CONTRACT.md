@@ -25,7 +25,7 @@ rediscovering it.
 
 ## Model routing
 
-One dispatch, strongest available model, vision-capable. The read must **look at every frame image**
+One dispatch, vision-capable. Set no model: the child runs on the session's model. The read must **look at every frame image**
 — counting frames and claiming each one is part of the deliverable. Do not split the read per source
 unless the orchestrator says so; cross-source compositions (a partial imported into three decks) are
 exactly what a split loses.

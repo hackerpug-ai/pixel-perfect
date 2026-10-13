@@ -214,6 +214,14 @@ export async function validatePackage(root = REPOSITORY_ROOT) {
     if (/\bautoActivate\b/.test(content)) errors.push(`unsupported autoActivate metadata in ${relativePath}`);
     if (/\bdesign-(?:planner|implementer|reviewer)\b/.test(content)) errors.push(`retired design agent referenced in ${relativePath}`);
     if (/\/Users\//.test(content) || /~\/Projects\//.test(content)) errors.push(`machine-specific path in ${relativePath}`);
+    const retiredClientAgentCount = content.split("frontend-designer").length - 1;
+    if (relativePath === "workflows/wireframe.md") {
+      if (retiredClientAgentCount !== 1) {
+        errors.push(`workflows/wireframe.md must name frontend-designer once, in its legacy-value note; found ${retiredClientAgentCount}`);
+      }
+    } else if (retiredClientAgentCount > 0) {
+      errors.push(`retired client agent frontend-designer referenced in ${relativePath}`);
+    }
   }
 
   try {
@@ -234,8 +242,11 @@ export async function validatePackage(root = REPOSITORY_ROOT) {
   try {
     const runtimeContract = await readFile(path.join(packageRoot, "workflows/RUNTIME-CONTRACT.md"), "utf8");
     const designContract = await readFile(path.join(packageRoot, "docs/DESIGN-CONTRACT.md"), "utf8");
-    if (!runtimeContract.includes("frontend-designer") || !runtimeContract.includes("executes the same contract directly")) {
-      errors.push("runtime contract must define frontend-designer and bundled direct-execution behavior");
+    for (const required of ["SUBAGENT(", "pixel-perfect:designer", "Only ever set a type that appears in your tool's list"]) {
+      if (!runtimeContract.includes(required)) errors.push(`runtime contract must contain "${required}"`);
+    }
+    if (runtimeContract.includes("frontend-designer")) {
+      errors.push("runtime contract must not name the retired client agent frontend-designer");
     }
     if (!designContract.includes("real components") || !designContract.includes("deterministic gates")) {
       errors.push("bundled design contract is missing implementation or verification requirements");

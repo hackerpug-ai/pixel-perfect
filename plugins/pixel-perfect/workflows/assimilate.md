@@ -118,7 +118,7 @@ Before rendering, write `<run>/reference/.gitignore` containing `*`, so the run'
 
 Write `<run>/report.md`:
 
-1. **What was done** — the sources with their roles, frames rendered (claimed · unclaimed), the `design engine:` line, and the user's notes.
+1. **What was done** — the sources with their roles, frames rendered (claimed · unclaimed), the `design engine:` route line (packaged designer registered, in brief, or inline), and the user's notes.
 2. **What was found** — per layer, each item marked **new**, **reused** (an existing component covers it), or **variant** (an existing component needs a new state or variant), with the frames that show it. For your own mockup, the routes and states as well.
 3. **The aesthetic lens** — for each source, the five headings: typography, color, motion, spatial, backgrounds.
 4. **Proposals** — for a source you admire: the tokens, patterns, and components worth adopting, each with its evidence and how it would fit your system. For your own mockup: what joins the inventory.

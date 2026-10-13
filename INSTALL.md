@@ -105,6 +105,14 @@ grok plugin install hackerpug-ai/pixel-perfect#plugins/pixel-perfect --trust
 
 - **Confirm:** run `grok plugin list`. The output lists `pixel-perfect`. If you skipped the install, run `grok inspect` instead.
 - **Next step:** tell the user to restart Grok, open a project that has their design, and run `/pixel-perfect:init`.
+- **Turn off the question timeout (recommended):** Grok stops waiting for an answer after 30 minutes by default. It then tells the model that the user declined, and the model may pick an answer and carry on past a decision the user meant to make. Add this to `~/.grok/config.toml` so Grok waits for the user:
+
+  ```toml
+  [toolset.ask_user_question]
+  timeout_enabled = false
+  ```
+
+- **Slash commands:** Grok lists an enabled skill under its short name, such as `/build`. It uses `/pixel-perfect:build` only when the short name clashes with a built-in command or another skill. Both forms run.
 - **Upgrade:** run `grok plugin update pixel-perfect`. Running the install command again fails with `already installed`.
 - **Uninstall:** run `grok plugin uninstall pixel-perfect`. If the Claude Code install is also on this machine, Grok keeps reading it until you remove that too.
 

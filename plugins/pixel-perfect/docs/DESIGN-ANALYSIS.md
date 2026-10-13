@@ -30,7 +30,7 @@ Pass `--reserve` whenever `OUT` is not `design/` and `design/reference/frames.js
 
 ## Step 2 — One read (probabilistic)
 
-`DESIGN_EXECUTE` with `docs/INVENTORY-CONTRACT.md`, `docs/DESIGN-CONTRACT.md`, and `LENS` when set. **One dispatch, strongest available vision-capable model.** Never split the read per source and never fan it out: cross-source compositions are what a split loses.
+`DESIGN_EXECUTE` with `docs/INVENTORY-CONTRACT.md`, `docs/DESIGN-CONTRACT.md`, and `LENS` when set. **One dispatch, vision-capable, on the session's model.** Never split the read per source and never fan it out: cross-source compositions are what a split loses.
 
 - **build** — the read returns the complete inventory to `<OUT>/inventory.json`, as it always has.
 - **assimilate and evolve** (additive) — the read returns only what this run adds or changes, to `<OUT>/delta.json`. When `PRIOR` exists, merge it over the prior in code, never by asking the model to copy the prior: `node {plugin}/scripts/merge-inventory.mjs <PRIOR> <OUT>/delta.json --out <OUT>/inventory.json`. Without a prior, the delta is the inventory. Prior items are immutable here — a rename, a move between layers, or a removal goes through `evolve`'s own path.
@@ -90,7 +90,7 @@ Pass `--prior` whenever `PRIOR` is set and the caller is additive (assimilate, e
 
 ## Step 4 — Return to the caller
 
-Return the gated `<OUT>/inventory.json` and a one-line summary: frames (claimed · unclaimed), and per layer what is new, reused, or a variant of something that exists. The caller writes its human brief, states `design engine: frontend-designer` or `design engine: bundled contract` (whichever ran the read), and asks its confirmation.
+Return the gated `<OUT>/inventory.json` and a one-line summary: frames (claimed · unclaimed), and per layer what is new, reused, or a variant of something that exists. The caller writes its human brief, states the design engine route that ran the read (`design engine: packaged designer (registered)`, `(in brief)`, or `(inline)`), and asks its confirmation.
 
 ## Step 5 — Persist (assimilate and evolve, after the caller's confirmation)
 

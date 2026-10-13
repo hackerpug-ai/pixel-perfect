@@ -208,7 +208,7 @@ Releases are version-locked across all six agents. Every breaking release ships 
 
 ## Commands
 
-The commands below use the Claude Code and Grok form, `/pixel-perfect:<name>`. Your agent's form is in the "Run a command as" table under [Install](#install).
+The commands below use the Claude Code form, `/pixel-perfect:<name>`. Grok lists them by their short name, `/<name>`, and both forms run in Grok. Your agent's form is in the "Run a command as" table under [Install](#install).
 
 **Build it**
 

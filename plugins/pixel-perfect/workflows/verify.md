@@ -90,7 +90,7 @@ Verifies all atomic components with sandbox controls.
 | **Ecosystem lib validated** | **If `ecosystemLib` exists, package is installed, importable, and vetting matches manifest** |
 | Aesthetic* | Font pairing, color hierarchy, intentional motion |
 
-*Aesthetic checks always run through `docs/DESIGN-CONTRACT.md`; `DESIGN_EXECUTE` uses `frontend-designer` when available and otherwise performs the same review directly.
+*Aesthetic checks always run through `docs/DESIGN-CONTRACT.md`; `DESIGN_EXECUTE` runs them through the packaged designer (see `workflows/RUNTIME-CONTRACT.md`, "Packaged agents").
 
 The **styling contract, component contract, and catalog capture** rows are the checks whose verdict is not the reviewing agent's opinion — run the script and report its exit code. Catalog capture:
 

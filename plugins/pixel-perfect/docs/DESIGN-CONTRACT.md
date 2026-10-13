@@ -1,6 +1,6 @@
-# Bundled Design Contract
+# Design Contract
 
-This is the design contract used by every Pixel Perfect harness. The named `frontend-designer` agent applies it when available; otherwise the primary agent applies it directly.
+This is the design contract every Pixel Perfect design run uses. The packaged `pixel-perfect:designer` agent applies it. `workflows/RUNTIME-CONTRACT.md`, section "Packaged agents", says how that agent is started.
 
 ## Inputs
 
@@ -32,4 +32,4 @@ A reference mockup is a target, not the deliverable. Match its hierarchy, compos
 
 Review the running surface at every required viewport and state. Compare it to its declared target, then report specific discrepancies in hierarchy, spacing, typography, color, behavior, accessibility, and responsive composition. Aesthetic review is additive to compilation, tests, sandbox rendering, token checks, and other deterministic gates; it never replaces them.
 
-If the named designer agent is unavailable, state `design engine: bundled contract` and perform this review directly. If it is available, state `design engine: frontend-designer`. Do not silently downgrade the review.
+The packaged designer performs this review. State the route it ran through: `design engine: packaged designer (registered)`, `(in brief)`, or `(inline)`. When no child can start, the orchestrator reads the brief and performs the review inline, and it says so. Do not silently downgrade the review.

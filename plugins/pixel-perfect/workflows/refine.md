@@ -204,7 +204,7 @@ pixel-perfect:refine --vibe "More industrial, less corporate. Think construction
 1. Update the vibe in manifest (top-level — shared across all platforms)
 2. For the selected platform (or prompt if multiple): regenerate theme file with new vibe interpretation
 3. Regenerate Design Token stories (Colors, Typography, Spacing) for the selected platform
-4. Run `DESIGN_EXECUTE` with the bundled design contract to re-derive aesthetic decisions
+4. Run `DESIGN_EXECUTE` with `docs/DESIGN-CONTRACT.md` to re-derive aesthetic decisions
 5. List components on the selected platform that may look different with the new theme
 6. Prompt: regenerate all components with new theme, or one at a time?
 7. If multiple platforms exist, ask: propagate vibe to other platforms too?

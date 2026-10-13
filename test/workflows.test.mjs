@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
@@ -349,4 +349,42 @@ test("assimilate asks intent first, reports before persisting, and runs the shar
   assert.ok(at("## Phase 3: REPORT") < at("batch: A1"), "the report is written before the persist question");
   const build = readFileSync(path.join(ROOT, "plugins/pixel-perfect/workflows/build.md"), "utf8");
   assert.ok(build.includes("docs/DESIGN-ANALYSIS.md"), "build Phase 4a runs the shared analysis");
+});
+
+// --- Packaged agents: the plugin starts only the designer it ships ---
+
+const PACKAGED_SECTION = "## Packaged agents";
+const BINARY_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".gif", ".ico", ".woff", ".woff2"]);
+
+function listFiles(directory) {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const full = path.join(directory, entry.name);
+    return entry.isDirectory() ? listFiles(full) : [full];
+  });
+}
+
+test("frontend-designer is named under the plugin only in the wireframe legacy-value note", () => {
+  const hits = listFiles(PLUGIN)
+    .filter((file) => !BINARY_EXTENSIONS.has(path.extname(file)))
+    .map((file) => [path.relative(PLUGIN, file), readFileSync(file, "utf8").split("frontend-designer").length - 1])
+    .filter(([, count]) => count > 0);
+  assert.deepEqual(hits, [["workflows/wireframe.md", 1]]);
+});
+
+test("the packaged-agent table keeps a row for every spawning tool and the exact-name rule", () => {
+  const contract = readPlugin("workflows/RUNTIME-CONTRACT.md");
+  const start = contract.indexOf(PACKAGED_SECTION);
+  assert.ok(start >= 0, `RUNTIME-CONTRACT.md must contain "${PACKAGED_SECTION}"`);
+  const next = contract.indexOf("\n## ", start + PACKAGED_SECTION.length);
+  const section = contract.slice(start, next < 0 ? undefined : next);
+  const rows = section
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith("|"));
+  for (const tool of ["`Agent`", "`Task`", "`spawn_subagent`", "`spawn_agent`", "`task`", "none of these"]) {
+    const row = rows.find((line) => line.split("|")[1]?.includes(tool));
+    assert.ok(row, `the packaged-agent table lost its row for ${tool}`);
+  }
+  assert.match(section, /pixel-perfect:designer/);
+  assert.match(section, /Only ever set a type that appears in your tool's list/);
 });
