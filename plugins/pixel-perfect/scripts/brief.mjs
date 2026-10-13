@@ -12,27 +12,31 @@
 //   node brief.mjs build <project-root> --platform <id> --layer <atoms|molecules|organisms|screens> --name <Name> [--findings <file.json>]
 //   node brief.mjs wrap  <project-root> --slug <short-name> <task-brief-file | ->
 
-import { existsSync, lstatSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { loadManifest, resolvePlatform } from "./verify-catalog.mjs";
 import { inside } from "./reference-revisions.mjs";
+import { GateError, resolveContract as resolveGateContract } from "./verify-styling-contract.mjs";
 
 const PLUGIN_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const GATE_SCRIPT = join(PLUGIN_ROOT, "scripts/verify-styling-contract.mjs");
 const LAYERS = ["atoms", "molecules", "organisms", "screens"];
 const SLUG_PATTERN = /^[a-z0-9-]+$/;
 const USAGE =
   "Usage: brief.mjs build <project-root> --platform <id> --layer <atoms|molecules|organisms|screens> --name <Name> [--findings <file.json>]\n" +
   "       brief.mjs wrap  <project-root> --slug <short-name> <task-brief-file | ->";
 const NO_FRAME = "No frame shows this item. The design contract and the project's theme tokens are the target.";
+const NO_INVENTORY = "No inventory entry for this item: the spec is the source.";
 const SANDBOX_ADAPTER = { custom: "custom-sandbox" }; // docs/adapters/README.md: tools.sandbox → adapter file
-const CONTRACTS = {
-  style: { label: "Styling", dir: "styling-contracts", research: "design/research/styling" },
-  component: { label: "Component", dir: "component-contracts", research: "design/research/libraries" },
+// The contract kinds, as the gate names them, with the label the brief shows and the tools-key prefix.
+const KINDS = {
+  style: { gate: "styling", label: "Styling" },
+  component: { gate: "component", label: "Component" },
 };
-const ENFORCEMENT = ["hard-fail", "warn", "off"];
-const CONTRACT_SOURCES = ["builtin", "manual", "researched"];
+// The gate key that records each layer's pass, as build.md's exit gates name them.
+const LAYER_GATE = { atoms: "atoms", molecules: "molecules", organisms: "organisms", screens: "compose" };
 
 export class BriefError extends Error {}
 
@@ -97,6 +101,39 @@ export function extractTemplate(markdown) {
   const close = lines.findIndex((line, i) => i > open && line.startsWith("```"));
   if (close === -1) fail("docs/BUILD-BRIEF.md fenced task block is not closed");
   return lines.slice(open + 1, close).join("\n") + "\n";
+}
+
+/**
+ * One "## " section of docs/BUILD-BRIEF.md, heading line included, from its heading to the next
+ * heading. A line inside a code fence never starts a section, so a fenced example is safe.
+ */
+export function ruleSection(markdown, title) {
+  const heading = `## ${title}`;
+  const lines = markdown.split("\n");
+  let inFence = false;
+  let start = -1;
+  let end = lines.length;
+  for (const [index, line] of lines.entries()) {
+    if (line.startsWith("```")) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence || !line.startsWith("## ")) continue;
+    if (start === -1) {
+      if (line === heading) start = index;
+      continue;
+    }
+    end = index;
+    break;
+  }
+  if (start === -1) fail(`docs/BUILD-BRIEF.md has no "${heading}" section`);
+  return lines.slice(start, end).join("\n").trim();
+}
+
+/** The rules one child gets for one layer: the rules every layer shares, then that layer's own. */
+export function layerRules(markdown, layer) {
+  if (!LAYERS.includes(layer)) fail(`no rules for layer "${layer}"`);
+  return [ruleSection(markdown, "Rules for every layer"), ruleSection(markdown, `Rules for ${layer}`)].join("\n\n");
 }
 
 /**
@@ -167,20 +204,18 @@ function readJsonFile(file, label) {
   }
 }
 
-function readInventory(root) {
+// The inventory is optional: a spec-driven project has none, and its items come from the manifest.
+function readInventoryIfPresent(root) {
   const file = join(root, "design/inventory.json");
-  return readJsonFile(file, "design/inventory.json");
-}
-
-function findItem(inventory, layer, name) {
-  const item = (inventory[layer] ?? []).find((entry) => entry.name === name);
-  if (!item) fail(`${name} is not a ${layer} entry in design/inventory.json`);
-  return item;
+  return existsSync(file) ? readJsonFile(file, "design/inventory.json") : null;
 }
 
 function manifestEntry(config, layer, name, platformId) {
   const entry = (config[layer] ?? []).find((candidate) => candidate.name === name);
-  if (!entry || !entry.file || !entry.story) {
+  if (!entry) {
+    fail(`${layer}/${name} is not recorded in design/manifest.json for platform ${platformId}, and it is not in design/inventory.json either. Record it first.`);
+  }
+  if (!entry.file || !entry.story) {
     fail(`No file and story recorded for ${layer}/${name} on platform ${platformId}. Record its file and story in design/manifest.json first.`);
   }
   return entry;
@@ -196,6 +231,7 @@ function loadFrameIndex(root, manifest) {
 }
 
 function frameLine(index, id) {
+  if (index === null) fail(`frame ${id} is named, but there is no frames index`);
   const frame = index.byId.get(id);
   if (!frame) fail(`frame ${id} is not in the frames index ${index.file}`);
   const png = inside(index.dir, frame.png);
@@ -248,25 +284,21 @@ function adapterLine(label, kind, name, tools) {
   return `- ${label} adapter: ${join(PLUGIN_ROOT, "docs/adapters/generic.md")} (no adapter named ${base}; generic fallback).`;
 }
 
-function resolveContract(kind, { root, tools }) {
-  const spec = CONTRACTS[kind];
-  const id = tools[`${kind}_contract`];
-  const source = tools[`${kind}_contract_source`];
-  const enforcement = tools[`${kind}_contract_enforcement`] ?? "hard-fail";
-  const overrides = Object.entries(tools[`${kind}_contract_overrides`] ?? {});
-  const base = { label: spec.label, id, source, enforcement, overrides };
-  if (source === undefined || source === "none") return { ...base, inForce: false };
-  if (!CONTRACT_SOURCES.includes(source)) {
-    fail(`tools.${kind}_contract_source must be builtin, manual, researched or none; found ${JSON.stringify(source)}`);
+// The contract for one kind, resolved by the gate itself, so the brief and the gate share one rule.
+// A GateError (absent source, no contract id, a bad value) becomes exit 2 with the gate's message.
+function resolveContractFor(kind, { root, platformId, tools }) {
+  let resolved;
+  try {
+    resolved = resolveGateContract(platformId, root, KINDS[kind].gate, tools);
+  } catch (error) {
+    if (error instanceof GateError) fail(error.message);
+    throw error;
   }
-  if (!ENFORCEMENT.includes(enforcement)) fail(`tools.${kind}_contract_enforcement must be hard-fail, warn or off; found ${JSON.stringify(enforcement)}`);
-  if (!id) fail(`tools.${kind}_contract_source is ${source} but tools.${kind}_contract records no id`);
-  safeName(id, `tools.${kind}_contract`);
-  const file = source === "researched"
-    ? join(root, spec.research, `${id}.md`)
-    : join(PLUGIN_ROOT, "docs", spec.dir, `${id}.md`);
-  if (!existsSync(file)) fail(`${spec.label.toLowerCase()} contract ${id} (${source}) is not on disk at ${file}`);
-  return { ...base, inForce: true, path: file };
+  if (resolved.inForce && !existsSync(resolved.path)) {
+    fail(`${kind} contract ${resolved.id} (${resolved.source}) is not on disk at ${resolved.path}`);
+  }
+  const overrides = Object.entries(tools[`${kind}_contract_overrides`] ?? {});
+  return { ...resolved, label: KINDS[kind].label, overrides };
 }
 
 function contractLines(contract) {
@@ -279,7 +311,13 @@ function contractLines(contract) {
   return [`${head}${off}`, ...overrides];
 }
 
-function stackSection({ platformId, sourceRoot, tools, contracts }) {
+// The primitives scaffold pulled from the component library (scaffold.components[] is a list of names).
+function installedLine(config) {
+  const names = config.scaffold?.components ?? [];
+  return names.length ? `- Installed library primitives: ${names.join(", ")}.` : "- Installed library primitives: none recorded.";
+}
+
+function stackSection({ platformId, sourceRoot, tools, contracts, config }) {
   return [
     `- Platform: ${platformId}. Source root: ${sourceRoot} (the directory that contains src/).`,
     toolLine("Framework", "framework", tools),
@@ -296,6 +334,107 @@ function stackSection({ platformId, sourceRoot, tools, contracts }) {
     "",
     ...contractLines(contracts.style),
     ...contractLines(contracts.component),
+    ...(contracts.component.inForce ? [installedLine(config)] : []),
+  ].join("\n");
+}
+
+// The declared state of a molecule or organism, or the story states of a screen. Empty for an
+// item that declares neither, so the section is removed from its brief.
+function stateSection(entry, statePatterns, label) {
+  const read = `State patterns for this framework: ${statePatterns}. Read it before you write.`;
+  if (entry.state === null) return "## Declared state\n\nThis item declares no state. It is a pure composition: one default story.";
+  if (entry.state !== undefined) {
+    return [
+      "## Declared state",
+      "",
+      "Keep this state in the component. Each scenario below gets one named story.",
+      "",
+      fencedJson(entry.state),
+      "",
+      read,
+    ].join("\n");
+  }
+  if (Array.isArray(entry.states) && entry.states.length > 0) {
+    return ["## States", "", `One named story for each: ${stateNames(entry.states, label).join(", ")}.`, "", read].join("\n");
+  }
+  return "";
+}
+
+// A screen's states are names, or objects with a name (the inventory shape). Anything else is an error.
+function stateNames(states, label) {
+  return states.map((state) => {
+    if (typeof state === "string") return state;
+    if (state !== null && typeof state === "object" && typeof state.name === "string") return state.name;
+    fail(`a state of ${label} must be a name, or an object with a name`);
+  });
+}
+
+// The layout target: a wireframe named for the screen, when design/wireframes/<Name>.md exists.
+function layoutTargetLine(root, layer, name) {
+  if (layer !== "screens") return "";
+  const file = join(root, "design/wireframes", `${name}.md`);
+  if (!existsSync(file)) return "";
+  return `Layout target (structure, not pixels): ${file}. Read it, and match its layout, information architecture, and regions. The frames above govern pixels when a frame is listed.`;
+}
+
+// The project facts a child cannot see from its item: each line appears only when its source exists.
+function contextSection(root, manifest) {
+  const lines = [];
+  if (typeof manifest.goal === "string" && manifest.goal.trim()) lines.push(`- Goal: ${oneLine(manifest.goal)}`);
+  if (typeof manifest.vibe === "string" && manifest.vibe.trim()) lines.push(`- Vibe: ${oneLine(manifest.vibe)}`);
+  if (typeof manifest.spec === "string" && manifest.spec.trim() && existsSync(resolve(root, manifest.spec))) {
+    lines.push(`- Spec: ${resolve(root, manifest.spec)}. For an item no frame shows, the spec decides behaviour and copy.`);
+  }
+  const tokensDir = join(root, "design/system/tokens");
+  if (existsSync(tokensDir) && statSync(tokensDir).isDirectory()) {
+    const files = readdirSync(tokensDir).filter((name) => statSync(join(tokensDir, name)).isFile()).sort();
+    if (files.length > 0) {
+      lines.push(`- Token files (use these values; invent no token): ${files.map((name) => join(tokensDir, name)).join(", ")}.`);
+    }
+  }
+  if (existsSync(join(root, "DESIGN.md"))) lines.push(`- DESIGN.md: ${join(root, "DESIGN.md")}`);
+  const sources = (manifest.inventory?.sources ?? [])
+    .map((source) => source?.ref)
+    .filter((ref) => typeof ref === "string")
+    .map((ref) => resolve(root, ref))
+    .filter((file) => existsSync(file));
+  if (sources.length > 0) lines.push(`- Design sources (exact values come from these): ${sources.join(", ")}.`);
+  if (existsSync(join(root, "design/build-plan.md"))) lines.push(`- Build plan: ${join(root, "design/build-plan.md")}`);
+  if (lines.length === 0) return "";
+  return ["## Project context", "", ...lines].join("\n");
+}
+
+function oneLine(text) {
+  return text.replace(/\s+/g, " ").trim();
+}
+
+// The layer order: a layer is built only after the layer before it is passed. Atoms come after the
+// scaffold gate. A layer with no recorded items is skipped, so the nearest earlier layer with items decides.
+function assertLayerOrder({ config, platformId, layer, name }) {
+  const gates = config.gates ?? {};
+  const item = `${layer}/${name}`;
+  if (layer === "atoms") {
+    if (gates.scaffold !== "passed") {
+      fail(`${item} is not built yet: the scaffold gate is not passed on platform ${platformId} (platforms.${platformId}.gates.scaffold). Pass scaffold first.`);
+    }
+    return;
+  }
+  const earlier = LAYERS.slice(0, LAYERS.indexOf(layer)).reverse().find((candidate) => Array.isArray(config[candidate]) && config[candidate].length > 0);
+  if (earlier === undefined) return;
+  if (gates[LAYER_GATE[earlier]] !== "passed") {
+    fail(`${item} is not built yet: the ${earlier} layer has recorded items, and its gate is not passed on platform ${platformId} (platforms.${platformId}.gates.${LAYER_GATE[earlier]}). Pass it first.`);
+  }
+}
+
+// The approved library record, with the wrapper rules that go with it. Empty for hand-built items.
+function librarySection(entry, markdown) {
+  if (!entry.ecosystemLib) return "";
+  return [
+    ruleSection(markdown, "Rules for a library wrapper"),
+    "",
+    "The library record from the build plan:",
+    "",
+    fencedJson(entry.ecosystemLib),
   ].join("\n");
 }
 
@@ -306,7 +445,7 @@ function filesSection(entry, sourceRoot) {
     `- ${inside(sourceRoot, entry.file)} (the component)`,
     `- ${inside(sourceRoot, entry.story)} (its story)`,
     "",
-    "You may also add exactly one line to the sandbox's story registry, for this story only, if the sandbox adapter needs one. Change no other line in that registry.",
+    "You may also add exactly one entry to the sandbox's story registry, for this story only, if the sandbox adapter needs one. Change no other entry in that registry.",
     "",
     "Write no other file. The manifest, package files, lockfiles, theme tokens, and every other component belong to the orchestrator; if you need one of them, return it under needs.",
   ].join("\n");
@@ -350,17 +489,20 @@ function renderSection({ root, platformId, layer, name, config }) {
   ].join("\n");
 }
 
-function gatesSection({ sourceRoot, contracts }) {
-  const gates = [contracts.style, contracts.component].filter((c) => c.inForce && c.enforcement !== "off");
-  if (gates.length === 0) return "No contract gate applies to this platform.";
-  const script = join(PLUGIN_ROOT, "scripts/verify-styling-contract.mjs");
-  const intro =
-    "Run each command as written, after your files are written. Exit codes: 0 pass; 1 violations; 2 contract or usage error; 3 vacuous scan (wrong source root). Under hard-fail, any non-zero exit blocks you: fix your files and run again. Under warn, list the violations in notes and carry on.";
-  const commands = gates.map((gate) => {
-    const allow = gate.overrides.map(([name]) => ` --allow ${shellQuote(name)}`).join("");
-    return `- ${gate.label} contract (${gate.id}, ${gate.enforcement}):\n\n    node ${shellQuote(script)} ${shellQuote(gate.path)} ${shellQuote(sourceRoot)}${allow}`;
+// One gate per contract kind. Manifest mode: the gate reads the contract, the scope, and the
+// overrides from design/manifest.json, so the brief passes only the project, the platform, the kind,
+// and the item's component file.
+function gatesSection({ root, platformId, entry, contracts }) {
+  const blocks = Object.entries(KINDS).map(([key, { gate, label }]) => {
+    const contract = contracts[key];
+    if (!contract.inForce) return `- ${label} gate: none. The ${gate} source is none, so no contract is in force and no gate runs.`;
+    if (contract.enforcement === "off") return `- ${label} gate: not run. Enforcement is off, so its gate is not run.`;
+    const command = `    node ${shellQuote(GATE_SCRIPT)} --manifest ${shellQuote(root)} --platform ${shellQuote(platformId)} --kind ${gate} --files ${shellQuote(entry.file)}`;
+    return `- ${label} contract (${contract.id}, ${contract.enforcement}):\n\n${command}`;
   });
-  return [intro, "", ...commands].join("\n");
+  const intro =
+    "Run each command as written, after your files are written. Exit codes: 0 pass; 1 violations; 2 contract or configuration error; 3 a recorded file is outside every check's scope. Under hard-fail, any exit 1 blocks you: fix your files and run again. Under warn, list the violations in notes and carry on. Exit 2 and exit 3 block the item even under warn.";
+  return [intro, "", ...blocks].join("\n");
 }
 
 function findingsSection(text) {
@@ -369,7 +511,7 @@ function findingsSection(text) {
   return [
     "## Prior review",
     "",
-    "Context: a previous attempt was reviewed; fix exactly these findings and nothing else.",
+    "A previous attempt was reviewed. Fix these findings first. Then run the Steps again, and fix every other difference you find as well.",
     "",
     `${fence}json`,
     text,
@@ -400,27 +542,45 @@ function readFindings(file) {
 export function buildBrief({ root, platform, layer, name, findings }) {
   const manifest = loadManifest(root);
   const { id: platformId, config } = resolvePlatform(manifest, platform);
-  const inventory = readInventory(root);
-  const item = findItem(inventory, layer, name);
+  const tools = config.tools;
+  if (!tools || typeof tools !== "object" || Array.isArray(tools)) {
+    fail(`platform ${platformId} has no tools object in design/manifest.json; the contract sources cannot be read`);
+  }
+  assertLayerOrder({ config, platformId, layer, name });
   const entry = manifestEntry(config, layer, name, platformId);
+  if ((layer === "molecules" || layer === "organisms") && !Object.hasOwn(entry, "state")) {
+    fail(`${layer}/${name} has no state key in design/manifest.json: record state, or null when it has none`);
+  }
+  // An item the inventory lists is built from its inventory entry. One the manifest alone records is
+  // built from its manifest entry, and the brief says the spec is the source.
+  const inventory = readInventoryIfPresent(root);
+  const inInventory = inventory === null ? undefined : (inventory[layer] ?? []).find((candidate) => candidate.name === name);
+  const itemText = inInventory === undefined ? `${NO_INVENTORY}\n\n${fencedJson(entry)}` : fencedJson(inInventory);
+  const index = inventory === null ? null : loadFrameIndex(root, manifest);
   const sourceRoot = resolve(root, config.root ?? ".");
-  const index = loadFrameIndex(root, manifest);
-  const tools = config.tools ?? {};
   const contracts = {
-    style: resolveContract("style", { root, tools }),
-    component: resolveContract("component", { root, tools }),
+    style: resolveContractFor("style", { root, platformId, tools }),
+    component: resolveContractFor("component", { root, platformId, tools }),
   };
-  const template = extractTemplate(readFileSync(join(PLUGIN_ROOT, "docs/BUILD-BRIEF.md"), "utf8"));
-  const task = fillTemplate(template, {
+  const framesText = [
+    framesSection(inInventory ?? entry, layer, index),
+    layoutTargetLine(root, layer, name),
+  ].filter((text) => text !== "").join("\n\n");
+  const brief = readFileSync(join(PLUGIN_ROOT, "docs/BUILD-BRIEF.md"), "utf8");
+  const task = fillTemplate(extractTemplate(brief), {
     ITEM_ID: `${layer}/${name}`,
     PLATFORM: platformId,
-    ITEM: fencedJson(item),
-    FRAMES: framesSection(item, layer, index),
-    STACK: stackSection({ platformId, sourceRoot, tools, contracts }),
+    ITEM: itemText,
+    FRAMES: framesText,
+    STACK: stackSection({ platformId, sourceRoot, tools, contracts, config }),
+    CONTEXT: contextSection(root, manifest),
     FILES: filesSection(entry, sourceRoot),
-    COMPOSES: composesSection(item, layer, name, config, sourceRoot),
+    COMPOSES: composesSection(inInventory ?? entry, layer, name, config, sourceRoot),
+    STATE: stateSection(entry, join(PLUGIN_ROOT, "docs/state-patterns.md"), `${layer}/${name}`),
+    LIBRARY: librarySection(entry, brief),
+    RULES: layerRules(brief, layer),
     RENDER: renderSection({ root, platformId, layer, name, config }),
-    GATES: gatesSection({ sourceRoot, contracts }),
+    GATES: gatesSection({ root, platformId, entry, contracts }),
     PRIOR_FINDINGS: findingsSection(findings === undefined ? undefined : readFindings(findings)),
   });
   const prompt = packagedPrompt(readFileSync(join(PLUGIN_ROOT, "agents/designer.md"), "utf8"));

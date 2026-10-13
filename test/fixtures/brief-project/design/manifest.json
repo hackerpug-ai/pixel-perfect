@@ -37,18 +37,55 @@
       "pinned": [],
       "deprecations": {},
       "atoms": [
-        { "name": "Button", "file": "src/components/Button.tsx", "story": "src/components/Button.stories.tsx", "status": "pending" },
-        { "name": "Input", "file": "src/components/Input.tsx", "story": "src/components/Input.stories.tsx", "status": "verified" },
-        { "name": "Icon", "file": "src/components/Icon.tsx", "story": "src/components/Icon.stories.tsx", "status": "verified" },
-        { "name": "Badge", "file": "src/components/Badge.tsx", "story": "src/components/Badge.stories.tsx", "status": "pending" }
+        {
+          "name": "Button",
+          "file": "src/components/Button.tsx",
+          "story": "src/components/Button.stories.tsx",
+          "status": "pending"
+        },
+        {
+          "name": "Input",
+          "file": "src/components/Input.tsx",
+          "story": "src/components/Input.stories.tsx",
+          "status": "verified"
+        },
+        {
+          "name": "Icon",
+          "file": "src/components/Icon.tsx",
+          "story": "src/components/Icon.stories.tsx",
+          "status": "verified"
+        },
+        {
+          "name": "Badge",
+          "file": "src/components/Badge.tsx",
+          "story": "src/components/Badge.stories.tsx",
+          "status": "pending"
+        }
       ],
       "molecules": [
-        { "name": "SearchBar", "file": "src/components/SearchBar.tsx", "story": "src/components/SearchBar.stories.tsx", "status": "pending" }
+        {
+          "name": "SearchBar",
+          "file": "src/components/SearchBar.tsx",
+          "story": "src/components/SearchBar.stories.tsx",
+          "status": "pending",
+          "state": null
+        }
       ],
       "organisms": [],
       "screens": [
-        { "name": "Library", "route": "/library", "file": "src/screens/Library.tsx", "story": "src/screens/Library.stories.tsx", "status": "pending" }
-      ]
+        {
+          "name": "Library",
+          "route": "/library",
+          "file": "src/screens/Library.tsx",
+          "story": "src/screens/Library.stories.tsx",
+          "status": "pending"
+        }
+      ],
+      "gates": {
+        "scaffold": "passed",
+        "atoms": "passed",
+        "molecules": "passed"
+      }
     },
     "terminal-cli": {
       "root": ".",
@@ -74,11 +111,19 @@
       "pinned": [],
       "deprecations": {},
       "atoms": [
-        { "name": "Button", "file": "src/tui/button.go", "story": "src/tui/button_story.go", "status": "pending" }
+        {
+          "name": "Button",
+          "file": "src/tui/button.go",
+          "story": "src/tui/button_story.go",
+          "status": "pending"
+        }
       ],
       "molecules": [],
       "organisms": [],
-      "screens": []
+      "screens": [],
+      "gates": {
+        "scaffold": "passed"
+      }
     }
   }
 }

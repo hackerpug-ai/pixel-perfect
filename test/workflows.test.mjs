@@ -458,12 +458,12 @@ test("the three route strings are defined in the runtime contract and only they 
   }
 });
 
-test("no shipped workflow or doc keeps the retired design wording (build.md is exempt until its rewrite)", () => {
+test("no shipped workflow or doc keeps the retired design wording", () => {
   const forbidden = /strongest available|bundled (design )?contract|if the harness exposes|general-purpose (agent|subagent|child)/i;
   const hits = [];
   for (const dir of ["workflows", "docs"]) {
     for (const file of readdirSync(path.join(PLUGIN, dir))) {
-      if (!file.endsWith(".md") || (dir === "workflows" && file === "build.md")) continue;
+      if (!file.endsWith(".md")) continue;
       readFileSync(path.join(PLUGIN, dir, file), "utf8")
         .split("\n")
         .forEach((line, index) => {
@@ -494,4 +494,200 @@ test("wireframe states the no-spawning-tool route as its built-in generator, rec
   assert.match(text, /no spawning tool/);
   assert.match(text, /built-in generator \(Step 2B\)/);
   assert.match(text, /engine `builtin`/);
+});
+
+// --- Build: the packaged designer builds every item, one at a time ---
+
+const BUILD_LOOPS = [
+  { heading: "## Phase 5: ATOMS", layer: "atoms" },
+  { heading: "## Phase 5b: MOLECULES", layer: "molecules" },
+  { heading: "## Phase 5c: ORGANISMS", layer: "organisms" },
+  { heading: "## Phase 6: COMPOSE", layer: "screens" },
+];
+
+// One phase's text, from its "## " heading to the next "## " heading.
+function buildPhase(heading) {
+  const lines = readPlugin("workflows/build.md").split("\n");
+  const start = lines.indexOf(heading);
+  assert.ok(start >= 0, `build.md must contain the heading "${heading}"`);
+  const end = lines.findIndex((line, index) => index > start && line.startsWith("## "));
+  return lines.slice(start, end === -1 ? undefined : end).join("\n");
+}
+
+test("each build phase assigns every item to the packaged designer with its own layer", () => {
+  for (const { heading, layer } of BUILD_LOOPS) {
+    const section = buildPhase(heading);
+    assert.match(
+      section,
+      new RegExp(`SUBAGENT\\(designer, node <plugin-root>/scripts/brief\\.mjs build <project-root> --platform \\{platform\\} --layer ${layer} --name \\{Name\\}\\)`),
+      `${heading} must assign each item with --layer ${layer}`,
+    );
+    for (const other of BUILD_LOOPS.map((loop) => loop.layer).filter((name) => name !== layer)) {
+      assert.doesNotMatch(section, new RegExp(`--layer ${other} `), `${heading} must not name the ${other} layer`);
+    }
+  }
+});
+
+test("each build loop states that items run one at a time, in its body text", () => {
+  for (const { heading } of BUILD_LOOPS) {
+    // A heading such as "Step 3: Build Each Atom, One at a Time" does not count as the statement.
+    const body = buildPhase(heading).split("\n").filter((line) => !line.startsWith("#"));
+    assert.ok(body.some((line) => /one at a time/i.test(line)), `${heading} must say its items run one at a time`);
+  }
+});
+
+test("each build loop caps re-assignment at two, names its attempt-numbered findings file, and re-runs with an absolute --findings path", () => {
+  for (const { heading, layer } of BUILD_LOOPS) {
+    const section = buildPhase(heading);
+    assert.match(section, /Two re-assignments at most/, `${heading} must cap re-assignment at two`);
+    assert.match(section, /--findings <absolute path/, `${heading} must re-run with an absolute --findings path`);
+    assert.match(
+      section,
+      new RegExp(`design/\\.briefs/\\{platform\\}/${layer}-\\{Name\\}\\.findings-N\\.json`),
+      `${heading} must write findings to its layer's attempt-numbered findings file`,
+    );
+    assert.match(section, /USER_CHOICE/, `${heading} must ask the user after the cap`);
+  }
+});
+
+test("no build loop has the primary agent write an item's files itself", () => {
+  const writesItem = /Write (component|molecule|organism|screen|story|atom)[a-z ]*(file|story)/i;
+  for (const { heading } of BUILD_LOOPS) {
+    const section = buildPhase(heading);
+    assert.doesNotMatch(section, writesItem, `${heading} still has a write-the-file step`);
+    assert.doesNotMatch(section, /Load context/, `${heading} still loads context itself`);
+  }
+});
+
+test("build declares the item-failure batch in its asks table", () => {
+  const build = readPlugin("workflows/build.md");
+  assert.match(build, /^\| B-item \|/m, "the asks table must list B-item");
+  assert.match(build, /batch: B-item/, "B-item must be declared as a user_choice batch");
+});
+
+test("process-context never says the primary agent creates or writes components", () => {
+  const pc = readPlugin("skills/process-context/SKILL.md");
+  assert.doesNotMatch(pc, /When you create or modify components/);
+  assert.doesNotMatch(pc, /\byou (create|write|build) (the |each |a |an )?(component|screen|molecule|organism|atom)/i);
+});
+
+// --- Follow-up review: the loop cannot come back as a write-it-yourself step ---
+
+const INLINE_ROUTE = 'The one exception is the inline row in `RUNTIME-CONTRACT.md` ("Packaged agents"). Use it only when that file\'s "none of these" row applies: no spawning tool exists. Never use it after a failed spawn.';
+const BLOCKED_REASONS = ["missing-input", "contract-missing", "no-render-command", "no-image", "gate-failed"];
+const itemLoop = () => {
+  const lines = readPlugin("workflows/build.md").split("\n");
+  const start = lines.indexOf("## The Item Loop (Phases 5, 5b, 5c, and 6)");
+  assert.ok(start >= 0, "build.md must hold The Item Loop");
+  const end = lines.indexOf("## Phase 5: ATOMS");
+  return lines.slice(start, end).join("\n");
+};
+
+test("The Item Loop forbids writing or finishing an item, and states the two-re-assignment cap", () => {
+  const loop = itemLoop();
+  assert.ok(loop.includes("Never write or finish an item yourself"), "the never-write rule is missing");
+  assert.ok(loop.includes("Two re-assignments at most"), "the two-re-assignment cap is missing");
+});
+
+test("The Item Loop's acceptance checks are numbered, and each one is present", () => {
+  const loop = itemLoop();
+  const numbered = loop.split("\n").filter((line) => /^\d+\. \*\*/.test(line));
+  assert.ok(numbered.length >= 6, `expected at least six numbered checks, found ${numbered.length}`);
+  for (const label of ["**Files.**", "**Renders.**", "**Compared.**", "**Needs.**", "**Look.**", "**Gates.**"]) {
+    assert.ok(loop.includes(label), `acceptance check ${label} is missing`);
+  }
+});
+
+test("The Item Loop accepts only one JSON object with a status, and sends anything else back", () => {
+  const loop = itemLoop();
+  assert.ok(loop.includes("one JSON object with a `status`"), "the one-object rule is missing");
+  assert.ok(loop.includes("a status other than `complete` or `blocked`"), "the status rule is missing");
+});
+
+test("the orchestrator runs the gate commands from the brief, and writes none itself", () => {
+  const loop = itemLoop();
+  assert.ok(loop.includes("Run the commands printed under `## Gates` in the item's brief file, exactly as written."), "the run-as-printed rule is missing");
+  assert.doesNotMatch(loop, /verify-styling-contract\.mjs/, "the orchestrator must not build gate commands");
+});
+
+test("the inline route is the single allowed exception, quoted exactly", () => {
+  const build = readPlugin("workflows/build.md");
+  assert.equal(build.split(INLINE_ROUTE).length - 1, 1, "the inline-route sentence must appear exactly once");
+});
+
+test("no build phase or The Item Loop tells the orchestrator to write, create, implement or finish an item itself", () => {
+  const build = readPlugin("workflows/build.md");
+  const text = [itemLoop(), ...BUILD_LOOPS.map(({ heading }) => buildPhase(heading))].join("\n").replace(INLINE_ROUTE, "");
+  const itemWord = "(component|story|screen|atom|molecule|organism)s?";
+  const patterns = [
+    new RegExp(`\\b(write|writes|writing|create|creates|implement|implements|finish|finishes|author|build|builds)\\b[^.\\n]*\\b${itemWord}\\b[^.\\n]*\\b(yourself|itself|directly|in place of the child)\\b`, "i"),
+    new RegExp(`\\byou\\b[^.\\n]*\\b(write|create|implement|finish|author)\\b[^.\\n]*\\b${itemWord}\\b`, "i"),
+    new RegExp(`\\b(write|create|implement|finish|author)\\s+(the|each|a|an|its|this)\\s+${itemWord}\\b`, "i"),
+  ];
+  for (const pattern of patterns) {
+    const hit = text.split("\n").find((line) => pattern.test(line));
+    assert.equal(hit, undefined, `a loop line tells the orchestrator to build an item itself: ${hit}`);
+  }
+  assert.ok(build.includes(INLINE_ROUTE));
+});
+
+test("each phase's Prepare step stops unless the gate of the layer before it is passed", () => {
+  const expected = { atoms: "gates.scaffold", molecules: "gates.atoms", organisms: "gates.molecules", screens: "gates.organisms" };
+  for (const { heading, layer } of BUILD_LOOPS) {
+    const section = buildPhase(heading);
+    const prepare = section.slice(section.indexOf("### Step 2: Prepare the Layer"), section.indexOf("### Step 3:"));
+    assert.ok(prepare.includes(expected[layer]), `${heading} Prepare must check ${expected[layer]}`);
+    assert.ok(prepare.includes("passed"), `${heading} Prepare must say the gate must be passed`);
+  }
+});
+
+test("the molecule and organism Prepare steps record the state key and install approved ecosystem packages", () => {
+  for (const heading of ["## Phase 5b: MOLECULES", "## Phase 5c: ORGANISMS"]) {
+    const prepare = buildPhase(heading).split("### Step 3:")[0];
+    assert.ok(prepare.includes("`state`"), `${heading} Prepare must record state`);
+    assert.ok(prepare.includes("B-eco"), `${heading} Prepare must install approved ecosystem packages`);
+    assert.ok(prepare.includes("null"), `${heading} Prepare must say null when there is no state`);
+  }
+});
+
+test("each loop's blocked handling names every reason in the shared list", () => {
+  const loop = itemLoop();
+  for (const reason of BLOCKED_REASONS) {
+    assert.ok(loop.includes(`reason: ${reason}`), `the blocked row for ${reason} is missing`);
+  }
+});
+
+test("flags are printed once, at the layer's exit, as file:line and text", () => {
+  const loop = itemLoop();
+  assert.ok(loop.includes("file:line"), "the flag format is missing");
+  for (const { heading } of BUILD_LOOPS) {
+    assert.match(buildPhase(heading), /flags/, `${heading} must print the collected flags at its exit`);
+  }
+});
+
+test("Resuming sends the model back into The Item Loop, and counts the findings files", () => {
+  const build = readPlugin("workflows/build.md");
+  const resuming = build.slice(build.indexOf("## Resuming"), build.indexOf("## Building Specific Items"));
+  assert.ok(resuming.includes("The Item Loop"), "Resuming must name The Item Loop");
+  assert.ok(resuming.includes("findings"), "Resuming must count the findings files");
+});
+
+test("--component and --screen rebuilds go through The Item Loop", () => {
+  const build = readPlugin("workflows/build.md");
+  const specific = build.slice(build.indexOf("## Building Specific Items"), build.indexOf("## Completion"));
+  assert.ok(specific.includes("The Item Loop"), "specific-item rebuilds must name The Item Loop");
+});
+
+test("designer.md lists the blocked reasons under How you are run", () => {
+  const designer = readPlugin("agents/designer.md");
+  const section = designer.slice(designer.indexOf("## How you are run"), designer.indexOf("## What outranks what"));
+  for (const reason of BLOCKED_REASONS) assert.ok(section.includes(`\`${reason}\``), `designer.md does not list ${reason}`);
+});
+
+test("the two contract READMEs point at the brief and the item loop, not at retired build steps", () => {
+  for (const file of ["docs/styling-contracts/README.md", "docs/component-contracts/README.md"]) {
+    const text = readPlugin(file);
+    assert.doesNotMatch(text, /Step 2 item 4|Phase 5 Step 1[bc]/, `${file} cites a retired build step`);
+    assert.ok(text.includes("docs/BUILD-BRIEF.md"), `${file} must point at docs/BUILD-BRIEF.md`);
+  }
 });
