@@ -346,6 +346,16 @@ export const Palette: Story = {}
 - [ ] Controls addon works for component props
 - [ ] Normal app still works with `pnpm start`
 
+## Catalog capture (piece #8 — required)
+
+The plugin ships no capture script for Storybook Native. The project supplies its own command. The contract matches the web adapter, with one difference in the image: native pixels come from a simulator or device screenshot, not a browser.
+
+- Per story the capture command writes the structural artifact (a view-tree dump or the rendered text the project can serialize) as `{staging}/{layer}/{name}/{state}.{ext}`, and a simulator or device screenshot as `{state}.png` beside it.
+- The PNG is required and is checked for a real, non-blank image within the declared viewport. Where the project cannot take a screenshot, it declares `capture.pixels: "none"` with a `capture.pixels_reason` that says why. It never omits the PNG silently.
+- Record `capture.command`, `capture.medium`, `capture.viewport`, and `capture.goldens`. Write goldens only through `verify-catalog.mjs --baseline`.
+
+Gate commands: `--baseline`, `--check`, `--accept <glob>`, `--render --only <layer>/<Name>`, `--audit`, `--blast <Name>`, `--reach <Name...>`. See `docs/sandbox-spec.md` §8.
+
 ## Sandbox
 
 ### Dev Server

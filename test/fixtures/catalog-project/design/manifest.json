@@ -10,6 +10,8 @@
       "capture": {
         "command": "node sandbox/capture.mjs",
         "medium": "text",
+        "pixels": "none",
+        "pixels_reason": "Structural text fixture for the catalog gate; the capture writes the text buffer and no browser or simulator exists in this fixture.",
         "goldens": "design/goldens/web-desktop",
         "catalog": "sandbox/catalog",
         "staging": "design/.captures/web-desktop"

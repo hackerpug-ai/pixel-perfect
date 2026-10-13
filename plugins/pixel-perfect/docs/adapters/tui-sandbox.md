@@ -260,6 +260,26 @@ expect(output).toHaveSelection("Selected item");
 expect(output).toHaveChecked("Checked item");
 ```
 
+## Catalog capture (piece #8 — pixels declared off)
+
+A terminal UI has no pixels to compare. Its render is the text buffer, so the structural artifact is the whole evidence, and the manifest says so explicitly:
+
+```json
+"capture": {
+  "command": "<project command that writes each story's frames>",
+  "medium": "text",
+  "goldens": "design/goldens/terminal",
+  "pixels": "none",
+  "pixels_reason": "terminal UI: the TestBackend text buffer is the render"
+}
+```
+
+- Each story's frame is written as `{staging}/{layer}/{name}/{state}.txt` (or the frame's structural extension). No PNG is written.
+- `pixels: "none"` without a `pixels_reason` is a config error (exit 2). The report names the reason.
+- Write goldens only through `verify-catalog.mjs --baseline`. `--check` refuses a golden it did not receive from a baseline or accept.
+
+Gate commands: `--baseline`, `--check`, `--accept <glob>`, `--render --only <layer>/<Name>`, `--audit`, `--blast <Name>`, `--reach <Name...>`. See `docs/sandbox-spec.md` §8.
+
 ## Sandbox
 
 ### Dev Server

@@ -41,11 +41,15 @@ function cloneFixture() {
   return dir;
 }
 
+// Mirrors the catalog-project fixture's capture block, including its pixels decision: this is a
+// text-only fixture, so the PNG requirement is declared off with a reason.
 function captureCfg(platformId = "web-desktop") {
   return resolveCaptureConfig(
     {
       capture: {
         medium: "text",
+        pixels: "none",
+        pixels_reason: "Structural text fixture for the catalog gate; no browser or simulator renders it.",
         goldens: `design/goldens/${platformId}`,
         catalog: "sandbox/catalog",
         staging: `design/.captures/${platformId}`,

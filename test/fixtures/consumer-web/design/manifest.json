@@ -11,6 +11,8 @@
       "capture": {
         "command": "npm run sandbox:capture",
         "medium": "text",
+        "pixels": "none",
+        "pixels_reason": "Structural text medium for CI without a browser (sandbox/capture.mjs); the normalized story text is the render in this fixture.",
         "goldens": "design/goldens/web-desktop",
         "catalog": "sandbox/stories",
         "staging": "design/.captures/web-desktop"

@@ -12,6 +12,7 @@ import { digest, inside, jsonDigest, readInside, reconcileFrames, sourceRevision
 import { mergeInventories } from './merge-inventory.mjs';
 import { verifyInventory } from './verify-inventory.mjs';
 import { loadManifest, resolvePlatform } from './verify-catalog.mjs';
+import { pngValid } from './png.mjs';
 
 const execute = promisify(execFile);
 const layers = ['tokens', 'atoms', 'molecules', 'organisms', 'screens'];
@@ -363,7 +364,6 @@ async function commandResult(root, command) {
   try { const result = await execute(command[0], command.slice(1), { cwd: root, timeout: 120_000, maxBuffer: 8 * 1024 * 1024 }); return { command, exit: 0, stdout: result.stdout, stderr: result.stderr }; }
   catch (error) { return { command, exit: typeof error.code === 'number' ? error.code : -1, stdout: error.stdout ?? '', stderr: error.stderr ?? error.message }; }
 }
-const pngValid = (bytes) => bytes.length > 32 && bytes.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10])) && bytes.readUInt32BE(16) > 0 && bytes.readUInt32BE(20) > 0;
 export async function captureRefresh(root, id, itemId, phase) {
   return locked(root, async () => {
     const run = recover(root, loadRun(root, id)); need(run.status === 'accepted' && ['before', 'after'].includes(phase), 'Capture requires an accepted run and before/after phase');
