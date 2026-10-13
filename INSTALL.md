@@ -104,7 +104,7 @@ grok plugin install hackerpug-ai/pixel-perfect#plugins/pixel-perfect --trust
 `--trust` skips Grok's confirmation prompt. Grok needs the trust grant before it loads the skills. Do not add an `@ref` to the source: Grok skips updates for a pinned install.
 
 - **Confirm:** run `grok plugin list`. The output lists `pixel-perfect`. If you skipped the install, run `grok inspect` instead.
-- **Next step:** tell the user to restart Grok, open a project that has their design, and run `/pixel-perfect:init`.
+- **Next step:** tell the user to restart Grok, open a project that has their design, and run `/init`.
 - **Turn off the question timeout (recommended):** Grok stops waiting for an answer after 30 minutes by default. It then tells the model that the user declined, and the model may pick an answer and carry on past a decision the user meant to make. Add this to `~/.grok/config.toml` so Grok waits for the user:
 
   ```toml

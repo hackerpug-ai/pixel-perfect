@@ -30,7 +30,7 @@ Pass `--reserve` whenever `OUT` is not `design/` and `design/reference/frames.js
 
 ## Step 2 — One read (probabilistic)
 
-`DESIGN_EXECUTE` with `docs/INVENTORY-CONTRACT.md`, `docs/DESIGN-CONTRACT.md`, and `LENS` when set. **One dispatch, vision-capable, on the session's model.** Never split the read per source and never fan it out: cross-source compositions are what a split loses.
+`DESIGN_EXECUTE` with `docs/INVENTORY-CONTRACT.md`, `docs/DESIGN-CONTRACT.md`, and `LENS` when set. **One dispatch, vision-capable, on the session's model.** Never split the read per source and never fan it out: cross-source compositions are what a split loses. Slug: `inventory-read`.
 
 - **build** — the read returns the complete inventory to `<OUT>/inventory.json`, as it always has.
 - **assimilate and evolve** (additive) — the read returns only what this run adds or changes, to `<OUT>/delta.json`. When `PRIOR` exists, merge it over the prior in code, never by asking the model to copy the prior: `node {plugin}/scripts/merge-inventory.mjs <PRIOR> <OUT>/delta.json --out <OUT>/inventory.json`. Without a prior, the delta is the inventory. Prior items are immutable here — a rename, a move between layers, or a removal goes through `evolve`'s own path.

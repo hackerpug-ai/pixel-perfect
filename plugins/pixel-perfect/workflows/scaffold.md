@@ -202,7 +202,7 @@ If no sibling theme exists, skip this step and proceed to theme generation as no
    - Token proposals the user adopted through `pixel-perfect:assimilate` (`manifest.assimilations[].adopted.tokens`) sit below the project's own references: they are proposals learned from a source, so the design contract decides how they fit.
 3. Vibe keywords, only when none of the above exists.
 
-Load `docs/DESIGN-CONTRACT.md`, then run `DESIGN_EXECUTE` with the project vibe, selected platform, adapters, any theme seed, and existing product constraints. The packaged designer performs this work. Write the resulting concrete decisions into the theme file using the component library's required format. Never replace this step with a generic design agent, a client agent, or a keyword-only theme.
+Load `docs/DESIGN-CONTRACT.md`, then run `DESIGN_EXECUTE` with the project vibe, selected platform, adapters, any theme seed, and existing product constraints. Slug: `theme`. The packaged designer performs this work. Write the resulting concrete decisions into the theme file using the component library's required format. Never replace this step with a generic design agent, a client agent, or a keyword-only theme.
 
 Follow `docs/adapters/{components}.md` for the component library's required theme file format (CSS variables for shadcn/RN Reusables, MD3 theme object for React Native Paper, createTheme for Mantine, tailwind.config.ts extensions for plain Tailwind).
 

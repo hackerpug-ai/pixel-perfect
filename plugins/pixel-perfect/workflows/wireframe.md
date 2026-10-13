@@ -59,7 +59,9 @@ One call. Generation follows the answer; nothing is written before it.
 
 Choose the engine from the spawning tool you have, using the table in `workflows/RUNTIME-CONTRACT.md`, section "Packaged agents".
 - **A spawning tool exists** → engine `designer`. Delegate generation to the packaged designer (Step 2A) with a strict ASCII override brief.
-- **No spawning tool exists** → engine `builtin`. Run the **built-in inline generator** (Step 2B).
+- **Otherwise** → engine `builtin`.
+
+When there is no spawning tool, wireframe uses its built-in generator (Step 2B). This is wireframe's form of the inline route in `workflows/RUNTIME-CONTRACT.md`, and it is recorded as engine `builtin`.
 
 Name the engine in the opening digest — one clause, not a section. No renderer is needed; ASCII is plain text. Never silently substitute a stub.
 
@@ -115,7 +117,9 @@ LOW-FIDELITY ASCII WIREFRAME ONLY.
 - Produce the exact file shape in the ASCII WIREFRAME CONTRACT.
 ```
 
-**Validate** each returned file: it must contain box-drawing characters and **must not** contain `<…>` tags or CSS braces. If it drifted into HTML/React, discard it and generate that screen via Step 2B. Report any screen that fell back.
+**Slug and result, per screen.** Slug: `wireframe-<screen>`, one per screen, so each screen gets its own brief. The task brief names `design/wireframes/{screen}.md` as the only file the child may write. The child writes that file and returns one JSON object with `file` and `status`.
+
+**Validate** each returned file, which means the file named in the brief: it must contain box-drawing characters and **must not** contain `<…>` tags or CSS braces. If it drifted into HTML/React, discard it and generate that screen via Step 2B. Report any screen that fell back.
 
 ### Step 2B: Inline generator (engine `builtin`: no child can start, or the child drifted)
 

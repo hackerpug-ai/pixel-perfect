@@ -193,7 +193,8 @@ Next: open a project that has your design and run `/pixel-perfect:init`.
 
 | Agent | Run a command as |
 |-------|------------------|
-| Claude Code, Grok | `/pixel-perfect:init` |
+| Claude Code | `/pixel-perfect:init` |
+| Grok | `/init` |
 | Codex | `$pixel-perfect:init` |
 | Cursor, OpenCode | `/init` |
 | Pi | `/skill:pixel-perfect-init` |

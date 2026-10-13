@@ -90,7 +90,7 @@ Verifies all atomic components with sandbox controls.
 | **Ecosystem lib validated** | **If `ecosystemLib` exists, package is installed, importable, and vetting matches manifest** |
 | Aesthetic* | Font pairing, color hierarchy, intentional motion |
 
-*Aesthetic checks always run through `docs/DESIGN-CONTRACT.md`; `DESIGN_EXECUTE` runs them through the packaged designer (see `workflows/RUNTIME-CONTRACT.md`, "Packaged agents").
+*Aesthetic checks always run through `docs/DESIGN-CONTRACT.md`; `DESIGN_EXECUTE` runs them through the packaged designer (see `workflows/RUNTIME-CONTRACT.md`, "Packaged agents"). Slug: `aesthetic-review`. The task brief asks for a review and says change nothing, so the child writes no file. The brief names each rendered screenshot and the frame it must compare with. The child returns one JSON object: `status`, and `differences`, one checkable statement per difference. Verify copies each difference into its report with the state it came from. The Aesthetic row reads pass only when `differences` is empty. A `status: blocked` result is reported as blocked, never as pass.
 
 The **styling contract, component contract, and catalog capture** rows are the checks whose verdict is not the reviewing agent's opinion — run the script and report its exit code. Catalog capture:
 
