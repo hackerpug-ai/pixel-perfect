@@ -334,58 +334,44 @@ const LAYERS = ["atoms", "molecules", "organisms", "screens"];
 const ENFORCEMENT = ["hard-fail", "warn", "off"];
 const CONTRACT_ID = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const GLOB_CHARS = /[*?[\]{}]/;
+const QUALIFIED_KEY = /^(atoms|molecules|organisms|screens)\/(.+)$/;
 
 // Per kind: the manifest field prefix and where each contract source lives.
 // builtin and manual contracts ship in the plugin; researched ones are cached per project.
-// toolField names the tool that selects the contract's family; toolLabel names it in messages.
 const KINDS = {
   styling: {
     prefix: "style_contract",
-    toolField: "style",
-    toolLabel: "style system",
     builtinDir: "styling-contracts",
     researchedDir: "design/research/styling",
   },
   component: {
     prefix: "component_contract",
-    toolField: "components",
-    toolLabel: "component library",
     builtinDir: "component-contracts",
     researchedDir: "design/research/libraries",
   },
 };
 
-// A tool value selects a family when it is set and is not "none".
-const isSelected = (value) => value !== undefined && value !== null && value !== "" && value !== "none";
+const itemLabel = (e) => `${e.layer}/${e.name ?? "(unnamed)"}`;
 
 // Resolves the contract for a kind from the platform's tools block.
-// - source "none": no contract in force (explicit opt-out).
-// - source absent: no contract in force only when the matching tool is unselected
-//   (absent, "none"). A selected tool with no recorded source is an error, so deleting
-//   one key cannot switch the gate off.
+// - source "none" (the literal string) is the only way to have no contract in force.
+// - source absent is always an error, whatever else is recorded.
 // enforcement is validated whenever it is present, even when no contract is in force.
-export function resolveContract(projectRoot, kind, tools) {
-  const { prefix, toolField, toolLabel, builtinDir, researchedDir } = KINDS[kind];
-  const id = tools[prefix] ?? null;
-  const source = tools[`${prefix}_source`] ?? null;
+export function resolveContract(platformId, projectRoot, kind, tools) {
+  const { prefix, builtinDir, researchedDir } = KINDS[kind];
   const rawEnforcement = tools[`${prefix}_enforcement`];
   if (rawEnforcement !== undefined && !ENFORCEMENT.includes(rawEnforcement)) {
     throw new GateError(`tools.${prefix}_enforcement must be hard-fail, warn or off (got ${JSON.stringify(rawEnforcement)})`);
   }
   const enforcement = rawEnforcement ?? "hard-fail";
-  if (source === "none") {
-    return { id, source, enforcement, inForce: false, path: null };
-  }
+  const id = tools[prefix] ?? null;
+  const source = tools[`${prefix}_source`] ?? null;
   if (source === null) {
-    const selected = tools[toolField];
-    if (isSelected(selected)) {
-      throw new GateError(
-        `a ${toolLabel} is selected (${selected}) but no ${kind} contract is recorded; ` +
-        `record one or set tools.${prefix}_source to "none"`
-      );
-    }
-    return { id, source, enforcement, inForce: false, path: null };
+    throw new GateError(
+      `no ${kind} contract source is recorded for platform ${platformId}; record one or set tools.${prefix}_source to "none"`
+    );
   }
+  if (source === "none") return { id, source, enforcement, inForce: false, path: null };
   if (!["builtin", "researched", "manual"].includes(source)) {
     throw new GateError(`tools.${prefix}_source must be builtin, researched, manual or none (got ${JSON.stringify(source)})`);
   }
@@ -398,57 +384,71 @@ export function resolveContract(projectRoot, kind, tools) {
   return { id, source, enforcement, inForce: true, path };
 }
 
-// Every component entry the platform records, across all four layers.
+// Every item the platform records, across all four layers.
 function platformEntries(platformCfg) {
   const entries = [];
   for (const layer of LAYERS) {
     const list = Array.isArray(platformCfg[layer]) ? platformCfg[layer] : [];
     for (const entry of list) {
-      const file = typeof entry?.file === "string" && entry.file.length > 0 ? entry.file : null;
-      const status = typeof entry?.status === "string" ? entry.status : null;
-      entries.push({ layer, name: entry?.name ?? null, status, file });
+      entries.push({
+        layer,
+        name: typeof entry?.name === "string" ? entry.name : null,
+        status: typeof entry?.status === "string" ? entry.status : null,
+        file: typeof entry?.file === "string" && entry.file.length > 0 ? entry.file : null,
+      });
     }
   }
   return entries;
 }
 
-// Turns tools.*_contract_overrides into exemptions. A key with "/" or a glob character is a
-// glob, used as written relative to the scan root. Any other key is a component name,
-// resolved to that component's manifest file.
-function resolveOverrides(raw, entries, projectRoot, scanRoot, prefix) {
+// An item is not built yet only when its status is "pending" AND its recorded file is
+// absent on disk. Every other item is built and must record a file.
+function isPendingItem(e, root) {
+  return e.status === "pending" && (e.file === null || !isFile(resolve(root, e.file)));
+}
+
+// Turns tools.*_contract_overrides into exemptions. Every value must be a non-empty reason.
+// A key of exactly "<layer>/<Name>" names one item. Any other key with "/" or a glob character
+// is a glob, used as written relative to the scan root. Any other key is a name: it must match
+// exactly one item.
+function resolveOverrides(raw, entries, root, scanRoot, prefix) {
   if (raw === undefined || raw === null) return [];
+  const where = `tools.${prefix}_overrides`;
   if (typeof raw !== "object" || Array.isArray(raw)) {
-    throw new GateError(`tools.${prefix}_overrides must be an object of {componentName: reason}`);
+    throw new GateError(`${where} must be an object of {componentName: reason}`);
   }
+  const byItem = (key, reason, item) => {
+    if (item.file === null) throw new GateError(`${where} key "${key}" names ${itemLabel(item)}, which records no file`);
+    const rel = scanRelative(root, scanRoot, item.file);
+    if (rel === null) throw new GateError(`${where} key "${key}" resolves to ${item.file}, which is outside the scan root`);
+    return { key, form: "name", pattern: null, reason, match: (file) => file === rel };
+  };
   return Object.keys(raw).map((key) => {
+    const reason = raw[key];
+    if (typeof reason !== "string" || reason.trim() === "") {
+      throw new GateError(`${where} key "${key}" needs a non-empty string reason`);
+    }
+    const qualified = key.match(QUALIFIED_KEY);
+    const qualifiedItem = qualified && entries.find((e) => e.layer === qualified[1] && e.name === qualified[2]);
+    if (qualifiedItem) return byItem(key, reason, qualifiedItem);
     if (key.includes("/") || GLOB_CHARS.test(key)) {
-      const match = makeMatcher([key]);
-      return { key, form: "glob", pattern: key, match };
+      return { key, form: "glob", pattern: key, reason, match: makeMatcher([key]) };
     }
     const named = entries.filter((e) => e.name === key);
     if (named.length === 0) {
-      throw new GateError(
-        `tools.${prefix}_overrides key "${key}" names no component in this platform's atoms, molecules, organisms or screens`
-      );
+      throw new GateError(`${where} key "${key}" names no component in this platform's atoms, molecules, organisms or screens`);
     }
-    const withFile = named.filter((e) => e.file !== null);
-    if (withFile.length === 0) {
-      throw new GateError(`tools.${prefix}_overrides key "${key}" names a manifest component that records no file`);
+    if (named.length > 1) {
+      throw new GateError(`override "${key}" matches ${named.map(itemLabel).join(" and ")}; use the form layer/Name`);
     }
-    const scanFiles = withFile.map((e) => {
-      const rel = scanRelative(projectRoot, scanRoot, e.file);
-      if (rel === null) {
-        throw new GateError(`tools.${prefix}_overrides key "${key}" resolves to ${e.file}, which is outside the scan root`);
-      }
-      return rel;
-    });
-    return { key, form: "name", pattern: null, match: (file) => scanFiles.includes(file) };
+    return byItem(key, reason, named[0]);
   });
 }
 
 const COVERAGE_REASON = {
   "outside-root": "outside the scan root",
-  "not-scanned": "skipped by the scanner (node_modules, dist, build, .next, .turbo, coverage, .cache, .design*)",
+  "not-scanned": "not scanned: the path lies in a directory the scanner skips (node_modules, dist, build, .next, .turbo, coverage, .cache) or in a .design* path",
+  "case-mismatch": "recorded path differs from the file on disk only by letter case",
   "out-of-scope": "no check's glob matches it, or every match is excluded",
 };
 
@@ -473,19 +473,22 @@ export function runManifestGate({ projectRoot, platform, kind, layer = null, fil
   } catch (e) {
     throw new GateError(e.message);
   }
+  const platformId = resolved.id;
   const cfg = resolved.config;
-  const tools = cfg.tools && typeof cfg.tools === "object" ? cfg.tools : {};
-  const contract = resolveContract(root, kind, tools);
+  if (!cfg.tools || typeof cfg.tools !== "object" || Array.isArray(cfg.tools)) {
+    throw new GateError(`platform ${platformId} has no tools object in design/manifest.json; the contract sources cannot be read`);
+  }
+  const tools = cfg.tools;
+  const contract = resolveContract(platformId, root, kind, tools);
   const base = {
     mode: "manifest",
     kind,
-    platform: resolved.id,
+    platform: platformId,
     projectRoot: root,
     inForce: contract.inForce,
     enforcement: contract.enforcement,
   };
-
-  const skipped = (note) => ({
+  const notRun = (note) => ({
     ...base,
     exitCode: 0,
     scanned: false,
@@ -497,20 +500,23 @@ export function runManifestGate({ projectRoot, platform, kind, layer = null, fil
     checks: [],
     overrides: [],
     coverage: null,
+    unrecordedInScope: [],
+    vacuousChecks: [],
     warnings: [],
     message: null,
     violations: [],
   });
-  if (!contract.inForce) return skipped(`no ${kind} contract in force (source ${contract.source ?? "absent"})`);
-  if (contract.enforcement === "off") return skipped("enforcement off: the gate did not scan");
 
+  if (!contract.inForce) return notRun(`source is "none" for ${kind} on platform ${platformId}: no contract in force`);
+
+  // Root and contract are validated even when enforcement is off, so a broken configuration
+  // is exit 2 and never hidden behind a skipped gate.
   const scanRelRoot = cfg.root ?? ".";
-  if (typeof scanRelRoot !== "string") throw new GateError(`platforms.${resolved.id}.root must be a path string`);
+  if (typeof scanRelRoot !== "string") throw new GateError(`platforms.${platformId}.root must be a path string`);
   const scanRoot = resolve(root, scanRelRoot);
   if (!isDirectory(scanRoot)) {
-    throw new GateError(`scan root not found: ${scanRoot} (platforms.${resolved.id}.root is "${scanRelRoot}")`);
+    throw new GateError(`scan root not found: ${scanRoot} (platforms.${platformId}.root is "${scanRelRoot}")`);
   }
-
   if (!existsSync(contract.path)) throw new GateError(`${kind} contract not found: ${contract.path}`);
   let parsed;
   try {
@@ -518,26 +524,28 @@ export function runManifestGate({ projectRoot, platform, kind, layer = null, fil
   } catch (e) {
     throw new GateError(e.message);
   }
+  if (contract.enforcement === "off") {
+    return notRun(`enforcement is "off" for ${kind} on platform ${platformId}: the gate did not scan`);
+  }
   const checks = [...parsed.checks.forbiddenPatterns, ...parsed.checks.mustInclude];
 
   const entries = platformEntries(cfg);
+  const scopeEntries = entries.filter((e) => layer === null || e.layer === layer);
+  const layerEmpty = layer !== null && scopeEntries.length === 0;
   const overrides = resolveOverrides(tools[`${prefix}_overrides`], entries, root, scanRoot, prefix);
 
   // Coverage set: exactly --files when given. Otherwise the built items of the scope.
-  // An item with status pending (or no status) is not built yet: it is listed under
-  // coverage.pending and its file is not required. Any other status must record a file.
   const scopeLabel = files !== null ? "--files" : (layer ?? "all layers");
-  const inScopeEntries = entries.filter((e) => layer === null || e.layer === layer);
   const pending = [];
   const built = [];
   if (files === null) {
-    for (const e of inScopeEntries) {
-      if (e.status === null || e.status === "pending") {
-        pending.push({ file: e.file, layer: e.layer, name: e.name, status: e.status ?? "pending" });
+    for (const e of scopeEntries) {
+      if (isPendingItem(e, root)) {
+        pending.push({ file: e.file, layer: e.layer, name: e.name, status: "pending" });
       } else if (e.file === null) {
         throw new GateError(
-          `manifest item "${e.name ?? "(unnamed)"}" (${e.layer}, status "${e.status}") records no file; ` +
-          `record its file, or set its status to "pending" until it is built`
+          `manifest item "${e.name ?? "(unnamed)"}" (${e.layer}, status ${e.status === null ? "absent" : `"${e.status}"`}) ` +
+          `records no file; record its file, or set its status to "pending" until it is built`
         );
       } else {
         built.push({ file: e.file, layer: e.layer, name: e.name });
@@ -555,32 +563,42 @@ export function runManifestGate({ projectRoot, platform, kind, layer = null, fil
 
   const allFiles = walk(scanRoot).map((f) => relative(scanRoot, f));
   const walked = new Set(allFiles);
+  const walkedByLowerCase = new Map(allFiles.map((f) => [f.toLowerCase(), f]));
   const exempt = (file) => overrides.some((o) => o.match(file));
-  const exemptedCount = (o) => allFiles.filter((f) => o.match(f));
 
   const coverage = targets.map((t) => {
     const scanFile = scanRelative(root, scanRoot, t.file);
     let status;
     if (scanFile === null) status = "outside-root";
-    else if (!walked.has(scanFile)) status = "not-scanned";
+    else if (!walked.has(scanFile)) status = walkedByLowerCase.has(scanFile.toLowerCase()) ? "case-mismatch" : "not-scanned";
     else if (exempt(scanFile)) status = "exempted";
     else if (checks.some((c) => inCheckScope(c, scanFile))) status = "in-scope";
     else status = "out-of-scope";
     return { file: t.file, layer: t.layer, name: t.name, scanFile, status };
   });
-  const covered = coverage.filter((c) => c.status === "in-scope" || c.status === "exempted");
-  const failures = coverage.filter((c) => !covered.includes(c)).map((c) => ({
+  const isCovered = (c) => c.status === "in-scope" || c.status === "exempted";
+  const covered = coverage.filter(isCovered);
+  const failures = coverage.filter((c) => !isCovered(c)).map((c) => ({
     file: c.file,
     status: c.status,
     reason: COVERAGE_REASON[c.status],
   }));
-  const message = failures.length === 0
+  const coverageMessage = failures.length === 0
     ? null
     : `${failures.length} component files are outside every check's scope: ${failures.map((f) => f.file).join(", ")}`;
+  const allExempt = coverage.length > 0 && coverage.every((c) => c.status === "exempted");
 
   const { violations: allViolations, scoped, checks: checkReport } = runChecks(parsed, scanRoot, allFiles, exempt);
   const scopedFiles = files !== null ? new Set(coverage.map((c) => c.scanFile).filter((f) => f !== null)) : null;
   const violations = scopedFiles === null ? allViolations : allViolations.filter((v) => scopedFiles.has(v.file));
+
+  // Files a check would scope but no manifest item records. Not a failure: reported so a
+  // reader can see what the manifest does not account for.
+  const recorded = new Set(entries.map((e) => (e.file === null ? null : scanRelative(root, scanRoot, e.file))).filter((f) => f !== null));
+  const unrecordedInScope = allFiles
+    .filter((f) => !recorded.has(f) && checks.some((c) => inCheckScope(c, f)))
+    .map((f) => relative(root, join(scanRoot, f)));
+  const vacuousChecks = checkReport.filter((c) => c.vacuous).map((c) => c.id);
 
   const warnings = [];
   const coverageApplied = targets.length > 0;
@@ -593,14 +611,20 @@ export function runManifestGate({ projectRoot, platform, kind, layer = null, fil
     }
   }
 
+  const messages = [];
+  if (layerEmpty) messages.push(`layer ${layer} has no recorded items`);
+  if (allExempt) messages.push("overrides exempt every recorded component file");
+  if (coverageMessage !== null) messages.push(coverageMessage);
+
   let exitCode = 0;
-  if (failures.length > 0 || vacuous) exitCode = 3;
+  if (messages.length > 0 || vacuous) exitCode = 3;
   else if (violations.length > 0 && contract.enforcement === "hard-fail") exitCode = 1;
 
   return {
     ...base,
     exitCode,
     scanned: true,
+    note: null,
     contract: { id: contract.id, name: parsed.name, source: contract.source, path: contract.path },
     scanRoot,
     scanRootRel: relative(root, scanRoot) || ".",
@@ -616,8 +640,9 @@ export function runManifestGate({ projectRoot, platform, kind, layer = null, fil
     overrides: overrides.map((o) => ({
       key: o.key,
       form: o.form,
+      reason: o.reason,
       pattern: o.form === "glob" ? o.pattern : null,
-      files: exemptedCount(o),
+      files: allFiles.filter((f) => o.match(f)),
     })),
     coverage: {
       applied: coverageApplied,
@@ -629,8 +654,10 @@ export function runManifestGate({ projectRoot, platform, kind, layer = null, fil
       failures,
       pending,
     },
+    unrecordedInScope,
+    vacuousChecks,
     warnings,
-    message,
+    message: messages.length > 0 ? messages.join("; ") : null,
     violations,
   };
 }
@@ -740,17 +767,34 @@ function runPositional(args) {
 function writeManifestText(r) {
   const id = r.contract.id ?? "(none)";
   if (!r.scanned) {
-    process.stderr.write(`verify-styling-contract: ${r.note}.\n`);
+    process.stderr.write(`GATE DID NOT RUN: ${r.note}\n`);
     return;
   }
   const c = r.coverage;
+  const pendingNames = c.pending.map((p) => `${p.layer}/${p.name ?? p.file}`);
+  const pendingText = pendingNames.length > 0 && pendingNames.length <= 5
+    ? `${c.pending.length} pending (${pendingNames.join(", ")})`
+    : `${c.pending.length} pending`;
   const coverageText = c.applied
-    ? `, ${c.covered} of ${c.required} recorded component file(s) covered`
-    : ", no recorded component files (global guard)";
+    ? `${c.covered} of ${c.required} built component file(s) covered`
+    : "no built component files (global guard)";
   const s = r.summary;
+  const u = r.unrecordedInScope;
   process.stderr.write(
-    `verify-styling-contract: scan root ${r.scanRootRel} — ${s.filesScanned} files walked, ${s.filesInScope} in scope${coverageText}\n`
+    `verify-styling-contract: scan root ${r.scanRootRel} — ${s.filesScanned} files walked, ${s.filesInScope} in scope, ` +
+    `${coverageText}, ${pendingText}, ${u.length} unrecorded in scope\n`
   );
+  if (u.length > 0) {
+    const more = u.length > 5 ? `, and ${u.length - 5} more` : "";
+    process.stderr.write(`  unrecorded in scope: ${u.slice(0, 5).join(", ")}${more}\n`);
+  }
+  const shown = (f) => (r.scanRootRel === "." ? f : `${r.scanRootRel}/${f}`);
+  for (const o of r.overrides) {
+    const exempted = o.files.length > 0
+      ? `exempts ${o.files.length} file(s): ${o.files.map(shown).join(", ")}`
+      : "exempts 0 file(s) — nothing matched";
+    process.stderr.write(`override ${o.key} (${o.form}): "${o.reason}" ${exempted}\n`);
+  }
   if (r.violations.length === 0) {
     process.stderr.write(`✓ ${id}: ${r.kind} contract satisfied (0 violations).\n`);
   } else {
@@ -761,6 +805,9 @@ function writeManifestText(r) {
   if (r.message !== null) {
     process.stderr.write(`✗ ${r.message}\n`);
     for (const f of c.failures) process.stderr.write(`  ${f.file} — ${f.reason}\n`);
+  }
+  if (r.vacuousChecks.length > 0) {
+    process.stderr.write(`note: ${r.vacuousChecks.length} check(s) scoped 0 files: ${r.vacuousChecks.join(", ")}\n`);
   }
   for (const w of r.warnings) process.stderr.write(`⚠ ${id}: ${w}\n`);
 }
@@ -779,8 +826,9 @@ function runManifest(args) {
     process.stderr.write(`CONFIG ERROR: ${e.message}\n`);
     return 2;
   }
-  process.stdout.write(JSON.stringify(result, null, 2) + "\n");
-  if (!args.json) writeManifestText(result);
+  // JSON only with --json; the text report is the default output.
+  if (args.json) process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+  else writeManifestText(result);
   return result.exitCode;
 }
 

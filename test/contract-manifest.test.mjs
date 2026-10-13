@@ -87,7 +87,13 @@ function runGate(args) {
   };
 }
 
+// JSON report on stdout (--json). Use runManifestText for the text report.
 function runManifest(dir, kind, extra = []) {
+  return runGate(["--manifest", dir, "--platform", "web-desktop", "--kind", kind, "--json", ...extra]);
+}
+
+// Text mode: the human report on stderr, nothing on stdout.
+function runManifestText(dir, kind, extra = []) {
   return runGate(["--manifest", dir, "--platform", "web-desktop", "--kind", kind, ...extra]);
 }
 
@@ -147,7 +153,7 @@ test("monorepo: the positional form pointed at apps/site finds the same componen
 });
 
 test("monorepo: manifest text mode prints one summary line with the scan root and both counts", () => {
-  const r = runManifest(MONOREPO, "component");
+  const r = runManifestText(MONOREPO, "component");
   const summary = r.stderr.split("\n")[0];
   assert.match(summary, /apps\/site/, `summary line missing the scan root: ${summary}`);
   assert.match(summary, /4 files walked/, `summary line missing files walked: ${summary}`);
@@ -387,15 +393,14 @@ test("contract source none resolves to no contract in force and exits 0", () => 
   assert.equal(r.report.scanned, false);
 });
 
-test("an absent contract source resolves to no contract in force and exits 0", () => {
+test("an absent source with a selected library and the tools object deleted both exit 2", () => {
   const dir = cloneMonorepo();
-  editPlatform(dir, (p) => {
-    delete p.tools.component_contract_source;
-    p.tools.components = "none";
-  });
+  const manifest = readManifest(dir);
+  delete manifest.platforms["web-desktop"].tools;
+  writeFileSync(path.join(dir, "design/manifest.json"), JSON.stringify(manifest, null, 2));
   const r = runManifest(dir, "component");
-  assert.equal(r.status, 0, r.stderr);
-  assert.equal(r.report.inForce, false);
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stderr, /platform web-desktop has no tools object/);
 });
 
 // ---------------------------------------------------------------------------
@@ -471,37 +476,37 @@ export function StatusBadge({ label }: { label: string }) {
 }
 `;
 
-test("an absent style source while a style system is selected exits 2 and names the field", () => {
+test("an absent style source exits 2 and names the field", () => {
   const dir = cloneMonorepo();
   editPlatform(dir, (p) => {
     delete p.tools.style_contract_source;
   });
   const r = runManifest(dir, "styling");
   assert.equal(r.status, 2, r.stderr);
-  assert.match(r.stderr, /a style system is selected \(tailwind\)/);
-  assert.match(r.stderr, /style_contract_source/);
+  assert.match(r.stderr, /no styling contract source is recorded for platform web-desktop/);
+  assert.match(r.stderr, /tools\.style_contract_source to "none"/);
 });
 
-test("an absent component source while a library is selected exits 2 and names the field", () => {
+test("an absent component source exits 2 and names the field", () => {
   const dir = cloneMonorepo();
   editPlatform(dir, (p) => {
     delete p.tools.component_contract_source;
   });
   const r = runManifest(dir, "component");
   assert.equal(r.status, 2, r.stderr);
-  assert.match(r.stderr, /a component library is selected \(shadcn\)/);
-  assert.match(r.stderr, /component_contract_source/);
+  assert.match(r.stderr, /no component contract source is recorded for platform web-desktop/);
+  assert.match(r.stderr, /tools\.component_contract_source to "none"/);
 });
 
-test("an absent source with no selected tool (none or missing) exits 0 with no contract in force", () => {
+test("an absent source is exit 2 even when no tool is selected", () => {
   const none = cloneMonorepo();
   editPlatform(none, (p) => {
     delete p.tools.component_contract_source;
     p.tools.components = "none";
   });
   const noneRun = runManifest(none, "component");
-  assert.equal(noneRun.status, 0, noneRun.stderr);
-  assert.equal(noneRun.report.inForce, false);
+  assert.equal(noneRun.status, 2, noneRun.stderr);
+  assert.match(noneRun.stderr, /no component contract source is recorded/);
 
   const missing = cloneMonorepo();
   editPlatform(missing, (p) => {
@@ -509,8 +514,8 @@ test("an absent source with no selected tool (none or missing) exits 0 with no c
     delete p.tools.components;
   });
   const missingRun = runManifest(missing, "component");
-  assert.equal(missingRun.status, 0, missingRun.stderr);
-  assert.equal(missingRun.report.inForce, false);
+  assert.equal(missingRun.status, 2, missingRun.stderr);
+  assert.match(missingRun.stderr, /no component contract source is recorded/);
 });
 
 test("an explicit source of none exits 0 even when a library is selected", () => {
@@ -586,4 +591,259 @@ test("--files still checks exactly the named files, whatever their status", () =
   const r = runManifest(dir, "component", ["--files", "apps/site/src/screens/Home.tsx"]);
   assert.equal(r.status, 2, "a named file that does not exist is exit 2 even when pending");
   assert.match(r.stderr, /Home\.tsx/);
+});
+
+// ---------------------------------------------------------------------------
+// Review follow-up: pending is not a way to hide a built file; overrides are
+// visible; the gate reports when it did not run; unrecorded and vacuous notes
+// ---------------------------------------------------------------------------
+
+test("a pending item whose file exists is built: coverage applies to it", () => {
+  const dir = cloneMonorepo();
+  writeProjectFile(dir, "apps/site/src/screens/Home.tsx", CLEAN_SCREEN);
+  editPlatform(dir, (p) => {
+    p.screens.push({ name: "Home", status: "pending", file: "apps/site/src/screens/Home.tsx" });
+  });
+  const component = runManifest(dir, "component");
+  assert.equal(component.status, 3, component.stderr);
+  assert.equal(component.report.coverage.required, 4, "Home is required once its file exists");
+  assert.deepEqual(component.report.coverage.pending, [], "an existing file is not pending");
+  assert.deepEqual(component.report.coverage.failures.map((f) => f.file), ["apps/site/src/screens/Home.tsx"]);
+
+  const styling = runManifest(dir, "styling");
+  assert.equal(styling.report.coverage.required, 4);
+  assert.equal(styling.report.coverage.failures.length, 0, "Home is in the styling contract's scope");
+});
+
+test("a missing status with no file is an error, not a pending item", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.molecules.push({ name: "Bare" });
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stderr, /Bare/);
+  assert.match(r.stderr, /records no file/);
+});
+
+test("the summary line counts pending items and names them when there are five or fewer", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.organisms.push({ name: "Later", status: "pending" });
+    p.screens.push({ name: "Home", status: "pending", file: "apps/site/src/screens/Home.tsx" });
+  });
+  const r = runManifestText(dir, "component");
+  const summary = r.stderr.split("\n")[0];
+  assert.match(summary, /2 pending \(organisms\/Later, screens\/Home\)/, summary);
+});
+
+test("the summary line counts pending items without names when there are more than five", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    for (let i = 1; i <= 6; i++) p.organisms.push({ name: `Later${i}`, status: "pending" });
+  });
+  const r = runManifestText(dir, "component");
+  const summary = r.stderr.split("\n")[0];
+  assert.match(summary, /6 pending,/, summary);
+  assert.doesNotMatch(summary, /Later1/, "names are omitted above five");
+});
+
+test("an override with no reason, an empty reason, or a non-string reason exits 2 naming the key", () => {
+  for (const value of ["", "   ", 5, null]) {
+    const dir = cloneMonorepo();
+    editPlatform(dir, (p) => {
+      p.tools.component_contract_overrides = { Badge: value };
+    });
+    const r = runManifest(dir, "component");
+    assert.equal(r.status, 2, `reason ${JSON.stringify(value)}: ${r.stderr}`);
+    assert.match(r.stderr, /Badge/, `reason ${JSON.stringify(value)} names the key`);
+    assert.match(r.stderr, /non-empty string reason/);
+  }
+});
+
+test("overrides that exempt every recorded component file exit 3", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.tools.component_contract_overrides = {
+      Button: "legacy",
+      Badge: "legacy",
+      Toolbar: "legacy",
+    };
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 3, r.stderr);
+  assert.match(r.report.message, /overrides exempt every recorded component file/);
+});
+
+test("text mode prints one line per override with its key, form, reason and exempted files", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.tools.component_contract_overrides = { Badge: "legacy raw button", "src/components/atoms/Nothing.tsx": "none yet" };
+  });
+  const r = runManifestText(dir, "component");
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stderr, /override Badge \(name\): "legacy raw button" exempts 1 file\(s\): apps\/site\/src\/components\/atoms\/Badge\.tsx/);
+  assert.match(r.stderr, /override src\/components\/atoms\/Nothing\.tsx \(glob\): "none yet" exempts 0 file\(s\) — nothing matched/);
+});
+
+test("an absent source with the tools object present and both tools none exits 2", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    delete p.tools.style_contract_source;
+    delete p.tools.component_contract_source;
+    p.tools.style = "none";
+    p.tools.components = "none";
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stderr, /no component contract source is recorded for platform web-desktop; record one or set tools\.component_contract_source to "none"/);
+});
+
+test("GATE DID NOT RUN is printed for an explicit source of none", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.tools.component_contract_source = "none";
+  });
+  const r = runManifestText(dir, "component");
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stderr.split("\n")[0], /^GATE DID NOT RUN: source is "none" for component on platform web-desktop/);
+  const json = runManifest(dir, "component");
+  assert.equal(json.report.scanned, false);
+  assert.match(json.report.note, /source is "none"/);
+});
+
+test("GATE DID NOT RUN is printed under enforcement off, and the root and contract are still validated", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.tools.component_contract_enforcement = "off";
+  });
+  const r = runManifestText(dir, "component");
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stderr.split("\n")[0], /^GATE DID NOT RUN: enforcement is "off" for component on platform web-desktop/);
+});
+
+test("under enforcement off a broken scan root still exits 2", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.root = "apps/nope";
+    p.tools.component_contract_enforcement = "off";
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stderr, /apps\/nope/);
+});
+
+test("under enforcement off a missing researched contract still exits 2", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.tools.component_contract = "absent-library";
+    p.tools.component_contract_source = "researched";
+    p.tools.component_contract_enforcement = "off";
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stderr, /absent-library\.md/);
+});
+
+test("a recorded file under dist/ or node_modules/ is not covered", () => {
+  const dir = cloneMonorepo();
+  writeProjectFile(dir, "apps/site/dist/Old.tsx", CLEAN_SCREEN);
+  writeProjectFile(dir, "apps/site/node_modules/pkg/Thing.tsx", CLEAN_SCREEN);
+  editPlatform(dir, (p) => {
+    p.molecules.push({ name: "Old", status: "verified", file: "apps/site/dist/Old.tsx" });
+    p.molecules.push({ name: "Thing", status: "verified", file: "apps/site/node_modules/pkg/Thing.tsx" });
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 3, r.stderr);
+  const byFile = Object.fromEntries(r.report.coverage.files.map((f) => [f.file, f.status]));
+  assert.equal(byFile["apps/site/dist/Old.tsx"], "not-scanned");
+  assert.equal(byFile["apps/site/node_modules/pkg/Thing.tsx"], "not-scanned");
+  assert.equal(r.report.coverage.covered, 3, "only the three real components are covered");
+});
+
+test("unrecorded files in scope are counted on the summary line and listed in JSON", () => {
+  const dir = cloneMonorepo();
+  writeProjectFile(dir, "apps/site/src/components/atoms/Badge.tsx", CLEAN_BADGE);
+  writeProjectFile(dir, "apps/site/src/components/atoms/Extra.tsx", CLEAN_SCREEN);
+  const text = runManifestText(dir, "component");
+  assert.equal(text.status, 0, text.stderr);
+  const lines = text.stderr.split("\n");
+  assert.match(lines[0], /1 unrecorded in scope/, lines[0]);
+  assert.match(lines[1], /apps\/site\/src\/components\/atoms\/Extra\.tsx/);
+  const json = runManifest(dir, "component");
+  assert.deepEqual(json.report.unrecordedInScope, ["apps/site/src/components/atoms/Extra.tsx"]);
+});
+
+test("a vacuous check is named on a note line in text mode", () => {
+  const dir = cloneMonorepo();
+  writeProjectFile(dir, "design/research/styling/mini.md", miniContract());
+  editPlatform(dir, (p) => {
+    p.tools.style_contract = "mini";
+    p.tools.style_contract_source = "researched";
+  });
+  const r = runManifestText(dir, "styling");
+  assert.match(r.stderr, /^note: 1 check\(s\) scoped 0 files: layout-testid$/m);
+});
+
+test("a qualified layer/Name override resolves to that item only", () => {
+  const dir = cloneMonorepo();
+  writeProjectFile(dir, "apps/site/src/components/molecules/Button.tsx", CLEAN_SCREEN);
+  editPlatform(dir, (p) => {
+    p.molecules.push({ name: "Button", status: "verified", file: "apps/site/src/components/molecules/Button.tsx" });
+    p.tools.component_contract_overrides = { "atoms/Button": "shared Button", Badge: "legacy raw button" };
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 0, r.stderr);
+  const override = r.report.overrides.find((o) => o.key === "atoms/Button");
+  assert.equal(override.form, "name");
+  assert.deepEqual(override.files, ["src/components/atoms/Button.tsx"]);
+});
+
+test("a name matching two manifest items exits 2 and asks for the layer/Name form", () => {
+  const dir = cloneMonorepo();
+  writeProjectFile(dir, "apps/site/src/components/molecules/Button.tsx", CLEAN_SCREEN);
+  editPlatform(dir, (p) => {
+    p.molecules.push({ name: "Button", status: "verified", file: "apps/site/src/components/molecules/Button.tsx" });
+    p.tools.component_contract_overrides = { Button: "ambiguous" };
+  });
+  const r = runManifest(dir, "component");
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stderr, /override "Button" matches atoms\/Button and molecules\/Button; use the form layer\/Name/);
+});
+
+test("--layer with no recorded items in that layer exits 3", () => {
+  const r = runManifest(MONOREPO, "component", ["--layer", "organisms"]);
+  assert.equal(r.status, 3, r.stderr);
+  assert.match(r.report.message, /layer organisms has no recorded items/);
+});
+
+test("--layer combined with --files is rejected with exit 2", () => {
+  const r = runManifest(MONOREPO, "component", ["--layer", "atoms", "--files", "apps/site/src/components/atoms/Button.tsx"]);
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stderr, /cannot be combined/);
+});
+
+test("text mode writes only the text report to stdout; JSON needs --json", () => {
+  const text = runManifestText(MONOREPO, "component");
+  assert.equal(text.stdout, "", "no JSON on stdout without --json");
+  assert.match(text.stderr, /^verify-styling-contract: scan root/);
+  const json = runManifest(MONOREPO, "component");
+  assert.equal(json.report.mode, "manifest");
+});
+
+test("a case-only difference between a recorded path and the disk is named as such, or is a missing file", () => {
+  const dir = cloneMonorepo();
+  editPlatform(dir, (p) => {
+    p.molecules.push({ name: "Toolbar2", status: "verified", file: "apps/site/src/components/molecules/TOOLBAR.tsx" });
+  });
+  const r = runManifest(dir, "component");
+  if (r.status === 2) {
+    // A case-sensitive file system: the recorded path simply does not exist.
+    assert.match(r.stderr, /TOOLBAR\.tsx/);
+  } else {
+    // A case-insensitive file system (macOS default): the file exists under another case.
+    assert.equal(r.status, 3, r.stderr);
+    const entry = r.report.coverage.failures.find((f) => f.file === "apps/site/src/components/molecules/TOOLBAR.tsx");
+    assert.match(entry.reason, /differs from the file on disk only by letter case/);
+  }
 });
