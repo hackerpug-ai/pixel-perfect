@@ -23,7 +23,7 @@ const BUILD_BRIEF_SRC = path.join(PLUGIN, "docs/BUILD-BRIEF.md");
 const SUCCESS_LINE = (file) =>
   `Read ${file} and follow it exactly. It is your complete assignment; return the result it asks for.\n`;
 
-const EXPECTED_PLACEHOLDERS = ["COMPOSES", "FILES", "FRAMES", "GATES", "ITEM", "ITEM_ID", "LIBRARY", "PLATFORM", "PRIOR_FINDINGS", "RENDER", "RULES", "STACK", "STATE"];
+const EXPECTED_PLACEHOLDERS = ["COMPOSES", "CONTEXT", "FILES", "FRAMES", "GATES", "ITEM", "ITEM_ID", "LIBRARY", "PLATFORM", "PRIOR_FINDINGS", "RENDER", "RULES", "STACK", "STATE"];
 const LAYERS = ["atoms", "molecules", "organisms", "screens"];
 
 function cloneFixture() {
@@ -405,7 +405,7 @@ describe("brief build: prior findings", () => {
       const { code, stderr } = runCli(buildArgs(root, { "--findings": findingsPath }));
       assert.equal(code, 0, stderr);
       const content = readFileSync(briefPath(root, "web-desktop", "atoms", "Button"), "utf8");
-      assert.ok(content.includes("a previous attempt was reviewed; fix exactly these"), "findings introduction missing");
+      assert.ok(content.includes("A previous attempt was reviewed. Fix these findings first."), "findings introduction missing");
       assert.ok(content.includes(readFileSync(findingsPath, "utf8").trimEnd()), "findings text is not verbatim");
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -487,92 +487,113 @@ describe("brief build: determinism and fixture integrity", () => {
   });
 });
 
-describe("brief build: gates and overrides", () => {
-  test("a component contract with source none is left out of the gate section", () => {
+describe("brief build: manifest-mode gate commands", () => {
+  const SCRIPT = path.join(PLUGIN, "scripts/verify-styling-contract.mjs");
+
+  test("the gate section prints one manifest-mode command per kind for the item's file, with no contract path and no --allow", () => {
+    const root = cloneFixture();
+    try {
+      const { code, stderr } = runCli(buildArgs(root));
+      assert.equal(code, 0, stderr);
+      const gates = sectionOf(readFileSync(briefPath(root, "web-desktop", "atoms", "Button"), "utf8"), "Gates");
+      assert.ok(gates.includes(`    node ${SCRIPT} --manifest ${root} --platform web-desktop --kind styling --files src/components/Button.tsx`), gates);
+      assert.ok(gates.includes(`    node ${SCRIPT} --manifest ${root} --platform web-desktop --kind component --files src/components/Button.tsx`), gates);
+      assert.ok(!gates.includes("--allow"), "overrides are resolved by the gate; the brief never passes --allow");
+      assert.ok(!gates.includes("tailwind-web.md") && !gates.includes("shadcn.md"), "the gate takes no contract path");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("the gate section says exit 2 and exit 3 block even under warn, and what exit 3 means", () => {
+    const root = cloneFixture();
+    try {
+      runCli(buildArgs(root));
+      const gates = sectionOf(readFileSync(briefPath(root, "web-desktop", "atoms", "Button"), "utf8"), "Gates");
+      assert.ok(gates.includes("outside every check's scope"), gates);
+      assert.ok(gates.includes("even under warn"), gates);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a component source of none gets a sentence and no component command", () => {
     const root = cloneFixture();
     try {
       setPlatformField(root, "component_contract", undefined);
       setPlatformField(root, "component_contract_source", "none");
       const { code, stderr } = runCli(buildArgs(root));
       assert.equal(code, 0, stderr);
-      const content = readFileSync(briefPath(root, "web-desktop", "atoms", "Button"), "utf8");
-      const gates = sectionOf(content, "Gates");
-      assert.ok(!gates.includes("component-contracts"), "component contract gate must be omitted");
-      assert.ok(gates.includes(path.join(PLUGIN, "scripts/verify-styling-contract.mjs")), "styling gate must still run");
-      assert.ok(gates.includes(path.join(PLUGIN, "docs/styling-contracts/tailwind-web.md")), "styling gate contract path missing");
-      assert.ok(!content.includes("docs/component-contracts/"), "a none component contract must not be named anywhere");
+      const gates = sectionOf(readFileSync(briefPath(root, "web-desktop", "atoms", "Button"), "utf8"), "Gates");
+      assert.ok(gates.includes("- Component gate: none. The component source is none, so no contract is in force and no gate runs."), gates);
+      assert.ok(!gates.includes("--kind component"), gates);
+      assert.ok(gates.includes("--kind styling"), "the styling gate must still run");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
   });
 
-  test("a contract with enforcement off is still read, but its gate is not run", () => {
+  test("a platform with no contract in force on either kind runs no gate command", () => {
+    const root = cloneFixture();
+    try {
+      const { code, stderr } = runCli(buildArgs(root, { "--platform": "terminal-cli" }));
+      assert.equal(code, 0, stderr);
+      const gates = sectionOf(readFileSync(briefPath(root, "terminal-cli", "atoms", "Button"), "utf8"), "Gates");
+      assert.ok(gates.includes("- Styling gate: none."), gates);
+      assert.ok(gates.includes("- Component gate: none."), gates);
+      assert.ok(!gates.includes("--kind"), gates);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("an absent contract source exits 2 with the gate's own message", () => {
+    const root = cloneFixture();
+    try {
+      setPlatformField(root, "style_contract_source", undefined);
+      const { code, stderr } = runCli(buildArgs(root));
+      assert.equal(code, 2);
+      assert.ok(stderr.includes("no styling contract source is recorded for platform web-desktop"), stderr);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a selected tool with no contract id exits 2 with the gate's own message", () => {
+    const root = cloneFixture();
+    try {
+      setPlatformField(root, "style_contract", undefined);
+      const { code, stderr } = runCli(buildArgs(root));
+      assert.equal(code, 2);
+      assert.match(stderr, /must name a contract id/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("enforcement off gets a not-run sentence and no styling command", () => {
     const root = cloneFixture();
     try {
       setPlatformField(root, "style_contract_enforcement", "off");
-      runCli(buildArgs(root));
-      const content = readFileSync(briefPath(root, "web-desktop", "atoms", "Button"), "utf8");
-      const gates = sectionOf(content, "Gates");
-      assert.ok(!gates.includes(path.join(PLUGIN, "docs/styling-contracts/tailwind-web.md")), "off styling contract must not be gated");
-      assert.ok(content.includes(path.join(PLUGIN, "docs/styling-contracts/tailwind-web.md")), "off contract must still be named to read");
-      assert.ok(gates.includes(path.join(PLUGIN, "docs/component-contracts/shadcn.md")), "component gate must still run");
+      const { code, stderr } = runCli(buildArgs(root));
+      assert.equal(code, 0, stderr);
+      const gates = sectionOf(readFileSync(briefPath(root, "web-desktop", "atoms", "Button"), "utf8"), "Gates");
+      assert.ok(gates.includes("- Styling gate: not run. Enforcement is off, so its gate is not run."), gates);
+      assert.ok(!gates.includes("--kind styling"), gates);
+      assert.ok(gates.includes("--kind component"), "the component gate must still run");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
   });
 
-  test("manifest overrides are passed to the gates as --allow and recorded in the stack", () => {
+  test("overrides are recorded in the stack and never passed to the gate", () => {
     const root = cloneFixture();
     try {
       setPlatformField(root, "component_contract_overrides", { Button: "wraps the Radix primitive for focus handling" });
       runCli(buildArgs(root));
       const content = readFileSync(briefPath(root, "web-desktop", "atoms", "Button"), "utf8");
-      assert.ok(sectionOf(content, "Gates").includes("--allow Button"), "override not passed to the gate");
-      assert.ok(sectionOf(content, "Stack").includes("wraps the Radix primitive for focus handling"), "override reason not recorded in Stack");
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-    }
-  });
-
-  test("the gate commands use the platform source root and the real verify-styling-contract script", () => {
-    const root = cloneFixture();
-    try {
-      runCli(buildArgs(root));
-      const gates = sectionOf(readFileSync(briefPath(root, "web-desktop", "atoms", "Button"), "utf8"), "Gates");
-      const command = `node ${path.join(PLUGIN, "scripts/verify-styling-contract.mjs")} ${path.join(PLUGIN, "docs/styling-contracts/tailwind-web.md")} ${root}`;
-      assert.ok(gates.includes(command), `styling gate command missing:\n${gates}`);
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-    }
-  });
-
-  test("with no capture command the render section tells the child to return blocked: no-render-command", () => {
-    const root = cloneFixture();
-    try {
-      const manifestPath = path.join(root, "design/manifest.json");
-      const manifest = readJson(manifestPath);
-      delete manifest.platforms["web-desktop"].capture.command;
-      writeJson(manifestPath, manifest);
-      const { code, stderr } = runCli(buildArgs(root));
-      assert.equal(code, 0, stderr);
-      const render = sectionOf(readFileSync(briefPath(root, "web-desktop", "atoms", "Button"), "utf8"), "Render");
-      assert.ok(render.includes("no-render-command"), "no-render-command reason missing");
-      assert.ok(render.includes("status") && render.includes("blocked"), "blocked status instruction missing");
-      assert.ok(!render.includes("PIXEL_PERFECT_CAPTURE_OUT="), "no render command may be invented");
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-    }
-  });
-
-  test("a tool with no adapter file falls back to generic.md", () => {
-    const root = cloneFixture();
-    try {
-      setPlatformField(root, "style", "nativewind");
-      runCli(buildArgs(root));
-      const content = readFileSync(briefPath(root, "web-desktop", "atoms", "Button"), "utf8");
-      const generic = path.join(PLUGIN, "docs/adapters/generic.md");
-      assert.ok(existsSync(generic));
-      assert.ok(sectionOf(content, "Stack").includes(generic), "generic adapter fallback missing from Stack");
+      assert.ok(sectionOf(content, "Stack").includes("  - Override Button: wraps the Radix primitive for focus handling"), "override reason not recorded in Stack");
+      assert.ok(!sectionOf(content, "Gates").includes("--allow"), "the override must not reach the gate as --allow");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -620,13 +641,13 @@ describe("brief build: usage and configuration errors exit 2", () => {
     }
   });
 
-  test("a missing inventory exits 2", () => {
+  test("a missing inventory no longer blocks a manifest item: it builds from the manifest entry", () => {
     const root = cloneFixture();
     try {
       unlinkSync(path.join(root, "design/inventory.json"));
       const { code, stderr } = runCli(buildArgs(root));
-      assert.equal(code, 2);
-      assert.match(stderr, /inventory/);
+      assert.equal(code, 0, stderr);
+      assert.ok(readFileSync(briefPath(root, "web-desktop", "atoms", "Button"), "utf8").includes("No inventory entry for this item: the spec is the source."));
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -982,7 +1003,7 @@ describe("brief: contract sources and enforcement", () => {
       assert.equal(code, 0, stderr);
       const content = readFileSync(briefPath(root, "web-desktop", "atoms", "Button"), "utf8");
       assert.ok(content.split("\n").includes(`- Styling contract: tailwind-web (source: researched, enforcement: hard-fail). Read it first: ${researched}`), "researched path missing from Stack");
-      assert.ok(sectionOf(content, "Gates").includes(`node ${path.join(PLUGIN, "scripts/verify-styling-contract.mjs")} ${researched} ${root}`), "gate must use the researched file");
+      assert.ok(sectionOf(content, "Gates").includes(`--manifest ${root} --platform web-desktop --kind styling --files src/components/Button.tsx`), "the researched contract must be gated in manifest mode");
       assert.ok(!content.includes(path.join(PLUGIN, "docs/styling-contracts/tailwind-web.md")), "researched source must not resolve to the built-in file");
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -1150,7 +1171,7 @@ describe("brief: quoting, fallbacks, and screens without frames", () => {
       const out = path.join(root, "design/.captures/web-desktop-item");
       const renderLine = `    rm -rf '${out}/atoms/Button' && PIXEL_PERFECT_CAPTURE_OUT='${out}' PIXEL_PERFECT_CAPTURE_ONLY=atoms/Button npm run sandbox:capture`;
       assert.ok(sectionOf(content, "Render").split("\n").includes(renderLine), `exact render line missing:\n${sectionOf(content, "Render")}`);
-      const gateLine = `    node ${path.join(PLUGIN, "scripts/verify-styling-contract.mjs")} ${path.join(PLUGIN, "docs/styling-contracts/tailwind-web.md")} '${root}'`;
+      const gateLine = `    node ${path.join(PLUGIN, "scripts/verify-styling-contract.mjs")} --manifest '${root}' --platform web-desktop --kind styling --files src/components/Button.tsx`;
       assert.ok(sectionOf(content, "Gates").split("\n").includes(gateLine), `exact gate line missing:\n${sectionOf(content, "Gates")}`);
     } finally {
       rmSync(parent, { recursive: true, force: true });
@@ -1336,6 +1357,10 @@ function prepareFixture(root) {
   });
   setItemStatus(root, "atoms", "Button", "verified");
   setItemStatus(root, "molecules", "SearchBar", "verified");
+  patchManifest(root, (platforms) => {
+    platforms["web-desktop"].gates.organisms = "passed";
+    platforms["web-desktop"].organisms.find((entry) => entry.name === "Panel").state = null;
+  });
 }
 
 function buildLayer(root, layer, platform = "web-desktop") {
@@ -1500,6 +1525,374 @@ describe("brief build: per-layer rules", () => {
     const root = cloneFixture();
     try {
       assert.ok(!buildLayer(root, "atoms").includes("## Rules for a library wrapper"));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+// --- Follow-up review: spec-driven items, layout targets, layer order, state, context, reasons ---
+
+const BLOCKED_REASONS = ["missing-input", "contract-missing", "no-render-command", "no-image", "gate-failed"];
+const NO_INVENTORY_SENTENCE = "No inventory entry for this item: the spec is the source.";
+
+function addManifestItem(root, layer, entry) {
+  patchManifest(root, (platforms) => {
+    platforms["web-desktop"][layer] = [...(platforms["web-desktop"][layer] ?? []), entry];
+  });
+}
+
+function taskOf(content) {
+  return content.slice(content.indexOf("# Part 3: task"));
+}
+
+// "## " and "### " heading texts inside one brief's task.
+function headingsOf(task) {
+  return task.split("\n").filter((line) => /^#{2,3} /.test(line)).map((line) => line.replace(/^#{2,3} /, "").trim());
+}
+
+// A reference resolves when some heading equals its leading words, or starts with them and a ":" or ",".
+function resolvesTo(reference, headings) {
+  const words = reference.split(" ");
+  for (let count = words.length; count >= 1; count--) {
+    const candidate = words.slice(0, count).join(" ");
+    if (headings.some((heading) => heading === candidate || heading.startsWith(`${candidate}:`) || heading.startsWith(`${candidate},`))) return true;
+  }
+  return false;
+}
+
+describe("brief build: items without an inventory", () => {
+  test("with no inventory file, a manifest item builds, says the spec is the source, and gets the no-frame text", () => {
+    const root = cloneFixture();
+    try {
+      rmSync(path.join(root, "design/inventory.json"));
+      const { code, stderr } = runCli(buildArgs(root));
+      assert.equal(code, 0, stderr);
+      const content = readFileSync(briefPath(root, "web-desktop", "atoms", "Button"), "utf8");
+      assert.ok(content.includes(NO_INVENTORY_SENTENCE), "the spec-source sentence is missing");
+      assert.ok(sectionOf(content, "Frames").includes("No frame shows this item."), "the no-frame text is missing");
+      assert.ok(sectionOf(content, "Item").includes('"name": "Button"'), "the Item section must hold the manifest entry");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("an item the manifest records but the inventory does not builds from its manifest entry", () => {
+    const root = cloneFixture();
+    try {
+      addManifestItem(root, "atoms", { name: "Ghost", file: "src/components/Ghost.tsx", story: "src/components/Ghost.stories.tsx", status: "pending" });
+      const { code, stderr } = runCli(buildArgs(root, { "--name": "Ghost" }));
+      assert.equal(code, 0, stderr);
+      assert.ok(readFileSync(briefPath(root, "web-desktop", "atoms", "Ghost"), "utf8").includes(NO_INVENTORY_SENTENCE));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("an item in neither the manifest nor the inventory exits 2", () => {
+    const root = cloneFixture();
+    try {
+      const { code, stderr } = runCli(buildArgs(root, { "--name": "Nowhere" }));
+      assert.equal(code, 2);
+      assert.match(stderr, /Nowhere/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("brief build: layout targets (wireframes)", () => {
+  test("a screen with frames names its wireframe as the layout target, after the frames", () => {
+    const root = cloneFixture();
+    try {
+      prepareFixture(root);
+      mkdirSync(path.join(root, "design/wireframes"), { recursive: true });
+      const wireframe = path.join(root, "design/wireframes/Library.md");
+      writeFileSync(wireframe, "# Library\n");
+      const frames = sectionOf(buildLayer(root, "screens"), "Frames");
+      assert.ok(frames.includes(`Layout target`) && frames.includes(wireframe), frames);
+      assert.ok(frames.indexOf("brief-deck/") < frames.indexOf("Layout target"), "the layout target must come after the frames");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a screen no frame shows names its wireframe as the layout target", () => {
+    const root = cloneFixture();
+    try {
+      addManifestItem(root, "screens", {
+        name: "Settings",
+        route: "/settings",
+        file: "src/screens/Settings.tsx",
+        story: "src/screens/Settings.stories.tsx",
+        status: "pending",
+        states: ["default"],
+      });
+      mkdirSync(path.join(root, "design/wireframes"), { recursive: true });
+      const wireframe = path.join(root, "design/wireframes/Settings.md");
+      writeFileSync(wireframe, "# Settings\n");
+      const { code, stderr } = runCli(buildArgs(root, { "--layer": "screens", "--name": "Settings" }));
+      assert.equal(code, 0, stderr);
+      const frames = sectionOf(readFileSync(briefPath(root, "web-desktop", "screens", "Settings"), "utf8"), "Frames");
+      assert.ok(frames.includes("No frame shows this item."), frames);
+      assert.ok(frames.includes(wireframe), frames);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a screen with no wireframe names no layout target", () => {
+    const root = cloneFixture();
+    try {
+      assert.ok(!buildLayer(root, "screens").includes("Layout target"));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("the steps tell the child to read a named layout target, not to ignore it", () => {
+    const root = cloneFixture();
+    try {
+      const steps = sectionOf(buildLayer(root, "screens"), "Steps");
+      assert.ok(steps.includes("If Frames names a layout target file, read it."), steps);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("brief build: layer order", () => {
+  test("an atom exits 2 while the scaffold gate is not passed", () => {
+    const root = cloneFixture();
+    try {
+      patchManifest(root, (platforms) => {
+        delete platforms["web-desktop"].gates.scaffold;
+      });
+      const { code, stderr } = runCli(buildArgs(root));
+      assert.equal(code, 2);
+      assert.match(stderr, /scaffold/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a molecule exits 2 while the atoms gate is not passed", () => {
+    const root = cloneFixture();
+    try {
+      patchManifest(root, (platforms) => {
+        delete platforms["web-desktop"].gates.atoms;
+      });
+      const { code, stderr } = runCli(buildArgs(root, { "--layer": "molecules", "--name": "SearchBar" }));
+      assert.equal(code, 2);
+      assert.match(stderr, /atoms/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a screen exits 2 while the gate of the last layer with recorded items is not passed", () => {
+    const root = cloneFixture();
+    try {
+      prepareFixture(root);
+      patchManifest(root, (platforms) => {
+        delete platforms["web-desktop"].gates.organisms;
+      });
+      const { code, stderr } = runCli(buildArgs(root, { "--layer": "screens", "--name": "Library" }));
+      assert.equal(code, 2);
+      assert.match(stderr, /organisms/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a screen skips a layer with no recorded items and needs only the gate of the last layer that has items", () => {
+    const root = cloneFixture();
+    try {
+      setItemStatus(root, "atoms", "Button", "verified");
+      setItemStatus(root, "molecules", "SearchBar", "verified");
+      const { code, stderr } = runCli(buildArgs(root, { "--layer": "screens", "--name": "Library" }));
+      assert.equal(code, 0, stderr);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("brief build: declared state", () => {
+  test("a molecule with no state key exits 2 and says to record state, or null when it has none", () => {
+    const root = cloneFixture();
+    try {
+      patchManifest(root, (platforms) => {
+        delete platforms["web-desktop"].molecules[0].state;
+      });
+      const { code, stderr } = runCli(buildArgs(root, { "--layer": "molecules", "--name": "SearchBar" }));
+      assert.equal(code, 2);
+      assert.match(stderr, /record state, or null when it has none/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("an organism with no state key exits 2", () => {
+    const root = cloneFixture();
+    try {
+      prepareFixture(root);
+      patchManifest(root, (platforms) => {
+        delete platforms["web-desktop"].organisms.find((entry) => entry.name === "Panel").state;
+      });
+      const { code, stderr } = runCli(buildArgs(root, { "--layer": "organisms", "--name": "Panel" }));
+      assert.equal(code, 2);
+      assert.match(stderr, /Panel/);
+      assert.match(stderr, /record state, or null when it has none/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("screen states given as objects print their names, never [object Object]", () => {
+    const root = cloneFixture();
+    try {
+      patchManifest(root, (platforms) => {
+        platforms["web-desktop"].screens[0].states = [{ name: "default", frames: [] }, { name: "empty" }];
+      });
+      const content = buildLayer(root, "screens");
+      assert.ok(sectionOf(content, "States").includes("One named story for each: default, empty."), sectionOf(content, "States"));
+      assert.ok(!content.includes("[object Object]"), "a state object was printed as text");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("brief build: project context", () => {
+  test("the goal is named, and no vibe, spec, token, DESIGN.md, source, or plan line appears when none exists", () => {
+    const root = cloneFixture();
+    try {
+      const context = sectionOf(buildLayer(root, "atoms"), "Project context");
+      assert.ok(context.includes("- Goal: Library screen fixture for scripts/brief.mjs"), context);
+      for (const absent of ["- Vibe:", "- Spec:", "Token files", "- DESIGN.md:", "- Build plan:", "Design sources"]) {
+        assert.ok(!context.includes(absent), `${absent} must not appear without its file`);
+      }
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("each context line appears when its field or file exists, and tokens are listed in sorted order", () => {
+    const root = cloneFixture();
+    try {
+      const manifestPath = path.join(root, "design/manifest.json");
+      const manifest = readJson(manifestPath);
+      manifest.vibe = "quiet and dense";
+      manifest.spec = "docs/spec.md";
+      manifest.inventory.sources = [{ ref: "design/source/brief-deck.html" }];
+      writeJson(manifestPath, manifest);
+      mkdirSync(path.join(root, "docs"), { recursive: true });
+      writeFileSync(path.join(root, "docs/spec.md"), "# Spec\n");
+      writeFileSync(path.join(root, "DESIGN.md"), "# Design\n");
+      mkdirSync(path.join(root, "design/system/tokens"), { recursive: true });
+      writeFileSync(path.join(root, "design/system/tokens/theme.light.json"), "{}\n");
+      writeFileSync(path.join(root, "design/system/tokens/theme.dark.json"), "{}\n");
+      writeFileSync(path.join(root, "design/build-plan.md"), "# Plan\n");
+      const context = sectionOf(buildLayer(root, "atoms"), "Project context");
+      assert.ok(context.includes("- Vibe: quiet and dense"), context);
+      assert.ok(context.includes(`- Spec: ${path.join(root, "docs/spec.md")}. For an item no frame shows, the spec decides behaviour and copy.`), context);
+      assert.ok(context.includes(`- DESIGN.md: ${path.join(root, "DESIGN.md")}`), context);
+      assert.ok(context.includes(`- Build plan: ${path.join(root, "design/build-plan.md")}`), context);
+      assert.ok(context.includes(path.join(root, "design/source/brief-deck.html")), context);
+      const dark = context.indexOf("theme.dark.json");
+      const light = context.indexOf("theme.light.json");
+      assert.ok(dark !== -1 && light !== -1 && dark < light, "token files must be listed sorted");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("with no context on disk there is no Project context section", () => {
+    const root = cloneFixture();
+    try {
+      const manifestPath = path.join(root, "design/manifest.json");
+      const manifest = readJson(manifestPath);
+      delete manifest.goal;
+      writeJson(manifestPath, manifest);
+      assert.ok(!buildLayer(root, "atoms").includes("## Project context"));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("brief build: rules and reasons every child gets", () => {
+  test("every layer's brief tells the child to compile, and to show disabled and the other usual states", () => {
+    const root = cloneFixture();
+    try {
+      for (const layer of LAYERS) {
+        const task = taskOf(buildLayer(root, layer));
+        assert.ok(task.includes("type-check"), `${layer}: the compile step is missing`);
+        assert.ok(task.includes("disabled"), `${layer}: the disabled state is missing`);
+      }
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("the task names all five reasons a blocked result may carry", () => {
+    const root = cloneFixture();
+    try {
+      const task = taskOf(buildLayer(root, "atoms"));
+      for (const reason of BLOCKED_REASONS) assert.ok(task.includes(reason), `reason ${reason} is missing`);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a prior review says to fix its findings first, and does not forbid fixing other differences", () => {
+    const root = cloneFixture();
+    try {
+      const findings = path.join(root, "findings-1.json");
+      writeFileSync(findings, JSON.stringify({ item: "atoms/Button", findings: ["title differs"] }));
+      const { code, stderr } = runCli(buildArgs(root, { "--findings": findings }));
+      assert.equal(code, 0, stderr);
+      const content = readFileSync(briefPath(root, "web-desktop", "atoms", "Button"), "utf8");
+      assert.ok(content.includes("Fix these findings first."), content);
+      assert.ok(!content.includes("nothing else"), "the prior review must not forbid fixing other differences");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("the file list allows exactly one registry entry", () => {
+    const root = cloneFixture();
+    try {
+      assert.ok(sectionOf(buildLayer(root, "atoms"), "Files").includes("exactly one entry"));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("the stateful example is in every layer's brief, because it is a shared rule", () => {
+    const root = cloneFixture();
+    try {
+      prepareFixture(root);
+      for (const layer of LAYERS) {
+        assert.ok(buildLayer(root, layer).includes("stateful molecule with 4 scenarios"), `${layer}: the stateful example is missing`);
+      }
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("every 'under' or 'see' reference to a heading resolves to a heading inside the same brief", () => {
+    const root = cloneFixture();
+    try {
+      prepareFixture(root);
+      for (const layer of LAYERS) {
+        const task = taskOf(buildLayer(root, layer));
+        const headings = headingsOf(task);
+        const references = [...task.matchAll(/\b(?:under|see)\s+"?(?:the\s+)?((?:[A-Z][A-Za-z]*)(?: [A-Za-z]+)*)/g)].map((m) => m[1].trim());
+        const unresolved = references.filter((reference) => !resolvesTo(reference, headings));
+        assert.deepEqual(unresolved, [], `${layer} brief refers to text it does not contain`);
+      }
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

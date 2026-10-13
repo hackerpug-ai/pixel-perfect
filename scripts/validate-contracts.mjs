@@ -101,8 +101,8 @@ export async function validateContracts(root = REPOSITORY_ROOT) {
     if (!body.some((line) => /one at a time/i.test(line))) errors.push(`${label} does not say its items run one at a time`);
     if (!/two re-assignments/i.test(section)) errors.push(`${label} does not cap re-assignment at two`);
     if (!/--findings/.test(section)) errors.push(`${label} never re-runs the brief with --findings`);
-    if (!new RegExp(`design/\\.briefs/\\{platform\\}/${layer}-\\{Name\\}\\.findings\\.json`).test(section)) {
-      errors.push(`${label} does not name its findings file design/.briefs/{platform}/${layer}-{Name}.findings.json`);
+    if (!new RegExp(`design/\\.briefs/\\{platform\\}/${layer}-\\{Name\\}\\.findings-N\\.json`).test(section)) {
+      errors.push(`${label} does not name its attempt-numbered findings file design/.briefs/{platform}/${layer}-{Name}.findings-N.json`);
     }
     if (/Load context/.test(section)) errors.push(`${label} still loads context itself; brief.mjs loads it`);
   }
@@ -122,6 +122,9 @@ export async function validateContracts(root = REPOSITORY_ROOT) {
     for (const other of BRIEF_LAYERS.filter((name) => name !== layer)) {
       if (rules.includes(`## Rules for ${other}`)) errors.push(`${layer} rules carry the ${other} rules`);
     }
+  }
+  if (!/outside every check's scope/.test(brief) || !/even under warn/.test(brief)) {
+    errors.push("docs/BUILD-BRIEF.md does not say that exit 3 means a recorded file is outside every check's scope, and that exits 2 and 3 block under warn");
   }
   if (!/no component contract is in force, skip this section/i.test(brief)) {
     errors.push("docs/BUILD-BRIEF.md does not say to skip the component rules when no component contract is in force");
@@ -145,8 +148,11 @@ export async function validateContracts(root = REPOSITORY_ROOT) {
     if (!/^- Component contract \(shadcn, hard-fail\):/m.test(atoms)) {
       errors.push("the fixture's atoms brief has no component gate with its enforcement level");
     }
-    const gateLine = atoms.split("\n").find((line) => line.includes("verify-styling-contract.mjs") && line.includes("component-contracts/shadcn.md"));
-    if (!gateLine) errors.push("the fixture's atoms brief has no component gate command for docs/component-contracts/shadcn.md");
+    const gateLine = atoms.split("\n").find((line) => line.includes("verify-styling-contract.mjs") && line.includes("--kind component"));
+    if (!gateLine || !gateLine.includes("--manifest") || !gateLine.includes("--files src/components/Button.tsx")) {
+      errors.push("the fixture's atoms brief has no manifest-mode component gate command for src/components/Button.tsx");
+    }
+    if (atoms.includes("--allow")) errors.push("the fixture's atoms brief passes --allow; manifest mode resolves overrides itself");
     if (!atoms.includes("- Installed library primitives: none recorded.")) {
       errors.push("the fixture's atoms brief does not say which library primitives scaffold installed");
     }
@@ -188,9 +194,7 @@ export async function validateContracts(root = REPOSITORY_ROOT) {
       errors.push("the terminal-cli brief does not say no component contract is in force");
     }
     if (terminal.includes("component-contracts/")) errors.push("the terminal-cli brief names a component contract file");
-    if (!terminal.includes("No contract gate applies to this platform.")) {
-      errors.push("the terminal-cli brief runs a contract gate although no contract is in force");
-    }
+    if (terminal.includes("--kind")) errors.push("the terminal-cli brief runs a contract gate although no contract is in force");
   } catch (error) {
     errors.push(`brief.mjs cannot build the fixture's terminal-cli brief: ${error.message}`);
   }

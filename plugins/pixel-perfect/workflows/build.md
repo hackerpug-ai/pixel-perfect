@@ -425,54 +425,62 @@ BUILD PLAN is confirmed by the user. Manifest has `"plan": "passed"`. Subsequent
 
 ## The Item Loop (Phases 5, 5b, 5c, and 6)
 
-Each component and screen in a layer is built by the packaged designer, one child per item. The orchestrator never writes an item's files. It records the item, assigns it, checks what the child returns, and records the outcome.
+Each component and screen in a layer is built by the packaged designer, one child per item. The orchestrator never writes an item's files. It records the item, assigns it, checks what the child returns, and records the outcome. `docs/BUILD-BRIEF.md` holds the rules a child follows. `scripts/brief.mjs` puts the rules for the item's layer into that child's assignment, and it prints the gate commands for the item.
 
-The child's rules are not in this file. `scripts/brief.mjs` puts them into each child's assignment: the item's facts, its frames, its stack, its contracts, its gate commands, and the rules for its layer. Those rules live in `docs/BUILD-BRIEF.md`.
+Never write or finish an item yourself while a child is available. The one exception is the inline row in `RUNTIME-CONTRACT.md` ("Packaged agents"). Use it only when that file's "none of these" row applies: no spawning tool exists. Never use it after a failed spawn.
+
+Two re-assignments at most, for each item. Every re-run counts toward this cap, whatever the reason: a finding, a blocked result, or a `gate-failed`. Each failed result writes one findings file (see "Findings and re-assignment"). After the second re-assignment, a result that still fails goes to `USER_CHOICE` (batch `B-item`).
 
 ### Assign one item
 
-Run `brief.mjs build` for the item. It writes the child's assignment and prints one line. Start one packaged designer child with that line as its whole prompt. Do not paraphrase the line or add to it. Each phase gives the exact command.
+Run the brief command for the item. It writes the child's assignment and prints one line. Start one packaged designer child with that line as its whole prompt. Do not paraphrase the line or add to it. Each phase gives the command.
 
-If the command exits non-zero, stop and read its error. The usual causes are an item with no `file` or `story` in the manifest (record them, then run again) and a composed item that is still `pending` (build that item first).
+If the command exits non-zero, stop and read its error. The usual causes are: the item has no `file` or `story` in the manifest (record them, then run again); a composed item is still `pending` (build it first); a layer before this one is not passed (pass its gate first); a molecule or organism has no `state` key (record `state`, or `null` when it declares none).
 
 ### Accept the result
 
-The child returns one JSON object. Read `status` first.
+Read the child's reply. It must be one JSON object with a `status`. A reply that is not one JSON object, has no `status`, or has a status other than `complete` or `blocked` is a finding. Re-assign.
 
 | Child returns | You do |
 |---------------|--------|
-| `status: blocked` | Read `reason` and `needs`. Clear each one: install the named package, add the named token, record a missing `file` or `story`, fix `capture.command`, or pull a library primitive with the library's CLI. Run the same brief command again. For `reason: contract-missing`, re-run the Resolve step for that contract in `workflows/init.md`, and set its enforcement to `off` only when the user asks for it. A blocker only the user can resolve goes to `USER_CHOICE` (batch `B-item`). |
+| `status: blocked`, `reason: missing-input` | Clear each item in `needs`: install the named package, add the named token, record the named file or story, or pull the named primitive with the library's CLI. Then write a findings file, and re-run with it. |
+| `status: blocked`, `reason: contract-missing` | Re-run the Resolve step for that contract in `workflows/init.md`. Set its enforcement to `off` only when the user asks. Then write a findings file, and re-run. |
+| `status: blocked`, `reason: no-render-command` | Fix `capture.command` for the platform in the manifest. Then write a findings file, and re-run. |
+| `status: blocked`, `reason: no-image` | The render command wrote no image or text artifact for a state. Check the capture command for this item. Then write a findings file, and re-run. |
+| `status: blocked`, `reason: gate-failed` | The gate still fails after the child's own fixes. Its output is in `notes`. Write a findings file with that output, and re-assign. If a second `gate-failed` comes back, go to `USER_CHOICE` (batch `B-item`) without a third child. |
+| `blocked` with any other reason, or with no reason | A finding. Write a findings file, and re-assign. |
 | `status: complete` | Run the checks below. Any failed check is a finding. |
+
+A blocker you cannot clear goes to `USER_CHOICE` (batch `B-item`).
 
 For `status: complete`, check in this order:
 
-1. Every path in `files_written` exists. Each path is the item's recorded `file`, its recorded `story`, or the one sandbox registry line the sandbox adapter allows.
-2. Every `renders[].path` exists on disk.
-3. Both contract gates pass for the item's files (commands below).
-4. Every `compared[].differences_remaining` is empty.
-5. Open one render and its frame yourself. A difference the child did not report is a finding.
+1. **Files.** `files_written` contains the item's recorded `file` and its recorded `story`. Every path in `files_written` is one of those two, or the one sandbox registry entry the sandbox adapter allows. Every path exists on disk.
+2. **Renders.** `renders` has at least one entry for each state the Item section in the brief lists. Count its `states`, or count one default state when it lists none. Every `renders[].path` exists on disk.
+3. **Compared.** When the Frames section lists a frame, `compared` is not empty. Every `compared[].differences_remaining` is empty.
+4. **Needs.** `needs` is empty. A complete item has nothing left to install or record.
+5. **Look.** Open the brief file. Take the first state under Frames. Open that state's render and its frame. Compare them in the order `agents/designer.md` lists. Each difference is a finding. With no frame, check that a render exists and shows the component. On a text-rendering platform, read the text artifact instead.
+6. **Gates.** Run the commands printed under `## Gates` in the item's brief file, exactly as written. Do not change them. Exit `0` passes. Exit `1` is a finding under `hard-fail`; under `warn`, record the violations and pass. Exit `2` and exit `3` block the item even under `warn`.
 
-The gate commands run from the project root. Run the component line only when `component_contract_source` is not `"none"` or absent.
-
-```
-node <plugin-root>/scripts/verify-styling-contract.mjs <style-contract.md> <project-root> [--allow GLOB ...]
-node <plugin-root>/scripts/verify-styling-contract.mjs <component-contract.md> <project-root> [--allow GLOB ...]
-```
-
-Pass the contract path from `tools.style_contract` or `tools.component_contract`. Pass one `--allow <glob>` for each override in `tools.style_contract_overrides` or `tools.component_contract_overrides`. Pass the project root, never `src/`. Exit codes: `0` pass; `1` violations; `2` contract or usage error; `3` vacuous scan. Under `hard-fail` (the default), any non-zero exit is a finding. Under `warn`, record the violations and pass the item. Under `off`, the gate does not run.
+Collect each `flags` entry from complete results. A flag is not a finding. When the layer's last item is verified, print the collected flags once, each as `file:line` and its text.
 
 ### Findings and re-assignment
 
-When a result fails a check, write the failures to `design/.briefs/{platform}/{layer}-{Name}.findings.json`:
+Each failed result writes one findings file, numbered by its attempt. The first is `findings-1.json`, and the second is `findings-2.json`:
 
-```json
-{
-  "item": "{layer}/{Name}",
-  "findings": ["src/components/Button.tsx: title is 17pt regular; the frame shows 22pt semibold"]
-}
+```
+<project-root>/design/.briefs/{platform}/{layer}-{Name}.findings-1.json
 ```
 
-Then run the brief command again with `--findings` pointing at that file, and start a new child. Two re-assignments at most. After the second one still fails, ask through `USER_CHOICE` (batch `B-item`).
+Write the failures in it, in this shape. The `reason` appears only for a blocked result:
+
+```json
+{"item": "{layer}/{Name}", "attempt": 1, "reason": "gate-failed", "findings": ["src/components/Button.tsx:12 — padding is 12px; the frame shows 16px"]}
+```
+
+Then run the brief command again with `--findings <absolute path to that file>`, and start a new child.
+
+The file survives compaction. An existing `findings-1.json` means one re-assignment is used. An existing `findings-2.json` means both are used, so the next failed result goes to `USER_CHOICE`.
 
 ### B-item
 
@@ -535,10 +543,6 @@ For atoms wrapping an ecosystem library, the entry also carries the `ecosystemLi
 
 Then print the progress line for the layer (see its Progress Tracking).
 
-### Never write an item yourself
-
-Never write or finish an item yourself while a child is available. The one exception is the inline row in `RUNTIME-CONTRACT.md` ("Packaged agents"), which applies only when no child can be started. Then read the brief file yourself, and follow it one item at a time, re-reading it for each item.
-
 ### Report the design engine
 
 Report the route once per run, as the table in `RUNTIME-CONTRACT.md` ("Packaged agents") gives it.
@@ -578,15 +582,15 @@ Step 2 records each atom in the manifest, with its `file` and `story`.
 
 Do this once, before the first atom. The orchestrator does it. No child does.
 
-1. **Record every atom.** Add each atom to `manifest.platforms[platform].atoms` with `name`, `file`, `story`, and `status: "pending"`. Choose the paths like this:
-   - `file`: `src/components/{Name}.tsx`, with the framework's extension.
+1. **Stop unless the scaffold gate is passed.** Check that `platforms[platform].gates.scaffold` is `"passed"`. If it is not, stop and name `pixel-perfect:scaffold --platform {platform}` as the fix.
+2. **Record every atom.** Add each atom to `manifest.platforms[platform].atoms` with `name`, `file`, `story`, and `status: "pending"`. Choose the paths like this:
+   - `file`: `src/components/{Name}.tsx`, or the framework's equivalent.
    - `story`: beside the component, named by the sandbox adapter (`docs/adapters/{sandbox}.md`), for example `src/components/{Name}.stories.tsx`.
    - If `build_plan.atoms.ecosystemLibs` holds a record for this atom, copy it onto the entry as `ecosystemLib`.
-2. **Pull library primitives.** Skip this when `component_contract_source` is `"none"` or absent. Otherwise, for each atom whose inventory entry sets `library_primitive` and whose primitive is not in `manifest.platforms[platform].scaffold.components[]`, pull it with the library's CLI. The components adapter (`docs/adapters/{components}.md`) gives the command. Add the name to that list.
-3. **Install approved packages.** For each library approved at `B-eco`, install it at its recorded version (`npm install {package}@{version}`, or the project's package manager). Check that its import resolves.
-4. **Add theme tokens.** When the approved plan calls for a theme token this layer uses, add it to the theme file before the first atom. The style adapter (`docs/adapters/{style}.md`) gives the file format.
-
-5. **Report unenforced styles.** If `style_contract_source` is `"none"`, tell the user once that styles are not enforced, and that the styling gate does not run for this platform.
+3. **Pull library primitives.** Skip this when `component_contract_source` is `"none"` or absent. Otherwise, for each atom whose inventory entry sets `library_primitive` and whose primitive is not in `manifest.platforms[platform].scaffold.components[]`, pull it with the library's CLI. The components adapter (`docs/adapters/{components}.md`) gives the command. Add the name to that list.
+4. **Install approved packages.** For each library approved at `B-eco`, install it at its recorded version (`npm install {package}@{version}`, or the project's package manager). Check that its import resolves.
+5. **Add theme tokens.** When the approved plan calls for a theme token this layer uses, add it to the theme file before the first atom. The style adapter (`docs/adapters/{style}.md`) gives the file format.
+6. **Report unenforced styles.** If `style_contract_source` is `"none"`, tell the user once that styles are not enforced, and that the styling gate does not run for this platform.
 
 Do only what `B-plan`, `B-eco`, or `B-val` approved.
 
@@ -596,9 +600,11 @@ Build the atoms one at a time, in manifest order. Finish one before you start th
 
 1. **Assign.** `SUBAGENT(designer, node <plugin-root>/scripts/brief.mjs build <project-root> --platform {platform} --layer atoms --name {Name})`. Start one child with the line the command prints.
 2. **Accept.** Follow "Accept the result" in The Item Loop.
-3. **Re-assign on failure.** Write the failures to `design/.briefs/{platform}/atoms-{Name}.findings.json`. Run the brief command again with `--findings` pointing at that file, then start a new child. Two re-assignments at most. After the second one still fails, ask through `USER_CHOICE` (batch `B-item`).
+3. **Re-assign on failure.** Write the failures to `design/.briefs/{platform}/atoms-{Name}.findings-N.json`, where N is the attempt: 1, then 2. Run the brief command again with `--findings <absolute path to that file>`, then start a new child. Two re-assignments at most, counting every re-run. After the second one still fails, ask through `USER_CHOICE` (batch `B-item`).
 4. **Record.** When the atom passes, set its `status` to `verified` (see "Record the item").
 5. **Print the progress line** (see Progress Tracking).
+
+After the last atom, print the collected flags once (see The Item Loop).
 
 ### Progress Tracking
 
@@ -749,8 +755,10 @@ Write state declarations into the manifest (**no authored composition-edge autho
 
 ### Step 2: Prepare the Layer
 
-1. **Record every molecule.** Add each molecule to `manifest.platforms[platform].molecules` with `name`, `file`, `story`, `status: "pending"`, and the `state` declared in Step 1b. Paths: `src/molecules/{Name}.tsx`, and its story beside it, named by the sandbox adapter. If `build_plan.molecules.ecosystemLibs` holds a record for this molecule, copy it onto the entry as `ecosystemLib`.
-2. **Check the atoms.** Every atom a molecule composes must already be `verified`. The brief exits 2 while a composed item is still `pending`.
+1. **Stop unless the atoms gate is passed.** Check that `platforms[platform].gates.atoms` is `"passed"`. If it is not, stop.
+2. **Record every molecule.** Add each molecule to `manifest.platforms[platform].molecules` with `name`, `file`, `story`, `status: "pending"`, and `state`. Set `state` to the object declared in Step 1b, or to `null` when the molecule declares no state. The brief exits 2 for a molecule with no `state` key. Paths: `src/molecules/{Name}.tsx` (or the framework's equivalent), and its story beside it, named by the sandbox adapter. If `build_plan.molecules.ecosystemLibs` holds a record for this molecule, copy it onto the entry as `ecosystemLib`.
+3. **Install approved packages.** For each library approved at `B-eco` for a molecule, install it at its recorded version (`npm install {package}@{version}`, or the project's package manager), and check that its import resolves. Do only what `B-eco` or `B-val` approved.
+4. **Check the atoms.** Every atom a molecule composes must already be `verified`. The brief exits 2 while a composed item is still `pending`.
 
 ### Step 3: Build Each Molecule, One at a Time
 
@@ -758,9 +766,11 @@ Build the molecules one at a time, in manifest order. Finish one before you star
 
 1. **Assign.** `SUBAGENT(designer, node <plugin-root>/scripts/brief.mjs build <project-root> --platform {platform} --layer molecules --name {Name})`. Start one child with the line the command prints.
 2. **Accept.** Follow "Accept the result" in The Item Loop.
-3. **Re-assign on failure.** Write the failures to `design/.briefs/{platform}/molecules-{Name}.findings.json`. Run the brief command again with `--findings` pointing at that file, then start a new child. Two re-assignments at most. After the second one still fails, ask through `USER_CHOICE` (batch `B-item`).
+3. **Re-assign on failure.** Write the failures to `design/.briefs/{platform}/molecules-{Name}.findings-N.json`, where N is the attempt: 1, then 2. Run the brief command again with `--findings <absolute path to that file>`, then start a new child. Two re-assignments at most, counting every re-run. After the second one still fails, ask through `USER_CHOICE` (batch `B-item`).
 4. **Record.** When the molecule passes, set its `status` to `verified` (see "Record the item").
 5. **Print the progress line** (see Progress Tracking).
+
+After the last molecule, print the collected flags once (see The Item Loop).
 
 ### Progress Tracking
 
@@ -861,9 +871,10 @@ Update manifest with organism list (all `status: pending`):
 
 ### Step 2: Prepare the Layer
 
-1. **Record every organism.** Step 1 wrote each entry with `name`, `file`, `story`, `status: "pending"`, and `state`. Confirm each `file` and `story` path: `src/organisms/{Name}.tsx`, and its story beside it, named by the sandbox adapter. If `build_plan.organisms.ecosystemLibs` holds a record for this organism, copy it onto the entry as `ecosystemLib`.
-2. **Install approved packages.** For each library approved at `B-eco` for an organism, install it at its recorded version, and check that its import resolves. Do only what `B-eco` or `B-val` approved.
-3. **Check the molecules and atoms.** Every item an organism composes must already be `verified`. The brief exits 2 while a composed item is still `pending`.
+1. **Stop unless the molecules gate is passed.** Check that `platforms[platform].gates.molecules` is `"passed"`. If it is not, stop.
+2. **Record every organism.** Step 1 wrote each entry. Confirm that each has `name`, `file`, `story`, `status: "pending"`, and `state`: the object declared in Step 1, or `null` when it declares no state. The brief exits 2 for an organism with no `state` key. Paths: `src/organisms/{Name}.tsx` (or the framework's equivalent), and its story beside it, named by the sandbox adapter. If `build_plan.organisms.ecosystemLibs` holds a record for this organism, copy it onto the entry as `ecosystemLib`.
+3. **Install approved packages.** For each library approved at `B-eco` for an organism, install it at its recorded version, and check that its import resolves. Do only what `B-eco` or `B-val` approved.
+4. **Check the molecules and atoms.** Every item an organism composes must already be `verified`. The brief exits 2 while a composed item is still `pending`.
 
 ### Step 3: Build Each Organism, One at a Time
 
@@ -871,9 +882,11 @@ Build the organisms one at a time, in manifest order. Finish one before you star
 
 1. **Assign.** `SUBAGENT(designer, node <plugin-root>/scripts/brief.mjs build <project-root> --platform {platform} --layer organisms --name {Name})`. Start one child with the line the command prints.
 2. **Accept.** Follow "Accept the result" in The Item Loop.
-3. **Re-assign on failure.** Write the failures to `design/.briefs/{platform}/organisms-{Name}.findings.json`. Run the brief command again with `--findings` pointing at that file, then start a new child. Two re-assignments at most. After the second one still fails, ask through `USER_CHOICE` (batch `B-item`).
+3. **Re-assign on failure.** Write the failures to `design/.briefs/{platform}/organisms-{Name}.findings-N.json`, where N is the attempt: 1, then 2. Run the brief command again with `--findings <absolute path to that file>`, then start a new child. Two re-assignments at most, counting every re-run. After the second one still fails, ask through `USER_CHOICE` (batch `B-item`).
 4. **Record.** When the organism passes, set its `status` to `verified` (see "Record the item").
 5. **Print the progress line** (see Progress Tracking).
+
+After the last organism, print the collected flags once (see The Item Loop).
 
 ### Progress Tracking
 
@@ -976,8 +989,9 @@ Write the confirmed screens to the manifest (all `status: pending`), each with i
 
 ### Step 2: Prepare the Layer
 
-1. **Check the records.** Every screen from Step 1e must be in `manifest.platforms[platform].screens` with `name`, `route`, `file`, `story`, `states`, and `status: "pending"`.
-2. **Check the components.** Every atom, molecule, and organism a screen composes must already be `verified`. The brief exits 2 while a composed item is still `pending`.
+1. **Stop unless the gate of the last layer with recorded items is passed.** That is `platforms[platform].gates.organisms` when organisms are recorded; otherwise `gates.molecules` when molecules are recorded; otherwise `gates.atoms`. If it is not passed, stop.
+2. **Check the records.** Every screen from Step 1e must be in `manifest.platforms[platform].screens` with `name`, `route`, `file`, `story`, `states`, and `status: "pending"`.
+3. **Check the components.** Every atom, molecule, and organism a screen composes must already be `verified`. The brief exits 2 while a composed item is still `pending`.
 
 ### Step 3: Build Each Screen, One at a Time
 
@@ -985,9 +999,9 @@ Build the screens one at a time, in route-map order. Finish one before you start
 
 1. **Assign.** `SUBAGENT(designer, node <plugin-root>/scripts/brief.mjs build <project-root> --platform {platform} --layer screens --name {Name})`. Start one child with the line the command prints.
 2. **Accept.** Follow "Accept the result" in The Item Loop.
-3. **Re-assign on failure.** Write the failures to `design/.briefs/{platform}/screens-{Name}.findings.json`. Run the brief command again with `--findings` pointing at that file, then start a new child. Two re-assignments at most. After the second one still fails, ask through `USER_CHOICE` (batch `B-item`).
+3. **Re-assign on failure.** Write the failures to `design/.briefs/{platform}/screens-{Name}.findings-N.json`, where N is the attempt: 1, then 2. Run the brief command again with `--findings <absolute path to that file>`, then start a new child. Two re-assignments at most, counting every re-run. After the second one still fails, ask through `USER_CHOICE` (batch `B-item`).
 4. **Record.** When the screen passes, set its `status` to `verified` (see "Record the item").
-5. **Print one line:** the count of screens verified, and the next screen.
+5. **Print one line:** the count of screens verified, and the next screen. After the last screen, print the collected flags once (see The Item Loop).
 
 ### Phase 6 Exit Gate
 
@@ -1020,6 +1034,8 @@ If the project has design references and no current inventory (missing, unconfir
 
 Otherwise build resumes from the current phase in one line and keeps going. It does not re-audit the codebase, re-read the spec, or re-present a plan the manifest already holds.
 
+Inside a layer, resuming means going back into The Item Loop at the first item whose `status` is not `verified`. Before you assign that item, count its findings files: `design/.briefs/{platform}/{layer}-{Name}.findings-1.json` and `findings-2.json`. Each file that exists is a re-assignment already used.
+
 ```
 Resuming: ATOMS 3/5 — building SectionHeader, then ActionButton.
 ```
@@ -1033,7 +1049,7 @@ pixel-perfect:build --component StatusBadge    # Rebuild one atom
 pixel-perfect:build --screen TodayFeed         # Rebuild one screen
 ```
 
-This re-generates the specified item while preserving everything else.
+This re-generates the specified item while preserving everything else. Both go through The Item Loop for that one item: the same assign, accept, and re-assign rules apply, and its findings files count toward the cap.
 
 ## Completion
 

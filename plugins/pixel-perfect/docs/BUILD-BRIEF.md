@@ -4,7 +4,7 @@
 
 A component build fails at the hand-off. The orchestrating model paraphrases the designer prompt, drops frame paths, and forgets the rules after context compaction. So the orchestrator never writes a component's assignment, and it never writes a component file itself. `scripts/brief.mjs build` assembles the assignment from files on disk: the packaged designer prompt, the design contract, and the task below, filled from the manifest, the inventory, the frames index, and the rules for the layer being built. The script prints one line that names the file, and the orchestrator passes that line to the child, nothing more.
 
-The task holds only what is specific to one item. A section that does not apply is removed. The script exits 2 if any placeholder is left unfilled.
+The task holds only what is specific to one item. A section that does not apply is removed. The Project context section holds facts from the project on disk, and a line appears only when its source exists. The script exits 2 if any placeholder is left unfilled.
 
 The rules are split by layer. Every brief gets "Rules for every layer" once. It also gets the rules for its own layer and none of the other three layers' rules. An item that wraps an approved ecosystem library also gets "Rules for a library wrapper". The script finds each rule section by its exact heading, so keep the headings as written. Code fences inside the rule sections are examples; the script copies them as they are.
 
@@ -33,6 +33,8 @@ What you build on. Read every adapter doc listed, before you write.
 
 <<STACK>>
 
+<<CONTEXT>>
+
 ## Files
 
 <<FILES>>
@@ -57,18 +59,26 @@ What you build on. Read every adapter doc listed, before you write.
 
 ## Steps
 
-1. Read every frame image under Frames. If Frames says no frame shows this item, read the design contract and the theme tokens instead.
+1. Read every frame image under Frames. If Frames names a layout target file, read it. If Frames says no frame shows this item and names no layout target, read the design contract and the theme tokens instead.
 2. Scan for reuse before you write a line: the components this brief lists to build on (if it lists any), the library primitive named under Stack, the theme tokens, and the helpers beside your file. Record what you found in notes.
 3. Write the component in its file, and its story in its story file. Use realistic fixed data, and show every state and variant the Item lists. Build on the library's primitive. Never re-implement a primitive the library provides.
 4. Run every command under Gates. Fix each failure in your own files, then run it again. If a hard-fail gate still fails after your fixes, return status blocked with reason gate-failed, and put the gate's output in notes.
-5. Run the command under Render. If Render says no render command is configured, return status blocked with reason no-render-command, and stop.
+5. Run the command under Render. If Render says no render command is configured, return status blocked with reason no-render-command, and stop. If it writes no image for a state (or, on a text platform, no text artifact), return status blocked with reason no-image.
 6. Look at each render the command wrote, and look at its frame beside it. Compare in this order: overall size and proportions; typeface, weight, and size; colour and contrast; borders, radii, and shadows; spacing and alignment; the words; anything missing or extra; anything cut off or wider than the viewport.
 7. Fix every difference, and go back to step 4. Make at most three rounds of fix and render. After the third round, list each difference that remains.
 8. Return ONE JSON object, and nothing after it:
 
     {"status": "complete" | "blocked", "item": "<<ITEM_ID>>", "files_written": [], "renders": [{"state": "", "path": ""}], "compared": [{"frame": "", "render": "", "differences_fixed": [], "differences_remaining": []}], "needs": [], "flags": [], "notes": ""}
 
-If status is blocked, add a "reason" string that names what is missing. Report every difference that remains. Never report a match you did not see.
+If status is blocked, add a "reason". It is exactly one of these five, and "needs" or "notes" names what is missing:
+
+- `missing-input`: something you need is not there. Name it under `needs`.
+- `contract-missing`: a contract named under Stack is not on disk.
+- `no-render-command`: Render says no render command is configured.
+- `no-image`: the render wrote no image (or, on a text platform, no text artifact) for a state.
+- `gate-failed`: a gate under Gates still fails after your fixes. Put its output in notes.
+
+Report every difference that remains. Never report a match you did not see.
 ```
 
 ## Rules for every layer
@@ -100,7 +110,7 @@ If the Stack says a component contract is in force but its file is missing, retu
 
 From the contract, you MUST:
 - **Compose the library's primitive** for anything in its inventory. A `vendored` library was copied into the repo by the CLI at scaffold time — those files are the project's primitive layer, already wired to the theme, to variants, and to accessibility. A `package` library is imported from `importRoot`. Either way the library's component is the basis; your item configures it.
-- **Check what scaffold installed.** The Stack lists the primitives scaffold pulled. If the primitive you need is not in that list, return it under `needs` and return `status: blocked`. The orchestrator pulls it with the library's CLI. Do not hand-roll a replacement.
+- **Check what scaffold installed.** The Stack lists the primitives scaffold pulled. If the primitive you need is not in that list, return `status: blocked` with reason `missing-input`, and name the primitive under `needs`. The orchestrator pulls it with the library's CLI. Do not hand-roll a replacement.
 
 You MUST NOT:
 - **Re-implement a primitive the library already provides.** Importing `Pressable` and `Text` from `react-native` to build a button, when `components/ui/button.tsx` is sitting in the tree, is the exact defect this contract exists to stop. These are blocking: the component gate fails the item on any.
@@ -115,12 +125,13 @@ The contract's `Free primitives` section is as binding as its ban list: layout a
 - Compose the component library exactly per the component contract (above): the library's primitive is the basis, and this item configures it rather than re-deriving it. Skip this when no component contract is in force.
 - Use theme tokens. Never hardcode a colour, size, space, or radius. The style adapter named under Stack says where the theme file lives.
 - Follow the composition patterns in the components adapter named under Stack.
+- Compile. The component and its story must compile. Run the project's type-check or build for your files where the stack has one. A compile or import error is a failure: fix it, and do not return until it is gone.
 
 ### Story files
 
 Every item gets a story file beside its component. The sandbox adapter named under Stack defines the format. For the `custom` sandbox, add one registry entry in the target language, as `docs/sandbox-spec.md` says. For Storybook, write CSF3.
 
-- Show every state the Item lists, in a story of its own.
+- Show every state the Item lists, in a story of its own. Where the component has them, also show its default, loading, error, and disabled states.
 - Use realistic mock data.
 - The story title uses the prefix for this item's layer, given in that layer's rules below.
 - Include `parameters.docs.description` for auto-generated docs.
@@ -132,7 +143,7 @@ Every item gets a story file beside its component. The sandbox adapter named und
   - `number` for numeric values
   - `color` for color values
 
-**Framework story format.** The story file's language, extension, and imports follow the framework adapter named under Stack. The React example is under "Rules for atoms". For **SvelteKit**, write `StatusBadge.stories.svelte` using native Svelte CSF (`defineMeta` + `<Story>` from `@storybook/addon-svelte-csf`), or `StatusBadge.stories.ts` importing `Meta`/`StoryObj` from `@storybook/svelte`. The `argTypes`/`args`/controls conventions are identical across frameworks. See the framework adapter and `docs/storybook-conventions.md`.
+**Framework story format.** The story file's language, extension, and imports follow the framework adapter named under Stack. The React example, with its argument controls, is under "Story files". For **SvelteKit**, write `StatusBadge.stories.svelte` using native Svelte CSF (`defineMeta` + `<Story>` from `@storybook/addon-svelte-csf`), or `StatusBadge.stories.ts` importing `Meta`/`StoryObj` from `@storybook/svelte`. The `argTypes`/`args`/controls conventions are identical across frameworks. See the framework adapter and `docs/storybook-conventions.md`.
 
 **React Native polyfill decorator.** For React Native projects rendering in web Storybook, add a polyfill decorator to the story preview, or to individual stories, where RN primitives need web shimming:
 
@@ -149,9 +160,78 @@ const withRNWeb: Decorator = (Story) => (
 export const decorators = [withRNWeb];
 ```
 
+### Stateful stories
+
+Every declared state scenario gets one named story export, and each one drives the component into one state configuration. The example shows a stateful molecule with four scenarios:
+
+```tsx
+// SearchBar.stories.tsx — stateful molecule with 4 scenarios
+import type { Meta, StoryObj } from '@storybook/react';
+import { userEvent, within } from '@storybook/test';
+import { SearchBar } from './SearchBar';
+
+const meta: Meta<typeof SearchBar> = {
+  title: 'Molecules/SearchBar',
+  component: SearchBar,
+  parameters: {
+    docs: {
+      description: {
+        component: 'Search input with debounced query and suggestion dropdown.',
+      },
+    },
+  },
+  argTypes: {
+    placeholder: { control: { type: 'text' } },
+    onSearch: { action: 'searched' },
+  },
+  args: {
+    placeholder: 'Search jobs...',
+  },
+};
+
+export default meta;
+type Story = StoryObj<typeof SearchBar>;
+
+export const Empty: Story = {};
+
+export const Typing: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = canvas.getByRole('textbox');
+    await userEvent.type(input, 'hva');
+  },
+};
+
+export const ResultsVisible: Story = {
+  args: {
+    initialQuery: 'hvac',
+    suggestions: mockSuggestions,
+  },
+};
+
+export const NoResults: Story = {
+  args: {
+    initialQuery: 'xyz',
+    suggestions: [],
+  },
+};
+
+export const Error: Story = {
+  args: {
+    initialQuery: 'hvac',
+    error: 'Search failed. Try again.',
+  },
+};
+```
+
 ### Gates
 
-Run each gate command under Gates after your files are written. Under `hard-fail`, any non-zero exit blocks the item: fix your own files and run the command again. Under `warn`, list the violations in notes and carry on. Under `off`, the gate is not run.
+Run the commands printed under `## Gates` in your brief, exactly as written, after your files are written. Each command runs the gate in manifest mode for one contract kind, against the one component file you wrote. The gate reads the contract, the scope, and the overrides from the project's manifest.
+
+- Under `hard-fail`, any exit 1 blocks you: fix your own files and run the command again.
+- Under `warn`, list the violations in notes and carry on.
+- Exit 2 is a contract or configuration error. Exit 3 means a recorded file is outside every check's scope. Exit 2 and exit 3 block the item even under warn.
+- Under `off`, no command is printed. A line that says a gate is `none` or `not run` means exactly that.
 
 If a gate command cannot run on this platform, for example a non-Node target, or its script path cannot be resolved, run the contract's `checks` block detections yourself with grep or glob against the project root. Apply the same pass and fail rule. The decision is deterministic either way.
 
@@ -162,7 +242,7 @@ The styling gate and the component gate are independent, and both must pass. A s
 - **Story title MUST use `Components/` prefix** (e.g., `title: 'Components/StatusBadge'`).
 - **Library primitive.** If the Item sets `library_primitive`, configure that primitive from the component library. Do not create a new one.
 - **Craft.** Take typography, colour hierarchy, and motion from the craft guidance in your agent prompt. Do not invent a second design system.
-- **Argument types.** Every prop gets a control. The example shows the control types for a badge:
+**Argument types.** Every prop gets a control. The example shows the control types for a badge:
 
 ```tsx
 // StatusBadge.stories.tsx
@@ -246,67 +326,7 @@ export const Complete: Story = {
 - **For stateful molecules:** include a named story export for EVERY declared state scenario (see Declared state). Each scenario exercises one specific internal state configuration.
 - **State.** Read the state patterns doc named under Declared state, and apply the pattern for this framework (useState, $state, @State, Entity, Model+Update, etc.). Atoms are never stateful; a state need at the atom level belongs in the molecule.
 
-**State scenario example** (a stateful molecule with four scenarios):
-
-```tsx
-// SearchBar.stories.tsx — stateful molecule with 4 scenarios
-import type { Meta, StoryObj } from '@storybook/react';
-import { userEvent, within } from '@storybook/test';
-import { SearchBar } from './SearchBar';
-
-const meta: Meta<typeof SearchBar> = {
-  title: 'Molecules/SearchBar',
-  component: SearchBar,
-  parameters: {
-    docs: {
-      description: {
-        component: 'Search input with debounced query and suggestion dropdown.',
-      },
-    },
-  },
-  argTypes: {
-    placeholder: { control: { type: 'text' } },
-    onSearch: { action: 'searched' },
-  },
-  args: {
-    placeholder: 'Search jobs...',
-  },
-};
-
-export default meta;
-type Story = StoryObj<typeof SearchBar>;
-
-export const Empty: Story = {};
-
-export const Typing: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const input = canvas.getByRole('textbox');
-    await userEvent.type(input, 'hva');
-  },
-};
-
-export const ResultsVisible: Story = {
-  args: {
-    initialQuery: 'hvac',
-    suggestions: mockSuggestions,
-  },
-};
-
-export const NoResults: Story = {
-  args: {
-    initialQuery: 'xyz',
-    suggestions: [],
-  },
-};
-
-export const Error: Story = {
-  args: {
-    initialQuery: 'hvac',
-    error: 'Search failed. Try again.',
-  },
-};
-```
+For the state scenario stories, see "Stateful stories" in the shared rules.
 
 For non-React frameworks, follow the state patterns doc for the equivalent pattern:
 - **Svelte**: pass initial values via props; use component args to set up `$state()`.
@@ -371,7 +391,7 @@ export const Complete: Story = { args: { status: 'complete' } };
 - Include a named story export for EVERY declared state scenario (see Declared state).
 - Wire every organism-level prop to an `argTypes` control.
 - Show realistic data, not minimal stubs.
-- Follow the same state scenario story pattern as molecules (see "Rules for molecules").
+- Each declared scenario gets a named story export, as the stateful example under "Stateful stories" shows.
 
 **What a correct organism is.** Check each point before you return:
 - The organism renders without errors.
@@ -388,7 +408,7 @@ export const Complete: Story = { args: { status: 'complete' } };
 - Use theme spacing and layout tokens.
 - Follow platform conventions: `ScrollView` for mobile, flex layouts for web, and so on.
 - Apply the craft guidance in your agent prompt for intentional visual hierarchy, considered negative space, and eye-flow. Do not invent a second design system.
-- **Target (fidelity precedence).** The Frames section names the reference frames for this screen's states. They govern the pixels. If Frames says no frame shows this screen, the screen's wireframe is the structural target: `design/wireframes/` in the project, if a file for this screen exists there. Match its layout, information architecture, and regions. If both exist, the frames govern pixels and the wireframe still informs structure.
+- **Target (fidelity precedence).** The Frames section names the reference frames for this screen's states, which govern the pixels, and, when a wireframe exists, a layout target. The layout target informs the structure: match its layout, information architecture, and regions. When both are named, the frames govern pixels and the layout target still informs structure. When no frame is named, the layout target is the structural target.
 - **More than one state.** If the Item or the States section lists more than one state, own the internal state that switches between them, using the framework's state pattern from the state patterns doc. The screen must be **drivable into any listed state**, so each renders as its own story. Wire whatever override or controlled mechanism the framework and adapter favor. The prop shape, naming, and precedence are your implementation choice. In the real app the screen uses its own internal state; the sandbox stories drive it into each named state.
 - Write one named story per entry in the screen's states list, each driving the screen into that state. A single-state screen has just a Default story.
 - Use realistic mock data.
