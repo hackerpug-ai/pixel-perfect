@@ -4,7 +4,8 @@
 // Reads the built Storybook's index.json, renders every story headlessly in Chrome in both
 // themes, and writes one normalized DOM file per story and theme (the structural golden, with each
 // element's resolved colours and type) plus
-// a PNG (review only) to {out}/{layer}/{Name}/{state}.{html,png}.
+// a PNG beside it, the required pixel evidence the gate checks for a real, non-blank image, to
+// {out}/{layer}/{Name}/{state}.{html,png}.
 //
 //   node scripts/sandbox-capture.mjs [--width 1440] [--out dir]
 //

@@ -1,0 +1,8 @@
+{
+  "name": "pixel-perfect-pixel-web-fixture",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sandbox:capture": "node sandbox/capture.mjs"
+  }
+}

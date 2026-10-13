@@ -227,6 +227,27 @@ Add dark mode toggle using `@storybook/addon-themes` if the project supports dar
 - Screen responds to viewport resizing
 - Mobile projects use mobile viewport preset as default
 
+## Catalog capture (piece #8 — required)
+
+The plugin ships no capture script for Storybook. The project supplies its own command, and the gate checks what that command writes. The contract:
+
+- The capture command renders every story headless, once per state, at the story's canonical viewport, with animation disabled and the render settled before capture.
+- Per story it writes `{staging}/{layer}/{name}/{state}.dom` (the normalized DOM of the story root) and `{state}.png` beside it. The PNG is required; see `docs/sandbox-spec.md` §8.
+- The platform records the command, medium and viewport: `capture.command`, `capture.medium: "dom+png"`, `capture.viewport: "WxH"`.
+- Goldens are written only by the gate: `node {plugin}/scripts/verify-catalog.mjs --baseline <project-root>`. Never copy a capture into goldens by hand; `--check` refuses it.
+
+```json
+"capture": {
+  "command": "<project command that renders the stories headless>",
+  "medium": "dom+png",
+  "goldens": "design/goldens/web-desktop",
+  "viewport": "390x844",
+  "scale": 1
+}
+```
+
+Gate commands: `--baseline`, `--check`, `--accept <glob>`, `--render --only <layer>/<Name>`, `--audit`, `--blast <Name>`, `--reach <Name...>`, `--composes`.
+
 ## Sandbox
 
 ### Dev Server

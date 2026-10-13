@@ -109,22 +109,98 @@ A story shows a component's variants and states **together** (a static catalog),
 - Per-story **snapshots** (get-spoke `tests/snapshots.rs` via `insta` + `TestBackend`) feed piece #8 when the platform has no separate capture command.
 
 ### 8. Catalog capture (required — durable truth)
-The sandbox emits a **deterministic structural artifact per story**, headless, from one command. Those artifacts are committed as goldens under `design/goldens/{platform}/{layer}/{name}/{state}.{ext}`. Everything else — drift, blast radius, dead inventory, the composition mutation check — is a diff against them.
+The sandbox emits a **deterministic structural artifact per story**, headless, from one command, and a **PNG beside it**. Structural artifacts are committed as goldens under `design/goldens/{platform}/{layer}/{name}/{state}.{ext}`. Everything else — drift, blast radius, dead inventory, the composition mutation check — is a diff against them.
 
 This is the mechanism that makes the design system *living*: the real rendered system is the source of truth, not a hand-maintained dependency graph or a stored `stale` flag.
 
 #### Capture medium per platform
 
-The contract is identical everywhere; the medium follows the platform.
+The contract is identical everywhere; the medium follows the platform. Pixels are required beside the structural artifact. A terminal UI declares its exemption in the manifest.
 
-| Platform | Structural artifact (authoritative gate) | Visual artifact (review only) |
+| Platform | Structural artifact (authoritative gate) | Pixel evidence (required beside it) |
 |---|---|---|
 | Web (custom / Storybook) | normalized serialized DOM | PNG via headless Chrome |
-| TUI (Ratatui / Bubbletea / Textual) | `TestBackend` text buffer — exact, no tolerance | none needed |
+| TUI (Ratatui / Bubbletea / Textual) | `TestBackend` text buffer — exact, no tolerance | none: `capture.pixels: "none"` with `capture.pixels_reason` |
 | Native mobile (Expo / SwiftUI / Compose) | view-tree dump | simulator screenshot |
-| GPUI / desktop | element-tree dump | window screenshot when available |
+| GPUI / desktop | element-tree dump | window screenshot |
 
-The **structural** artifact is the gate. The **visual** artifact is for human review and design-target comparison. A platform that can produce neither declares the degradation explicitly — it never silently passes.
+The **structural** artifact is the gate for drift. The **image** is required evidence for fidelity review: the gate checks that it exists, that it is a real image, that it is not blank, and that it fits the declared viewport. A platform that can produce neither declares the degradation explicitly. It never silently passes.
+
+#### Pixel rules
+
+- Every captured story needs a sibling `{state}.png`. A missing PNG fails the gate and names the story.
+- The PNG must be a well-formed chunk stream: IHDR first, at least one IDAT, IEND last. A file without pixel data fails. Corrupt or truncated compressed data fails with the reason, never with an uncaught error.
+- The gate decodes colour types 0 (grey), 2 (RGB), 3 (palette), 4 (grey + alpha) and 6 (RGBA), at bit depths 8 and 16, non-interlaced. Any other PNG is a violation (`undecodable-png`): "cannot verify this image; write a non-interlaced 8- or 16-bit PNG". The gate never passes an image it did not read.
+- An image is blank when it is narrower or shorter than 8 pixels, or when fewer than 64 pixels differ from its most common colour (`blank-png`: "render shows almost nothing").
+- When the manifest declares `capture.viewport` as `"WxH"`, a PNG wider than `W × capture.scale` (scale defaults to 1) fails with "render is wider than the viewport". A render that overflows its viewport is a finding, not a screenshot detail.
+- Pixels are required by default. A platform that renders pixels must declare `capture.viewport`; without it the gate exits 2 and says how to fix it.
+- The exemption is explicit: `capture.pixels: "none"` plus a non-empty `capture.pixels_reason`. `"none"` without a reason is a config error (exit 2). Every mode prints `PIXELS NOT REQUIRED: <reason>` on stderr, and `receipt.json` records `pixels` and the reason.
+- PNGs never become goldens.
+
+#### Coverage rules
+
+- In `--baseline` and `--check`, with or without `--layer`, every manifest item that is not `pending` (a missing `status` counts as built) must have at least one captured story, in any of the four layers. A built item with no story fails: "no story captured for <layer>/<Name>".
+- A platform that requires pixels must declare `capture.viewport` as `"WxH"`. Without it the gate exits 2 and names the fix: `declare platforms.<id>.capture.viewport, for example "390x844"`.
+
+#### Empty and duplicate rules
+
+- A structural artifact that is empty or whitespace-only after normalization fails.
+- Identical bodies (same hash) for stories of two **different** components on one platform fail. The usual cause is a wrapper-only capture: a dialog or sheet that renders outside the captured root. Each group is listed.
+- Identical bodies across states of the **same** component are reported under `duplicates` and do not fail.
+- When two or more platforms have goldens, the report gives `identicalAcrossPlatforms`: how many golden keys are byte-identical between each pair. This is informational.
+
+#### Receipts
+
+`receipt.json` sits beside the goldens. It records the platform's pixel decision at its top level (`pixels`, and `pixelsReason` when pixels are "none"). Each golden has one entry:
+
+```json
+{
+  "version": 1,
+  "platform": "web-desktop",
+  "pixels": "required",
+  "pixelsReason": null,
+  "goldens": {
+    "atoms/Button/default": {
+      "hash": "a1b2c3d4e5f60718",
+      "ext": ".dom",
+      "mode": "baseline",
+      "png": { "hash": "sha256:…", "width": 390, "height": 300, "inkPixels": 810 },
+      "source": { "file": "src/Button.tsx", "fileHash": "sha256:…", "story": "sandbox/stories/atoms/Button/default.html", "storyHash": "sha256:…" }
+    }
+  }
+}
+```
+
+- `png` is the evidence the gate judged for that story. It is omitted when pixels are "none". `source` appears only when the manifest item names a `file` or `story`. There are no timestamps, so diffs stay quiet. Writes are atomic.
+- Line endings are normalized to LF before any hash is taken.
+- `--baseline` never blesses drift. A story with no golden is added. A golden that already matches the capture is stamped with a receipt. A golden that differs is refused: nothing is written, the changed keys are listed, and the mode says to use `--accept <glob>`.
+- `--accept <glob>` is the only write that moves a changed golden.
+- Each write reads and validates the prior receipt before it copies any golden. A corrupt receipt is exit 2, with nothing written. Entries whose golden file is gone are pruned.
+- `--check` fails any golden that has no receipt entry, or whose hash differs from its receipt (`unreceipted`). A missing `receipt.json` beside existing goldens fails `--check` too, and the message says to run `--baseline` to stamp matching goldens and add new ones.
+- `--audit` reads goldens, receipts and sources and runs **no capture**. It reports unreceipted goldens, empty goldens, cross-component duplicate groups, and receipted sources edited after their golden was written (`staleSources`). Where pixels are required, it also reports receipt entries with no PNG evidence (`golden has no pixel evidence`) and built items whose receipt has no source hashes (`receipt has no source hashes`).
+- A manifest source path that does not exist blocks `--baseline` (exit 2). A receipt cannot pin a file that is not there.
+
+A receipt is a record of what a mode wrote. It is not proof that the render is faithful. A forger who hand-writes a receipt and large, distinct PNGs can pass `--check` and `--audit`. The fidelity review that compares renders against the design target is the gate for that residue.
+
+#### Capture command environment
+
+`verify-catalog.mjs` runs the capture command with these variables:
+
+| Variable | Set when | Meaning |
+|---|---|---|
+| `PIXEL_PERFECT_CAPTURE_OUT` | always | The staging directory the command writes to |
+| `PIXEL_PERFECT_CAPTURE_LAYER` | `--layer <L>` is given | Restrict the capture to layer `<L>` |
+| `PIXEL_PERFECT_CAPTURE_ONLY` | `--only <layer>/<Name>` is given | Restrict the capture to one story's states |
+
+A command may ignore the last two and capture everything. The script still keeps only what the run asked for. `--out <dir>` sets the staging directory for one run, so rendering one story does not wipe the main staging folder. `--out` may not name the project root.
+
+#### Staging, timeout and tamper rules
+
+- The staging folder is deleted before each capture. So `--out` and `capture.staging` are accepted only when, after `realpath`, they lie inside `design/.captures/` or the system temporary directory. A symbolic link on the path, the filesystem root, the project root, anything containing `design/`, and anything overlapping the goldens are refused with exit 2 before anything is deleted.
+- `--only <layer>/<Name>` is valid only with `--render`.
+- A story state has one structural artifact. Two files for one state are a config error. A PNG is found by its extension in any case (`.png`, `.PNG`). A file with any other extension is listed under `ignoredFiles` and never rewritten.
+- `capture.timeout_ms` bounds the capture command (default 600000). A timeout is exit 2.
+- The capture command may write only to its staging folder. The gate hashes `design/manifest.json`, `design/inventory.json`, the goldens and `receipt.json` before and after it runs. A change is exit 2: "the capture command modified gate inputs".
 
 #### Determinism requirements
 
@@ -133,21 +209,26 @@ Capture is worthless if it is noisy. The generated capture command must:
 - disable animation and transitions, and settle before capture;
 - use fixed mock data (no `Math.random`, no `Date.now` in fixtures — story fixtures are already required to be realistic; they must also be constant);
 - normalize volatile output before writing: framework-generated ids, hash-suffixed class names, absolute paths, timestamps;
-- render at the story's canonical size (piece #2).
+- render at the story's canonical size (piece #2), and write the PNG at that size.
 
 #### Plugin gate script
 
 ```
 node {plugin}/scripts/verify-catalog.mjs <mode> <project-root> [options]
 
-  --baseline            capture → write goldens (after a layer is approved)
-  --check               capture → diff vs goldens; non-zero on unreviewed drift
+  --baseline            capture → gate → write goldens and receipts (after a layer is approved)
+  --check               capture → gate → diff vs goldens; unreceipted goldens; non-zero on unreviewed drift
+  --accept <glob>       promote drifted captures to goldens (intentional change)
+  --render              capture → pixel gate → print structural and PNG paths; writes no goldens
+  --audit               read goldens, receipts and sources; runs no capture
   --blast <name>        perturb <name>, report which stories move        (downstream)
   --reach <name...>     report which live roots each name reaches         (upstream)
-  --accept <glob>       promote drifted captures to goldens (intentional change)
+  --composes            check each composing item's source uses what it composes
+
+  options: --platform <id>  --layer <layer>  --only <layer>/<Name>  --out <dir>  --json
 ```
 
-Exit codes match `verify-styling-contract.mjs`: `0` pass, `1` drift/violations, `2` config/usage error, `3` vacuous scan (zero stories captured — never a pass).
+Exit codes match `verify-styling-contract.mjs`: `0` pass, `1` drift or violations, `2` config/usage error, `3` vacuous scan (zero stories captured — never a pass).
 
 Manifest per platform records the capture *decision*, not derivables:
 
@@ -156,13 +237,28 @@ Manifest per platform records the capture *decision*, not derivables:
   "command": "npm run sandbox:capture",
   "medium": "dom+png",
   "goldens": "design/goldens/web-desktop",
+  "viewport": "390x844",
+  "scale": 1,
   "captured_at": "2026-08-11T00:00:00Z"
+}
+```
+
+A terminal UI declares its exemption instead of a PNG:
+
+```json
+"capture": {
+  "command": "npm run sandbox:capture",
+  "medium": "text",
+  "pixels": "none",
+  "pixels_reason": "terminal UI: the TestBackend text buffer is the render"
 }
 ```
 
 #### Composition mutation check
 
 A molecule that *claims* to compose `StatusBadge` but re-implemented its internals will not move when `StatusBadge` moves. So: perturb an atom (`--blast StatusBadge`), re-capture, and assert its declared dependents changed. A dependent that does not move is not composing — it is a copy.
+
+A compiled stack cannot be checked this way. A comment-only perturbation does not change a compiled render, so `--blast` reports a `note` and zero moved stories. Use `--composes` on those stacks. It reads each composing item's source with comments, string literals and import lines removed, using the comment syntax of the file's extension. It requires a use of every composed name: `<Name` in markup, `Name(` or `Name {` for a call or trailing closure, or `Name.` for member access. A bare word, a string, a comment, an import, or a longer identifier does not count. An inventory entry whose item is not built (pending, or its file missing) fails with `--layer` and is listed under `notBuilt` without it. Zero entries checked is exit 3. The JSON `note` states the limits: a component reached only through a re-export under another name, a name built at run time, and a use that is only a type or a value are not seen.
 
 ### State Scenarios for Molecules, Organisms, and Screens
 

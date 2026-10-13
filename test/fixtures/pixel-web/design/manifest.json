@@ -1,0 +1,34 @@
+{
+  "goal": "Full pixel-path catalog fixture: headless Chrome renders a DOM dump and a PNG per story",
+  "version": "9.3.0",
+  "platforms": {
+    "web-desktop": {
+      "phase": "atoms",
+      "tools": {
+        "framework": "vite",
+        "sandbox": "custom"
+      },
+      "capture": {
+        "command": "node sandbox/capture.mjs",
+        "medium": "dom+png",
+        "goldens": "design/goldens/web-desktop",
+        "catalog": "sandbox/stories",
+        "staging": "design/.captures/web-desktop",
+        "viewport": "390x300",
+        "scale": 1
+      },
+      "pinned": ["Button"],
+      "deprecations": {},
+      "atoms": [
+        { "name": "Button", "status": "verified" },
+        { "name": "Badge", "status": "verified" }
+      ],
+      "molecules": [
+        { "name": "Card", "status": "verified" }
+      ],
+      "screens": [
+        { "name": "Home", "route": "/", "states": ["default"], "status": "verified" }
+      ]
+    }
+  }
+}

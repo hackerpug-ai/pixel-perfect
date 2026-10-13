@@ -57,7 +57,7 @@ Create a small sandbox project that imports the project's components and renders
        "sandbox:capture": "node sandbox/capture.mjs"
    } }
    ```
-   `sandbox:capture` walks the registry headless, disables animation, settles, serializes each story's structural artifact (normalized DOM or framework equivalent), and writes `design/.captures/{platform}/{layer}/{name}/{state}.txt` (PNG optional for review). Record the command on the platform as `capture.command`.
+   `sandbox:capture` walks the registry headless, disables animation, settles, serializes each story's structural artifact (normalized DOM or framework equivalent), and writes `design/.captures/{platform}/{layer}/{name}/{state}.dom` (or the framework's structural extension) **and** `{state}.png` beside it. The PNG is required: the gate checks that it is a real, non-blank image no wider than the declared viewport. Record the command on the platform as `capture.command`.
 3. The shell (`main.tsx`, React example — adapt to the framework) keeps `selected` state, lists `registry` grouped by `layer` in a sidebar, and renders the selected story's `render()` in the preview with a `{layer} / {name}` breadcrumb. ~60 lines.
 4. Import `tokens.css` so components render themed.
 
@@ -108,10 +108,13 @@ Left: sections per layer with their stories (click / keyboard-select). Right: br
 Generate a capture command alongside the run command. The plugin gate is:
 
 ```
-node {plugin}/scripts/verify-catalog.mjs --baseline <project-root>   # write goldens
-node {plugin}/scripts/verify-catalog.mjs --check <project-root>      # drift gate
+node {plugin}/scripts/verify-catalog.mjs --baseline <project-root>   # write goldens and receipts
+node {plugin}/scripts/verify-catalog.mjs --check <project-root>      # drift gate; refuses hand-copied goldens
+node {plugin}/scripts/verify-catalog.mjs --render --only <layer>/<Name> --out <dir> <project-root>   # one story's DOM + PNG
+node {plugin}/scripts/verify-catalog.mjs --audit <project-root>     # goldens, receipts and sources; runs no capture
 node {plugin}/scripts/verify-catalog.mjs --blast <Name> <project-root>
 node {plugin}/scripts/verify-catalog.mjs --reach <Name...> <project-root>
+node {plugin}/scripts/verify-catalog.mjs --composes <project-root>  # does each composing source name what it composes
 ```
 
 Goldens land at `design/goldens/{platform}/{layer}/{name}/{state}.{ext}` and are committed. Manifest:
@@ -120,11 +123,15 @@ Goldens land at `design/goldens/{platform}/{layer}/{name}/{state}.{ext}` and are
 "capture": {
   "command": "npm run sandbox:capture",
   "medium": "dom+png",
-  "goldens": "design/goldens/web-desktop"
+  "goldens": "design/goldens/web-desktop",
+  "viewport": "390x844",
+  "scale": 1
 }
 ```
 
-Determinism: fixed fixtures, no animation, normalize ids/hashes/paths/timestamps before write. Structural artifact is the gate; PNG is review-only. A platform that cannot capture must declare the degradation — never silent-pass.
+Determinism: fixed fixtures, no animation, normalize ids/hashes/paths/timestamps before write. The structural artifact is the drift gate. The PNG is required evidence for fidelity review, and the gate checks it. Two stories with identical bodies across different components fail, and an empty capture fails. A platform that cannot render declares `pixels: "none"` with a `pixels_reason` — never a silent pass.
+
+The environment the command receives: `PIXEL_PERFECT_CAPTURE_OUT` (always), `PIXEL_PERFECT_CAPTURE_LAYER` (with `--layer`), `PIXEL_PERFECT_CAPTURE_ONLY` (with `--only`). A command may ignore the last two; the gate still keeps only what was asked for.
 
 ## Verify (the minimum bar — see `docs/sandbox-spec.md`)
 - Each built component is **registered under its layer** and **renders in isolation**.

@@ -2,7 +2,7 @@
 // E4 confirm stays workflow-required (static); apply/prove drive real scripts.
 
 import assert from "node:assert/strict";
-import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -66,6 +66,12 @@ test("evolve add: new entity goldens appear; prior goldens undisturbed", () => {
       name: "ProgressDot",
       body: "ProgressDot\nsize=sm\n",
     });
+
+    // E5 writes the component's source and story before anything is captured; a golden cannot be
+    // receipted against a manifest path that does not exist, so the test writes both as the workflow would.
+    mkdirSync(path.join(dir, "src/atoms"), { recursive: true });
+    writeFileSync(path.join(dir, "src/atoms/ProgressDot.tsx"), "export const ProgressDot = () => null;\n", "utf8");
+    writeFileSync(path.join(dir, "src/atoms/ProgressDot.stories.tsx"), "export default {};\n", "utf8");
 
     const proved = proveAddition(dir, "web-desktop", ["ProgressDot"], prior);
     assert.equal(proved.ok, true, JSON.stringify(proved, null, 2));
