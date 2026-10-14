@@ -1,5 +1,5 @@
 {
-  "pageUrl": "http://127.0.0.1:4177/pixel-perfect/",
+  "pageUrl": "http://localhost:4177/pixel-perfect/",
   "runs": [
     {
       "width": 1440,
@@ -7,9 +7,9 @@
       "name": "OpenCode",
       "mode": "fresh",
       "headerBottom": 61,
-      "commandTop": 87.671875,
+      "commandTop": 87.828125,
       "selected": true,
-      "scrollY": 5550,
+      "scrollY": 5834,
       "pass": true
     },
     {
@@ -18,9 +18,9 @@
       "name": "OpenCode",
       "mode": "hashchange",
       "headerBottom": 61,
-      "commandTop": 87.671875,
+      "commandTop": 87.828125,
       "selected": true,
-      "scrollY": 5550,
+      "scrollY": 5834,
       "pass": true
     },
     {
@@ -29,9 +29,9 @@
       "name": "Claude Code",
       "mode": "fresh",
       "headerBottom": 61,
-      "commandTop": 87.671875,
+      "commandTop": 87.828125,
       "selected": true,
-      "scrollY": 5550,
+      "scrollY": 5834,
       "pass": true
     },
     {
@@ -40,9 +40,9 @@
       "name": "Claude Code",
       "mode": "hashchange",
       "headerBottom": 61,
-      "commandTop": 87.671875,
+      "commandTop": 87.828125,
       "selected": true,
-      "scrollY": 5550,
+      "scrollY": 5834,
       "pass": true
     },
     {
@@ -51,9 +51,9 @@
       "name": "OpenCode",
       "mode": "fresh",
       "headerBottom": 61,
-      "commandTop": 87.734375,
+      "commandTop": 87.546875,
       "selected": true,
-      "scrollY": 8692,
+      "scrollY": 9153,
       "pass": true
     },
     {
@@ -62,9 +62,9 @@
       "name": "OpenCode",
       "mode": "hashchange",
       "headerBottom": 61,
-      "commandTop": 87.734375,
+      "commandTop": 87.546875,
       "selected": true,
-      "scrollY": 8692,
+      "scrollY": 9153,
       "pass": true
     },
     {
@@ -73,9 +73,9 @@
       "name": "Claude Code",
       "mode": "fresh",
       "headerBottom": 61,
-      "commandTop": 87.734375,
+      "commandTop": 87.546875,
       "selected": true,
-      "scrollY": 8692,
+      "scrollY": 9153,
       "pass": true
     },
     {
@@ -84,9 +84,9 @@
       "name": "Claude Code",
       "mode": "hashchange",
       "headerBottom": 61,
-      "commandTop": 87.734375,
+      "commandTop": 87.546875,
       "selected": true,
-      "scrollY": 8692,
+      "scrollY": 9153,
       "pass": true
     }
   ]

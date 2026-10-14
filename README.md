@@ -107,16 +107,16 @@ One mockup, separated into five layers. Each layer is built and checked before t
    `status` output (excerpt), from the landing site's own build:
 
    ```text
-   tokens    gate passed  25 colours
+   tokens      25 colours
    atoms     gate passed  22 components
-   molecules gate passed  18 components
+   molecules gate passed  19 components
    organisms gate passed  15 components
-   screens   building
+   screens   gate passed  2 components
    ```
 
 | Tokens | Minutes | Frames | Gates | Components |
 |--------|---------|--------|-------|------------|
-| 10.0M | 326 | 22 | 34 | 55 |
+| 10.0M | 341 | 22 | 34 | 56 |
 
 Measured on the landing site's own build. Tokens counts new tokens; see the [FAQ](#faq).
 
@@ -254,7 +254,7 @@ Run `evolve` with the new mock. Each element is sorted into reuse, variant, new,
 
 <details><summary>How many tokens does it use?</summary>
 
-The landing site's own build read a 22-frame design and used 10.0M new tokens across 326 active minutes, plus 444.4M tokens of cached context re-read between turns. Frames are read once and cached, so evolve and refine runs cost a fraction of the first build.
+The landing site's own build read a 22-frame design and used 10.0M new tokens across 341 active minutes, plus 449.4M tokens of cached context re-read between turns. Frames are read once and cached, so evolve and refine runs cost a fraction of the first build.
 
 </details>
 

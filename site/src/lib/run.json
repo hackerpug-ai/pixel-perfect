@@ -1,18 +1,18 @@
 {
-	"recorded": "2026-10-01T21:37:14.408Z",
+	"recorded": "2026-10-14T18:55:06.280Z",
 	"release": {
-		"version": "9.2.0",
-		"major": "9",
-		"tag": "v9.2.0",
-		"date": "2026-10-01"
+		"version": "10.0.0",
+		"major": "10",
+		"tag": "v10.0.0",
+		"date": "2026-10-13"
 	},
 	"numbers": {
-		"tokens": 9970153,
-		"cachedTokens": 444395796,
-		"minutes": 326,
+		"tokens": 9994309,
+		"cachedTokens": 449389238,
+		"minutes": 341,
 		"frames": 22,
 		"gates": 34,
-		"components": 55
+		"components": 56
 	},
 	"excerpts": {
 		"manifest": [
@@ -236,10 +236,6 @@
 					"tokens    "
 				],
 				[
-					"success",
-					"gate passed"
-				],
-				[
 					"plain",
 					"  25 colours"
 				]
@@ -269,7 +265,7 @@
 				],
 				[
 					"plain",
-					"  18 components"
+					"  19 components"
 				]
 			],
 			[
@@ -292,8 +288,12 @@
 					"screens   "
 				],
 				[
-					"value",
-					"building"
+					"success",
+					"gate passed"
+				],
+				[
+					"plain",
+					"  2 components"
 				]
 			]
 		]
@@ -312,18 +312,18 @@
 			"TabNote",
 			"TextLink"
 		],
-		"reached": 35
+		"reached": 36
 	},
 	"method": {
 		"tokens": {
-			"input": 3366,
-			"cacheWrite": 9086987,
-			"cacheRead": 444395796,
-			"output": 879800
+			"input": 3386,
+			"cacheWrite": 9101410,
+			"cacheRead": 449389238,
+			"output": 889513
 		},
-		"responses": 1386,
+		"responses": 1396,
 		"idleMinutes": 15,
 		"from": "2026-09-30T04:45:38.036Z",
-		"sessions": 33
+		"sessions": 38
 	}
 }

@@ -73,10 +73,21 @@
 			<div class="mb-3 max-w-200"><SectionHeading text="From mockup to system in four commands." /></div>
 			<p class="m-0 mb-12 max-w-150 text-pretty text-muted">
 				Point it at the design, scaffold a sandbox, build the layers, and read the report. Each layer is checked
-				against its frames before the next one starts, so the report is the proof.
+				against its frames — a pass needs a real PNG — before the next one starts, so the report is the proof.
 			</p>
 			<StepsTimeline />
 			<div class="mt-16"><DemoStats /></div>
+			<div class="mt-18 max-w-200">
+				<SectionHeading variant="subhead">It brings its own agents.</SectionHeading>
+				<p class="m-0 mt-5 max-w-150 text-pretty text-muted">
+					Batteries included: the plugin ships a designer and a judge, started by its workflows with a brief — no
+					agent wiring of your own. The designer builds each component in your stack; the judge compares every render
+					to its frame, and a component that fails goes back to its builder twice before it asks you. The designer's
+					craft guidance is Claude's
+					<TextLink href="https://claude.com/marketplace/plugins/frontend-design" label="frontend-design skill" external variant="ui" />,
+					built in.
+				</p>
+			</div>
 		</section>
 
 		<section id="grow" class={[section, 'py-24']}>

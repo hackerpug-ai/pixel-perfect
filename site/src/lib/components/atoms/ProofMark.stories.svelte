@@ -27,7 +27,7 @@
 	});
 </script>
 
-{#snippet template(args: { number?: number; visible?: boolean })}
+{#snippet template(args: { number: number; visible?: boolean })}
 	<div class="flex items-center gap-3">
 		<span class="text-sm text-ink">Mark {args.number}</span>
 		<ProofMark {...args} />

@@ -59,7 +59,10 @@ await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const base = `http://127.0.0.1:${server.address().port}`;
 
 const stories = Object.values(JSON.parse(readFileSync(join(root, 'index.json'), 'utf8')).entries).filter((e) => e.type === 'story');
-const browser = await chromium.launch({ channel: 'chrome' });
+// Software raster: the GPU compositor paints the diagonal hatch gradient on a different subpixel
+// phase run to run, so fullPage PNG bytes never reproduce and gate.mjs record — which binds a
+// judgment to the render hash of a fresh capture — cannot match. Software painting is deterministic.
+const browser = await chromium.launch({ channel: 'chrome', args: ['--disable-gpu', '--disable-gpu-compositing'] });
 let failed = 0;
 // One job per story × theme; a small pool of pages renders them in parallel. Each job is
 // independent (fresh navigation), so the output is identical to a sequential run.
@@ -74,6 +77,31 @@ for (const s of stories) {
 	}
 	const name = rest.join('/').replace(/\s+/g, '');
 	for (const theme of THEMES) jobs.push({ s, layer, name, theme, state: theme === 'light' ? kebab(s.name) : `${kebab(s.name)}--dark` });
+}
+
+// Platform scope: the manifest's platform decides which components exist at this width — the design
+// hides Fig. 1 (LayerStack) below 720px and the SocialCard is a fixed 1200x630 desktop export, so
+// those stories are not mobile items. Capturing them anyway makes gate.mjs's pixel checks fail on
+// stories the platform never claimed. Token stories carry no inventory item, so only the item
+// layers are filtered.
+const ITEM_LAYERS = ['atoms', 'molecules', 'organisms', 'screens'];
+{
+	const manifest = JSON.parse(readFileSync(join('design', 'manifest.json'), 'utf8'));
+	const platform = Object.values(manifest.platforms ?? {}).find((p) => p?.capture?.viewport?.startsWith(`${width}x`));
+	if (platform) {
+		const inScope = new Set(
+			ITEM_LAYERS.flatMap((layer) => (platform[layer] ?? []).map((item) => item && `${layer}/${item.name}`))
+		);
+		const before = jobs.length;
+		for (let i = jobs.length - 1; i >= 0; i--) {
+			const { layer, name } = jobs[i];
+			if (ITEM_LAYERS.includes(layer) && !inScope.has(`${layer}/${name}`)) {
+				console.log(`– skipping ${layer}/${name}: not an item of this platform`);
+				jobs.splice(i, 1);
+			}
+		}
+		if (jobs.length !== before) console.log(`platform scope: ${before - jobs.length} job(s) outside the manifest's items at ${width}px`);
+	}
 }
 
 async function capture(page, { s, layer, name, theme, state }) {

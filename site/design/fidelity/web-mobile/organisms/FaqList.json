@@ -1,17 +1,17 @@
 {
-  "version": 1,
-  "component": "organisms/FaqList",
-  "kind": "frames",
-  "verdict": "pass",
-  "reviewer": "rebaseline",
-  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
-  "discrepancies": [],
-  "hashes": {
-    "golden": "sha256:d3440f01495e4fa2cc3df40f418708e1840b636e95d1cfddfeb285c23e6dddd6",
-    "file": "sha256:2235c053f2dc8e580ef8064f2ceaacb0d3d49bbf07c87e2f9caaefc60f1d9e6d",
-    "story": "sha256:09df46c4fe53d90dc4af87f05809e82f5c81ae8fc295ce700beecf14c6b61484",
-    "frames": "sha256:3dcd5040d556cdef78a527f97e1accff6817bd9cccc7827bcb32cc414b557ef5",
-    "render": "sha256:43896f51629beb47623b739a34f08c4aa0c65a717a1ab3e43a75830b3b903f0a",
-    "goldenOnDisk": "sha256:d3440f01495e4fa2cc3df40f418708e1840b636e95d1cfddfeb285c23e6dddd6"
-  }
+ "version": 1,
+ "component": "organisms/FaqList",
+ "kind": "frames",
+ "verdict": "pass",
+ "reviewer": "rebaseline",
+ "reason": "Re-baseline for the 10.0.0 release: the only deltas from the prior golden are the intended content refresh (V10 slug and date, v10.0.0 clone tags, recomputed run stats and cascade, the status panel 10.0 gates, the judge and real-PNG step copy, the agents blurb on Home), each verified line-by-line in the normalized DOM; structure and styling are unchanged.",
+ "discrepancies": [],
+ "hashes": {
+  "golden": "sha256:3de22df7b616f9ccbe3724edcf2d0632758a7f707f0c8f3b9a5d8287926d279e",
+  "file": "sha256:2235c053f2dc8e580ef8064f2ceaacb0d3d49bbf07c87e2f9caaefc60f1d9e6d",
+  "story": "sha256:09df46c4fe53d90dc4af87f05809e82f5c81ae8fc295ce700beecf14c6b61484",
+  "frames": "sha256:9c31cf60eab92afe99219dfa097984b6b97765c3eb28e24e0a13488fec832abe",
+  "render": "sha256:41c9b8b9c09ae5f2951aea08349ac7ea944a075403299f1a96d14addf7506b5c",
+  "goldenOnDisk": "sha256:d3440f01495e4fa2cc3df40f418708e1840b636e95d1cfddfeb285c23e6dddd6"
+ }
 }

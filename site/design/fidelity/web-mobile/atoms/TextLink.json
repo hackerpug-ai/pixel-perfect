@@ -1,17 +1,17 @@
 {
-  "version": 1,
-  "component": "atoms/TextLink",
-  "kind": "frames",
-  "verdict": "pass",
-  "reviewer": "rebaseline",
-  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
-  "discrepancies": [],
-  "hashes": {
-    "golden": "sha256:fe97f8dc49724db8f8710f9214b8ab1077031624ace45817624d882756ac053f",
-    "file": "sha256:e10f9b2a928aa25f9d680c08c859ae43621d48a0a0a947934fd03d1705465c8e",
-    "story": "sha256:5a84f1282ed08e0e492e6950a24da0edb66bf71c9fc92bb043e8c6895b9df83f",
-    "frames": "sha256:dbc1372bc1a32432d5d5e0534667eeaa7bce69265f8622ea5958a336dc231064",
-    "render": "sha256:23d44c2390a4bb0791123edf9dcec6e976cb15eac612d8d88ddad0b039110e0d",
-    "goldenOnDisk": "sha256:fe97f8dc49724db8f8710f9214b8ab1077031624ace45817624d882756ac053f"
-  }
+ "version": 1,
+ "component": "atoms/TextLink",
+ "kind": "frames",
+ "verdict": "pass",
+ "reviewer": "rebaseline",
+ "reason": "Re-baseline after the capture moved to software raster for byte-reproducible PNGs: this component story set 's DOM golden is byte-identical to the prior one and only the PNG raster differs; the receipt is re-recorded from the deterministic capture.",
+ "discrepancies": [],
+ "hashes": {
+  "golden": "sha256:fe97f8dc49724db8f8710f9214b8ab1077031624ace45817624d882756ac053f",
+  "file": "sha256:e10f9b2a928aa25f9d680c08c859ae43621d48a0a0a947934fd03d1705465c8e",
+  "story": "sha256:5a84f1282ed08e0e492e6950a24da0edb66bf71c9fc92bb043e8c6895b9df83f",
+  "frames": "sha256:9e64b9c15b743e69c34b563a86b2f451cbeb6d02dd03f46fb9ee13165b8f781a",
+  "render": "sha256:0bf9178735980920da4daa54fc180408b28e759fa45d591ceef47c9e103ff41c",
+  "goldenOnDisk": "sha256:fe97f8dc49724db8f8710f9214b8ab1077031624ace45817624d882756ac053f"
+ }
 }

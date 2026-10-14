@@ -1,17 +1,17 @@
 {
-  "version": 1,
-  "component": "organisms/PrinciplesGrid",
-  "kind": "frames",
-  "verdict": "pass",
-  "reviewer": "rebaseline",
-  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
-  "discrepancies": [],
-  "hashes": {
-    "golden": "sha256:94826ba50c86da9523af939848967b83a2438349b5c7518298108c9ef50c9880",
-    "file": "sha256:a913f49784ea798ab7d15d3f56bfa675c2ef917103e2de158891754eb442ae67",
-    "story": "sha256:3e9b98969b5e6611ddf3eb1a5e8e6e41bafd3ca2621a62ed1bb7c5aed844c7db",
-    "frames": "sha256:647c113f91933cc0a6c01d9e9fe1b500ca4dd4d426a1ff12f701f3dc097ba2c2",
-    "render": "sha256:b0de579fed2c9ac049bd938688606d6078ca2784e4b5fd14c169e6ba60bca580",
-    "goldenOnDisk": "sha256:94826ba50c86da9523af939848967b83a2438349b5c7518298108c9ef50c9880"
-  }
+ "version": 1,
+ "component": "organisms/PrinciplesGrid",
+ "kind": "frames",
+ "verdict": "pass",
+ "reviewer": "rebaseline",
+ "reason": "Re-baseline after the capture moved to software raster for byte-reproducible PNGs: this component story set 's DOM golden is byte-identical to the prior one and only the PNG raster differs; the receipt is re-recorded from the deterministic capture.",
+ "discrepancies": [],
+ "hashes": {
+  "golden": "sha256:94826ba50c86da9523af939848967b83a2438349b5c7518298108c9ef50c9880",
+  "file": "sha256:a913f49784ea798ab7d15d3f56bfa675c2ef917103e2de158891754eb442ae67",
+  "story": "sha256:3e9b98969b5e6611ddf3eb1a5e8e6e41bafd3ca2621a62ed1bb7c5aed844c7db",
+  "frames": "sha256:3af50d69161064f375eabb849298bcd52b0c156ed5b3e9b04977fdded4117ce5",
+  "render": "sha256:25175f20a3794192207967816bfa994e366b50d18fefda61fbbd399ed5344426",
+  "goldenOnDisk": "sha256:94826ba50c86da9523af939848967b83a2438349b5c7518298108c9ef50c9880"
+ }
 }

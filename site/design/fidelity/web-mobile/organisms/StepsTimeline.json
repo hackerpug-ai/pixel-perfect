@@ -1,17 +1,17 @@
 {
-  "version": 1,
-  "component": "organisms/StepsTimeline",
-  "kind": "frames",
-  "verdict": "pass",
-  "reviewer": "rebaseline",
-  "reason": "the captured PNG, the component, the story, and the frames are the ones this judgment names",
-  "discrepancies": [],
-  "hashes": {
-    "golden": "sha256:879407e2c1268a90c319a40041e05ba0d989045559f0999375bdd6088dd66a71",
-    "file": "sha256:e59ff80ce6c2bffb14bc3e56d62189ba2c6b7ac223e1f65bc75fd7980f47607c",
-    "story": "sha256:744ab82bcdaa0421d1a1175ba6a2e21f598539ae94bbc1a9a25ab314c28c6bde",
-    "frames": "sha256:305d727c9ff1172b1840d10ae374cf44be4cdf2692e8f7f760daec67c9ac3dbb",
-    "render": "sha256:babe684486b63a18cfe892c79595aaf22f77d46e7107ebf878c8a75a93ad7822",
-    "goldenOnDisk": "sha256:879407e2c1268a90c319a40041e05ba0d989045559f0999375bdd6088dd66a71"
-  }
+ "version": 1,
+ "component": "organisms/StepsTimeline",
+ "kind": "frames",
+ "verdict": "pass",
+ "reviewer": "rebaseline",
+ "reason": "Re-baseline for the 10.0.0 release: the only deltas from the prior golden are the intended content refresh (V10 slug and date, v10.0.0 clone tags, recomputed run stats and cascade, the status panel 10.0 gates, the judge and real-PNG step copy, the agents blurb on Home), each verified line-by-line in the normalized DOM; structure and styling are unchanged.",
+ "discrepancies": [],
+ "hashes": {
+  "golden": "sha256:efcb8b2b598cc2111e45cad60a228eed510b391898af8fcabcdd96985278fdfd",
+  "file": "sha256:3593da2903d5c28de44f65881f0e2705efd0bdd6463c385a494fe9d3e861ab10",
+  "story": "sha256:744ab82bcdaa0421d1a1175ba6a2e21f598539ae94bbc1a9a25ab314c28c6bde",
+  "frames": "sha256:9c31cf60eab92afe99219dfa097984b6b97765c3eb28e24e0a13488fec832abe",
+  "render": "sha256:27aed2dff9c54e68ff508ad10cbb3ab7331cfee2a63de2762e2d8e141d8a0950",
+  "goldenOnDisk": "sha256:879407e2c1268a90c319a40041e05ba0d989045559f0999375bdd6088dd66a71"
+ }
 }

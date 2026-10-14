@@ -9,7 +9,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:187c46b495dc5cfeaadfb2264a4994258fdda9c4100f4e09d1dc4d1090371f5e",
+        "hash": "sha256:fcd769fda635852e31bde7597dcc9ea0de7c2aa937832411524beef967f86517",
         "width": 390,
         "height": 900,
         "inkPixels": 10140
@@ -26,10 +26,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:6db5147b18852331282160f51c2fb8b87d3f7ba82a61971c9f5a3e741674ee76",
+        "hash": "sha256:e1682a72cc60c27bea33055a29d0263a372e7d9c12baf8a97d19cc58a917aca3",
         "width": 390,
         "height": 900,
-        "inkPixels": 10140
+        "inkPixels": 10135
       },
       "source": {
         "file": "src/lib/components/atoms/Button.svelte",
@@ -43,7 +43,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:1bf8204505f2417204209fc5f09149d9d77e3dff3848c69c4fd5b38d46c1abd5",
+        "hash": "sha256:af8e76e7082146dbe5da6bd881ec35cae84aad191cec27b9061cf90aa4e6aa41",
         "width": 390,
         "height": 900,
         "inkPixels": 4586
@@ -60,7 +60,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:7f2989c6e4e25b95198d1ca630d0324a8551bdd35907e2bf0505cdec5f0860b1",
+        "hash": "sha256:47d51aa7a8fd46747182633079decda93a149818cbd363855c2f0e79e2af669a",
         "width": 390,
         "height": 900,
         "inkPixels": 4586
@@ -77,7 +77,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:d3cb3108d734c4854096523705f503e9b020863364810f59c897a0560a17b124",
+        "hash": "sha256:62f232f872c82fac1c26a6fd88824e905e282c369b7e87d8d881fd70ed7dc64e",
         "width": 390,
         "height": 900,
         "inkPixels": 5936
@@ -94,7 +94,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:dd2819aabf6af567deae2ef1a6d932a1f4531810fb08abd435c3ee21429a7ffb",
+        "hash": "sha256:4bf7ce725efb94780cf919415286b658b4ebd912943f9e0088838e3a0615b2bf",
         "width": 390,
         "height": 900,
         "inkPixels": 5936
@@ -111,7 +111,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:7d53a9ec3f7bd5d2f7dd18aa28dbc87f62e2bcc27f2ffaa3e9ab48d1466a09cf",
+        "hash": "sha256:f15fb819f0a972662ad694cc5e5300032d234a577afcbf7f142d9f7e0739a887",
         "width": 390,
         "height": 900,
         "inkPixels": 3566
@@ -128,10 +128,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:ca96afb2a3627739836226c24bad6ada2c6341fa00da9ab8c78b0f209b818325",
+        "hash": "sha256:4635232dbcf59434cd19cc5b7f92a2e058b15b2a2ca43f17345a8f48a8df1923",
         "width": 390,
         "height": 900,
-        "inkPixels": 3566
+        "inkPixels": 3563
       },
       "source": {
         "file": "src/lib/components/atoms/Button.svelte",
@@ -145,7 +145,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:608b63a9c61a0937838040528161c92d9944463c164f54729a3fd09be5960950",
+        "hash": "sha256:468d9a19602f153a335105450e49d47813d721ead0707c70c25d788fc11f0bb7",
         "width": 390,
         "height": 900,
         "inkPixels": 2542
@@ -162,10 +162,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:30f2aa1df0cfc20230736d15e6728357efd3f14a7074b7215c23661c6d1d5c08",
+        "hash": "sha256:2dae17af5ed69385a26895ba2a20230749d8ba713454d9d6a93df50132527e86",
         "width": 390,
         "height": 900,
-        "inkPixels": 2542
+        "inkPixels": 2541
       },
       "source": {
         "file": "src/lib/components/atoms/Button.svelte",
@@ -179,7 +179,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:bc4f5567f38ba093b715e8c2d1ab7b32fef7c6b6dfed570f50725becea0a8337",
+        "hash": "sha256:7cc29482f3dce4b64f354b13f9f817e970c868f6fd629f9571c5721a55b1a7ce",
         "width": 390,
         "height": 900,
         "inkPixels": 8175
@@ -196,10 +196,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:d851944fb448d06341e62d7f3f6536a47b8fee797731c546bf7c67e3896a1e62",
+        "hash": "sha256:49e7fb956681bc22a0aa95cc6d59bbb067fb6fe5c6c9554b0a06ef5dc774ffb5",
         "width": 390,
         "height": 900,
-        "inkPixels": 8175
+        "inkPixels": 8166
       },
       "source": {
         "file": "src/lib/components/atoms/Button.svelte",
@@ -213,7 +213,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:bc9e3048d8643e9508f9c89a61446dd9ef8678ac6006f2a0ee02310e01158efe",
+        "hash": "sha256:b2da1f5fbc97fcfb13df6f6f5711e4da23e840c8b4f999cc984e522caa5482c5",
         "width": 390,
         "height": 900,
         "inkPixels": 749
@@ -230,10 +230,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:e6f2e7bd630accee71827084f5e8792fae3bf29ef02757221416058d2a1347a7",
+        "hash": "sha256:d0ff8df970efa098bac8c12414996d2da859e37a128eadcc5f28fe58e86664de",
         "width": 390,
         "height": 900,
-        "inkPixels": 749
+        "inkPixels": 744
       },
       "source": {
         "file": "src/lib/components/atoms/Button.svelte",
@@ -247,7 +247,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:15c717fbf8ca20cb37bd9eb2b1f239ab99be95adaefc9faa79ac930eb494007d",
+        "hash": "sha256:ad1ddace420bed45b96c3579dcf1b548cead9457a28b01ef475351a299ec11af",
         "width": 390,
         "height": 900,
         "inkPixels": 691
@@ -264,10 +264,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:6e8d52b74bdb4b2f1211f866b7645420049c53fa646352a2ed2410380026b58c",
+        "hash": "sha256:ed099ee859ed3d95eeb5e8f09f692c5e21e29843d12a74e1318ed988e24390f0",
         "width": 390,
         "height": 900,
-        "inkPixels": 691
+        "inkPixels": 685
       },
       "source": {
         "file": "src/lib/components/atoms/Button.svelte",
@@ -281,7 +281,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:158d71f128a389e48a694568ee5d658b7e222c5f9176e5ab19fdd50f6c22fdbe",
+        "hash": "sha256:7ee64c638ae9f0ac737b05ff99932399213d513930c0ab80f2440ccf6e679b5a",
         "width": 390,
         "height": 900,
         "inkPixels": 407
@@ -298,10 +298,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:7bc304aa02bce256435118ca2fdb81029d1a46cac70bdaa73f0f5a567efb3b66",
+        "hash": "sha256:0bab8cbe30e8c2ad83fc7a8741b9ac899533b132a2440d663f25f8633f1b7c00",
         "width": 390,
         "height": 900,
-        "inkPixels": 407
+        "inkPixels": 402
       },
       "source": {
         "file": "src/lib/components/atoms/Button.svelte",
@@ -315,7 +315,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:f2988fdd2f1013b951f0f26748f77172f7742c18078eceb007a3233a7550b510",
+        "hash": "sha256:20cd886f5a3123f0ecc1df95d7dd96e830fc6da6804795dd61dd2e99e8b7a64c",
         "width": 390,
         "height": 900,
         "inkPixels": 3477
@@ -332,10 +332,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:2f3554e6b1a14c5aee99d747f582ffe003559f6d8250efd8d5b986f4eb1ed4af",
+        "hash": "sha256:e965142d3a3c63b8c3e7a17fc27480cb6eba496a3ad6f567299a973b3768d435",
         "width": 390,
         "height": 900,
-        "inkPixels": 3477
+        "inkPixels": 3474
       },
       "source": {
         "file": "src/lib/components/atoms/Button.svelte",
@@ -349,7 +349,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:9fb1da708ef90ce673a9ab8a9b44e72f533850de6eb95d7e3f73e1ffeeab8708",
+        "hash": "sha256:d123fe735fe910cdf55f4814886eb2923b0643026657dee086134700b2459572",
         "width": 390,
         "height": 900,
         "inkPixels": 1280
@@ -366,7 +366,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:7a4dec535fe47123fe015cdd9d52eb12a666a516f36a017cdc74db71a4b6eab2",
+        "hash": "sha256:1fb82c0d6f083a6b589b23cac78c2a897cf275a76c5da325a3a661d66bbae05c",
         "width": 390,
         "height": 900,
         "inkPixels": 1280
@@ -383,7 +383,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:d66c48ae8b103b204046f0cb49d1ec4c122326773582e172e8cd6023844637b5",
+        "hash": "sha256:e7781bddf8573de1ec2ac3e200bb0daa316deb3c0f26d8bfadfa61b88a0db083",
         "width": 390,
         "height": 900,
         "inkPixels": 2240
@@ -400,7 +400,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:e9817fbe8f1b3755b5e1e1d90c74816b09b7ee64bc301b6b4ae685058c9d1e7e",
+        "hash": "sha256:9374ad0ef49c13333776f863b0c666ef7ecd081705afd8b6e0a41e9d3424e3f0",
         "width": 390,
         "height": 900,
         "inkPixels": 2240
@@ -587,7 +587,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:e7c99555da6e966ee91288a58ff3cd102828e3cd4686ba60edd348759a5db0c8",
+        "hash": "sha256:aadbb8f8188c6336e2f33a259b1a75c6c7ce48a048502889e5f1b151746b06b8",
         "width": 390,
         "height": 900,
         "inkPixels": 32
@@ -604,7 +604,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:4308edc6e4b01e23b5c7e459d6819a7032ae61f1eaaf97061b16494448d4917c",
+        "hash": "sha256:449bff4f3dc17909f33ed796dc2d32d6862e6c8ec64124fe7341273d40862052",
         "width": 390,
         "height": 900,
         "inkPixels": 32
@@ -621,7 +621,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:fc0762c8bf2eba12aea208b6ab087c10c5b3954613f97796dcddd348a58d0814",
+        "hash": "sha256:821cbbae349fae48645773ad701c8204c3dabb0b78f2149ef1f06fe7745fcc91",
         "width": 390,
         "height": 900,
         "inkPixels": 18
@@ -638,7 +638,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:deb7f0cb2491539884e28d0e8044be93064fe87cf981ad63f27104ced05dc746",
+        "hash": "sha256:110bd67848f94f407fe622a83b21156b912484914da94917f82076d94156651e",
         "width": 390,
         "height": 900,
         "inkPixels": 18
@@ -655,7 +655,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:e4a4f155ee7079a3ab70a10860131241a818d39da949b74c4b0f5cba1fb986e9",
+        "hash": "sha256:aee32112839dfff513c2e87c3a4cc1c35ea4f4d42f957d0337619a9b5f602770",
         "width": 390,
         "height": 900,
         "inkPixels": 1992
@@ -672,10 +672,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:47de1066579729f7f3ad01664ed7ded955d3a625465e72e15b6bf6c0af3d0453",
+        "hash": "sha256:9c6eeeecd611a078a940c0676fcd0732b7f67be1470675166bfa73d0f7128ed2",
         "width": 390,
         "height": 900,
-        "inkPixels": 1992
+        "inkPixels": 1968
       },
       "source": {
         "file": "src/lib/components/atoms/InlineCode.svelte",
@@ -689,7 +689,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:09314e68156ae2e5675e665301688a8c5a5e579cc0b7e527ccdb1000255c1e83",
+        "hash": "sha256:ce51baa9be04645ed550305c74bb4ad74789bbac267050013307cc39cfa96f10",
         "width": 390,
         "height": 900,
         "inkPixels": 3208
@@ -706,10 +706,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:0b7130ccf5f71cdfdc8bf1cdd07eb28edec72684be722fb6a055212a77f0fbc1",
+        "hash": "sha256:e24da47a02ad900ea3638dcd58e6a2d90cb287a78fcc89a3d092e52e2f922fc9",
         "width": 390,
         "height": 900,
-        "inkPixels": 3208
+        "inkPixels": 3157
       },
       "source": {
         "file": "src/lib/components/atoms/InlineCode.svelte",
@@ -723,7 +723,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:7b9182d907dc04a07d674fa6222536652af47e8c419225e0b768c92b64f61a5e",
+        "hash": "sha256:d0b0e50560c4bb471a682b61a8d1f47b0fedb28adb81ecf23d59ea58f22af3ac",
         "width": 390,
         "height": 900,
         "inkPixels": 2365
@@ -740,10 +740,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:e47f5682df9e1180154b9578aeadfc89afc2802bfa12590b00c0a441cb223820",
+        "hash": "sha256:5eba402dfa80c3b303cd72367e37fc3fb7719e3efbc9614732f020b991b747be",
         "width": 390,
         "height": 900,
-        "inkPixels": 2365
+        "inkPixels": 2342
       },
       "source": {
         "file": "src/lib/components/atoms/InlineCode.svelte",
@@ -757,7 +757,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:0cfa3cc77fbc234d908553c3c92b21d51f323f1ceb5bcb3a42ac49ed4249f627",
+        "hash": "sha256:acfb7793b576bff46548158c456a7e221de72c3ec120ffe3af24ac8764d1e61b",
         "width": 390,
         "height": 900,
         "inkPixels": 783
@@ -774,7 +774,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:2b1520265555520835ba598f5ce3e82bd6a9f43e33f7c8ac0ba28385a802c319",
+        "hash": "sha256:7f21bb1a2d36ce23736532e7196e3bd320e4d1126483c1c8c4a3a5a1515e780b",
         "width": 390,
         "height": 900,
         "inkPixels": 783
@@ -791,7 +791,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:e6996ef95a38b353a992a7f570f04f9f56483919c1757d7152e2ae0bf08ab84a",
+        "hash": "sha256:2f673d8ef694a9039e29555b4289bb00d5a1a3f68194c33c83e2befac7b8c2c0",
         "width": 390,
         "height": 900,
         "inkPixels": 6178
@@ -808,10 +808,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:a3c585c24ee531924472c2ff862f4b34c39360641a6fea32f40f28768307e0ff",
+        "hash": "sha256:470256486cd7a3708a181efe10ed576c889f29f02f0799e090a79cf9f0d20418",
         "width": 390,
         "height": 900,
-        "inkPixels": 6178
+        "inkPixels": 6099
       },
       "source": {
         "file": "src/lib/components/atoms/InlineCode.svelte",
@@ -825,7 +825,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:2e12948153a0c499bb637dd60edf78cd748efab81d8c8471f24f814bc6fe80ac",
+        "hash": "sha256:589aa708b35570b44da99c7f0e701587a8088224c1b4756445b8368ecd237610",
         "width": 390,
         "height": 900,
         "inkPixels": 1692
@@ -842,10 +842,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:95e5528412ba9d17170340a8783142d61554b8ad1d9b7d5438d52fea545026ef",
+        "hash": "sha256:1aa01916877f82a54cf64a355ee91fb4faca96d167bce91575ab92fd06598d88",
         "width": 390,
         "height": 900,
-        "inkPixels": 1690
+        "inkPixels": 1672
       },
       "source": {
         "file": "src/lib/components/atoms/Logo.svelte",
@@ -859,7 +859,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:dda3a0b053140cda4472c1fa8684d31f35646bc4a7cf6151632fd8a83e712c8e",
+        "hash": "sha256:e1c731034f77c37692f9cfa639fc45ebc5f74e10c790afbc969c98b3b4e102be",
         "width": 390,
         "height": 900,
         "inkPixels": 243
@@ -876,7 +876,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:2006ca6e921aba407a6fb4b9e29626f5e8c49ec43fcba3289588f7ed16b6be18",
+        "hash": "sha256:20562fe166cf87f5623618ada5108d7b1d910e1e3f9e1e2e52f80945501616da",
         "width": 390,
         "height": 900,
         "inkPixels": 241
@@ -893,7 +893,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:2e12948153a0c499bb637dd60edf78cd748efab81d8c8471f24f814bc6fe80ac",
+        "hash": "sha256:589aa708b35570b44da99c7f0e701587a8088224c1b4756445b8368ecd237610",
         "width": 390,
         "height": 900,
         "inkPixels": 1692
@@ -910,10 +910,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:95e5528412ba9d17170340a8783142d61554b8ad1d9b7d5438d52fea545026ef",
+        "hash": "sha256:1aa01916877f82a54cf64a355ee91fb4faca96d167bce91575ab92fd06598d88",
         "width": 390,
         "height": 900,
-        "inkPixels": 1690
+        "inkPixels": 1672
       },
       "source": {
         "file": "src/lib/components/atoms/Logo.svelte",
@@ -927,7 +927,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:b90d2fc158c63a2e1e3f632b7814cbc5705586979aa1cc97d95ed5b349e4a97e",
+        "hash": "sha256:1d17427b7f3fa61799c33f8b244233455c180336ad4be0e8405d63d41f493840",
         "width": 390,
         "height": 900,
         "inkPixels": 197
@@ -944,10 +944,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:f39c4406a146ded25eee6f271f124ed8a40e6b9c4dcaab5e13b89515fa4aac9d",
+        "hash": "sha256:b1d3a7d109b9ae34e664b3e4398a6fc626df613129b3b0157182e56736f2ae2d",
         "width": 390,
         "height": 900,
-        "inkPixels": 197
+        "inkPixels": 193
       },
       "source": {
         "file": "src/lib/components/atoms/NavLink.svelte",
@@ -961,7 +961,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:5b4a201adda22681aa2f42320a392287e9498b7f4d00a9304f2b9779ce062b9c",
+        "hash": "sha256:4b85664641ad3058195280c1a1ea17220f79a68bacb880771df62a2692672793",
         "width": 390,
         "height": 900,
         "inkPixels": 354
@@ -978,10 +978,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:2aaffc766263e59d5025af9565b5e930204787242d179e4633131890a91b3b08",
+        "hash": "sha256:9661d7f0186178d0306ec493b2b56577ef44dc0ccde658922ef7dfa5ef0a8311",
         "width": 390,
         "height": 900,
-        "inkPixels": 354
+        "inkPixels": 351
       },
       "source": {
         "file": "src/lib/components/atoms/NavLink.svelte",
@@ -995,7 +995,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:a24dca6eb7702999d88f12e4512d268e8469c3b36e9a7584d7188e96c6836b28",
+        "hash": "sha256:d0a54def601aa41aafd721ddeed394e6ee844fb809c567137845c8e83e283bd0",
         "width": 390,
         "height": 900,
         "inkPixels": 99
@@ -1012,7 +1012,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:e24c334ed6e09275cf8af709ded1ae0ead56c23a824994bd86e69d35f0fc5643",
+        "hash": "sha256:1d4e9ea0620c140868c5815e7983576559587a47a8e9757ac6eb646789243d4e",
         "width": 390,
         "height": 900,
         "inkPixels": 99
@@ -1029,7 +1029,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:b7b451d3288208f3470edd9e95c0a3b736175a48ad84a7bfa3fbb5644de0c562",
+        "hash": "sha256:6cc9e4b345ab9ba97a709979dd5fa9b7d2a28bea1f2c1f855a79f05f9f54bb32",
         "width": 390,
         "height": 900,
         "inkPixels": 274
@@ -1046,10 +1046,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:597818dc2164cc276689006aec48c90f27d991cc70468723e462e48fbb499fab",
+        "hash": "sha256:e5daf7df3d1f9e6901c0eb72b36cc7179ea2b3cb97d068672578255b5b922d85",
         "width": 390,
         "height": 900,
-        "inkPixels": 274
+        "inkPixels": 273
       },
       "source": {
         "file": "src/lib/components/atoms/PlateLabel.svelte",
@@ -1063,7 +1063,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:075eb8fa2a73d9e96b45721fe342f262b9b82e87ef64a949cd388a436f88f207",
+        "hash": "sha256:38381a9368d7df2ed8f72356fedac191bd8aa7f6933b98663d3d6d0cb4ddb95e",
         "width": 390,
         "height": 900,
         "inkPixels": 373
@@ -1080,10 +1080,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:dc79cd97a51a9996a4b59c5b3eba32ac5deec5ee54344bef58938f3628a75520",
+        "hash": "sha256:4f8e432ba44def4ad8a44d08c11888feb931192904fec098c1cc20f60c796420",
         "width": 390,
         "height": 900,
-        "inkPixels": 373
+        "inkPixels": 371
       },
       "source": {
         "file": "src/lib/components/atoms/PlateLabel.svelte",
@@ -1097,7 +1097,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:58c2ad10c574ee6c43f539faa8796f922e19fd5ed32799bef31879f864a87954",
+        "hash": "sha256:9a0dad621ca3c69abd7b9afecfa8c38e16e5611ef30734826c5e2a42774e693a",
         "width": 390,
         "height": 900,
         "inkPixels": 207
@@ -1114,7 +1114,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:33fcdb5061fe335b0ce8e1941542429027a4eca37e0fd754457eaf58aee715e3",
+        "hash": "sha256:987a0265c56a521ef54f9875a5cf88d681a5f8578dc56dea8e01a34ab6a9ece4",
         "width": 390,
         "height": 900,
         "inkPixels": 207
@@ -1131,7 +1131,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:3fd815e7e761615d8e81f70b8f16bd180006c439a2d368b87a31d5f9dbb30106",
+        "hash": "sha256:71fb2e4a0c2228942b8d9ed13b42f4059a385547c0dc6d69ff2cab9c12b2df90",
         "width": 390,
         "height": 900,
         "inkPixels": 15032
@@ -1148,7 +1148,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:9ec6e0585b469500363ad23fe5b5fe214f27178683ac185e138aa5cd7e3f7d69",
+        "hash": "sha256:eb3c954ec3c46206852f8302cd0aef7d94f7f8a28c8a8511831a6606d05cf758",
         "width": 390,
         "height": 900,
         "inkPixels": 15032
@@ -1165,7 +1165,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:bd370069f340708b7f59f2ea974a2c89410aa3e0ee0e7e661002731bda64a230",
+        "hash": "sha256:5e9a2a457dcd8693e79f82bd4ecce52508b1837a9ee5754bd0cfa0b0173c5cec",
         "width": 390,
         "height": 900,
         "inkPixels": 673
@@ -1182,10 +1182,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:6d4e1b40defa0bd5976469d4a0e4fe18a9e28dfb68623d37af197d84e9fadfc6",
+        "hash": "sha256:9ca5f196c1b0c21b89a06a59a5a7183c7d25722994f3e86a25e5a6824bde3b11",
         "width": 390,
         "height": 900,
-        "inkPixels": 673
+        "inkPixels": 666
       },
       "source": {
         "file": "src/lib/components/atoms/PlateLabel.svelte",
@@ -1199,7 +1199,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:51a27c413b7fcee8b069a308141887d9a0e1a940fa96ef3ec611e95ee4502ccb",
+        "hash": "sha256:78a803d8647ef1b0f3e2d14a91c78681b99657cb0cacbdbec01d209a5fd8ea1d",
         "width": 390,
         "height": 900,
         "inkPixels": 11114
@@ -1216,10 +1216,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:719db952d68ba831b0ce27cea24cdcc389a50f917e43162f44fd4015dbcb5eb2",
+        "hash": "sha256:71ce87bbacf407262d94f0b11b2e17d5701eccc30b6546e9aec62bb4e8bd2dc1",
         "width": 390,
         "height": 900,
-        "inkPixels": 11114
+        "inkPixels": 11067
       },
       "source": {
         "file": "src/lib/components/atoms/PlateText.svelte",
@@ -1233,7 +1233,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:8b8948077b55259f5d21ecb709c2c2cae3d545f7d50dffa1eef8b0cbd8295c2d",
+        "hash": "sha256:4e478b55484b800b31435c799fc3f2ef82bbfd745220269e3c736c3d7964884e",
         "width": 390,
         "height": 900,
         "inkPixels": 28052
@@ -1250,10 +1250,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:53a1c30cb0d42a36f6c458d8ed843c344ff6d920d3060c6d10f7a104da46e65a",
+        "hash": "sha256:4a621c4ab20858dab2ec583625187f80b6deb814d258ea6503c1a8ab54ea8b4c",
         "width": 390,
         "height": 900,
-        "inkPixels": 28052
+        "inkPixels": 28041
       },
       "source": {
         "file": "src/lib/components/atoms/PlateText.svelte",
@@ -1267,7 +1267,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:cbb4ed72456ad5ff3c17ef2ea5f3083beb76061d64db6d221c9c9c2853512fc9",
+        "hash": "sha256:9de971457f22d8281e4cef3cba329ccb216b8e4ef86520e929d97e3b6417944e",
         "width": 390,
         "height": 900,
         "inkPixels": 10701
@@ -1284,10 +1284,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:a3625e2e6c291851078a5abd06f6e1b7c1b9d13991b3f8ee0deab79dae0d42c3",
+        "hash": "sha256:895e5e6b438dc0cc7847218f3fe2bf6093d0beb87f6fc0da5c119a9331620fa8",
         "width": 390,
         "height": 900,
-        "inkPixels": 10701
+        "inkPixels": 10656
       },
       "source": {
         "file": "src/lib/components/atoms/PlateText.svelte",
@@ -1301,7 +1301,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:3a5437f67ceb10da71d3e4550957792b1ce137441edcfc9ffa8245a9072f2791",
+        "hash": "sha256:47f0787a1b5c1937bf5a5ac2bb3642fd464c3e603c2fb0fc3e6557e3b8b7eb47",
         "width": 390,
         "height": 900,
         "inkPixels": 20919
@@ -1318,10 +1318,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:f645c3d66eaa869ef36da27917d2252b4a11e9d0962427df9ba632093338f2a5",
+        "hash": "sha256:f047665f937a2b134ed01e3b3b7d5aeee85be93cf0dc457532075495db98330d",
         "width": 390,
         "height": 900,
-        "inkPixels": 20919
+        "inkPixels": 20834
       },
       "source": {
         "file": "src/lib/components/atoms/PlateText.svelte",
@@ -1335,7 +1335,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:f5cd2dc2c312496b7cf1bf7b59f23938e881a738a9ac5e46125758290ff8a019",
+        "hash": "sha256:3ac2137deb81d7fca3dd999ed6c0ff18da9e08642f79768228f9c9eb556a690c",
         "width": 390,
         "height": 900,
         "inkPixels": 42342
@@ -1352,10 +1352,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:703e4fca88d2b14efdc4989002f82ccbe75c2b70b9d173bada87e3a3a9c0eecc",
+        "hash": "sha256:ff50a67886b68f8aa5d7f4e1ed4f45be41159c30ae538ead7dda4e28587864e6",
         "width": 390,
         "height": 900,
-        "inkPixels": 42342
+        "inkPixels": 42317
       },
       "source": {
         "file": "src/lib/components/atoms/PlateText.svelte",
@@ -1369,10 +1369,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:679db2b2654317d5152f2f7eabb764ab420546298a914024f4ffb5f312e55a36",
+        "hash": "sha256:916250f00a1766f96496d7b0ef2120b1961e07222a6c90847de8e88efa5cd200",
         "width": 390,
         "height": 900,
-        "inkPixels": 2536
+        "inkPixels": 2504
       },
       "source": {
         "file": "src/lib/components/atoms/PlayButton.svelte",
@@ -1386,10 +1386,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:054e175575896de12dc684dc4feb840ec583fbc21fbfac272129b260a13a2861",
+        "hash": "sha256:ba36d733b03802c1154201babd1ec32e112eb330a68e297d53a394bfda1b709c",
         "width": 390,
         "height": 900,
-        "inkPixels": 2536
+        "inkPixels": 2504
       },
       "source": {
         "file": "src/lib/components/atoms/PlayButton.svelte",
@@ -1403,7 +1403,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:3774de9b57400b40f4ffd385c08b7e1e9e96f67acf5e48063013b22483631a00",
+        "hash": "sha256:8573d0225a236f6e4df81e428fdb2c403c87a6b49273e957d65e1596ee5fca89",
         "width": 390,
         "height": 900,
         "inkPixels": 5018
@@ -1420,10 +1420,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:1777db2fccf6cd11b513ae9cccc42c1f6c173a684210993af6cec4ed921784b3",
+        "hash": "sha256:932500cfb454a2eeae1e0fe31948534d971edc16a277a16abdde27a514cfc6f0",
         "width": 390,
         "height": 900,
-        "inkPixels": 5018
+        "inkPixels": 4973
       },
       "source": {
         "file": "src/lib/components/atoms/PrincipleCard.svelte",
@@ -1437,7 +1437,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:de7e3c4ec6f0517e6cbd02bb0a9a5f5c7be766d30015beccef8a7e9d488a9495",
+        "hash": "sha256:af238e6e3c5678e300affc16093756cddbfd40ec1e7af3dcbba087968e3d94c4",
         "width": 390,
         "height": 900,
         "inkPixels": 4273
@@ -1454,10 +1454,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:14f5efdfe5063017f122e8cd07aeb0b9eb1a0349460666652b58b146aa1960f7",
+        "hash": "sha256:85ffc97ba90ae62563206e41747f5ffdd98edd020bd58691157758ea00f5de99",
         "width": 390,
         "height": 900,
-        "inkPixels": 4273
+        "inkPixels": 4225
       },
       "source": {
         "file": "src/lib/components/atoms/PrincipleCard.svelte",
@@ -1471,7 +1471,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:772a5e7bbef0e15963e72ae81df31cef812727882c95eec82c0da5dbbc2b605b",
+        "hash": "sha256:eb63b32a427f372d96184397644fd2a5467430be820172b5343bfcb5485091de",
         "width": 390,
         "height": 900,
         "inkPixels": 5320
@@ -1488,10 +1488,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:09801227727919242575ba8abec14efa1ea8541ed7e66af686e2c469f063133d",
+        "hash": "sha256:0743aa5d29379afd0c75bda0caad758a950eae83fdfa14a5530aaceb5947116f",
         "width": 390,
         "height": 900,
-        "inkPixels": 5320
+        "inkPixels": 5254
       },
       "source": {
         "file": "src/lib/components/atoms/PrincipleCard.svelte",
@@ -1505,7 +1505,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:a965fa4c1039042a7da6ad5414dc968a0fb2bd6cecf20594e4ba40fc603703a5",
+        "hash": "sha256:b5680b925d8b7172838602c3236fd465770a21f4963d7b57cba4f74a890b9af1",
         "width": 390,
         "height": 900,
         "inkPixels": 7202
@@ -1522,10 +1522,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:ff68ae7797e48678d57d7258a958c6a126ce59f239ac4a5d6dd35d5c5cefdf94",
+        "hash": "sha256:4f783e90ee85fcb53101e4b7d07819b70a467fb0f9281c27074c8558c79a8d65",
         "width": 390,
         "height": 900,
-        "inkPixels": 7202
+        "inkPixels": 7126
       },
       "source": {
         "file": "src/lib/components/atoms/PrincipleCard.svelte",
@@ -1539,92 +1539,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:f21d2a2313d614c3433d3fa35af2548630a4e7e7e955d9d5371852991dfb230a",
-        "width": 390,
-        "height": 900,
-        "inkPixels": 661
-      },
-      "source": {
-        "file": "src/lib/components/atoms/ProofMark.svelte",
-        "fileHash": "sha256:b7b3f7c6892d8f3812a397d60699a881e23e8862a8b97f8121e54be0ff6db06a",
-        "story": "src/lib/components/atoms/ProofMark.stories.svelte",
-        "storyHash": "sha256:75673099dffa785533c24664ecadfa0ccbe219c8dc8d8a2b6fca3007a1033f54"
-      }
-    },
-    "atoms/ProofMark/default--dark": {
-      "hash": "438a028bba0a900d",
-      "ext": ".html",
-      "mode": "baseline",
-      "png": {
-        "hash": "sha256:0410d30e9e063b497493e5c20931ebefcf8a02b1b8f7037acb91d22d8493e6c5",
-        "width": 390,
-        "height": 900,
-        "inkPixels": 648
-      },
-      "source": {
-        "file": "src/lib/components/atoms/ProofMark.svelte",
-        "fileHash": "sha256:b7b3f7c6892d8f3812a397d60699a881e23e8862a8b97f8121e54be0ff6db06a",
-        "story": "src/lib/components/atoms/ProofMark.stories.svelte",
-        "storyHash": "sha256:75673099dffa785533c24664ecadfa0ccbe219c8dc8d8a2b6fca3007a1033f54"
-      }
-    },
-    "atoms/ProofMark/hidden": {
-      "hash": "1485dcb6c101de6e",
-      "ext": ".html",
-      "mode": "baseline",
-      "png": {
-        "hash": "sha256:13aa10ddc716ba0c9f86bf47bc7f094f6bf33a817b90d78241341719a098ec15",
-        "width": 390,
-        "height": 900,
-        "inkPixels": 253
-      },
-      "source": {
-        "file": "src/lib/components/atoms/ProofMark.svelte",
-        "fileHash": "sha256:b7b3f7c6892d8f3812a397d60699a881e23e8862a8b97f8121e54be0ff6db06a",
-        "story": "src/lib/components/atoms/ProofMark.stories.svelte",
-        "storyHash": "sha256:75673099dffa785533c24664ecadfa0ccbe219c8dc8d8a2b6fca3007a1033f54"
-      }
-    },
-    "atoms/ProofMark/hidden--dark": {
-      "hash": "b190b18246717fb8",
-      "ext": ".html",
-      "mode": "baseline",
-      "png": {
-        "hash": "sha256:fc572766d3e160936ecfd116ba9098d42297f974e4375e67fec9580bdc5a9055",
-        "width": 390,
-        "height": 900,
-        "inkPixels": 253
-      },
-      "source": {
-        "file": "src/lib/components/atoms/ProofMark.svelte",
-        "fileHash": "sha256:b7b3f7c6892d8f3812a397d60699a881e23e8862a8b97f8121e54be0ff6db06a",
-        "story": "src/lib/components/atoms/ProofMark.stories.svelte",
-        "storyHash": "sha256:75673099dffa785533c24664ecadfa0ccbe219c8dc8d8a2b6fca3007a1033f54"
-      }
-    },
-    "atoms/ProofMark/mark-2": {
-      "hash": "d0ff67ca6000ac6a",
-      "ext": ".html",
-      "mode": "baseline",
-      "png": {
-        "hash": "sha256:95152385c740a394c31379cf351deb99219d17c078efa90332ac48bc99f46cd5",
-        "width": 390,
-        "height": 900,
-        "inkPixels": 676
-      },
-      "source": {
-        "file": "src/lib/components/atoms/ProofMark.svelte",
-        "fileHash": "sha256:b7b3f7c6892d8f3812a397d60699a881e23e8862a8b97f8121e54be0ff6db06a",
-        "story": "src/lib/components/atoms/ProofMark.stories.svelte",
-        "storyHash": "sha256:75673099dffa785533c24664ecadfa0ccbe219c8dc8d8a2b6fca3007a1033f54"
-      }
-    },
-    "atoms/ProofMark/mark-2--dark": {
-      "hash": "cf50a62afb20ba3c",
-      "ext": ".html",
-      "mode": "baseline",
-      "png": {
-        "hash": "sha256:910b463edc2ff67dd1d535224e9a74750737d7c617e92e80ca7d4a6f948c0899",
+        "hash": "sha256:d2251c12cbcd32e4c937da38cc6bebd66ff29c9fb3af2652b7c28e8701b46d2c",
         "width": 390,
         "height": 900,
         "inkPixels": 669
@@ -1633,7 +1548,92 @@
         "file": "src/lib/components/atoms/ProofMark.svelte",
         "fileHash": "sha256:b7b3f7c6892d8f3812a397d60699a881e23e8862a8b97f8121e54be0ff6db06a",
         "story": "src/lib/components/atoms/ProofMark.stories.svelte",
-        "storyHash": "sha256:75673099dffa785533c24664ecadfa0ccbe219c8dc8d8a2b6fca3007a1033f54"
+        "storyHash": "sha256:067fd422530ebdfe10703d890a490714b0600c437b0475d113ffe8f8c6da1b5a"
+      }
+    },
+    "atoms/ProofMark/default--dark": {
+      "hash": "438a028bba0a900d",
+      "ext": ".html",
+      "mode": "baseline",
+      "png": {
+        "hash": "sha256:96dab0690978c6f584d34b0dcf3bd73f19b9354d2b4fea510b15a0b482040f16",
+        "width": 390,
+        "height": 900,
+        "inkPixels": 655
+      },
+      "source": {
+        "file": "src/lib/components/atoms/ProofMark.svelte",
+        "fileHash": "sha256:b7b3f7c6892d8f3812a397d60699a881e23e8862a8b97f8121e54be0ff6db06a",
+        "story": "src/lib/components/atoms/ProofMark.stories.svelte",
+        "storyHash": "sha256:067fd422530ebdfe10703d890a490714b0600c437b0475d113ffe8f8c6da1b5a"
+      }
+    },
+    "atoms/ProofMark/hidden": {
+      "hash": "1485dcb6c101de6e",
+      "ext": ".html",
+      "mode": "baseline",
+      "png": {
+        "hash": "sha256:795459d355f79bd2e30edaf8d35fdaf40dfa9afcfc4a8151a8b334e3b756a102",
+        "width": 390,
+        "height": 900,
+        "inkPixels": 253
+      },
+      "source": {
+        "file": "src/lib/components/atoms/ProofMark.svelte",
+        "fileHash": "sha256:b7b3f7c6892d8f3812a397d60699a881e23e8862a8b97f8121e54be0ff6db06a",
+        "story": "src/lib/components/atoms/ProofMark.stories.svelte",
+        "storyHash": "sha256:067fd422530ebdfe10703d890a490714b0600c437b0475d113ffe8f8c6da1b5a"
+      }
+    },
+    "atoms/ProofMark/hidden--dark": {
+      "hash": "b190b18246717fb8",
+      "ext": ".html",
+      "mode": "baseline",
+      "png": {
+        "hash": "sha256:c351fe9c94252026ed132c50e702e66c10cb1e8fcb5da13ef9781e890d98982f",
+        "width": 390,
+        "height": 900,
+        "inkPixels": 252
+      },
+      "source": {
+        "file": "src/lib/components/atoms/ProofMark.svelte",
+        "fileHash": "sha256:b7b3f7c6892d8f3812a397d60699a881e23e8862a8b97f8121e54be0ff6db06a",
+        "story": "src/lib/components/atoms/ProofMark.stories.svelte",
+        "storyHash": "sha256:067fd422530ebdfe10703d890a490714b0600c437b0475d113ffe8f8c6da1b5a"
+      }
+    },
+    "atoms/ProofMark/mark-2": {
+      "hash": "d0ff67ca6000ac6a",
+      "ext": ".html",
+      "mode": "baseline",
+      "png": {
+        "hash": "sha256:b9d2f63ea06322ccf99aacadff9dc813e21651bf4898bd860ea0ee255713fbae",
+        "width": 390,
+        "height": 900,
+        "inkPixels": 684
+      },
+      "source": {
+        "file": "src/lib/components/atoms/ProofMark.svelte",
+        "fileHash": "sha256:b7b3f7c6892d8f3812a397d60699a881e23e8862a8b97f8121e54be0ff6db06a",
+        "story": "src/lib/components/atoms/ProofMark.stories.svelte",
+        "storyHash": "sha256:067fd422530ebdfe10703d890a490714b0600c437b0475d113ffe8f8c6da1b5a"
+      }
+    },
+    "atoms/ProofMark/mark-2--dark": {
+      "hash": "cf50a62afb20ba3c",
+      "ext": ".html",
+      "mode": "baseline",
+      "png": {
+        "hash": "sha256:dcb7167a812f3f4ba337faa6d4a2432a825d3c02fd1f1fd1d0f5405cf5f8cc76",
+        "width": 390,
+        "height": 900,
+        "inkPixels": 676
+      },
+      "source": {
+        "file": "src/lib/components/atoms/ProofMark.svelte",
+        "fileHash": "sha256:b7b3f7c6892d8f3812a397d60699a881e23e8862a8b97f8121e54be0ff6db06a",
+        "story": "src/lib/components/atoms/ProofMark.stories.svelte",
+        "storyHash": "sha256:067fd422530ebdfe10703d890a490714b0600c437b0475d113ffe8f8c6da1b5a"
       }
     },
     "atoms/ProofMark/mark-3": {
@@ -1641,16 +1641,16 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:30a00ad79fd44f0dfe058b72d4b5a2f2a49b7e8ac6cb4853907b0c33e19d1784",
+        "hash": "sha256:23fb9b69d38c45381ecbe0cce33f3f9af5ba32a83b62e8f03f12cd73e896c284",
         "width": 390,
         "height": 900,
-        "inkPixels": 689
+        "inkPixels": 697
       },
       "source": {
         "file": "src/lib/components/atoms/ProofMark.svelte",
         "fileHash": "sha256:b7b3f7c6892d8f3812a397d60699a881e23e8862a8b97f8121e54be0ff6db06a",
         "story": "src/lib/components/atoms/ProofMark.stories.svelte",
-        "storyHash": "sha256:75673099dffa785533c24664ecadfa0ccbe219c8dc8d8a2b6fca3007a1033f54"
+        "storyHash": "sha256:067fd422530ebdfe10703d890a490714b0600c437b0475d113ffe8f8c6da1b5a"
       }
     },
     "atoms/ProofMark/mark-3--dark": {
@@ -1658,16 +1658,16 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:1f8db5b5f4a214e0aff3f03a4d166796d6238e0c6c625c568211a794a411df55",
+        "hash": "sha256:1e8b34d7d804dbd9ce0383eb8b58a126d4861128fce6339832328d18db00edcf",
         "width": 390,
         "height": 900,
-        "inkPixels": 683
+        "inkPixels": 686
       },
       "source": {
         "file": "src/lib/components/atoms/ProofMark.svelte",
         "fileHash": "sha256:b7b3f7c6892d8f3812a397d60699a881e23e8862a8b97f8121e54be0ff6db06a",
         "story": "src/lib/components/atoms/ProofMark.stories.svelte",
-        "storyHash": "sha256:75673099dffa785533c24664ecadfa0ccbe219c8dc8d8a2b6fca3007a1033f54"
+        "storyHash": "sha256:067fd422530ebdfe10703d890a490714b0600c437b0475d113ffe8f8c6da1b5a"
       }
     },
     "atoms/ProofMark/mark-4": {
@@ -1675,16 +1675,16 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:5dffd2cc811b5c27ffd1014aea4710df52a2bb56e4d1330da8ee39449a2008bb",
+        "hash": "sha256:3c54c4893d9249ebc25310db7f1fd3b95f8277ff594a1331710c6018acd93060",
         "width": 390,
         "height": 900,
-        "inkPixels": 680
+        "inkPixels": 688
       },
       "source": {
         "file": "src/lib/components/atoms/ProofMark.svelte",
         "fileHash": "sha256:b7b3f7c6892d8f3812a397d60699a881e23e8862a8b97f8121e54be0ff6db06a",
         "story": "src/lib/components/atoms/ProofMark.stories.svelte",
-        "storyHash": "sha256:75673099dffa785533c24664ecadfa0ccbe219c8dc8d8a2b6fca3007a1033f54"
+        "storyHash": "sha256:067fd422530ebdfe10703d890a490714b0600c437b0475d113ffe8f8c6da1b5a"
       }
     },
     "atoms/ProofMark/mark-4--dark": {
@@ -1692,16 +1692,16 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:d05778bdf0125c1262e950eb2bc9d4b7841429871b9bc2d1dc00ee234d9d879c",
+        "hash": "sha256:5c70747c5a381f520395309f9179b32ce30a8ddf8a6057c131cbdf494e848b9f",
         "width": 390,
         "height": 900,
-        "inkPixels": 679
+        "inkPixels": 685
       },
       "source": {
         "file": "src/lib/components/atoms/ProofMark.svelte",
         "fileHash": "sha256:b7b3f7c6892d8f3812a397d60699a881e23e8862a8b97f8121e54be0ff6db06a",
         "story": "src/lib/components/atoms/ProofMark.stories.svelte",
-        "storyHash": "sha256:75673099dffa785533c24664ecadfa0ccbe219c8dc8d8a2b6fca3007a1033f54"
+        "storyHash": "sha256:067fd422530ebdfe10703d890a490714b0600c437b0475d113ffe8f8c6da1b5a"
       }
     },
     "atoms/RegistrationTarget/default": {
@@ -1709,10 +1709,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:054302ce8fa3775701b5478d7dae10d893683e49ab0a405cf07e94b1479e9c63",
+        "hash": "sha256:f37e6977fa23ab4cda4238bf7f59d0df02e68d63d23148d82ca7b3354a5bbe2f",
         "width": 390,
         "height": 900,
-        "inkPixels": 75
+        "inkPixels": 71
       },
       "source": {
         "file": "src/lib/components/atoms/RegistrationTarget.svelte",
@@ -1726,10 +1726,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:62eff171fcba3e38e46367f6ee697193a6b9e67075abb86543d270c306beec18",
+        "hash": "sha256:e99a33bb8edef3223a220384df1eece14af6bfeb7aab03dc47e619800fd5b06e",
         "width": 390,
         "height": 900,
-        "inkPixels": 75
+        "inkPixels": 71
       },
       "source": {
         "file": "src/lib/components/atoms/RegistrationTarget.svelte",
@@ -1743,10 +1743,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:beb7f3e39d1c697c24279a96fea76427809770f74c7da32467900a50b1713dfe",
+        "hash": "sha256:e02be25c930805da9631c5f92f694c86f2742cfdd83d6d9210f779c2b685076a",
         "width": 390,
         "height": 900,
-        "inkPixels": 240
+        "inkPixels": 236
       },
       "source": {
         "file": "src/lib/components/atoms/RegistrationTarget.svelte",
@@ -1760,10 +1760,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:df0882705cb172ba28445ef5ec1441b26dbe39bd3d3a40ac2ad91631e89043fc",
+        "hash": "sha256:620eb867a9f07a8eeac28d1ab4d85ebfa49fbdc3e4746e78ffaf810da66d0ac9",
         "width": 390,
         "height": 900,
-        "inkPixels": 240
+        "inkPixels": 236
       },
       "source": {
         "file": "src/lib/components/atoms/RegistrationTarget.svelte",
@@ -1777,7 +1777,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:f4a3ccd386d05945537ab23eda6b1d2b5ea27051d52206edd448d322bd9da7ca",
+        "hash": "sha256:bb6115f462fc0d4e0b8a28d0b8160c7543f0ec223cb53ad66b057450a1b7511d",
         "width": 390,
         "height": 900,
         "inkPixels": 6571
@@ -1794,10 +1794,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:4860739c87d41d3633cb6f7d4bf898787289af989b283228b533c3112caa015c",
+        "hash": "sha256:55849ce7eda14fcb1bc7b68998ceb1e552937b7f87997304dcfaac4f1dd182d7",
         "width": 390,
         "height": 900,
-        "inkPixels": 6571
+        "inkPixels": 6538
       },
       "source": {
         "file": "src/lib/components/atoms/SectionHeading.svelte",
@@ -1811,7 +1811,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:ed4d3e49f36b6d731c300af043e0ab22c5a913459a43af4fca48527667f9dc0d",
+        "hash": "sha256:667adb5bc5f034a34e5d27d1e653a9c57790dd304644794078bb807cd1ef63a8",
         "width": 390,
         "height": 900,
         "inkPixels": 3002
@@ -1828,10 +1828,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:0e23a5e51b531559c81d8a48988481c9d583dbfb1c17c040582bc7f47c64a7b4",
+        "hash": "sha256:b95f4f4d918577ee4c4218ba924d4b0e36237a43b01d2a50f868214b1959a14a",
         "width": 390,
         "height": 900,
-        "inkPixels": 3002
+        "inkPixels": 2987
       },
       "source": {
         "file": "src/lib/components/atoms/SectionHeading.svelte",
@@ -1845,7 +1845,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:8f7a7a8851f4b26f381e5ab822eb1f334199232689b1f9b00d6d68abdd8900aa",
+        "hash": "sha256:04dd5b7a9b544ad5824b76a93cc65e0c248c54e09903bc9cbae75198146b595c",
         "width": 390,
         "height": 900,
         "inkPixels": 5274
@@ -1862,10 +1862,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:5f15f83269586cd4df2d5da44543f6ebef5b0e750cc1c557c38feeac877946bb",
+        "hash": "sha256:87b59c21398c8e14960f36a069572c4eeb39142454784402cc1266a02f7dc318",
         "width": 390,
         "height": 900,
-        "inkPixels": 5274
+        "inkPixels": 5228
       },
       "source": {
         "file": "src/lib/components/atoms/SectionHeading.svelte",
@@ -1879,7 +1879,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:0a20c17f03063cff1c83b6952d9e51d870c41868519d4a818b1b9bd24d5d11f2",
+        "hash": "sha256:58fd2f355a4425b5b1d634b41f1c22d5cdb4d0b28f9e1b6c360fe18a982eab62",
         "width": 390,
         "height": 900,
         "inkPixels": 2478
@@ -1896,10 +1896,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:90a97f046dff9876a27e01b91400b9851100444b4c5f73efa95258b776806576",
+        "hash": "sha256:83e9445e0042871274d55227c6203b3a5d0e69e53f79a11c4bd02591d6fdffd0",
         "width": 390,
         "height": 900,
-        "inkPixels": 2478
+        "inkPixels": 2456
       },
       "source": {
         "file": "src/lib/components/atoms/SectionHeading.svelte",
@@ -1913,7 +1913,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:eb4eb7d1615ccc2b0a1a44626ad4543cea01ffd06b4736d3f0c8813fff3b1422",
+        "hash": "sha256:a6a793c18044aa7621cea44af8babe2089c722ab51740cb6d6a616f56a446dfc",
         "width": 390,
         "height": 900,
         "inkPixels": 51200
@@ -1930,7 +1930,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:4332f536dc6cfce1836bc50f4b156cee886f815dc35e685fdb2602fca2b793e4",
+        "hash": "sha256:9b067a1460da2ce7209b25a96ee1d91f0be88f612b97517b9e65a5c102a6949a",
         "width": 390,
         "height": 900,
         "inkPixels": 51200
@@ -1947,7 +1947,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:64a9e82cd0809e64f767bf374d8697b72426edb8fdd9a05e31a773bbc8b295a4",
+        "hash": "sha256:552a1f9a9c5f2e196c3fa7d708524ae2615dbda2fc26ccb0d75a22ab907780ff",
         "width": 390,
         "height": 900,
         "inkPixels": 51200
@@ -1964,7 +1964,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:edac64348f0a4cca0d56f9151a8873de73e280eebb0e8699779db55e22c240d7",
+        "hash": "sha256:904cc250aa9b3e1d5f6e62d8ab971c588cb265cf2153fc21a2b772357660d035",
         "width": 390,
         "height": 900,
         "inkPixels": 51200
@@ -1981,7 +1981,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:267a4ac515dfa665db757df7200960a013cb536e11e585b1df38d00fba8cdded",
+        "hash": "sha256:31a2fc1d31edf46ba30b2c21a6578d80383013e06e97ef4d761694010292e638",
         "width": 390,
         "height": 900,
         "inkPixels": 51200
@@ -1998,7 +1998,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:88a1ca02330b0de5c8d24504435714b03992d4770857256e9b72bcb69615c790",
+        "hash": "sha256:fbba369e94f598c746368ffecaa5d4b38352e3c4c5604df55058ec9cd753bf59",
         "width": 390,
         "height": 900,
         "inkPixels": 51200
@@ -2015,7 +2015,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:fb771a4440aafd0cb563e1e6b6badac68fe060ec16148af95fc36b7eeb16a025",
+        "hash": "sha256:9c8220d3917f52363e462de87b8afad41bca71e772a0e96a9c64f070204e04df",
         "width": 390,
         "height": 900,
         "inkPixels": 51200
@@ -2032,7 +2032,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:d2771a1513dabde98aeef19dbf46a68ae7f3bfc1761723b994c1293dc07b2344",
+        "hash": "sha256:eb6150aeb38cc3bd524ffe96352ee9ec49c56b3030dc5d3add759cf5afd31404",
         "width": 390,
         "height": 900,
         "inkPixels": 51200
@@ -2049,7 +2049,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:c33f707acf0589834d5f4f256ecd3feaf8ed1b3d6d5d537d4a923bf4679661f8",
+        "hash": "sha256:42ebfcad2ac3430cd884931d5a5236d4e90343bf6cec6fcad6a9f9027d4a66c4",
         "width": 390,
         "height": 900,
         "inkPixels": 2363
@@ -2066,10 +2066,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:6ecf509691291ae786147d7301364eea72b5c7c26efd338d8ad7020919b7b572",
+        "hash": "sha256:637a70e3dd2426467fdb0a0639b0afc5b8d59c1413e931edae93a79177017b25",
         "width": 390,
         "height": 900,
-        "inkPixels": 2363
+        "inkPixels": 2334
       },
       "source": {
         "file": "src/lib/components/atoms/SlugLine.svelte",
@@ -2083,7 +2083,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:72a02d2c5e054d05f2bb762d9e205ccd1a7026803d76e785c3278195a89be1ad",
+        "hash": "sha256:ff7ffd0d17940b58784d0f640916e0f1f6f9ada9ba23dd2c7c573d9594e0e906",
         "width": 390,
         "height": 900,
         "inkPixels": 1227
@@ -2100,10 +2100,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:2fb40cb3b87d8f5440a09dfa0def71158af46b399de8b7ba642ad3801d05829d",
+        "hash": "sha256:678cb07ce81e9e328f5120ce71832ab47b0801eda263ae575c5849da10edf9e6",
         "width": 390,
         "height": 900,
-        "inkPixels": 1227
+        "inkPixels": 1209
       },
       "source": {
         "file": "src/lib/components/atoms/SlugLine.svelte",
@@ -2117,7 +2117,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:14e0442aa4504e6e8841e37e591256496aa483425dbdcffe10be384bd85bc215",
+        "hash": "sha256:375404e1081dfb47c26034aebfb5c56ae0720bea9a088d6638fd9369025bf2fa",
         "width": 390,
         "height": 900,
         "inkPixels": 1410
@@ -2134,10 +2134,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:bb25ee1aae94e0cbafdb6f8db67e882f6b93efaf8d895b6c6bda68f54f4cc492",
+        "hash": "sha256:c576b0a7c9ef3d89b20a6df8e3cbaa0aa3fbcb12536bac75bb8177f77210ccc1",
         "width": 390,
         "height": 900,
-        "inkPixels": 1410
+        "inkPixels": 1402
       },
       "source": {
         "file": "src/lib/components/atoms/Stat.svelte",
@@ -2151,7 +2151,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:5300def9f19983cabaee2df27504a282da29c1184ccf6de8e213a5adbb280ed2",
+        "hash": "sha256:fc48ca9f596ba3c4c6e9574202da271c9ef56b997ba84c65091dd1ae384cf839",
         "width": 390,
         "height": 900,
         "inkPixels": 1071
@@ -2168,10 +2168,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:add8e3749a314a34e0d2c58f64e4c484510f61c5f184bad4524d4e43bb08f374",
+        "hash": "sha256:70d4a2fbd7151102629c34924ec00333743214157e8e878473884a887a3e8a2b",
         "width": 390,
         "height": 900,
-        "inkPixels": 1071
+        "inkPixels": 1066
       },
       "source": {
         "file": "src/lib/components/atoms/Tab.svelte",
@@ -2185,7 +2185,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:762e53ffce527646e95bf4fa14e1fc95dd0c5fea79db9ece796ed90a254a21f4",
+        "hash": "sha256:893caae96e95535b1436d90bc566abd32a6b1dcf7878d50997de8c59d9c485e2",
         "width": 390,
         "height": 900,
         "inkPixels": 616
@@ -2202,10 +2202,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:120385b979e57aeb449ed76c749a2ba8fdee20cc3e21a533210887cb95ddf412",
+        "hash": "sha256:fa9a0846339cabf561317f8a29d86d7f0a01496c5ba283a6d0509f8c5d3fff35",
         "width": 390,
         "height": 900,
-        "inkPixels": 616
+        "inkPixels": 613
       },
       "source": {
         "file": "src/lib/components/atoms/Tab.svelte",
@@ -2219,7 +2219,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:89e1167f265bc6bf4fb7b20a44f2ea953279e7a670d23c779a25f4e9dab77e35",
+        "hash": "sha256:fa8c925bf4857021d234f77ffaffb73329427d7e3d8ce998ef697bbac7d6c288",
         "width": 390,
         "height": 900,
         "inkPixels": 3901
@@ -2236,10 +2236,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:1dc798e899e6dbdf01256839dde3f5629558ca2376689dadefca3f5c80a150a5",
+        "hash": "sha256:fbc8e1440dfd6dd6efe2b947d74e7e329506ef8ef82291d1d6182a85d1c004a8",
         "width": 390,
         "height": 900,
-        "inkPixels": 3901
+        "inkPixels": 3834
       },
       "source": {
         "file": "src/lib/components/atoms/TabNote.svelte",
@@ -2253,7 +2253,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:c9f4eca587580b67a5141208f3b3556356ccd8618e2c603570429e410e292f91",
+        "hash": "sha256:4ced66a523d58dc50cdfe1a28f49e383f4f49837800063c9fad5957aaf5904b2",
         "width": 390,
         "height": 900,
         "inkPixels": 867
@@ -2270,10 +2270,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:bad335d40d56229b3296a86a12257b57594713d5c5dbe71d4b74b64410bb06a0",
+        "hash": "sha256:77417879d4775ed21a3f98fc8b4916c053ae31a876fecfee3c765c712d09331d",
         "width": 390,
         "height": 900,
-        "inkPixels": 867
+        "inkPixels": 857
       },
       "source": {
         "file": "src/lib/components/atoms/TabNote.svelte",
@@ -2287,7 +2287,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:cee969d974e3c7b3f2b5fe4c1e5c59e30cba9bece58ec674ae6f5c9cba345ced",
+        "hash": "sha256:2bf7d65fdbfaf8448f9c79226ab3b952998f5a9f26eb1ec464e7f552ccbf648b",
         "width": 390,
         "height": 900,
         "inkPixels": 1348
@@ -2304,10 +2304,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:0ffe5419b5e2b781f11a45176f7936dbbfaa717798d4d3c04f6fef8a71de8c7b",
+        "hash": "sha256:764652dc2f45fffbe19934c128bdffac0af3761af5264bf89770615f6c661a69",
         "width": 390,
         "height": 900,
-        "inkPixels": 1348
+        "inkPixels": 1330
       },
       "source": {
         "file": "src/lib/components/atoms/TabNote.svelte",
@@ -2321,7 +2321,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:4ea4fca7b39473be7ae315145a35e33326aa155ed75e574b8de4aaeea54a2fc2",
+        "hash": "sha256:cfa5f2c067f3cf66001a3993984519bf582a674875ca0abeec23ff0e9b26ba07",
         "width": 390,
         "height": 900,
         "inkPixels": 1994
@@ -2338,10 +2338,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:44db46278d3a7c8910e87772e12902532c083a6371071952479aac0bd2c2cbcb",
+        "hash": "sha256:7c2dfde4d3a8444efa8e7a8de435d0b4efa9b2703ade888bd37bb9ff36f6a217",
         "width": 390,
         "height": 900,
-        "inkPixels": 1994
+        "inkPixels": 1958
       },
       "source": {
         "file": "src/lib/components/atoms/TabNote.svelte",
@@ -2355,7 +2355,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:5da82475bd0b84aaf57fa217e67152d842d07d9ebc641a0d652c8ae70a70c305",
+        "hash": "sha256:d09aa2cbc647a32e7b857fe9df74918a0bb51e987c17058f13bc65c6f1f76a8d",
         "width": 390,
         "height": 900,
         "inkPixels": 2470
@@ -2372,7 +2372,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:505f312f641f4ffa749957eaa2bdf9e096f437c1bb1601b43355c0f8fe7b2679",
+        "hash": "sha256:bc0f5a01bada5b63d60e003bd7d156fb34932f3dbae4abd28de894d83bc18209",
         "width": 390,
         "height": 900,
         "inkPixels": 2470
@@ -2389,7 +2389,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:d5781527d2cdc5b3f5cc0dfcc757f4f0763d75ea91faad826caac1d4f85e3495",
+        "hash": "sha256:672f247dfcaa79366d6cb16b6bc4e55df6c4ee5da822a5c2d48ed18d0e7a832d",
         "width": 390,
         "height": 900,
         "inkPixels": 598
@@ -2406,7 +2406,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:b4de927acbecac203387ea7c9c7529bb4678611b657d171541467e983fc5c9e2",
+        "hash": "sha256:0c7fe910cc55f5e222da529aa72f413db3ba03b5b039cde26a3232620ed17b36",
         "width": 390,
         "height": 900,
         "inkPixels": 598
@@ -2423,7 +2423,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:bd2d0f36a004816e9995f2846714c2e91626b20ecbbd74138ee95296a6e46888",
+        "hash": "sha256:7630a5c624472ecb3290fd652be9020fae427dcf9303b0ae465739d74b5a9377",
         "width": 390,
         "height": 900,
         "inkPixels": 520
@@ -2440,7 +2440,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:d2595ca54b9b39ceba2c40cde8060b51181b95a06b86b636524ec81762dff50a",
+        "hash": "sha256:de09a670f96c192b6a316c8d098fd2a0d3cc9047a5e72916e770357caaa47d08",
         "width": 390,
         "height": 900,
         "inkPixels": 520
@@ -2457,7 +2457,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:c9f18733b27f5d90dab5a6734f2511afc738c4e3339becf929d32a5d2aec358d",
+        "hash": "sha256:3bcb6aeb2884917e04f1220a9d0201f5dc0f6020f772543e7f6598946d43c098",
         "width": 390,
         "height": 900,
         "inkPixels": 276
@@ -2474,7 +2474,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:46c68f660d5c6420e0ddb91708ce3816359e39951899f4fee6eabab399315986",
+        "hash": "sha256:7d968f961a9df6a9939caa9c85ddf93e3a2c287a1ca8c517a63ca85b171edbad",
         "width": 390,
         "height": 900,
         "inkPixels": 276
@@ -2491,10 +2491,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:d83c8e3cdb0fc9ce2d910458115296840460f14b192d288f6bdc3ceb16829d07",
+        "hash": "sha256:bfa93d2afff115f0885cad8fa05cae6c6b4e2ab629d3a1d1d531cb8e1580339a",
         "width": 390,
         "height": 900,
-        "inkPixels": 252
+        "inkPixels": 254
       },
       "source": {
         "file": "src/lib/components/atoms/ThemeToggle.svelte",
@@ -2508,10 +2508,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:d47305163c581b866836e243576b41c8f1cd5107b3a854ad14526014296fed15",
+        "hash": "sha256:17cc8755f7377893c4b2a2e14c46c6b00634063059ddf5dd8668a3f02df7b6c1",
         "width": 390,
         "height": 900,
-        "inkPixels": 252
+        "inkPixels": 254
       },
       "source": {
         "file": "src/lib/components/atoms/ThemeToggle.svelte",
@@ -2525,10 +2525,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:d83c8e3cdb0fc9ce2d910458115296840460f14b192d288f6bdc3ceb16829d07",
+        "hash": "sha256:bfa93d2afff115f0885cad8fa05cae6c6b4e2ab629d3a1d1d531cb8e1580339a",
         "width": 390,
         "height": 900,
-        "inkPixels": 252
+        "inkPixels": 254
       },
       "source": {
         "file": "src/lib/components/atoms/ThemeToggle.svelte",
@@ -2542,10 +2542,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:d47305163c581b866836e243576b41c8f1cd5107b3a854ad14526014296fed15",
+        "hash": "sha256:17cc8755f7377893c4b2a2e14c46c6b00634063059ddf5dd8668a3f02df7b6c1",
         "width": 390,
         "height": 900,
-        "inkPixels": 252
+        "inkPixels": 254
       },
       "source": {
         "file": "src/lib/components/atoms/ThemeToggle.svelte",
@@ -2559,10 +2559,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:d83c8e3cdb0fc9ce2d910458115296840460f14b192d288f6bdc3ceb16829d07",
+        "hash": "sha256:bfa93d2afff115f0885cad8fa05cae6c6b4e2ab629d3a1d1d531cb8e1580339a",
         "width": 390,
         "height": 900,
-        "inkPixels": 252
+        "inkPixels": 254
       },
       "source": {
         "file": "src/lib/components/atoms/ThemeToggle.svelte",
@@ -2576,10 +2576,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:d47305163c581b866836e243576b41c8f1cd5107b3a854ad14526014296fed15",
+        "hash": "sha256:17cc8755f7377893c4b2a2e14c46c6b00634063059ddf5dd8668a3f02df7b6c1",
         "width": 390,
         "height": 900,
-        "inkPixels": 252
+        "inkPixels": 254
       },
       "source": {
         "file": "src/lib/components/atoms/ThemeToggle.svelte",
@@ -2593,7 +2593,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:81454f4663c447eb1c9cd818d24a16e2edf03f18618d081219831f4894c465d2",
+        "hash": "sha256:b04ca074022c720bbc37dfed8b4d4205c3bc0ebf6cb27a63382065db81d44b3f",
         "width": 390,
         "height": 900,
         "inkPixels": 528
@@ -2610,7 +2610,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:f4cb23d229207c2c639c5bafb86889ae2fd7efb82d271a6d3209f2a7c6915902",
+        "hash": "sha256:6d6f29b76b7a491963068798b590eee6397cfe723796df06a0ee6f6235445f7c",
         "width": 390,
         "height": 900,
         "inkPixels": 518
@@ -2627,10 +2627,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:e179911233d173edb09778df753cbc52c5de617b34643720775845048e8553d4",
+        "hash": "sha256:b62d576791eb5385adb6fd4517bef9924765b43b59336eda027eb454370d3fcc",
         "width": 390,
         "height": 900,
-        "inkPixels": 235
+        "inkPixels": 243
       },
       "source": {
         "file": "src/lib/components/atoms/VersionPill.svelte",
@@ -2644,10 +2644,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:c7e8802129587aeac78e8813357b90fafba827989f9611b0b43876ce425bd121",
+        "hash": "sha256:47f2311687217c64ab60beb3210057acca941d3ced2abe2ba00ce9f79f2464b3",
         "width": 390,
         "height": 900,
-        "inkPixels": 235
+        "inkPixels": 240
       },
       "source": {
         "file": "src/lib/components/atoms/VersionPill.svelte",
@@ -2657,45 +2657,79 @@
       }
     },
     "molecules/ChangelogMini/default": {
-      "hash": "85e684229340e14e",
+      "hash": "a2a27c7d0d29910d",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:9099f66f00622c03a93ce817000f121c702294ccd999ed01e94bcdaac0bd19c2",
+        "hash": "sha256:da1816b9a34eb60a38e7e85914ad5bfe7529429b66d25e607268f9ec7a9c3c56",
         "width": 390,
         "height": 900,
-        "inkPixels": 10087
+        "inkPixels": 10320
       },
       "source": {
         "file": "src/lib/components/molecules/ChangelogMini.svelte",
         "fileHash": "sha256:293b5ffbcf4034432fd6633ee91067e562d2e84ae315607f735788885ee75944",
         "story": "src/lib/components/molecules/ChangelogMini.stories.svelte",
-        "storyHash": "sha256:2a59ab4dd1d763467ae5740d6661ea66ec1d7ead96c148c811937e07ef8e83b2"
+        "storyHash": "sha256:236bca097c10133cb9546b5a3fdfda7d749e8dd5d68de9b8f2f20c44d26de466"
       }
     },
     "molecules/ChangelogMini/default--dark": {
-      "hash": "58c1002c5aa3e7a0",
+      "hash": "1011df0d9973a0ab",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:cd972c4c1844098f34cb3663892ff6b5756a4e2341a21809585d662c8eb943ec",
+        "hash": "sha256:548ce4c7934161a4cb50635b8bf907173946a4c0dc515ec353e4edc5b3b17578",
         "width": 390,
         "height": 900,
-        "inkPixels": 10077
+        "inkPixels": 10282
       },
       "source": {
         "file": "src/lib/components/molecules/ChangelogMini.svelte",
         "fileHash": "sha256:293b5ffbcf4034432fd6633ee91067e562d2e84ae315607f735788885ee75944",
         "story": "src/lib/components/molecules/ChangelogMini.stories.svelte",
-        "storyHash": "sha256:2a59ab4dd1d763467ae5740d6661ea66ec1d7ead96c148c811937e07ef8e83b2"
+        "storyHash": "sha256:236bca097c10133cb9546b5a3fdfda7d749e8dd5d68de9b8f2f20c44d26de466"
       }
     },
-    "molecules/CodePanel/status": {
-      "hash": "a624bc016aa66242",
+    "molecules/ChangelogMini/scattered": {
+      "hash": "f0c9754c8744fcb3",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:b6be8c30208e788431bcd1a53ab2fea5ed0830808d01a4e0336c1dc27a4fb32f",
+        "hash": "sha256:ea7d025d653370d303e992fe03400ff7711c0010fd6ef1e690054c68bea2baa1",
+        "width": 390,
+        "height": 900,
+        "inkPixels": 9698
+      },
+      "source": {
+        "file": "src/lib/components/molecules/ChangelogMini.svelte",
+        "fileHash": "sha256:293b5ffbcf4034432fd6633ee91067e562d2e84ae315607f735788885ee75944",
+        "story": "src/lib/components/molecules/ChangelogMini.stories.svelte",
+        "storyHash": "sha256:236bca097c10133cb9546b5a3fdfda7d749e8dd5d68de9b8f2f20c44d26de466"
+      }
+    },
+    "molecules/ChangelogMini/scattered--dark": {
+      "hash": "78d7aa3f7f2ac5cf",
+      "ext": ".html",
+      "mode": "baseline",
+      "png": {
+        "hash": "sha256:6c5aeabe216a0b8f0d3c34ae32472a7828d40b25596c827de76bb67671bce08e",
+        "width": 390,
+        "height": 900,
+        "inkPixels": 9681
+      },
+      "source": {
+        "file": "src/lib/components/molecules/ChangelogMini.svelte",
+        "fileHash": "sha256:293b5ffbcf4034432fd6633ee91067e562d2e84ae315607f735788885ee75944",
+        "story": "src/lib/components/molecules/ChangelogMini.stories.svelte",
+        "storyHash": "sha256:236bca097c10133cb9546b5a3fdfda7d749e8dd5d68de9b8f2f20c44d26de466"
+      }
+    },
+    "molecules/CodePanel/status": {
+      "hash": "34f1ee2b753c65a7",
+      "ext": ".html",
+      "mode": "baseline",
+      "png": {
+        "hash": "sha256:2da598bd20858b130fa8be7791a66635c501847a9b353013a35dfd32b8ada189",
         "width": 390,
         "height": 900,
         "inkPixels": 59424
@@ -2708,11 +2742,11 @@
       }
     },
     "molecules/CodePanel/status--dark": {
-      "hash": "a624bc016aa66242",
+      "hash": "34f1ee2b753c65a7",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:49e2a8606e3d6eaba5b42ffc29f1c38390226b13c1121f3fed5d1c1b296f7f1a",
+        "hash": "sha256:193f913079c1a82a344c8081b46f42f1c14a772b10b5aa45f27b7a46869eeb60",
         "width": 390,
         "height": 900,
         "inkPixels": 59424
@@ -2729,7 +2763,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:090c3b6094b0c1935ed660d9f5ad81c1eda2b06f672c2291998e9f2117cda65a",
+        "hash": "sha256:0caa63354bf7963841977523357c10df337d10a77c3d4f67e192e9afacc62ba4",
         "width": 390,
         "height": 900,
         "inkPixels": 59424
@@ -2746,7 +2780,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:40d8ae72f7a5141916142e537217465e525efe860e5a4e2d41d85d1773f93b1f",
+        "hash": "sha256:9972965981158b02fc249c867c1c8bca798952b68c4a778d1132caa0a03ef955",
         "width": 390,
         "height": 900,
         "inkPixels": 59424
@@ -2763,7 +2797,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:f4f95d3ea3892873b4282b42df351b209dccc9d62644220ac7cc0cbcdd1e6ae7",
+        "hash": "sha256:871eff903bf486a9d318dba478cdafc4f3a6aeee688def43b67a7d6103b1ba46",
         "width": 390,
         "height": 900,
         "inkPixels": 66942
@@ -2780,7 +2814,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:cd51ede1291f3ef9be703e92f7613cc86f21c5a264127ee6db9f0b4c1169b752",
+        "hash": "sha256:e2c1a955c8667bacabcc1b01d57bc8225f51d68fcacd6dc4fd00ecee6d8319c6",
         "width": 390,
         "height": 900,
         "inkPixels": 66942
@@ -2797,7 +2831,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:9b13e46a67538705909be375af8c10f0e7a668c85da1d4b24654d765d3287014",
+        "hash": "sha256:9271663f76579a51ee1aaf1cd28388106e46b607bc8ead58bcc0af58e0bf6983",
         "width": 390,
         "height": 900,
         "inkPixels": 21834
@@ -2814,7 +2848,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:d1d256a433ccefc7753f9d6b59fc04169e0c3747bf8a0171fd19b70a7a8f78ba",
+        "hash": "sha256:cb72df0fa3d7dbd553c58fb984d5a47443955c07ec0dee95c19d42aded50f3f9",
         "width": 390,
         "height": 900,
         "inkPixels": 21834
@@ -2831,7 +2865,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:2b7796ba3e87538ab6b9ee7955d8405e6a1b347e8cd9da47c4accdd466978ee0",
+        "hash": "sha256:5a44c2c4ebf9ea09d39b6b80dfb14469a26c5983d1f71058e4b108aa99e5e527",
         "width": 390,
         "height": 900,
         "inkPixels": 21834
@@ -2848,7 +2882,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:92b695a5e601fea2ae172fe7d0f19bf84ce563800ba2cb6086cbe240e575b1cb",
+        "hash": "sha256:d9ed64d3996065c3583325082c4b1b14b49476ac40ebfaf0ebcd5f349f7c99fa",
         "width": 390,
         "height": 900,
         "inkPixels": 21834
@@ -2861,11 +2895,11 @@
       }
     },
     "molecules/CommandRow/long-command": {
-      "hash": "29efd29d76238284",
+      "hash": "b0fcb10e36474be8",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:b23f165f7cb603fac593dac5592fc2164ca7d6b2e690d00acbcfaf816504cf00",
+        "hash": "sha256:20e7ca88a7d75ca3114391d87b19b0a2b991a391b6a47c40ae554a9e49766228",
         "width": 390,
         "height": 900,
         "inkPixels": 28994
@@ -2878,11 +2912,11 @@
       }
     },
     "molecules/CommandRow/long-command--dark": {
-      "hash": "29efd29d76238284",
+      "hash": "b0fcb10e36474be8",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:035517437944692ac57ad9946f73cc74cc92dd626c3fc59e5d95b4e355d63527",
+        "hash": "sha256:a511f5f25a3fbe5cd9e46c2ead67745380dfb0fb18100ad2a5586f499ab5a089",
         "width": 390,
         "height": 900,
         "inkPixels": 28994
@@ -2899,7 +2933,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:a80ec1ff38062eb615feb22fcef281e8ca544ea691b9a4d16a9ac2cd7c89bc57",
+        "hash": "sha256:464d8bee25426aa0d4d25161dc1b5eb7ea1496f2a6d0338485a8b0cd71994c1f",
         "width": 390,
         "height": 900,
         "inkPixels": 21834
@@ -2916,7 +2950,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:1985c5bc8b27e0f00d1445ea49ac3eab51449fc4f22a8a99e8f109dbdb8340d1",
+        "hash": "sha256:0bcc6e5d3ff4f370163329a2822f813ea51ddae00ae49fff4c993efe06f337ef",
         "width": 390,
         "height": 900,
         "inkPixels": 21834
@@ -2933,7 +2967,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:dfa91f9544bc26ff37179df55ec7d702078efe186d15b41bc8aa019c6adc5d2e",
+        "hash": "sha256:a08630da80430f7bef5e2c478c194c65ca4736a6926c42ada1a0050bff2f98fd",
         "width": 390,
         "height": 900,
         "inkPixels": 50818
@@ -2950,10 +2984,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:c0466786340a0ff2d4a36ef27e397c30ed873561a63f49e2fcb7d36ef6067476",
+        "hash": "sha256:5edf76b725324dd7bb0489b70610d37bfdd92610a8202e41700f646e664f2092",
         "width": 390,
         "height": 900,
-        "inkPixels": 50818
+        "inkPixels": 50817
       },
       "source": {
         "file": "src/lib/components/molecules/CopyBlock.svelte",
@@ -2967,7 +3001,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:ba87ca2abde07c93059a9cef591a65c782718e5957fbee1cec88b74e51c36e1f",
+        "hash": "sha256:cf4457aad9225c88738d0aba230b6a77e83e33f1a1f6c4ee56fb68de326f63ac",
         "width": 390,
         "height": 900,
         "inkPixels": 57944
@@ -2984,10 +3018,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:ebb433fb4dc23312cc8a16090ff8fa138119239a6a7cf56964cd9669e6c9e86f",
+        "hash": "sha256:87bf2c6fd23273fa1d04375556d8867868bd60e4ff4d56cd48107561e595bc35",
         "width": 390,
         "height": 900,
-        "inkPixels": 57944
+        "inkPixels": 57942
       },
       "source": {
         "file": "src/lib/components/molecules/CopyBlock.svelte",
@@ -3001,7 +3035,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:55df8c54a4bde6fd041791ccc9f647f5b5798fc1f398c538321758c46e3370b4",
+        "hash": "sha256:ea40e60a815b42aa4ef0b45f4bfc449a094f7984bb9e2741b5480125a2cd4614",
         "width": 390,
         "height": 900,
         "inkPixels": 57962
@@ -3018,10 +3052,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:e75bf1d324fc10defc8a6beee8f0af9fa3b24f471aec0a77efc1587b7920d70d",
+        "hash": "sha256:c0443b21c8aea8ab20073060b05161c23542f8d5f043075f2a64a8efbf154087",
         "width": 390,
         "height": 900,
-        "inkPixels": 57962
+        "inkPixels": 57957
       },
       "source": {
         "file": "src/lib/components/molecules/CopyBlock.svelte",
@@ -3035,10 +3069,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:bbf2b332443c1338e1c250d1b5c167017d3e903fc202f8945ec6e3b299cc4230",
+        "hash": "sha256:cd0bb93cafbd8f2a45cee4c4713260e8770340f6bdcfc0706c59d9186a9786e6",
         "width": 390,
         "height": 900,
-        "inkPixels": 2650
+        "inkPixels": 2658
       },
       "source": {
         "file": "src/lib/components/molecules/CopyBlock.svelte",
@@ -3052,10 +3086,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:a0040d04a2ba77b1846ad217b1fa396210e0addf5de895c8ec6296456d38b0ef",
+        "hash": "sha256:d5a01efcb1e6b4be6e3bf5a946af30720f703f432d4f0679b4b89ca61709766a",
         "width": 390,
         "height": 900,
-        "inkPixels": 2650
+        "inkPixels": 2638
       },
       "source": {
         "file": "src/lib/components/molecules/CopyBlock.svelte",
@@ -3069,10 +3103,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:64a9f93d7684875b242c3e7593729f1a468bcae39412a755c1af109d7e09cbb1",
+        "hash": "sha256:0cefaf6f0fb798059d39af13fca310304343c9f1d1337bc30ea0384da8f1ed6e",
         "width": 390,
         "height": 900,
-        "inkPixels": 2826
+        "inkPixels": 2834
       },
       "source": {
         "file": "src/lib/components/molecules/CopyBlock.svelte",
@@ -3086,10 +3120,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:c0030fb90c17d1e079039f94f2a69d3fbc5b34b1765014ff5941fd0a511557ca",
+        "hash": "sha256:c76422b1110d9a408b41098d6323f9940117509e7b6b801d066ef81a3113d212",
         "width": 390,
         "height": 900,
-        "inkPixels": 2826
+        "inkPixels": 2815
       },
       "source": {
         "file": "src/lib/components/molecules/CopyBlock.svelte",
@@ -3103,7 +3137,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:bcc9837b3d2959814dfe7454ca9d32b2b824667ee125e833eca486f52cb48ac2",
+        "hash": "sha256:72b94eff8278d3d4211907b13f79a5db8d2b89bb52af04a18e683bdfa6348203",
         "width": 390,
         "height": 900,
         "inkPixels": 2365
@@ -3120,10 +3154,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:9521c860a3a9f8a5e9389f81ce6bba863853738b402c823ff049add68f9638bf",
+        "hash": "sha256:366bef088463c4ee2aa17ebbe3a11a9d5cadaa1f2489f5165b0e5bd518217e75",
         "width": 390,
         "height": 900,
-        "inkPixels": 2365
+        "inkPixels": 2342
       },
       "source": {
         "file": "src/lib/components/molecules/CopyNextStep.svelte",
@@ -3137,10 +3171,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:2f0d2f6b39d766ce51ea3c54fb05d0f3f29a9126245b992780771ea8e557392d",
+        "hash": "sha256:e5d5a57c2e6af5403d5e029720b86eae878d7fdf1407b5c70c2c4bcc4c923b25",
         "width": 390,
         "height": 900,
-        "inkPixels": 149420
+        "inkPixels": 148814
       },
       "source": {
         "file": "src/lib/components/molecules/DesignMdCard.svelte",
@@ -3154,10 +3188,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:7910036f8c73603ab29aeb5bad795e232d0a5e6a6e30bbdb2e68058417ba6302",
+        "hash": "sha256:116b2e3a65587a957514d2116e7bf9092a786d13ef3a49455381c2dd44f250bd",
         "width": 390,
         "height": 900,
-        "inkPixels": 131234
+        "inkPixels": 148814
       },
       "source": {
         "file": "src/lib/components/molecules/DesignMdCard.svelte",
@@ -3171,7 +3205,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:33b9d5714baaadc90cb23b85155c076145064e8962787246e36c53be303a008e",
+        "hash": "sha256:5a886699ebf7689166411ffc3ca79d4b9519b7289c2bd940107e884545cf3381",
         "width": 390,
         "height": 900,
         "inkPixels": 2885
@@ -3188,10 +3222,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:933e097294bb68c02735290cf2ff122839faf13e4ee3d4a9ed434ce03de5655b",
+        "hash": "sha256:26ade8ff06aed73f747bcd1a072f9bff847c0a37e8664469882d483e000ac3ef",
         "width": 390,
         "height": 900,
-        "inkPixels": 2885
+        "inkPixels": 2862
       },
       "source": {
         "file": "src/lib/components/molecules/FaqItem.svelte",
@@ -3205,7 +3239,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:dda497522c49997ab51198af1308ecfe0c23704a3eb98fe5210fa60970750a98",
+        "hash": "sha256:8ce994ae0e6825b760a873fe8d3fbe443caac8a8421cbac03335a4dcfba8bcf2",
         "width": 390,
         "height": 900,
         "inkPixels": 9049
@@ -3222,10 +3256,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:346d0ecd7aaec3882dd106173977ec198ed94b859d323cc69c75bfccc22386ed",
+        "hash": "sha256:791a0643e7f2839d4dca2fe05190411ff1669f1c3e84f15444a2ac981c21dc64",
         "width": 390,
         "height": 900,
-        "inkPixels": 9049
+        "inkPixels": 8947
       },
       "source": {
         "file": "src/lib/components/molecules/FaqItem.svelte",
@@ -3239,7 +3273,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:134f97c9ef975ff5490644666dc87a426d793f1e5204f888d4d63e434404d992",
+        "hash": "sha256:28021fa0e17b1957ddeda4a615d865a9a4fc3587471f240160c903d3b21c4c57",
         "width": 390,
         "height": 900,
         "inkPixels": 4966
@@ -3256,10 +3290,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:daea1ea24105976ac84ed8b545685993e9a81e95fc7ddbe1c9725e96141657a9",
+        "hash": "sha256:6716d6a8a4588e8a2da70dacc0d0e5723e0c42550634f95db65ea910a6519e0d",
         "width": 390,
         "height": 900,
-        "inkPixels": 4966
+        "inkPixels": 4877
       },
       "source": {
         "file": "src/lib/components/molecules/FigureCaption.svelte",
@@ -3273,7 +3307,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:c052a1f195957e177c967ebfa9d248e5bc8479c8236ebe5a0678435260825dfa",
+        "hash": "sha256:6777cf61546ece95f1c678850a8521775395e05ca4bf5f4ec3d1c8d5d27ce297",
         "width": 390,
         "height": 900,
         "inkPixels": 3082
@@ -3290,10 +3324,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:38eb4637a125780afd00ae0a56eb80648d7ece1947097fe1dfcb087fc0b28654",
+        "hash": "sha256:c35168cc3650d16a95bec281e662ff9981d74c8cd0ed5b9784cd9c8592062559",
         "width": 390,
         "height": 900,
-        "inkPixels": 3082
+        "inkPixels": 3033
       },
       "source": {
         "file": "src/lib/components/molecules/FigureCaption.svelte",
@@ -3307,7 +3341,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:84a09b7ce52447790fcede50265bb14e9d75ba6b675417b54b6bb087fc9ab44c",
+        "hash": "sha256:69b867c9b65898c0fbb1d0cd68c50e10c94571d83fee3e3fe7f499721d806fb5",
         "width": 390,
         "height": 900,
         "inkPixels": 1418
@@ -3324,10 +3358,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:701a4c202531ba78595bd08aa7a298ae7ac766d0ac44b5c0b73945feffd465ca",
+        "hash": "sha256:c74cdf78099b51f1042fd8e4c611c5485f5c2bc884b457c36030bdf704eb458d",
         "width": 390,
         "height": 900,
-        "inkPixels": 1418
+        "inkPixels": 1404
       },
       "source": {
         "file": "src/lib/components/molecules/FigureCaption.svelte",
@@ -3341,7 +3375,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:716129b0b9e6305649d0b7f630a40082a99c342e119698c1544172fd1b906d3f",
+        "hash": "sha256:b2f0ef084c65ef46c1095d00f2dc9917ed3c91c865aa38d0214df34e501d0d13",
         "width": 390,
         "height": 900,
         "inkPixels": 1637
@@ -3358,10 +3392,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:4b572965654636661c8ead8288c0dd44c3286e29700c939a2f16c675702fc761",
+        "hash": "sha256:734417f5448e38991a89ce973e871395d70a54b08acbf9f8d8d0336feae0aafd",
         "width": 390,
         "height": 900,
-        "inkPixels": 1637
+        "inkPixels": 1590
       },
       "source": {
         "file": "src/lib/components/molecules/FigureCaption.svelte",
@@ -3375,7 +3409,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:0907e7bff593797d3687c806050bf0dd37b3567c3d2b776b8224495178d7d4d3",
+        "hash": "sha256:5d79abcfc8214900c76ae8d21e4ba12643adb3bd953ad1e4ecb39074dbe8aaf2",
         "width": 390,
         "height": 900,
         "inkPixels": 3367
@@ -3392,10 +3426,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:a1057b38d22d51c059cc85d1f56f46caee68acd08b88f05c469a40ea07f1fb8e",
+        "hash": "sha256:ca50315a698714e971ce2b34baa3dafffe1aac39956c63e18cbe4f4198ff33c4",
         "width": 390,
         "height": 900,
-        "inkPixels": 3367
+        "inkPixels": 3330
       },
       "source": {
         "file": "src/lib/components/molecules/GrowCard.svelte",
@@ -3409,7 +3443,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:010bd68d9cbb65f2401884ec7c2978882bf597b7575b802bbdf5204f16cacb3b",
+        "hash": "sha256:a82586a0af6bd17a09c082646c0a5f656fefa28efbf2091a3f6067c36c41594f",
         "width": 390,
         "height": 900,
         "inkPixels": 5944
@@ -3426,10 +3460,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:6650c4b1f8651ac6be204b96fcc984b364ea8095d5766e14e3271fbaeba751f2",
+        "hash": "sha256:626fa17fd1466907fc471776a6d1e5c16bb92ab0e2bf8682aa320b8f3288ad8b",
         "width": 390,
         "height": 900,
-        "inkPixels": 5944
+        "inkPixels": 5866
       },
       "source": {
         "file": "src/lib/components/molecules/GrowCard.svelte",
@@ -3439,14 +3473,14 @@
       }
     },
     "molecules/GrowCard/refine": {
-      "hash": "ed7bed1230e39acf",
+      "hash": "e94a87fdfa51935e",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:c4c26f2ef0a1ee56e9a00747ff4ecc52d315688d74d834b5c68f6f70e118f546",
+        "hash": "sha256:bc24648dc02d46b6b68439c1e665f6a98af16381d898e9a358a6bfcdb3c658c2",
         "width": 390,
         "height": 900,
-        "inkPixels": 6801
+        "inkPixels": 6807
       },
       "source": {
         "file": "src/lib/components/molecules/GrowCard.svelte",
@@ -3456,14 +3490,14 @@
       }
     },
     "molecules/GrowCard/refine--dark": {
-      "hash": "43faeed5f0a3cbd4",
+      "hash": "53a321bc8ecb5b06",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:0b367934f660b88f716dcf5e31f7196e4ee12fa3758b138006061ff2b304b1d4",
+        "hash": "sha256:b60b090fb279148d03911c7366e13d72957251262e15e9ed1967ad83ababaa23",
         "width": 390,
         "height": 900,
-        "inkPixels": 6801
+        "inkPixels": 6718
       },
       "source": {
         "file": "src/lib/components/molecules/GrowCard.svelte",
@@ -3477,7 +3511,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:e429991772839ff6ced7a8ba337c24627f5b6ffec988cddc069a9b46f5093f7a",
+        "hash": "sha256:6c7e8640315df326218f431b63715c7a550800a80013cd4c2bcfeecccbc3d4d8",
         "width": 390,
         "height": 900,
         "inkPixels": 5810
@@ -3494,10 +3528,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:8422f1bdd602c8ec553a802a270ea18f8e1c0b5c83e851f39ce0a863d6168ea9",
+        "hash": "sha256:efed7931448c33c2bfcffe11a8b5b038dc7a9aeac75845041afce5b9c62e3c07",
         "width": 390,
         "height": 900,
-        "inkPixels": 5810
+        "inkPixels": 5686
       },
       "source": {
         "file": "src/lib/components/molecules/MetaStrip.svelte",
@@ -3511,7 +3545,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:e429991772839ff6ced7a8ba337c24627f5b6ffec988cddc069a9b46f5093f7a",
+        "hash": "sha256:6c7e8640315df326218f431b63715c7a550800a80013cd4c2bcfeecccbc3d4d8",
         "width": 390,
         "height": 900,
         "inkPixels": 5810
@@ -3528,10 +3562,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:8422f1bdd602c8ec553a802a270ea18f8e1c0b5c83e851f39ce0a863d6168ea9",
+        "hash": "sha256:efed7931448c33c2bfcffe11a8b5b038dc7a9aeac75845041afce5b9c62e3c07",
         "width": 390,
         "height": 900,
-        "inkPixels": 5810
+        "inkPixels": 5686
       },
       "source": {
         "file": "src/lib/components/molecules/MetaStrip.svelte",
@@ -3545,10 +3579,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:9b0389adc2befe03174c62760acb56b40ba88931ba2434255bebd5df67904d1a",
+        "hash": "sha256:af35e18f8a994f82fadde23112cc160b9029a93230b3686e19174d63c44cc100",
         "width": 390,
         "height": 900,
-        "inkPixels": 80190
+        "inkPixels": 80192
       },
       "source": {
         "file": "src/lib/components/molecules/ProofFrame.svelte",
@@ -3562,7 +3596,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:fc521461fed1521faf17977e2393c653b6e8d83a9968ed38fa097dcc5c1b3190",
+        "hash": "sha256:8adf5e0aebb242954a4ee8477bc73c144490ce69067c9a2e6514b4fef2d1f895",
         "width": 390,
         "height": 900,
         "inkPixels": 80192
@@ -3579,7 +3613,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:b8d8aa73ff00b734c11c69855217811e0b7e752dafafea8afc86b430cb9f10d3",
+        "hash": "sha256:196261a9c8671a828e464306abf9dd4d43f19bc3f98a8d182ec4e41c668b9e2d",
         "width": 390,
         "height": 900,
         "inkPixels": 80192
@@ -3596,7 +3630,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:2de9d0364c1fc0dc11d016251f501975ef16315f37f61aef4ea0c82547667093",
+        "hash": "sha256:ec364295a73891d69e1c928b3ddd1cbb12cd6e72a9e0726c56f6c5d6737bcda4",
         "width": 390,
         "height": 900,
         "inkPixels": 80192
@@ -3613,7 +3647,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:7919954e23926938131c2cdf9a1bc063d02f9fba5646a9d10eca3f9a75b70bc0",
+        "hash": "sha256:280c961c111205815db1c764a4f7b9ec228e19db4eaa2bd7417241a85b142bbf",
         "width": 390,
         "height": 900,
         "inkPixels": 80192
@@ -3630,7 +3664,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:f8017c6328f61e47ffb6b33cd1dc1d3229c7d78ff80471d94b2104b49e12fcd2",
+        "hash": "sha256:bfe46e512ab5308832d12e1d5f5f4032bc2e6866c9ce4ae259b3f67a2b0f0feb",
         "width": 390,
         "height": 900,
         "inkPixels": 80192
@@ -3647,7 +3681,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:be63b67ff45216c087a0cc3c3528474069254b37a6c39ffb61f1da0a49bccaf7",
+        "hash": "sha256:17f097aaf83f650e869ffeddf8a3d4ac9436e470df7a162d0bc18b1ec2b6cae0",
         "width": 390,
         "height": 900,
         "inkPixels": 80192
@@ -3664,7 +3698,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:797739c8ef07d0a5530608d426d9f17c526cd4220e3640de986c2ba1fcc0935f",
+        "hash": "sha256:2a8897fd1a94c5e7aea95b52b746d9093e382ebf33975d8a1b322575207a1dbc",
         "width": 390,
         "height": 900,
         "inkPixels": 80192
@@ -3681,7 +3715,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:26e622779eac281c075d649cda90abc9f7064c14ed4a39ff54f4828935b925d7",
+        "hash": "sha256:b876d76bf38219a11060d6f4724574f199d9c5a86cb27151ac31783751bca8cf",
         "width": 390,
         "height": 900,
         "inkPixels": 978
@@ -3698,10 +3732,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:a37d2a5c1f5a273f25c15d5c9e3327eee2807d7aa14968c505de92ca5918131c",
+        "hash": "sha256:3ee351bd76dc870191978ee2b50c0352e2c2c7a41a07c91b4017e056b3641195",
         "width": 390,
         "height": 900,
-        "inkPixels": 978
+        "inkPixels": 963
       },
       "source": {
         "file": "src/lib/components/molecules/ProofNote.svelte",
@@ -3715,7 +3749,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:bd28c97ec4dd6409c72dfbd253756acb80362d5e2967462634f1d0a602ce98ea",
+        "hash": "sha256:da422a83243009c57634caf1076884d2163413bdc88dcc0d88dc44e66548f188",
         "width": 390,
         "height": 900,
         "inkPixels": 722
@@ -3732,10 +3766,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:768e550d4e578b5ca63b42d5b6d5f5b64d2c05246f3e9e0b770eb41c41522401",
+        "hash": "sha256:0035740820446e8b28406fe84c2682ff9b419c4282ff290b3b3d3bf8e21a64ea",
         "width": 390,
         "height": 900,
-        "inkPixels": 722
+        "inkPixels": 711
       },
       "source": {
         "file": "src/lib/components/molecules/ProofNote.svelte",
@@ -3749,7 +3783,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:db213bc5a326fa65f159f5d6e176eb455979997322d5b397969af7bc67b76b46",
+        "hash": "sha256:f3fbb97e91b471bec6fdf149fdb035c80a67e6effa0e9accf552f311de5c7c56",
         "width": 390,
         "height": 900,
         "inkPixels": 1565
@@ -3766,10 +3800,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:b1caba1b9b59dd9d1f105728b60469d78f2634ea828dde0a1b414a418e38b9af",
+        "hash": "sha256:4584c62a43b32751cf0eaee28e8b66a9a284f142d589af6785cacc65fd3cf904",
         "width": 390,
         "height": 900,
-        "inkPixels": 1565
+        "inkPixels": 1521
       },
       "source": {
         "file": "src/lib/components/molecules/ProofNote.svelte",
@@ -3783,7 +3817,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:a5ec7b396fdbc4cb9576664c06424c8b692f326e6f234497a02f1e23a7cd804e",
+        "hash": "sha256:13435d569af7830db3aa3197ee2c650dd1fbc9d96cb4b9486df6faa6251a8e76",
         "width": 390,
         "height": 900,
         "inkPixels": 1044
@@ -3800,10 +3834,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:579fb0b69ed5c3efaaf0243ed38ca99c3bfbae8a187f1b603291557d40b40ddf",
+        "hash": "sha256:f169a4c41e8ec85e15476e1bc5d7de886fb1841377ba435e9fc09b5e4c430c45",
         "width": 390,
         "height": 900,
-        "inkPixels": 1044
+        "inkPixels": 1021
       },
       "source": {
         "file": "src/lib/components/molecules/ProofNote.svelte",
@@ -3817,10 +3851,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:f289f6a3a83bb14fb453997ed1a0d039585c089d9afe363c727da7b70f5c36bc",
+        "hash": "sha256:23abba6493966f158bf78a926e4409e663adb695a38bab15999f6b30d979f6ef",
         "width": 390,
         "height": 900,
-        "inkPixels": 21134
+        "inkPixels": 21136
       },
       "source": {
         "file": "src/lib/components/molecules/ReleaseEntry.svelte",
@@ -3834,10 +3868,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:d2933d7e4f7ddd09bf2b9fe2d32f40412687c34df47fb07ce10f3efb84e1869d",
+        "hash": "sha256:2861820b064d4ba234ac770159afeec1daa114a0f0d721b61779a0697e623394",
         "width": 390,
         "height": 900,
-        "inkPixels": 21116
+        "inkPixels": 20899
       },
       "source": {
         "file": "src/lib/components/molecules/ReleaseEntry.svelte",
@@ -3851,10 +3885,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:a9efc6cd2b30cf7f0207237713a1ae769b56578a4c597023c7902b1a215b1b62",
+        "hash": "sha256:9d4e28a58640b93c5252b977c5a8e632822777db073db704ef7e976de6e84315",
         "width": 390,
         "height": 1173,
-        "inkPixels": 62284
+        "inkPixels": 62292
       },
       "source": {
         "file": "src/lib/components/molecules/ReleaseEntry.svelte",
@@ -3868,10 +3902,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:dd1ce3b52a410b01da416a64ecaac812270d102b44a470a898215942aca1a86b",
+        "hash": "sha256:55aa7c5166e17c2e3f8f02f52a7c21f585ed38ab023ba32ab8c20e0933630ae9",
         "width": 390,
         "height": 1173,
-        "inkPixels": 62284
+        "inkPixels": 61470
       },
       "source": {
         "file": "src/lib/components/molecules/ReleaseEntry.svelte",
@@ -3885,7 +3919,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:3b9d3869e9c6db0184eee18a4fb66a4feb032d73941723d652e01c87421823ad",
+        "hash": "sha256:64e9148254b0163ef939171b804af59d09505b084123005273a35740d57dc643",
         "width": 390,
         "height": 900,
         "inkPixels": 1848
@@ -3902,10 +3936,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:da15da1a32394f1da7d9ec27dbaa715c2c8939b952d9026c9aa91e64fcc4d2c0",
+        "hash": "sha256:ce81141664c492cc0a962560023d9a3f095d4a325e969fe07cfe883a10671d44",
         "width": 390,
         "height": 900,
-        "inkPixels": 1848
+        "inkPixels": 1831
       },
       "source": {
         "file": "src/lib/components/molecules/ScanBox.svelte",
@@ -3919,7 +3953,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:676f3d0a089390b27b5a7a15d0467a9fd54b9163d6432006cf2ecb179fdebbd3",
+        "hash": "sha256:b62f40b6cdb8d5c96bf665405973d4eea75e60156e3c76c22040b8fee765019c",
         "width": 390,
         "height": 900,
         "inkPixels": 1417
@@ -3936,10 +3970,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:c19e703fd293432188e1a938d4f3f8d2cf8facb150b1f0abbaa69706dc609476",
+        "hash": "sha256:8ea4c95e15fc616ef9286e688c0dfce8e50339c6a7740837c1b7f4004f17a072",
         "width": 390,
         "height": 900,
-        "inkPixels": 1417
+        "inkPixels": 1408
       },
       "source": {
         "file": "src/lib/components/molecules/SectionStrip.svelte",
@@ -3949,14 +3983,14 @@
       }
     },
     "molecules/StatGrid/default": {
-      "hash": "cee66404207bd280",
+      "hash": "496b9abf6fbb2174",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:acd0f21e9608b01c03155ec1fd9f6a490d98176078fbb74c1eb4cda012b5b49b",
+        "hash": "sha256:4a13cbcc292e707fe5e03d3bd73496a1e242f4b7710d814924df6abe74f7da81",
         "width": 390,
         "height": 900,
-        "inkPixels": 7114
+        "inkPixels": 7002
       },
       "source": {
         "file": "src/lib/components/molecules/StatGrid.svelte",
@@ -3966,14 +4000,14 @@
       }
     },
     "molecules/StatGrid/default--dark": {
-      "hash": "6c78c6aad3c3d7ec",
+      "hash": "0c38a4b289ac3b23",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:cda477563dd49a44693a53e0aad0197b4d80255b1df23316e255f7f2c8ce9888",
+        "hash": "sha256:ba48eda62d051f8a2286dc5107716f8e50855f60268cdd5f6e6b4b9b9f5403a2",
         "width": 390,
         "height": 900,
-        "inkPixels": 7114
+        "inkPixels": 6943
       },
       "source": {
         "file": "src/lib/components/molecules/StatGrid.svelte",
@@ -3983,14 +4017,14 @@
       }
     },
     "molecules/StatGrid/narrow": {
-      "hash": "da779f1f1ce15fd7",
+      "hash": "89387970553d53b3",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:acd0f21e9608b01c03155ec1fd9f6a490d98176078fbb74c1eb4cda012b5b49b",
+        "hash": "sha256:4a13cbcc292e707fe5e03d3bd73496a1e242f4b7710d814924df6abe74f7da81",
         "width": 390,
         "height": 900,
-        "inkPixels": 7114
+        "inkPixels": 7002
       },
       "source": {
         "file": "src/lib/components/molecules/StatGrid.svelte",
@@ -4000,14 +4034,14 @@
       }
     },
     "molecules/StatGrid/narrow--dark": {
-      "hash": "568c6f6ef885d1dd",
+      "hash": "96cbc890cd81518f",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:cda477563dd49a44693a53e0aad0197b4d80255b1df23316e255f7f2c8ce9888",
+        "hash": "sha256:ba48eda62d051f8a2286dc5107716f8e50855f60268cdd5f6e6b4b9b9f5403a2",
         "width": 390,
         "height": 900,
-        "inkPixels": 7114
+        "inkPixels": 6943
       },
       "source": {
         "file": "src/lib/components/molecules/StatGrid.svelte",
@@ -4021,7 +4055,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:e45c2fd8385c397c6a458b0e5f808787ab913bb07023830529e4bdccd1523016",
+        "hash": "sha256:748117ca529883152e4b4ca2f396bbf11d84d6a55b97742b2f77117dfb9aef01",
         "width": 390,
         "height": 900,
         "inkPixels": 4917
@@ -4038,10 +4072,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:6192b6222e6ca95a39e09df38ad344f94501bc3b5e73cf4bcafc86feda695a5b",
+        "hash": "sha256:dfcbe799798f0f45a285b7dbcfafbfa86f9a27039ec194fd3808501ceb6315ae",
         "width": 390,
         "height": 900,
-        "inkPixels": 4917
+        "inkPixels": 4860
       },
       "source": {
         "file": "src/lib/components/molecules/StepCard.svelte",
@@ -4055,10 +4089,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:96fe7bbeb30da3a116298ffbb12ea10d03f7ab282f0c54b2964ef04e0f3fcc68",
+        "hash": "sha256:5da8532efb3cf754201812d707403d46966071def7b14d24ead53465109d6e06",
         "width": 390,
         "height": 900,
-        "inkPixels": 5785
+        "inkPixels": 5837
       },
       "source": {
         "file": "src/lib/components/molecules/StepCard.svelte",
@@ -4072,10 +4106,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:39f677bb3ed681000896e0691ac3c79ba38e268e95cb41f6d52de001c9a8cfed",
+        "hash": "sha256:c5e59e71b0d08cba6936c0cbcfc461688f87a36b5b6d3b9039f69c89111edbfb",
         "width": 390,
         "height": 900,
-        "inkPixels": 5785
+        "inkPixels": 5707
       },
       "source": {
         "file": "src/lib/components/molecules/StepCard.svelte",
@@ -4089,7 +4123,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:d966545acee72ebc3f62f4bf61a5e5b174c96f32422cf97f6998e056c3aedd6d",
+        "hash": "sha256:95dfc75053db22a40c27ed4b0b3285e93057cb1e47eaf6ab8d2723c58725e078",
         "width": 390,
         "height": 900,
         "inkPixels": 4455
@@ -4106,10 +4140,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:21f77baddc00fc52692fe478dd781374d4ad94ab31ddc0e8c8b5392a6873bd67",
+        "hash": "sha256:5b6957033b8c4fc94156dfda64197bcbfe447dc01f996c81622312a2818a0f8b",
         "width": 390,
         "height": 900,
-        "inkPixels": 4455
+        "inkPixels": 4399
       },
       "source": {
         "file": "src/lib/components/molecules/StepCard.svelte",
@@ -4123,7 +4157,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:63d24fbacdc9968b73e3930e4e93e6e3c167082e254e0a24ffd9f626e4d144e0",
+        "hash": "sha256:68e021edefd8b4b964ba6ab7d9fcf7e0e3eac019446800bf1de611883519290d",
         "width": 390,
         "height": 900,
         "inkPixels": 5993
@@ -4140,10 +4174,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:dfd66b3dfa7b81cc8749f7953d013fe5ef7256ef3f334fe1b669740af1d0d36d",
+        "hash": "sha256:6c1ea3506d8d24c4e9db81d15ebe5cfae595a0682db49bc016c683b3673bf501",
         "width": 390,
         "height": 900,
-        "inkPixels": 5993
+        "inkPixels": 5917
       },
       "source": {
         "file": "src/lib/components/molecules/StepCard.svelte",
@@ -4157,7 +4191,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:b52c8c51fade6b0f69c63b60e342ee0725c907ea84b9125e259eaa27abc5af99",
+        "hash": "sha256:aa05b40da5f81a8deb15c3d0e678618ae6852dc1b0245570fa10e60158185750",
         "width": 390,
         "height": 900,
         "inkPixels": 5913
@@ -4174,10 +4208,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:00bd83c132b94c0e49d6aac1236f7e666d638647b6afffa078096d8aad370428",
+        "hash": "sha256:2a7cc4e87c204eff35dcfce7aab8c6e91c1d0f2692d555eec3aa367870c44a5b",
         "width": 390,
         "height": 900,
-        "inkPixels": 5913
+        "inkPixels": 5837
       },
       "source": {
         "file": "src/lib/components/molecules/StepCard.svelte",
@@ -4191,7 +4225,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:1e25fb9d83a36685ba4db6acb1910d164a917f0e00c491d3d21d813452c0d971",
+        "hash": "sha256:2b71611a2361c1c20332e40214b130f2d77251037a9d4587bbc4ea754d7733fb",
         "width": 390,
         "height": 900,
         "inkPixels": 31858
@@ -4208,7 +4242,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:a8f47361c34085afa824eed9b3d2b5928fcd09629765f78c56c10411e72b764c",
+        "hash": "sha256:9d0aeb9ddcabc8778361d56f68457992528777841d8eff1d9a67c36cfb5da51e",
         "width": 390,
         "height": 900,
         "inkPixels": 31858
@@ -4225,7 +4259,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:393060724842481f89cebd3d38606ef44fb39d6107a1c3e81670b67b81a849bb",
+        "hash": "sha256:5d22c468bee69517e65204a0e89ceb5c0f53a17ebf8f097505e270391607121b",
         "width": 390,
         "height": 900,
         "inkPixels": 30426
@@ -4242,7 +4276,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:6eeca2060c7dc9fd41ba395cfe119002a7a28e50b5a39b228296ee5dbb209113",
+        "hash": "sha256:d75d6fcee0add9302c3ff527dc2378c8553ccdf879badb3c651faaa794a7d1eb",
         "width": 390,
         "height": 900,
         "inkPixels": 30426
@@ -4259,7 +4293,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:79253340407abcf4cf22eb715054896cc40fbf7f90c87647e7816254a7cfd35e",
+        "hash": "sha256:429b7b8a9101fb105994b68a513a0482e1c38facd29c50427d187a85590ec5ad",
         "width": 390,
         "height": 900,
         "inkPixels": 3573
@@ -4276,10 +4310,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:c970b56145e0e158ddbf85cabd0a8656b1ecae02781e2164c2460ca41b0da621",
+        "hash": "sha256:c8fd1d2d42f217c393d03ef27bf01abc3e23ce5ecbef485d63b62e960083ed9d",
         "width": 390,
         "height": 900,
-        "inkPixels": 3573
+        "inkPixels": 3532
       },
       "source": {
         "file": "src/lib/components/molecules/TouchList.svelte",
@@ -4293,7 +4327,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:d4b1d8906dab0407af539c13dbaa12539614876b3e27c7ce584b031f5498df35",
+        "hash": "sha256:3c485b37e1ba381fcb441d92c27f7dea08d5b24a628bb0ed007a0ac21e1381f4",
         "width": 390,
         "height": 900,
         "inkPixels": 3486
@@ -4310,10 +4344,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:f156855354b9a956449f90c22069694181088e48fb13bc38f818319de530e14c",
+        "hash": "sha256:693c53b824e2636ea3bc8565ecea7decafe4b1420aeae2baa8a68a94b981174c",
         "width": 390,
         "height": 900,
-        "inkPixels": 3486
+        "inkPixels": 3451
       },
       "source": {
         "file": "src/lib/components/molecules/TouchList.svelte",
@@ -4327,7 +4361,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:9708550884b444e1e83612b329eb2a7e04528a3dc413a8de759c15a37b3d6ee9",
+        "hash": "sha256:9ce89ad53c28e2ceb5d583888fb74d0875ccec6171ded97ffb6f8beed79e5ca3",
         "width": 390,
         "height": 900,
         "inkPixels": 2976
@@ -4344,10 +4378,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:9bbf1e038846cf763696ec999189a67a55d72e65c17e950cc88eed0ef34baea9",
+        "hash": "sha256:0ded1c0412eb504b8685d9f0861b8c65dc6ab9a9ec9c3334c926be16bc5cc25b",
         "width": 390,
         "height": 900,
-        "inkPixels": 2976
+        "inkPixels": 2931
       },
       "source": {
         "file": "src/lib/components/molecules/TouchList.svelte",
@@ -4361,7 +4395,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:41e3e9098f16ba6ad39488aaf1de1b1883faa428fded0ff1abf1013b8e005b31",
+        "hash": "sha256:256bdfb5097d3f6de36b70b7954bf8b2bb8406a294d5469d4092bc66e1fa430c",
         "width": 390,
         "height": 900,
         "inkPixels": 19682
@@ -4378,10 +4412,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:4623802922646cfdee85a689be9f086c37e75fca29b0e3d5d786ecb38c4e511a",
+        "hash": "sha256:1180eec2eb4532239e79c083fab21b92539ea4ce7f12cb032eebb3d5e401c250",
         "width": 390,
         "height": 900,
-        "inkPixels": 19682
+        "inkPixels": 19626
       },
       "source": {
         "file": "src/lib/components/organisms/CloseCta.svelte",
@@ -4395,7 +4429,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:0cd235e91fc027b2ed86fdeaf9ebdd35ba85e260d6ff7e22e95356ca510d7cfc",
+        "hash": "sha256:24e15410fe3cbbb9d337cb0f660e6fafd799d20138d3fc1360960520defee01a",
         "width": 390,
         "height": 900,
         "inkPixels": 36620
@@ -4412,10 +4446,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:a60d7a9022195f8830b3cc9083e8f0066af6bafa846a48387f2b5a6a1de4dfa5",
+        "hash": "sha256:2d2d1dc03ba88107e6e366495a366c08664c7d0ba7dd86101476ab40cd7b9c34",
         "width": 390,
         "height": 900,
-        "inkPixels": 36620
+        "inkPixels": 36600
       },
       "source": {
         "file": "src/lib/components/organisms/CloseCta.svelte",
@@ -4425,14 +4459,14 @@
       }
     },
     "organisms/DemoStats/default": {
-      "hash": "2274c5b11778d35b",
+      "hash": "b6031cfbdc979602",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:268108cf29d8f711f7c654d3415853e3b25e90f04ee2eac1bb65e448b20f0eb7",
+        "hash": "sha256:785b52029d08d57b2761ef977c16359056342dcdc4e0a998a5b1930434b240e0",
         "width": 390,
         "height": 900,
-        "inkPixels": 46166
+        "inkPixels": 46046
       },
       "source": {
         "file": "src/lib/components/organisms/DemoStats.svelte",
@@ -4442,14 +4476,14 @@
       }
     },
     "organisms/DemoStats/default--dark": {
-      "hash": "345694cf35c3f4a7",
+      "hash": "064273db63c6b2aa",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:bbed76e660e75a3ca0c401fddc6474ad3b8b577da33ea50e47168fbba1f21bbc",
+        "hash": "sha256:453bd0032dac40ccfb1c48a2de031090313a6d14bc8827d803cfff64e29644f3",
         "width": 390,
         "height": 900,
-        "inkPixels": 46166
+        "inkPixels": 45911
       },
       "source": {
         "file": "src/lib/components/organisms/DemoStats.svelte",
@@ -4463,10 +4497,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:95f4618d2dcce2801fb08f71591f52ad7300b2bcc2f339e476f023922a6ba169",
+        "hash": "sha256:879ea35ebb6cdef7ddc125a3f5016fbee9e55c8f8e2d98fdedb8f6a0c49d3d82",
         "width": 390,
         "height": 900,
-        "inkPixels": 165122
+        "inkPixels": 164516
       },
       "source": {
         "file": "src/lib/components/organisms/DesignMdPromo.svelte",
@@ -4480,10 +4514,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:e67df5ae0cd731909de736d36f457517d6c52b7a4d7e91efb606825c1989bb8d",
+        "hash": "sha256:52b3ff96955e7332f6ea3542e8cefe4e57a677e1a5133af152df231bb374fdce",
         "width": 390,
         "height": 900,
-        "inkPixels": 146936
+        "inkPixels": 164416
       },
       "source": {
         "file": "src/lib/components/organisms/DesignMdPromo.svelte",
@@ -4497,10 +4531,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:87560b1d5bea75a39e32e5ed3a37cace4d4ecefdd4180763130bd3db79781559",
+        "hash": "sha256:a24e799b5e6acaf253dfc32aa24783a68431cd46b1839065de609089354dc7f8",
         "width": 390,
         "height": 900,
-        "inkPixels": 111992
+        "inkPixels": 112012
       },
       "source": {
         "file": "src/lib/components/organisms/DriftComparison.svelte",
@@ -4514,10 +4548,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:eba601fd36e6e275a8b1a6671337292854eae052bf96aca92251563110bee07d",
+        "hash": "sha256:51793d2da0590c64a459cddbf9add36e44d6c4438e8cad701b79fb9a18de2902",
         "width": 390,
         "height": 900,
-        "inkPixels": 111958
+        "inkPixels": 111864
       },
       "source": {
         "file": "src/lib/components/organisms/DriftComparison.svelte",
@@ -4531,10 +4565,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:56f953994e3836711ded41e88f738ca3bd8cf97427d9d2c2c37abc91c5249749",
+        "hash": "sha256:4232cec208ee61c2322704f18640a230dac11b8853e102b42f96ffa6bd3034ce",
         "width": 390,
         "height": 900,
-        "inkPixels": 110009
+        "inkPixels": 110016
       },
       "source": {
         "file": "src/lib/components/organisms/DriftComparison.svelte",
@@ -4548,10 +4582,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:b8ffb8f78b9d63c29a27ada6baa2bffd0b421d5f20611d9b3381d179320ed9a7",
+        "hash": "sha256:7e066376cdb1d973e6786f15657c754a503c46fb51101ae8df6fece2fdc3451c",
         "width": 390,
         "height": 900,
-        "inkPixels": 109994
+        "inkPixels": 109887
       },
       "source": {
         "file": "src/lib/components/organisms/DriftComparison.svelte",
@@ -4565,7 +4599,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:72f9fb2600b47ddada06000c9bbaf3573285455ae556c3a8f8457dd4fb0a653b",
+        "hash": "sha256:48252f78bf6ee091cc8b19d2db8ccda11d065efc1025ec70f76de678881b34ea",
         "width": 390,
         "height": 900,
         "inkPixels": 108110
@@ -4582,10 +4616,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:a377af5b47e7486af9781002d5ade943d78163a3a5434a10a3b68339a9892756",
+        "hash": "sha256:99c22dbf4ff4cd05200973536cd393779b0963c96011f50b6bb8d2cae3f49854",
         "width": 390,
         "height": 900,
-        "inkPixels": 108110
+        "inkPixels": 107996
       },
       "source": {
         "file": "src/lib/components/organisms/DriftComparison.svelte",
@@ -4599,10 +4633,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:0b2a249ae8fda129c9a9725923855dbdc07101dbc9d7ecca6a55c8f0d8fd638e",
+        "hash": "sha256:e75b8b826f24487cc6b39ba2f8219e4cb7f064f7439f04bd4d142fdd91558fd8",
         "width": 390,
         "height": 900,
-        "inkPixels": 135509
+        "inkPixels": 135507
       },
       "source": {
         "file": "src/lib/components/organisms/EvolveThread.svelte",
@@ -4616,10 +4650,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:2c52a345f1eccf6e52652a38251acb9cbe433284c0a757eb764b651e8e16e97b",
+        "hash": "sha256:f76c64f933dbce7a6bb98ae724f332a2d4a08916bf0f30db28b5a7a919db05c6",
         "width": 390,
         "height": 900,
-        "inkPixels": 135485
+        "inkPixels": 135459
       },
       "source": {
         "file": "src/lib/components/organisms/EvolveThread.svelte",
@@ -4633,10 +4667,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:567774a4b5cca856ca864231fed9e9fe8bdac25c16ed95d6d2b6a9c6d1cd12fd",
+        "hash": "sha256:4cdde980f6d1d3e8cf9e2d94338f621b3e4a35c3e5819dc8a16aa1be1dde5a42",
         "width": 390,
         "height": 900,
-        "inkPixels": 134863
+        "inkPixels": 134839
       },
       "source": {
         "file": "src/lib/components/organisms/EvolveThread.svelte",
@@ -4650,10 +4684,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:a9244dbfaa766b4fba82eff74468eda7b0f9b3a74b4c047b340fc3f4f4fc91eb",
+        "hash": "sha256:f1661fe0a3137f7ac46f665122eb785b8a9c0767dd786427d4132bb634073533",
         "width": 390,
         "height": 900,
-        "inkPixels": 134853
+        "inkPixels": 134825
       },
       "source": {
         "file": "src/lib/components/organisms/EvolveThread.svelte",
@@ -4663,14 +4697,14 @@
       }
     },
     "organisms/FaqList/all-closed": {
-      "hash": "b986979a78c79010",
+      "hash": "662eb62dc9276f20",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:700c8c30aaf615c11bd65280415d9ad760661cf6c11c76a4807144603b7ac3d5",
+        "hash": "sha256:9e298c0f4c2a02714815e552fc35c304a2a9140e3dda88b0440f52b30c43574a",
         "width": 390,
         "height": 900,
-        "inkPixels": 16524
+        "inkPixels": 16588
       },
       "source": {
         "file": "src/lib/components/organisms/FaqList.svelte",
@@ -4680,14 +4714,14 @@
       }
     },
     "organisms/FaqList/all-closed--dark": {
-      "hash": "06a2a42d7cc4ce62",
+      "hash": "c60256e87d2bd3cf",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:b0f7a83533c1de76382c5df39bbb95ce70973ff306b768e2fa6b73483b4fd86a",
+        "hash": "sha256:5f818e589b6304b756ac5716e1d563fff12c951055dc14545c39df0b7e5684b6",
         "width": 390,
         "height": 900,
-        "inkPixels": 16524
+        "inkPixels": 16435
       },
       "source": {
         "file": "src/lib/components/organisms/FaqList.svelte",
@@ -4697,14 +4731,14 @@
       }
     },
     "organisms/FaqList/some-open": {
-      "hash": "000e0f51440e9aa2",
+      "hash": "79e37d9cb87bc864",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:7d28fbb6ecac813b84e6c963c563f04e4320e81e84c0b380e8009c0ac470382a",
+        "hash": "sha256:c11315c5f4990a65a9796765b8569d51b3873f317dd2ea2a37723f4303aaf338",
         "width": 390,
         "height": 900,
-        "inkPixels": 31733
+        "inkPixels": 31821
       },
       "source": {
         "file": "src/lib/components/organisms/FaqList.svelte",
@@ -4714,14 +4748,14 @@
       }
     },
     "organisms/FaqList/some-open--dark": {
-      "hash": "8afce94a147193c6",
+      "hash": "5fcfe0381397afc8",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:f16b3a5706e290d28dee137f036b0e755151a07cf1e779f4ba0bae1b525a291a",
+        "hash": "sha256:ff3f476353e411e3b4d0a31013a01a2dd549d64d7d2575a0bb7830d46f6f8eeb",
         "width": 390,
         "height": 900,
-        "inkPixels": 31733
+        "inkPixels": 31475
       },
       "source": {
         "file": "src/lib/components/organisms/FaqList.svelte",
@@ -4731,14 +4765,14 @@
       }
     },
     "organisms/Hero/default": {
-      "hash": "6d20b494de9ed503",
+      "hash": "b4a714e7bacdf79b",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:84436656747fba4d5096e63359c3ca500427d6689330a9da10ab74f0580619e4",
+        "hash": "sha256:a425ad1b2fbdc9f9194d5f2065096a2dfb940e72fa8a656da0ac21d389d84e08",
         "width": 390,
         "height": 1544,
-        "inkPixels": 180099
+        "inkPixels": 180135
       },
       "source": {
         "file": "src/lib/components/organisms/Hero.svelte",
@@ -4748,14 +4782,14 @@
       }
     },
     "organisms/Hero/default--dark": {
-      "hash": "b783c01e4a673d72",
+      "hash": "392b01254b9d8978",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:8a1373f28a1aeb8fdffc278841610199fc6a5ddf3d38dbbe43e9f61bab09de49",
+        "hash": "sha256:c4cd03234d99656b3e08995bb1aae81b0c63ba7cf102d4b7c4dcf3b9987a7fdb",
         "width": 390,
         "height": 1544,
-        "inkPixels": 180099
+        "inkPixels": 179594
       },
       "source": {
         "file": "src/lib/components/organisms/Hero.svelte",
@@ -4765,14 +4799,14 @@
       }
     },
     "organisms/Hero/headline-alternate": {
-      "hash": "011b5ea11f5a18fd",
+      "hash": "8fbc1cd22b69119e",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:8ab8f26add47fd3e7899d25d005c405c58919a4f1e7579a4d200cd7491869bf2",
+        "hash": "sha256:016c5aba1170813eb97cc54e25f81114f42eee959423986797d78c7a5a0ca69f",
         "width": 390,
         "height": 1591,
-        "inkPixels": 190313
+        "inkPixels": 190351
       },
       "source": {
         "file": "src/lib/components/organisms/Hero.svelte",
@@ -4782,14 +4816,14 @@
       }
     },
     "organisms/Hero/headline-alternate--dark": {
-      "hash": "62cae3c45ad8ece8",
+      "hash": "811ffd4517619413",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:99919a40caa1d03456b9c09c630c98f654ada4fe946a333893397680eee48a21",
+        "hash": "sha256:329fa62995a30f61f2009e8dc33768807afdbe46462e38a1420612a5c4035c84",
         "width": 390,
         "height": 1591,
-        "inkPixels": 190313
+        "inkPixels": 189768
       },
       "source": {
         "file": "src/lib/components/organisms/Hero.svelte",
@@ -4799,14 +4833,14 @@
       }
     },
     "organisms/InstallSection/claude": {
-      "hash": "8541411aa1a412e4",
+      "hash": "b57d024835b8f6f7",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:a5ec1bbad9b9575799faedafec9dde3657cfd16eb16feeffdc959fb1103209ac",
+        "hash": "sha256:ed15544ef8604e4383136738de487a5f96982ed014c2b2e6b30e9f7c0c7d30e0",
         "width": 390,
         "height": 1156,
-        "inkPixels": 116427
+        "inkPixels": 116435
       },
       "source": {
         "file": "src/lib/components/organisms/InstallSection.svelte",
@@ -4816,14 +4850,14 @@
       }
     },
     "organisms/InstallSection/claude--dark": {
-      "hash": "cd2157d46ce5d0aa",
+      "hash": "3a0a644e3b043222",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:328a821a1b8813b86e87b4e435b3e0e147a810e811f30ff0f2d576ce875de628",
+        "hash": "sha256:29caef4092e6293f49a07a486476b507ce535d06b1b09e56d03a83e3a1e5feb2",
         "width": 390,
         "height": 1156,
-        "inkPixels": 116427
+        "inkPixels": 116216
       },
       "source": {
         "file": "src/lib/components/organisms/InstallSection.svelte",
@@ -4833,14 +4867,14 @@
       }
     },
     "organisms/InstallSection/codex": {
-      "hash": "fb0fd0b0b4362c67",
+      "hash": "c8d3fef87aa9505a",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:35634c2ec6d1aef8555c58a5fe8d7333f39e6855be3b3c4bd60ed08a5c765366",
+        "hash": "sha256:26cf00490a0fa5916c3cd916fc8a4917d5b78cc18e2bc8781733d503572d9369",
         "width": 390,
         "height": 1233,
-        "inkPixels": 120170
+        "inkPixels": 120178
       },
       "source": {
         "file": "src/lib/components/organisms/InstallSection.svelte",
@@ -4850,14 +4884,14 @@
       }
     },
     "organisms/InstallSection/codex--dark": {
-      "hash": "625fe6086d023b53",
+      "hash": "8fc031d23cdc38a1",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:633e5de2d9bbf9b8b432309f13c6f1af3e65e448c9499ab4500c377f35bc7238",
+        "hash": "sha256:cea125dd589e1c59511442283d5d95b5704baa59b18ec171af12189c35088f88",
         "width": 390,
         "height": 1233,
-        "inkPixels": 120170
+        "inkPixels": 119887
       },
       "source": {
         "file": "src/lib/components/organisms/InstallSection.svelte",
@@ -4867,14 +4901,14 @@
       }
     },
     "organisms/InstallSection/cursor": {
-      "hash": "6c9a2c7a49a0ec94",
+      "hash": "61ee888fd7b0bc44",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:fd742e1a3e11620819e153d635727a5cb03ba3a44fd1badd31dd1d2c59e0e2ad",
+        "hash": "sha256:aa26f1fe0aef4dd1f6d7bc77c0378376f45634fc5f81c29534a018cbdb2977d6",
         "width": 390,
         "height": 1307,
-        "inkPixels": 140981
+        "inkPixels": 140989
       },
       "source": {
         "file": "src/lib/components/organisms/InstallSection.svelte",
@@ -4884,14 +4918,14 @@
       }
     },
     "organisms/InstallSection/cursor--dark": {
-      "hash": "24d69d48b7a6c513",
+      "hash": "3c64822170429a81",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:a8bd7236fcb197c26915fe38708679e7781bb69bae54ae266d17881e8e6308d9",
+        "hash": "sha256:f77fafada6fb4980cd6eb4a4edf3afa47f55433060bacd8c820688787da1d5cb",
         "width": 390,
         "height": 1307,
-        "inkPixels": 140981
+        "inkPixels": 140724
       },
       "source": {
         "file": "src/lib/components/organisms/InstallSection.svelte",
@@ -4901,14 +4935,14 @@
       }
     },
     "organisms/InstallSection/grok": {
-      "hash": "56f92f86e6de4236",
+      "hash": "ce6ffde0087f1435",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:9bdb2082309641abcbf96e98d0dcc6b38ba51019738e6cc28c1bca4ccb274a70",
+        "hash": "sha256:69ef3d7864419a190c199cb017a5f8928a526740ba9047053669387a4556195b",
         "width": 390,
         "height": 1191,
-        "inkPixels": 117600
+        "inkPixels": 117608
       },
       "source": {
         "file": "src/lib/components/organisms/InstallSection.svelte",
@@ -4918,14 +4952,14 @@
       }
     },
     "organisms/InstallSection/grok--dark": {
-      "hash": "c0ac71f5bd5eac45",
+      "hash": "ec9277a537b72fc3",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:12a6e9b048d612d50a84bebc9e283a15cc4a31013e3e99deb39e993458a6100b",
+        "hash": "sha256:7488524a90a47bd7034b8e5725404b5bdc2282df0b663e28aaba1a88c2a8c1d1",
         "width": 390,
         "height": 1191,
-        "inkPixels": 117600
+        "inkPixels": 117370
       },
       "source": {
         "file": "src/lib/components/organisms/InstallSection.svelte",
@@ -4935,14 +4969,14 @@
       }
     },
     "organisms/InstallSection/opencode": {
-      "hash": "3c22f7d702713045",
+      "hash": "8267d08355e101fc",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:c21f75b0d620f489a40b0a3589d0053075fb6469f6f451a26915280362594137",
+        "hash": "sha256:2916d0ee77c032640e96e47b59724ae24252eb259083e447daa7af301653aa9a",
         "width": 390,
         "height": 1395,
-        "inkPixels": 193592
+        "inkPixels": 193600
       },
       "source": {
         "file": "src/lib/components/organisms/InstallSection.svelte",
@@ -4952,14 +4986,14 @@
       }
     },
     "organisms/InstallSection/opencode--dark": {
-      "hash": "bb446f17479065ac",
+      "hash": "79e34907de050cea",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:3d024867990606b447518626b35aeefd9039f3a4bc20a7733b8749ba92479d00",
+        "hash": "sha256:44f38d4fc9ac5bbfc318fd5b9e55522a7bc88d070088944b65999afdd8e19106",
         "width": 390,
         "height": 1395,
-        "inkPixels": 193592
+        "inkPixels": 193378
       },
       "source": {
         "file": "src/lib/components/organisms/InstallSection.svelte",
@@ -4969,14 +5003,14 @@
       }
     },
     "organisms/InstallSection/pi": {
-      "hash": "384fc3be9ac1c4f4",
+      "hash": "4b66c9739916436b",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:7c986ae94f7371f7f2c1293b6aa91ff7c59a7d44dd2c4166244bdd1bda6c4b9a",
+        "hash": "sha256:fb2d842cdafeb2831408b98de17678f2310ef5851f84f2aba488cbdf374ed81a",
         "width": 390,
         "height": 1083,
-        "inkPixels": 94318
+        "inkPixels": 94326
       },
       "source": {
         "file": "src/lib/components/organisms/InstallSection.svelte",
@@ -4986,14 +5020,14 @@
       }
     },
     "organisms/InstallSection/pi--dark": {
-      "hash": "dc850c305e544227",
+      "hash": "3e1f008d160bdb10",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:a08342d0f696bf51a5a1ed7e102b044fa187f25f54366fe684689f5289e92d33",
+        "hash": "sha256:38b12de128897819c6e17e45b1c9a6e658a7175a3de149e29305c1e3d003ff77",
         "width": 390,
         "height": 1083,
-        "inkPixels": 94318
+        "inkPixels": 94103
       },
       "source": {
         "file": "src/lib/components/organisms/InstallSection.svelte",
@@ -5003,14 +5037,14 @@
       }
     },
     "organisms/InstallSection/scan-box": {
-      "hash": "02812ed51fbb80d0",
+      "hash": "c050083c5215d335",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:6e9a217a58a037f99c95c670609e8e4648cbc742a90243cfd523ae8e3d6e3cbc",
+        "hash": "sha256:9ae333c009393a04d5b29ea13cb53f3078eec84d1663f04adeb468429cd03eea",
         "width": 390,
         "height": 1249,
-        "inkPixels": 118275
+        "inkPixels": 118285
       },
       "source": {
         "file": "src/lib/components/organisms/InstallSection.svelte",
@@ -5020,14 +5054,14 @@
       }
     },
     "organisms/InstallSection/scan-box--dark": {
-      "hash": "c3ab237474d2b566",
+      "hash": "4d001b48f2b2f32c",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:7535ad68d80e6058462c42fbb58773fce493895d51e1528f9d6f3c37021ce860",
+        "hash": "sha256:45218327f56782eb3a87cb7a769375ebea8fbc18b3a9d8f2487de20eb4e4f3f4",
         "width": 390,
         "height": 1249,
-        "inkPixels": 118275
+        "inkPixels": 118049
       },
       "source": {
         "file": "src/lib/components/organisms/InstallSection.svelte",
@@ -5041,7 +5075,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:0e6bd85dbdc67e9e37160e563dfdac94073cf0db97d362133ae9734787e42662",
+        "hash": "sha256:a471205d37c25442cae0fbf3fc06b8c2b7bf96af271cab16310f90800c2c4041",
         "width": 390,
         "height": 900,
         "inkPixels": 27445
@@ -5058,10 +5092,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:364f6044018b1ea83b4fb899e010933424a55437e23ccb96c7e336d00a0ae0da",
+        "hash": "sha256:10281715e14471ae7619d02b4fa831a9dba746a37ecb496531ccac67d7d6a322",
         "width": 390,
         "height": 900,
-        "inkPixels": 27445
+        "inkPixels": 27164
       },
       "source": {
         "file": "src/lib/components/organisms/PrinciplesGrid.svelte",
@@ -5075,7 +5109,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:69188f6d9acf711cf210859dfd38334066b9693f15af8025fa2f3a6e09002c6b",
+        "hash": "sha256:60df8dd411381779a8718836b2b936a070ec90c5d60dd6f2624d09f2e2a81146",
         "width": 390,
         "height": 900,
         "inkPixels": 83910
@@ -5092,10 +5126,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:a9b3fd21a3ed0e88d0df04bbd2ad2cdae6f8014b7fab926354f03fe12f5a0a8f",
+        "hash": "sha256:9bb73259080e03485d1d184273b4eb6de66704b5190ca1a2bc8a99d7ae268a78",
         "width": 390,
         "height": 900,
-        "inkPixels": 83910
+        "inkPixels": 83837
       },
       "source": {
         "file": "src/lib/components/organisms/ProofSlider.svelte",
@@ -5109,7 +5143,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:7151fed0e4be8ba146121d972c73a281fd43efe14eebed4be672b15e6c6cfd35",
+        "hash": "sha256:33abab56814c6ae55846d2e3a1b3bf256a0abadb8631bfe1896f26f2f695a23a",
         "width": 390,
         "height": 900,
         "inkPixels": 83915
@@ -5126,10 +5160,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:76f4fde7540b90555b9ca795b85f2f9d2aad1226a68556f7fef4e6c7659296a6",
+        "hash": "sha256:ac34573cab9f82382009dd4d30dac4041f4cd7cdb31616f65bf744d7de6b8a7e",
         "width": 390,
         "height": 900,
-        "inkPixels": 83915
+        "inkPixels": 83842
       },
       "source": {
         "file": "src/lib/components/organisms/ProofSlider.svelte",
@@ -5143,7 +5177,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:7b5d5941cb44323cd2fd4c9cf64ad0764eb58baee3681c6dc5fcab0eac6562ac",
+        "hash": "sha256:a2595a487c599b95da212513b9f433912ed375341c5ae15ac429c3623ac72515",
         "width": 390,
         "height": 900,
         "inkPixels": 83910
@@ -5160,10 +5194,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:65d48b19bcc5edb6437c2dc9eb51f9617ed44745bf14fcd935c34c557926d97e",
+        "hash": "sha256:bfee4d1851a96c1501a9ea129b58a13bcc92efb96312254190b3b7224cb8f754",
         "width": 390,
         "height": 900,
-        "inkPixels": 83910
+        "inkPixels": 83837
       },
       "source": {
         "file": "src/lib/components/organisms/ProofSlider.svelte",
@@ -5177,7 +5211,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:a309d4ce94db3b2314fb2832b995eb317b7e7aea9336fd0b13c3366dfc4286d7",
+        "hash": "sha256:b9d8aefccadba8ab00687651355461fde07b434e3ff6062ea743557104f95ff5",
         "width": 390,
         "height": 900,
         "inkPixels": 2001
@@ -5194,7 +5228,7 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:f438cd8f39a99b0f31b75b72dcd183ddbd6ab0b642f9d48bafebc7e9ddb3020f",
+        "hash": "sha256:5e35662b431b430a086472e525852050da8bb74bd37ea53ce79105d420ff5738",
         "width": 390,
         "height": 900,
         "inkPixels": 1999
@@ -5211,10 +5245,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:b7f3f996a9247c3fc88b639cc5432221b4997418053c4f47010f6d66209a2cee",
+        "hash": "sha256:38f058ecb918c0ed72e7d4d9134a5acbe82a0d24a8fc499829dd571d71383257",
         "width": 390,
         "height": 900,
-        "inkPixels": 4030
+        "inkPixels": 4032
       },
       "source": {
         "file": "src/lib/components/organisms/SiteHeader.svelte",
@@ -5228,10 +5262,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:0884a1692ad3e7f5d9d6608fe8076d02a002788f4bd4848d485100064815b177",
+        "hash": "sha256:640160f7b87800207b8145acce80ff2f2b1399e627ca86d5ccd399b0ed4d7752",
         "width": 390,
         "height": 900,
-        "inkPixels": 4028
+        "inkPixels": 4003
       },
       "source": {
         "file": "src/lib/components/organisms/SiteHeader.svelte",
@@ -5241,103 +5275,103 @@
       }
     },
     "organisms/StepsTimeline/complete": {
-      "hash": "672e886096cd3644",
+      "hash": "f382454ad21d7c05",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:d5c57145d5e9b20675c23eddaf35e4023659aa4899c15494eff5fa843a5043f2",
+        "hash": "sha256:eaa9bfc81abeca62af8748cd4527922b0bc165b5835c836a24ac0b07bc9d5b2e",
         "width": 390,
-        "height": 1462,
-        "inkPixels": 263952
+        "height": 1485,
+        "inkPixels": 266278
       },
       "source": {
         "file": "src/lib/components/organisms/StepsTimeline.svelte",
-        "fileHash": "sha256:e59ff80ce6c2bffb14bc3e56d62189ba2c6b7ac223e1f65bc75fd7980f47607c",
+        "fileHash": "sha256:3593da2903d5c28de44f65881f0e2705efd0bdd6463c385a494fe9d3e861ab10",
         "story": "src/lib/components/organisms/StepsTimeline.stories.svelte",
         "storyHash": "sha256:744ab82bcdaa0421d1a1175ba6a2e21f598539ae94bbc1a9a25ab314c28c6bde"
       }
     },
     "organisms/StepsTimeline/complete--dark": {
-      "hash": "356510bc969a03f4",
+      "hash": "49fd71d895a0c850",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:1282687cadf220cd02658076bd807da51e9676fc840df77bab2df81c15b7b613",
+        "hash": "sha256:89e7101cf78c1557508d1e5eee3541308984732c0ede04fcb61c16e381f2e596",
         "width": 390,
-        "height": 1462,
-        "inkPixels": 263952
+        "height": 1485,
+        "inkPixels": 265988
       },
       "source": {
         "file": "src/lib/components/organisms/StepsTimeline.svelte",
-        "fileHash": "sha256:e59ff80ce6c2bffb14bc3e56d62189ba2c6b7ac223e1f65bc75fd7980f47607c",
+        "fileHash": "sha256:3593da2903d5c28de44f65881f0e2705efd0bdd6463c385a494fe9d3e861ab10",
         "story": "src/lib/components/organisms/StepsTimeline.stories.svelte",
         "storyHash": "sha256:744ab82bcdaa0421d1a1175ba6a2e21f598539ae94bbc1a9a25ab314c28c6bde"
       }
     },
     "organisms/StepsTimeline/halfway": {
-      "hash": "e0098fa11a61a794",
+      "hash": "d32e6181f8cdf4ed",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:ccaf2a2ebbcddfae495f5dbbf786631696b822bf4538a69802a6f99a15d61a7b",
+        "hash": "sha256:43245502679057c526c055b60a057b29ea1a744d30739ff05f8fa2c80f13e05b",
         "width": 390,
-        "height": 1462,
-        "inkPixels": 263826
+        "height": 1485,
+        "inkPixels": 266106
       },
       "source": {
         "file": "src/lib/components/organisms/StepsTimeline.svelte",
-        "fileHash": "sha256:e59ff80ce6c2bffb14bc3e56d62189ba2c6b7ac223e1f65bc75fd7980f47607c",
+        "fileHash": "sha256:3593da2903d5c28de44f65881f0e2705efd0bdd6463c385a494fe9d3e861ab10",
         "story": "src/lib/components/organisms/StepsTimeline.stories.svelte",
         "storyHash": "sha256:744ab82bcdaa0421d1a1175ba6a2e21f598539ae94bbc1a9a25ab314c28c6bde"
       }
     },
     "organisms/StepsTimeline/halfway--dark": {
-      "hash": "1816d157a3f8cb56",
+      "hash": "f6a54559709ebfb0",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:0d918d4852b9867cbc4dd6ac0e44fb1426e004b133fb55447f448a048275fc0a",
+        "hash": "sha256:f1e49c8aa548324a8e9c9a69d6cdc52d2db5a0b64b5c8a1497f5793f13687dda",
         "width": 390,
-        "height": 1462,
-        "inkPixels": 263826
+        "height": 1485,
+        "inkPixels": 265802
       },
       "source": {
         "file": "src/lib/components/organisms/StepsTimeline.svelte",
-        "fileHash": "sha256:e59ff80ce6c2bffb14bc3e56d62189ba2c6b7ac223e1f65bc75fd7980f47607c",
+        "fileHash": "sha256:3593da2903d5c28de44f65881f0e2705efd0bdd6463c385a494fe9d3e861ab10",
         "story": "src/lib/components/organisms/StepsTimeline.stories.svelte",
         "storyHash": "sha256:744ab82bcdaa0421d1a1175ba6a2e21f598539ae94bbc1a9a25ab314c28c6bde"
       }
     },
     "organisms/StepsTimeline/scroll-start": {
-      "hash": "3afecf8d809f49ca",
+      "hash": "e9b2f57687f43849",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:55dfe7eeeb4f7efa782d53e4be1efa105d5e2025c8eb1b5ffe54f37a1379895a",
+        "hash": "sha256:d185d379a5f59b4aec55e0f7f1ee4cef27e37d6b81068c5613c8e0084b5f0061",
         "width": 390,
-        "height": 1462,
-        "inkPixels": 263603
+        "height": 1485,
+        "inkPixels": 266047
       },
       "source": {
         "file": "src/lib/components/organisms/StepsTimeline.svelte",
-        "fileHash": "sha256:e59ff80ce6c2bffb14bc3e56d62189ba2c6b7ac223e1f65bc75fd7980f47607c",
+        "fileHash": "sha256:3593da2903d5c28de44f65881f0e2705efd0bdd6463c385a494fe9d3e861ab10",
         "story": "src/lib/components/organisms/StepsTimeline.stories.svelte",
         "storyHash": "sha256:744ab82bcdaa0421d1a1175ba6a2e21f598539ae94bbc1a9a25ab314c28c6bde"
       }
     },
     "organisms/StepsTimeline/scroll-start--dark": {
-      "hash": "785ee4bf5cf08a47",
+      "hash": "91a634e0ae54711e",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:6ba62b7d03212b2c0640b9ec1d262ee7ba12e97bc4b99f29372fa0d64eb14b9d",
+        "hash": "sha256:8cdf5bcc3ce45e1e6d7c3e6fdd020e0c89d50bab85d9f529c646ec290a7efe12",
         "width": 390,
-        "height": 1462,
-        "inkPixels": 263603
+        "height": 1485,
+        "inkPixels": 265616
       },
       "source": {
         "file": "src/lib/components/organisms/StepsTimeline.svelte",
-        "fileHash": "sha256:e59ff80ce6c2bffb14bc3e56d62189ba2c6b7ac223e1f65bc75fd7980f47607c",
+        "fileHash": "sha256:3593da2903d5c28de44f65881f0e2705efd0bdd6463c385a494fe9d3e861ab10",
         "story": "src/lib/components/organisms/StepsTimeline.stories.svelte",
         "storyHash": "sha256:744ab82bcdaa0421d1a1175ba6a2e21f598539ae94bbc1a9a25ab314c28c6bde"
       }
@@ -5347,10 +5381,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:32501b0f386d25438739d3093df7f68a8a27b70400c9e6d2f26adba760624cbb",
+        "hash": "sha256:837cfb40e9c480183622c97673f1a4505d8dccc05d384e42978d17e30b7e1a61",
         "width": 390,
         "height": 12011,
-        "inkPixels": 635246
+        "inkPixels": 635280
       },
       "source": {
         "file": "src/lib/components/screens/Changelog.svelte",
@@ -5364,10 +5398,10 @@
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:0bcb84953e4e28d32b8807a9f0a6f629e30ab672771dc030fdc802de54060908",
+        "hash": "sha256:3f5c2f8c1ec5d0fa762d6c9943d2aa4231fdca5289ada8154ace163080b3b587",
         "width": 390,
         "height": 12011,
-        "inkPixels": 635220
+        "inkPixels": 627429
       },
       "source": {
         "file": "src/lib/components/screens/Changelog.svelte",
@@ -5377,375 +5411,375 @@
       }
     },
     "screens/Home/copied": {
-      "hash": "62f2cf90bb8b2033",
+      "hash": "60efe0257b04f41f",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:c9c4d2923caba38f65f631f5279638c85453d3c3a2135e47d6fe9f884d8c78cf",
+        "hash": "sha256:1d7c12e64ca25dd3f281e3300e7ff413f5244ef18794d7b87b5d74e38c700570",
         "width": 390,
-        "height": 10913,
-        "inkPixels": 1188574
+        "height": 11352,
+        "inkPixels": 1210101
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/copied--dark": {
-      "hash": "2be2847da314342c",
+      "hash": "6a6f50cc9b6009c2",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:f0d67c634c5c97792fafdbe6a6e5d6b8473b2cf39983d73b9d0132206fa32bf2",
+        "hash": "sha256:4f6b232bd9649631a988aaf6ba8240974033d061680655e728691dc0bbcca9a0",
         "width": 390,
-        "height": 10913,
-        "inkPixels": 1170326
+        "height": 11352,
+        "inkPixels": 1207139
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/default": {
-      "hash": "372418c7f648140b",
+      "hash": "56b04e28e1aed6bf",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:ee1afec34ebcc5f1a13f57ffb5878209cac6f3dd427178243b12554d05970a99",
+        "hash": "sha256:596ae88ec31cfad2685bea31473d8d6dcc9a0289dfd8471088561692724bccd2",
         "width": 390,
-        "height": 10893,
-        "inkPixels": 1181308
+        "height": 11332,
+        "inkPixels": 1203988
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/default--dark": {
-      "hash": "f0341a9933683d4c",
+      "hash": "52c4a1db4b25dfed",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:e67b12948c861f06ff17941329d5fff5db05aa9a270869a88b072767af546f8d",
+        "hash": "sha256:74927bc58401d544cfdc7f4f9ed0e49d8c86605c6a5d564f9892e6a49737f841",
         "width": 390,
-        "height": 10893,
-        "inkPixels": 1163060
+        "height": 11332,
+        "inkPixels": 1201027
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/faq-open": {
-      "hash": "cf89534c20cb5f2e",
+      "hash": "a2f1ac22649be96e",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:3395bd1de5c7dd1eb90ecfb1b96da8ac30318f72d1377e8c93c6abaca1e9df72",
+        "hash": "sha256:3946db8d82c0014651673205c7a78ab0ba8724708201dfe8e9c19f8ae54005b6",
         "width": 390,
-        "height": 11052,
-        "inkPixels": 1191492
+        "height": 11492,
+        "inkPixels": 1214348
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/faq-open--dark": {
-      "hash": "d7bcb7c604b1096f",
+      "hash": "6e9e78b770796872",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:72f2e888924bdad96df1496252ba3fcf243da9aef27cff98992ec6118dca7ef0",
+        "hash": "sha256:b3a6810c90aabc37bc2376555249f7b43c220be1c615bf4c534ce1801011e143",
         "width": 390,
-        "height": 11052,
-        "inkPixels": 1173244
+        "height": 11492,
+        "inkPixels": 1211253
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/headline-alternate": {
-      "hash": "e257e6a3034e0954",
+      "hash": "a3668f106ebb5064",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:c222db74ebb766a09d37c07f847a9204db04257a26570ecd4b25514971104732",
+        "hash": "sha256:7b0989e175eadbc03019a40dcb2726878a9034d1e9493a27b53c0f2c83b47288",
         "width": 390,
-        "height": 10940,
-        "inkPixels": 1192189
+        "height": 11379,
+        "inkPixels": 1214267
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/headline-alternate--dark": {
-      "hash": "68e48f2f265709ad",
+      "hash": "8beb456cec151ffa",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:10b68f72aa61c82dea00b81d9b274c84d1cae4ddd556143b5d62315d232fcfa2",
+        "hash": "sha256:82a269001a0f8e369b0a224378b3dedb16ace82428a59445c4116c1dae0adde7",
         "width": 390,
-        "height": 10940,
-        "inkPixels": 1173941
+        "height": 11379,
+        "inkPixels": 1211266
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-claude": {
-      "hash": "372418c7f648140b",
+      "hash": "56b04e28e1aed6bf",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:ee1afec34ebcc5f1a13f57ffb5878209cac6f3dd427178243b12554d05970a99",
+        "hash": "sha256:596ae88ec31cfad2685bea31473d8d6dcc9a0289dfd8471088561692724bccd2",
         "width": 390,
-        "height": 10893,
-        "inkPixels": 1181308
+        "height": 11332,
+        "inkPixels": 1203988
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-claude--dark": {
-      "hash": "f0341a9933683d4c",
+      "hash": "52c4a1db4b25dfed",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:c26724a04d4fa5d1d1095720609bb8a54e1715d598195a4c4ca9061a1f416932",
+        "hash": "sha256:74927bc58401d544cfdc7f4f9ed0e49d8c86605c6a5d564f9892e6a49737f841",
         "width": 390,
-        "height": 10893,
-        "inkPixels": 1163060
+        "height": 11332,
+        "inkPixels": 1201027
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-codex": {
-      "hash": "e6cc87cb65d95ded",
+      "hash": "b5dfe427cd86e406",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:e4ec0f0c91ae4c68b0382dfb34cce781de02b598a94165c7607d9f78a177fabd",
+        "hash": "sha256:bb5bfeada0ec1035945438cec7aa88ecea7057ece8d8df390ea29ecad057c7b5",
         "width": 390,
-        "height": 10970,
-        "inkPixels": 1185051
+        "height": 11409,
+        "inkPixels": 1207731
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-codex--dark": {
-      "hash": "aa7f3447172ae319",
+      "hash": "69754ec7b4495f93",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:7f214fb67be33d8e1e7d0986e7ab4c5f217651bed853e6a2deb442071e82e8cd",
+        "hash": "sha256:d7682bb56a6f3f3fd3f62ad38cb856ecc348994f5a5d3623f3536dd1f42afeef",
         "width": 390,
-        "height": 10970,
-        "inkPixels": 1166803
+        "height": 11409,
+        "inkPixels": 1204698
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-cursor": {
-      "hash": "f00a5b6bf6940ea8",
+      "hash": "b21ee814d91e0cae",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:0d315a29816843bfdd66f2320d3aa7f5be9445b1d79b87211b03fa99dcd61b08",
+        "hash": "sha256:94c8cf92ac6bf972e06e40ee9e3446be183924f8beb53edea150c4fe34342145",
         "width": 390,
-        "height": 11044,
-        "inkPixels": 1205862
+        "height": 11483,
+        "inkPixels": 1228184
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-cursor--dark": {
-      "hash": "b9bc1a00b01c90a3",
+      "hash": "7bd47275ca484660",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:56985aab9853d7702efdd03f088024773f5a65eb309f1af3e9562d306ff493b6",
+        "hash": "sha256:951708328451f9fba5e08ba3a88f133d128f96e473488f765a0ae20fcf4fee60",
         "width": 390,
-        "height": 11044,
-        "inkPixels": 1187614
+        "height": 11483,
+        "inkPixels": 1225177
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-grok": {
-      "hash": "a53d78b7e01f87a9",
+      "hash": "f2b39df2e7d3384d",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:8dde5665408ce4872eb5e01843ecd2d46c977c4dedd61a1f9086c6359e0c5bc7",
+        "hash": "sha256:7002fa8789f58bb8e9520a6637198c1e65f67b0f2072ae36571bd2525a3ed761",
         "width": 390,
-        "height": 10928,
-        "inkPixels": 1182481
+        "height": 11367,
+        "inkPixels": 1205161
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-grok--dark": {
-      "hash": "d6d5761a5e73986b",
+      "hash": "21d8bb46670b3df0",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:c193e19c8eaa55390ce375c1bea069cb14b981917572f47d2d8293875d024ba4",
+        "hash": "sha256:aaf42b995dd691fb8829452a3422d0eefcf7a548084b694aad5881ddbea74b29",
         "width": 390,
-        "height": 10928,
-        "inkPixels": 1164233
+        "height": 11367,
+        "inkPixels": 1202181
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-opencode": {
-      "hash": "f8577f2b61867df8",
+      "hash": "27bb3c67ab499cf2",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:662ea4cb1de2b4519321943a852257a98543eb1b36870ba5bfe6d84ecd5dceb5",
+        "hash": "sha256:b4ef6146a590524c93387c48cc6208f46fcbbead1fef7a53350dc9dc4428affe",
         "width": 390,
-        "height": 11133,
-        "inkPixels": 1258473
+        "height": 11572,
+        "inkPixels": 1280795
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-opencode--dark": {
-      "hash": "88effe5b0e2cc3e9",
+      "hash": "45f452309c953227",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:8238b668dfa3e618507c1b5d44ef2a3193ddffd57b34d7fec312a52516885f60",
+        "hash": "sha256:589acb62d359f8cebb8efc32af281884159b7e17ff686ec0a996bfd23f1dde91",
         "width": 390,
-        "height": 11133,
-        "inkPixels": 1240225
+        "height": 11572,
+        "inkPixels": 1277831
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-pi": {
-      "hash": "cbeb96cab0f39e34",
+      "hash": "f132ef9cb525fac2",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:81bb04d92765bd4311a76c4d7fe9b7033e85dedd30ef0470484a2541c7bb0978",
+        "hash": "sha256:ebe83b433099f0d534df0922679e09f7247f279ed478e1523ce0f1c3eb4b6243",
         "width": 390,
-        "height": 10820,
-        "inkPixels": 1159557
+        "height": 11260,
+        "inkPixels": 1182055
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-pi--dark": {
-      "hash": "69da867b55621fe5",
+      "hash": "b80e40c5e1719c8f",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:6eda87c9623d5803c4c74fd9cec006afec8dd038259e788d4c94c409d5d9af0a",
+        "hash": "sha256:1c007d33f4cf0ecf866a2575431049fa6ee7060ef34abc07666d4223ddd705fa",
         "width": 390,
-        "height": 10820,
-        "inkPixels": 1141309
+        "height": 11260,
+        "inkPixels": 1179090
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/phone": {
-      "hash": "372418c7f648140b",
+      "hash": "56b04e28e1aed6bf",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:ee1afec34ebcc5f1a13f57ffb5878209cac6f3dd427178243b12554d05970a99",
+        "hash": "sha256:596ae88ec31cfad2685bea31473d8d6dcc9a0289dfd8471088561692724bccd2",
         "width": 390,
-        "height": 10893,
-        "inkPixels": 1181308
+        "height": 11332,
+        "inkPixels": 1203988
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/phone--dark": {
-      "hash": "f0341a9933683d4c",
+      "hash": "52c4a1db4b25dfed",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:c26724a04d4fa5d1d1095720609bb8a54e1715d598195a4c4ca9061a1f416932",
+        "hash": "sha256:74927bc58401d544cfdc7f4f9ed0e49d8c86605c6a5d564f9892e6a49737f841",
         "width": 390,
-        "height": 10893,
-        "inkPixels": 1163060
+        "height": 11332,
+        "inkPixels": 1201027
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:8d8f6b0f9849c5ade30210704274706b083088111989f7bc6e987317ef27964e",
+        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }

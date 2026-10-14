@@ -128,13 +128,16 @@ function excerpts() {
 		[['plain', '    '], ['key', '"appears_on"'], ['plain', `: ${frameList(copy)} }, …`]]
 	];
 	// Status: one line per layer from the gates this site's manifest records. Kept to 36 characters so the
-	// counts show in full at 390 (strategy line 546: the status block must not clip).
+	// counts show in full at 390 (strategy line 546: the status block must not clip). 10.0 writes no
+	// tokens gate (token captures are receipted, not gated), so the tokens line prints its count only.
 	const g = manifest.platforms['web-desktop'].gates;
 	const colours = (readFileSync(join(site, 'src/app.css'), 'utf8').match(/^\s*--color-(?!\*|transparent|current)[a-z-]+:/gm) ?? []).length;
 	const counts = { tokens: `${colours} colours`, atoms: inventory.atoms.length, molecules: inventory.molecules.length, organisms: inventory.organisms.length, screens: inventory.screens.length };
-	const gate = { tokens: 'tokens_capture', atoms: 'atoms', molecules: 'molecules', organisms: 'organisms', screens: 'compose' };
+	const gate = { atoms: 'atoms', molecules: 'molecules', organisms: 'organisms', screens: 'compose' };
 	let building = false;
-	const statusLines = Object.keys(gate).map((layer) => {
+	const statusLines = [
+		[['plain', 'tokens'.padEnd(10)], ['plain', `  ${counts.tokens}`]],
+		...Object.keys(gate).map((layer) => {
 		const name = layer.padEnd(10);
 		const count = typeof counts[layer] === 'number' ? `${counts[layer]} components` : counts[layer];
 		if (g[gate[layer]] === 'passed') return [['plain', name], ['success', 'gate passed'], ['plain', `  ${count}`]];
@@ -143,7 +146,8 @@ function excerpts() {
 			return [['plain', name], ['value', 'building']];
 		}
 		return [['plain', name], ['comment', 'waiting']];
-	});
+		})
+	];
 	return { manifest: manifestLines, inventory: inventoryLines, status: statusLines };
 }
 

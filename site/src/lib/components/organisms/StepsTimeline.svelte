@@ -53,7 +53,7 @@
 				title: 'CHECK THE PROOF',
 				command: '/pixel-perfect:status',
 				description:
-					'A gate is a check of one layer against its frames. It runs once per layer, so the next layer starts from parts that already match.',
+					'A packaged judge compares every render to its frame, and a pass needs a real PNG — only the gate writes one. It runs once per layer, so the next layer starts from parts that already match.',
 				threshold: 0.7,
 				panel: { title: 'status', lines: excerpts.status }
 			}
