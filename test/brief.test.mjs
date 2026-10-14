@@ -2006,4 +2006,42 @@ describe("brief.mjs judge", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  test("a component with a judgment bound to its current hashes leaves the brief, and a stale one comes back", () => {
+    const root = judgeProject();
+    const file = path.join(root, "design/.briefs/web-desktop/judge-atoms.md");
+    const hashesOf = (text, name) => {
+      const section = text.split(`## atoms/${name}\n`)[1].split("\n## ")[0];
+      return Object.fromEntries([...section.matchAll(/^- (golden|file|story|frames|render): (\S+)$/gm)].map((m) => [m[1], m[2]]));
+    };
+    const record = (name, hashes) => {
+      const dir = path.join(root, "design/fidelity/web-desktop/atoms");
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(path.join(dir, `${name}.json`), JSON.stringify({ verdict: "fail", hashes }));
+    };
+    try {
+      assert.equal(runCli(["judge", root, "--platform", "web-desktop", "--layer", "atoms"]).code, 0);
+      const first = readFileSync(file, "utf8");
+      for (const name of ["One", "Two", "Three", "Four", "Five", "Six"]) record(name, hashesOf(first, name));
+      assert.equal(runCli(["judge", root, "--platform", "web-desktop", "--layer", "atoms"]).code, 0);
+      const second = readFileSync(file, "utf8");
+      assert.ok(second.includes("## atoms/Seven"));
+      assert.equal(second.includes("## atoms/One"), false);
+      assert.equal(second.includes("more components are not in this brief"), false);
+
+      writeFileSync(path.join(root, "src/Two.tsx"), "export const Two = () => 2;\n");
+      assert.equal(runCli(["judge", root, "--platform", "web-desktop", "--layer", "atoms"]).code, 0);
+      const third = readFileSync(file, "utf8");
+      assert.ok(third.includes("## atoms/Two"), "a changed file makes its judgment stale");
+      assert.ok(third.includes("## atoms/Seven"));
+
+      record("Two", hashesOf(third, "Two"));
+      record("Seven", hashesOf(third, "Seven"));
+      const done = runCli(["judge", root, "--platform", "web-desktop", "--layer", "atoms"]);
+      assert.notEqual(done.code, 0);
+      assert.match(done.stderr, /nothing to judge/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });

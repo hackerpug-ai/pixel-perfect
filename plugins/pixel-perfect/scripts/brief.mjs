@@ -703,7 +703,7 @@ function boundRenders(structural, renders) {
   return renders.filter((file) => states.has(stemOf(file)));
 }
 
-function judgeBlock({ root, manifest, platformId, layer, item }) {
+function judgeInputs({ root, manifest, platformId, layer, item }) {
   const renderDir = join(root, "design", ".captures", platformId, layer, item.name);
   const renders = listNamed(renderDir, (name) => name.toLowerCase().endsWith(".png"));
   const structural = listNamed(renderDir, (name) => !name.toLowerCase().endsWith(".png"));
@@ -727,6 +727,34 @@ function judgeBlock({ root, manifest, platformId, layer, item }) {
   const storyPath = item.story ? join(root, item.story) : null;
   if (storyPath && !existsSync(storyPath)) fail(`story file is not on disk: ${storyPath}`);
   const renderHash = boundRenders(structural, renders);
+  return {
+    renders,
+    frames,
+    hashes: {
+      golden: structural.length ? hashFiles(structural) : "none",
+      file: digest(readFileSync(filePath)),
+      story: storyPath ? digest(readFileSync(storyPath)) : "none",
+      frames: frames.length ? hashFiles([...frames].sort()) : "none",
+      render: renderHash.length ? hashFiles(renderHash) : "none",
+    },
+  };
+}
+
+// A component whose recorded judgment is bound to the hashes on disk now is already judged.
+// Skipping it is what lets the next run reach the components after the first six.
+function judgedNow(root, platformId, layer, item, hashes) {
+  const file = join(root, "design", "fidelity", platformId, layer, `${item.name}.json`);
+  if (!existsSync(file)) return false;
+  let stored;
+  try {
+    stored = JSON.parse(readFileSync(file, "utf8"));
+  } catch {
+    return false;
+  }
+  return ["golden", "file", "story", "frames", "render"].every((key) => stored?.hashes?.[key] === hashes[key]);
+}
+
+function judgeBlock(layer, item, { renders, frames, hashes }) {
   return [
     `## ${layer}/${item.name}`,
     "",
@@ -737,11 +765,7 @@ function judgeBlock({ root, manifest, platformId, layer, item }) {
     ...frames.map((file) => `- ${file}`),
     "",
     "Copy these hashes into hashes. A hash that does not match is rejected.",
-    `- golden: ${structural.length ? hashFiles(structural) : "none"}`,
-    `- file: ${digest(readFileSync(filePath))}`,
-    `- story: ${storyPath ? digest(readFileSync(storyPath)) : "none"}`,
-    `- frames: ${frames.length ? hashFiles([...frames].sort()) : "none"}`,
-    `- render: ${renderHash.length ? hashFiles(renderHash) : "none"}`,
+    ...["golden", "file", "story", "frames", "render"].map((key) => `- ${key}: ${hashes[key]}`),
   ].join("\n");
 }
 
@@ -749,15 +773,19 @@ export function judgeBrief({ root, platform, layer }) {
   const manifest = loadManifest(root);
   const { id: platformId, config } = resolvePlatform(manifest, platform);
   const items = (config[layer] ?? []).filter((item) => item && item.name && item.file);
-  const chosen = items.slice(0, 6);
-  const rest = items.length - chosen.length;
+  const pending = items
+    .map((item) => ({ item, inputs: judgeInputs({ root, manifest, platformId, layer, item }) }))
+    .filter(({ item, inputs }) => !judgedNow(root, platformId, layer, item, inputs.hashes));
+  if (pending.length === 0) fail(`nothing to judge: every ${layer} component on ${platformId} has a judgment bound to its current hashes`);
+  const chosen = pending.slice(0, 6);
+  const rest = pending.length - chosen.length;
   const doc = readFileSync(join(PLUGIN_ROOT, "docs/FIDELITY-BRIEF.md"), "utf8");
   const task = fillTemplate(extractTemplate(doc), {
     PLATFORM: platformId,
     LAYER: layer,
     COUNT: String(chosen.length),
     REMAINING: rest > 0 ? `${rest} more components are not in this brief. Judge these, then run the command again.` : "",
-    COMPONENTS: chosen.map((item) => judgeBlock({ root, manifest, platformId, layer, item })).join("\n\n"),
+    COMPONENTS: chosen.map(({ item, inputs }) => judgeBlock(layer, item, inputs)).join("\n\n"),
     VERDICT: VERDICT_SHAPE,
   });
   if (task.includes("<<")) fail("judge brief left a placeholder unfilled");
