@@ -14,7 +14,7 @@
 
 import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
-import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { loadManifest, resolvePlatform } from "./verify-catalog.mjs";
 import { digest, inside } from "./reference-revisions.mjs";
@@ -690,6 +690,19 @@ function hashFiles(files) {
   return digest(Buffer.concat(files.map((file) => readFileSync(file))));
 }
 
+function stemOf(file) {
+  const base = basename(file);
+  const dot = base.lastIndexOf(".");
+  return dot > 0 ? base.slice(0, dot) : base;
+}
+
+// Dark review shots sit beside the story PNG. The gate hashes only the PNG paired with
+// each structural story, so the hash the judge copies has to be that same set.
+function boundRenders(structural, renders) {
+  const states = new Set(structural.map(stemOf));
+  return renders.filter((file) => states.has(stemOf(file)));
+}
+
 function judgeBlock({ root, manifest, platformId, layer, item }) {
   const renderDir = join(root, "design", ".captures", platformId, layer, item.name);
   const renders = listNamed(renderDir, (name) => name.toLowerCase().endsWith(".png"));
@@ -713,6 +726,7 @@ function judgeBlock({ root, manifest, platformId, layer, item }) {
   if (!existsSync(filePath)) fail(`component file is not on disk: ${filePath}`);
   const storyPath = item.story ? join(root, item.story) : null;
   if (storyPath && !existsSync(storyPath)) fail(`story file is not on disk: ${storyPath}`);
+  const renderHash = boundRenders(structural, renders);
   return [
     `## ${layer}/${item.name}`,
     "",
@@ -727,7 +741,7 @@ function judgeBlock({ root, manifest, platformId, layer, item }) {
     `- file: ${digest(readFileSync(filePath))}`,
     `- story: ${storyPath ? digest(readFileSync(storyPath)) : "none"}`,
     `- frames: ${frames.length ? hashFiles([...frames].sort()) : "none"}`,
-    `- render: ${renders.length ? hashFiles(renders) : "none"}`,
+    `- render: ${renderHash.length ? hashFiles(renderHash) : "none"}`,
   ].join("\n");
 }
 
