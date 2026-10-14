@@ -1,14 +1,14 @@
 ---
 stability: CONSTITUTION
-last_validated: 2026-10-13
-prd_version: 1.0.0
+last_validated: 2026-10-14
+prd_version: 1.0.1
 ---
 
 # Architecture Diagram
 
 ```
 Maintainer
-    |  nightly / hand / push to main (plugin paths)
+    |  nightly published / hand selected mode / push exact checkout
     v
 [harness-eval workflow]
     |-- [drift-proof job] -----------------> harness-eval/drift
@@ -27,11 +27,13 @@ Maintainer
     +-- newest graded fail only --> [fix agent, no write token]
                                          |
                                          v
-                                   [patch recheck on base SHA]
+                                   [reproduce + patch recheck on main repair base]
                                          |
                                          v
-                                   [confirming run, graders from base]
+                                   [confirm exact patch, immutable base graders]
                                          |
                                          v
-                                   [heal app opens PR] --> person merges
+                                   [heal app opens PR; bot merge denied] --> person merges
 ```
+
+Publish resolves trusted checkout run/attempt, actual loaded bytes, 36-hour freshness, and published compatibility holds, then repeats local drift. Published success alone never authorizes a candidate.

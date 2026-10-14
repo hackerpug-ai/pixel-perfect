@@ -1,7 +1,7 @@
 ---
 stability: FEATURE_SPEC
-last_validated: 2026-10-13
-prd_version: 1.0.0
+last_validated: 2026-10-14
+prd_version: 1.0.1
 scope_posture: full
 ---
 
@@ -62,7 +62,7 @@ Each night, when the owner starts a run by hand, and after accepted plugin chang
 - Pull-request tracking for each sprint. Accepted work lands on main.
 - An approve-everything permission stance. The stance is not approve-everything. The exact flags are an engineering choice, not a product feature.
 - A fix pull request for a could-not-run result. Could-not-run is not a graded product defect. It blocks the release and does not open a fix.
-- Scripted answers on the first grades. The first checks ask nothing. The shared resume path is only for later answers.
+- Scripted answers on the first grades. List, status, and verify ask nothing; the independent must-ask probe stops at its first question and receives no answer. The shared resume path is only for later answers.
 - Clearing a pinned release block by merging a newest-only fix. That merge does not clear a pinned block, and an open fix is not a cleared release.
 
 ## Constraints
@@ -72,3 +72,11 @@ Each night, when the owner starts a run by hand, and after accepted plugin chang
 - Cursor is a real channel. It has no key yet and no headless trial, and the owner has not exempted it.
 - Permission is not approve-everything. Choosing the exact flags is outside this product scope.
 - A fix stays inside the current change allowlist until that limit is explicitly re-checked.
+
+## Accepted remediation decisions (2026-10-14)
+
+Nightly runs evaluate only the published plugin, resolved once per run. Plugin pushes evaluate the exact checkout. Manual runs select a mode and default to checkout. Each run retains twelve cells. Candidate release authorization requires the latest trusted complete checkout evaluation for that commit, at most 36 hours old; a newer pending, failed, or cancelled attempt invalidates the older pass. A blocking published observation requires a subsequent qualifying checkout evaluation to clear it. The detailed transition rules are in [API Design](09-technical-requirements/04-api-design.md).
+
+Correct planted-defect detection is an evaluation pass if the clean twin passes and evidence is valid. List, status, and verify ask nothing. The separate initialization question probe stops at its first valid question without an answer. Later scripted-answer checks remain report-only. Structural-only live verification must prove that no image judging occurred, including in child calls.
+
+The existing fix patterns are relative to plugins/pixel-perfect. Resolving that root does not widen the allowlist. A newest failure must reproduce on the recorded main repair base and its exact patch must pass confirmation before a human-reviewable PR exists. Repository enforcement must deny the heal app merge authority. These are specification requirements, not claims of deployed controls.

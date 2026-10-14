@@ -1,7 +1,7 @@
 ---
 stability: CONSTITUTION
-last_validated: 2026-10-13
-prd_version: 1.0.0
+last_validated: 2026-10-14
+prd_version: 1.0.1
 ---
 
 # External Dependencies
@@ -13,7 +13,8 @@ prd_version: 1.0.0
 | GitHub Actions environments harness-smoke, heal-agent, and heal-pr | smoke matrix, confirming run, fix-agent job, heal pull-request job | https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment |
 | GitHub commit statuses API | pinned-channel status job and release gate | https://docs.github.com/en/rest/commits/statuses |
 | GitHub Actions artifacts API | grade recorder and release gate | https://docs.github.com/en/rest/actions/artifacts |
-| anthropics/claude-code-action | fix-agent job | https://github.com/anthropics/claude-code-action/blob/main/docs/security.md |
+| Pinned Claude Code CLI, direct programmatic execution | fix-agent job; no GitHub/OIDC token in model process | https://code.claude.com/docs/en/headless |
+| GitHub branch rulesets: restrict updates and explicit bypass actors | human-only merge prerequisite | https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets#restrict-updates |
 | actions/create-github-app-token | heal pull-request job | https://github.com/actions/create-github-app-token |
 | actions/checkout, actions/upload-artifact, and actions/download-artifact | every job in harness-eval and the tag-release gate | https://github.com/actions/checkout |
 | GitHub App pixel-perfect-heal app id 5156617 | heal pull-request job | https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/making-authenticated-api-requests-with-a-github-app |

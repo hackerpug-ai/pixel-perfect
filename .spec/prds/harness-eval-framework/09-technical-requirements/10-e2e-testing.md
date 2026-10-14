@@ -1,7 +1,7 @@
 ---
 stability: CONSTITUTION
-last_validated: 2026-10-13
-prd_version: 1.0.0
+last_validated: 2026-10-14
+prd_version: 1.0.1
 ---
 
 # E2E Harness Constitution
@@ -10,7 +10,7 @@ The constitution is incomplete until the reference flow below is green on a real
 
 ## Framework
 
-GitHub Actions drives real harness CLIs. The surfaces are the six CLIs (Claude Code, Codex, Grok, OpenCode, Pi, Cursor) on a GitHub-hosted Linux runner, plus the local release script. There is no browser and no device. The pinned track blocks a release. The newest track warns. Desktop GUI harnesses are out.
+GitHub Actions drives real harness CLIs. The surfaces are the six CLIs (Claude Code, Codex, Grok, OpenCode, Pi, Cursor) on a GitHub-hosted Linux runner, plus the local release script. There is no product browser or device surface. The human merge/reject gate uses real GitHub in a browser. The pinned track blocks a release. The newest track warns. Desktop GUI harnesses are out.
 
 ## Determinism seam
 
@@ -43,3 +43,9 @@ Run once. A failure is real. Do not retry a cell to turn it green.
 ## CI lanes
 
 The pinned status blocks publish. The newest track does not, unless the cell could not run. Later checks do not fail the job. Drift is its own status. Pull requests do not run this workflow.
+
+## Required discriminating controls
+
+Use real services and captures for loaded checkout versus stale cache; old success versus newer cancelled attempt; correct planted detection versus missed defect and clean false positive; exact report versus unrelated file; two factual status states; question before work versus expensive work first; actual consumed key removal; no-op/regressing repair; bot merge denial; lost persisted session; and hidden screenshot judging. Unknown observability is could-not-run. No core logic, provider, GitHub record, or CLI is stubbed.
+
+T-RUN-010 is a process/history gate using accepted contribution SHAs and the authoritative sprint tracker; a workflow trigger is insufficient. Preserve the same test ID.

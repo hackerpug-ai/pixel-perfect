@@ -1,7 +1,7 @@
 ---
 stability: FEATURE_SPEC
-last_validated: 2026-10-13
-prd_version: 1.0.0
+last_validated: 2026-10-14
+prd_version: 1.0.1
 functional_group: RPT
 ---
 
@@ -26,11 +26,11 @@ Sits under 'Maintainer reads decline-a-change, scripted-answer, resume, one-full
 
 ## UC-RPT-02: Carry a later answer on one resume path
 
-Sits under 'System carries a later answer on a shared resume path.' Scripted answers for every harness use that one path. The first checks still ask nothing.
+Sits under 'System carries a later answer on a shared resume path.' Scripted answers for every harness use that one path. List, status, and verify still ask nothing; the separate must-ask probe receives no answer.
 
 ### Acceptance Criteria
 
 - ☐ Maintainer can rely on scripted answers using one resume-with-text path for Claude Code, Codex, Grok, OpenCode, Pi, and Cursor.
 - ☐ Maintainer can rely on that path being used for later answers only.
-- ☐ Maintainer can rely on the first checks still asking nothing when this later path exists.
+- ☐ Maintainer can rely on list, status, and verify still asking nothing and the separate must-ask probe receiving no answer when this later path exists.
 

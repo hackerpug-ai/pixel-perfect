@@ -18,7 +18,7 @@ action:
     - Run the harness-eval workflow for this use case on a real runner.
 end_state:
   must_observe:
-    - The planted tree for Grok pinned contains defect DEF-SHIFT-BASELINE.
+    - The planted tree for Grok pinned contains defect atoms/Button/default.
   must_not_observe:
     - A pass taken from process exit code 0 alone.
 negative_control:
@@ -29,6 +29,6 @@ evidence:
   required_capture: true
 ---
 
-# The clean twin passes verify and gets no failure report
+# The clean twin passes and retains its own report
 
-The planted tree for Grok pinned contains defect DEF-SHIFT-BASELINE. The clean twin is that same tree with the defect removed. Verify runs on the clean twin for Grok pinned. The verify grade is pass. No failure report is written for the twin at the planted case's report path. The planted tree can still fail verify in the same night. That failure does not change the twin's pass. The twin result names the clean fixture as what was verified.
+The planted tree for Grok pinned contains defect atoms/Button/default. The clean twin is that same tree with the defect removed. Verify runs on the clean twin for Grok pinned. The verify grade is pass. The evaluator retains the twin's case-declared reports/verify-clean.json, distinct from the planted invocation's report. Correct planted detection in the other invocation does not change the twin's pass; the pair earns evaluation pass. The twin result names the clean fixture as what was verified.

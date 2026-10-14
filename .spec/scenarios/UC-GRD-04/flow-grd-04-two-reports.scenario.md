@@ -9,6 +9,6 @@ scope: task
 test_tier: e2e
 ---
 
-# Two verify failures keep the two paths and do not swap bodies
+# Separate invocations cannot exchange reports
 
-In one run, Cursor newest fails verify on DEF-LAYER-GAP, and Pi pinned fails verify on DEF-QUESTION-RULE. The Cursor case names reports/cursor-newest-verify.md. The Pi case names reports/pi-pinned-verify.md. Both files exist at those paths. The Cursor file names Cursor, newest, and DEF-LAYER-GAP, and it does not mention Pi. The Pi file names Pi, pinned, and DEF-QUESTION-RULE, and it does not mention Cursor. There is no third blended file, and neither defect string is turned into a filename.
+Run the same canonical atoms/Button/default planted case for Pi pinned and Claude Code newest. Each invocation declares reports/verify-button-drift.json relative to its own directory. Both evaluator reports name their actual harness, track, invocation, loaded identity, and source capture hash. Correct detection can pass both evaluations. Swap the bodies or provide a stale report from another attempt: evidence binding fails, even though the defect key and relative filename are equal. No merged report replaces either one.

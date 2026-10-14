@@ -9,6 +9,6 @@ scope: task
 test_tier: e2e
 ---
 
-# A forged schedule event does not start the nightly grade
+# Untrusted GitHub events cannot impersonate schedule
 
-An HTTP client that is not the scheduler posts a body claiming the cron time is 06:17 UTC and asking to start the nightly grade. The client has no maintainer credential. The service rejects the request and writes no run id. No grade file appears for any harness. A second attempt posts a GitHub-shaped schedule payload signed with the wrong secret at 11:00 UTC. That attempt is rejected too, and the run list stays unchanged. Only the real scheduler at the next 06:17 UTC starts the nightly grade.
+Inspect the real workflow trigger allowlist and send an unauthorized workflow-dispatch request to GitHub from an identity without repository permission. Require rejection and no eval run from that request. A fork PR or repository_dispatch payload claiming event schedule cannot start the secret-bearing workflow. At release, a result from another workflow with a matching artifact/context name is rejected against actual producer metadata. There is no product HTTP receiver to forge or local signing secret to simulate.

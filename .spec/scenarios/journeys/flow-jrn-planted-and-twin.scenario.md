@@ -10,6 +10,6 @@ covers_ucs: [UC-GRD-04, UC-GRD-05]
 test_tier: e2e
 ---
 
-# Planted defect and clean twin
+# Planted detection and clean control earn evaluation pass
 
-Verify runs on a planted tree for Claude Code pinned and fails on DEF-SHIFT-BASELINE. The report appears only at reports/claude-code-pinned-verify.md, the path the case names. The file states Claude Code, pinned, and that defect. The grader does not add a filename of its own. The clean twin of the same tree, which does not contain the defect, then runs verify. The twin's verify grade is pass. No failure report is written for the twin, and the planted report is not rewritten to blame the twin.
+Run real structural-only verify on the planted fixture and clean twin. The planted invocation detects atoms/Button/default and leaves protected files unchanged; the clean invocation passes. Retain the case-declared reports reports/verify-button-drift.json and reports/verify-clean.json in their separate invocation directories with observed evidence references. Verify evaluation is pass, despite expected planted oracle exit 1. This alone creates no pinned block or newest repair. A missed defect, clean false positive, report swap, or unrelated-file substitution must fail the relevant evaluation.

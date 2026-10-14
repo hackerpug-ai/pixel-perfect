@@ -9,6 +9,6 @@ scope: task
 test_tier: e2e
 ---
 
-# A read-only report directory does not get a fallback filename
+# Unwritable report storage cannot select a fallback
 
-Verify fails for Codex newest on the planted defect DEF-STALE-ADAPTER. The case names reports/codex-newest-verify.md, and the reports directory cannot be created because the parent is read-only. The run marks the reporting step failed. No file appears at ./codex-newest-verify.md or /tmp/verify.md. The defect id is not used as a filename. The grade remains a verify failure plus a reporting error. A search of the run directory finds no report name the grader invented.
+Make the invocation report parent genuinely read-only for the evaluator's runtime user. Actual report creation fails. Record report-unavailable/could-not-run, refuse release, and open no repair PR for this storage failure. No file appears in the working-directory root or /tmp as a substitute. Restore write permission in a fresh invocation and require its exact case report to persist successfully.

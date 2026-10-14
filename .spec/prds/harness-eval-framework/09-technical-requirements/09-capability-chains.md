@@ -1,43 +1,40 @@
 ---
 stability: CONSTITUTION
-last_validated: 2026-10-13
-prd_version: 1.0.0
+last_validated: 2026-10-14
+prd_version: 1.0.1
 ---
 
 # Capability Chains
 
 ## CAP-EVAL-01 Install and grade
 
-- Promise: each of the six harnesses, on the pinned version and the newest version, produces a grade file and an event stream.
-- Trigger: nightly schedule, hand dispatch, or a push to main that touches the plugin.
-- Hops: resolve version, install in the selected mode with no API key, list commands with no model call, copy the fixture, run the ask-nothing checks with stdin closed and an outer timeout, write the grade.
-- Failure: a missing key, a missing grade file, a timeout, or a plugin that did not load is could-not-run. A parsed run that breaks a check is fail. Exit code 0 does not choose.
-- Proof: a real runner, real CLIs, and real keys. Linux installs are unproven until that run exists.
+- Promise: six harnesses by pinned/newest, one install mode, actual loaded-byte identity, four evidence-based grades.
+- Trigger: published nightly; checkout plugin push; manual mode selection, checkout default.
+- Hops: resolve pins and plugin once; install with no key; verify loaded digest; no-model list; factual status; structural-only planted/clean verify pair; independent must-ask init probe; deterministic grade/report writer.
+- Failure: unavailable dependencies/mapping/identity is could-not-run; observed behavioral violations fail. Correct planted detection plus clean pass is evaluation pass. Exit code alone decides nothing.
+- Proof: real runner/CLIs/keys with stale-cache, positive-status, report-binding, question-order, and hidden-image-judge controls. Per-version mappings and Linux installs remain unverified.
 - Owners: harness-adapter implementer, GitHub Actions implementer.
 
 ## CAP-EVAL-02 Release gate
 
-- Promise: publish refuses a red or missing pinned channel and a could-not-run, and does not refuse a newest-only graded failure.
-- Trigger: `scripts/release.mjs publish` or the tag-release workflow.
-- Hops: read commit status `harness-eval/pinned` and artifact `harness-eval-result` for the publish SHA. Repeat the drift proof locally.
-- Failure: missing status, missing artifact, SHA mismatch, pinned fail, could-not-run, or drift refuses the publish. A green workflow conclusion is not a pass.
-- Proof: a real tag dry-run against a real status and a real artifact.
-- Owners: GitHub Actions implementer, the release-script owner.
+- Promise: only the latest trusted exact-checkout evidence, within 36 hours, can authorize release; newest-only failures warn, could-not-run blocks either track.
+- Hops: [API Design](04-api-design.md) authenticates producer/run/attempt/status/artifact, selects without success fallback, checks identity/freshness/published holds, repeats drift locally, and rechecks authority before publish.
+- Failure: pending/cancelled/incomplete/stale/mismatched/missing evidence refuses release. Published success, open/merged fix, and later reports never authorize it.
+- Proof: real GitHub records and dry-run rejection controls, including a newer cancelled attempt after success and the 36-hour boundary.
+- Owners: GitHub Actions implementer, release-script owner.
 
 ## CAP-EVAL-03 Fix pull request
 
-- Promise: a newest-only graded failure opens one pull request a person merges. A pinned failure and a could-not-run do not.
-- Trigger: at least one newest cell whose grade is fail.
-- Hops: read-only fix agent with no GitHub token, patch recheck on the graded base SHA, confirming run using graders from the base branch, app token opens the pull request.
-- Failure: a patch outside `harness/*.json` and `skills/**`, a patch that touches tests, fixtures, graders, validators, CI, or the release script, a confirming run that could not run, or a planted defect that is no longer red. No pull request is opened.
-- Proof: a real run with a deliberately broken path, and a real pull request opened by the app.
-- Owners: GitHub Actions implementer.
+- Promise: newest evaluated fail checks can produce a confirmed patch for a person to merge; pinned failures and could-not-run are never repair inputs.
+- Hops: reproduce on current main repair base with original versions; directly invoke pinned Claude CLI without GitHub/OIDC credentials; enforce plugin-root allowlist; confirm exact patch against immutable base graders across twelve cells; verify unchanged base; separate app opens PR.
+- Failure: no reproduction, forbidden path, no-op/ineffective/regressing patch, required could-not-run, missing planted/clean controls, changed base, or absent human-only merge enforcement opens no PR. Report the reason; do not broaden permissions/scope.
+- Proof: real provider call and local diff; real confirmation; app creates branch/PR but is refused merge by repository policy; human merge and reject receipts. Independent pinned failure remains a release block.
+- Owners: GitHub Actions implementer; repository owner for rule prerequisite; human maintainer for merge/reject gate.
 
 ## CAP-EVAL-04 Resume with text
 
-- Promise: later checks that must receive an answer use one resume-with-text path on every harness.
-- Trigger: a later check, not the command list, status, or verify.
-- Hops: resume the namespaced session and send one plain-text answer. The exact flag per CLI is untested. A missing assignment is could-not-run.
-- Failure: inventing an argv is not allowed. These checks report and do not block a release.
-- Proof: one real resume on each harness before the path is treated as working.
+- Promise: later answers use one resume-with-text path on every harness; report-only.
+- Hops: persist native session in isolated storage, capture question/context and session identity, stop process, resume same conversation in another process with one answer, prove context-dependent continuation, retain evidence then clean up. Pi omits --no-session on this path.
+- Failure: missing state/unsupported argv is could-not-run; no new-session or second-channel fallback. First checks consume no scripted answers.
+- Proof: real cross-process continuation per harness and missing-session negative control. Exact per-version argv remains unverified.
 - Owners: harness-adapter implementer.

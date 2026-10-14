@@ -9,6 +9,6 @@ scope: task
 test_tier: e2e
 ---
 
-# A crashed scheduler at 06:17 does not leave a false pass
+# Delayed or absent Actions runs cannot refresh evidence
 
-The nightly scheduler is killed at 06:17:00 UTC after it has noted the tick and before it has written any harness grade. Five minutes later the operator opens the run list. There is a failed-to-start or missed-tick record, and there is no run marked pass. No harness grade file from that tick contains a pass. A replacement scheduler brought up at 06:19 UTC does not backfill a silent pass for 06:17. The missed tick stays visible until a later grade run actually completes.
+The legacy flow ID is retained; there is no local scheduler to kill. Inspect real Actions history during a missed/delayed observation interval or disable the schedule in a disposable repository, retaining the actual configuration and history. No run means no grade, synthetic success, or invented missed-tick record. Use an actual checkout evaluation older than 36 hours: release dry-run refuses stale evidence. Start a real manual checkout run and require its new trusted completed result before authorization returns. Do not alter the host clock or substitute local JSON for GitHub history.

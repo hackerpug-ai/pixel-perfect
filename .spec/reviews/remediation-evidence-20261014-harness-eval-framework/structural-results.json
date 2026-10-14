@@ -1,0 +1,91 @@
+{
+  "checks": [
+    {
+      "check": "Stable unique 65 criterion IDs",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "Source/table criterion agreement GRD",
+      "pass": true,
+      "detail": "22 source / 22 table"
+    },
+    {
+      "check": "Source/table criterion agreement REL",
+      "pass": true,
+      "detail": "27 source / 27 table"
+    },
+    {
+      "check": "Source/table criterion agreement RPT",
+      "pass": true,
+      "detail": "6 source / 6 table"
+    },
+    {
+      "check": "Source/table criterion agreement RUN",
+      "pass": true,
+      "detail": "10 source / 10 table"
+    },
+    {
+      "check": "77 unique scenario IDs; original 68 preserved",
+      "pass": true,
+      "detail": "77 current / 68 original"
+    },
+    {
+      "check": "Every scenario appears in coverage matrix",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "16 use cases retain coverage rows",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "All local document links resolve",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "PRD metadata consistently 1.0.1",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "All 17 finding/change pairs mapped",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "Process gate remains T-RUN-010",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "Test type counts",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "Original review and unrelated WIP bytes preserved",
+      "pass": true,
+      "detail": "187 files; changed=[]"
+    },
+    {
+      "check": "HEAD and main unchanged during editing/review",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "YAML frontmatter parses",
+      "pass": true,
+      "detail": "99 documents"
+    },
+    {
+      "check": "git diff --check",
+      "pass": true,
+      "detail": ""
+    }
+  ],
+  "passed": 17,
+  "total": 17
+}

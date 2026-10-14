@@ -31,4 +31,6 @@ evidence:
 
 # A plugin merge to main starts a grade and a pull request does not
 
-A pull request edits a plugin command file and an adapter file. While that pull request is open, no grade starts. The pull request is merged to main as commit abc123. A grade run starts for abc123 and records the trigger as a plugin change on main. The run uses the same six harnesses as the nightly grade. A second pull request that edits the same plugin file does not start a grade before it is merged. Pushing more commits onto the unmerged pull request still does not start a grade.
+A pull request edits a plugin command file and an adapter file. While that pull request is open, no grade starts. The pull request is merged to main at its recorded full commit SHA. A checkout-mode grade run starts for that exact SHA and records the trigger as a plugin change on main. The run uses the same six harnesses as the nightly grade. A second pull request that edits the same plugin file does not start a grade before it is merged. Pushing more commits onto the unmerged pull request still does not start a grade.
+
+Observe loaded plugin revision and content digest equal to that commit, not the latest published release. T-RUN-010 is separately verified by FLOW-RUN-03-TRUNK-HISTORY, not by this trigger.

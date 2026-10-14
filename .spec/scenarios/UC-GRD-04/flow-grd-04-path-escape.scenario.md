@@ -9,6 +9,6 @@ scope: task
 test_tier: e2e
 ---
 
-# A report path that climbs out of the run directory is refused
+# Unsafe report paths fail before writing
 
-The verify case names the report path reports/../../outside/stolen.md. Verify has failed for Pi pinned on defect DEF-QUESTION-RULE. The grader does not write outside/stolen.md or any file above the run directory. It does not rewrite the escape into reports/stolen.md and call that the named path. The reporting step fails closed. The verify grade stays fail. The harness and defect are not saved under a filename the grader chose.
+Set the case path to reports/../../outside/stolen.json; separately place a symlink in its parent path. The real case loader rejects both as invalid-case-path/could-not-run before verification starts. Nothing is written outside the invocation directory, no sanitized substitute is used, release is blocked, and no fix is opened. An ordinary confined case path succeeds as a control.

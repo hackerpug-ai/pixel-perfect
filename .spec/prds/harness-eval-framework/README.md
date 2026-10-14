@@ -1,6 +1,6 @@
 ---
 title: Harness eval framework
-version: 1.0.0
+version: 1.0.1
 scope_posture: full
 pr_sequencing: false
 base_branches: []
@@ -14,12 +14,12 @@ A nightly, hand-started, and post-merge grade of the pixel-perfect plugin on Cla
 
 | Field | Value |
 |-------|-------|
-| Version | 1.0.0 |
+| Version | 1.0.1 |
 | Scope Posture | Full feature |
 | PR Sequencing | Disabled |
 | Base Branches | None (lands on trunk) |
 | Created | 2026-10-13 |
-| Last Updated | 2026-10-13 |
+| Last Updated | 2026-10-14 |
 
 ## Document Index
 
@@ -37,6 +37,8 @@ A nightly, hand-started, and post-merge grade of the pixel-perfect plugin on Cla
 | [Technical requirements](09-technical-requirements/README.md) | 09-technical-requirements/README.md | CONSTITUTION |
 | [E2E testing criteria](10-e2e-testing-criteria.md) | 10-e2e-testing-criteria.md | TEST_SPEC |
 
+[Remediation and evidence boundary](11-remediation.md) maps all seventeen findings to requirements and scenarios.
+
 ## Quick Stats
 
 | Item | Count |
@@ -49,11 +51,12 @@ A nightly, hand-started, and post-merge grade of the pixel-perfect plugin on Cla
 
 | Version | Date | Change |
 |---------|------|--------|
+| 1.0.1 | 2026-10-14 | Seventeen review findings remediated in the specification; published-only nightly and 36-hour checkout evidence. Runtime proof remains unverified. |
 | 1.0.0 | 2026-10-13 | Initial PRD. Cursor is included. Goals G1–G4 are proposed, not confirmed. |
 
 ## Next Steps
 
 - Confirm or replace the proposed goals.
-- Settle the two open decisions: Cursor's could-not-run block, and the fix-diff allowlist.
+- Preserve Cursor blocking and the current plugin-root fix allowlist unless the owner explicitly changes them.
 - `/kb-sprint-plan` to turn this PRD into sprints.
 - The e2e constitution's reference flow is not green yet. The first build has to prove it on a real runner.

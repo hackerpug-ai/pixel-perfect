@@ -18,7 +18,7 @@ action:
     - Run the harness-eval workflow for this use case on a real runner.
 end_state:
   must_observe:
-    - The scheduler is set for 06:17 UTC and the clock reaches 06:17:00 UTC on a Tuesday.
+    - A real GitHub schedule event records actual timestamps and twelve published-mode cells.
   must_not_observe:
     - A pass taken from process exit code 0 alone.
 negative_control:
@@ -29,6 +29,6 @@ evidence:
   required_capture: true
 ---
 
-# Nightly grade starts at 06:17 UTC and a pull request does not
+# Observe an actual published nightly evaluation
 
-The scheduler is set for 06:17 UTC and the clock reaches 06:17:00 UTC on a Tuesday. The nightly grade starts and records a run id for that UTC minute. The run includes the six harnesses on both the pinned and newest tracks. At 14:03 UTC the same day, a pull request is opened that edits a plugin command file. That pull request does not start a grade run, and the only run id so far is the 06:17 run. Updating the pull request with another commit still does not start a grade. The next scheduled start is the following day at 06:17 UTC, and that start gets a new run id.
+Inspect the accepted workflow cron 17 6 * * * on main. Wait for an actual GitHub schedule event and retain its run ID, event metadata, requested schedule, and actual queued/start/completion times. Require published mode and the same run-resolved release revision across twelve cells. Delay relative to 06:17 UTC is not failure by itself. Open and update a real plugin-changing PR in the controlled repository; neither PR event starts a secret-bearing eval. A manual dispatch is labeled manual and cannot substitute for the schedule observation. No exact-second assertion is used.

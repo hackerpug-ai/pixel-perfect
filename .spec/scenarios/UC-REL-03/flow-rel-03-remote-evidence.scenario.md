@@ -9,6 +9,6 @@ scope: task
 test_tier: e2e
 ---
 
-# A remote evidence link and a bot merge do not decide the request
+# Actual repository enforcement rejects the heal app merge
 
-Someone edits the pull request so the evidence link is https://example.invalid/pass.png instead of the in-repo report. The grader does not fetch that URL and does not treat it as proof. A bot token then calls the merge API on the pull request. The merge is refused because the actor is not a person on the maintainer list. The pull request stays open. The grade record's harness name and failed grade are still the ones in the original body.
+In a disposable repository, activate the main update restriction with the designated human maintainer permitted and heal app excluded from bypass. Record the effective rule ID and actor configuration. The real app token creates a heal branch and PR, then attempts the merge API. Require API denial and unchanged main. A designated human can merge a separately qualified PR; capture that receipt. Missing rule or inability to prove denial disables healing. A remote link inserted into a PR body cannot replace the original artifact identity and is not fetched as grade evidence.

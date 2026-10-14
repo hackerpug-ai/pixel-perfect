@@ -1,7 +1,7 @@
 ---
 stability: FEATURE_SPEC
-last_validated: 2026-10-13
-prd_version: 1.0.0
+last_validated: 2026-10-14
+prd_version: 1.0.1
 functional_group: GRD
 ---
 
@@ -25,7 +25,7 @@ Sits under 'Maintainer reads pass, fail, or could-not-run for each harness on th
 ### Acceptance Criteria
 
 - ☐ Maintainer can read a result of pass, fail, or could-not-run for Claude Code, Codex, Grok, OpenCode, Pi, and Cursor from the finished run's summary.
-- ☐ Maintainer can read that result for the pinned version and for the newest version of each of those harnesses.
+- ☐ Maintainer can read that result for the pinned and newest versions of each harness, bound to the observed CLI version and actual loaded plugin revision and digest.
 - ☐ Maintainer can see that Cursor is present as a real channel and is never omitted.
 - ☐ Maintainer can read the summary without a navigable product screen.
 - ☐ Maintainer can read a finished run that has no screenshot score and can see that the missing score is not a gap.
@@ -33,13 +33,13 @@ Sits under 'Maintainer reads pass, fail, or could-not-run for each harness on th
 
 ## UC-GRD-02: Read the four grades
 
-Sits under 'Maintainer reads the command list, status, verify on a planted defect, and whether the first turn asked before expensive work.' These first checks ask nothing of the maintainer.
+Sits under 'Maintainer reads the command list, status, verify on a planted defect, and whether the first turn asked before expensive work.' List, status, and verify ask nothing. The separate must-ask probe asks once and stops without receiving an answer.
 
 ### Acceptance Criteria
 
 - ☐ Maintainer can read a command-list grade, a status grade, a verify grade on a planted defect, and a grade for whether the first turn reached a question before expensive work.
 - ☐ Maintainer can read those four grades for each harness on the pinned version and on the newest version.
-- ☐ Maintainer can rely on these first checks asking no question and using no scripted answer.
+- ☐ Maintainer can rely on list, status, and verify asking no question, while the separate must-ask probe stops at its first question and none consumes a scripted answer.
 
 ## UC-GRD-03: Read grades from evidence, not the exit code
 
@@ -57,8 +57,8 @@ Sits under 'Maintainer reads the planted defect when verify fails.' The failing 
 
 ### Acceptance Criteria
 
-- ☐ Maintainer can read the name of the known planted defect when verify fails.
-- ☐ Maintainer can read a report file when verify fails, at the path the failing case names.
+- ☐ Maintainer can read the observed planted defect by its canonical key even when correct detection earns an evaluation pass.
+- ☐ Maintainer can read the evidence-bound planted and clean verify reports at the exact paths their cases declare, including when evaluation passes.
 - ☐ Maintainer can rely on the grader not inventing that report filename.
 - ☐ Maintainer can read, in that report, the harness, whether the version was pinned or newest, and the name of the planted defect.
 - ☐ Maintainer can tell a missed defect apart from could-not-run.
@@ -79,6 +79,6 @@ Sits under 'System fails a run that is missing its credential.' A missing key ca
 
 ### Acceptance Criteria
 
-- ☐ Maintainer can rely on a run with a missing API key failing.
+- ☐ Maintainer can rely on a missing consumed API key producing could-not-run and blocking release before any model request.
 - ☐ Maintainer can rely on that missing-key result not being readable as a pass.
 

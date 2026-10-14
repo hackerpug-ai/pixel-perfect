@@ -18,7 +18,7 @@ action:
     - Run the harness-eval workflow for this use case on a real runner.
 end_state:
   must_observe:
-    - Claude Code pinned fails verify on DEF-SHIFT-BASELINE.
+    - Claude Code pinned misses atoms/Button/default in a real planted verify invocation, so its evaluation fails.
   must_not_observe:
     - A pass taken from process exit code 0 alone.
 negative_control:
@@ -31,4 +31,4 @@ evidence:
 
 # A pinned verify failure blocks release despite exit 0 and an open fix
 
-Claude Code pinned fails verify on DEF-SHIFT-BASELINE. Claude Code newest passes. The release job for the next version starts after the grader process has exited 0. A fix pull request for the verify failure is already open. The release stays blocked. No release artifact is published. The open pull request is visible and is not a clearance. Seeing exit 0 on the grader does not remove the block.
+Claude Code pinned misses atoms/Button/default in a real planted verify invocation, so its evaluation fails. Claude Code newest passes. The release job for the next version starts after the grader process has exited 0. A separate fix pull request for a newest-only failure is already open; the pinned failure does not create one. The release stays blocked. No release artifact is published. The open pull request is visible and is not a clearance. Seeing exit 0 on the grader does not remove the block.

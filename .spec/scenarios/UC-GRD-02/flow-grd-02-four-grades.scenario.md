@@ -18,7 +18,7 @@ action:
     - Run the harness-eval workflow for this use case on a real runner.
 end_state:
   must_observe:
-    - The reader opens the Claude Code pinned result.
+    - All four grades have independent positive evidence, and correct planted detection earns evaluation pass.
   must_not_observe:
     - A pass taken from process exit code 0 alone.
 negative_control:
@@ -29,6 +29,8 @@ evidence:
   required_capture: true
 ---
 
-# Four grades are readable and the first checks ask nothing
+# Four distinct grades use positive evidence
 
-The reader opens the Claude Code pinned result. It shows a command-list grade, a status grade, a verify grade for the planted defect, and a first-turn grade for asking before expensive work. In this run the command list passes, status passes, verify fails because the planted defect is still present, and the first-turn grade passes because the harness asked before the expensive edit. The command-list transcript contains no question to the person. The status transcript contains no question. Those first checks do not consume a scripted answer.
+Run real Claude Code pinned against the case fixtures. Command listing contains all public commands with no model call. Status reports the seeded platform, phase, gates, and inventory counts without mutation. Structural-only verify detects atoms/Button/default in the planted project and passes the clean twin; both exact case-declared reports exist with source evidence. This earns verify evaluation pass despite the planted oracle exit 1. Independently, init on the empty project reaches a valid first USER_CHOICE before expensive work, and is stopped without an answer. List, status, and verify ask nothing and no first check consumes a scripted answer.
+
+Negative controls: generic status text fails; a missed defect or clean false positive fails verify; no question or an expensive tool start before the question fails the must-ask probe. A missing required event mapping is could-not-run rather than an invented pass.

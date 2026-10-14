@@ -9,6 +9,6 @@ scope: task
 test_tier: e2e
 ---
 
-# A planted failure in the same process does not sink the twin
+# A planted observation does not contaminate the clean invocation
 
-Verify fails on the planted tree for OpenCode newest and writes reports/opencode-newest-verify.md for DEF-STALE-ADAPTER. The same process then verifies the clean twin, which does not contain that defect. The twin's verify grade is pass. The planted report is not rewritten to say the twin failed. The twin does not get a failure report. A second clean twin, for Cursor, is not compared with OpenCode's defect file. Cursor's twin is graded only from Cursor's own tree.
+Run real verify in separate fresh invocation directories for OpenCode newest planted and clean fixtures. Correctly observe atoms/Button/default only in the planted case and retain reports/verify-button-drift.json there. The clean invocation passes and retains reports/verify-clean.json with clean outcome. The pair earns evaluation pass. Neither report overwrites the other. Swap evidence between these invocations, or between OpenCode and Cursor: report identity validation fails. No shared process/session state may substitute for independent fixture evidence.

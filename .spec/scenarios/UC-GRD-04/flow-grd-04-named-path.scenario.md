@@ -18,7 +18,7 @@ action:
     - Run the harness-eval workflow for this use case on a real runner.
 end_state:
   must_observe:
-    - The verify case for Claude Code pinned names the report path reports/claude-code-pinned-verify.md.
+    - Both case-declared reports match the invocation and observed evidence, including on evaluation pass.
   must_not_observe:
     - A pass taken from process exit code 0 alone.
 negative_control:
@@ -29,6 +29,8 @@ evidence:
   required_capture: true
 ---
 
-# A failed verify writes only the report path the case names
+# Exact case paths retain planted and clean evidence
 
-The verify case for Claude Code pinned names the report path reports/claude-code-pinned-verify.md. Verify fails because the planted defect DEF-SHIFT-BASELINE is still present. The grader writes that file at that path and nowhere else. The file states the harness Claude Code, the track pinned, and the defect DEF-SHIFT-BASELINE. It does not name a different harness. The grader does not also create reports/verify-failed.md or a timestamped name of its own. The case path is the only new report for this failure.
+The case loader binds reports/verify-button-drift.json and reports/verify-clean.json inside their separate invocation directories before launch. Real verify observes atoms/Button/default in the planted project and passes the clean twin. The key, source event offsets, capture hashes, harness, track, and invocation ID agree with actual evidence. The evaluator writes and retains both reports even though the verify evaluation passes. The summary links their invocation-specific artifact paths.
+
+Place an unrelated new note and an old report in the work area. Neither satisfies the contract. Suppress observed detection while retaining the expected key in case metadata: evaluation must fail for missed-defect. Delete or swap the produced report: acceptance must fail. No alternative filename is discovered or invented.

@@ -1,7 +1,7 @@
 ---
 stability: FEATURE_SPEC
-last_validated: 2026-10-13
-prd_version: 1.0.0
+last_validated: 2026-10-14
+prd_version: 1.0.1
 functional_group: REL
 ---
 
@@ -23,7 +23,7 @@ Sits under 'System holds the next release when a pinned harness fails a grade.' 
 
 ### Acceptance Criteria
 
-- ☐ Maintainer can rely on a pinned-version graded failure blocking the next release.
+- ☐ Maintainer can rely on a pinned-version evaluated failure blocking release until a trusted, complete checkout evaluation for the exact publish commit clears it within its 36-hour lifetime.
 - ☐ Maintainer can read, in the summary, the harness and the grade that blocked the release.
 - ☐ Maintainer can rely on an exit code of 0 not clearing that block.
 - ☐ Maintainer can rely on an open fix pull request not clearing that block.

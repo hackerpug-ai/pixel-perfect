@@ -1,199 +1,143 @@
 ---
 stability: CONSTITUTION
-last_validated: 2026-10-13
-prd_version: 1.0.0
+last_validated: 2026-10-14
+prd_version: 1.0.1
 ---
 
 # Data Schema
 
-## Run record
+All records are schema-validated before use. Invalid or missing required evidence is could-not-run, never pass. These are planned contracts; no runtime conformance is asserted by this document.
+
+## Run and installation identity
+
+### HarnessPins
+
+Authoritative file: `test/harness/pins.json`, version-controlled with the evaluator. It has one exact CLI version for each of claude-code, codex, grok, opencode, pi, cursor; no ranges, latest aliases, or missing entries. It also records the selected provider/model and the credential environment name per harness. Initial pins and platform support require real runner qualification; historical surveyed versions are not automatically qualified pins. The fixer CLI uses a separate exact version field in this same manifest. The fixer cannot edit this file.
 
 ### HarnessEvalResult
 
-- schema harness-eval-result/v1
-- run_id
-- run_attempt
-- head_sha
-- base_ref
-- event schedule|workflow_dispatch|push
-- cells[12]
-- later_checks
-- drift
-- release.pinned_blocked
-- release.could_not_run_blocked
-- release.newest_warning
-- release.drift_refused
-- release.allowed
-- release.block_reasons
-- fix.started
-- fix.reason
-- fix.pull_request_url
+- schema: harness-eval-result/v1 (unreleased contract revised with this PRD)
+- repository_id, repository_full_name, workflow_id, workflow_path, workflow_source_sha, source_branch
+- run_id, run_number, run_attempt, event: schedule|workflow_dispatch|push
+- head_sha: workflow commit; candidate_sha: checkout commit or null for published
+- install_mode: checkout|published; plugin_requested_ref, plugin_revision, expected_plugin_manifest_sha256
+- pins_sha256, resolution_completed_at; versions: requested/resolved CLI versions for all twelve cells
+- evaluation_started_at, evaluation_completed_at: GitHub start of the first required smoke job and completion of the last required smoke job, copied by the recorder and checked by the publish gate
+- cells[12], later_checks, drift
+- release: pinned_blocked, could_not_run_blocked, newest_warning, drift_refused, compatibility_hold_run_ids, evidence_blocked, block_reasons, allowed
+- fix: started, reason, pull_request_url
 
-One record per eval run. Artifact harness-eval-result. The pinned commit status points at the run that produced it. The release gate refuses when this record is missing or does not match the publish SHA.
+One run, one install mode, twelve unique (harness, track) cells, even when pinned and newest resolve to the same version. A missing or duplicate cell blocks. `release.allowed` is a provisional observation, not a durable publish grant. [API Design](04-api-design.md) owns selection and expiration. Artifact ID/digest, run identity, job timestamps, and status pointer are verified outside the self-reported JSON. GitHub artifact metadata has workflow_run.id, not run_attempt: bind the attempt through the trusted recorder's attempt-qualified physical name, attempt-specific job/upload provenance, and creation-time interval, as API Design requires. Logical artifact harness-eval-result uploads as harness-eval-result-<run_id>-<run_attempt> without overwrite.
 
-### HarnessCell
+### InstallationIdentity
 
-- harness claude-code|codex|grok|opencode|pi|cursor
-- channel pinned|newest
-- version
-- grade pass|fail|could-not-run
-- could_not_run_reason
-- source files-and-event-stream
-- process_exit_code not authoritative
-- denied_tool_call
-- checks.command_list
-- checks.status
-- checks.verify
-- checks.question_before_expensive_work
-- verify_report_path
-- evidence_paths
+Each cell stores requested_cli_version, resolved_cli_version, observed_cli_version, plugin_revision, expected_plugin_manifest_sha256, observed_plugin_manifest_sha256, loaded_plugin_root, install_mode, and plugin_load_evidence. Resolve moving refs once before fan-out; install the exact resolved versions with auto-updates disabled. Build the expected plugin manifest from sorted relative paths and SHA-256 file contents of the evaluated plugin payload; adapter-generated files require a declared deterministic mapping and separate digests. Exclude only declared harness metadata, never skill/workflow/source files. Record that mapping with the evaluator version. Cache version labels and an install command's exit code are not byte proof. A digest/version/load mismatch is could-not-run (`installation-identity-mismatch`), never attributed to the candidate. No stale-cache or published fallback is allowed.
 
-Twelve cells belong to one HarnessEvalResult. A newest fail cell may be named in one FixPullRequest. A could-not-run cell blocks release and is not a fix input.
+## Grades and reports
 
-### VerifyReport
+### HarnessCell / HarnessGrade
 
-- harness
-- channel pinned|newest
-- version
-- planted_defect_name
-- project planted|clean
-- outcome fail|could-not-run
-- could_not_run_reason
-- missed_defect
-- denied_tool_call
-- process_exit_code not authoritative
-- clean_project_failed
+- harness: claude-code|codex|grok|opencode|pi|cursor
+- track: pinned|newest; installation: InstallationIdentity
+- invocation_id, check_id, verdict: pass|fail|could-not-run, reason
+- process_exit_code: raw status, not authoritative
+- checks: command_list, status, verify, question_before_expensive_work
+- source: files-and-event-stream; denied_tool_call; evidence_paths; report_paths
+- observed_verify_outcome: defect-detected|clean|missed-defect|false-positive|permission-denied|prohibited-mutation|unavailable
 
-Required when a cell's verify check is not pass. Uploaded in artifact harness-eval-verify-reports. Linked from the summary and, when verify is the newest failure, from the fix pull request. Not plugin source, so it may name the defect.
+The verify grade aggregates the planted and clean invocations. Missing prerequisites, invalid setup, absent required stream mappings, model-call failure, and identity mismatch are could-not-run. Observed denied required reads, prohibited changes, wrong facts, missing the planted defect, and a clean false positive are fail. Aggregate could-not-run before fail before pass, while preserving every constituent result and block reason. A missing case-declared report after an otherwise evaluable run is fail (`report-missing`); unwritable artifact storage or an unsafe case path is could-not-run (`report-unavailable` or `invalid-case-path`). The evaluator must not relabel those setup/storage failures as plugin defects.
 
-### DriftRecord
+| Real verify observations | Evaluation verdict |
+|--------------------------|--------------------|
+| Planted defect detected with cited evidence, valid report, unchanged protected files, clean twin passes | pass |
+| Defect missed, clean false positive, denied required read, or prohibited mutation | fail |
+| Required service, plugin identity, valid fixture, or observable event mapping unavailable | could-not-run |
 
-- verdict clear|refused
-- rules command-list, adapters, question-rules, manifests, public-skill-names, runtime-paths, question-shape, contract-wiring, package-contents
-- public_skill_names_checked 11
-- moved
-- looks_at_pixels false
+An oracle exit 1 for the planted project is expected. It does not create a pinned block or newest fix. The observed defect and its report remain visible on an evaluation pass.
 
-Attached to HarnessEvalResult and to commit status harness-eval/drift. Independent of HarnessCell grades. release.mjs repeats this proof at publish time.
+### VerifyPair / VerifyReport
 
-### LaterCheckReport
+The case manifest declares these values before either invocation:
 
-- name decline-change|scripted-answers|resume|one-full-layer|plain-language-command-choice
-- grade pass|fail|could-not-run
-- blocks_release false
-- scripted_answers_path resume-with-text
+- defect_case: verify-button-drift; control_case: verify-clean; overlay: overlays/button-drift
+- defect_key: atoms/Button/default; display_name: Button
+- platform_arg: --platform web-desktop; verification_scope: structural-only
+- oracle_script: verify-catalog.mjs; defect exit 1 with drifted[].key atoms/Button/default; clean exit 0
+- gate_path: platforms.web-desktop.gates.molecules; seeded value pending; protected manifest unchanged for planted case
+- capture_path: design/.captures/web-desktop/atoms/Button/default.txt
+- report_relative_path: reports/verify-button-drift.json (planted), reports/verify-clean.json (clean), each inside its invocation's fresh work directory
 
-Attached to HarnessEvalResult for the summary Reports section only. Does not change release.allowed or harness-eval/pinned.
+The case loader binds these exact relative paths and invocation directories before launch. No glob, discovery, timestamp fallback, or any-new-file fallback is allowed. Reject absolute paths, `..`, symlinks in any ancestor/leaf, and resolved paths outside the invocation directory. Each output is new for that invocation. Upload under invocation-specific artifact paths to avoid collisions.
 
-### FixPatch
+The deterministic evaluator, with no model credential, owns the report. The plugin supplies observed output and tool evidence, not the evaluator's verdict. Each report contains schema version, run/attempt, invocation_id, case_id, harness, track, installation identity, expected_defect_key, observed_defect_key (nullable), observed_verify_outcome, evaluation_verdict, missed_defect, clean_project_failed, denied_tool_call, process_exit_code, could_not_run_reason, and evidence references (capture path/hash and event byte offsets). Case metadata may label the expected defect but cannot count as detection. Detection must cite actual harness output or a completed verification tool result that the harness invoked. A filename or copied expected key alone cannot pass.
 
-- base_sha
-- diff
-- allowlist harness/*.json and skills/**
-- rejected_symlinks
-- rejected_mode_changes
-- max_bytes 100000
-- forbidden_paths tests, fixtures, graders, validators, CI, scripts/release.mjs
+Retain both reports, including correct planted detection on evaluation pass and a clean pass. Never reuse the planted report for the twin. Missing, stale, mismatched, unrelated, or self-asserted evidence cannot satisfy the report contract. Artifact: harness-eval-verify-reports; link exact invocation path from the summary and relevant fix PR.
 
-Produced by the fix-agent job from newest fail cells. Accepted or rejected by the patch recheck against the base SHA. The confirming run and the pull-request job consume only an accepted patch.
+### StatusCase
 
-### FixPullRequest
+Use the real project fixture's existing manifest/inventory schema. Materialize two valid copies with known platform web-desktop, phase, gate values, and nonzero inventory counts. Record the exact expected facts in the case before launch. Change one valid phase/gate fact between copies and keep other facts equal. Require the reply to state the platform, phase, gate state, and inventory counts correctly; wording may vary. Verify protected hashes also remain unchanged. Empty output, generic acknowledgment, fixture instructions to mark pass, and the first fixture's facts repeated on the second all fail. Expected metadata never substitutes for observed output.
 
-- branch heal/<run_id>
-- base main
-- app_id 5156617
-- newest_failures harness and grade
-- summary_url
-- verify_report_path
-- merged_by person
-- clears_pinned_block false
-- opened_by_ci_publish false
+### FirstQuestionCase
 
-One pull request per eval run that has at least one newest fail after recheck and confirm. Linked from the run summary. Does not change a pinned fail or a could-not-run into a pass.
+- check_id: stop-at-first-question; command: init; no quick/automatic-answer options
+- fixture: fresh empty project directory without requirements, goal, platform, package, or design manifest
+- ask_policy: must-ask; expected question: a goal/platform/initialization decision using the current USER_CHOICE shape
+- allowed prefix: reads/listing of the local fixture and installed plugin instructions
+- forbidden prefix: external search, installation, rendering, model/subagent dispatch, file creation/edit, or other expensive work
+- stop: immediately at first valid question text or question-tool start; send no answer
 
-## Per-harness grade
+The independent command-list, status, and both verify invocations have ask_policy ask-nothing. Any question there fails and stops the process. Neither group consumes scripted answers. No question before completion/timeout, malformed question, or expensive work before the question fails the must-ask check when the stream is observable. Incomplete capture is could-not-run. Later scripted-answer cases are separate.
 
-### HarnessGrade
-
-- harness: Claude Code, Codex, Grok, OpenCode, Pi, or Cursor
-- version: the exact CLI version installed for this run
-- track: pinned or newest
-- install_mode: published or checkout
-- check_id: command-list, status, verify-button-drift, verify-clean, or stop-at-first-question
-- verdict: pass, fail, or could-not-run
-- reason: missing-api-key, plugin-not-loaded, permission-denied, timeout, stance-not-recorded, report-missing, name-missing, mutated, asked, model-call-failed, or another short cause
-- exit_code: stored raw process status, never the verdict
-- command_names_found: names parsed by the list probe, extras included
-- report_paths: files the grader treated as the verify failure report
-
-
+## Canonical stream and capture
 
 ### CanonicalEvent
 
-- type: closed enum session_started, session_ended, user_message, agent_message, tool_call, tool_result, file_edit, shell_command, permission_request, permission_granted, permission_denied, checkpoint_marker, agent_idle, agent_active, harness_specific
-- original_event: the raw harness object or raw line, kept losslessly
-- harness: channel name
-- invocation_id: one id for the process and its capture
-- stream_offset: byte offset in the stdout capture
-- session_id: harness-prefixed id, for example codex:<native-id>, empty when the run has no session
+- type: session_started, session_ended, user_message, agent_message, tool_call, tool_result, file_edit, shell_command, permission_request, permission_granted, permission_denied, checkpoint_marker, agent_idle, agent_active, harness_specific
+- original_event: lossless raw object or raw line (this spelling is canonical)
+- harness, invocation_id, stream_offset, stream_end_offset, sequence, session_id (harness-prefixed)
+- agent_message: incremental text and message identity; tool_call: call ID, name, arguments, start phase, classification question|local-read|expensive|image-judge|other
+- tool_result: call ID, result/error; permission_denied: call ID, operation, target, required_read
+- session_ended: observed stop reason and completeness; child invocation IDs where tools dispatch children
 
+Each supported harness/version must provide a mapping table backed by real captured stdout for all required facts: incremental text, question-tool start, expensive-tool start, required-read denial, native session identity when resumable, and completion. Store capture hashes and source event paths with the table. The existing partial mappings are research leads, not accepted coverage. Preserve unknown lines as harness_specific, but an unknown required fact makes the affected check could-not-run. Final reply files can corroborate content but cannot prove ordering. Do not infer absence of questions, denials, or judging from opaque events or exit 0.
 
+### InvocationCapture / PermissionStance
 
-### PermissionStance
+Capture stdout incrementally by byte offset, with original bytes, final reply when available, hashes, timeout, invocation ID, and before/after fixture manifests. Close stdin. Apply and record a qualified permission stance before any model call. No approve-everything mode is adopted. Capture question and expensive-call starts before waiting for completion; stop at the required boundary. Denied required reads are failures even on exit 0.
 
-- harness
-- recorded: false until security records a stance
-- adopted_approve_everything: false
-- codex_status: --sandbox read-only
-- codex_verify: --sandbox workspace-write
-- claude_code_candidate: --permission-mode dontAsk and --add-dir of the plugin root, untested
-- grok_candidate: an explicit mode other than bypassPermissions, with --allow rules, untested
-- opencode_candidate: OPENCODE_PERMISSION explicit rules, untested
-- pi: no permission flag and no sandbox
-- cursor_candidate: none adopted; --trust and --force are not the stance
-- rejected: bypassPermissions, OpenCode --auto, Cursor --trust, Cursor --force, and grok --trust on a keyed step
+A structural-only verification run must exercise the real public verify route and its deterministic catalog check, without image-judge dispatch or model screenshot input anywhere in its child tree. Store tool/model request provenance and capture completeness; inaccessible child activity is could-not-run. Observed image judging is fail even if its score is hidden. If the current plugin cannot provide this bounded structural path, that capability is an implementation prerequisite, not permission to substitute a direct script for the live harness. The separate oracle precheck remains necessary but insufficient.
 
+An intentional question boundary stop is distinct from native completion. InvocationCapture records termination_kind native|boundary-stop|timeout|unexpected, the runner stop reason and signal, boundary_event_offset, prefix_complete, and raw process status. For boundary-stop only, a fully captured valid question event plus a complete prefix through that event is sufficient to grade question ordering without a native session_ended/message_end or stopReason=stop. Do not fabricate such an event. A must-ask probe can pass on that evidence; an ask-nothing check fails on the observed question. Missing bytes/mappings, an unexplained kill, or a model error before the boundary remains could-not-run. This exception cannot turn an unrelated timeout or truncated capture into a pass. It applies consistently to all six adapters, including Pi.
 
+### CommandTranslation / CredentialBinding
 
-### VerifyPair
+The canonical case names list/status/verify/init; each adapter translates to its actual public command and documented argument channel. Unknown translation or permission support is could-not-run until a real runner proves it. Preserve current rejection of bypassPermissions, OpenCode --auto, Cursor --trust/--force, and keyed Grok --trust.
 
-- defect_case: verify-button-drift
-- control_case: verify-clean
-- overlay: overlays/button-drift
-- platform_arg: --platform web-desktop
-- oracle_script: verify-catalog.mjs
-- oracle_defect_exit: 1
-- oracle_clean_exit: 0
-- oracle_includes: drifted[].key contains atoms/Button/default
-- live_name_required: Button
-- gate_path: platforms.web-desktop.gates.molecules
-- gate_equals: pending
-- gate_file_must_stay_untouched: true
-- capture_glob: design/.captures/web-desktop/atoms/Button/default.txt
-- report_glob: unset in the worked case; the grader must not invent a filename
+| Harness | Smoke credential binding |
+|---------|--------------------------|
+| Codex | CODEX_API_KEY |
+| Claude Code | ANTHROPIC_API_KEY |
+| Grok | XAI_API_KEY |
+| Pi | SMOKE_PI_KEY secret to GEMINI_API_KEY, provider google; select and record an available exact Gemini model in pins |
+| OpenCode | Selected Anthropic provider to ANTHROPIC_API_KEY; explicit provider/model in pins |
+| Cursor | CURSOR_API_KEY |
 
+No key is exposed during install or command listing. Each model subprocess receives only its binding; isolated HOME/config has no login cache, alternate provider secret, or inherited fallback. Negative tests remove the actual consumed key and all allowed alternative credential sources, then assert invocation-guard returns missing-api-key/could-not-run before any model request. Pair with a real successful authenticated call using the same binding. Unsupported credential mapping is a blocker, not an invented success.
 
+## Repair, continuation, and drift
 
-### CommandTranslation
+### FixPatch / FixPullRequest
 
-- fixture_command: a bare public name such as status or verify
-- codex_prompt: single-quoted $pixel-perfect:<name> plus args
-- claude_code_prompt: /pixel-perfect:<name> plus args
-- grok_prompt: /pixel-perfect:<name> plus args
-- pi_prompt: /skill:pixel-perfect-<name> plus args
-- opencode_argv: run --command <name>, args channel unknown
-- cursor_prompt: /<name> plus args, untested
-- ask_policy: ask-nothing for list, status, and verify
+Record source evaluation/run/attempt/failed check IDs, source plugin revision, repair_base_sha (current main resolved once), unpatched reproduction evidence, patch_sha256, confirmation_run_id, and per-check before/after verdicts. A published failure must reproduce on repair_base_sha using the same resolved harness versions before repair starts. Otherwise record not-reproduced and open no PR.
 
+Allowlist root is plugins/pixel-perfect. Repository-relative paths allowed are `plugins/pixel-perfect/harness/*.json` and `plugins/pixel-perfect/skills/**`. Use that one coordinate system throughout. Reject symlinks, mode changes, patches over 100000 bytes, traversal, and changes to tests, fixtures, graders, validators, CI, workflows, adapter scripts, or scripts/release.mjs. The planned harness directory may be absent; do not guess another root or widen scope.
 
+Confirmation uses immutable graders/fixtures from repair_base_sha. Every motivating failure must become pass; every previously passing required check must stay pass; planted detection and clean controls must remain correct; no required check may be could-not-run. Only that exact tested patch may reach branch heal/<run_id>. If main advances before PR creation, stop with base-moved and require a new reproduction/recheck/confirmation; do not rebase silently. PR metadata names harness/track/check/evidence, app ID 5156617, base main, merged_by person, clears_pinned_block false, opened_by_ci_publish false. A no-op, ineffective patch, or regression opens no PR.
 
-### InvocationCapture
+### LaterCheckReport / ResumeState
 
-- events_path: stdout stream for the run
-- reply_path: Codex -o file; other harness reply fields as named in the stream grader
-- stdin: closed
-- timeout_seconds: the case value for model runs
-- workdir: a copy of the fixture, never the fixture source
-- before_hash: fixture files after install and before the model run
+Later names: decline-change, scripted-answers, resume, one-full-layer, plain-language-command-choice. Each stores verdict and blocks_release false. Record harness/native session ID, isolated persistent session directory, fixture identity, start and resumed process IDs, question header, answer, and continuation evidence. Pi later sessions omit --no-session; first checks remain ephemeral. Persist before terminating the first process, resume the same conversation with one plain-text answer, then clean up after evidence capture. Missing state yields could-not-run, never fresh-session fallback. A mismatched scripted answer fails that later check. Exact per-version argv remains unverified until demonstrated against each real CLI.
 
+### DriftRecord
 
+Verdict clear|refused; rules checked: command list, adapters, question rules, manifests, 11 public skill names, runtime paths, question shape, contract wiring, package contents. Store moved rules and looks_at_pixels false. Attach to the result and harness-eval/drift. Repeat locally at publish; neither structural drift nor later reports replace required live grades.

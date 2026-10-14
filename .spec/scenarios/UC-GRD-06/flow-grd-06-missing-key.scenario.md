@@ -18,7 +18,7 @@ action:
     - Run the harness-eval workflow for this use case on a real runner.
 end_state:
   must_observe:
-    - The Grok tracks start with GROK_API_KEY unset, and no key is passed on the command line.
+    - Grok records missing-api-key/could-not-run before a model request when XAI_API_KEY and fallback credentials are absent.
   must_not_observe:
     - A pass taken from process exit code 0 alone.
 negative_control:
@@ -29,6 +29,6 @@ evidence:
   required_capture: true
 ---
 
-# A missing API key fails the run and is not stored as pass
+# Remove the key Grok actually consumes
 
-The Grok tracks start with GROK_API_KEY unset, and no key is passed on the command line. Grok pinned and Grok newest are not pass. The run result for Grok is a failure, and the reason says the API key is missing. Harnesses that have their own keys still receive real grades. The overall run is not a pass while Grok has no key. A release gate that reads this run sees a failed Grok run rather than two green cells.
+Run real Grok pinned and newest through invocation-guard with XAI_API_KEY absent. Use an empty isolated HOME/config and exclude login credentials and inherited alternative keys. Record could-not-run with missing-api-key before starting any model request. Both cells block release and neither enters repair. Removing only the unused GROK_API_KEY while XAI_API_KEY remains is an explicit counterexample and must not be called a missing-key trial. In a separate fresh invocation provide the valid XAI_API_KEY and observe a real authenticated request, without recording its value.

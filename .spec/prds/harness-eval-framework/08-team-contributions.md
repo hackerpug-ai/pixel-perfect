@@ -1,7 +1,7 @@
 ---
 stability: FEATURE_SPEC
-last_validated: 2026-10-13
-prd_version: 1.0.0
+last_validated: 2026-10-14
+prd_version: 1.0.1
 ---
 
 # Team Contributions
@@ -39,12 +39,12 @@ Keep one initiative. The later checks stay here because they must report without
 - A graded failure on a pinned version blocks the next release. A graded failure only on the newest version warns and opens a fix. Could-not-run is not that warning path: it blocks on either version and opens no fix.
 - A zero exit code is not success and does not clear a block. A denied tool call fails the grade even when the process exited 0.
 - Grades come from files and the event stream. The run summary is the place the maintainer reads them. There is no navigable screen.
-- The grade starts nightly at 06:17 UTC, by hand, and after a merge to main when the plugin changes. It does not start on a pull request.
-- When verify fails, the failing case names the report path. The grader does not invent a filename. The report names the harness, pinned or newest, and the planted defect. A missed defect is distinct from could-not-run. The clean twin does not fail.
+- The grade is requested nightly at 06:17 UTC (published), by hand (mode selectable, checkout default), and after a push to main when the plugin changes (exact checkout). Actual scheduled start time is recorded, not guaranteed. It does not start on a pull request.
+- Each planted/clean verify case names its report path before invocation; the evaluator retains the evidence-bound report even when correct detection earns evaluation pass. The grader does not invent a filename. The report names the harness, pinned or newest, and the planted defect. A missed defect is distinct from could-not-run. The clean twin does not fail.
 - A missing credential fails the run and cannot be read as a pass.
 - The drift refusal is separate from any live harness result. It still covers manifests, the 11 public skill names, runtime paths, question-shape rules, contract wiring, and package contents. It does not look at pixels, and it does not stand in for a live grade.
 - A person merges fix pull requests. Continuous integration never publishes. Merging a newest-only fix does not clear a pinned block.
-- The first checks ask nothing. Later scripted answers use one resume-with-text path for every harness. That path is specified and not yet proven.
+- List, status, and verify ask nothing; the independent must-ask probe stops at its first question and receives no answer. Later scripted answers use one resume-with-text path for every harness. That path is specified and not yet proven.
 - No model judges screenshots. Design fidelity stays out. A missing screenshot score is not a gap.
 - The permission stance is not approve-everything. Exact launch flags are not a product feature.
 
@@ -54,3 +54,7 @@ Keep one initiative. The later checks stay here because they must report without
 - **Whether a newest-version behavior fix may change workflow files or adapter scripts, or must stay inside harness/*.json and skills/**.** Recommendation: Do not widen the allowlist. Research said behavior fixes may need workflows/ and scripts/adapters/, and that claim was not re-checked. Keep the allowlist until that re-check is done. Decide by: Before the first newest-version fix is opened, if that fix cannot be expressed inside harness/*.json and skills/**.
 - **Which confirmed goal, if any, the later-report area serves. Decline a change, scripted answers, resume, one full layer, and plain-language command choice are in the confirmed objective and report rather than block, but none of G1 through G4 states that outcome.** Recommendation: Leave the area in scope. Do not add a goal unless the owner confirms one, and do not drop the area to force a match with G1 through G4. Decide by: Before the overview goals are confirmed.
 - **Which exact permission flags the live harness commands use.** Recommendation: Leave the flags to engineering. The product stance is only that permission is not approve-everything. Decide by: Before the harness launch commands are written. This is not a product gate.
+
+## Remediation choices accepted on 2026-10-14
+
+The owner chose published-only nightly evaluation and a 36-hour checkout-evidence lifetime. Direct CLI fixing preserves the existing no-GitHub-token model boundary. Allowlist patterns are plugin-root-relative. No Cursor exemption or allowlist expansion was accepted. The original goals remain proposed.

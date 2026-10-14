@@ -1,7 +1,7 @@
 ---
 stability: CONSTITUTION
-last_validated: 2026-10-13
-prd_version: 1.0.0
+last_validated: 2026-10-14
+prd_version: 1.0.1
 ---
 
 # UI Infrastructure
@@ -13,7 +13,7 @@ There is no website, app screen, or component library, so there is nothing to na
 ## What a person reads
 
 - **GitHub Actions run summary** (maintainer): Pass, fail, or could-not-run for Claude Code, Codex, Grok, OpenCode, Pi, and Cursor; A pinned-version result and a newest-version result for each harness; Four grades per cell: command list, status, verify, and whether the first turn reached a question before expensive work; Exit code 0 was not treated as success.
-- **Verify report file** (maintainer): Present only when verify does not pass; The harness; Pinned or newest; The planted defect.
+- **Verify report file** (maintainer): Retained for both planted and clean invocations, including evaluation pass; exact case path; harness and track; loaded identity; observed defect; source evidence.
 - **Fix pull request** (maintainer): Opened only for a newest-version failure; The harness; The failed grade; The evidence.
 
 ## Feasibility limits
@@ -22,3 +22,5 @@ There is no website, app screen, or component library, so there is nothing to na
 - Those three surfaces are enough for six harnesses (Claude Code, Codex, Grok, OpenCode, Pi, Cursor), two tracks (pinned, newest), four checks, a pass/fail/could-not-run label, a separate drift section, and a later-checks section, if each surface uses headings and one row per harness and track instead of one wide grid.
 - GitHub markdown has no design tokens and drops style and script. Do not use color or custom components. Write the words pass, fail, and could-not-run.
 - A heading can say that later checks do not block a release. None of the three surfaces can change the workflow badge or required-status checks. A failing job still looks like a release block on the pull request Checks list.
+
+Every summary identifies published versus checkout mode, actual plugin revision/digest, CLI versions, run/attempt, evidence age, and compatibility holds. Published results say compatibility-only. A correct planted finding is displayed separately from the evaluation verdict.
