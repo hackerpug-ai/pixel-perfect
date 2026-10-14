@@ -22,6 +22,7 @@ import { digest } from "./reference-revisions.mjs";
 import { runManifestGate } from "./verify-styling-contract.mjs";
 import {
   auditGoldens,
+  frameFitsPlatform,
   gateCapture,
   inventoryDir,
   loadManifest,
@@ -117,7 +118,7 @@ function frameIds(layer, manifestEntry, fromInventory) {
   return source.appears_on ?? [];
 }
 
-function frameFiles(root, manifest, ids) {
+function frameFiles(root, manifest, ids, config) {
   if (ids.length === 0) return [];
   const dir = join(root, manifest.inventory?.reference ?? "design/reference");
   const indexPath = join(dir, "frames.json");
@@ -125,7 +126,7 @@ function frameFiles(root, manifest, ids) {
   const index = readJson(indexPath, indexPath);
   if (!Array.isArray(index.frames)) throw new GateConfigError(`${indexPath} has no frames array`);
   const byId = new Map(index.frames.map((frame) => [frame.id, frame]));
-  return ids.map((id) => {
+  return ids.filter((id) => frameFitsPlatform(byId.get(id), config)).map((id) => {
     const frame = byId.get(id);
     if (!frame) throw new GateConfigError(`frame ${id} is not in the frames index`);
     const png = join(dir, frame.png);
@@ -161,7 +162,7 @@ export function expectedHashes(root, manifest, config, captureCfg, layer, name, 
   if (!existsSync(filePath)) throw new GateConfigError(`component file is missing: ${item.file}`);
   if (!existsSync(storyPath)) throw new GateConfigError(`story file is missing: ${item.story}`);
   const ids = frameIds(layer, item, inventoryEntry(root, layer, name));
-  const frames = frameFiles(root, manifest, ids);
+  const frames = frameFiles(root, manifest, ids, config);
   return {
     item,
     frames,

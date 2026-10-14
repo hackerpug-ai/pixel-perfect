@@ -315,6 +315,19 @@ function resolvePixels(capture, platformId) {
   throw new Error(`capture.pixels must be "required" or "none", got ${JSON.stringify(declared)}`);
 }
 
+// A frame drawn at phone width must not judge a desktop capture, and the reverse.
+// ponytail: one 768px split between narrow and wide; a tablet platform would need explicit frame scoping.
+const NARROW_BELOW = 768;
+
+/** True when a frame's recorded viewport is the same width class as the platform's capture viewport.
+ * A frame or platform with no recorded viewport keeps every frame. */
+export function frameFitsPlatform(frame, platformConfig) {
+  const capture = /^(\d+)x\d+$/.exec(String(platformConfig?.capture?.viewport ?? ""));
+  const drawn = /^(\d+)x\d+$/.exec(String(frame?.viewport ?? ""));
+  if (!capture || !drawn) return true;
+  return Number(drawn[1]) < NARROW_BELOW === Number(capture[1]) < NARROW_BELOW;
+}
+
 function parseViewport(value) {
   if (value === undefined) return null;
   const m = /^(\d+)x(\d+)$/.exec(String(value));

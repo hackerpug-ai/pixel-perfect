@@ -2007,6 +2007,55 @@ describe("brief.mjs judge", () => {
     }
   });
 
+  test("a judge brief carries the project's rules when design/fidelity/rules.md exists, and asks accepted differences for a decider and a reason", () => {
+    const root = judgeProject();
+    const file = path.join(root, "design/.briefs/web-desktop/judge-atoms.md");
+    try {
+      assert.equal(runCli(["judge", root, "--platform", "web-desktop", "--layer", "atoms"]).code, 0);
+      const without = readFileSync(file, "utf8");
+      assert.equal(without.includes("## Project rules"), false);
+      assert.match(without, /"acceptedBy"/);
+      mkdirSync(path.join(root, "design/fidelity"), { recursive: true });
+      writeFileSync(path.join(root, "design/fidelity/rules.md"), "1. The story canvas is accepted.\n");
+      assert.equal(runCli(["judge", root, "--platform", "web-desktop", "--layer", "atoms"]).code, 0);
+      const withRules = readFileSync(file, "utf8");
+      assert.match(withRules, /## Project rules/);
+      assert.match(withRules, /1\. The story canvas is accepted\./);
+      assert.equal(withRules.includes("<<"), false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a judge brief lists only the frames drawn at the platform's width class", () => {
+    const root = judgeProject();
+    const file = path.join(root, "design/.briefs/web-desktop/judge-atoms.md");
+    try {
+      writeFileSync(
+        path.join(root, "design/reference/frames.json"),
+        JSON.stringify({ frames: [{ id: "frame-a", png: "frame-a.png", viewport: "390x900" }, { id: "frame-b", png: "frame-b.png", viewport: "1440x900" }] }),
+      );
+      writeFileSync(path.join(root, "design/reference/frame-b.png"), PNG);
+      const manifestPath = path.join(root, "design/manifest.json");
+      const body = JSON.parse(readFileSync(manifestPath, "utf8"));
+      for (const atom of body.platforms["web-desktop"].atoms) atom.appears_on = ["frame-a", "frame-b"];
+      writeFileSync(manifestPath, JSON.stringify(body, null, 2));
+      assert.equal(runCli(["judge", root, "--platform", "web-desktop", "--layer", "atoms"]).code, 0);
+      const narrow = readFileSync(file, "utf8");
+      assert.ok(narrow.includes(path.join(root, "design/reference/frame-a.png")), "a 32px-wide capture is narrow, so the 390 frame applies");
+      assert.equal(narrow.includes("frame-b.png"), false, "the 1440 frame does not judge a narrow capture");
+
+      body.platforms["web-desktop"].capture.viewport = "1440x800";
+      writeFileSync(manifestPath, JSON.stringify(body, null, 2));
+      assert.equal(runCli(["judge", root, "--platform", "web-desktop", "--layer", "atoms"]).code, 0);
+      const wide = readFileSync(file, "utf8");
+      assert.ok(wide.includes(path.join(root, "design/reference/frame-b.png")));
+      assert.equal(wide.includes("frame-a.png"), false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("a component with a judgment bound to its current hashes leaves the brief, and a stale one comes back", () => {
     const root = judgeProject();
     const file = path.join(root, "design/.briefs/web-desktop/judge-atoms.md");

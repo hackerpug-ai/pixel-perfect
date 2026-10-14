@@ -16,7 +16,7 @@ import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, renameSync
 import { randomUUID } from "node:crypto";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { loadManifest, resolvePlatform } from "./verify-catalog.mjs";
+import { frameFitsPlatform, loadManifest, resolvePlatform } from "./verify-catalog.mjs";
 import { digest, inside } from "./reference-revisions.mjs";
 import { GateError, resolveContract as resolveGateContract } from "./verify-styling-contract.mjs";
 
@@ -231,13 +231,16 @@ function manifestEntry(config, layer, name, platformId) {
   return entry;
 }
 
-function loadFrameIndex(root, manifest) {
+function loadFrameIndex(root, manifest, platformConfig = null) {
   const dir = inside(root, manifest.inventory?.reference ?? "design/reference");
   const file = join(dir, "frames.json");
   if (!existsSync(file)) fail(`no frames index at ${file}`);
   const index = readJsonFile(file, "frames index");
   if (!Array.isArray(index.frames)) fail(`${file} has no frames array`);
-  return { dir, file, byId: new Map(index.frames.map((frame) => [frame.id, frame])) };
+  const byId = new Map(index.frames.map((frame) => [frame.id, frame]));
+  // An unknown id stays in, so frameLine still fails loudly on it.
+  const fits = (id) => !byId.has(id) || frameFitsPlatform(byId.get(id), platformConfig);
+  return { dir, file, byId, fits };
 }
 
 function frameLine(index, id) {
@@ -256,10 +259,10 @@ function frameLine(index, id) {
 function framesSection(item, layer, index) {
   if (layer === "screens") {
     const states = item.states ?? [];
-    if (!states.some((state) => (state.frames ?? []).length > 0)) return NO_FRAME;
+    if (!states.some((state) => (state.frames ?? []).some((id) => index === null || index.fits(id)))) return NO_FRAME;
     return states
       .map((state) => {
-        const ids = state.frames ?? [];
+        const ids = (state.frames ?? []).filter((id) => index === null || index.fits(id));
         const body = ids.length
           ? ids.map((id) => frameLine(index, id))
           : [`No frame draws this state.${state.undrawn ? ` Spec-only reason: ${state.undrawn}` : ""}`];
@@ -267,7 +270,7 @@ function framesSection(item, layer, index) {
       })
       .join("\n\n");
   }
-  const ids = item.appears_on ?? [];
+  const ids = (item.appears_on ?? []).filter((id) => index === null || index.fits(id));
   if (ids.length === 0) return NO_FRAME;
   return ids.map((id) => frameLine(index, id)).join("\n");
 }
@@ -581,7 +584,7 @@ export function buildBrief({ root, platform, layer, name, findings }) {
   const inventory = readInventoryIfPresent(root);
   const inInventory = inventory === null ? undefined : (inventory[layer] ?? []).find((candidate) => candidate.name === name);
   const itemText = inInventory === undefined ? `${NO_INVENTORY}\n\n${fencedJson(entry)}` : fencedJson(inInventory);
-  const index = inventory === null ? null : loadFrameIndex(root, manifest);
+  const index = inventory === null ? null : loadFrameIndex(root, manifest, config);
   const sourceRoot = resolve(root, config.root ?? ".");
   const contracts = {
     style: resolveContractFor("style", { root, platformId, tools }),
@@ -676,7 +679,7 @@ const VERDICT_SHAPE = [
   '  "verdict": "pass or fail",',
   '  "reviewer": "judge",',
   '  "reason": "one sentence",',
-  '  "discrepancies": [{ "description": "what differs", "accepted": false }],',
+  '  "discrepancies": [{ "description": "what differs", "accepted": false, "acceptedBy": "only when accepted: who decided", "reason": "only when accepted: why" }],',
   '  "hashes": { "golden": "sha256:...", "file": "sha256:...", "story": "sha256:...", "frames": "sha256:... or none", "render": "sha256:... or none" }',
   "}",
 ].join("\n");
@@ -713,8 +716,8 @@ function judgeInputs({ root, manifest, platformId, layer, item }) {
   const ids = layer === "screens" ? (source.states ?? []).flatMap((state) => state.frames ?? []) : (source.appears_on ?? []);
   const frames = [];
   if (ids.length > 0) {
-    const index = loadFrameIndex(root, manifest);
-    for (const id of ids) {
+    const index = loadFrameIndex(root, manifest, resolvePlatform(manifest, platformId).config);
+    for (const id of ids.filter(index.fits)) {
       const frame = index.byId.get(id);
       if (!frame) fail(`frame ${id} is not in the frames index ${index.file}`);
       const png = inside(index.dir, frame.png);
@@ -769,6 +772,22 @@ function judgeBlock(layer, item, { renders, frames, hashes }) {
   ].join("\n");
 }
 
+// Differences the project has decided to accept, written by the people who own the design in
+// design/fidelity/rules.md. The judge applies them; without the file there are no project rules.
+function projectRules(root) {
+  const file = join(root, "design", "fidelity", "rules.md");
+  if (!existsSync(file)) return "";
+  const text = readFileSync(file, "utf8").trim();
+  if (!text) return "";
+  return [
+    "## Project rules",
+    "",
+    "The project has decided the rules below. A difference that a rule covers is accepted: set `accepted: true`, `acceptedBy` to \"project rule\", and `reason` to the rule it falls under. A difference no rule covers is judged as usual.",
+    "",
+    text,
+  ].join("\n");
+}
+
 export function judgeBrief({ root, platform, layer }) {
   const manifest = loadManifest(root);
   const { id: platformId, config } = resolvePlatform(manifest, platform);
@@ -785,6 +804,7 @@ export function judgeBrief({ root, platform, layer }) {
     LAYER: layer,
     COUNT: String(chosen.length),
     REMAINING: rest > 0 ? `${rest} more components are not in this brief. Judge these, then run the command again.` : "",
+    RULES: projectRules(root),
     COMPONENTS: chosen.map(({ item, inputs }) => judgeBlock(layer, item, inputs)).join("\n\n"),
     VERDICT: VERDICT_SHAPE,
   });

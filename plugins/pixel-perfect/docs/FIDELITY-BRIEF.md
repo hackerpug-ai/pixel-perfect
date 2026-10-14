@@ -15,6 +15,8 @@ You did not build them. Open every render PNG beside every frame PNG named under
 
 <<REMAINING>>
 
+<<RULES>>
+
 <<COMPONENTS>>
 
 ## JSON verdict

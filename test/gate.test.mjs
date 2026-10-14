@@ -322,6 +322,32 @@ test("a failing verdict, an unaccepted difference, a stale golden, and a stale f
   }
 });
 
+test("the gate hashes only the frames drawn at the platform's width class", () => {
+  const dir = scratchProject("pp-gate-");
+  try {
+    buttonProject(dir);
+    writeIn(
+      dir,
+      "design/reference/frames.json",
+      JSON.stringify({ frames: [{ id: "f1", png: "f1.png", viewport: "390x300" }, { id: "f2", png: "f2.png", viewport: "1440x900" }] }),
+    );
+    writeIn(dir, "design/reference/f1.png", PNG);
+    writeIn(dir, "design/reference/f2.png", inkImage({ width: 32, height: 32, inkCount: 400 }));
+    const body = manifest(dir);
+    body.platforms["web-desktop"].atoms[0].appears_on = ["f1", "f2"];
+    writeFileSync(path.join(dir, "design/manifest.json"), JSON.stringify(body, null, 2) + "\n");
+    assert.equal(run(["item", dir, "--platform", "web-desktop", "--layer", "atoms", "--name", "Button"]).code, 0);
+    const hashes = hashesFor(dir);
+    hashes.frames = digest(readFileSync(path.join(dir, "design/reference/f1.png")));
+    const file = writeIn(dir, "design/.briefs/scoped.json", JSON.stringify(judgment(hashes, { kind: "frames" })));
+    const recorded = run(["record", dir, "--platform", "web-desktop", "--layer", "atoms", "--name", "Button", "--judgment", file]);
+    assert.equal(recorded.code, 0, recorded.report?.message);
+    assert.equal(run(["layer", dir, "--platform", "web-desktop", "--layer", "atoms"]).code, 0);
+  } finally {
+    removeDirs(dir);
+  }
+});
+
 test("a component with no frames needs a contract-review judgment", () => {
   const dir = scratchProject("pp-gate-");
   try {
