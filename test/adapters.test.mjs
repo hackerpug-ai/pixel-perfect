@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import test from "node:test";
-import { AdapterBuildError, buildAdapters, loadCapabilities, renderAdapters } from "../scripts/build-adapters.mjs";
+import { AdapterBuildError, SURFACES, buildAdapters, loadCapabilities, renderAdapters } from "../scripts/build-adapters.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const INTERACTIVE_WORKFLOWS = ["add-platform", "assimilate", "build", "evolve", "init", "refine", "scaffold", "wireframe"];
@@ -41,7 +41,7 @@ test("renderAdapters is deterministic and covers all 11×4 surfaces", async () =
   for (const capability of first.capabilities) {
     const commandPath = `plugins/pixel-perfect/commands/${capability.name}.md`;
     const skillPath = `plugins/pixel-perfect/skills/${capability.name}/SKILL.md`;
-    const opencodePath = `plugins/pixel-perfect/.opencode/commands/${capability.name}.md`;
+    const opencodePath = `plugins/pixel-perfect/.opencode/commands/pixel-perfect/${capability.name}.md`;
     const piPath = `plugins/pixel-perfect/.pi/skills/pixel-perfect-${capability.name}/SKILL.md`;
     assert.ok(first.files.has(commandPath), commandPath);
     assert.ok(first.files.has(skillPath), skillPath);
@@ -112,4 +112,83 @@ test('selection metadata is complete and every surface includes it with escaped 
     catalog[0].handoffs = ['status']; delete catalog[0].inputs; await writeFile(file, JSON.stringify(catalog));
     await assert.rejects(loadCapabilities(temp), /adapter build failed/);
   } finally { await rm(temp, { recursive: true, force: true }); }
+});
+
+const OPENCODE_PLUGIN_PATH = "plugins/pixel-perfect/.opencode/plugins/pixel-perfect.ts";
+
+test("OpenCode plugin module exports a Plugin function with no third-party imports, network, or writes", async () => {
+  const source = await readFile(path.join(ROOT, OPENCODE_PLUGIN_PATH), "utf8");
+  for (const match of source.matchAll(/^\s*import\s+(?:[^"']+\s+from\s+)?["']([^"']+)["']/gm)) {
+    assert.ok(match[1].startsWith("node:"), `plugin must not import third-party module "${match[1]}"`);
+  }
+  assert.match(source, /export\s+(?:async\s+function|function|const)\s+PixelPerfectPlugin/);
+  assert.doesNotMatch(source, /\b(fetch|XMLHttpRequest|WebSocket|http\.request|https\.request)\b/);
+  assert.doesNotMatch(source, /\b(writeFile|writeFileSync|appendFile|appendFileSync|mkdir|mkdirSync|rm|rmSync|unlink|unlinkSync|rename|renameSync|copyFile|copyFileSync|truncate|truncateSync)\b/);
+});
+
+test("OpenCode plugin writes one structured stderr line only when the namespaced command link is missing", async () => {
+  const moduleUrl = pathToFileURL(path.join(ROOT, OPENCODE_PLUGIN_PATH)).href;
+  const plugin = await import(moduleUrl);
+
+  const resolved = await mkdtemp(path.join(tmpdir(), "pp-opencode-plugin-resolved-"));
+  const missing = await mkdtemp(path.join(tmpdir(), "pp-opencode-plugin-missing-"));
+  try {
+    await mkdir(path.join(resolved, ".opencode/commands/pixel-perfect"), { recursive: true });
+    await writeFile(path.join(resolved, ".opencode/commands/pixel-perfect/init.md"), "x", "utf8");
+
+    const originalWrite = process.stderr.write.bind(process.stderr);
+    const captured = [];
+    process.stderr.write = (chunk) => { captured.push(chunk); return true; };
+    try {
+      await plugin.PixelPerfectPlugin({ directory: resolved });
+    } finally {
+      process.stderr.write = originalWrite;
+    }
+    assert.deepEqual(captured, [], "plugin must be silent when the namespaced link resolves");
+
+    const capturedMissing = [];
+    process.stderr.write = (chunk) => { capturedMissing.push(chunk); return true; };
+    try {
+      await plugin.PixelPerfectPlugin({ directory: missing });
+    } finally {
+      process.stderr.write = originalWrite;
+    }
+    assert.equal(capturedMissing.length, 1, "plugin must write exactly one diagnostic line");
+    const diagnostic = JSON.parse(capturedMissing[0]);
+    assert.equal(diagnostic.plugin, "pixel-perfect");
+    assert.equal(diagnostic.status, "missing");
+    assert.equal(diagnostic.path, path.join(missing, ".opencode/commands/pixel-perfect/init.md"));
+  } finally {
+    await rm(resolved, { recursive: true, force: true });
+    await rm(missing, { recursive: true, force: true });
+  }
+});
+
+test("every rendered path derives from the per-surface naming rule", async () => {
+  const { files } = await renderAdapters(ROOT);
+  const expected = new Set();
+  for (const capability of await loadCapabilities(ROOT)) {
+    for (const surface of Object.values(SURFACES)) {
+      expected.add(surface.path.replace(/\{name\}/g, capability.name));
+    }
+  }
+  assert.deepEqual([...files.keys()].sort(), [...expected].sort());
+});
+
+test("RUNTIME-CONTRACT.md harness mappings agree with the rendered invocation names", async () => {
+  const contract = await readFile(path.join(ROOT, "plugins/pixel-perfect/workflows/RUNTIME-CONTRACT.md"), "utf8");
+  const harnessHeadings = { "Claude Code": "claude", Grok: "grok", Codex: "codex", OpenCode: "opencode", Pi: "pi", Cursor: "cursor" };
+  for (const [heading, key] of Object.entries(harnessHeadings)) {
+    const start = contract.indexOf(`### ${heading}`);
+    assert.ok(start >= 0, `RUNTIME-CONTRACT.md has no "### ${heading}" section`);
+    const rest = contract.slice(start);
+    const end = rest.indexOf("\n### ", 1);
+    const section = end === -1 ? rest : rest.slice(0, end);
+    const invocationLine = section.split("\n").find((line) => /^- Invocation:/.test(line));
+    assert.ok(invocationLine, `"### ${heading}" has no "- Invocation:" line`);
+    const quoted = invocationLine.match(/`([^`]+)`/);
+    assert.ok(quoted, `"### ${heading}" invocation is not backtick-quoted: ${invocationLine}`);
+    const normalized = quoted[1].replace(/<name>/g, "{name}");
+    assert.equal(normalized, SURFACES[key].invocation, `"${heading}" invocation disagrees with the naming rule`);
+  }
 });

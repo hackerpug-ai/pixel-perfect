@@ -128,7 +128,7 @@ Never weaken the design contract or skip a deterministic gate. Do not start anot
 
 ### Grok
 
-- Invocation: `/<name>`. Grok lists an enabled skill under its bare name, so use the bare name. Use `/pixel-perfect:<name>` only when the bare name collides with a built-in command or another skill. Both forms run.
+- Invocation: `/pixel-perfect:<name>`. Grok lists each command under its prefixed name; the bare `/<name>` also runs. Both forms run.
 - User choices and task tracking: Grok's native mechanisms, one call per declared batch as above. Never a printed question followed by an ended turn. Grok stops waiting for an answer after 30 minutes by default; `INSTALL.md` shows how to turn that timeout off. A return of "User declined to answer the questions" with no text the user typed is that timeout, not an answer. At a gate, never proceed on best judgment. End the turn with the batch as a numbered plain-text list, the last thing in the turn, and wait for the reply.
 - Plugin paths: resolve from the enabled Claude-compatible plugin root.
 
@@ -141,7 +141,7 @@ Never weaken the design contract or skip a deterministic gate. Do not start anot
 
 ### OpenCode
 
-- Invocation: `/<name>`.
+- Invocation: `/pixel-perfect/<name>`. OpenCode discovers namespaced commands from the nested `.opencode/commands/pixel-perfect/` path, so every public command is namespaced and none takes over a built-in such as `/init`.
 - User choices and task tracking: OpenCode's native question and todo/planning mechanisms, one call per declared batch; otherwise a numbered plain-text batch as the last thing in the turn. Never a printed question followed by an ended turn.
 - Plugin paths: adapters include canonical files from `.pixel-perfect/plugins/pixel-perfect/`.
 

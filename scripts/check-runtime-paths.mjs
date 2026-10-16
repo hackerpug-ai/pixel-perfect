@@ -45,7 +45,7 @@ export async function checkRuntimePaths(root = REPOSITORY_ROOT) {
 
   for (const capability of PUBLIC_CAPABILITIES) {
     const commandPath = path.join(packageRoot, `commands/${capability}.md`);
-    const opencodePath = path.join(packageRoot, `.opencode/commands/${capability}.md`);
+    const opencodePath = path.join(packageRoot, `.opencode/commands/pixel-perfect/${capability}.md`);
     const codexPath = path.join(packageRoot, `skills/${capability}/SKILL.md`);
     const workflowPath = path.join(packageRoot, `workflows/${capability}.md`);
 

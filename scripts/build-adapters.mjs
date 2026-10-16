@@ -17,6 +17,25 @@ const SILENT_SKILL_FOOTER =
 const INTERACTIVE_SKILL_FOOTER =
   "Invoke with the active harness's syntax from the harness mappings table in the runtime contract, treat the user's remaining text as input, collect choices through that harness's input mechanism one call per declared batch, never printing a decision as prose and ending the turn, and represent transient workflow tasks with its planning tools. Follow the runtime contract's turn shape: open with a status digest of twelve lines or fewer, write longer analysis to the artifact the workflow names, run no search, install, or generation before the decision authorizing it, and ask when the input does not resolve to exactly one thing. Durable completion comes only from the manifest and required evidence.";
 
+// Per-surface naming rule: the single source of truth for how each of the six
+// harness surfaces renders its adapter files and how it names the command at
+// invocation time. Every rendered path below derives from this table.
+// kb:{ceiling}: OpenCode command namespacing is the slash form (a nested
+// command path under `.opencode/commands/pixel-perfect/`). Upgrade to a colon
+// form only when OpenCode documents colon-prefixed command naming.
+export const SURFACES = Object.freeze({
+  claude: { path: `${PLUGIN_ROOT}/commands/{name}.md`, kind: "command", invocation: "/pixel-perfect:{name}" },
+  codex: { path: `${PLUGIN_ROOT}/skills/{name}/SKILL.md`, kind: "skill", invocation: "$pixel-perfect:{name}" },
+  cursor: { path: `${PLUGIN_ROOT}/commands/{name}.md`, kind: "command", invocation: "/{name}" },
+  grok: { path: `${PLUGIN_ROOT}/skills/{name}/SKILL.md`, kind: "skill", invocation: "/pixel-perfect:{name}" },
+  opencode: { path: `${PLUGIN_ROOT}/.opencode/commands/pixel-perfect/{name}.md`, kind: "command", invocation: "/pixel-perfect/{name}" },
+  pi: { path: `${PLUGIN_ROOT}/.pi/skills/pixel-perfect-{name}/SKILL.md`, kind: "pi-skill", invocation: "/skill:pixel-perfect-{name}" },
+});
+
+function surfacePath(surface, name) {
+  return surface.path.replace(/\{name\}/g, name);
+}
+
 export class AdapterBuildError extends Error {
   constructor(details) {
     super("adapter build failed");
@@ -123,10 +142,14 @@ export async function renderAdapters(root = REPOSITORY_ROOT) {
       }),
     );
 
-    files.set(`${PLUGIN_ROOT}/commands/${name}.md`, commandBody);
-    files.set(`${PLUGIN_ROOT}/skills/${name}/SKILL.md`, skillBody);
-    files.set(`${PLUGIN_ROOT}/.opencode/commands/${name}.md`, commandBody);
-    files.set(`${PLUGIN_ROOT}/.pi/skills/pixel-perfect-${name}/SKILL.md`, piSkillBody);
+    // Every rendered path derives from the per-surface naming rule. Claude and
+    // Cursor share the bare command surface; Codex and Grok share the bare skill
+    // surface; OpenCode and Pi carry their namespace in the path. The `files`
+    // map dedupes the shared surfaces, leaving 11 capabilities × 4 file groups.
+    const bodies = { command: commandBody, skill: skillBody, "pi-skill": piSkillBody };
+    for (const surface of Object.values(SURFACES)) {
+      files.set(surfacePath(surface, name), bodies[surface.kind]);
+    }
   }
   return { capabilities, files };
 }
@@ -172,11 +195,11 @@ if (isMain) {
     .then((result) => {
       if (check) {
         process.stdout.write(
-          `adapters in sync: ${result.capabilities} capabilities × 4 surfaces (${result.surfaces} files)\n`,
+          `adapters in sync: ${result.capabilities} capabilities × ${Object.keys(SURFACES).length} harness surfaces (${result.surfaces} files)\n`,
         );
       } else {
         process.stdout.write(
-          `adapters written: ${result.capabilities} capabilities × 4 surfaces (${result.surfaces} files)\n`,
+          `adapters written: ${result.capabilities} capabilities × ${Object.keys(SURFACES).length} harness surfaces (${result.surfaces} files)\n`,
         );
       }
     })
