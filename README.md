@@ -196,7 +196,8 @@ Next: open a project that has your design and run `/pixel-perfect:init`.
 | Claude Code | `/pixel-perfect:init` |
 | Grok | `/init` |
 | Codex | `$pixel-perfect:init` |
-| Cursor, OpenCode | `/init` |
+| Cursor | `/pixel-perfect-init` |
+| OpenCode | `/pixel-perfect/init` |
 | Pi | `/skill:pixel-perfect-init` |
 
 Releases are version-locked across all six agents. Every breaking release ships an upgrade guide. Upgrading from 7.x? Read the [8.0 guide](plugins/pixel-perfect/docs/UPGRADING-8.0.md). From 8.x? Read the [9.0 guide](plugins/pixel-perfect/docs/UPGRADING-9.0.md). From 9.x? Read the [10.0 guide](plugins/pixel-perfect/docs/UPGRADING-10.0.md). Returning to a project you built earlier? Read [returning to a project](plugins/pixel-perfect/docs/RETURNING-PROJECT.md).
@@ -209,7 +210,7 @@ Releases are version-locked across all six agents. Every breaking release ships 
 
 ## Commands
 
-The commands below use the Claude Code form, `/pixel-perfect:<name>`. Grok lists them by their short name, `/<name>`, and both forms run in Grok. Your agent's form is in the "Run a command as" table under [Install](#install).
+The commands below use the Claude Code form, `/pixel-perfect:<name>`. OpenCode lists them under their namespaced name, `/pixel-perfect/<name>`, and Cursor lists them under a hyphenated prefix, `/pixel-perfect-<name>`. Your agent's form is in the "Run a command as" table under [Install](#install).
 
 **Build it**
 

@@ -122,7 +122,8 @@ export async function validatePackage(root = REPOSITORY_ROOT) {
     required.push(
       `commands/${capability}.md`,
       `skills/${capability}/SKILL.md`,
-      `.opencode/commands/${capability}.md`,
+      `.cursor-plugin/commands/pixel-perfect-${capability}.md`,
+      `.opencode/commands/pixel-perfect/${capability}.md`,
       `.pi/skills/pixel-perfect-${capability}/SKILL.md`,
       `workflows/${capability}.md`,
     );
@@ -168,8 +169,14 @@ export async function validatePackage(root = REPOSITORY_ROOT) {
   if (totalBytes > 10 * 1024 * 1024) errors.push(`package is unexpectedly large: ${totalBytes} bytes`);
 
   try {
-    compareNames(await namesIn(path.join(packageRoot, "commands"), ".md"), PUBLIC_CAPABILITIES, "Claude/OpenCode command adapters", errors);
-    compareNames(await namesIn(path.join(packageRoot, ".opencode/commands"), ".md"), PUBLIC_CAPABILITIES, "OpenCode command adapters", errors);
+    compareNames(await namesIn(path.join(packageRoot, "commands"), ".md"), PUBLIC_CAPABILITIES, "Claude command adapters", errors);
+    compareNames(
+      await namesIn(path.join(packageRoot, ".cursor-plugin/commands"), ".md"),
+      PUBLIC_CAPABILITIES.map((capability) => `pixel-perfect-${capability}`),
+      "Cursor command adapters",
+      errors,
+    );
+    compareNames(await namesIn(path.join(packageRoot, ".opencode/commands/pixel-perfect"), ".md"), PUBLIC_CAPABILITIES, "OpenCode command adapters", errors);
     compareNames(
       await namesIn(path.join(packageRoot, "skills")),
       [...PUBLIC_CAPABILITIES, ...INTERNAL_SKILLS, ...SUPPORT_SKILL_DIRS],

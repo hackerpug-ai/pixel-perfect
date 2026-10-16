@@ -137,7 +137,7 @@ test("the real pi package manager installs the packed artifact and discovers eve
     assert.deepEqual(commands, PI_COMMANDS);
     const catalog = JSON.parse(await readFile(path.join(ROOT, "scripts/adapters/capabilities.json"), "utf8"));
     for (const command of packageCommands) {
-      assert.equal(command.description, catalog.find((entry) => command.name === `skill:pixel-perfect-${entry.name}`).description);
+      assert.equal(command.description, catalog.capabilities.find((entry) => command.name === `skill:pixel-perfect-${entry.name}`).description);
       assert.ok(command.sourceInfo.path.startsWith(packageRoot), command.sourceInfo.path);
     }
   } finally {

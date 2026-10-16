@@ -106,7 +106,7 @@ test("README.md run numbers match site/src/lib/run.json", () => {
 test("README.md lists exactly the shipped /pixel-perfect: commands", () => {
   const text = read("README.md");
   assert.notEqual(text, null, "README.md does not exist");
-  const shipped = new Set(json("scripts/adapters/capabilities.json").map((c) => c.name));
+  const shipped = new Set(json("scripts/adapters/capabilities.json").capabilities.map((c) => c.name));
   const named = new Set([...text.matchAll(/\/pixel-perfect:([a-z][a-z-]*)/g)].map((m) => m[1]));
   const missing = [...shipped].filter((x) => !named.has(x)).sort();
   const extra = [...named].filter((x) => !shipped.has(x)).sort();
@@ -134,7 +134,29 @@ test("INSTALL.md's Grok section tells the user the bare command, and the qualifi
   const qualified = section.split("\n").filter((line) => line.includes("/pixel-perfect:"));
   assert.equal(qualified.length, 1, `Grok section must mention the qualified form in one note only; found ${qualified.length}`);
   assert.match(qualified[0], /Slash commands:/);
+  assert.match(qualified[0], /bare short name/);
   assert.match(qualified[0], /Both forms run/);
+});
+
+test("README.md pairs Cursor with the hyphenated /pixel-perfect-init form", () => {
+  const rows = stripFences(read("README.md"))
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith("|"));
+  const cursor = rows.find((line) => line.split("|")[1]?.includes("Cursor"));
+  assert.ok(cursor, "README.md has no invocation-table row for Cursor");
+  assert.match(cursor, /`\/pixel-perfect-init`/);
+  assert.doesNotMatch(cursor, /`\/init`/);
+});
+
+test("INSTALL.md's Cursor section tells the user the hyphenated command", () => {
+  const text = read("INSTALL.md");
+  const start = text.indexOf("## Cursor");
+  const end = text.indexOf('<a name="grok"></a>', start);
+  assert.ok(start >= 0 && end > start, "INSTALL.md has no bounded Cursor section");
+  const section = text.slice(start, end);
+  assert.match(section, /Next step:.*run `\/pixel-perfect-init`/);
+  assert.match(section, /pixel-perfect-init\.md/);
 });
 
 test("README.md and INSTALL.md follow the voice rules", () => {

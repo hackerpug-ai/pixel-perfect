@@ -45,7 +45,8 @@ export async function checkRuntimePaths(root = REPOSITORY_ROOT) {
 
   for (const capability of PUBLIC_CAPABILITIES) {
     const commandPath = path.join(packageRoot, `commands/${capability}.md`);
-    const opencodePath = path.join(packageRoot, `.opencode/commands/${capability}.md`);
+    const cursorPath = path.join(packageRoot, `.cursor-plugin/commands/pixel-perfect-${capability}.md`);
+    const opencodePath = path.join(packageRoot, `.opencode/commands/pixel-perfect/${capability}.md`);
     const codexPath = path.join(packageRoot, `skills/${capability}/SKILL.md`);
     const workflowPath = path.join(packageRoot, `workflows/${capability}.md`);
 
@@ -56,6 +57,15 @@ export async function checkRuntimePaths(root = REPOSITORY_ROOT) {
       }
     } catch (error) {
       errors.push(`cannot compare OpenCode ${capability} adapter: ${error.message}`);
+    }
+
+    try {
+      const [cursor, command] = await Promise.all([readFile(cursorPath, "utf8"), readFile(commandPath, "utf8")]);
+      if (cursor !== command) {
+        errors.push(`Cursor ${capability} adapter must be byte-identical to commands/${capability}.md`);
+      }
+    } catch (error) {
+      errors.push(`cannot compare Cursor ${capability} adapter: ${error.message}`);
     }
 
     try {
@@ -128,7 +138,7 @@ export async function checkRuntimePaths(root = REPOSITORY_ROOT) {
     errors.push(`cannot validate OpenCode internal skill paths: ${error.message}`);
   }
 
-  const runtimeDirectories = ["commands", "skills", ".opencode/commands", "workflows"];
+  const runtimeDirectories = ["commands", "skills", ".cursor-plugin/commands", ".opencode/commands", "workflows"];
   for (const relativePath of runtimeDirectories) {
     try {
       if ((await readdir(path.join(packageRoot, relativePath))).length === 0) errors.push(`${relativePath} is empty`);

@@ -19,6 +19,9 @@ const PUBLIC_CAPABILITIES = [
   "verify",
   "wireframe",
 ];
+// Skill names are lowercase with hyphen separators. Public capabilities render
+// two shapes: the bare name in the Codex/Grok surface (`init`) and the
+// `pixel-perfect-` prefixed name in the Pi surface (`pixel-perfect-init`).
 const SKILL_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const ALLOWED_FIELDS = new Set(["name", "description", "license", "compatibility", "metadata"]);
 
@@ -93,6 +96,7 @@ export async function validateSkills(root = REPOSITORY_ROOT) {
     `${PLUGIN_ROOT}/skills/process-context/SKILL.md`,
     `${PLUGIN_ROOT}/.opencode/skills/process-context/SKILL.md`,
     ...PUBLIC_CAPABILITIES.map((name) => `${PLUGIN_ROOT}/skills/${name}/SKILL.md`),
+    ...PUBLIC_CAPABILITIES.map((name) => `${PLUGIN_ROOT}/.pi/skills/pixel-perfect-${name}/SKILL.md`),
   ];
   await Promise.all(paths.map((relativePath) => validateSkill(root, relativePath, errors)));
 

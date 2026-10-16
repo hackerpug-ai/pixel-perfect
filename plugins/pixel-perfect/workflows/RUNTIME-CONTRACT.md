@@ -128,7 +128,7 @@ Never weaken the design contract or skip a deterministic gate. Do not start anot
 
 ### Grok
 
-- Invocation: `/<name>`. Grok lists an enabled skill under its bare name, so use the bare name. Use `/pixel-perfect:<name>` only when the bare name collides with a built-in command or another skill. Both forms run.
+- Invocation: `/pixel-perfect:<name>`. Grok lists the bare short name in its slash menu; the qualified `/pixel-perfect:<name>` form also runs and is what Grok shows when a name is ambiguous. Both forms run.
 - User choices and task tracking: Grok's native mechanisms, one call per declared batch as above. Never a printed question followed by an ended turn. Grok stops waiting for an answer after 30 minutes by default; `INSTALL.md` shows how to turn that timeout off. A return of "User declined to answer the questions" with no text the user typed is that timeout, not an answer. At a gate, never proceed on best judgment. End the turn with the batch as a numbered plain-text list, the last thing in the turn, and wait for the reply.
 - Plugin paths: resolve from the enabled Claude-compatible plugin root.
 
@@ -141,7 +141,7 @@ Never weaken the design contract or skip a deterministic gate. Do not start anot
 
 ### OpenCode
 
-- Invocation: `/<name>`.
+- Invocation: `/pixel-perfect/<name>`. OpenCode discovers namespaced commands from the nested `.opencode/commands/pixel-perfect/` path, so every public command is namespaced and none takes over a built-in such as `/init`.
 - User choices and task tracking: OpenCode's native question and todo/planning mechanisms, one call per declared batch; otherwise a numbered plain-text batch as the last thing in the turn. Never a printed question followed by an ended turn.
 - Plugin paths: adapters include canonical files from `.pixel-perfect/plugins/pixel-perfect/`.
 
@@ -154,7 +154,7 @@ Never weaken the design contract or skip a deterministic gate. Do not start anot
 
 ### Cursor
 
-- Invocation: `/<name>` (slash command from the installed plugin) or the skill name when skills are discovered by convention.
+- Invocation: `/pixel-perfect-<name>` (slash command from the installed plugin; Cursor derives the slug from the command filename and commands are global, so the `pixel-perfect-` prefix avoids collisions) or the skill name when skills are discovered by convention.
 - User choices: Cursor's native structured input when available, one call per declared batch; otherwise a numbered plain-text batch as the last thing in the turn. Never a printed question followed by an ended turn.
 - Task tracking: Cursor's native task/todo tools when available.
 - Plugin paths: resolve from the plugin directory that contains the loaded command or skill under `~/.cursor/plugins/` (marketplace) or `~/.cursor/plugins/local/` (local install). There is no `CLAUDE_PLUGIN_ROOT` equivalent — locate the plugin root by the directory that holds `.cursor-plugin/plugin.json`.

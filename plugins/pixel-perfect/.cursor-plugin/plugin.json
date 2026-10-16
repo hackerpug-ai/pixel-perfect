@@ -31,6 +31,6 @@
     "design-system"
   ],
   "logo": "assets/icon.png",
-  "commands": "./commands/",
+  "commands": "./.cursor-plugin/commands/",
   "skills": "./skills/"
 }

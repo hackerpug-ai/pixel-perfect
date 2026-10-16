@@ -41,6 +41,24 @@ export const RELEASE_PATHS = {
   changelog: "CHANGELOG.md",
 };
 
+// The OpenCode adapter is a real npm package now: it exports a plugin module and
+// ships namespaced commands. The release gate content-checks its tarball.
+const OPENCODE_ADAPTER_DIR = "plugins/pixel-perfect/.opencode";
+const OPENCODE_PLUGIN_MODULE = "plugins/pixel-perfect.ts";
+const PUBLIC_CAPABILITIES = [
+  "add-platform",
+  "assimilate",
+  "build",
+  "evolve",
+  "init",
+  "refine",
+  "research",
+  "scaffold",
+  "status",
+  "verify",
+  "wireframe",
+];
+
 const SEMVER_PATTERN = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
 
 export class ReleaseError extends Error {
@@ -347,9 +365,49 @@ export async function verifyVersionState(root = REPOSITORY_ROOT, expectedVersion
 export async function verifyRelease(root = REPOSITORY_ROOT, expectedVersion, options = {}) {
   const state = await verifyVersionState(root, expectedVersion, options);
   if (options.packageValidation !== false) {
-    await Promise.all([validatePackage(root), validatePlugin(root), validateSkills(root), checkRuntimePaths(root)]);
+    await Promise.all([
+      validatePackage(root),
+      validatePlugin(root),
+      validateSkills(root),
+      checkRuntimePaths(root),
+      verifyAdapterPackage(root),
+    ]);
   }
   return state;
+}
+
+// kb:{ceiling}: npm publication is wired into the release gate but not the
+// credentials — this checks the adapter tarball contents, and actual publishing
+// moves to CI (OIDC) once the owner provisions credentials.
+export async function verifyAdapterPackage(root = REPOSITORY_ROOT) {
+  const adapterPackagePath = `${OPENCODE_ADAPTER_DIR}/package.json`;
+  const manifest = await readJson(root, adapterPackagePath);
+  if (manifest.private !== undefined) {
+    throw new ReleaseError(`${adapterPackagePath} must not declare private for the publishable OpenCode adapter`);
+  }
+  if (manifest.main !== `./${OPENCODE_PLUGIN_MODULE}` || manifest.exports?.["."] !== `./${OPENCODE_PLUGIN_MODULE}`) {
+    throw new ReleaseError(`${adapterPackagePath} must export the plugin module at ./${OPENCODE_PLUGIN_MODULE}`);
+  }
+  if (!Array.isArray(manifest.files) || !manifest.files.includes("plugins/") || !manifest.files.includes("commands/")) {
+    throw new ReleaseError(`${adapterPackagePath} files must include plugins/ and commands/`);
+  }
+
+  const adapterRoot = path.join(root, OPENCODE_ADAPTER_DIR);
+  const result = await run("npm", ["pack", "--dry-run", "--json"], adapterRoot);
+  let report;
+  try {
+    report = JSON.parse(result.stdout);
+  } catch (error) {
+    throw new ReleaseError(`adapter tarball dry-run produced unparsable output`, [result.stdout, result.stderr]);
+  }
+  const packed = new Set((report[0]?.files ?? []).map((entry) => entry.path));
+  const expected = [
+    OPENCODE_PLUGIN_MODULE,
+    ...PUBLIC_CAPABILITIES.map((name) => `commands/pixel-perfect/${name}.md`),
+  ];
+  const missing = expected.filter((relativePath) => !packed.has(relativePath));
+  if (missing.length) throw new ReleaseError("adapter tarball is missing required files", missing);
+  return { packedFiles: packed.size, pluginModule: manifest.main, capabilities: PUBLIC_CAPABILITIES.length };
 }
 
 async function run(command, args, root, options = {}) {
@@ -575,8 +633,9 @@ export function formatVerification(state) {
     `  codex:    ${state.channels.codex} (Codex plugin manifest)`,
     `  cursor:   ${state.channels.cursor} (Cursor plugin manifest + marketplace)`,
     `  grok:     ${state.channels.grok} (shared Claude marketplace)`,
-    `  opencode: ${state.channels.opencode} (adapter package + lockfile)`,
+    `  opencode: ${state.channels.opencode} (adapter package + plugin module + lockfile)`,
     `  pi:       ${state.channels.pi} (npm Pi package)`,
+    `  publish:  adapter npm package is content-checked here; publish via CI (OIDC) once credentials are provisioned`,
   ].join("\n");
 }
 

@@ -353,6 +353,8 @@ three surfaces per capability, so none of it is hand-copied:
 | `scripts/check-runtime-paths.mjs` | `PUBLIC_CAPABILITIES` += `evolve` |
 | `scripts/validate-workflows.mjs` | `INTERACTIVE_WORKFLOWS` += `evolve` |
 | generated ×3 | `commands/evolve.md`, `skills/evolve/SKILL.md`, `.opencode/commands/evolve.md` via `node scripts/build-adapters.mjs` |
+
+> **Superseded** (Oct 2026): the OpenCode command surface now renders under the namespaced path `.opencode/commands/pixel-perfect/evolve.md`; the bare `.opencode/commands/evolve.md` path above is the pre-namespace layout and no longer exists.
 | `plugin-release.json` + channel manifests | version bump (currently 7.4.0) |
 
 The workflow must satisfy `validate-workflows.mjs`: a `## How this workflow asks` section

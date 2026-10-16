@@ -24,7 +24,7 @@ Every install downloads from `github.com/hackerpug-ai/pixel-perfect`. None edits
 | Codex | `~/.codex/plugins/` and `~/.codex/.tmp/marketplaces/` | The `pixel-perfect` marketplace and agent skill, in `~/.codex/config.toml` |
 | Cursor | `~/.cursor/plugins/local/pixel-perfect` | Nothing. Cursor reads the folder when it reloads. |
 | Grok | `~/.grok/installed-plugins/` | An entry in `~/.grok/installed-plugins/registry.json`, and `pixel-perfect` in `[plugins].enabled` in `~/.grok/config.toml` |
-| OpenCode | `.pixel-perfect/` (a git clone) and `.opencode/` in the current project | Two symlinks, `.opencode/commands` and `.opencode/skills`, which add project commands such as `/init` and `/build` |
+| OpenCode | `.pixel-perfect/` (a git clone) and `.opencode/` in the current project | Three symlinks — `.opencode/commands`, `.opencode/skills`, and `.opencode/plugins` — which add namespaced project commands such as `/pixel-perfect/init` and register the `pixel-perfect` plugin |
 | Pi | `~/.pi/pixel-perfect` | One package path, in `~/.pi/agent/settings.json` |
 
 Claude Code, Codex, and Grok track the repository's default branch. Cursor, OpenCode, and Pi install the newest release tag, which the install block looks up.
@@ -83,13 +83,13 @@ echo "installed pixel-perfect $TAG"
 SH
 ```
 
-- **Confirm:** run the command below. It prints `ok` when the folder holds `.cursor-plugin/plugin.json` and is a real copy.
-- **Next step:** tell the user to reload Cursor (Command Palette, then "Developer: Reload Window"), open a project that has their design, and run `/init`.
+- **Confirm:** run the command below. It prints `ok` when the folder holds `.cursor-plugin/plugin.json` and the prefixed `pixel-perfect-init` command, and is a real copy.
+- **Next step:** tell the user to reload Cursor (Command Palette, then "Developer: Reload Window"), open a project that has their design, and run `/pixel-perfect-init`.
 - **Upgrade:** run the install block again. It fetches the newest release and replaces the copy. Reload Cursor.
 - **Uninstall:** run `rm -rf "$HOME/.cursor/plugins/local/pixel-perfect"`.
 
 ```bash
-test -f "$HOME/.cursor/plugins/local/pixel-perfect/.cursor-plugin/plugin.json" && ! test -L "$HOME/.cursor/plugins/local/pixel-perfect" && echo ok
+test -f "$HOME/.cursor/plugins/local/pixel-perfect/.cursor-plugin/plugin.json" && test -f "$HOME/.cursor/plugins/local/pixel-perfect/.cursor-plugin/commands/pixel-perfect-init.md" && ! test -L "$HOME/.cursor/plugins/local/pixel-perfect" && echo ok
 ```
 
 <a name="grok"></a>
@@ -112,7 +112,7 @@ grok plugin install hackerpug-ai/pixel-perfect#plugins/pixel-perfect --trust
   timeout_enabled = false
   ```
 
-- **Slash commands:** Grok lists an enabled skill under its short name, such as `/build`. It uses `/pixel-perfect:build` only when the short name clashes with a built-in command or another skill. Both forms run.
+- **Slash commands:** Grok lists each command under its bare short name, such as `/build`; the qualified `/pixel-perfect:build` form also runs, and is the form Grok shows when a name is ambiguous. Both forms run.
 - **Upgrade:** run `grok plugin update pixel-perfect`. Running the install command again fails with `already installed`.
 - **Uninstall:** run `grok plugin uninstall pixel-perfect`. If the Claude Code install is also on this machine, Grok keeps reading it until you remove that too.
 
@@ -121,13 +121,13 @@ grok plugin install hackerpug-ai/pixel-perfect#plugins/pixel-perfect --trust
 
 OpenCode installs per project. Run this block from the root of each project that uses pixel-perfect.
 
-- It adds project commands with plain names, such as `/init`, `/build`, and `/status`. In this project, `/init` then runs the pixel-perfect init in place of OpenCode's built-in `/init`.
-- The two links take over `.opencode/commands` and `.opencode/skills`. The project cannot keep its own commands or skills in those folders.
-- The block stops before it writes anything if either folder is a real directory, if `.pixel-perfect` is not a pixel-perfect checkout, or if it finds no release tag. If it stops, tell the user which check failed and ask how to proceed. This install cannot merge with existing commands or skills.
+- It adds namespaced project commands, such as `/pixel-perfect/init`, `/pixel-perfect/build`, and `/pixel-perfect/status`, and registers the `pixel-perfect` plugin so it appears in OpenCode's plugin list. No bare name takes over an OpenCode built-in such as `/init`.
+- The three links take over `.opencode/commands`, `.opencode/skills`, and `.opencode/plugins`. The project cannot keep its own commands, skills, or plugins in those folders.
+- The block stops before it writes anything if either folder is a real directory, if `.pixel-perfect` is not a pixel-perfect checkout, or if it finds no release tag. If it stops, tell the user which check failed and ask how to proceed. This install cannot merge with existing commands, skills, or plugins.
 
 ```bash
 bash -e <<'SH'
-for d in commands skills; do
+for d in commands skills plugins; do
   if [ -e ".opencode/$d" ] && [ ! -L ".opencode/$d" ]; then echo ".opencode/$d is a real directory. Ask the user." >&2; exit 1; fi
 done
 if [ -e .pixel-perfect ] && ! git -C .pixel-perfect remote get-url origin 2>/dev/null | grep -q 'hackerpug-ai/pixel-perfect'; then echo ".pixel-perfect exists and is not a pixel-perfect checkout. Ask the user." >&2; exit 1; fi
@@ -140,16 +140,17 @@ mv .pixel-perfect.new .pixel-perfect
 mkdir -p .opencode
 ln -sfn ../.pixel-perfect/plugins/pixel-perfect/.opencode/commands .opencode/commands
 ln -sfn ../.pixel-perfect/plugins/pixel-perfect/.opencode/skills .opencode/skills
+ln -sfn ../.pixel-perfect/plugins/pixel-perfect/.opencode/plugins .opencode/plugins
 echo "installed pixel-perfect $TAG"
 SH
 ```
 
-`.pixel-perfect/` is a git clone inside the project. Do not commit it. The two links point into it, so they break for anyone who has not run this install. Offer to add `.pixel-perfect/`, `.opencode/commands`, and `.opencode/skills` to the project's `.gitignore`.
+`.pixel-perfect/` is a git clone inside the project. Do not commit it. The three links point into it, so they break for anyone who has not run this install. Offer to add `.pixel-perfect/`, `.opencode/commands`, `.opencode/skills`, and `.opencode/plugins` to the project's `.gitignore`.
 
-- **Confirm:** run `test -f .opencode/commands/init.md && test -f .opencode/skills/process-context/SKILL.md && echo ok`. It prints `ok`.
-- **Next step:** tell the user to restart OpenCode in this project, with their design in it, and run `/init`.
+- **Confirm:** run `test -f .opencode/commands/pixel-perfect/init.md && test -f .opencode/plugins/pixel-perfect.ts && echo ok`. It prints `ok`.
+- **Next step:** tell the user to restart OpenCode in this project, with their design in it, and run `/pixel-perfect/init`.
 - **Upgrade:** run the install block again. It fetches the newest release and keeps the links intact. Restart OpenCode. The version is in `.pixel-perfect/plugins/pixel-perfect/.opencode/package.json`.
-- **Uninstall:** run `rm -rf .pixel-perfect .opencode/commands .opencode/skills`.
+- **Uninstall:** run `rm -rf .pixel-perfect .opencode/commands .opencode/skills .opencode/plugins`.
 
 <a name="pi"></a>
 ## Pi
