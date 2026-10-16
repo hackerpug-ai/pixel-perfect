@@ -4,6 +4,8 @@ All notable changes to Pixel Perfect are documented here.
 
 ## [Unreleased]
 
+## [10.1.0] - 2026-10-16
+
 ### Changed
 
 - OpenCode commands now render under a namespaced path — `plugins/pixel-perfect/.opencode/commands/pixel-perfect/<name>.md` — so they surface as `/pixel-perfect/<name>` instead of bare `/init`-style names that could shadow OpenCode built-ins. Command bodies stay byte-identical to the Claude `commands/<name>.md` surfaces; only the path changes.
