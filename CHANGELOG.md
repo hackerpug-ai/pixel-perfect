@@ -4,6 +4,13 @@ All notable changes to Pixel Perfect are documented here.
 
 ## [Unreleased]
 
+### Changed
+
+- OpenCode commands now render under a namespaced path — `plugins/pixel-perfect/.opencode/commands/pixel-perfect/<name>.md` — so they surface as `/pixel-perfect/<name>` instead of bare `/init`-style names that could shadow OpenCode built-ins. Command bodies stay byte-identical to the Claude `commands/<name>.md` surfaces; only the path changes.
+- The OpenCode install now lays down three project links — `.opencode/commands`, `.opencode/skills`, and `.opencode/plugins` — and registers a real plugin module at `plugins/pixel-perfect/.opencode/plugins/pixel-perfect.ts`, so pixel-perfect appears in OpenCode's plugin list.
+- Command naming is defined once: `scripts/build-adapters.mjs` derives every rendered adapter path from a per-surface naming rule (`SURFACES`), and a new assertion checks that `workflows/RUNTIME-CONTRACT.md` harness mappings agree with it.
+- The OpenCode adapter package (`plugins/pixel-perfect/.opencode/package.json`) is no longer private and exports the plugin module; the release gate content-checks its npm tarball (`npm pack --dry-run`) and notes the pending CI (OIDC) publication step.
+
 ## [10.0.0] - 2026-10-13
 
 ### Gates fail closed

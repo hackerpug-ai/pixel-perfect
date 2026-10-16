@@ -214,6 +214,8 @@ real screens) or the catalog gate (which proves composition in code).
 | `plugins/pixel-perfect/skills/deconstruct-engine/` (412K, 24 files) | the mock pipeline |
 | `plugins/pixel-perfect/.opencode/skills/deconstruct-engine/` | generated surface |
 | `plugins/pixel-perfect/skills/design-deconstruct/`, `commands/design-deconstruct.md`, `.opencode/commands/design-deconstruct.md` | generated from `scripts/adapters/capabilities.json` — remove the entry and rebuild |
+
+> **Superseded** (Oct 2026): OpenCode command surfaces now render under the namespaced path `.opencode/commands/pixel-perfect/<name>.md`; the bare `.opencode/commands/design-deconstruct.md` reference above is the pre-namespace layout.
 | `plugins/pixel-perfect/workflows/design-deconstruct.md` | replaced by build Phase 4a |
 | `theme-seed.json`, `deconstruction.json`, `design/system/`, `deconstructed:`/`design_system:` manifest markers | replaced by `inventory.json` |
 
