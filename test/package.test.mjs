@@ -14,7 +14,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 test("repository release and package gates pass together", async () => {
   const [release, packageResult, plugin, skills, runtimePaths, workflows, contracts] = await Promise.all([
-    verifyRelease(ROOT, "10.0.0", { environment: {} }),
+    verifyRelease(ROOT, "10.1.0", { environment: {} }),
     validatePackage(ROOT),
     validatePlugin(ROOT),
     validateSkills(ROOT),
@@ -24,18 +24,18 @@ test("repository release and package gates pass together", async () => {
   ]);
 
   assert.deepEqual(release.channels, {
-    claude: "10.0.0",
-    codex: "10.0.0",
-    cursor: "10.0.0",
-    grok: "10.0.0",
-    opencode: "10.0.0",
-    pi: "10.0.0",
+    claude: "10.1.0",
+    codex: "10.1.0",
+    cursor: "10.1.0",
+    grok: "10.1.0",
+    opencode: "10.1.0",
+    pi: "10.1.0",
   });
   assert.equal(packageResult.capabilities, 11);
   assert.equal(packageResult.internalSkills, 1);
   assert.equal(packageResult.piSkills, 11);
-  assert.equal(plugin.codexVersion, "10.0.0");
-  assert.equal(plugin.cursorVersion, "10.0.0");
+  assert.equal(plugin.codexVersion, "10.1.0");
+  assert.equal(plugin.cursorVersion, "10.1.0");
   assert.equal(skills.publicCapabilities, 11);
   assert.equal(runtimePaths.checkedCapabilities, 11);
   assert.equal(workflows.interactive, 8);
