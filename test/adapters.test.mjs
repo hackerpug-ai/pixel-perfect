@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import test from "node:test";
-import { AdapterBuildError, SURFACES, buildAdapters, loadCapabilities, renderAdapters } from "../scripts/build-adapters.mjs";
+import { AdapterBuildError, buildAdapters, loadCapabilities, renderAdapters } from "../scripts/build-adapters.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const INTERACTIVE_WORKFLOWS = ["add-platform", "assimilate", "build", "evolve", "init", "refine", "scaffold", "wireframe"];
@@ -12,7 +12,7 @@ const SILENT_WORKFLOWS = ["research", "status", "verify"];
 const PUBLIC_CAPABILITIES = [...INTERACTIVE_WORKFLOWS, ...SILENT_WORKFLOWS].sort();
 
 test("capabilities match interactive flags from validate-workflows", async () => {
-  const capabilities = await loadCapabilities(ROOT);
+  const { capabilities } = await loadCapabilities(ROOT);
   const names = capabilities.map((entry) => entry.name).sort();
   assert.deepEqual(names, PUBLIC_CAPABILITIES);
 
@@ -27,11 +27,11 @@ test("capabilities match interactive flags from validate-workflows", async () =>
   }
 });
 
-test("renderAdapters is deterministic and covers all 11×4 surfaces", async () => {
+test("renderAdapters is deterministic and covers all 11×5 surfaces", async () => {
   const first = await renderAdapters(ROOT);
   const second = await renderAdapters(ROOT);
   assert.equal(first.capabilities.length, 11);
-  assert.equal(first.files.size, 44);
+  assert.equal(first.files.size, 55);
   assert.deepEqual([...first.files.keys()].sort(), [...second.files.keys()].sort());
   for (const [relativePath, content] of first.files) {
     assert.equal(content, second.files.get(relativePath), relativePath);
@@ -41,13 +41,16 @@ test("renderAdapters is deterministic and covers all 11×4 surfaces", async () =
   for (const capability of first.capabilities) {
     const commandPath = `plugins/pixel-perfect/commands/${capability.name}.md`;
     const skillPath = `plugins/pixel-perfect/skills/${capability.name}/SKILL.md`;
+    const cursorPath = `plugins/pixel-perfect/.cursor-plugin/commands/pixel-perfect-${capability.name}.md`;
     const opencodePath = `plugins/pixel-perfect/.opencode/commands/pixel-perfect/${capability.name}.md`;
     const piPath = `plugins/pixel-perfect/.pi/skills/pixel-perfect-${capability.name}/SKILL.md`;
     assert.ok(first.files.has(commandPath), commandPath);
     assert.ok(first.files.has(skillPath), skillPath);
+    assert.ok(first.files.has(cursorPath), cursorPath);
     assert.ok(first.files.has(opencodePath), opencodePath);
     assert.ok(first.files.has(piPath), piPath);
     assert.equal(first.files.get(commandPath), first.files.get(opencodePath));
+    assert.equal(first.files.get(cursorPath), first.files.get(commandPath));
     assert.match(first.files.get(commandPath), /~\/\.cursor\/plugins\//);
     assert.doesNotMatch(first.files.get(skillPath), /Codex invocation/);
     assert.match(first.files.get(piPath), new RegExp(`name: pixel-perfect-${capability.name}`));
@@ -60,7 +63,7 @@ test("buildAdapters --check passes on the clean repository tree", async () => {
   const result = await buildAdapters(ROOT, { check: true });
   assert.equal(result.mode, "check");
   assert.equal(result.capabilities, 11);
-  assert.equal(result.surfaces, 44);
+  assert.equal(result.surfaces, 55);
   assert.deepEqual(result.drifts, []);
 });
 
@@ -92,12 +95,12 @@ test('selection metadata is complete and every surface includes it with escaped 
     await mkdir(path.join(temp, 'scripts'), { recursive: true });
     await cp(path.join(ROOT, 'scripts/adapters'), path.join(temp, 'scripts/adapters'), { recursive: true });
     const file = path.join(temp, 'scripts/adapters/capabilities.json');
-    const catalog = await loadCapabilities(temp);
+    const { naming, capabilities: catalog } = await loadCapabilities(temp);
     catalog[0].description = 'Use "quotes": C:\\design and #tags safely';
-    await writeFile(file, JSON.stringify(catalog));
+    await writeFile(file, JSON.stringify({ naming, capabilities: catalog }));
     const { files } = await renderAdapters(temp);
     for (const entry of catalog) {
-      for (const content of [...files.entries()].filter(([file]) => file.endsWith(`/${entry.name}.md`) || file.includes(`/${entry.name}/`) || file.includes(`/pixel-perfect-${entry.name}/`)).map(([, content]) => content)) {
+      for (const content of [...files.entries()].filter(([file]) => file.endsWith(`/${entry.name}.md`) || file.endsWith(`/pixel-perfect-${entry.name}.md`) || file.includes(`/${entry.name}/`) || file.includes(`/pixel-perfect-${entry.name}/`)).map(([, content]) => content)) {
         const description = content.split('\n').find((line) => line.startsWith('description: ')).slice(13);
         assert.equal(JSON.parse(description), entry.description);
         assert.ok(content.includes(entry.selection));
@@ -107,9 +110,9 @@ test('selection metadata is complete and every surface includes it with escaped 
         for (const name of entry.handoffs) assert.ok(content.includes(`pixel-perfect:${name}`));
       }
     }
-    catalog[0].handoffs = ['polish']; await writeFile(file, JSON.stringify(catalog));
+    catalog[0].handoffs = ['polish']; await writeFile(file, JSON.stringify({ naming, capabilities: catalog }));
     await assert.rejects(loadCapabilities(temp), /adapter build failed/);
-    catalog[0].handoffs = ['status']; delete catalog[0].inputs; await writeFile(file, JSON.stringify(catalog));
+    catalog[0].handoffs = ['status']; delete catalog[0].inputs; await writeFile(file, JSON.stringify({ naming, capabilities: catalog }));
     await assert.rejects(loadCapabilities(temp), /adapter build failed/);
   } finally { await rm(temp, { recursive: true, force: true }); }
 });
@@ -165,10 +168,10 @@ test("OpenCode plugin writes one structured stderr line only when the namespaced
 });
 
 test("every rendered path derives from the per-surface naming rule", async () => {
-  const { files } = await renderAdapters(ROOT);
+  const { files, naming } = await renderAdapters(ROOT);
   const expected = new Set();
-  for (const capability of await loadCapabilities(ROOT)) {
-    for (const surface of Object.values(SURFACES)) {
+  for (const capability of (await loadCapabilities(ROOT)).capabilities) {
+    for (const surface of Object.values(naming)) {
       expected.add(surface.path.replace(/\{name\}/g, capability.name));
     }
   }
@@ -177,6 +180,7 @@ test("every rendered path derives from the per-surface naming rule", async () =>
 
 test("RUNTIME-CONTRACT.md harness mappings agree with the rendered invocation names", async () => {
   const contract = await readFile(path.join(ROOT, "plugins/pixel-perfect/workflows/RUNTIME-CONTRACT.md"), "utf8");
+  const { naming } = await loadCapabilities(ROOT);
   const harnessHeadings = { "Claude Code": "claude", Grok: "grok", Codex: "codex", OpenCode: "opencode", Pi: "pi", Cursor: "cursor" };
   for (const [heading, key] of Object.entries(harnessHeadings)) {
     const start = contract.indexOf(`### ${heading}`);
@@ -189,6 +193,6 @@ test("RUNTIME-CONTRACT.md harness mappings agree with the rendered invocation na
     const quoted = invocationLine.match(/`([^`]+)`/);
     assert.ok(quoted, `"### ${heading}" invocation is not backtick-quoted: ${invocationLine}`);
     const normalized = quoted[1].replace(/<name>/g, "{name}");
-    assert.equal(normalized, SURFACES[key].invocation, `"${heading}" invocation disagrees with the naming rule`);
+    assert.equal(normalized, naming[key].invocation, `"${heading}" invocation disagrees with the naming rule`);
   }
 });

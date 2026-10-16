@@ -83,13 +83,13 @@ echo "installed pixel-perfect $TAG"
 SH
 ```
 
-- **Confirm:** run the command below. It prints `ok` when the folder holds `.cursor-plugin/plugin.json` and is a real copy.
-- **Next step:** tell the user to reload Cursor (Command Palette, then "Developer: Reload Window"), open a project that has their design, and run `/init`.
+- **Confirm:** run the command below. It prints `ok` when the folder holds `.cursor-plugin/plugin.json` and the prefixed `pixel-perfect-init` command, and is a real copy.
+- **Next step:** tell the user to reload Cursor (Command Palette, then "Developer: Reload Window"), open a project that has their design, and run `/pixel-perfect-init`.
 - **Upgrade:** run the install block again. It fetches the newest release and replaces the copy. Reload Cursor.
 - **Uninstall:** run `rm -rf "$HOME/.cursor/plugins/local/pixel-perfect"`.
 
 ```bash
-test -f "$HOME/.cursor/plugins/local/pixel-perfect/.cursor-plugin/plugin.json" && ! test -L "$HOME/.cursor/plugins/local/pixel-perfect" && echo ok
+test -f "$HOME/.cursor/plugins/local/pixel-perfect/.cursor-plugin/plugin.json" && test -f "$HOME/.cursor/plugins/local/pixel-perfect/.cursor-plugin/commands/pixel-perfect-init.md" && ! test -L "$HOME/.cursor/plugins/local/pixel-perfect" && echo ok
 ```
 
 <a name="grok"></a>
@@ -112,7 +112,7 @@ grok plugin install hackerpug-ai/pixel-perfect#plugins/pixel-perfect --trust
   timeout_enabled = false
   ```
 
-- **Slash commands:** Grok lists each command under its prefixed name, such as `/pixel-perfect:build`, and the bare `/build` also runs. Both forms run.
+- **Slash commands:** Grok lists each command under its bare short name, such as `/build`; the qualified `/pixel-perfect:build` form also runs, and is the form Grok shows when a name is ambiguous. Both forms run.
 - **Upgrade:** run `grok plugin update pixel-perfect`. Running the install command again fails with `already installed`.
 - **Uninstall:** run `grok plugin uninstall pixel-perfect`. If the Claude Code install is also on this machine, Grok keeps reading it until you remove that too.
 

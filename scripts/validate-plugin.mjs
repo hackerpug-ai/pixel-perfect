@@ -131,6 +131,13 @@ export async function validatePlugin(root = REPOSITORY_ROOT) {
   } else {
     errors.push("Cursor manifest logo is required");
   }
+  // Cursor commands are global (not plugin-namespaced) and derive their slash
+  // slug from the filename stem, so they must ship from the prefixed Cursor
+  // surface (`.cursor-plugin/commands/pixel-perfect-*.md`), never the shared
+  // `./commands/` directory that Claude Code namespaces with a colon prefix.
+  if (cursor.commands !== "./.cursor-plugin/commands/") {
+    errors.push("Cursor manifest commands must point at ./.cursor-plugin/commands/");
+  }
 
   const cursorEntry = onePlugin(cursorMarketplace, "Cursor marketplace", errors);
   if (cursorMarketplace.name !== "pixel-perfect") errors.push("Cursor marketplace name must be pixel-perfect");

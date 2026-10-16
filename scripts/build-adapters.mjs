@@ -17,20 +17,11 @@ const SILENT_SKILL_FOOTER =
 const INTERACTIVE_SKILL_FOOTER =
   "Invoke with the active harness's syntax from the harness mappings table in the runtime contract, treat the user's remaining text as input, collect choices through that harness's input mechanism one call per declared batch, never printing a decision as prose and ending the turn, and represent transient workflow tasks with its planning tools. Follow the runtime contract's turn shape: open with a status digest of twelve lines or fewer, write longer analysis to the artifact the workflow names, run no search, install, or generation before the decision authorizing it, and ask when the input does not resolve to exactly one thing. Durable completion comes only from the manifest and required evidence.";
 
-// Per-surface naming rule: the single source of truth for how each of the six
-// harness surfaces renders its adapter files and how it names the command at
-// invocation time. Every rendered path below derives from this table.
-// kb:{ceiling}: OpenCode command namespacing is the slash form (a nested
-// command path under `.opencode/commands/pixel-perfect/`). Upgrade to a colon
-// form only when OpenCode documents colon-prefixed command naming.
-export const SURFACES = Object.freeze({
-  claude: { path: `${PLUGIN_ROOT}/commands/{name}.md`, kind: "command", invocation: "/pixel-perfect:{name}" },
-  codex: { path: `${PLUGIN_ROOT}/skills/{name}/SKILL.md`, kind: "skill", invocation: "$pixel-perfect:{name}" },
-  cursor: { path: `${PLUGIN_ROOT}/commands/{name}.md`, kind: "command", invocation: "/{name}" },
-  grok: { path: `${PLUGIN_ROOT}/skills/{name}/SKILL.md`, kind: "skill", invocation: "/pixel-perfect:{name}" },
-  opencode: { path: `${PLUGIN_ROOT}/.opencode/commands/pixel-perfect/{name}.md`, kind: "command", invocation: "/pixel-perfect/{name}" },
-  pi: { path: `${PLUGIN_ROOT}/.pi/skills/pixel-perfect-{name}/SKILL.md`, kind: "pi-skill", invocation: "/skill:pixel-perfect-{name}" },
-});
+// Per-surface naming rule, carried in scripts/adapters/capabilities.json as the
+// single source of truth (see Goal C). Every rendered path and every invocation
+// name below derives from it; there is no hardcoded surface table in code.
+const SURFACE_KEYS = Object.freeze(["claude", "codex", "cursor", "grok", "opencode", "pi"]);
+const SURFACE_KINDS = new Set(["command", "skill", "pi-skill"]);
 
 function surfacePath(surface, name) {
   return surface.path.replace(/\{name\}/g, name);
@@ -66,11 +57,43 @@ async function writeGeneratedFile(absolutePath, content) {
   await writeFile(absolutePath, content, "utf8");
 }
 
+function validateNaming(naming) {
+  if (!naming || typeof naming !== "object" || Array.isArray(naming)) {
+    throw new AdapterBuildError(["capabilities.json must carry a non-empty `naming` object"]);
+  }
+  const keys = Object.keys(naming);
+  if (keys.length !== SURFACE_KEYS.length || SURFACE_KEYS.some((key) => !keys.includes(key))) {
+    throw new AdapterBuildError([`naming must define exactly the surfaces: ${SURFACE_KEYS.join(", ")}`]);
+  }
+  for (const key of SURFACE_KEYS) {
+    const surface = naming[key];
+    if (!surface || typeof surface !== "object") throw new AdapterBuildError([`naming.${key} must be an object`]);
+    if (typeof surface.path !== "string" || !surface.path.includes("{name}")) {
+      throw new AdapterBuildError([`naming.${key}.path must include a {name} placeholder`]);
+    }
+    if (!SURFACE_KINDS.has(surface.kind)) {
+      throw new AdapterBuildError([`naming.${key}.kind must be one of: ${[...SURFACE_KINDS].join(", ")}`]);
+    }
+    if (typeof surface.invocation !== "string" || !surface.invocation.includes("{name}")) {
+      throw new AdapterBuildError([`naming.${key}.invocation must include a {name} placeholder`]);
+    }
+    // The rendered path must land inside the plugin tree so it ships with the package.
+    if (!surface.path.startsWith(`${PLUGIN_ROOT}/`)) {
+      throw new AdapterBuildError([`naming.${key}.path must render inside ${PLUGIN_ROOT}/`]);
+    }
+  }
+  return naming;
+}
+
 export async function loadCapabilities(root = REPOSITORY_ROOT) {
   const capabilitiesPath = path.join(root, "scripts/adapters/capabilities.json");
-  const capabilities = JSON.parse(await readFile(capabilitiesPath, "utf8"));
+  const document = JSON.parse(await readFile(capabilitiesPath, "utf8"));
+  if (!document || typeof document !== "object" || Array.isArray(document)) {
+    throw new AdapterBuildError(["capabilities.json must be an object with a `naming` rule and a `capabilities` array"]);
+  }
+  const capabilities = document.capabilities;
   if (!Array.isArray(capabilities) || capabilities.length === 0) {
-    throw new AdapterBuildError(["capabilities.json must be a non-empty array"]);
+    throw new AdapterBuildError(["capabilities.json must carry a non-empty `capabilities` array"]);
   }
   const names = new Set(capabilities.map((entry) => entry.name));
   const expected = ['add-platform', 'assimilate', 'build', 'evolve', 'init', 'refine', 'research', 'scaffold', 'status', 'verify', 'wireframe'];
@@ -88,16 +111,18 @@ export async function loadCapabilities(root = REPOSITORY_ROOT) {
     }
     if (!entry.example.startsWith(`pixel-perfect:${entry.name}`)) throw new AdapterBuildError([`${entry.name}.example must invoke its command`]);
   }
-  return capabilities;
+  const naming = validateNaming(document.naming);
+  return { naming, capabilities };
 }
 
 export async function renderAdapters(root = REPOSITORY_ROOT) {
-  const [commandTemplate, skillTemplate, piSkillTemplate, capabilities] = await Promise.all([
+  const [commandTemplate, skillTemplate, piSkillTemplate, loaded] = await Promise.all([
     readFile(path.join(root, "scripts/adapters/command.template.md"), "utf8"),
     readFile(path.join(root, "scripts/adapters/skill.template.md"), "utf8"),
     readFile(path.join(root, "scripts/adapters/pi-skill.template.md"), "utf8"),
     loadCapabilities(root),
   ]);
+  const { naming, capabilities } = loaded;
 
   const files = new Map();
   for (const capability of capabilities) {
@@ -142,21 +167,21 @@ export async function renderAdapters(root = REPOSITORY_ROOT) {
       }),
     );
 
-    // Every rendered path derives from the per-surface naming rule. Claude and
-    // Cursor share the bare command surface; Codex and Grok share the bare skill
-    // surface; OpenCode and Pi carry their namespace in the path. The `files`
-    // map dedupes the shared surfaces, leaving 11 capabilities × 4 file groups.
+    // Every rendered path derives from the per-surface naming rule. Claude reads
+    // the bare command surface; Codex and Grok share the bare skill surface;
+    // Cursor, OpenCode, and Pi each carry their prefix in the path. The `files`
+    // map dedupes the shared surfaces, leaving 11 capabilities × 5 file groups.
     const bodies = { command: commandBody, skill: skillBody, "pi-skill": piSkillBody };
-    for (const surface of Object.values(SURFACES)) {
+    for (const surface of Object.values(naming)) {
       files.set(surfacePath(surface, name), bodies[surface.kind]);
     }
   }
-  return { capabilities, files };
+  return { capabilities, naming, files };
 }
 
 export async function buildAdapters(root = REPOSITORY_ROOT, options = {}) {
   const check = Boolean(options.check);
-  const { capabilities, files } = await renderAdapters(root);
+  const { capabilities, naming, files } = await renderAdapters(root);
   const drifts = [];
 
   for (const [relativePath, expected] of files) {
@@ -195,11 +220,11 @@ if (isMain) {
     .then((result) => {
       if (check) {
         process.stdout.write(
-          `adapters in sync: ${result.capabilities} capabilities × ${Object.keys(SURFACES).length} harness surfaces (${result.surfaces} files)\n`,
+          `adapters in sync: ${result.capabilities} capabilities × ${SURFACE_KEYS.length} harness surfaces (${result.surfaces} files)\n`,
         );
       } else {
         process.stdout.write(
-          `adapters written: ${result.capabilities} capabilities × ${Object.keys(SURFACES).length} harness surfaces (${result.surfaces} files)\n`,
+          `adapters written: ${result.capabilities} capabilities × ${SURFACE_KEYS.length} harness surfaces (${result.surfaces} files)\n`,
         );
       }
     })

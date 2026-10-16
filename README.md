@@ -196,7 +196,7 @@ Next: open a project that has your design and run `/pixel-perfect:init`.
 | Claude Code | `/pixel-perfect:init` |
 | Grok | `/init` |
 | Codex | `$pixel-perfect:init` |
-| Cursor | `/init` |
+| Cursor | `/pixel-perfect-init` |
 | OpenCode | `/pixel-perfect/init` |
 | Pi | `/skill:pixel-perfect-init` |
 
@@ -210,7 +210,7 @@ Releases are version-locked across all six agents. Every breaking release ships 
 
 ## Commands
 
-The commands below use the Claude Code form, `/pixel-perfect:<name>`. OpenCode lists them under their namespaced name, `/pixel-perfect/<name>`. Your agent's form is in the "Run a command as" table under [Install](#install).
+The commands below use the Claude Code form, `/pixel-perfect:<name>`. OpenCode lists them under their namespaced name, `/pixel-perfect/<name>`, and Cursor lists them under a hyphenated prefix, `/pixel-perfect-<name>`. Your agent's form is in the "Run a command as" table under [Install](#install).
 
 **Build it**
 
