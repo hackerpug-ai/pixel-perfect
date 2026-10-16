@@ -1,7 +1,16 @@
 {
   "name": "pixel-perfect-opencode-adapter",
   "version": "10.0.0",
-  "private": true,
+  "description": "OpenCode adapter for pixel-perfect — namespaced slash commands and a startup plugin.",
+  "main": "./plugins/pixel-perfect.ts",
+  "exports": {
+    ".": "./plugins/pixel-perfect.ts"
+  },
+  "files": [
+    "commands/",
+    "plugins/",
+    "skills/"
+  ],
   "dependencies": {
     "@opencode-ai/plugin": "1.16.2"
   }
