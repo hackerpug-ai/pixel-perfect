@@ -26,7 +26,7 @@ const LAYERS = ["atoms", "molecules", "organisms", "screens"];
 const SLUG_PATTERN = /^[a-z0-9-]+$/;
 const USAGE =
   "Usage: brief.mjs build <project-root> --platform <id> --layer <atoms|molecules|organisms|screens> --name <Name> [--findings <file.json>]\n" +
-  "       brief.mjs judge <project-root> --platform <id> --layer <atoms|molecules|organisms|screens>\n" +
+  "       brief.mjs judge <project-root> --platform <id> --layer <atoms|molecules|organisms|screens> [--name <Name>]\n" +
   "       brief.mjs wrap  <project-root> --slug <short-name> <task-brief-file | ->";
 const NO_FRAME = "No frame shows this item. The design contract and the project's theme tokens are the target.";
 const NO_INVENTORY = "No inventory entry for this item: the spec is the source.";
@@ -55,7 +55,7 @@ export function parseArgs(argv) {
   const flags = command === "wrap"
     ? { "--slug": "slug" }
     : command === "judge"
-      ? { "--platform": "platform", "--layer": "layer" }
+      ? { "--platform": "platform", "--layer": "layer", "--name": "name" }
       : { "--platform": "platform", "--layer": "layer", "--name": "name", "--findings": "findings" };
   const parsed = {};
   const positional = [];
@@ -85,7 +85,8 @@ export function parseArgs(argv) {
     for (const key of ["platform", "layer"]) if (!parsed[key]) fail(`judge needs --${key}\n${USAGE}`);
     if (!LAYERS.includes(parsed.layer)) fail(`unknown layer "${parsed.layer}"; use ${LAYERS.join(", ")}`);
     safeName(parsed.platform, "--platform");
-    return { command, root: resolve(positional[0]), platform: parsed.platform, layer: parsed.layer };
+    if (parsed.name !== undefined) safeName(parsed.name, "--name");
+    return { command, root: resolve(positional[0]), platform: parsed.platform, layer: parsed.layer, name: parsed.name };
   }
   if (positional.length !== 2) fail(`wrap takes a project root and a task file (or -)\n${USAGE}`);
   if (!parsed.slug) fail(`wrap needs --slug\n${USAGE}`);
@@ -788,14 +789,22 @@ function projectRules(root) {
   ].join("\n");
 }
 
-export function judgeBrief({ root, platform, layer }) {
+export function judgeBrief({ root, platform, layer, name }) {
   const manifest = loadManifest(root);
   const { id: platformId, config } = resolvePlatform(manifest, platform);
-  const items = (config[layer] ?? []).filter((item) => item && item.name && item.file);
+  let items = (config[layer] ?? []).filter((item) => item && item.name && item.file);
+  if (name !== undefined) {
+    items = items.filter((item) => item.name === name);
+    if (items.length === 0) fail(`${layer}/${name} is not recorded with a file on platform ${platformId}`);
+  }
   const pending = items
     .map((item) => ({ item, inputs: judgeInputs({ root, manifest, platformId, layer, item }) }))
     .filter(({ item, inputs }) => !judgedNow(root, platformId, layer, item, inputs.hashes));
-  if (pending.length === 0) fail(`nothing to judge: every ${layer} component on ${platformId} has a judgment bound to its current hashes`);
+  if (pending.length === 0) {
+    fail(name !== undefined
+      ? `nothing to judge: ${layer}/${name} on ${platformId} has a judgment bound to its current hashes`
+      : `nothing to judge: every ${layer} component on ${platformId} has a judgment bound to its current hashes`);
+  }
   const chosen = pending.slice(0, 6);
   const rest = pending.length - chosen.length;
   const doc = readFileSync(join(PLUGIN_ROOT, "docs/FIDELITY-BRIEF.md"), "utf8");
@@ -812,7 +821,7 @@ export function judgeBrief({ root, platform, layer }) {
   const prompt = packagedPrompt(readFileSync(join(PLUGIN_ROOT, "agents/judge.md"), "utf8"), "agents/judge.md");
   const middle = doc.split("## The task")[0].trim();
   return {
-    file: join(root, "design", ".briefs", platformId, `judge-${layer}.md`),
+    file: join(root, "design", ".briefs", platformId, name !== undefined ? `judge-${layer}-${name}.md` : `judge-${layer}.md`),
     content: assembleBrief({ prompt, contract: middle, task }),
   };
 }

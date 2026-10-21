@@ -262,7 +262,7 @@ batch: R4 — the cascade
 
 ## Manifest Updates
 
-Refine does not write a gate or an item status. Manifest stores decisions and receipts only — **no `controls` authority field**, no authored composition edges. After a successful refine, run `gate.mjs item` for the refined item and then the judge loop in `build`: `brief.mjs judge`, `SUBAGENT(judge, ...)`, `gate.mjs record`, `gate.mjs layer`. A failing component goes back to a builder twice, then ask the user. The layer command is the only writer of the result.
+Refine does not write a gate or an item status. Manifest stores decisions and receipts only — **no `controls` authority field**, no authored composition edges. After a successful refine, run `gate.mjs item` for the refined item, then `gate.mjs layer` for its layer. The edit makes any earlier judgment stale, so the item stays `built` until it is judged again. Judging is optional: `pixel-perfect:verify --component {Name}` runs it when precision matters. The layer command is the only writer of the result.
 
 ## Examples
 

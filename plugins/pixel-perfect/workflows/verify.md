@@ -19,7 +19,7 @@ pixel-perfect:verify --refresh <run-id>
 - `--phase <name>`: Verify a specific phase instead of current (scaffold, atoms, compose, integrate)
 - `--component <name>`: Verify a specific component only
 - `--screen <name>`: Verify a specific screen only
-- `--fix`: Attempt to fix failures automatically before reporting
+- `--fix`: Attempt to fix failures automatically before reporting. This includes sending a component that fails its judgment back to a builder (see Judging)
 
 ## Gate Check
 
@@ -38,6 +38,20 @@ For ordinary verification, inspect pending refresh runs first. Older manifest pa
 3. Runs gate checks appropriate for that phase
 4. Reports results per check
 5. If all pass, advances the platform's phase gate in manifest
+
+---
+
+## Judging
+
+Build does not judge. `verify` is where a component is judged against its frames, and a fresh passing judgment is what turns `built` into `verified`. Judging is optional precision: a layer gate passes without it, and nothing in the next phase waits for it. Each judge child takes up to six components, so judge only the scope asked for — the layer from `--phase` (default: the current phase), or the one item `--component` names.
+
+1. Run `node {plugin}/scripts/brief.mjs judge <project-root> --platform {platform} --layer {layer}`. For `--component`, add `--name {Name}`. Items already judged against their current hashes are skipped, and a "nothing to judge" exit means the scope is done. Dispatch `SUBAGENT(judge, that command)` and start one child with the line the command prints.
+2. Write each JSON judgment the child returns to a file, and run `node {plugin}/scripts/gate.mjs record <project-root> --platform {platform} --layer {layer} --name {Name} --judgment <file>`.
+3. For a layer, repeat from step 1 while the brief says more components remain.
+4. Run `node {plugin}/scripts/gate.mjs layer <project-root> --platform {platform} --layer {layer}` and paste its report. It promotes each item with a fresh passing judgment to `verified`. Its `unverified` list names the rest and the reason for each.
+5. Report each failing judgment with the judge's discrepancies. Without `--fix`, stop there: the item stays `built`. With `--fix`, a failing component goes back to a builder with the judge's list (`brief.mjs build --findings`), then is judged again. Two builder retries at most. When the second retry still fails, ask the user through `USER_CHOICE` and stop. Do not dispatch a third builder.
+
+Do not type a gate or `verified` into the manifest.
 
 ---
 
@@ -92,15 +106,13 @@ Verifies all atomic components with sandbox controls.
 
 *Aesthetic checks always run through `docs/DESIGN-CONTRACT.md`; `DESIGN_EXECUTE` runs them through the packaged designer (see `workflows/RUNTIME-CONTRACT.md`, "Packaged agents"). Slug: `aesthetic-review`. The task brief asks for a review and says change nothing, so the child writes no file. The brief names each rendered screenshot and the frame it must compare with. The child returns one JSON object: `status`, and `differences`, one checkable statement per difference. Verify copies each difference into its report with the state it came from. The Aesthetic row reads pass only when `differences` is empty. A `status: blocked` result is reported as blocked, never as pass.
 
-The **styling contract, component contract, and catalog capture** rows are the checks whose verdict is not the reviewing agent's opinion. `verify` judges anything unjudged or stale, then runs one gate:
+The **styling contract, component contract, and catalog capture** rows are the checks whose verdict is not the reviewing agent's opinion. They decide the gate, and a judgment does not:
 
 ```
-node {plugin}/scripts/brief.mjs judge <project-root> --platform {platform} --layer atoms
-node {plugin}/scripts/gate.mjs record <project-root> --platform {platform} --layer atoms --name {Name} --judgment <file>
 node {plugin}/scripts/gate.mjs layer <project-root> --platform {platform} --layer atoms
 ```
 
-Dispatch `SUBAGENT(judge, the brief command)`. A component the layer report names as failing goes back to a builder with the judge's list. Two builder retries at most. When the second retry still fails, ask the user and stop. Do not type a gate or `verified` into the manifest. The same judge dispatch, the same two builder retries, and the same ask-the-user stop apply to molecules, organisms, and screens.
+When the run judges (see Judging), the same layer command then promotes the items that passed to `verified`. The same rule applies to molecules, organisms, and screens.
 
 Note that `ecosystemLib` covers only packages approved by the Phase 4b ecosystem scan (TanStack Table and the like); the project's own component library from `tools.components` never produces an `ecosystemLib` entry, which is why it needs its own row.
 

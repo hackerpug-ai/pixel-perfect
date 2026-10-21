@@ -310,15 +310,19 @@ test("build's four exit gates are one gate.mjs command and nobody is told to typ
   for (const file of ["workflows/build.md", "workflows/scaffold.md", "workflows/verify.md", "workflows/refine.md", "workflows/evolve.md", "workflows/status.md"]) {
     assert.doesNotMatch(readPlugin(file), writeTold, file);
   }
-  assert.match(build, /SUBAGENT\(judge/);
-  assert.match(build, /Two builder retries at most/);
-  assert.match(build, /ask the user/);
+  // Judging is optional precision: build never dispatches the judge, verify does.
+  assert.doesNotMatch(build, /SUBAGENT\(judge/);
+  assert.doesNotMatch(build, /brief\.mjs judge/);
+  assert.match(build, /pixel-perfect:verify --component/);
   for (const file of ["workflows/verify.md", "workflows/status.md"]) {
     const text = readPlugin(file);
     assert.match(text, /SUBAGENT\(judge/, file);
+    assert.match(text, /With `--fix`, a failing component goes back to a builder/, file);
     assert.match(text, /Two builder retries at most/, file);
     assert.match(text, /ask the user/, file);
   }
+  assert.match(readPlugin("workflows/verify.md"), /Without `--fix`, stop there: the item stays `built`/);
+  assert.doesNotMatch(readPlugin("workflows/refine.md"), /judge loop in `build`/);
 });
 
 test("manifest schema examples prefer capture/pinned/deprecations over controls authority", () => {

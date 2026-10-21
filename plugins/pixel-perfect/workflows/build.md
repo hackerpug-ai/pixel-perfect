@@ -35,7 +35,7 @@ batch: B-arg — what was meant by the input
   question: That input does not match anything in the manifest exactly. Which did you mean?
   options:
     - label: The molecules phase (Recommended)
-      description: Closest match to what was typed. Builds every molecule the plan lists that is not yet verified, then stops before organisms, leaving the levels above untouched.
+      description: Closest match to what was typed. Builds every molecule the plan lists that is not yet built, then stops before organisms, leaving the levels above untouched.
     - label: One named component
       description: Choose Other and give the exact component name. Only that component and its story are rebuilt, and only the screens composing it are re-verified afterward.
     - label: Resume the whole build
@@ -219,7 +219,7 @@ A missing token file makes Tokens ACTIVE (greenfield token setup). A missing or 
 
 ### Step 2: Read the spec and compute the delta
 
-Read the requirements document (from `manifest.spec`) and, when it exists, `design/inventory.json`. For each level, **delta = required − already verified in the codebase**, where *required* is the inventory's list for that level when an inventory exists and otherwise what the spec names. A level is ACTIVE when its delta is above zero, SKIP when the delta is zero and no lower level is ACTIVE.
+Read the requirements document (from `manifest.spec`) and, when it exists, `design/inventory.json`. For each level, **delta = required − already built or verified in the codebase**, where *required* is the inventory's list for that level when an inventory exists and otherwise what the spec names. A level is ACTIVE when its delta is above zero, SKIP when the delta is zero and no lower level is ACTIVE.
 
 **Bottom-up propagation is automatic.** A lower ACTIVE level forces every higher level to be re-evaluated, even when its own delta is zero — changed atoms mean the molecules composing them need re-checking. A level cannot be SKIP while something below it is ACTIVE.
 
@@ -251,7 +251,7 @@ BUILD PLAN — web-desktop · brownfield · design/build-plan.md
 
   INVENTORY  9 frames · 4 atoms · 2 molecules · 1 organism · 2 screens (confirmed)
   TOKENS     skip    token file matches spec
-  ATOMS      build   1 new (ActionButton); 3 already verified
+  ATOMS      build   1 new (ActionButton); 3 already built
   MOLECULES  build   1 new (JobRow) — triggered by the atoms change
   ORGANISMS  build   1 new (DataTable) — used by 3 screens
   SCREENS    build   2 routes: /today [3 states], /jobs/:id [2 states]
@@ -462,7 +462,7 @@ For `status: complete`, check in this order:
 5. **Look.** Open the brief file. Take the first state under Frames. Open that state's render and its frame. Compare them in the order `agents/designer.md` lists. Each difference is a finding. With no frame, check that a render exists and shows the component. On a text-rendering platform, read the text artifact instead.
 6. **Gates.** Run the commands printed under `## Gates` in the item's brief file, exactly as written. Do not change them. Exit `0` passes. Exit `1` is a finding under `hard-fail`; under `warn`, record the violations and pass. Exit `2` and exit `3` block the item even under `warn`.
 
-Collect each `flags` entry from complete results. A flag is not a finding. When the layer's last item is verified, print the collected flags once, each as `file:line` and its text.
+Collect each `flags` entry from complete results. A flag is not a finding. When the layer's last item is built, print the collected flags once, each as `file:line` and its text.
 
 ### Findings and re-assignment
 
@@ -557,7 +557,7 @@ Build individual, reusable components.
 
 Fire `B-atoms` only when the list is genuinely open: the user chose "Change what gets built" at the plan gate, or the atoms are being derived here for the first time because the plan was seeded without them.
 
-**With an inventory** (`design/inventory.json`), the list is never open here: the atoms are `inventory.atoms` minus what is verified on disk, confirmed at `B-inv` and again at `B-plan`. Each atom's `states` and `variants` come from its inventory entry; an atom with `library_primitive` set is configured from the component library, not created.
+**With an inventory** (`design/inventory.json`), the list is never open here: the atoms are `inventory.atoms` minus what is built or verified on disk, confirmed at `B-inv` and again at `B-plan`. Each atom's `states` and `variants` come from its inventory entry; an atom with `library_primitive` set is configured from the component library, not created.
 
 ```
 ATOMS 0/5 — StatusBadge, JobCard, DateChip, SectionHeader, ActionButton. Building StatusBadge.
@@ -569,7 +569,7 @@ batch: B-atoms — the atom list
   question: Build these five atoms?
   options:
     - label: Build all five (Recommended)
-      description: Each becomes one component and one sandbox story, built and verified in order. Everything above this level composes these five, so adding one later means re-verifying whatever already uses it.
+      description: Each becomes one component and one sandbox story, built and checked in order. Everything above this level composes these five, so adding one later means re-verifying whatever already uses it.
     - label: Change the list
       description: Choose Other and name the atoms to add or drop. Worth doing now: an atom missing here surfaces as a gap during the molecule phase, which is a more expensive place to discover it.
 ```
@@ -609,24 +609,20 @@ After the last atom, print the collected flags once (see The Item Loop).
 One line after each atom — the count, and what is next. Not a re-listing of what is already done.
 
 ```
-Atoms 3/5 — StatusBadge, JobCard, DateChip verified. Building SectionHeader.
+Atoms 3/5 — StatusBadge, JobCard, DateChip built. Building SectionHeader.
 ```
 
-### Judge, then one gate
+### Gate the layer
 
-At each layer exit, judge before the gate. `gate.mjs` is the only command that writes a layer gate or `verified`. Do not type either value into the manifest.
+At each layer exit, run the one layer command below and paste its report as written. `gate.mjs` is the only command that writes a layer gate or `verified`. Do not type either value into the manifest.
 
-1. Run `node {plugin}/scripts/brief.mjs judge <project-root> --platform {platform} --layer {layer}`. The brief holds at most six components. Dispatch `SUBAGENT(judge, that command)` and start one child with the line the command prints.
-2. For each JSON judgment the child returns, run `node {plugin}/scripts/gate.mjs record <project-root> --platform {platform} --layer {layer} --name {Name} --judgment <file>`.
-3. Run the one layer command below. Paste its report as written.
-4. A component the report names as failing goes back to a builder with the judge's list (`brief.mjs build --findings`). Two builder retries at most. When the second retry still fails, ask the user through `USER_CHOICE` and stop. Do not dispatch a third builder.
-5. When the brief names components that were not in this batch of six, repeat from step 1.
+Build does not dispatch the judge. Its fidelity check is the review each item already gets in The Item Loop: the designer's own comparison against the frames (`compared`), then your Look check. The layer gate passes on the deterministic checks alone — files, both contracts, catalog capture, and a real PNG — so the next layer is never held back for want of a judgment.
 
-`verify` uses the same judge dispatch, the same two builder retries, and the same ask-the-user stop for anything unjudged or stale. `status` reports that loop and does not run it.
+The report lists under `unverified` every item without a fresh passing judgment. Those items stay `built`. That is information, not a blocker. Print one line naming them and how to judge them when precision matters: `pixel-perfect:verify --phase {layer}`, or `pixel-perfect:verify --component {Name}` for one item. An item that passes there becomes `verified`.
 
 ### Phase 5 Exit Gate
 
-One command. It reads the atoms layer from the manifest, runs the contract checks and `verify-catalog.mjs`, and requires a fresh passing judgment for every atom. On success it writes the manifest and the receipt together and records `atoms`, `atoms_styling_contract`, `atoms_component_contract`, and `atoms_capture`. On failure the manifest is left byte-identical. When `component_contract_source` is `"none"`, `atoms_component_contract` is recorded as not run, so a later reader can tell "no library" apart from "gate skipped".
+One command. It reads the atoms layer from the manifest and runs the contract checks and `verify-catalog.mjs`. It does not require a judgment: atoms with a fresh passing judgment become `verified`, and the rest stay `built`. On success it writes the manifest and the receipt together and records `atoms`, `atoms_styling_contract`, `atoms_component_contract`, and `atoms_capture`. On failure the manifest is left byte-identical. When `component_contract_source` is `"none"`, `atoms_component_contract` is recorded as not run, so a later reader can tell "no library" apart from "gate skipped".
 
 ```
 node {plugin}/scripts/gate.mjs layer <project-root> --platform {platform} --layer atoms
@@ -655,7 +651,7 @@ If none of these conditions apply, skip Phase 5b and proceed to Phase 6.
 
 ### Step 1: Identify Molecules
 
-**With an inventory**, the molecules are `inventory.molecules` minus what is verified on disk, and each one's state declarations (Step 1b) are seeded from its inventory `states[]` — digest them one line each and continue; `B-mol` never fires. Otherwise, review the verified atoms and the spec for repeated atom groupings, then digest the candidates with the screens that justify each one:
+**With an inventory**, the molecules are `inventory.molecules` minus what is built or verified on disk, and each one's state declarations (Step 1b) are seeded from its inventory `states[]` — digest them one line each and continue; `B-mol` never fires. Otherwise, review the built atoms and the spec for repeated atom groupings, then digest the candidates with the screens that justify each one:
 
 ```
 Proposed molecules
@@ -671,7 +667,7 @@ batch: B-mol — the molecules and their state
   question: Build these two molecules?
   options:
     - label: Build both (Recommended)
-      description: Each becomes one component and one sandbox story composed from atoms already verified. Both appear on more than one screen, which is what makes them worth extracting rather than inlining.
+      description: Each becomes one component and one sandbox story composed from atoms already built. Both appear on more than one screen, which is what makes them worth extracting rather than inlining.
     - label: Change the list
       description: Choose Other and name the molecules to add or drop. A grouping that appears on only one screen is often better left inside that screen than extracted.
     - label: Skip molecules entirely
@@ -740,7 +736,7 @@ Write state declarations into the manifest (**no authored composition-edge autho
 1. **Stop unless the atoms gate is passed.** Check that `platforms[platform].gates.atoms` is `"passed"`. If it is not, stop.
 2. **Record every molecule.** Add each molecule to `manifest.platforms[platform].molecules` with `name`, `file`, `story`, `status: "pending"`, and `state`. Set `state` to the object declared in Step 1b, or to `null` when the molecule declares no state. The brief exits 2 for a molecule with no `state` key. Paths: `src/molecules/{Name}.tsx` (or the framework's equivalent), and its story beside it, named by the sandbox adapter. If `build_plan.molecules.ecosystemLibs` holds a record for this molecule, copy it onto the entry as `ecosystemLib`.
 3. **Install approved packages.** For each library approved at `B-eco` for a molecule, install it at its recorded version (`npm install {package}@{version}`, or the project's package manager), and check that its import resolves. Do only what `B-eco` or `B-val` approved.
-4. **Check the atoms.** Every atom a molecule composes must already be `verified`. The brief exits 2 while a composed item is still `pending`.
+4. **Check the atoms.** Every atom a molecule composes must already be `built` or `verified`. The brief exits 2 while a composed item is still `pending`.
 
 ### Step 3: Build Each Molecule, One at a Time
 
@@ -758,12 +754,12 @@ After the last molecule, print the collected flags once (see The Item Loop).
 
 One line after each molecule — the count, and what is next.
 ```
-Molecules 1/2 — JobRow verified. Building ActionPanel (ActionButton + StatusBadge).
+Molecules 1/2 — JobRow built. Building ActionPanel (ActionButton + StatusBadge).
 ```
 
 ### Phase 5b Exit Gate
 
-One command, after the judge loop above. It records `molecules`, `molecules_styling_contract`, `molecules_component_contract`, and `molecules_capture`. Composition is `--composes` on the real source, not a stored `molecules[].atoms` array.
+One command. It records `molecules`, `molecules_styling_contract`, `molecules_component_contract`, and `molecules_capture`. Composition is `--composes` on the real source, not a stored `molecules[].atoms` array.
 
 ```
 node {plugin}/scripts/gate.mjs layer <project-root> --platform {platform} --layer molecules
@@ -786,7 +782,7 @@ If no patterns meet these criteria, skip Phase 5c and proceed to Phase 6. This p
 
 ### Step 1: Identify Organisms
 
-**With an inventory**, the organisms are `inventory.organisms` minus what is verified on disk, each with its `composes`, `states`, and the frames it appears on — digest them one line each and continue; `B-org` never fires. Otherwise, review molecules, atoms, and the spec for complex compositions spanning multiple screens. Digest each candidate as one line — what it composes, what state it owns, and where it is reused:
+**With an inventory**, the organisms are `inventory.organisms` minus what is built or verified on disk, each with its `composes`, `states`, and the frames it appears on — digest them one line each and continue; `B-org` never fires. Otherwise, review molecules, atoms, and the spec for complex compositions spanning multiple screens. Digest each candidate as one line — what it composes, what state it owns, and where it is reused:
 
 ```
 Proposed organisms
@@ -843,7 +839,7 @@ Update manifest with organism list (all `status: pending`):
 1. **Stop unless the molecules gate is passed.** Check that `platforms[platform].gates.molecules` is `"passed"`. If it is not, stop.
 2. **Record every organism.** Step 1 wrote each entry. Confirm that each has `name`, `file`, `story`, `status: "pending"`, and `state`: the object declared in Step 1, or `null` when it declares no state. The brief exits 2 for an organism with no `state` key. Paths: `src/organisms/{Name}.tsx` (or the framework's equivalent), and its story beside it, named by the sandbox adapter. If `build_plan.organisms.ecosystemLibs` holds a record for this organism, copy it onto the entry as `ecosystemLib`.
 3. **Install approved packages.** For each library approved at `B-eco` for an organism, install it at its recorded version, and check that its import resolves. Do only what `B-eco` or `B-val` approved.
-4. **Check the molecules and atoms.** Every item an organism composes must already be `verified`. The brief exits 2 while a composed item is still `pending`.
+4. **Check the molecules and atoms.** Every item an organism composes must already be `built` or `verified`. The brief exits 2 while a composed item is still `pending`.
 
 ### Step 3: Build Each Organism, One at a Time
 
@@ -861,12 +857,12 @@ After the last organism, print the collected flags once (see The Item Loop).
 
 One line after each organism — the count, and what is next.
 ```
-Organisms 1/2 — DataTable verified (6 state scenarios). Building CommandPalette.
+Organisms 1/2 — DataTable built (6 state scenarios). Building CommandPalette.
 ```
 
 ### Phase 5c Exit Gate
 
-One command, after the judge loop above. It records `organisms`, `organisms_styling_contract`, `organisms_component_contract`, and `organisms_capture`.
+One command. It records `organisms`, `organisms_styling_contract`, `organisms_component_contract`, and `organisms_capture`.
 
 ```
 node {plugin}/scripts/gate.mjs layer <project-root> --platform {platform} --layer organisms
@@ -926,7 +922,7 @@ batch: B-screens — the route map
   question: Build these three screens, with state variants collapsed into one screen per route?
   options:
     - label: Build these three (Recommended)
-      description: Six candidate views collapse to three routes, and every state still gets its own sandbox story, so no visual coverage is lost. Each screen composes only components already verified below it.
+      description: Six candidate views collapse to three routes, and every state still gets its own sandbox story, so no visual coverage is lost. Each screen composes only components already built below it.
     - label: Split a route apart
       description: One route was collapsed too aggressively and a state is really its own page. Choose Other and name it; it is promoted back to a screen with its own route and its own gate.
     - label: Merge two routes
@@ -947,7 +943,7 @@ Write the confirmed screens to the manifest (all `status: pending`), each with i
 
 1. **Stop unless the gate of the last layer with recorded items is passed.** That is `platforms[platform].gates.organisms` when organisms are recorded; otherwise `gates.molecules` when molecules are recorded; otherwise `gates.atoms`. If it is not passed, stop.
 2. **Check the records.** Every screen from Step 1e must be in `manifest.platforms[platform].screens` with `name`, `route`, `file`, `story`, `states`, and `status: "pending"`.
-3. **Check the components.** Every atom, molecule, and organism a screen composes must already be `verified`. The brief exits 2 while a composed item is still `pending`.
+3. **Check the components.** Every atom, molecule, and organism a screen composes must already be `built` or `verified`. The brief exits 2 while a composed item is still `pending`.
 
 ### Step 3: Build Each Screen, One at a Time
 
@@ -957,11 +953,11 @@ Build the screens one at a time, in route-map order. Finish one before you start
 2. **Accept.** Follow "Accept the result" in The Item Loop.
 3. **Re-assign on failure.** Write the failures to `design/.briefs/{platform}/screens-{Name}.findings-N.json`, where N is the attempt: 1, then 2. Run the brief command again with `--findings <absolute path to that file>`, then start a new child. Two re-assignments at most, counting every re-run. After the second one still fails, ask through `USER_CHOICE` (batch `B-item`).
 4. **Record.** Run `gate.mjs item` for this screen (see "Record the item").
-5. **Print one line:** the count of screens verified, and the next screen. After the last screen, print the collected flags once (see The Item Loop).
+5. **Print one line:** the count of screens built, and the next screen. After the last screen, print the collected flags once (see The Item Loop).
 
 ### Phase 6 Exit Gate
 
-One command, after the judge loop above. It records `compose`, `compose_styling_contract`, `compose_component_contract`, and `compose_capture`.
+One command. It records `compose`, `compose_styling_contract`, `compose_component_contract`, and `compose_capture`.
 
 ```
 node {plugin}/scripts/gate.mjs layer <project-root> --platform {platform} --layer screens
@@ -977,7 +973,7 @@ If the project has design references and no current inventory (missing, unconfir
 
 Otherwise build resumes from the current phase in one line and keeps going. It does not re-audit the codebase, re-read the spec, or re-present a plan the manifest already holds.
 
-Inside a layer, resuming means going back into The Item Loop at the first item whose `status` is not `verified`. Before you assign that item, count its findings files: `design/.briefs/{platform}/{layer}-{Name}.findings-1.json` and `findings-2.json`. Each file that exists is a re-assignment already used.
+Inside a layer, resuming means going back into The Item Loop at the first item whose `status` is neither `built` nor `verified`. Before you assign that item, count its findings files: `design/.briefs/{platform}/{layer}-{Name}.findings-1.json` and `findings-2.json`. Each file that exists is a re-assignment already used.
 
 ```
 Resuming: ATOMS 3/5 — building SectionHeader, then ActionButton.

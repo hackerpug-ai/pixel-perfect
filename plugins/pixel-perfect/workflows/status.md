@@ -45,7 +45,7 @@ Reads `design/manifest.json` **and** runs catalog capture when goldens exist:
 
 When `platforms[platform].capture` is configured (or goldens exist under `design/goldens/`), run `gate.mjs audit`. It does not capture. Paste its report as written. It names an empty golden, a copied golden, an out-of-order layer, missing pixels, an empty styling scope, and a hand-typed pass. An item marked verified with no judgment is reported as recorded before 10.0, not judged.
 
-`build` and `verify` own the repair: `brief.mjs judge`, then `SUBAGENT(judge, that command)`, then `gate.mjs record`. A failing component goes back to a builder. Two builder retries at most, then ask the user and stop. Status reports that loop. It does not dispatch it, and it does not write a gate.
+A layer gate passes without judgments. An item is `built` until a fresh passing judgment makes it `verified`; report both counts per layer. Judging is optional and belongs to `verify`: `brief.mjs judge`, then `SUBAGENT(judge, that command)`, then `gate.mjs record`, then `gate.mjs layer`. With `--fix`, a failing component goes back to a builder. Two builder retries at most, then ask the user and stop. Status reports that loop. It does not dispatch it, and it does not write a gate.
 
 ```
 node {plugin}/scripts/gate.mjs audit <project-root> --platform {platform}
@@ -85,7 +85,7 @@ Platforms:
   Phases:
     [x] SCAFFOLD    — Project structure ready, theme configured
     [x] PLAN        — Build plan confirmed
-    [x] ATOMS       — 5/5 components verified · atoms_capture passed
+    [x] ATOMS       — 5/5 components built · 3 verified by judgment · atoms_capture passed
     [x] MOLECULES   — 2/2 molecules verified · molecules_capture passed
     [x] COMPOSE     — 2/2 screens verified · compose_capture passed
 
@@ -102,7 +102,7 @@ Platforms:
     Dead inventory: (none)
     Pinned: EmptyState
 
-  Atoms (5/5 verified):
+  Atoms (5/5 built, 3 verified):
     [x] StatusBadge     src/components/StatusBadge.tsx
     [x] JobCard         src/components/JobCard.tsx
     [x] DateChip        src/components/DateChip.tsx

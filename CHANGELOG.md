@@ -4,6 +4,14 @@ All notable changes to Pixel Perfect are documented here.
 
 ## [Unreleased]
 
+### Judging is optional
+
+- Build no longer dispatches the judge. Its fidelity check is the review each item already gets: the designer's comparison against the frames and the orchestrator's Look check.
+- `gate.mjs layer` passes on the deterministic checks alone: files, both contracts, catalog capture, and a real PNG. A missing, failing, or stale judgment no longer blocks the layer or the next phase.
+- `verified` still means judged. On a passing layer, an item with a fresh passing judgment becomes `verified`; every other item stays `built` and is listed under `unverified` in the report. An edit demotes a `verified` item to `built` on the next layer run.
+- `verify` is the opt-in place to judge, for the layer from `--phase` or one item from `--component`. A failing judgment is reported. It goes back to a builder only with `--fix`.
+- `brief.mjs judge` takes `--name <Name>` to judge one component.
+
 ## [10.1.0] - 2026-10-16
 
 ### Changed

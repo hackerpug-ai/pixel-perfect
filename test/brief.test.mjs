@@ -2093,4 +2093,32 @@ describe("brief.mjs judge", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  test("--name judges one component, refuses one that is not recorded, and says when it is already judged", () => {
+    const root = judgeProject();
+    const file = path.join(root, "design/.briefs/web-desktop/judge-atoms-Two.md");
+    try {
+      const one = runCli(["judge", root, "--platform", "web-desktop", "--layer", "atoms", "--name", "Two"]);
+      assert.equal(one.code, 0, one.stderr);
+      const text = readFileSync(file, "utf8");
+      assert.deepEqual([...text.matchAll(/^## atoms\/(\w+)$/gm)].map((m) => m[1]), ["Two"]);
+      assert.equal(text.includes("more components are not in this brief"), false);
+      assert.equal(existsSync(path.join(root, "design/.briefs/web-desktop/judge-atoms.md")), false, "a one-component brief does not overwrite the layer brief");
+
+      const missing = runCli(["judge", root, "--platform", "web-desktop", "--layer", "atoms", "--name", "Nope"]);
+      assert.notEqual(missing.code, 0);
+      assert.match(missing.stderr, /atoms\/Nope is not recorded/);
+
+      const section = text.split("## atoms/Two\n")[1];
+      const hashes = Object.fromEntries([...section.matchAll(/^- (golden|file|story|frames|render): (\S+)$/gm)].map((m) => [m[1], m[2]]));
+      const dir = path.join(root, "design/fidelity/web-desktop/atoms");
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(path.join(dir, "Two.json"), JSON.stringify({ verdict: "pass", hashes }));
+      const judged = runCli(["judge", root, "--platform", "web-desktop", "--layer", "atoms", "--name", "Two"]);
+      assert.notEqual(judged.code, 0);
+      assert.match(judged.stderr, /nothing to judge: atoms\/Two/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });

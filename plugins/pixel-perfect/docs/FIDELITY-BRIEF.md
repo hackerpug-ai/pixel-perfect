@@ -4,7 +4,9 @@
 
 A builder checking its own render confirms what it remembers. The judge is a separate agent. It did not write the component. `scripts/brief.mjs judge` assembles this assignment from the manifest, the capture folder, and the frames index, and the orchestrator passes the printed line to the child unchanged.
 
-One brief holds at most six components. The script exits 2 if any placeholder is left unfilled. The same project state produces the same bytes.
+Judging is optional precision. Build does not run it; `verify` does, for the layer or the one component asked for. A fresh passing judgment is what makes a component `verified`.
+
+One brief holds at most six components, or only the one `--name` names. The script exits 2 if any placeholder is left unfilled. The same project state produces the same bytes.
 
 ## The task
 

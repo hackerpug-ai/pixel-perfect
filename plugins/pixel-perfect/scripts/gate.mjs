@@ -5,7 +5,9 @@
 // record  store a judgment only when its hashes match the golden, the component, the story,
 //         the frames, and the capture
 // layer   previous layer passed, scope from the manifest, empty scope fails; on success the
-//         manifest and the receipt are written together; on failure the manifest is untouched
+//         manifest and the receipt are written together; on failure the manifest is untouched.
+//         A judgment never blocks it: an item with a fresh passing judgment becomes verified,
+//         every other item stays built and is listed under `unverified`
 // audit   recompute from files already on disk. It does not capture.
 //
 // Exit: 0 pass · 1 a named failure · 2 usage or configuration.
@@ -212,11 +214,15 @@ function contractFindings(root, platformId, layer, files) {
 }
 
 function pixelFindings(gate) {
-  return (gate.violations ?? []).map((violation) => ({
-    component: violation.key,
-    kind: violation.kind,
-    reason: `${violation.key}: ${violation.reason}`,
-  }));
+  // A duplicate names every story it groups under `keys`; every other violation names one `key`.
+  return (gate.violations ?? []).map((violation) => {
+    const where = violation.key ?? (violation.keys ?? []).join(", ");
+    return {
+      component: violation.key ?? violation.keys?.[0],
+      kind: violation.kind,
+      reason: `${where}: ${violation.reason}`,
+    };
+  });
 }
 
 function requireBuiltStories(config, layer, stories) {
@@ -440,6 +446,8 @@ export function runLayer(root, { platform, layer }) {
   const stagingAbs = join(root, captureCfg.staging);
   const gate = gateCapture(captured.stories, stagingAbs, captureCfg, captured.ignoredFiles);
   const findings = [];
+  // A judgment never blocks the layer. It only decides whether an item is verified or stays built.
+  const unverified = [];
   if (layer === "scaffold") {
     if (captured.stories.length === 0) findings.push({ kind: "empty-capture", reason: "scaffold captured no story" });
     findings.push(...pixelFindings(gate));
@@ -464,9 +472,7 @@ export function runLayer(root, { platform, layer }) {
       const problems = judgmentProblems(stored, expected);
       const recordedDisk = stored?.hashes?.goldenOnDisk ?? "none";
       if (onDisk !== "none" && onDisk !== expected.hashes.golden && onDisk !== recordedDisk) problems.push("stale golden hash");
-      for (const problem of problems) {
-        findings.push({ component: componentId(layer, item.name), kind: "judgment", reason: `${componentId(layer, item.name)}: ${problem}` });
-      }
+      if (problems.length > 0) unverified.push({ component: componentId(layer, item.name), name: item.name, reasons: problems });
     }
   }
   if (findings.length > 0) {
@@ -482,8 +488,9 @@ export function runLayer(root, { platform, layer }) {
     config.gates[key] = "passed";
     receipt.layers[key] = { items: layer === "scaffold" ? [] : itemsOf(config, layer).map((item) => item.name) };
   }
+  const notVerified = new Set(unverified.map((entry) => entry.name));
   if (layer !== "scaffold") {
-    for (const item of itemsOf(config, layer)) item.status = "verified";
+    for (const item of itemsOf(config, layer)) item.status = notVerified.has(item.name) ? "built" : "verified";
   }
   const entries = {};
   for (const story of stories) {
@@ -499,9 +506,14 @@ export function runLayer(root, { platform, layer }) {
       writeReceipts(root, captureCfg, entries, readReceipts(root, captureCfg));
     },
   });
-  return report("layer", 0, `${layer} passed`, {
+  const total = layer === "scaffold" ? 0 : itemsOf(config, layer).length;
+  const message = unverified.length === 0
+    ? `${layer} passed`
+    : `${layer} passed — ${total - unverified.length} of ${total} verified by judgment; ${unverified.length} built, not judged or not passing (pixel-perfect:verify judges them)`;
+  return report("layer", 0, message, {
     platform: id,
     layer,
+    unverified: unverified.map(({ component, reasons }) => ({ component, reasons })),
     manifestWritten: true,
     receipt: gateReceiptFile(root, id),
     catalogReceipt: join(captureCfg.goldens, "receipt.json"),

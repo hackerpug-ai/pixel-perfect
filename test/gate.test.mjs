@@ -3,7 +3,7 @@
 
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { digest } from "../plugins/pixel-perfect/scripts/reference-revisions.mjs";
@@ -248,25 +248,57 @@ test("a failing layer leaves the manifest byte-identical", () => {
     buttonProject(dir);
     assert.equal(passButton(dir).code, 0);
     const before = manifestBytes(dir);
-    writeFileSync(path.join(dir, "src/Button.tsx"), "export const Button = () => <button>Edited</button>;\n");
+    // Files inside this test's own temp project, removed one by one.
+    unlinkSync(path.join(dir, "sandbox/catalog/atoms/Button/default.txt"));
+    unlinkSync(path.join(dir, "sandbox/catalog/atoms/Button/default.png"));
     const { code, report } = run(["layer", dir, "--platform", "web-desktop", "--layer", "atoms"]);
     assert.equal(code, 1, report?.message);
-    assert.match(report.message, /atoms\/Button/);
-    assert.match(report.message, /stale file hash/);
-    assert.deepEqual(manifestBytes(dir), before);
-    writeFileSync(path.join(dir, "src/Button.tsx"), "export const Button = () => <button>Save</button>;\n");
-    writeFileSync(path.join(dir, "src/Button.stories.tsx"), "export const Default = { args: { edited: true } };\n");
-    const story = run(["layer", dir, "--platform", "web-desktop", "--layer", "atoms"]);
-    assert.equal(story.code, 1);
-    assert.match(story.report.message, /atoms\/Button/);
-    assert.match(story.report.message, /stale story hash/);
+    assert.match(report.message, /atoms\/Button: no story captured/);
     assert.deepEqual(manifestBytes(dir), before);
   } finally {
     removeDirs(dir);
   }
 });
 
-test("a failing verdict, an unaccepted difference, a stale golden, and a stale frame each fail the layer and name the component", () => {
+test("a layer with no judgment passes, and its items stay built", () => {
+  const dir = scratchProject("pp-gate-");
+  try {
+    buttonProject(dir);
+    assert.equal(run(["item", dir, "--platform", "web-desktop", "--layer", "atoms", "--name", "Button"]).code, 0);
+    const { code, report } = run(["layer", dir, "--platform", "web-desktop", "--layer", "atoms"]);
+    assert.equal(code, 0, report?.message);
+    const platform = manifest(dir).platforms["web-desktop"];
+    assert.equal(platform.gates.atoms, "passed");
+    assert.equal(platform.atoms[0].status, "built");
+    assert.deepEqual(report.unverified, [{ component: "atoms/Button", reasons: ["no contract-review judgment"] }]);
+    assert.match(report.message, /0 of 1 verified by judgment/);
+  } finally {
+    removeDirs(dir);
+  }
+});
+
+test("an edit after a passing judgment leaves the layer passing and demotes the item to built", () => {
+  const dir = scratchProject("pp-gate-");
+  try {
+    buttonProject(dir);
+    assert.equal(passButton(dir).code, 0);
+    assert.equal(manifest(dir).platforms["web-desktop"].atoms[0].status, "verified");
+    writeFileSync(path.join(dir, "src/Button.tsx"), "export const Button = () => <button>Edited</button>;\n");
+    const file = run(["layer", dir, "--platform", "web-desktop", "--layer", "atoms"]);
+    assert.equal(file.code, 0, file.report?.message);
+    assert.equal(manifest(dir).platforms["web-desktop"].atoms[0].status, "built");
+    assert.deepEqual(file.report.unverified, [{ component: "atoms/Button", reasons: ["stale file hash"] }]);
+    writeFileSync(path.join(dir, "src/Button.tsx"), "export const Button = () => <button>Save</button>;\n");
+    writeFileSync(path.join(dir, "src/Button.stories.tsx"), "export const Default = { args: { edited: true } };\n");
+    const story = run(["layer", dir, "--platform", "web-desktop", "--layer", "atoms"]);
+    assert.equal(story.code, 0, story.report?.message);
+    assert.deepEqual(story.report.unverified, [{ component: "atoms/Button", reasons: ["stale story hash"] }]);
+  } finally {
+    removeDirs(dir);
+  }
+});
+
+test("a failing verdict, an unaccepted difference, a stale golden, and a stale frame each leave the layer passing and the component built", () => {
   const dir = scratchProject("pp-gate-");
   try {
     buttonProject(dir);
@@ -284,10 +316,14 @@ test("a failing verdict, an unaccepted difference, a stale golden, and a stale f
       JSON.stringify(judgment(hashes, { kind: "frames", discrepancies: [{ description: "type is heavier", accepted: false }] })),
     );
     assert.equal(run(["record", dir, "--platform", "web-desktop", "--layer", "atoms", "--name", "Button", "--judgment", file]).code, 0);
-    const open = run(["layer", dir, "--platform", "web-desktop", "--layer", "atoms"]);
-    assert.equal(open.code, 1);
-    assert.match(open.report.message, /atoms\/Button/);
-    assert.match(open.report.message, /unaccepted difference/);
+    const status = () => manifest(dir).platforms["web-desktop"].atoms[0].status;
+    const layerRun = () => run(["layer", dir, "--platform", "web-desktop", "--layer", "atoms"]);
+    const reasons = (result) => result.report.unverified.flatMap((entry) => (entry.component === "atoms/Button" ? entry.reasons : []));
+
+    const open = layerRun();
+    assert.equal(open.code, 0, open.report?.message);
+    assert.equal(status(), "built");
+    assert.match(reasons(open).join("; "), /unaccepted difference/);
 
     const accepted = writeIn(
       dir,
@@ -295,28 +331,30 @@ test("a failing verdict, an unaccepted difference, a stale golden, and a stale f
       JSON.stringify(judgment(hashes, { kind: "frames", verdict: "fail", discrepancies: [] })),
     );
     assert.equal(run(["record", dir, "--platform", "web-desktop", "--layer", "atoms", "--name", "Button", "--judgment", accepted]).code, 0);
-    const failed = run(["layer", dir, "--platform", "web-desktop", "--layer", "atoms"]);
-    assert.equal(failed.code, 1);
-    assert.match(failed.report.message, /atoms\/Button/);
-    assert.match(failed.report.message, /failing verdict/);
+    const failed = layerRun();
+    assert.equal(failed.code, 0, failed.report?.message);
+    assert.equal(status(), "built");
+    assert.match(reasons(failed).join("; "), /failing verdict/);
 
     const passing = writeIn(dir, "design/.briefs/ok.json", JSON.stringify(judgment(hashes, { kind: "frames" })));
     assert.equal(run(["record", dir, "--platform", "web-desktop", "--layer", "atoms", "--name", "Button", "--judgment", passing]).code, 0);
-    assert.equal(run(["layer", dir, "--platform", "web-desktop", "--layer", "atoms"]).code, 0);
-    const before = manifestBytes(dir);
+    const verified = layerRun();
+    assert.equal(verified.code, 0, verified.report?.message);
+    assert.equal(status(), "verified");
+    assert.deepEqual(verified.report.unverified, []);
+
     writeFileSync(path.join(dir, "design/goldens/web-desktop/atoms/Button/default.txt"), "Button\nlabel=No\n");
-    const golden = run(["layer", dir, "--platform", "web-desktop", "--layer", "atoms"]);
-    assert.equal(golden.code, 1);
-    assert.match(golden.report.message, /atoms\/Button/);
-    assert.match(golden.report.message, /stale golden/);
-    assert.deepEqual(manifestBytes(dir), before);
+    const golden = layerRun();
+    assert.equal(golden.code, 0, golden.report?.message);
+    assert.equal(status(), "built");
+    assert.match(reasons(golden).join("; "), /stale golden/);
 
     writeFileSync(path.join(dir, "design/goldens/web-desktop/atoms/Button/default.txt"), readFileSync(path.join(dir, "design/.captures/web-desktop/atoms/Button/default.txt")));
     writeFileSync(path.join(dir, "design/reference/f1.png"), inkImage({ width: 32, height: 32, inkCount: 400 }));
-    const frame = run(["layer", dir, "--platform", "web-desktop", "--layer", "atoms"]);
-    assert.equal(frame.code, 1);
-    assert.match(frame.report.message, /atoms\/Button/);
-    assert.match(frame.report.message, /stale frames/);
+    const frame = layerRun();
+    assert.equal(frame.code, 0, frame.report?.message);
+    assert.equal(status(), "built");
+    assert.match(reasons(frame).join("; "), /stale frames/);
   } finally {
     removeDirs(dir);
   }
@@ -484,6 +522,34 @@ test("an empty layer scope fails and leaves the manifest byte-identical", () => 
     assert.equal(code, 1);
     assert.match(report.message, /empty scope/);
     assert.deepEqual(manifestBytes(dir), before);
+  } finally {
+    removeDirs(dir);
+  }
+});
+
+test("a layer that fails on identical pixels names every story in the group", () => {
+  const dir = scratchProject("pp-gate-");
+  try {
+    project(dir, {
+      stories: {
+        ...buttonStories(),
+        "atoms/Badge/default.txt": "Badge\nlabel=New\n",
+        "atoms/Badge/default.png": PNG,
+      },
+      items: {
+        atoms: [
+          { name: "Button", file: "src/Button.tsx", story: "src/Button.stories.tsx", status: "built" },
+          { name: "Badge", file: "src/Badge.tsx", story: "src/Badge.stories.tsx", status: "built" },
+        ],
+      },
+    });
+    writeButtonSources(dir);
+    writeIn(dir, "src/Badge.tsx", "export const Badge = () => <span>New</span>;\n");
+    writeIn(dir, "src/Badge.stories.tsx", "export const Default = {};\n");
+    const { code, report } = run(["layer", dir, "--platform", "web-desktop", "--layer", "atoms"]);
+    assert.equal(code, 1, report?.message);
+    assert.match(report.message, /atoms\/Badge\/default, atoms\/Button\/default: identical pixels/);
+    assert.doesNotMatch(report.message, /undefined/);
   } finally {
     removeDirs(dir);
   }
