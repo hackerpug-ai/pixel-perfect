@@ -4,6 +4,8 @@ All notable changes to Pixel Perfect are documented here.
 
 ## [Unreleased]
 
+## [10.2.0] - 2026-10-22
+
 ### Judging is optional
 
 - Build no longer dispatches the judge. Its fidelity check is the review each item already gets: the designer's comparison against the frames and the orchestrator's Look check.

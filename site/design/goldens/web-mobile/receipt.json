@@ -4629,14 +4629,14 @@
       }
     },
     "organisms/EvolveThread/assembled": {
-      "hash": "ed8ce8c6ab04fee7",
+      "hash": "51172d9aa04db587",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:e75b8b826f24487cc6b39ba2f8219e4cb7f064f7439f04bd4d142fdd91558fd8",
+        "hash": "sha256:668a136b9183c64c189a5cb1f731a2268361b617fa6621ab3ae2a60fe4300de2",
         "width": 390,
         "height": 900,
-        "inkPixels": 135507
+        "inkPixels": 135524
       },
       "source": {
         "file": "src/lib/components/organisms/EvolveThread.svelte",
@@ -4646,14 +4646,14 @@
       }
     },
     "organisms/EvolveThread/assembled--dark": {
-      "hash": "be03d15b1a5e0f37",
+      "hash": "94037f04cca5d277",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:f76c64f933dbce7a6bb98ae724f332a2d4a08916bf0f30db28b5a7a919db05c6",
+        "hash": "sha256:c081342a8916fdd2300343494939bbe66774035b2d3c6626591de8e8f1239184",
         "width": 390,
         "height": 900,
-        "inkPixels": 135459
+        "inkPixels": 135469
       },
       "source": {
         "file": "src/lib/components/organisms/EvolveThread.svelte",
@@ -4663,14 +4663,14 @@
       }
     },
     "organisms/EvolveThread/scroll-start": {
-      "hash": "1782ad432bc1f594",
+      "hash": "34e09ff7c712ae87",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:4cdde980f6d1d3e8cf9e2d94338f621b3e4a35c3e5819dc8a16aa1be1dde5a42",
+        "hash": "sha256:0c3e6e337d0a4821378891fb7339c23e97a86f368b7a281cf8c0e6aee9134af9",
         "width": 390,
         "height": 900,
-        "inkPixels": 134839
+        "inkPixels": 134850
       },
       "source": {
         "file": "src/lib/components/organisms/EvolveThread.svelte",
@@ -4680,14 +4680,14 @@
       }
     },
     "organisms/EvolveThread/scroll-start--dark": {
-      "hash": "1086cc413be5768a",
+      "hash": "4bd08b84eeb76e27",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:f1661fe0a3137f7ac46f665122eb785b8a9c0767dd786427d4132bb634073533",
+        "hash": "sha256:ef568ba214940da9d8f8d842c14e4532783087d38b11ba6dadab8ebdfdc0e593",
         "width": 390,
         "height": 900,
-        "inkPixels": 134825
+        "inkPixels": 134830
       },
       "source": {
         "file": "src/lib/components/organisms/EvolveThread.svelte",
@@ -5275,116 +5275,116 @@
       }
     },
     "organisms/StepsTimeline/complete": {
-      "hash": "f382454ad21d7c05",
+      "hash": "4ed3a2d13fce4a50",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:eaa9bfc81abeca62af8748cd4527922b0bc165b5835c836a24ac0b07bc9d5b2e",
+        "hash": "sha256:a7f22c7a19085544b42460e62abd67bb95f051a96b2ec1d5632eed70972d12db",
         "width": 390,
         "height": 1485,
-        "inkPixels": 266278
+        "inkPixels": 265451
       },
       "source": {
         "file": "src/lib/components/organisms/StepsTimeline.svelte",
-        "fileHash": "sha256:3593da2903d5c28de44f65881f0e2705efd0bdd6463c385a494fe9d3e861ab10",
+        "fileHash": "sha256:d93ee3eb5f3e5870895c803e2361060fa33742f8abfc78865d599c37fd752fee",
         "story": "src/lib/components/organisms/StepsTimeline.stories.svelte",
         "storyHash": "sha256:744ab82bcdaa0421d1a1175ba6a2e21f598539ae94bbc1a9a25ab314c28c6bde"
       }
     },
     "organisms/StepsTimeline/complete--dark": {
-      "hash": "49fd71d895a0c850",
+      "hash": "e6eb011ca443f8d9",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:89e7101cf78c1557508d1e5eee3541308984732c0ede04fcb61c16e381f2e596",
+        "hash": "sha256:89e7eade1adfa73b7a29d2ea59e46dd406ed11b1f352156e6ac2544bf28482fa",
         "width": 390,
         "height": 1485,
-        "inkPixels": 265988
+        "inkPixels": 265183
       },
       "source": {
         "file": "src/lib/components/organisms/StepsTimeline.svelte",
-        "fileHash": "sha256:3593da2903d5c28de44f65881f0e2705efd0bdd6463c385a494fe9d3e861ab10",
+        "fileHash": "sha256:d93ee3eb5f3e5870895c803e2361060fa33742f8abfc78865d599c37fd752fee",
         "story": "src/lib/components/organisms/StepsTimeline.stories.svelte",
         "storyHash": "sha256:744ab82bcdaa0421d1a1175ba6a2e21f598539ae94bbc1a9a25ab314c28c6bde"
       }
     },
     "organisms/StepsTimeline/halfway": {
-      "hash": "d32e6181f8cdf4ed",
+      "hash": "9a5cc4717448bd4e",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:43245502679057c526c055b60a057b29ea1a744d30739ff05f8fa2c80f13e05b",
+        "hash": "sha256:f627f943b9a302591ed2fd7607a9024458bcccd8e25be764c7a20e387b428173",
         "width": 390,
         "height": 1485,
-        "inkPixels": 266106
+        "inkPixels": 265301
       },
       "source": {
         "file": "src/lib/components/organisms/StepsTimeline.svelte",
-        "fileHash": "sha256:3593da2903d5c28de44f65881f0e2705efd0bdd6463c385a494fe9d3e861ab10",
+        "fileHash": "sha256:d93ee3eb5f3e5870895c803e2361060fa33742f8abfc78865d599c37fd752fee",
         "story": "src/lib/components/organisms/StepsTimeline.stories.svelte",
         "storyHash": "sha256:744ab82bcdaa0421d1a1175ba6a2e21f598539ae94bbc1a9a25ab314c28c6bde"
       }
     },
     "organisms/StepsTimeline/halfway--dark": {
-      "hash": "f6a54559709ebfb0",
+      "hash": "67f9a3e4fc593fcf",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:f1e49c8aa548324a8e9c9a69d6cdc52d2db5a0b64b5c8a1497f5793f13687dda",
+        "hash": "sha256:ba58195587b42576f92e0e3e3c4710e301d2ae84e086b53c48483650763d8032",
         "width": 390,
         "height": 1485,
-        "inkPixels": 265802
+        "inkPixels": 265041
       },
       "source": {
         "file": "src/lib/components/organisms/StepsTimeline.svelte",
-        "fileHash": "sha256:3593da2903d5c28de44f65881f0e2705efd0bdd6463c385a494fe9d3e861ab10",
+        "fileHash": "sha256:d93ee3eb5f3e5870895c803e2361060fa33742f8abfc78865d599c37fd752fee",
         "story": "src/lib/components/organisms/StepsTimeline.stories.svelte",
         "storyHash": "sha256:744ab82bcdaa0421d1a1175ba6a2e21f598539ae94bbc1a9a25ab314c28c6bde"
       }
     },
     "organisms/StepsTimeline/scroll-start": {
-      "hash": "e9b2f57687f43849",
+      "hash": "627b48bee9e33289",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:d185d379a5f59b4aec55e0f7f1ee4cef27e37d6b81068c5613c8e0084b5f0061",
+        "hash": "sha256:1db239fc05b2fb466a86a1cc593c35b730ded1054df8b5c57212d4e5218a8726",
         "width": 390,
         "height": 1485,
-        "inkPixels": 266047
+        "inkPixels": 265242
       },
       "source": {
         "file": "src/lib/components/organisms/StepsTimeline.svelte",
-        "fileHash": "sha256:3593da2903d5c28de44f65881f0e2705efd0bdd6463c385a494fe9d3e861ab10",
+        "fileHash": "sha256:d93ee3eb5f3e5870895c803e2361060fa33742f8abfc78865d599c37fd752fee",
         "story": "src/lib/components/organisms/StepsTimeline.stories.svelte",
         "storyHash": "sha256:744ab82bcdaa0421d1a1175ba6a2e21f598539ae94bbc1a9a25ab314c28c6bde"
       }
     },
     "organisms/StepsTimeline/scroll-start--dark": {
-      "hash": "91a634e0ae54711e",
+      "hash": "5aaccb4e08fcfa91",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:8cdf5bcc3ce45e1e6d7c3e6fdd020e0c89d50bab85d9f529c646ec290a7efe12",
+        "hash": "sha256:232152e37fcf790b60191a88181f08cfccc6ca6816d10c51b2562b02d81b7558",
         "width": 390,
         "height": 1485,
-        "inkPixels": 265616
+        "inkPixels": 264855
       },
       "source": {
         "file": "src/lib/components/organisms/StepsTimeline.svelte",
-        "fileHash": "sha256:3593da2903d5c28de44f65881f0e2705efd0bdd6463c385a494fe9d3e861ab10",
+        "fileHash": "sha256:d93ee3eb5f3e5870895c803e2361060fa33742f8abfc78865d599c37fd752fee",
         "story": "src/lib/components/organisms/StepsTimeline.stories.svelte",
         "storyHash": "sha256:744ab82bcdaa0421d1a1175ba6a2e21f598539ae94bbc1a9a25ab314c28c6bde"
       }
     },
     "screens/Changelog/default": {
-      "hash": "30e7bc56d20f830f",
+      "hash": "34c0fbd5142ade8a",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:837cfb40e9c480183622c97673f1a4505d8dccc05d384e42978d17e30b7e1a61",
+        "hash": "sha256:14b1a59366f2aaf8a2edc09195a779715531832ff75530a106d09f71e9fee227",
         "width": 390,
-        "height": 12011,
-        "inkPixels": 635280
+        "height": 13860,
+        "inkPixels": 730579
       },
       "source": {
         "file": "src/lib/components/screens/Changelog.svelte",
@@ -5394,14 +5394,14 @@
       }
     },
     "screens/Changelog/default--dark": {
-      "hash": "9b5ae22dda5a2185",
+      "hash": "925fb73ed86a76d9",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:3f5c2f8c1ec5d0fa762d6c9943d2aa4231fdca5289ada8154ace163080b3b587",
+        "hash": "sha256:e58cbed22fded46b3eec9dc13f004ae570c0eeaa02209c1af4971b52d6eb229b",
         "width": 390,
-        "height": 12011,
-        "inkPixels": 627429
+        "height": 13860,
+        "inkPixels": 721562
       },
       "source": {
         "file": "src/lib/components/screens/Changelog.svelte",
@@ -5411,375 +5411,375 @@
       }
     },
     "screens/Home/copied": {
-      "hash": "60efe0257b04f41f",
+      "hash": "efcffd70b26d2bfb",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:1d7c12e64ca25dd3f281e3300e7ff413f5244ef18794d7b87b5d74e38c700570",
+        "hash": "sha256:4ef64fa8ed24d84108993393b9563e4990071b07a82f5ed51dee2b3cabdb0b3a",
         "width": 390,
         "height": 11352,
-        "inkPixels": 1210101
+        "inkPixels": 1209686
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/copied--dark": {
-      "hash": "6a6f50cc9b6009c2",
+      "hash": "ddf9f41c37b02f10",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:4f6b232bd9649631a988aaf6ba8240974033d061680655e728691dc0bbcca9a0",
+        "hash": "sha256:00f7a30f7e506e0a7dfe68d4da602cf8dbee19d8f77d3588496b3a63dda4cc5f",
         "width": 390,
         "height": 11352,
-        "inkPixels": 1207139
+        "inkPixels": 1206722
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/default": {
-      "hash": "56b04e28e1aed6bf",
+      "hash": "6e4c344aeb07da9a",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:596ae88ec31cfad2685bea31473d8d6dcc9a0289dfd8471088561692724bccd2",
+        "hash": "sha256:eb0751f9903814e1c0cfe9e44eab09450fc6f780095d8bf7a252d1106289ee08",
         "width": 390,
         "height": 11332,
-        "inkPixels": 1203988
+        "inkPixels": 1203573
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/default--dark": {
-      "hash": "52c4a1db4b25dfed",
+      "hash": "c6930584ea514e62",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:74927bc58401d544cfdc7f4f9ed0e49d8c86605c6a5d564f9892e6a49737f841",
+        "hash": "sha256:855af4cc59b9d9d1da8f8991126e2cb767bf8c959957e5402fc7c1725d94b00e",
         "width": 390,
         "height": 11332,
-        "inkPixels": 1201027
+        "inkPixels": 1200610
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/faq-open": {
-      "hash": "a2f1ac22649be96e",
+      "hash": "18e5f9b9f86995a8",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:3946db8d82c0014651673205c7a78ab0ba8724708201dfe8e9c19f8ae54005b6",
+        "hash": "sha256:3467f00ee1806e19a56e476eca32035a2e5b35151dd67cb5998365e5460c274e",
         "width": 390,
         "height": 11492,
-        "inkPixels": 1214348
+        "inkPixels": 1213933
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/faq-open--dark": {
-      "hash": "6e9e78b770796872",
+      "hash": "97324a9602421326",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:b3a6810c90aabc37bc2376555249f7b43c220be1c615bf4c534ce1801011e143",
+        "hash": "sha256:171a8363daa9250f96470ec9365cbdba41e0506b57484e1ae1fbfa0f056bb0ac",
         "width": 390,
         "height": 11492,
-        "inkPixels": 1211253
+        "inkPixels": 1210836
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/headline-alternate": {
-      "hash": "a3668f106ebb5064",
+      "hash": "1bf774de67a894ed",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:7b0989e175eadbc03019a40dcb2726878a9034d1e9493a27b53c0f2c83b47288",
+        "hash": "sha256:2e3b8eb954899770452e93f087332d3843f8b50f927a712eab412b61a8cc9040",
         "width": 390,
         "height": 11379,
-        "inkPixels": 1214267
+        "inkPixels": 1213851
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/headline-alternate--dark": {
-      "hash": "8beb456cec151ffa",
+      "hash": "1c43a5106d905916",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:82a269001a0f8e369b0a224378b3dedb16ace82428a59445c4116c1dae0adde7",
+        "hash": "sha256:3d3bd76b5b53c47e03d974650e9a1335ef4c248793e821eed075ec59020ba83e",
         "width": 390,
         "height": 11379,
-        "inkPixels": 1211266
+        "inkPixels": 1210848
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-claude": {
-      "hash": "56b04e28e1aed6bf",
+      "hash": "6e4c344aeb07da9a",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:596ae88ec31cfad2685bea31473d8d6dcc9a0289dfd8471088561692724bccd2",
+        "hash": "sha256:eb0751f9903814e1c0cfe9e44eab09450fc6f780095d8bf7a252d1106289ee08",
         "width": 390,
         "height": 11332,
-        "inkPixels": 1203988
+        "inkPixels": 1203573
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-claude--dark": {
-      "hash": "52c4a1db4b25dfed",
+      "hash": "c6930584ea514e62",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:74927bc58401d544cfdc7f4f9ed0e49d8c86605c6a5d564f9892e6a49737f841",
+        "hash": "sha256:855af4cc59b9d9d1da8f8991126e2cb767bf8c959957e5402fc7c1725d94b00e",
         "width": 390,
         "height": 11332,
-        "inkPixels": 1201027
+        "inkPixels": 1200610
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-codex": {
-      "hash": "b5dfe427cd86e406",
+      "hash": "0cb7db38307d752f",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:bb5bfeada0ec1035945438cec7aa88ecea7057ece8d8df390ea29ecad057c7b5",
+        "hash": "sha256:b603b1a21f992ff53029d69bc1557e53f63b059c0bf0eef53457acee2ca9084e",
         "width": 390,
         "height": 11409,
-        "inkPixels": 1207731
+        "inkPixels": 1207316
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-codex--dark": {
-      "hash": "69754ec7b4495f93",
+      "hash": "42d334ffb4a6d477",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:d7682bb56a6f3f3fd3f62ad38cb856ecc348994f5a5d3623f3536dd1f42afeef",
+        "hash": "sha256:aba14a4db57104198779b2dfaf605fb421da28de72f0490992806de4c2583a4d",
         "width": 390,
         "height": 11409,
-        "inkPixels": 1204698
+        "inkPixels": 1204281
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-cursor": {
-      "hash": "b21ee814d91e0cae",
+      "hash": "48330f36630adc8b",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:94c8cf92ac6bf972e06e40ee9e3446be183924f8beb53edea150c4fe34342145",
+        "hash": "sha256:dd4957c0844aa87f9582bc93acde7629eb1dd9f0076c4a0005225e03a92ceb41",
         "width": 390,
         "height": 11483,
-        "inkPixels": 1228184
+        "inkPixels": 1227769
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-cursor--dark": {
-      "hash": "7bd47275ca484660",
+      "hash": "3bc3398ed6970f22",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:951708328451f9fba5e08ba3a88f133d128f96e473488f765a0ae20fcf4fee60",
+        "hash": "sha256:2cd13eac89333fc1ebff6c82617b306527c7ae82f1785281d065d8704b6153c5",
         "width": 390,
         "height": 11483,
-        "inkPixels": 1225177
+        "inkPixels": 1224760
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-grok": {
-      "hash": "f2b39df2e7d3384d",
+      "hash": "0f6738b04dcb9a5e",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:7002fa8789f58bb8e9520a6637198c1e65f67b0f2072ae36571bd2525a3ed761",
+        "hash": "sha256:b986605442c7f03989ac2a1bb2253ce9f2ec78329d9ea71d05885174cdee3e3d",
         "width": 390,
         "height": 11367,
-        "inkPixels": 1205161
+        "inkPixels": 1204746
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-grok--dark": {
-      "hash": "21d8bb46670b3df0",
+      "hash": "04b72d816a1e82c4",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:aaf42b995dd691fb8829452a3422d0eefcf7a548084b694aad5881ddbea74b29",
+        "hash": "sha256:15ff29de950729c2419d998735c3f7d63ba040dd9f4e761074115d87dd83703f",
         "width": 390,
         "height": 11367,
-        "inkPixels": 1202181
+        "inkPixels": 1201764
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-opencode": {
-      "hash": "27bb3c67ab499cf2",
+      "hash": "308634055d8a8b2b",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:b4ef6146a590524c93387c48cc6208f46fcbbead1fef7a53350dc9dc4428affe",
+        "hash": "sha256:dc5d0bc5377097e26f1556da41dcab1a035de9ca144975108b66ed8dc75a8a08",
         "width": 390,
         "height": 11572,
-        "inkPixels": 1280795
+        "inkPixels": 1280380
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-opencode--dark": {
-      "hash": "45f452309c953227",
+      "hash": "175fe114f1f86c3f",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:589acb62d359f8cebb8efc32af281884159b7e17ff686ec0a996bfd23f1dde91",
+        "hash": "sha256:9f496e0ea5683906b1eef2462f73d7e4f338fccdf1ae04bbae5b3a9f709a0260",
         "width": 390,
         "height": 11572,
-        "inkPixels": 1277831
+        "inkPixels": 1277414
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-pi": {
-      "hash": "f132ef9cb525fac2",
+      "hash": "ba4185b15bc5a7e4",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:ebe83b433099f0d534df0922679e09f7247f279ed478e1523ce0f1c3eb4b6243",
+        "hash": "sha256:8649533350ee7053155a72d2d2752742274a8525a7022d9955b082ccd2bff046",
         "width": 390,
         "height": 11260,
-        "inkPixels": 1182055
+        "inkPixels": 1181640
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/install-pi--dark": {
-      "hash": "b80e40c5e1719c8f",
+      "hash": "a667d377d47946dd",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:1c007d33f4cf0ecf866a2575431049fa6ee7060ef34abc07666d4223ddd705fa",
+        "hash": "sha256:0d35e2adec946962c54bf1810755b4d9efb76b6a78aebdd0c1143377a0d33886",
         "width": 390,
         "height": 11260,
-        "inkPixels": 1179090
+        "inkPixels": 1178673
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/phone": {
-      "hash": "56b04e28e1aed6bf",
+      "hash": "6e4c344aeb07da9a",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:596ae88ec31cfad2685bea31473d8d6dcc9a0289dfd8471088561692724bccd2",
+        "hash": "sha256:eb0751f9903814e1c0cfe9e44eab09450fc6f780095d8bf7a252d1106289ee08",
         "width": 390,
         "height": 11332,
-        "inkPixels": 1203988
+        "inkPixels": 1203573
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }
     },
     "screens/Home/phone--dark": {
-      "hash": "52c4a1db4b25dfed",
+      "hash": "c6930584ea514e62",
       "ext": ".html",
       "mode": "baseline",
       "png": {
-        "hash": "sha256:74927bc58401d544cfdc7f4f9ed0e49d8c86605c6a5d564f9892e6a49737f841",
+        "hash": "sha256:855af4cc59b9d9d1da8f8991126e2cb767bf8c959957e5402fc7c1725d94b00e",
         "width": 390,
         "height": 11332,
-        "inkPixels": 1201027
+        "inkPixels": 1200610
       },
       "source": {
         "file": "src/lib/components/screens/Home.svelte",
-        "fileHash": "sha256:811aee44c412ad6391a344bfafc57e59c55aad5b2e087d29f29e84ff1f8bfd71",
+        "fileHash": "sha256:7a83073a80aaee1d6b5d39d5012848d0fa6ee7092b187a8284dc4633b1babb26",
         "story": "src/lib/components/screens/Home.stories.svelte",
         "storyHash": "sha256:6ff9f8fd03992611ab3b4079c0fa26f4632f685490fc80fbc340d1f9a6d9763c"
       }

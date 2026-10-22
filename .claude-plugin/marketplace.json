@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Build and refresh real UI systems from requirements and design exports, with resumable implementation and reference verification.",
-    "version": "10.1.0"
+    "version": "10.2.0"
   },
   "plugins": [
     {
       "name": "pixel-perfect",
       "source": "./plugins/pixel-perfect",
       "description": "Build and refresh real UI systems from requirements and design exports, with resumable implementation and reference verification.",
-      "version": "10.1.0",
+      "version": "10.2.0",
       "author": {
         "name": "Justin Rich"
       },

@@ -53,7 +53,7 @@
 				title: 'CHECK THE PROOF',
 				command: '/pixel-perfect:status',
 				description:
-					'A packaged judge compares every render to its frame, and a pass needs a real PNG — only the gate writes one. It runs once per layer, so the next layer starts from parts that already match.',
+					'Every layer gate needs a real PNG, and only the gate writes a pass. When precision matters, verify sends a packaged judge to compare each render with its frame.',
 				threshold: 0.7,
 				panel: { title: 'status', lines: excerpts.status }
 			}

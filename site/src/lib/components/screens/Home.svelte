@@ -81,8 +81,8 @@
 				<SectionHeading variant="subhead">It brings its own agents.</SectionHeading>
 				<p class="m-0 mt-5 max-w-150 text-pretty text-muted">
 					Batteries included: the plugin ships a designer and a judge, started by its workflows with a brief — no
-					agent wiring of your own. The designer builds each component in your stack; the judge compares every render
-					to its frame, and a component that fails goes back to its builder twice before it asks you. The designer's
+					agent wiring of your own. The designer builds each component in your stack; when you ask verify for it, the
+					judge compares each render to its frame, and with --fix a failing component goes back to its builder. The designer's
 					craft guidance is Claude's
 					<TextLink href="https://claude.com/marketplace/plugins/frontend-design" label="frontend-design skill" external variant="ui" />,
 					built in.

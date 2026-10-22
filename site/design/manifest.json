@@ -538,7 +538,7 @@
             "copied",
             "headline-alternate"
           ],
-          "status": "verified",
+          "status": "built",
           "states_note": "One route. The install tabs deep-link with #install-{id} on the same page (same data, instant toggle, shared layout), so they are states, not routes. dark renders Home in the dark theme; headline-alternate is the strategy D13 headline test.",
           "file": "src/lib/components/screens/Home.svelte",
           "story": "src/lib/components/screens/Home.stories.svelte",
@@ -551,7 +551,7 @@
             "default",
             "dark"
           ],
-          "status": "verified",
+          "status": "built",
           "states_note": "One route with one state. dark is the capture's dark pass of the default story, as for Home.",
           "file": "src/lib/components/screens/Changelog.svelte",
           "story": "src/lib/components/screens/Changelog.stories.svelte",
@@ -937,7 +937,7 @@
           "name": "StepsTimeline",
           "file": "src/lib/components/organisms/StepsTimeline.svelte",
           "story": "src/lib/components/organisms/StepsTimeline.stories.svelte",
-          "status": "verified",
+          "status": "built",
           "state": null
         },
         {
@@ -951,7 +951,7 @@
           "name": "EvolveThread",
           "file": "src/lib/components/organisms/EvolveThread.svelte",
           "story": "src/lib/components/organisms/EvolveThread.stories.svelte",
-          "status": "verified",
+          "status": "built",
           "state": null
         },
         {
@@ -1167,7 +1167,7 @@
             "copied",
             "headline-alternate"
           ],
-          "status": "verified",
+          "status": "built",
           "states_note": "One route. The install tabs deep-link with #install-{id} on the same page (same data, instant toggle, shared layout), so they are states, not routes. dark renders Home in the dark theme; headline-alternate is the strategy D13 headline test.",
           "file": "src/lib/components/screens/Home.svelte",
           "story": "src/lib/components/screens/Home.stories.svelte",
@@ -1180,7 +1180,7 @@
             "default",
             "dark"
           ],
-          "status": "verified",
+          "status": "built",
           "states_note": "One route with one state. dark is the capture's dark pass of the default story, as for Home.",
           "file": "src/lib/components/screens/Changelog.svelte",
           "story": "src/lib/components/screens/Changelog.stories.svelte",
@@ -1559,7 +1559,7 @@
           "name": "StepsTimeline",
           "file": "src/lib/components/organisms/StepsTimeline.svelte",
           "story": "src/lib/components/organisms/StepsTimeline.stories.svelte",
-          "status": "verified",
+          "status": "built",
           "state": null
         },
         {
@@ -1573,7 +1573,7 @@
           "name": "EvolveThread",
           "file": "src/lib/components/organisms/EvolveThread.svelte",
           "story": "src/lib/components/organisms/EvolveThread.stories.svelte",
-          "status": "verified",
+          "status": "built",
           "state": null
         },
         {

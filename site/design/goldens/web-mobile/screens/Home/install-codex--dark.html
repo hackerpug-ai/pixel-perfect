@@ -587,7 +587,7 @@
 <span class="font-mono text-muted text-caption" data-cs="color:rgb(167, 172, 178);bg:rgba(0, 0, 0, 0);radius:0px;font:400 100% 12px/18.6px &quot;IBM Plex Mono&quot;">STEP 4 · CHECK THE PROOF</span>
 </div>
 <code class="font-mono text-small block wrap-anywhere text-ink" data-cs="color:rgb(236, 237, 232);bg:rgba(0, 0, 0, 0);radius:0px;font:400 100% 14px/21.7px &quot;IBM Plex Mono&quot;">/pixel-perfect:status</code>
-<p class="mt-2.5 text-ui text-muted" data-cs="color:rgb(167, 172, 178);bg:rgba(0, 0, 0, 0);radius:0px;font:400 100% 15px/23.25px &quot;Libre Franklin Variable&quot;">A packaged judge compares every render to its frame, and a pass needs a real PNG — only the gate writes one. It runs once per layer, so the next layer starts from parts that already match.</p>
+<p class="mt-2.5 text-ui text-muted" data-cs="color:rgb(167, 172, 178);bg:rgba(0, 0, 0, 0);radius:0px;font:400 100% 15px/23.25px &quot;Libre Franklin Variable&quot;">Every layer gate needs a real PNG, and only the gate writes a pass. When precision matters, verify sends a packaged judge to compare each render with its frame.</p>
 </div>
 <div class="overflow-hidden rounded-md bg-code-bg text-code-fg" data-cs="color:rgb(230, 231, 226);bg:rgb(20, 23, 27);radius:4px;font:400 100% 17px/26.35px &quot;Libre Franklin Variable&quot;">
 <div class="flex justify-between gap-4 border-b border-code-rule px-3.5 py-2" data-cs="color:rgb(230, 231, 226);bg:rgba(0, 0, 0, 0);radius:0px;font:400 100% 17px/26.35px &quot;Libre Franklin Variable&quot;">
@@ -670,8 +670,8 @@
 <div class="mt-18 max-w-200" data-cs="color:rgb(236, 237, 232);bg:rgba(0, 0, 0, 0);radius:0px;font:400 100% 17px/26.35px &quot;Libre Franklin Variable&quot;">
 <h3 class="m-0 font-display text-subhead font-bold [font-stretch:110%]" data-cs="color:rgb(236, 237, 232);bg:rgba(0, 0, 0, 0);radius:0px;font:700 110% 22px/34.1px &quot;Anybody Variable&quot;">It brings its own agents.</h3>
 <p class="m-0 mt-5 max-w-150 text-pretty text-muted" data-cs="color:rgb(167, 172, 178);bg:rgba(0, 0, 0, 0);radius:0px;font:400 100% 17px/26.35px &quot;Libre Franklin Variable&quot;">Batteries included: the plugin ships a designer and a judge, started by its workflows with a brief — no
-					agent wiring of your own. The designer builds each component in your stack; the judge compares every render
-					to its frame, and a component that fails goes back to its builder twice before it asks you. The designer's
+					agent wiring of your own. The designer builds each component in your stack; when you ask verify for it, the
+					judge compares each render to its frame, and with --fix a failing component goes back to its builder. The designer's
 					craft guidance is Claude's <a class="text-accent-text underline decoration-1 underline-offset-3 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-focus font-sans text-ui" data-cs="color:rgb(255, 122, 185);bg:rgba(0, 0, 0, 0);radius:0px;font:400 100% 15px/23.25px &quot;Libre Franklin Variable&quot;" href="https://claude.com/marketplace/plugins/frontend-design">frontend-design skill&nbsp;<span aria-hidden="true" data-cs="color:rgb(255, 122, 185);bg:rgba(0, 0, 0, 0);radius:0px;font:400 100% 15px/23.25px &quot;Libre Franklin Variable&quot;">↗</span>
 </a>,
 					built in.</p>
@@ -710,17 +710,17 @@
 </div>
 <div class="font-display text-base leading-[inherit] font-bold [--dx:30px] [--dy:-6px] translate-x-[calc((1_-_var(--p))*var(--dx))] translate-y-[calc((1_-_var(--p))*var(--dy))] opacity-[calc(.3_+_var(--p)*.7)]" data-cs="color:rgb(236, 237, 232);bg:rgba(0, 0, 0, 0);radius:0px;font:700 100% 16px/24.8px &quot;Anybody Variable&quot;">Changelog</div>
 <div class="flex items-center gap-2 [--dx:-28px] [--dy:14px] translate-x-[calc((1_-_var(--p))*var(--dx))] translate-y-[calc((1_-_var(--p))*var(--dy))] opacity-[calc(.3_+_var(--p)*.7)]" data-cs="color:rgb(236, 237, 232);bg:rgba(0, 0, 0, 0);radius:0px;font:400 100% 17px/26.35px &quot;Libre Franklin Variable&quot;">
-<span class="inline-block rounded-full px-1.5 py-px text-pill bg-accent font-semibold text-on-accent" data-cs="color:rgb(13, 15, 18);bg:rgb(255, 61, 158);radius:3.35544e+07px;font:600 100% 10px/15.5px &quot;Libre Franklin Variable&quot;">10.0.0</span>
+<span class="inline-block rounded-full px-1.5 py-px text-pill bg-accent font-semibold text-on-accent" data-cs="color:rgb(13, 15, 18);bg:rgb(255, 61, 158);radius:3.35544e+07px;font:600 100% 10px/15.5px &quot;Libre Franklin Variable&quot;">10.2.0</span>
 <span class="h-1.5 bg-line flex-1" data-cs="color:rgb(236, 237, 232);bg:rgb(42, 47, 54);radius:0px;font:400 100% 17px/26.35px &quot;Libre Franklin Variable&quot;">
 </span>
 </div>
 <div class="flex items-center gap-2 [--dx:34px] [--dy:4px] translate-x-[calc((1_-_var(--p))*var(--dx))] translate-y-[calc((1_-_var(--p))*var(--dy))] opacity-[calc(.3_+_var(--p)*.7)]" data-cs="color:rgb(236, 237, 232);bg:rgba(0, 0, 0, 0);radius:0px;font:400 100% 17px/26.35px &quot;Libre Franklin Variable&quot;">
-<span class="inline-block rounded-full px-1.5 py-px text-pill border border-line" data-cs="color:rgb(236, 237, 232);bg:rgba(0, 0, 0, 0);border:1px rgb(42, 47, 54);radius:3.35544e+07px;font:400 100% 10px/15.5px &quot;Libre Franklin Variable&quot;">9.3.0</span>
+<span class="inline-block rounded-full px-1.5 py-px text-pill border border-line" data-cs="color:rgb(236, 237, 232);bg:rgba(0, 0, 0, 0);border:1px rgb(42, 47, 54);radius:3.35544e+07px;font:400 100% 10px/15.5px &quot;Libre Franklin Variable&quot;">10.1.0</span>
 <span class="h-1.5 bg-line flex-1" data-cs="color:rgb(236, 237, 232);bg:rgb(42, 47, 54);radius:0px;font:400 100% 17px/26.35px &quot;Libre Franklin Variable&quot;">
 </span>
 </div>
 <div class="flex items-center gap-2 [--dx:-18px] [--dy:20px] translate-x-[calc((1_-_var(--p))*var(--dx))] translate-y-[calc((1_-_var(--p))*var(--dy))] opacity-[calc(.3_+_var(--p)*.7)]" data-cs="color:rgb(236, 237, 232);bg:rgba(0, 0, 0, 0);radius:0px;font:400 100% 17px/26.35px &quot;Libre Franklin Variable&quot;">
-<span class="inline-block rounded-full px-1.5 py-px text-pill border border-line" data-cs="color:rgb(236, 237, 232);bg:rgba(0, 0, 0, 0);border:1px rgb(42, 47, 54);radius:3.35544e+07px;font:400 100% 10px/15.5px &quot;Libre Franklin Variable&quot;">9.2.0</span>
+<span class="inline-block rounded-full px-1.5 py-px text-pill border border-line" data-cs="color:rgb(236, 237, 232);bg:rgba(0, 0, 0, 0);border:1px rgb(42, 47, 54);radius:3.35544e+07px;font:400 100% 10px/15.5px &quot;Libre Franklin Variable&quot;">10.0.0</span>
 <span class="h-1.5 bg-line w-3/5" data-cs="color:rgb(236, 237, 232);bg:rgb(42, 47, 54);radius:0px;font:400 100% 17px/26.35px &quot;Libre Franklin Variable&quot;">
 </span>
 </div>
