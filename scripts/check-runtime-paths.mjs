@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { lstat, readFile, readdir, realpath } from "node:fs/promises";
+import { lstat, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -130,9 +130,12 @@ export async function checkRuntimePaths(root = REPOSITORY_ROOT) {
   }
 
   try {
-    const processContextTarget = await realpath(path.join(packageRoot, ".opencode/skills/process-context/SKILL.md"));
-    if (processContextTarget !== path.join(packageRoot, "skills/process-context/SKILL.md")) {
-      errors.push("OpenCode process-context must resolve to the canonical internal skill");
+    const [canonical, opencodeCopy] = await Promise.all([
+      readFile(path.join(packageRoot, "skills/process-context/SKILL.md")),
+      readFile(path.join(packageRoot, ".opencode/skills/process-context/SKILL.md")),
+    ]);
+    if (!canonical.equals(opencodeCopy)) {
+      errors.push("OpenCode process-context copy must match the canonical internal skill");
     }
   } catch (error) {
     errors.push(`cannot validate OpenCode internal skill paths: ${error.message}`);

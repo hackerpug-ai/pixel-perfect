@@ -1,12 +1,10 @@
 // OpenCode project plugin. Auto-loaded from `.opencode/plugins/` at startup.
 //
-// The install lays down three project-level links: `.opencode/commands`,
-// `.opencode/skills`, and `.opencode/plugins`. This plugin verifies that the
-// namespaced command link resolves and emits one structured JSON diagnostic
-// line to stderr only when it does not. It performs no network access and no
-// filesystem mutation, and it carries no third-party imports — the module must
-// load under a symlinked package layout where dependency resolution is not
-// guaranteed.
+// The install lays down real copies of the namespaced commands, skills, and
+// this plugin under `.opencode/`. This plugin verifies that the namespaced
+// command file is present and emits one structured JSON diagnostic line to
+// stderr only when it is not. It performs no network access and no
+// filesystem mutation, and it carries no third-party imports.
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 

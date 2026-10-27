@@ -24,7 +24,7 @@ Every install downloads from `github.com/hackerpug-ai/pixel-perfect`. None edits
 | Codex | `~/.codex/plugins/` and `~/.codex/.tmp/marketplaces/` | The `pixel-perfect` marketplace and agent skill, in `~/.codex/config.toml` |
 | Cursor | `~/.cursor/plugins/local/pixel-perfect` | Nothing. Cursor reads the folder when it reloads. |
 | Grok | `~/.grok/installed-plugins/` | An entry in `~/.grok/installed-plugins/registry.json`, and `pixel-perfect` in `[plugins].enabled` in `~/.grok/config.toml` |
-| OpenCode | `.pixel-perfect/` (a git clone) and `.opencode/` in the current project | Three symlinks — `.opencode/commands`, `.opencode/skills`, and `.opencode/plugins` — which add namespaced project commands such as `/pixel-perfect/init` and register the `pixel-perfect` plugin |
+| OpenCode | `.pixel-perfect/` (a git clone) and `.opencode/` in the current project | Real copies of commands, skills, and the plugin module under `.opencode/` — which add namespaced project commands such as `/pixel-perfect/init` and register the `pixel-perfect` plugin |
 | Pi | `~/.pi/pixel-perfect` | One package path, in `~/.pi/agent/settings.json` |
 
 Claude Code, Codex, and Grok track the repository's default branch. Cursor, OpenCode, and Pi install the newest release tag, which the install block looks up.
@@ -122,13 +122,15 @@ grok plugin install hackerpug-ai/pixel-perfect#plugins/pixel-perfect --trust
 OpenCode installs per project. Run this block from the root of each project that uses pixel-perfect.
 
 - It adds namespaced project commands, such as `/pixel-perfect/init`, `/pixel-perfect/build`, and `/pixel-perfect/status`, and registers the `pixel-perfect` plugin so it appears in OpenCode's plugin list. No bare name takes over an OpenCode built-in such as `/init`.
-- The three links take over `.opencode/commands`, `.opencode/skills`, and `.opencode/plugins`. The project cannot keep its own commands, skills, or plugins in those folders.
-- The block stops before it writes anything if either folder is a real directory, if `.pixel-perfect` is not a pixel-perfect checkout, or if it finds no release tag. If it stops, tell the user which check failed and ask how to proceed. This install cannot merge with existing commands, skills, or plugins.
+- The install takes over `.opencode/commands`, `.opencode/skills`, and `.opencode/plugins` with its own copies. The project cannot keep its own commands, skills, or plugins in those folders.
+- Copies, not links: OpenCode does not register commands behind a symlinked commands folder (verified against a current OpenCode 2.x release), so a link-based install shows no commands. The skills copy dereferences any internal links, so nothing points outside the project.
+- The block stops before it writes anything if an `.opencode` folder exists without pixel-perfect's own files in it, if `.pixel-perfect` is not a pixel-perfect checkout, or if it finds no release tag. If it stops, tell the user which check failed and ask how to proceed. This install cannot merge with existing commands, skills, or plugins.
 
 ```bash
 bash -e <<'SH'
-for d in commands skills plugins; do
-  if [ -e ".opencode/$d" ] && [ ! -L ".opencode/$d" ]; then echo ".opencode/$d is a real directory. Ask the user." >&2; exit 1; fi
+for pair in "commands pixel-perfect/init.md" "skills process-context" "plugins pixel-perfect.ts"; do
+  set -- $pair
+  if [ -e ".opencode/$1" ] && [ ! -e ".opencode/$1/$2" ]; then echo ".opencode/$1 exists and is not a pixel-perfect install. Ask the user." >&2; exit 1; fi
 done
 if [ -e .pixel-perfect ] && ! git -C .pixel-perfect remote get-url origin 2>/dev/null | grep -q 'hackerpug-ai/pixel-perfect'; then echo ".pixel-perfect exists and is not a pixel-perfect checkout. Ask the user." >&2; exit 1; fi
 TAG=$(git ls-remote --tags --refs --sort=-v:refname https://github.com/hackerpug-ai/pixel-perfect.git 'v*' | sed -n 's|.*refs/tags/\(v[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\)$|\1|p' | head -n 1)
@@ -138,18 +140,19 @@ git -c advice.detachedHead=false clone -q --branch "$TAG" --depth 1 https://gith
 rm -rf .pixel-perfect
 mv .pixel-perfect.new .pixel-perfect
 mkdir -p .opencode
-ln -sfn ../.pixel-perfect/plugins/pixel-perfect/.opencode/commands .opencode/commands
-ln -sfn ../.pixel-perfect/plugins/pixel-perfect/.opencode/skills .opencode/skills
-ln -sfn ../.pixel-perfect/plugins/pixel-perfect/.opencode/plugins .opencode/plugins
+rm -rf .opencode/commands .opencode/skills .opencode/plugins
+cp -R .pixel-perfect/plugins/pixel-perfect/.opencode/commands .opencode/commands
+cp -RL .pixel-perfect/plugins/pixel-perfect/.opencode/skills .opencode/skills
+cp -R .pixel-perfect/plugins/pixel-perfect/.opencode/plugins .opencode/plugins
 echo "installed pixel-perfect $TAG"
 SH
 ```
 
-`.pixel-perfect/` is a git clone inside the project. Do not commit it. The three links point into it, so they break for anyone who has not run this install. Offer to add `.pixel-perfect/`, `.opencode/commands`, `.opencode/skills`, and `.opencode/plugins` to the project's `.gitignore`.
+`.pixel-perfect/` is a git clone inside the project. Do not commit it. The copies are snapshots taken from it, so a fresh project must run this install to get the commands. Offer to add `.pixel-perfect/`, `.opencode/commands`, `.opencode/skills`, and `.opencode/plugins` to the project's `.gitignore`.
 
 - **Confirm:** run `test -f .opencode/commands/pixel-perfect/init.md && test -f .opencode/plugins/pixel-perfect.ts && echo ok`. It prints `ok`.
 - **Next step:** tell the user to restart OpenCode in this project, with their design in it, and run `/pixel-perfect/init`.
-- **Upgrade:** run the install block again. It fetches the newest release and keeps the links intact. Restart OpenCode. The version is in `.pixel-perfect/plugins/pixel-perfect/.opencode/package.json`.
+- **Upgrade:** run the install block again. It fetches the newest release and replaces the copies with its files. Restart OpenCode. The version is in `.pixel-perfect/plugins/pixel-perfect/.opencode/package.json`.
 - **Uninstall:** run `rm -rf .pixel-perfect .opencode/commands .opencode/skills .opencode/plugins`.
 
 <a name="pi"></a>

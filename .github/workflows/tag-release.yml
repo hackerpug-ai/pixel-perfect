@@ -40,3 +40,38 @@ jobs:
 
       - name: Recheck every release channel and package gate
         run: pnpm run ci
+
+  publish-opencode-adapter:
+    needs: verify-tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out tagged commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Install pinned dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Recheck release gates
+        run: pnpm run verify
+
+      # Publishes pixel-perfect-opencode-adapter via npm trusted publishing
+      # (OIDC — no secret). One-time setup on npmjs.com before this succeeds:
+      # configure the trusted publisher for "pixel-perfect-opencode-adapter"
+      # pointing at this repository and workflow. Until then the job fails
+      # with 403 — the gate above has still passed.
+      - name: Publish the OpenCode adapter package
+        run: npm publish plugins/pixel-perfect/.opencode --provenance
