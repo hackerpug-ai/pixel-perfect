@@ -23,7 +23,8 @@ end_state:
     - A pass taken from process exit code 0 alone.
 negative_control:
   would_fail_if:
-    - The opposite input still produces the success result.
+    - A pinned Cursor failure produces the same warn-and-wait outcome instead of a release block.
+    - The fix pull request auto-merges, or the run publishes a release or package despite the newest failure.
 evidence:
   artifact_type: grade-file
   required_capture: true

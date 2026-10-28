@@ -1,7 +1,7 @@
 ---
 stability: FEATURE_SPEC
-last_validated: 2026-10-14
-prd_version: 1.0.1
+last_validated: 2026-10-28
+prd_version: 1.0.2
 scope_posture: full
 ---
 
@@ -70,6 +70,7 @@ Each night, when the owner starts a run by hand, and after accepted plugin chang
 - A person merges every fix. This grade never publishes a release.
 - Accepted work lands on main. This initiative does not track a pull request per sprint.
 - Cursor is a real channel. It has no key yet and no headless trial, and the owner has not exempted it.
+- Day-one releases refuse on Cursor could-not-run until a key and a qualified runner trial exist; that refusal is the framework working, not a framework failure.
 - Permission is not approve-everything. Choosing the exact flags is outside this product scope.
 - A fix stays inside the current change allowlist until that limit is explicitly re-checked.
 

@@ -1,7 +1,7 @@
 ---
 stability: CONSTITUTION
-last_validated: 2026-10-14
-prd_version: 1.0.1
+last_validated: 2026-10-28
+prd_version: 1.0.2
 ---
 
 # Technical Risks
@@ -17,7 +17,7 @@ prd_version: 1.0.1
 | R-linux-unproven | Harness | Nothing in this design has been run on Linux. Every Linux install line is unproven. A Mac result must not be copied forward as a Linux pass. Codex on a hosted runner also needs unprivileged user namespaces, or the sandbox can fail closed. |
 | R-claude-reads | Harness | With the default permission mode, Claude Code denied reads of its own workflow files, including workflows/RUNTIME-CONTRACT.md and workflows/status.md, and still reported success. --add-dir is untested. -p can skip plugins in bare mode. The assembled Bash(node *) allow list does not show that reads succeed. A denied read is not a pass, and a missing plugin is could-not-run rather than a plugin behavior fail. |
 | R-grok-trust | Harness | The checkout install command includes --trust, and --trust is forbidden on any step that holds an API key. This Mac's Grok config approves every tool call, so a runner that copies that config would hide permission failures. bypassPermissions is not the stance. |
-| R-opencode-layout | Harness | OpenCode's slash form does not run headless. Published install clones the whole repo into the work directory, so fixture expectations sit beside the agent once a tag contains them. The checkout install command is unknown. The channel for --platform web-desktop is unknown, so verify cannot be graded yet. The reply field name is unknown. Every run leaves a session, and that residue is not a grade. opencode debug config prints provider config and must not run in a step that holds a key. |
+| R-opencode-layout | Harness | OpenCode's slash form does not run headless. Published install clones the whole repo into the work directory, so fixture expectations sit beside the agent once a tag contains them. The checkout install is the documented INSTALL.md real-copy block (bd53ad0) and the list channel reads .opencode/commands/pixel-perfect/. The channel for --platform web-desktop is unknown, so verify cannot be graded yet. The reply field name is unknown. Every run leaves a session, and that residue is not a grade. opencode debug config prints provider config and must not run in a step that holds a key. |
 | R-list-count | Harness | Claude Code, Codex, and Grok list more than the 11 public commands. A check that requires a length of exactly 11 will fail a good install. Cursor has no no-model list, and substituting a model call would break the no-model rule. |
 | R-question-signal | Harness | Grok and Cursor tell the model to continue after a question, and Claude Code must not use turn-end as the question signal either. Waiting for the process to exit grades work the harness told the model to do after the question. List, status, and verify must ask nothing; the separate must-ask probe stops at its first question, and the untested resume path must not be used to answer them into a pass. |
 | R-resume-untested | Harness | The one phase-two answer path is resume-with-text on every harness. It has not been run on any harness, and the evidence does not assign --resume, exec resume, --session, or --continue to a named CLI. Inventing an argv would be a stub. |

@@ -1,7 +1,7 @@
 ---
 stability: CONSTITUTION
-last_validated: 2026-10-14
-prd_version: 1.0.1
+last_validated: 2026-10-28
+prd_version: 1.0.2
 ---
 
 # API Design
@@ -22,7 +22,7 @@ One invocation selects one mode and produces twelve cells. Do not merge modes or
 
 ## Authoritative run selection
 
-Both `scripts/release.mjs publish` and the gate in `tag-release.yml` apply the same resolver:
+Three release-adjacent side effects are governed by the same resolver: `scripts/release.mjs publish`, the release gate in `tag-release.yml`, and the `publish-opencode-adapter` job in `tag-release.yml` (the npm publish of pixel-perfect-opencode-adapter, added 2026-10-27 in bd53ad0). The adapter publish is a release side effect: it runs only after the recomputed verdict is allow or allow-with-newest-warning, never while a hold or refuse verdict stands, and never from the eval workflow. The `pages.yml` site deploy on main is explicitly outside hold scope: it publishes the site, not a plugin release artifact. Every side effect under `.github/workflows/` carries a disposition here; a new publish path is added to this list or refused:
 
 1. Query GitHub for the configured repository ID and `.github/workflows/harness-eval.yml` workflow ID/path. Verify its source branch is main and event is an allowed push or manual dispatch for checkout. Do not trust these values solely because an artifact asserts them. Reject fork, PR, other workflow, other branch, and published-mode records as candidate authorization.
 2. For the exact publish commit and checkout mode, choose the highest workflow run number, then the highest attempt of that run, including queued, pending, cancelled, and failed attempts. Do not search backward for a successful attempt. Unknown mode while a qualifying run is pending blocks until its trusted dispatch inputs/result resolve it. Rerunning an older run cannot supersede a newer run number.

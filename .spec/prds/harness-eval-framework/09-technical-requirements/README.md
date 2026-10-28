@@ -28,6 +28,7 @@ Routing: N/A — no navigable UI. Readers use the Actions summary, the verify re
 
 | Version | Date | Notes |
 |---------|------|-------|
+| 1.1.0 | 2026-10-28 | Review round 2 corrections: 02-system-components (OpenCode, Cursor), 03-data-schema (pins authority, branch sequencing), 04-api-design (adapter publish gate, pages.yml disposition), 08-technical-risks (checkout install known). |
 | 1.0.0 | 2026-10-13 | Initial folder. |
 
 Parent PRD: [../README.md](../README.md)

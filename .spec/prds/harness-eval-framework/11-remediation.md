@@ -38,6 +38,41 @@ Every row has specification edits and a discriminating planned observation. Fina
 | F-016 / CHG-016 | Separate trunk process/history proof | [10-e2e-testing.md](09-technical-requirements/10-e2e-testing.md) | T-RUN-010 | [flow-run-03-trunk-history.scenario](../../scenarios/UC-RUN-03/flow-run-03-trunk-history.scenario.md) |
 | F-017 / CHG-017 | One explicit plugin-root allowlist | [03-data-schema.md](09-technical-requirements/03-data-schema.md) | T-REL-007,012 | [flow-rel-02-patch-confirmation.scenario](../../scenarios/UC-REL-02/flow-rel-02-patch-confirmation.scenario.md) |
 
+## Review round 2 (2026-10-28) — red-hat-20261028T114257Z-harness-eval-framework
+
+Second red-hat review against repo state bd53ad0 (post-10.2.0, post OpenCode real-copy install). Source report and evidence: `.spec/reviews/red-hat-20261028T114257Z-harness-eval-framework.md` (+ `review-evidence-20261028T113439Z-harness-eval/`). Eleven findings (2 HIGH, 5 MEDIUM, 4 LOW); ten changes applied in this 1.0.2 revision at the specification level. Runtime proof remains unverified for every row.
+
+| Change | Contract correction | Primary source | Stable criteria |
+|--------|--------------------|----------------|-----------------|
+| CHG-001 | OpenCode adapter: namespaced list path, prefixed --command, documented checkout install, serve-password note, layout verification | [02-system-components.md](09-technical-requirements/02-system-components.md); [08-technical-risks.md](09-technical-requirements/08-technical-risks.md) | T-GRD-001,002; OpenCode channel premises |
+| CHG-002 | Adapter npm publish gated behind the same resolver verdict | [04-api-design.md](09-technical-requirements/04-api-design.md) | T-REL-001..004 |
+| CHG-003 | Branch 9624a4b salvage-only sequencing; canonical homes named | [03-data-schema.md](09-technical-requirements/03-data-schema.md) | — |
+| CHG-004 | pins.json declared greenfield; package.json reconciliation rule | [03-data-schema.md](09-technical-requirements/03-data-schema.md) | T-REL pin rows |
+| CHG-005 | Cursor adapter: prefixed pixel-perfect-<name> commands and prompt form | [02-system-components.md](09-technical-requirements/02-system-components.md) | Cursor channel premises |
+| CHG-006 | T-GRD-004 criterion and the twelve-cells scenario now exercise no-screen readability | [10-e2e-testing-criteria.md](10-e2e-testing-criteria.md); [flow-grd-01-twelve-cells.scenario](../../scenarios/UC-GRD-01/flow-grd-01-twelve-cells.scenario.md) | T-GRD-004 |
+| CHG-007 | Negative-control schema created (placeholder sentences banned, validator required to cover all 77 scenarios); the two review-named placeholders replaced. The remaining 14 scenario files still carry the template sentence — now schema-invalid, enumerated below, and replaced with concrete controls during the build; the validator is the enforcement gate | [controls-schema.md](../../scenarios/controls-schema.md); [flow-rel-02-newest-warn.scenario](../../scenarios/UC-REL-02/flow-rel-02-newest-warn.scenario.md) | T-GRD/T-REL negative controls |
+| CHG-008 | Day-one Cursor refusal framed as expected initial state | [01-scope.md](01-scope.md) | — |
+| CHG-009 | Per-cell observed CLI version required in the twelve-cell summary | [10-e2e-testing-criteria.md](10-e2e-testing-criteria.md) | T-GRD-001 |
+| CHG-010 | pages.yml disposition; side-effect inventory rule | [04-api-design.md](09-technical-requirements/04-api-design.md) | — |
+
+### CHG-007 remaining placeholder instances (schema-invalid; replace during build)
+
+- .spec/scenarios/UC-GRD-02/flow-grd-02-four-grades.scenario.md
+- .spec/scenarios/UC-GRD-03/flow-grd-03-files-and-stream.scenario.md
+- .spec/scenarios/UC-GRD-04/flow-grd-04-named-path.scenario.md
+- .spec/scenarios/UC-GRD-05/flow-grd-05-clean-twin.scenario.md
+- .spec/scenarios/UC-GRD-06/flow-grd-06-missing-key.scenario.md
+- .spec/scenarios/UC-REL-01/flow-rel-01-pinned-block.scenario.md
+- .spec/scenarios/UC-REL-03/flow-rel-03-person-decides.scenario.md
+- .spec/scenarios/UC-REL-04/flow-rel-04-could-not-run.scenario.md
+- .spec/scenarios/UC-REL-05/flow-rel-05-drift.scenario.md
+- .spec/scenarios/UC-RPT-01/flow-rpt-01-later-checks.scenario.md
+- .spec/scenarios/UC-RPT-02/flow-rpt-02-resume-text.scenario.md
+- .spec/scenarios/UC-RUN-01/flow-run-01-nightly.scenario.md
+- .spec/scenarios/UC-RUN-02/flow-run-02-hand.scenario.md
+- .spec/scenarios/UC-RUN-03/flow-run-03-merge.scenario.md
+
+
 ## Verification and remaining proof
 
 - Structural validation: 17/17 checks passed: criterion agreement, stable/unique IDs, local links, coverage, versions, YAML frontmatter, whitespace, and 187 preserved review/WIP file hashes. See the [validation record](../../reviews/remediation-evidence-20261014-harness-eval-framework/validation.md).

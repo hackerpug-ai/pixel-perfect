@@ -1,6 +1,6 @@
 ---
 title: Harness eval framework
-version: 1.0.1
+version: 1.0.2
 scope_posture: full
 pr_sequencing: false
 base_branches: []
@@ -14,12 +14,12 @@ A nightly, hand-started, and post-merge grade of the pixel-perfect plugin on Cla
 
 | Field | Value |
 |-------|-------|
-| Version | 1.0.1 |
+| Version | 1.0.2 |
 | Scope Posture | Full feature |
 | PR Sequencing | Disabled |
 | Base Branches | None (lands on trunk) |
 | Created | 2026-10-13 |
-| Last Updated | 2026-10-14 |
+| Last Updated | 2026-10-28 |
 
 ## Document Index
 
@@ -51,6 +51,7 @@ A nightly, hand-started, and post-merge grade of the pixel-perfect plugin on Cla
 
 | Version | Date | Change |
 |---------|------|--------|
+| 1.0.2 | 2026-10-28 | Review round 2 (red-hat-20261028T114257Z) applied: OpenCode and Cursor adapter premises refreshed to bd53ad0 reality (namespaced commands, real-copy install, serve password), resolver governs the adapter npm publish and disposes pages.yml, pins.json declared greenfield with package.json reconciliation, branch-9624a4b sequencing recorded, T-GRD-004 oracle fixed, per-cell observed CLI version required, day-one Cursor refusal framed as expected, scenario negative-control schema created (remaining template placeholders enumerated for the build). Ten changes; runtime proof remains unverified. |
 | 1.0.1 | 2026-10-14 | Seventeen review findings remediated in the specification; published-only nightly and 36-hour checkout evidence. Runtime proof remains unverified. |
 | 1.0.0 | 2026-10-13 | Initial PRD. Cursor is included. Goals G1–G4 are proposed, not confirmed. |
 

@@ -1,7 +1,7 @@
 ---
 stability: CONSTITUTION
-last_validated: 2026-10-14
-prd_version: 1.0.1
+last_validated: 2026-10-28
+prd_version: 1.0.2
 ---
 
 # Data Schema
@@ -12,7 +12,7 @@ All records are schema-validated before use. Invalid or missing required evidenc
 
 ### HarnessPins
 
-Authoritative file: `test/harness/pins.json`, version-controlled with the evaluator. It has one exact CLI version for each of claude-code, codex, grok, opencode, pi, cursor; no ranges, latest aliases, or missing entries. It also records the selected provider/model and the credential environment name per harness. Initial pins and platform support require real runner qualification; historical surveyed versions are not automatically qualified pins. The fixer CLI uses a separate exact version field in this same manifest. The fixer cannot edit this file.
+Authoritative file: `test/harness/pins.json`, created by this initiative (it does not exist before the evaluator lands) and version-controlled with the evaluator. Pins reconcile with package.json, which independently pins locally-exercised versions (for example @earendil-works/pi-coding-agent): a validation check fails when pins.json and package.json disagree for the same harness, pins.json wins for grading, and an intentional difference is recorded as a named exception inside pins.json. It has one exact CLI version for each of claude-code, codex, grok, opencode, pi, cursor; no ranges, latest aliases, or missing entries. It also records the selected provider/model and the credential environment name per harness. Initial pins and platform support require real runner qualification; historical surveyed versions are not automatically qualified pins. The fixer CLI uses a separate exact version field in this same manifest. The fixer cannot edit this file.
 
 ### HarnessEvalResult
 
@@ -130,7 +130,7 @@ No key is exposed during install or command listing. Each model subprocess recei
 
 Record source evaluation/run/attempt/failed check IDs, source plugin revision, repair_base_sha (current main resolved once), unpatched reproduction evidence, patch_sha256, confirmation_run_id, and per-check before/after verdicts. A published failure must reproduce on repair_base_sha using the same resolved harness versions before repair starts. Otherwise record not-reproduced and open no PR.
 
-Allowlist root is plugins/pixel-perfect. Repository-relative paths allowed are `plugins/pixel-perfect/harness/*.json` and `plugins/pixel-perfect/skills/**`. Use that one coordinate system throughout. Reject symlinks, mode changes, patches over 100000 bytes, traversal, and changes to tests, fixtures, graders, validators, CI, workflows, adapter scripts, or scripts/release.mjs. The planned harness directory may be absent; do not guess another root or widen scope.
+Allowlist root is plugins/pixel-perfect. Repository-relative paths allowed are `plugins/pixel-perfect/harness/*.json` and `plugins/pixel-perfect/skills/**`. Use that one coordinate system throughout. Reject symlinks, mode changes, patches over 100000 bytes, traversal, and changes to tests, fixtures, graders, validators, CI, workflows, adapter scripts, or scripts/release.mjs. The planned harness directory may be absent; do not guess another root or widen scope. Assets and sequencing: unmerged branch 9624a4b (improvement imp-all-6-steps-utilize-github) predates this PRD and carries root-level harness/*.json, probes for five channels, and a gate wired into scripts/release.mjs. It is salvage for probe mechanics only — its root-level harness/ directory, its harness-matrix.yml, and its gate wiring must not land before this build, and the canonical homes remain plugins/pixel-perfect/harness/, test/harness/pins.json, and .github/workflows/harness-eval.yml.
 
 Confirmation uses immutable graders/fixtures from repair_base_sha. Every motivating failure must become pass; every previously passing required check must stay pass; planted detection and clean controls must remain correct; no required check may be could-not-run. Only that exact tested patch may reach branch heal/<run_id>. If main advances before PR creation, stop with base-moved and require a new reproduction/recheck/confirmation; do not rebase silently. PR metadata names harness/track/check/evidence, app ID 5156617, base main, merged_by person, clears_pinned_block false, opened_by_ci_publish false. A no-op, ineffective patch, or regression opens no PR.
 

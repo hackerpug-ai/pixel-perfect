@@ -1,7 +1,7 @@
 ---
 stability: TEST_SPEC
-last_validated: 2026-10-14
-prd_version: 1.0.1
+last_validated: 2026-10-28
+prd_version: 1.0.2
 ---
 
 # E2E / Human Testing Criteria for Harness eval framework
@@ -14,10 +14,10 @@ Version 1.0.1. Date 2026-10-14. Every acceptance criterion has one row. Live row
 
 | # | Criterion | AC Ref | Type | Setup | Pass/Fail |
 |---|-----------|--------|------|-------|-----------|
-| T-GRD-001 | Maintainer can read a result of pass, fail, or could-not-run for Claude Code, Codex, Grok, OpenCode, Pi, and Cursor from the finished run's summary | AC-1 | [e2e-automated] | Real harness-eval workflow on a GitHub-hosted runner, real CLIs, real keys in harness-smoke. Not mocked. | The observable result in the criterion is true on a real run, and the opposite input does not produce it. |
+| T-GRD-001 | Maintainer can read a result of pass, fail, or could-not-run for Claude Code, Codex, Grok, OpenCode, Pi, and Cursor from the finished run's summary | AC-1 | [e2e-automated] | Real harness-eval workflow on a GitHub-hosted runner, real CLIs, real keys in harness-smoke. Not mocked. | Each of the twelve cells shows its verdict word together with the observed CLI version for that harness and track, and a summary missing any cell's version string fails the report check; the opposite input does not produce it. |
 | T-GRD-002 | Maintainer can read that result for the pinned and newest versions of each harness, bound to the observed CLI version and actual loaded plugin revision and digest | AC-2 | [e2e-automated] | Distinct release and checkout revisions plus an intentionally stale real cache; FLOW-GRD-01-LOADED-IDENTITY. | Observed loaded digests/CLI versions match the selected identity; mismatch is could-not-run; equal versions preserve both tracks. |
 | T-GRD-003 | Maintainer can see that Cursor is present as a real channel and is never omitted | AC-3 | [e2e-automated] | Real harness-eval workflow on a GitHub-hosted runner, real CLIs, real keys in harness-smoke. Not mocked. | The observable result in the criterion is true on a real run, and the opposite input does not produce it. |
-| T-GRD-004 | Maintainer can read the summary without a navigable product screen | AC-4 | [e2e-automated] | Real harness-eval workflow on a GitHub-hosted runner, real CLIs, real keys in harness-smoke. Not mocked. | The observable result in the criterion is true on a real run, and the opposite input does not produce it. |
+| T-GRD-004 | Maintainer can read the summary without a navigable product screen | AC-4 | [e2e-automated] | Real harness-eval workflow on a GitHub-hosted runner, real CLIs, real keys in harness-smoke. Not mocked. | The finished run's summary artifact alone, fetched with no product screen or UI session available, is complete and readable per the twelve-cell rule; a summary that cannot be read from the artifact alone fails, and a screen-available read does not satisfy the criterion. |
 | T-GRD-005 | Maintainer can read a finished run that has no screenshot score and can see that the missing score is not a gap | AC-5 | [e2e-automated] | Real harness-eval workflow on a GitHub-hosted runner, real CLIs, real keys in harness-smoke. Not mocked. | The observable result in the criterion is true on a real run, and the opposite input does not produce it. |
 | T-GRD-006 | Maintainer can rely on no model having judged screenshots and on design fidelity staying out of the grade | AC-6 | [e2e-automated] | Real structural-only public verify plus a deliberate real image-judge negative control; FLOW-GRD-01-HIDDEN-IMAGE-JUDGE. | Complete child/tool/model evidence proves no screenshot judging; a hidden judge call fails; incomplete observation is could-not-run. |
 
