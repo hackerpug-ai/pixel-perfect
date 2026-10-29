@@ -146,3 +146,98 @@ test("FLOW-GRD-05-CLEAN-TWIN", async (t) => {
     assert.match(run.caseManifest.report_relative_path, /^reports\//);
   });
 });
+
+// ===========================================================================================
+// T7 — the pair graded as ONE check, from the two reports at their declared paths.
+//
+// A clean twin is not a verify failure: `verify` passes only when the planted report says
+// `defect-detected` WITH the evidence the oracle measured AND the clean report says clean with
+// `clean_project_failed === false`. Anything else — a borrowed body, a clean false positive, a
+// missing half — fails, and the reason names which half.
+// ===========================================================================================
+test("FLOW-GRD-05-CLEAN-TWIN", async (t) => {
+  const graders = await import("../../test/harness/graders/index.mjs");
+  const { readFileSync: read, writeFileSync: write } = await import("node:fs");
+  const { runVerifyCase } = await import("./flow-runner.mjs");
+  const planted = loadCase("verify-button-drift");
+  const clean = loadCase("verify-clean");
+
+  const pair = () => {
+    const p = runVerifyCase("verify-button-drift", { keep: true });
+    const c = runVerifyCase("verify-clean", { keep: true });
+    return { planted: p, clean: c, dispose: () => [p, c].forEach((side) => rmSync(side.dir, { recursive: true, force: true })) };
+  };
+
+  await t.test("the real twin pair grades verify pass, citing both reports and both invocation ids", () => {
+    const run = pair();
+    t.after(run.dispose);
+    const part = graders.gradeVerifyCheck({
+      planted: { caseManifest: planted, invocation: run.planted.invocation },
+      clean: { caseManifest: clean, invocation: run.clean.invocation },
+    });
+    assert.equal(part.verdict, "pass", `the pair is a pass: ${JSON.stringify(part.blocks)}`);
+    assert.equal(part.check_id, "verify");
+    assert.equal(part.reason, null, "a pass carries no failure reason");
+    assert.equal(part.report_paths.length, 2, "both reports are cited");
+    assert.deepEqual(
+      part.report_paths.map((p) => path.basename(p)).sort(),
+      ["verify-button-drift.json", "verify-clean.json"],
+      "the two citations are the two declared filenames",
+    );
+    const [plantedId, cleanId] = part.invocation_ids;
+    assert.ok(plantedId && cleanId, "both reports name the invocation that produced them");
+    assert.notEqual(plantedId, cleanId, "distinct invocation ids: the twin is its own invocation");
+    assert.equal(part.observed_verify_outcome, "defect-detected", "the cell records the planted detection");
+    t.diagnostic(`twin_invocations=${plantedId} != ${cleanId}`);
+  });
+
+  await t.test("the planted body in the clean slot fails as a binding mismatch", () => {
+    const run = pair();
+    t.after(run.dispose);
+    // Tamper: copy the planted body over the clean report at its declared path.
+    write(run.clean.bound_path, read(run.planted.bound_path));
+    const part = graders.gradeVerifyCheck({
+      planted: { caseManifest: planted, invocation: run.planted.invocation },
+      clean: { caseManifest: clean, invocation: run.clean.invocation },
+    });
+    assert.equal(part.verdict, "fail", "a static body copy must not pass in the clean slot");
+    assert.equal(part.reason, "report-mismatched-invocation");
+    assert.equal(part.blocks.find((entry) => entry.verdict === "fail").side, "clean", "the failing side is named");
+  });
+
+  await t.test("a clean false positive is not graded pass", () => {
+    const run = pair();
+    t.after(run.dispose);
+    const body = JSON.parse(read(run.clean.bound_path, "utf8"));
+    write(run.clean.bound_path, `${JSON.stringify({ ...body, observed_verify_outcome: "false-positive", clean_project_failed: true }, null, 2)}\n`, "utf8");
+    const part = graders.gradeVerifyCheck({
+      planted: { caseManifest: planted, invocation: run.planted.invocation },
+      clean: { caseManifest: clean, invocation: run.clean.invocation },
+    });
+    assert.equal(part.verdict, "fail");
+    assert.equal(part.reason, "clean-false-positive");
+    assert.equal(part.blocks.find((entry) => entry.reason === "clean-false-positive").side, "clean");
+  });
+
+  await t.test("the verify check pools with the other three, and a failing verify fails the cell", () => {
+    const run = pair();
+    t.after(run.dispose);
+    const passing = graders.gradeVerifyCheck({
+      planted: { caseManifest: planted, invocation: run.planted.invocation },
+      clean: { caseManifest: clean, invocation: run.clean.invocation },
+    });
+    const others = [
+      graders.part({ check_id: "command_list", verdict: "pass", evidence_paths: ["a"] }),
+      graders.part({ check_id: "status", verdict: "pass", evidence_paths: ["b"] }),
+      graders.part({ check_id: "question_before_expensive_work", verdict: "pass", evidence_paths: ["c"] }),
+    ];
+    const installation = { requested_cli_version: "2.1.291", resolved_cli_version: "2.1.291", observed_cli_version: null, install_mode: "checkout", plugin_revision: null, expected_plugin_manifest_sha256: null, observed_plugin_manifest_sha256: null, loaded_plugin_root: null, plugin_load_evidence: null };
+    const cell = graders.gradeCell({ harness: "claude-code", track: "pinned", installation, invocation_id: run.planted.invocation.invocationId, process_exit_code: 1, parts: [...others, passing] });
+    assert.equal(cell.verdict, "pass", `four passing checks aggregate to pass: ${JSON.stringify(cell.block_reasons)}`);
+    assert.equal(cell.observed_verify_outcome, "defect-detected");
+
+    const failed = graders.gradeCell({ harness: "claude-code", track: "pinned", installation, invocation_id: run.planted.invocation.invocationId, process_exit_code: 0, parts: [...others, { ...passing, verdict: "fail", reason: "clean-false-positive", blocks: [{ verdict: "fail", reason: "clean-false-positive", side: "clean" }] }] });
+    assert.equal(failed.verdict, "fail", "a failing verify fails the cell even when the exit code is 0");
+    assert.equal(failed.reason, "clean-false-positive");
+  });
+});

@@ -195,3 +195,142 @@ test("FLOW-GRD-04-NAMED-PATH", async (t) => {
     assert.equal(leg.clean.report.clean_project_failed, false);
   });
 });
+
+// ===========================================================================================
+// T7 — the writer itself. The case manifest declares the path; this section proves the writer
+// obeys that single path, writes nothing anywhere else, reads no decoy, and keeps a storage fault
+// in the could-not-run lane instead of blaming the plugin.
+// ===========================================================================================
+test("FLOW-GRD-04-NAMED-PATH", async (t) => {
+  const grader = await import("../../test/harness/graders/index.mjs");
+  const { chmodSync, mkdirSync, readdirSync, symlinkSync, writeFileSync } = await import("node:fs");
+  const { createHash } = await import("node:crypto");
+  const { runVerifyCase } = await import("./flow-runner.mjs");
+  const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
+  const planned = loadCase("verify-button-drift");
+  const control = loadCase("verify-clean");
+
+  const real = runVerifyCase("verify-button-drift", { keep: true });
+  t.after(() => rmSync(real.dir, { recursive: true, force: true }));
+  const declaredRel = planned.report_relative_path;
+  const declaredAbs = path.join(real.dir, declaredRel);
+
+  await t.test("the writer lands the report at exactly the declared path and leaves nothing else behind", () => {
+    // Start from the real report, remove it, and let the WRITER put it back: same bytes, same path.
+    const body = JSON.parse(readFileSync(declaredAbs, "utf8"));
+    rmSync(declaredAbs, { force: true });
+    assert.equal(existsSync(declaredAbs), false, "the declared path is empty before the writer runs");
+
+    const written = grader.writeVerifyReport({ caseManifest: planned, invocation: real.invocation, body });
+    assert.equal(written.ok, true, `the writer landed the report: ${JSON.stringify(written)}`);
+    assert.equal(written.path, declaredAbs, "the only path written is the bound one");
+    assert.equal(path.relative(real.dir, written.path).split(path.sep).join("/"), declaredRel, "the path is the relative path the case declared");
+    assert.equal(path.basename(written.path), "verify-button-drift.json", "no timestamp, pid or suffix in the filename");
+    assert.equal(sha(readFileSync(declaredAbs)), written.sha256, "the read-back hash is the file on disk");
+    assert.deepEqual(readdirSync(path.join(real.dir, "reports")), ["verify-button-drift.json"], "reports/ holds the declared file and no temp file");
+    assert.equal(sha(readFileSync(declaredAbs)), real.report_sha256, "the writer wrote exactly the bytes the oracle's run produced");
+
+    const reread = grader.readVerifyReportAt({ caseManifest: planned, invocation: real.invocation });
+    assert.equal(reread.ok, true);
+    assert.equal(reread.report.invocation_id, real.invocation.invocationId, "the body is bound to the invocation that produced it");
+    assert.equal(reread.report.observed_defect_key, "atoms/Button/default");
+    t.diagnostic(`written=${declaredRel} sha256=${written.sha256} listing=${readdirSync(path.join(real.dir, "reports")).join(",")}`);
+  });
+
+  await t.test("the body carries harness, track, both defect keys, the capture hash and the event offsets", () => {
+    const reread = grader.readVerifyReportAt({ caseManifest: planned, invocation: real.invocation });
+    assert.equal(reread.ok, true);
+    const report = reread.report;
+    assert.equal(report.harness, "claude-code", "the planted report prints claude-code");
+    assert.equal(report.track, "pinned", "the planted report prints pinned");
+    assert.equal(report.expected_defect_key, "atoms/Button/default");
+    assert.equal(report.observed_defect_key, "atoms/Button/default");
+    assert.equal(report.observed_verify_outcome, "defect-detected");
+    assert.match(report.evidence.capture_sha256, /^[0-9a-f]{64}$/, "detection cites the capture's hash");
+    assert.equal(report.evidence.capture_path, "design/.captures/web-desktop/atoms/Button/default.txt", "detection cites the capture path");
+    assert.ok(Number.isInteger(report.evidence.event_offsets?.offset), "detection cites the byte offset the oracle measured");
+    t.diagnostic(`capture_sha256=${report.evidence.capture_sha256} offsets=${JSON.stringify(report.evidence.event_offsets)}`);
+  });
+
+  await t.test("a decoy in reports/ is never read and never chosen", () => {
+    const decoy = path.join(real.dir, "reports/verify-button-drift.backup.json");
+    writeFileSync(decoy, `${JSON.stringify({ observed_defect_key: "atoms/Decoy/default", invocation_id: "decoy" })}\n`, "utf8");
+    const listed = readdirSync(path.join(real.dir, "reports")).sort();
+    assert.deepEqual(listed, ["verify-button-drift.backup.json", "verify-button-drift.json"], "both files are on disk — the writer did not delete a decoy either");
+    const chosen = grader.classifyReportPath(planned, real.dir);
+    assert.equal(chosen.path, declaredAbs, "the bound path is the declared one, never the decoy");
+    const reread = grader.readVerifyReportAt({ caseManifest: planned, invocation: real.invocation });
+    assert.equal(reread.path, declaredAbs, "the reader reads the declared path only");
+    assert.equal(reread.report.observed_defect_key, "atoms/Button/default", "the decoy body never becomes the report");
+    rmSync(decoy, { force: true });
+  });
+
+  await t.test("an escaping declared path is refused before a single file is written", () => {
+    for (const [label, rel] of [
+      ["traversal", "../escape.json"],
+      ["inner-traversal", "reports/../escape.json"],
+      ["absolute", "/tmp/pp-t7-escape.json"],
+    ]) {
+      const fresh = freshInvocationDir("writer-refusal");
+      const manifest = { ...planned, report_relative_path: rel };
+      const result = grader.writeVerifyReport({ caseManifest: manifest, invocation: fresh, body: real.report });
+      assert.equal(result.ok, false, `${label} must be refused`);
+      assert.equal(result.verdict, "could-not-run", `${label} is a setup refusal, not a defect`);
+      assert.equal(result.reason, "invalid-case-path", `${label} names the refusal`);
+      assert.equal(result.wrote, 0, `${label} wrote nothing`);
+      assert.deepEqual(listDir(fresh.dir), [], `${label} left the invocation directory empty`);
+      rmSync(fresh.dir, { recursive: true, force: true });
+    }
+    const symlinked = freshInvocationDir("writer-symlink");
+    const elsewhere = freshInvocationDir("writer-symlink-target");
+    symlinkSync(elsewhere.dir, path.join(symlinked.dir, "reports"), "dir");
+    const result = grader.writeVerifyReport({ caseManifest: planned, invocation: symlinked, body: real.report });
+    assert.equal(result.reason, "invalid-case-path", "a symlinked reports/ ancestor is refused");
+    assert.deepEqual(listDir(elsewhere.dir), [], "nothing was written through the symlink");
+    assert.deepEqual(listDir(symlinked.dir), ["reports"], "the symlink is untouched and nothing landed beside it");
+    rmSync(symlinked.dir, { recursive: true, force: true });
+    rmSync(elsewhere.dir, { recursive: true, force: true });
+  });
+
+  await t.test("a body from another invocation is refused before it is written", () => {
+    const fresh = freshInvocationDir("writer-borrowed");
+    const result = grader.writeVerifyReport({ caseManifest: planned, invocation: fresh, body: real.report });
+    assert.equal(result.ok, false);
+    assert.equal(result.verdict, "fail", "a borrowed body is a plugin failure, not a storage fault");
+    assert.equal(result.reason, "report-mismatched-invocation");
+    assert.equal(result.wrote, 0, "nothing was written");
+    assert.deepEqual(listDir(fresh.dir), []);
+    // The clean case's declared path is a different file, so the twin can never borrow either report.
+    assert.notEqual(control.report_relative_path, planned.report_relative_path);
+    rmSync(fresh.dir, { recursive: true, force: true });
+  });
+
+  await t.test("unwritable storage is could-not-run report-unavailable, never a plugin defect", () => {
+    const fresh = freshInvocationDir("writer-unwritable");
+    const reports = path.join(fresh.dir, "reports");
+    mkdirSync(reports, { recursive: true });
+    const body = { ...real.report, invocation_id: fresh.invocationId };
+    try {
+      chmodSync(reports, 0o500);
+      const write = grader.writeVerifyReport({ caseManifest: planned, invocation: fresh, body });
+      assert.equal(write.ok, false);
+      assert.equal(write.verdict, "could-not-run", "a store this process cannot write is not the plugin's fault");
+      assert.equal(write.reason, "report-unavailable");
+      assert.equal(write.wrote, 0);
+      assert.deepEqual(listDir(fresh.dir), ["reports"], "the failed write left no temp file behind");
+    } finally {
+      chmodSync(reports, 0o700);
+    }
+    rmSync(fresh.dir, { recursive: true, force: true });
+  });
+
+  await t.test("an absent report is fail report-missing, and only storage is could-not-run", () => {
+    const fresh = freshInvocationDir("writer-missing");
+    const missing = grader.readVerifyReportAt({ caseManifest: planned, invocation: fresh });
+    assert.equal(missing.ok, false);
+    assert.equal(missing.verdict, "fail", "an unterminated run that leaves no report is a failure");
+    assert.equal(missing.reason, "report-missing");
+    assert.notEqual(missing.reason, "report-unavailable");
+    rmSync(fresh.dir, { recursive: true, force: true });
+  });
+});

@@ -665,3 +665,83 @@ function exitShape(name) {
 
 const shapeArg = process.argv.find((arg) => arg.startsWith("--shape="));
 if (shapeArg) process.exit(exitShape(shapeArg.slice("--shape=".length)));
+
+// ===========================================================================================
+// T7 — the pair's two failure lanes, kept apart at the grader.
+//
+//   * the planted report is ABSENT after an otherwise evaluable run  -> fail  report-missing
+//   * the report store cannot be read at all                        -> could-not-run
+//                                                                       report-unavailable
+//
+// The second outranks the first, and the first is preserved inside it: a storage fault must never be
+// reported as a plugin defect, and it must never erase the defect that was already recorded.
+// ===========================================================================================
+test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
+  const graders = await import("../../test/harness/graders/index.mjs");
+  const { chmodSync } = await import("node:fs");
+  const { runVerifyCase } = await import("./flow-runner.mjs");
+  const { loadCase: load } = await import("../../test/harness/kit/case-loader.mjs");
+  const plantedCase = load("verify-button-drift");
+  const cleanCase = load("verify-clean");
+
+  const pair = () => {
+    const p = runVerifyCase("verify-button-drift", { keep: true });
+    const c = runVerifyCase("verify-clean", { keep: true });
+    return { p, c, dispose: () => [p, c].forEach((side) => rmSync(side.dir, { recursive: true, force: true })) };
+  };
+
+  await t.test("a deleted planted report grades fail report-missing through the grader, not could-not-run", () => {
+    const run = pair();
+    t.after(run.dispose);
+    rmSync(run.p.bound_path, { force: true });
+    assert.deepEqual(readdirSync(path.join(run.p.dir, "reports")), [], "the planted report really is gone from its declared path");
+    const part = graders.gradeVerifyCheck({
+      planted: { caseManifest: plantedCase, invocation: run.p.invocation },
+      clean: { caseManifest: cleanCase, invocation: run.c.invocation },
+    });
+    assert.equal(part.verdict, "fail", "an evaluable run missing its planted report is a failure");
+    assert.equal(part.reason, "report-missing");
+    assert.equal(part.blocks[0].side, "planted", "the failing half is named");
+    assert.ok(!part.blocks.some((entry) => entry.reason === "report-unavailable"), "a missing file is never excused as storage");
+    t.diagnostic(`missing_planted=${part.reason} declared=${plantedCase.report_relative_path}`);
+  });
+
+  await t.test("an unreadable report store is could-not-run report-unavailable and outranks the missing report", () => {
+    const run = pair();
+    t.after(run.dispose);
+    rmSync(run.p.bound_path, { force: true });
+    try {
+      chmodSync(run.c.bound_path, 0o000);
+      const part = graders.gradeVerifyCheck({
+        planted: { caseManifest: plantedCase, invocation: run.p.invocation },
+        clean: { caseManifest: cleanCase, invocation: run.c.invocation },
+      });
+      assert.equal(part.verdict, "could-not-run", `a store this process cannot read is not a plugin defect: ${JSON.stringify(part.blocks)}`);
+      assert.equal(part.reason, "report-unavailable");
+      // The fail lane is preserved, not swallowed by the could-not-run that outranks it.
+      const preserved = part.blocks.find((entry) => entry.reason === "report-missing");
+      assert.ok(preserved, "the missing planted report is still recorded as a fail block");
+      assert.equal(preserved.verdict, "fail");
+      assert.equal(preserved.side, "planted");
+      t.diagnostic(`unavailable_outranks_missing=${part.blocks.map((entry) => `${entry.verdict}:${entry.reason}`).join(",")}`);
+    } finally {
+      chmodSync(run.c.bound_path, 0o600);
+    }
+  });
+
+  await t.test("neither lane can be laundered into a pass by the cell aggregate", () => {
+    const installation = { requested_cli_version: "2.1.291", resolved_cli_version: "2.1.291", observed_cli_version: null, install_mode: "checkout", plugin_revision: null, expected_plugin_manifest_sha256: null, observed_plugin_manifest_sha256: null, loaded_plugin_root: null, plugin_load_evidence: null };
+    const pass = (check_id) => graders.part({ check_id, verdict: "pass", evidence_paths: [`${check_id}.json`] });
+    const cell = graders.gradeCell({
+      harness: "claude-code",
+      track: "pinned",
+      installation,
+      invocation_id: "run-1",
+      process_exit_code: 1,
+      parts: [pass("command_list"), pass("status"), graders.part({ check_id: "verify", verdict: "fail", reason: "report-missing", evidence_paths: ["reports/verify-clean.json"] }), pass("question_before_expensive_work")],
+    });
+    assert.equal(cell.verdict, "fail", "one failing verify fails the cell");
+    assert.equal(cell.reason, "report-missing");
+    assert.ok(cell.block_reasons.some((entry) => entry.reason === "report-missing" && entry.check_id === "verify"), "the block reason survives in the cell");
+  });
+});

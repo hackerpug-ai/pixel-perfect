@@ -1097,3 +1097,121 @@ test("FLOW-GRD-03-FILES-AND-STREAM", async (t) => {
   t.diagnostic(`stream_controls=${artifact2.controls.map((row) => `${row.control_id}:${row.verdict}`).join(",")}`);
   t.diagnostic(`stream_awaiting=${artifact2.awaiting.map((row) => row.leg).join(",")}`);
 });
+
+// ===========================================================================================
+// T7 — the same rule at CELL level: four checks, each citing files-and-event-stream, and not one
+// verdict that could have been read off the process exit code.
+//
+// The sharpest locally available proof is the planted verify case: the real keyless oracle exits 1
+// and the check still passes, because what it grades is the report's own `defect-detected` outcome
+// plus the capture hash and byte span the oracle measured. `exitCodeVerdict(1)` is "fail"; the check
+// is "pass". Beside it, a part that improves on evidence nobody holds is downgraded, not trusted.
+// ===========================================================================================
+test("FLOW-GRD-03-FILES-AND-STREAM", async (t) => {
+  const graders = await import("../../test/harness/graders/index.mjs");
+  const stream = await import("../../test/harness/stream/index.mjs");
+  const { runVerifyCase } = await import("./flow-runner.mjs");
+  const { loadCase } = await import("../../test/harness/kit/case-loader.mjs");
+  const { rmSync: remove } = await import("node:fs");
+  const installation = stream.provisionalInstallation("2.1.291");
+
+  const planted = runVerifyCase("verify-button-drift", { keep: true });
+  const clean = runVerifyCase("verify-clean", { keep: true });
+  t.after(() => {
+    remove(planted.dir, { recursive: true, force: true });
+    remove(clean.dir, { recursive: true, force: true });
+  });
+  const verifyPart = graders.gradeVerifyCheck({
+    planted: { caseManifest: loadCase("verify-button-drift"), invocation: planted.invocation },
+    clean: { caseManifest: loadCase("verify-clean"), invocation: clean.invocation },
+  });
+  const capturedArchive = join(ROOT, "test/harness/stream/captures/claude-code-stream-probe.capture.json");
+  const archived = stream.readArchived(capturedArchive);
+  const events = stream.normalise({ bytes: archived.bytes, table: stream.loadTable({ version: "2.1.291" }), invocation_id: archived.record.invocation_id }).events;
+  const questionPart = graders.gradeQuestionCheck({ record: archived.record, events, ask_policy: "ask-nothing", evidencePaths: [capturedArchive] });
+
+  const cell = graders.gradeCell({
+    harness: "claude-code",
+    track: "pinned",
+    installation,
+    invocation_id: planted.invocation.invocationId,
+    process_exit_code: planted.oracle.exit_code,
+    parts: [
+      graders.notExecutedPart({ check_id: "command_list", reason: "the command list is captured on the hosted runner", owner: "T11" }),
+      graders.notExecutedPart({ check_id: "status", reason: "a status reply needs a model that answers", owner: "T11" }),
+      verifyPart,
+      questionPart,
+    ],
+  });
+
+  await t.test("four checks cite files-and-event-stream, and each carries at least one evidence path", () => {
+    const fromFilesAndStream = cell.checks.filter((check) => check.source === "files-and-event-stream");
+    assert.equal(fromFilesAndStream.length, 4, `all four checks cite the files-and-stream source: ${JSON.stringify(cell.checks)}`);
+    const graded = cell.checks.filter((check) => check.verdict !== "could-not-run");
+    assert.ok(graded.length >= 2, "at least the two locally evidenced lanes produced a verdict");
+    for (const check of graded) {
+      assert.ok(check.evidence_paths.length > 0, `${check.check_id} cites at least one evidence path for the verdict it states`);
+    }
+    for (const check of cell.checks.filter((entry) => entry.verdict === "could-not-run")) {
+      assert.ok(check.reason, `${check.check_id} states why it has no verdict`);
+    }
+    assert.ok(cell.evidence_paths.length >= 3, "the cell's own citation list carries every graded check's evidence");
+    for (const cited of cell.evidence_paths) assert.ok(existsSync(cited), `cited evidence exists on disk: ${cited}`);
+    t.diagnostic(`cell_checks=${cell.checks.map((check) => `${check.check_id}:${check.verdict}:${check.source}`).join(",")}`);
+  });
+
+  await t.test("the planted verify check passes while the oracle's raw exit code is 1 — the verdict is not the exit code", () => {
+    assert.equal(planted.oracle.exit_code, 1, "the real oracle reports the planted drift with exit 1");
+    assert.equal(exitCodeVerdict(planted.oracle.exit_code), "fail", "exit 1 maps to fail, which is the trap");
+    assert.equal(verifyPart.verdict, "pass", `the check passes on the report's own evidence: ${JSON.stringify(verifyPart.blocks)}`);
+    assert.equal(cell.process_exit_code, 1, "the raw exit code travels beside the verdict as a diagnostic");
+    assert.notEqual(cell.process_exit_code === 1 ? "pass" : null, null);
+    assert.equal(exitCodeVerdict(cell.process_exit_code), "fail");
+    assert.equal(cell.checks.find((check) => check.check_id === "verify").verdict, "pass", "the recorded check disagrees with the exit mapping on purpose");
+    // And the clean twin proves the same independence in the other direction: exit 0, and a pass that
+    // comes from `clean_project_failed === false` rather than from the zero.
+    assert.equal(clean.oracle.exit_code, 0, "the clean twin's oracle exits 0");
+    assert.equal(clean.report.clean_project_failed, false, "the pass cites the report body, not the exit status");
+    t.diagnostic(`exit_code_independence=planted:exit1->pass clean:exit0->clean`);
+  });
+
+  await t.test("a check that claims pass with no citation is downgraded to could-not-run, never trusted", () => {
+    const unevidenced = graders.gradeCell({
+      harness: "claude-code",
+      track: "pinned",
+      installation,
+      invocation_id: planted.invocation.invocationId,
+      process_exit_code: 0,
+      parts: [
+        graders.part({ check_id: "command_list", verdict: "pass", evidence_paths: [] }),
+        graders.part({ check_id: "status", verdict: "pass", evidence_paths: ["a"] }),
+        verifyPart,
+        questionPart,
+      ],
+    });
+    const downgraded = unevidenced.checks.find((check) => check.check_id === "command_list");
+    assert.equal(downgraded.verdict, "could-not-run", "a pass with nothing behind it is not a pass");
+    assert.equal(downgraded.reason, "check-unevidenced");
+    assert.equal(unevidenced.verdict, "could-not-run", "and the aggregate inherits the downgrade");
+    assert.ok(unevidenced.block_reasons.some((entry) => entry.reason === "check-unevidenced" && entry.check_id === "command_list"));
+  });
+
+  await t.test("a non-pass check with no reason is refused, so no verdict travels unexplained", () => {
+    const reasonless = graders.gradeCell({
+      harness: "claude-code",
+      track: "pinned",
+      installation,
+      invocation_id: planted.invocation.invocationId,
+      process_exit_code: 0,
+      parts: [
+        graders.part({ check_id: "command_list", verdict: "fail", evidence_paths: ["a"] }),
+        graders.part({ check_id: "status", verdict: "pass", evidence_paths: ["a"] }),
+        verifyPart,
+        questionPart,
+      ],
+    });
+    const repaired = reasonless.checks.find((check) => check.check_id === "command_list");
+    assert.equal(repaired.reason, "check-reason-absent");
+    assert.equal(reasonless.verdict, "could-not-run");
+  });
+});
