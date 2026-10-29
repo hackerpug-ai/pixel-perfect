@@ -31,8 +31,17 @@ const IMAGE_MAGIC = Object.freeze([
   { format: "gif", bytes: [0x47, 0x49, 0x46, 0x38] },
   { format: "webp", bytes: [0x52, 0x49, 0x46, 0x46], tail: [0x57, 0x45, 0x42, 0x50] },
 ]);
-// Any of these in a request or a captured byte stream means image input reached a model.
-const IMAGE_MARKERS = Object.freeze([/"type"\s*:\s*"image"/, /"media_type"\s*:\s*"image\//, /data:image\//]);
+// Any of these in a request or a captured byte stream means image input reached a model. The last
+// one covers the tool-call dimension: a Read/View call naming a screenshot lives in the captured
+// bytes, not in a separate list, so scanning the bytes is what makes tool calls observable.
+const IMAGE_MARKERS = Object.freeze([
+  /"type"\s*:\s*"image"/,
+  /"media_type"\s*:\s*"image\//,
+  /data:image\//,
+  /"[^"]+\.(?:png|jpe?g|webp|gif)"/i,
+]);
+// A file larger than this is not a request log or a report; it is skipped rather than parsed.
+const MARKER_SCAN_LIMIT = 1 << 20;
 const HEX64 = /^[0-9a-f]{64}$/;
 
 function magicFormat(bytes) {
@@ -80,7 +89,7 @@ export function imageFilesInTree({ root, manifest }) {
     if (sha256Hex(bytes) !== sha) unreadable.push({ path, at: rel, why: "digest-mismatch" });
     const format = magicFormat(bytes.subarray(0, 16));
     if (format) found.push({ kind: "image-magic", path, at: rel, detail: format });
-    if (TEXT_EXTENSION.test(rel)) {
+    if (TEXT_EXTENSION.test(rel) && bytes.length <= MARKER_SCAN_LIMIT) {
       const text = bytes.toString("utf8");
       for (const marker of IMAGE_MARKERS) {
         if (marker.test(text)) found.push({ kind: "image-block-in-file", path, at: rel, detail: String(marker) });

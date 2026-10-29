@@ -1520,7 +1520,7 @@ writeFileSync(join(root, "judge-requests.json"), JSON.stringify([{ sequence: 0, 
           evidence: {
             process_exit_code: deniedGrade.cell.process_exit_code,
             exit_code_mapping: exitCodeVerdict(deniedGrade.cell.process_exit_code),
-            denial: { ...deniedGrade.cell.denied_tool_call, target: deniedGrade.cell.denied_tool_call.target },
+            denial: deniedGrade.cell.denied_tool_call,
             capture_sha256: deniedStaged.record.stdout.sha256,
             stream_provenance: { base_capture_sha256: archived.sha256, shape: "permission_denials result event" },
           },

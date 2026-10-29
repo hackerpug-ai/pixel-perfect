@@ -937,7 +937,7 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
             checked_names: keyless.decision.credential.checked,
             env_secret_names: survivingNames,
             model_request_count: keylessRecord.model_request_count,
-            child_ran: existsSync(markerPath) === false ? false : true,
+            child_ran: existsSync(markerPath),
             capture_sha256: keylessRecord.stdout.sha256,
           },
         },
