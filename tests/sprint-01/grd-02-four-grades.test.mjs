@@ -1161,3 +1161,240 @@ test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
   t.diagnostic(`stream_table=${table.id} coverage=${coverage.verdict} capture_missing=${real.missing.join(",")}`);
   t.diagnostic(`stream_not_executed=${report.not_executed.map((entry) => entry.leg).join(",")}`);
 });
+
+// ===========================================================================================
+// T7 — the fixture-grader: ONE cell, FOUR check records, and no exit code anywhere near them.
+//
+// This block grades the cell rather than the individual adapters. The four parts come from what
+// exists on this branch: the real keyless oracle (verify), the archived real claude-code stdout
+// (question boundary), the product's own status sample (status) and a real captured command list
+// when a `claude` CLI is present. A lane whose evidence only a hosted run can produce is recorded
+// `not-executed` with its reason and owner — never a pass, never an invented failure.
+// ===========================================================================================
+test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
+  const graders = await import("../../test/harness/graders/index.mjs");
+  const grades = await import("../../test/harness/grade/index.mjs");
+  const stream = await import("../../test/harness/stream/index.mjs");
+  const { runStatusCase, runVerifyCase } = await import("./flow-runner.mjs");
+  const { mkdirSync: mkdir, writeFileSync: writeFile } = await import("node:fs");
+  const installation = stream.provisionalInstallation("2.1.291");
+  const OUT = join(REPORT_DIR, "grd-02-t7-cell");
+  const cleanup = [];
+  t.after(() => {
+    for (const dir of cleanup) rmSync(dir, { recursive: true, force: true });
+  });
+  t.diagnostic(`cell_grades=test/harness/graders/fixture-grader.mjs report=test/harness/grade/records.mjs out=${OUT}`);
+
+  // ---- the four lanes, each from real local evidence, plus the two a hosted run owns --------
+  const plantedRun = runVerifyCase("verify-button-drift", { keep: true });
+  const cleanRun = runVerifyCase("verify-clean", { keep: true });
+  cleanup.push(plantedRun.dir, cleanRun.dir);
+  const verifyPart = graders.gradeVerifyCheck({
+    planted: { caseManifest: loadCase("verify-button-drift"), invocation: plantedRun.invocation },
+    clean: { caseManifest: loadCase("verify-clean"), invocation: cleanRun.invocation },
+  });
+
+  const statusCase = runStatusCase("status-a");
+  // The product's own documented reply, not a transcription of it, graded against the SEEDED facts.
+  const statusPart = graders.gradeStatusCheck({ reply: statusSample(), expectedFacts: statusCase.facts, evidencePaths: [join(PLUGIN_ROOT, "workflows", "status.md")] });
+
+  const table = stream.loadTable({ version: "2.1.291" });
+  const ARCHIVE = join(ROOT, "test/harness/stream/captures/claude-code-stream-probe.capture.json");
+  const archived = stream.readArchived(ARCHIVE);
+  const realEvents = stream.normalise({ bytes: archived.bytes, table, invocation_id: archived.record.invocation_id }).events;
+  const questionPart = graders.gradeQuestionCheck({
+    record: archived.record,
+    events: realEvents,
+    ask_policy: "ask-nothing",
+    evidencePaths: [ARCHIVE, join(ROOT, "test/harness/stream/captures", archived.record.stdout_path ?? "claude-code-stream-probe.stdout.bin")],
+  });
+
+  // The command list owns a real capture only when a CLI is on PATH; the harness-smoke credential is
+  // not involved (no model call), but a machine without `claude` cannot produce the bytes at all.
+  const commandPart = claudeAvailable()
+    ? graders.notExecutedPart({
+        check_id: "command_list",
+        reason: "no captured `plugin details` bytes are archived on this branch; the local CLI is installed but the list is captured on the hosted runner",
+        owner: "T11",
+      })
+    : graders.notExecutedPart({ check_id: "command_list", reason: "no claude CLI on PATH to capture the command list", owner: "T11" });
+
+  // The roots the cell's citations may live in: the pair's own invocation directories, plus the repo
+  // root for the archived stream capture and the product's own workflow document they cite.
+  const evidence_roots = [plantedRun.dir, cleanRun.dir, ROOT];
+  const cell = graders.gradeCell({
+    harness: HARNESS,
+    track: "pinned",
+    installation,
+    invocation_id: plantedRun.invocation.invocationId,
+    process_exit_code: plantedRun.oracle.exit_code,
+    parts: [commandPart, statusPart, verifyPart, questionPart],
+    evidence_roots,
+  });
+
+  await t.test("the grader assembles exactly four check records, in order, each citing its own source", () => {
+    assert.deepEqual(
+      cell.checks.map((check) => check.check_id),
+      graders.CHECK_IDS,
+      "one record per check id, in the order the cell reports them",
+    );
+    assert.equal(cell.checks.length, 4, "no check may be omitted from the array");
+    for (const check of cell.checks) {
+      assert.equal(check.source, "files-and-event-stream", `${check.check_id} cites the files-and-stream source`);
+      assert.ok(["pass", "fail", "could-not-run"].includes(check.verdict), `${check.check_id} carries a binary verdict`);
+      assert.ok(check.verdict === "pass" ? check.reason === null : typeof check.reason === "string" && check.reason.length > 0, `${check.check_id} names its reason`);
+      assert.ok(Array.isArray(check.evidence_paths), `${check.check_id} carries its evidence list`);
+    }
+    assert.equal(verifyPart.verdict, "pass", `the real keyless oracle pair grades verify pass: ${JSON.stringify(verifyPart.blocks)}`);
+    assert.equal(questionPart.verdict, "pass", "the archived real stream asks nothing, so ask-nothing passes");
+    assert.equal(questionPart.question_count, 0, "zero question events, measured not asserted");
+    // The status lane compares the product's own documented reply against THIS case's seeded facts, so
+    // it fails and names the facts that differ. A grader that passed here would be echoing the reply.
+    assert.equal(statusPart.verdict, "fail", `the product sample is a different project, so its counts cannot satisfy status-a: ${JSON.stringify(statusPart.blocks)}`);
+    assert.equal(statusPart.reason, "status-facts-absent");
+    assert.ok(statusPart.facts.missing.length > 0, "the status check names which seeded facts the reply does not state");
+    // The two lanes that need a model are could-not-run WITH a reason and an owner; the cell may not
+    // reach pass on a lane nobody graded.
+    assert.ok(cell.verdict !== "pass", "a cell with an ungraded lane can never pass");
+    assert.equal(cell.verdict, "could-not-run", `the aggregate is could-not-run, not fail: ${JSON.stringify(cell.block_reasons)}`);
+    for (const check of cell.checks.filter((entry) => entry.verdict === "could-not-run")) {
+      assert.ok(check.reason, `${check.check_id} states why it did not run`);
+    }
+    t.diagnostic(`cell_verdicts=${cell.checks.map((c) => `${c.check_id}:${c.verdict}`).join(",")}`);
+  });
+
+  await t.test("the aggregate is could-not-run before fail before pass, and every constituent survives", () => {
+    // A pass part cites a file the pair's own invocation produced; nothing here invents a citation.
+    const cited = plantedRun.bound_path;
+    const order = [
+      { parts: [verifyPart, questionPart, statusPart, commandPart], expected: "could-not-run" },
+      { parts: [verifyPart, questionPart, graders.part({ check_id: "status", verdict: "fail", reason: "status-facts-absent", evidence_paths: [cited] }), commandPart], expected: "could-not-run" },
+      { parts: [verifyPart, questionPart, graders.part({ check_id: "status", verdict: "fail", reason: "status-facts-absent", evidence_paths: [cited] }), graders.part({ check_id: "command_list", verdict: "pass", evidence_paths: [cited] })], expected: "fail" },
+      { parts: [verifyPart, questionPart, graders.part({ check_id: "status", verdict: "pass", evidence_paths: [cited] }), graders.part({ check_id: "command_list", verdict: "pass", evidence_paths: [cited] })], expected: "pass" },
+    ];
+    for (const { parts, expected } of order) {
+      const built = graders.gradeCell({ harness: HARNESS, track: "pinned", installation, invocation_id: plantedRun.invocation.invocationId, process_exit_code: 0, parts, evidence_roots });
+      assert.equal(built.verdict, expected, `four parts graded ${parts.map((p) => p.verdict).join("/")} aggregate to ${expected}`);
+      assert.equal(built.checks.length, 4, "the constituents are preserved, not collapsed");
+      for (const part of parts) {
+        const kept = built.checks.find((check) => check.check_id === part.check_id);
+        assert.equal(kept.verdict, part.verdict, `${part.check_id} keeps its own verdict in the aggregate`);
+      }
+      for (const reason of built.block_reasons.filter((entry) => entry.verdict !== "pass")) {
+        assert.ok(reason.check_id, `block ${reason.reason} names the check that produced it`);
+      }
+    }
+  });
+
+  await t.test("a lane that produced nothing is filled could-not-run check-set-incomplete, never a pass", () => {
+    // The fail-closed filler: a cell built from fewer than four parts must still report all four ids,
+    // and every absent id must be could-not-run. A filler that invents a pass would be one edit away
+    // from reporting a lane nobody graded as a pass, so it is pinned here rather than assumed.
+    const cited = plantedRun.bound_path;
+    const three = graders.gradeCell({
+      harness: HARNESS,
+      track: "pinned",
+      installation,
+      invocation_id: plantedRun.invocation.invocationId,
+      process_exit_code: 0,
+      parts: [verifyPart, questionPart, graders.part({ check_id: "status", verdict: "pass", evidence_paths: [cited] })],
+      evidence_roots,
+    });
+    assert.equal(three.checks.length, 4, "an absent lane is still reported, not dropped from the array");
+    assert.deepEqual(three.checks.map((check) => check.check_id), graders.CHECK_IDS);
+    const filler = three.checks.find((check) => check.check_id === "command_list");
+    assert.equal(filler.verdict, "could-not-run", "a lane that produced nothing is not a pass");
+    assert.equal(filler.reason, "check-set-incomplete");
+    assert.deepEqual(filler.evidence_paths, [], "the filler cites nothing, so it cannot launder a citation in");
+    assert.equal(three.verdict, "could-not-run", "and the aggregate inherits it");
+    assert.ok(three.block_reasons.some((entry) => entry.check_id === "command_list" && entry.reason === "check-set-incomplete" && entry.missing === "command_list"));
+
+    const none = graders.gradeCell({ harness: HARNESS, track: "pinned", installation, invocation_id: plantedRun.invocation.invocationId, process_exit_code: 0, parts: [], evidence_roots });
+    assert.equal(none.checks.length, 4, "a cell with no parts at all still reports four lanes");
+    for (const check of none.checks) {
+      assert.equal(check.verdict, "could-not-run", `${check.check_id} is could-not-run when nothing ran`);
+      assert.equal(check.reason, "check-set-incomplete");
+    }
+    assert.equal(none.verdict, "could-not-run", "nothing at all is not a pass");
+    t.diagnostic(`incomplete_filler=${three.checks.map((check) => `${check.check_id}:${check.verdict}`).join(",")}`);
+  });
+
+  await t.test("a question spliced into the real verify stream fails that check at its offset, and no pass is launderable", () => {
+    mkdir(OUT, { recursive: true });
+    const questionLine = JSON.stringify({ type: "user_choice", session_id: "spliced", questions: [{ question: "which platform?" }] });
+    const splicedBytes = Buffer.concat([archived.bytes, Buffer.from(`${questionLine}\n`)]);
+    const spliced = stream.normalise({ bytes: splicedBytes, table, invocation_id: archived.record.invocation_id });
+    assert.equal(spliced.tiling.ok, true, "the splice tiles exactly once, so the offset really is a byte offset");
+    const questionEvent = spliced.events.find((event) => event.classification === "question");
+    assert.ok(questionEvent, "the spliced USER_CHOICE maps to a question event");
+    writeFile(join(OUT, "question-splice.stdout.bin"), splicedBytes);
+    const splicedRecord = {
+      ...archived.record,
+      invocation_id: "question-splice",
+      stdout: { byte_length: splicedBytes.length, sha256: sha256Hex(splicedBytes) },
+      observations: [],
+      evidence_paths: [join(OUT, "question-splice.stdout.bin")],
+    };
+    writeFile(join(OUT, "question-splice.capture.json"), `${JSON.stringify(splicedRecord, null, 2)}\n`, "utf8");
+    assert.equal(sha256Hex(readFileSync(join(OUT, "question-splice.stdout.bin"))), splicedRecord.stdout.sha256, "the spliced capture's hash is the bytes on disk");
+
+    const failing = graders.gradeQuestionCheck({ record: splicedRecord, events: spliced.events, ask_policy: "ask-nothing", evidencePaths: splicedRecord.evidence_paths });
+    assert.equal(failing.verdict, "fail", "a question in an ask-nothing stream fails that check");
+    assert.equal(failing.reason, "question-in-ask-nothing");
+    assert.deepEqual(failing.question_offsets, [questionEvent.stream_offset], "the failure cites the question's own byte offset");
+    assert.equal(questionEvent.stream_offset, archived.bytes.length, "the question sits where the splice put it");
+
+    const laundered = graders.gradeCell({
+      harness: HARNESS,
+      track: "pinned",
+      installation,
+      invocation_id: splicedRecord.invocation_id,
+      process_exit_code: 0,
+      parts: [commandPart, statusPart, verifyPart, failing],
+      evidence_roots: [plantedRun.dir, cleanRun.dir, ROOT],
+    });
+    assert.equal(laundered.verdict, "could-not-run");
+    assert.equal(laundered.checks.find((check) => check.check_id === "question_before_expensive_work").verdict, "fail", "an exit code of 0 cannot lift a failing check");
+    t.diagnostic(`splice_sha256=${splicedRecord.stdout.sha256} offset=${questionEvent.stream_offset}`);
+  });
+
+  await t.test("a generic status reply and an incomplete captured list each fail their own check", () => {
+    const generic = graders.gradeStatusCheck({ reply: "Done — everything looks good.", expectedFacts: statusCase.facts, evidencePaths: ["reply"] });
+    assert.equal(generic.verdict, "fail", "a generic acknowledgement is not a status report");
+    assert.equal(generic.reason, "status-facts-absent");
+    assert.deepEqual(generic.facts.missing.sort(), ["gates.atoms", "gates.molecules", "gates.screens", "inventory.atoms", "inventory.molecules", "inventory.screens", "phase", "platform"].sort());
+
+    const captured = "Component inventory\n  Skills (11)  add-platform, assimilate, build, init, refine, research, scaffold, status, verify, wireframe";
+    const list = graders.gradeCommandListCheck({ capturedText: captured, pluginRoot: PLUGIN_ROOT, evidencePaths: ["captured-list"] });
+    assert.equal(list.verdict, "fail", "a list missing a declared command fails");
+    assert.equal(list.reason, "command-list-incomplete");
+    assert.ok(list.blocks[0].missing.includes("evolve"), `the missing command is named: ${JSON.stringify(list.blocks[0])}`);
+  });
+
+  await t.test("the hosted four-pass cell is not-executed here, with a reason and an owner", () => {
+    const ungraded = cell.checks.filter((check) => check.verdict === "could-not-run");
+    assert.ok(ungraded.length > 0, "at least one lane needs the hosted credential");
+    for (const check of ungraded) {
+      const detail = cell.block_reasons.find((entry) => entry.check_id === check.check_id && entry.verdict === "could-not-run");
+      assert.ok(detail?.owner, `${check.check_id} names the task that owns its hosted lane`);
+      assert.equal(detail.not_executed, true, `${check.check_id} is recorded as not executed, not as a failure`);
+    }
+    t.diagnostic(`not_executed_lanes=${ungraded.map((check) => check.check_id).join(",")} owner=T11`);
+  });
+
+  await t.test("the four checks land as four separate grade records that read back off disk", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "pp-grades-t7-"));
+    cleanup.push(dir);
+    const written = grades.writeCellGrades({ dir, cell });
+    assert.equal(written.receipts.length, 4, "one grade file per check");
+    assert.deepEqual(written.receipts.map((receipt) => receipt.check_id), graders.CHECK_IDS);
+    for (const receipt of written.receipts) {
+      assert.equal(receipt.ok, true, `${receipt.check_id} read back from disk`);
+      assert.equal(receipt.read_back_verdict, receipt.verdict, `${receipt.check_id} reads back the verdict it was given`);
+      const reread = grades.readGrade(receipt.path);
+      assert.equal(reread.check_id, receipt.check_id, "the file on disk carries its own check identity");
+    }
+    assert.equal(new Set(written.receipts.map((receipt) => receipt.path)).size, 4, "no grade file overwrites another");
+    assert.equal(grades.aggregate(cell), cell.verdict, "the stored verdict is the aggregate of its own checks");
+  });
+});
