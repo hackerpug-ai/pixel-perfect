@@ -261,15 +261,35 @@ export function runStatusCase(caseId) {
   return result;
 }
 
+/**
+ * The only fixture shape this runner builds: a fresh empty directory, plus the paths that
+ * must not appear in it. A manifest declaring anything else — a files map, a seeded
+ * project — is refused rather than graded as empty, so the declaration can never claim
+ * content the runner does not materialize.
+ */
+export function assertEmptyDirFixture(caseManifest) {
+  const caseId = caseManifest?.case_id;
+  const fixture = caseManifest?.fixture;
+  if (fixture?.kind !== "fresh-empty-dir") {
+    throw new CaseInvalid(caseId, `fixture kind ${JSON.stringify(fixture?.kind)} is not fresh-empty-dir`);
+  }
+  const unknown = Object.keys(fixture).filter((key) => !["kind", "must_not_contain"].includes(key));
+  if (unknown.length > 0) {
+    throw new CaseInvalid(
+      caseId,
+      `fixture declares ${unknown.join(", ")}, which this runner never materializes (allowed: kind, must_not_contain)`,
+    );
+  }
+  return fixture;
+}
+
 /** One first-question case: a genuinely empty project directory. */
 export function runFirstQuestionCase(caseId) {
   const caseManifest = loadCase(caseId);
   // This runner builds a fresh, empty directory and nothing else, so a case
-  // declaring any other fixture kind cannot be graded here — it is refused, not
-  // silently graded as empty.
-  if (caseManifest.fixture?.kind !== "fresh-empty-dir") {
-    throw new CaseInvalid(caseId, `fixture kind ${JSON.stringify(caseManifest.fixture?.kind)} is not fresh-empty-dir`);
-  }
+  // declaring any other fixture kind or any content cannot be graded here — it is
+  // refused, not silently graded as empty.
+  assertEmptyDirFixture(caseManifest);
   const invocation = freshInvocationDir(caseId);
   const boundPath = bindReportPath(caseManifest, invocation.dir);
   const listing = listDir(invocation.dir);

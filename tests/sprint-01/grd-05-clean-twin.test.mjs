@@ -16,6 +16,7 @@ import test from "node:test";
 
 import { CASES_DIR, PROJECT_DIR, loadCase } from "../../test/harness/kit/case-loader.mjs";
 import {
+  assertEmptyDirFixture,
   cleanTwinCase,
   diffFacts,
   falsePositiveClean,
@@ -128,6 +129,14 @@ test("FLOW-GRD-05-CLEAN-TWIN", async (t) => {
     assert.equal(run.caseManifest.fixture.kind, "fresh-empty-dir", "the declared fixture kind is the one the runner builds");
     assert.deepEqual(run.listing, [], "the fixture directory is empty");
     assert.deepEqual(run.present, [], "no requirements, goal, platform, package or design manifest");
+    // The declaration may not claim content the runner never materializes: the same
+    // guard the runner applies refuses a fixture carrying a files map.
+    assert.equal(assertEmptyDirFixture(run.caseManifest), run.caseManifest.fixture, "the shipped declaration passes the guard");
+    assert.throws(
+      () => assertEmptyDirFixture({ ...run.caseManifest, fixture: { ...run.caseManifest.fixture, files: { "package.json": "seeded" } } }),
+      /fixture declares files, which this runner never materializes/,
+      "a fixture declaring content the runner ignores is refused, not graded as empty",
+    );
     assert.equal(run.caseManifest.ask_policy, "must-ask");
     assert.equal(run.caseManifest.check_id, "stop-at-first-question");
     assert.equal(run.caseManifest.command, "init");

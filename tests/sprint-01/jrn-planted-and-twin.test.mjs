@@ -11,11 +11,13 @@
 //      or dispatch `harness-eval` ourselves), download the attempt-qualified
 //      verify-reports artifact, and require its oracle transcript and both reports
 //      to agree with the case manifests;
-//   3. honest not-executed: with no live run reachable, the live leg is recorded as
-//      `not-executed` with its reason — never a silent pass, never a hard failure.
-//      T7 owns the dispatch (post-integration obligation obl-FLOW-JRN-PLANTED-AND-TWIN),
-//      so until .github/workflows/harness-eval.yml is on the branch the live leg cannot
-//      be executed here and says so.
+//   3. honest not-executed for exactly ONE cause: the harness-eval workflow not being on
+//      this branch, which T7 lands (post-integration obligation
+//      obl-FLOW-JRN-PLANTED-AND-TWIN). Only that cause may defer, and it carries its
+//      reason. Every other way the live leg can fail to start — gh unauthenticated, the
+//      dispatch refused, the run list unreadable, no run appearing — is a failure to
+//      execute the leg and goes RED. A catch-all deferral would let T7's gate step stay
+//      green while the journey's THEN was never observed.
 
 import assert from "node:assert/strict";
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
@@ -70,11 +72,20 @@ export function readOracleTranscript(dir) {
   return null;
 }
 
-function resolveLiveRun() {
-  if (!existsSync(path.join(REPO_ROOT, WORKFLOW_PATH))) {
-    return { ok: false, reason: `no ${WORKFLOW_PATH} to dispatch — the harness-eval workflow is not on this branch (T7 owns it)` };
+export function resolveLiveRun({
+  hasWorkflow = () => existsSync(path.join(REPO_ROOT, WORKFLOW_PATH)),
+  gh: runGh = gh,
+} = {}) {
+  // The one legitimate deferral: T7 has not landed the workflow yet, so there is nothing
+  // to dispatch. Everything below is a genuine failure and must not reach the green branch.
+  if (!hasWorkflow()) {
+    return {
+      ok: false,
+      deferral: true,
+      reason: `no ${WORKFLOW_PATH} to dispatch — the harness-eval workflow is not on this branch (T7 owns it)`,
+    };
   }
-  const auth = gh(["auth", "status"]);
+  const auth = runGh(["auth", "status"]);
   if (auth.status !== 0) return { ok: false, reason: "gh is not authenticated" };
 
   const suppliedRun = process.env.HARNESS_EVAL_RUN_ID;
@@ -82,15 +93,29 @@ function resolveLiveRun() {
     return { ok: true, runId: suppliedRun, attempt: process.env.HARNESS_EVAL_RUN_ATTEMPT || "1", dispatched: false };
   }
 
-  const dispatch = gh(["workflow", "run", "harness-eval", "--repo", REPO]);
+  const dispatch = runGh(["workflow", "run", "harness-eval", "--repo", REPO]);
   if (dispatch.status !== 0) {
     return { ok: false, reason: `gh workflow run harness-eval failed: ${(dispatch.stderr || "").trim()}` };
   }
-  const list = gh(["run", "list", "--repo", REPO, "--workflow", "harness-eval", "--limit", "1", "--json", "databaseId,attempt,status"]);
+  const list = runGh(["run", "list", "--repo", REPO, "--workflow", "harness-eval", "--limit", "1", "--json", "databaseId,attempt,status"]);
   if (list.status !== 0) return { ok: false, reason: `gh run list failed: ${(list.stderr || "").trim()}` };
   const [latest] = JSON.parse(list.stdout || "[]");
   if (!latest) return { ok: false, reason: "no harness-eval run appeared after dispatch" };
   return { ok: true, runId: String(latest.databaseId), attempt: String(latest.attempt || 1), dispatched: true, status: latest.status };
+}
+
+/**
+ * Grade the live leg's resolution. Only `deferral: true` — the missing-workflow cause —
+ * may record not-executed; any other failure to start the leg fails the check.
+ */
+export function gradeLiveRun(run, emitDiagnostic) {
+  if (run.ok) return;
+  if (run.deferral) {
+    assert.ok(run.reason && run.reason.length > 0, "a deferred live leg always carries its reason");
+    emitDiagnostic(`not-executed leg=live-dispatched-run owner=T7 obligation=obl-FLOW-JRN-PLANTED-AND-TWIN reason=${run.reason}`);
+    return;
+  }
+  assert.fail(`live-dispatched-run could not execute: ${run.reason}`);
 }
 
 function downloadVerifyReports(runId, attempt) {
@@ -144,16 +169,53 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
     }
   });
 
-  // ---- Part 2/3: the live journey, or an honest not-executed ---------------
+  // ---- Part 2/3: the live journey, or the one legitimate not-executed -------
+  await t.test("only the missing workflow defers; any other failure to dispatch goes red", () => {
+    // Control 1: a dispatch failure that is NOT the missing-workflow case. The workflow
+    // is present, gh answers, and the dispatch is refused — nothing this leg owns is
+    // absent, so it must fail rather than quietly defer.
+    const dispatchFailed = resolveLiveRun({
+      hasWorkflow: () => true,
+      gh: (args) =>
+        args[0] === "auth"
+          ? { status: 0, stdout: "", stderr: "" }
+          : { status: 1, stdout: "", stderr: "could not find any workflows named harness-eval" },
+    });
+    assert.equal(dispatchFailed.ok, false);
+    assert.equal(dispatchFailed.deferral, undefined, "a refused dispatch is not a deferral");
+    const emitted = [];
+    assert.throws(
+      () => gradeLiveRun(dispatchFailed, (m) => emitted.push(m)),
+      /live-dispatched-run could not execute: gh workflow run harness-eval failed/,
+      "a genuine dispatch failure must fail the check, not record not-executed",
+    );
+    assert.deepEqual(emitted, [], "a failed dispatch emits no not-executed diagnostic");
+
+    // Control 2: gh unauthenticated, likewise not a deferral.
+    const unauthenticated = resolveLiveRun({ hasWorkflow: () => true, gh: () => ({ status: 1, stdout: "", stderr: "" }) });
+    assert.equal(unauthenticated.deferral, undefined);
+    assert.throws(() => gradeLiveRun(unauthenticated, () => {}), /gh is not authenticated/);
+
+    // Control 3: the one legitimate cause still defers, with its reason.
+    const absent = resolveLiveRun({ hasWorkflow: () => false, gh: () => assert.fail("must not call gh when the workflow is absent") });
+    assert.equal(absent.ok, false);
+    assert.equal(absent.deferral, true);
+    const deferred = [];
+    gradeLiveRun(absent, (m) => deferred.push(m));
+    assert.equal(deferred.length, 1);
+    assert.match(deferred[0], /^not-executed leg=live-dispatched-run owner=T7 .*reason=no \.github\/workflows\/harness-eval\.yml to dispatch/);
+
+    // A deferral with no reason cannot hide behind the marker.
+    assert.throws(() => gradeLiveRun({ ok: false, deferral: true, reason: "" }, () => {}), /always carries its reason/);
+  });
+
   await t.test("one live dispatched run: oracle precheck, both reports, distinct invocation_ids", (tt) => {
     const run = resolveLiveRun();
     if (!run.ok) {
-      // The live leg cannot start at T4: T7 lands the workflow and the report writer and
-      // owns the dispatch. Recorded as an explicit not-executed observation with its
-      // reason — not a pass (nothing live was observed) and not a failure (nothing this
-      // task owns is broken). The three locally-provable legs above carry the row.
-      tt.diagnostic(`not-executed leg=live-dispatched-run owner=T7 obligation=obl-FLOW-JRN-PLANTED-AND-TWIN reason=${run.reason}`);
-      assert.ok(run.reason.length > 0, "a not-executed leg always carries its reason");
+      // Red unless the sole legitimate cause above applies: T7 has not landed the
+      // workflow, so there is nothing to dispatch and the leg records not-executed with
+      // its owner and obligation. This task's own failures still fail the check.
+      gradeLiveRun(run, (m) => tt.diagnostic(m));
       return;
     }
     const download = downloadVerifyReports(run.runId, run.attempt);
