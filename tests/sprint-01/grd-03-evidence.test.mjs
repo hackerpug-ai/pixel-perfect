@@ -946,6 +946,8 @@ test("FLOW-GRD-03-FILES-AND-STREAM", async (t) => {
     "the validator refuses the archived capture: version-not-qualified (2.1.312 != 2.1.291) and 3 unobserved facts",
     "subtype success + is_error true on exit 1 grades could-not-run, never pass and never its exit-code mapping",
   );
+  const { loadPins } = await import("../../test/harness/pins.mjs");
+  artifact2.provenance.pins_sha256 = loadPins().pins_sha256;
   artifact2.provenance.capture_sha256 = archived.sha256;
   artifact2.provenance.capture_bytes = archived.bytes.length;
   artifact2.provenance.events = real.events.length;
@@ -963,6 +965,15 @@ test("FLOW-GRD-03-FILES-AND-STREAM", async (t) => {
     },
   };
   writeFileSync(ARTIFACT, `${JSON.stringify(merged, null, 2)}\n`, "utf8");
+
+  // The product-owned success target: the report this flow publishes, read back off disk. Its
+  // pins_sha256 binds it to this tree's manifest bytes and its capture hash to the bytes that were
+  // graded, so a report from a different tree or a different capture is refused rather than read.
+  const published = JSON.parse(readFileSync(ARTIFACT, "utf8"));
+  assert.match(published.stream.provenance.pins_sha256, /^[0-9a-f]{64}$/, "the published report carries a 64-hex pins_sha256 identity");
+  assert.equal(published.stream.provenance.pins_sha256, loadPins().pins_sha256, "the report binds to this tree's pins manifest");
+  assert.equal(published.stream.provenance.capture_sha256, archived.sha256, "the report cites the capture it graded");
+  assert.notEqual(published.stream.controls.length, 0, "the report carries the controls the verdicts rest on");
 
   t.diagnostic(`stream_capture_sha256=${archived.sha256} events=${real.events.length} unknown=${real.unknown_lines}`);
   t.diagnostic(`stream_tiling=${real.tiling.ok} lossless=${intact.ok} validator=${report.verdict}/${report.reason}`);
