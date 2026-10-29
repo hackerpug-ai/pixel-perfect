@@ -17,12 +17,15 @@
 // `--expect green` passes when the legitimate pair really detected / really was clean.
 // `observed` reports which of those actually happened.
 
-import { mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  CaseInvalid,
   CasePathRefused,
   applyFactsMutation,
   bindReportPath,
@@ -54,17 +57,25 @@ export function observedOutcome(caseManifest, oracleRun) {
 /**
  * One real verify invocation: bind the declared path, materialize a fresh copy,
  * run the keyless oracle, write the report at the bound path only.
+ *
+ * `oracle` is injectable for exactly one purpose: the derivation control in
+ * `grd-04-named-path.test.mjs`, which proves the report's outcome is computed from
+ * the oracle's own exit and drift list. Every detection assertion uses the real,
+ * keyless `verify-catalog.mjs`.
  */
-export function runVerifyCase(caseId, { keep = false } = {}) {
+export function runVerifyCase(caseId, { keep = false, oracle = runOraclePrecheck } = {}) {
   const caseManifest = loadCase(caseId);
   const invocation = freshInvocationDir(caseId);
   // Binding happens before any copy or write, so a refusal leaves the dir empty.
   const boundPath = bindReportPath(caseManifest, invocation.dir);
   materialize(caseManifest, invocation);
   const protectedBefore = protectedSnapshot(invocation.dir);
-  const oracleRun = runOraclePrecheck(invocation.dir, { platform: caseManifest.platform });
+  const oracleRun = oracle(invocation.dir, { platform: caseManifest.platform });
   const evidence = observedEvidence(invocation.dir, caseManifest, oracleRun);
   const observed = observedOutcome(caseManifest, oracleRun);
+  // Read off the oracle's own drift list, never echoed back from the manifest.
+  const observedDefectKey =
+    observed === "defect-detected" ? evidence.drifted_keys.find((key) => key === caseManifest.defect_key) ?? null : null;
 
   const report = {
     schema_version: "verify-report/v1",
@@ -74,7 +85,7 @@ export function runVerifyCase(caseId, { keep = false } = {}) {
     track: caseManifest.track,
     verification_scope: caseManifest.verification_scope,
     expected_defect_key: caseManifest.defect_key,
-    observed_defect_key: observed === "defect-detected" ? caseManifest.defect_key : null,
+    observed_defect_key: observedDefectKey,
     observed_verify_outcome: observed,
     missed_defect: observed === "missed-defect",
     clean_project_failed: observed === "false-positive",
@@ -92,6 +103,7 @@ export function runVerifyCase(caseId, { keep = false } = {}) {
     invocation,
     bound_path: boundPath,
     report_relative_path: caseManifest.report_relative_path,
+    overlay_changed: invocation.overlay_changed,
     reports_listing: listDir(path.join(invocation.dir, "reports")),
     report,
     report_sha256: sha256File(boundPath),
@@ -160,6 +172,51 @@ export function missingPlantedReport() {
   return result;
 }
 
+/**
+ * AC-1's GIVEN: download the run's attempt-qualified `verify-reports` artifact and
+ * read both reports at their declared paths.
+ *
+ * Without a live run this is `not-executed` with its reason — never a pass and never
+ * a failure, because the artifact is produced by T7's `harness-eval` workflow.
+ */
+export function readDeclaredReportsFromArtifact({
+  runId = process.env.HARNESS_EVAL_RUN_ID,
+  attempt = process.env.HARNESS_EVAL_RUN_ATTEMPT || "1",
+  repo = process.env.HARNESS_EVAL_REPO || "hackerpug-ai/pixel-perfect",
+} = {}) {
+  if (!runId) {
+    return {
+      status: "not-executed",
+      leg: "verify-reports-artifact",
+      owner: "T7",
+      reason: "no HARNESS_EVAL_RUN_ID: the verify-reports artifact is produced by T7's harness-eval workflow",
+    };
+  }
+  const dir = mkdtempSync(path.join(tmpdir(), `pp-artifact-${runId}-`));
+  const artifact = `harness-eval-verify-reports-${runId}-${attempt}`;
+  const res = spawnSync("gh", ["run", "download", String(runId), "--repo", repo, "-n", artifact, "-D", dir], {
+    encoding: "utf8",
+    timeout: 120_000,
+  });
+  if (res.status !== 0) {
+    throw new Error(`gh run download ${artifact} failed: ${(res.stderr || res.stdout || "").trim()}`);
+  }
+  const read = (caseId) => {
+    const rel = loadCase(caseId).report_relative_path;
+    const abs = path.join(dir, rel);
+    if (!existsSync(abs)) throw new Error(`${rel} is absent from artifact ${artifact} — fail report-missing`);
+    return { path: abs, report: JSON.parse(readFileSync(abs, "utf8")) };
+  };
+  return {
+    status: "observed",
+    leg: "verify-reports-artifact",
+    dir,
+    artifact,
+    planted: read("verify-button-drift"),
+    clean: read("verify-clean"),
+  };
+}
+
 /** Facts a status reply must state, read off the materialized manifest. */
 export function deriveFacts(projectDir, platformKey) {
   const manifest = JSON.parse(readFileSync(path.join(projectDir, "design/manifest.json"), "utf8"));
@@ -207,6 +264,12 @@ export function runStatusCase(caseId) {
 /** One first-question case: a genuinely empty project directory. */
 export function runFirstQuestionCase(caseId) {
   const caseManifest = loadCase(caseId);
+  // This runner builds a fresh, empty directory and nothing else, so a case
+  // declaring any other fixture kind cannot be graded here — it is refused, not
+  // silently graded as empty.
+  if (caseManifest.fixture?.kind !== "fresh-empty-dir") {
+    throw new CaseInvalid(caseId, `fixture kind ${JSON.stringify(caseManifest.fixture?.kind)} is not fresh-empty-dir`);
+  }
   const invocation = freshInvocationDir(caseId);
   const boundPath = bindReportPath(caseManifest, invocation.dir);
   const listing = listDir(invocation.dir);

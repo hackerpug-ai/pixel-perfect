@@ -9,6 +9,7 @@
   "platform": "web-desktop",
   "verification_scope": "structural-only",
   "overlay": null,
+  "overlay_files": [],
   "defect_key": null,
   "display_name": "Button",
   "oracle": {

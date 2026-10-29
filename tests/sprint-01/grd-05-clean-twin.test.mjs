@@ -75,6 +75,9 @@ test("FLOW-GRD-05-CLEAN-TWIN", async (t) => {
     // The twin ran from a copy, and its protected files are intact.
     assert.notEqual(path.resolve(run.clean.dir), path.resolve(PROJECT_DIR));
     assert.equal(run.clean.protected_unchanged, true);
+    // The pair differs by exactly the planted overlay's declared source files.
+    assert.deepEqual(run.planted.overlay_changed, planted.overlay_files);
+    assert.deepEqual(run.clean.overlay_changed, [], "the clean twin materializes the kit project unchanged");
   });
 
   await t.test("planted-report body in the clean slot is rejected (swapped-twin)", () => {
@@ -120,6 +123,9 @@ test("FLOW-GRD-05-CLEAN-TWIN", async (t) => {
   // TC-4 — FirstQuestionCase: a genuinely empty fixture, ask_policy must-ask.
   await t.test("TC-4 FirstQuestionCase is a genuinely empty project with a must-ask policy", () => {
     const run = runFirstQuestionCase("first-question-init");
+    // The runner builds a fresh empty dir and nothing else, so the declaration has to
+    // name exactly that; a manifest claiming a populated fixture is refused, not graded.
+    assert.equal(run.caseManifest.fixture.kind, "fresh-empty-dir", "the declared fixture kind is the one the runner builds");
     assert.deepEqual(run.listing, [], "the fixture directory is empty");
     assert.deepEqual(run.present, [], "no requirements, goal, platform, package or design manifest");
     assert.equal(run.caseManifest.ask_policy, "must-ask");

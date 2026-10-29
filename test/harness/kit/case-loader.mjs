@@ -45,6 +45,16 @@ const SEGMENTS = (rel) => String(rel).split(/[\\/]+/).filter((s) => s.length > 0
 /**
  * Refuse anything that could resolve outside `invocationDir`. Pure: reads no
  * report, writes nothing, creates nothing.
+ *
+ * Which guard is load-bearing, per escape shape (one guard each — none is dead):
+ *   /abs.json                -> the isAbsolute / drive-letter check
+ *   reports/../escape.json   -> the `..` segment check. The containment check cannot
+ *                               refuse this one: the path resolves back INSIDE the
+ *                               invocation dir, so it must stay here.
+ *   reports -> symlink       -> the per-component lstat check
+ *   "." (the root itself)    -> the containment check below. No other guard here
+ *                               refuses a path that resolves to the invocation dir
+ *                               itself, which is not a report path.
  */
 export function assertConfined(rel, invocationDir) {
   if (typeof rel !== "string" || rel.length === 0) throw new CasePathRefused(rel, "empty or non-string path");
@@ -55,6 +65,7 @@ export function assertConfined(rel, invocationDir) {
 
   const root = path.resolve(invocationDir);
   const abs = path.resolve(root, rel);
+  // Load-bearing for a path that resolves to the root itself (`rel` = ".").
   if (!abs.startsWith(root + path.sep)) throw new CasePathRefused(rel, "resolves outside the invocation directory");
 
   // Every existing component from the invocation root to the leaf must be a real
@@ -88,6 +99,7 @@ export function bindReportPath(caseManifest, invocationDir) {
     const sibling = loadCase(other);
     if (sibling.report_relative_path === rel) throw new CaseInvalid(caseManifest.case_id, `shares a report path with ${other}`);
   }
+  // Defense in depth: assertConfined already refused anything outside `root`.
   if (!abs.startsWith(root + path.sep)) throw new CasePathRefused(rel, "resolves outside the invocation directory");
   return abs;
 }
@@ -116,10 +128,18 @@ export function freshInvocationDir(caseId) {
 export function materialize(caseManifest, invocationDir) {
   const { dir } = invocationDir;
   cpSync(PROJECT_DIR, dir, { recursive: true });
+  invocationDir.overlay_changed = [];
   if (caseManifest.overlay) {
     const overlayDir = path.join(OVERLAYS_DIR, caseManifest.overlay.replace(/^overlays\//, ""));
     if (!existsSync(overlayDir)) throw new CaseInvalid(caseManifest.case_id, `no overlay at ${overlayDir}`);
+    const before = treeHashes(dir);
     cpSync(overlayDir, dir, { recursive: true });
+    const after = treeHashes(dir);
+    // Every file the overlay added, rewrote or removed. The pair of cases may diverge
+    // in exactly the case's declared `overlay_files` and nothing else.
+    invocationDir.overlay_changed = [...new Set([...Object.keys(before), ...Object.keys(after)])]
+      .filter((rel) => before[rel] !== after[rel])
+      .sort();
   }
   return dir;
 }
@@ -158,6 +178,16 @@ export function listDir(dir) {
 
 export function sha256File(file) {
   return createHash("sha256").update(readFileSync(file)).digest("hex");
+}
+
+/** sha256 of every regular file under `dir`, keyed by invocation-relative path. */
+export function treeHashes(dir) {
+  const out = {};
+  for (const rel of listDir(dir)) {
+    const full = path.join(dir, rel);
+    if (lstatSync(full).isFile()) out[rel] = sha256File(full);
+  }
+  return out;
 }
 
 /** Hashes of the protected set, so a before/after comparison is data, not prose. */

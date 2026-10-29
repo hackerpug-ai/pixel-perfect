@@ -9,6 +9,7 @@
   "platform": "web-desktop",
   "verification_scope": "structural-only",
   "overlay": "overlays/button-drift",
+  "overlay_files": ["sandbox/stories/atoms/Button/default.txt"],
   "defect_key": "atoms/Button/default",
   "display_name": "Button",
   "oracle": {
