@@ -1,12 +1,16 @@
-// The adapter registry: who decides a cell, in the one order that cannot invent a verdict.
+// The adapter registry: which harnesses have a real adapter in this sprint, and what an absent
+// one honestly answers — plus who decides a cell, in the one order that cannot invent a verdict.
 //
-// Twelve cells exist on every run because they are enumerated from pins, not from what happened to
-// succeed. For each (harness, track) this module answers one question — who owns this cell right
-// now — and returns either a could-not-run cell with the deciding component's own reason, or null,
-// meaning "a loaded adapter grades it". It never returns `pass`: a verdict needs evidence, and this
-// module has none.
+// Sprint 01 implements exactly one adapter — claude-code, the one harness graded live. The other
+// five are NOT dropped: an absent adapter is present-as-`could-not-run` with a named reason, so the
+// twelve-cell matrix never loses a cell and no reader can mistake silence for a pass.
 //
-// The order is load-bearing:
+// `adapterFor` answers "is there an adapter in this tree?" for a caller that walks the matrix.
+// `cellFor` answers "who owns this (harness, track) cell right now?" and returns either a
+// could-not-run cell with the deciding component's own reason, or null, meaning "a loaded adapter
+// grades it". It never returns `pass`: a verdict needs evidence, and this module has none.
+//
+// The order in `cellFor` is load-bearing:
 //   1. the invocation-guard's credential check — a missing key is the truth even when the adapter is
 //      also absent, and the reason string is the guard's, never a per-harness constant here;
 //   2. adapter absence — a real cell with a named reason (./absent.mjs);
@@ -17,8 +21,58 @@
 import { CHECKS, HARNESSES, TRACKS, loadPins } from "../pins.mjs";
 import { guardInvocation } from "../runtime/guard.mjs";
 import { absentReason } from "./absent.mjs";
+import * as claudeCode from "./claude-code.mjs";
 
 export { ABSENT_REASONS, ADAPTER_PENDING, absentReason } from "./absent.mjs";
+
+export const REGISTRY_SCHEMA = "harness-adapter-registry/v1";
+
+/** Harnesses with an implementation in this tree. Everything else answers `adapter-absent`. */
+export const REGISTERED = ["claude-code"];
+
+const ABSENT_REASON = "adapter-absent";
+const OWNERS = {
+  codex: "T10",
+  grok: "T10",
+  opencode: "T10",
+  pi: "T10",
+  cursor: "T10",
+};
+
+const IMPLEMENTATIONS = { "claude-code": claudeCode };
+
+/**
+ * The adapter for a harness, or the honest absence of one. An unknown harness is an error — a typo
+ * must not read as "no adapter" — while a known harness without an implementation is a
+ * `could-not-run` entry, never a null and never a pass.
+ */
+export function adapterFor(harness) {
+  if (!HARNESSES.includes(harness)) {
+    throw new Error(`unknown harness ${JSON.stringify(harness)}: pins.json declares ${HARNESSES.join(", ")}`);
+  }
+  const adapter = IMPLEMENTATIONS[harness] ?? null;
+  if (!adapter) {
+    return {
+      schema: REGISTRY_SCHEMA,
+      harness,
+      available: false,
+      verdict: "could-not-run",
+      reason: ABSENT_REASON,
+      owner: OWNERS[harness] ?? null,
+      detail: `${harness} has no adapter in this tree yet; its cell stays could-not-run ${ABSENT_REASON}`,
+    };
+  }
+  return { schema: REGISTRY_SCHEMA, harness, available: true, verdict: null, reason: null, adapter };
+}
+
+/** All six entries, in pins order, so a twelve-cell writer can walk the matrix directly. */
+export function describeRegistry() {
+  return HARNESSES.map((harness) => {
+    const entry = adapterFor(harness);
+    if (!entry.available) return entry;
+    return { ...entry, install_modes: ["checkout", "published"], checks: claudeCode.CHECKS };
+  });
+}
 
 /** The component that decided each could-not-run cell, recorded in the cell's `source`. */
 export const CELL_SOURCES = Object.freeze({
@@ -197,7 +251,6 @@ export function cellFor(harness, track, ctx = {}) {
  * cell neither in `cells` nor in `adapterOwned` has dropped a cell, and the recorder refuses eleven.
  */
 export function planCells(ctx = {}) {
-  const { adapters = new Set() } = ctx;
   const cells = [];
   const adapterOwned = [];
   const decisions = [];

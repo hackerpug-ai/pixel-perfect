@@ -40,9 +40,10 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { bindReport, prepareVerifyPair, runCheck } from "../../test/harness/adapters/claude-code.mjs";
 import { loadCase, sha256File } from "../../test/harness/kit/case-loader.mjs";
 import { validateDispatchIdentity } from "../../test/harness/validate.mjs";
-import { missingPlantedReport } from "./flow-runner.mjs";
+import { missingPlantedReport, runVerifyCase } from "./flow-runner.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, "../..");
@@ -567,6 +568,62 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
     // Bound to the live run itself, not to a replay.
     const provenance = readProvenance(download.dir, { runId: run.runId, attempt: run.attempt });
     assert.equal(provenance.live, true, provenance.reason);
+  });
+
+  // ---- T5 / AC-2: the adapter's own planted-and-clean pair -------------------
+  // What the adapter owes this journey: two invocations of ONE run, each in its own fresh
+  // work directory, each report bound to the path its case manifest declares, and each
+  // report body belonging only to the invocation that produced it. The bodies themselves
+  // need a model that answers, so that half is reported not-executed with its reason.
+  await t.test("the adapter binds the planted and the clean report to distinct invocations of one run", async (tt) => {
+    const runId = "4242";
+    const pair = prepareVerifyPair({ runId, track: "pinned", pluginRoot: path.join(REPO_ROOT, "plugins/pixel-perfect") });
+    tt.after(() => pair.cleanup());
+
+    // Both report paths are the case manifests' own declared paths, never discovered.
+    assert.equal(planted.report_relative_path, "reports/verify-button-drift.json");
+    assert.equal(clean.report_relative_path, "reports/verify-clean.json");
+    assert.ok(pair.planted.bound_path.endsWith(planted.report_relative_path), pair.planted.bound_path);
+    assert.ok(pair.clean.bound_path.endsWith(clean.report_relative_path), pair.clean.bound_path);
+    assert.notEqual(pair.planted.bound_path, pair.clean.bound_path);
+
+    // Fresh work directory per invocation, and distinct invocation ids of the SAME live run.
+    assert.notEqual(pair.planted.dir, pair.clean.dir);
+    assert.notEqual(pair.planted.invocation_id, pair.clean.invocation_id);
+    for (const side of [pair.planted, pair.clean]) {
+      assert.ok(side.invocation_id.startsWith(runId), `${side.invocation_id} belongs to run ${runId}`);
+    }
+
+    // No report exists before its invocation ran: absence is never read as a result.
+    assert.equal(existsSync(pair.planted.bound_path), false);
+    assert.equal(existsSync(pair.clean.bound_path), false);
+
+    // A body produced by another invocation is refused, so the twin can never borrow the
+    // planted report: the planted report's own invocation_id is not the clean one's.
+    const plantedRun = runVerifyCase("verify-button-drift", { keep: true });
+    tt.after(() => rmSync(plantedRun.dir, { recursive: true, force: true }));
+    const plantedBody = plantedRun.report;
+    const borrowed = bindReport({ invocation: pair.clean, reported: plantedBody });
+    assert.equal(borrowed.ok, false);
+    assert.equal(borrowed.reason, "report-mismatched-invocation");
+    assert.equal(borrowed.verdict, "fail");
+
+    // The bodies need the harness that answers. Without a credential the guard refuses before
+    // spawning, so the pair's reports stay unwritten and the leg is not-executed, never green.
+    const attempt = await runCheck({
+      track: "pinned",
+      entry: pair.planted.entry,
+      pluginRoot: path.join(REPO_ROOT, "plugins/pixel-perfect"),
+      configDir: path.join(tmpdir(), "pp-no-plugin"),
+      env: {},
+    });
+    assert.equal(attempt.decision.allowed, false);
+    assert.equal(attempt.decision.refusal.reason, "missing-api-key");
+    assert.equal(attempt.record.model_request_count, 0);
+    assert.equal(existsSync(pair.planted.bound_path), false, "a refused invocation writes no report");
+    tt.diagnostic(
+      "not-executed leg=harness-verify-pair owner=T7 reason=the report bodies need a model that answers; the harness-smoke credential exists only on the hosted runner",
+    );
   });
 });
 
