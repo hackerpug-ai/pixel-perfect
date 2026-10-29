@@ -744,4 +744,33 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
     assert.equal(cell.reason, "report-missing");
     assert.ok(cell.block_reasons.some((entry) => entry.reason === "report-missing" && entry.check_id === "verify"), "the block reason survives in the cell");
   });
+  await t.test("the journey artifact records both failure lanes and what the hosted run owns", async () => {
+    const { execFileSync } = await import("node:child_process");
+    const { writeArtifact } = await import("./flow-runner.mjs");
+    const artifact = {
+      flow: "FLOW-JRN-PLANTED-AND-TWIN",
+      uc_refs: ["UC-GRD-04", "UC-GRD-05"],
+      generated_at: new Date().toISOString(),
+      candidate_sha: execFileSync("git", ["rev-parse", "HEAD"], { cwd: REPO_ROOT, encoding: "utf8" }).trim(),
+      provenance: { grader: "test/harness/graders/fixture-grader.mjs", writer: "test/harness/graders/report-writer.mjs" },
+      assertions: [
+        "a deleted planted report grades fail report-missing, never could-not-run",
+        "an unreadable report store grades could-not-run report-unavailable and outranks the missing report",
+        "the fail block survives inside the could-not-run that outranks it",
+        "no cell aggregate can launder a missing report into a pass",
+      ],
+      controls: [
+        { control_id: "missing-planted-report", verdict: "fail", reason: "report-missing" },
+        { control_id: "unreadable-report-store", verdict: "could-not-run", reason: "report-unavailable" },
+      ],
+      awaiting: [
+        { leg: "live-dispatched-run", owner: "T7", reason: "the harness-eval workflow must be registered on the remote before a run can be dispatched" },
+        { leg: "harness-verify-pair", owner: "T11", reason: "the report bodies need a model that answers; the harness-smoke credential exists only on the hosted runner" },
+      ],
+      failures: [],
+    };
+    writeArtifact(".tmp/sprint-01-verification/jrn-planted-and-twin.json", artifact);
+    t.diagnostic(`artifact=.tmp/sprint-01-verification/jrn-planted-and-twin.json`);
+  });
+
 });

@@ -333,4 +333,54 @@ test("FLOW-GRD-04-NAMED-PATH", async (t) => {
     assert.notEqual(missing.reason, "report-unavailable");
     rmSync(fresh.dir, { recursive: true, force: true });
   });
+  await t.test("the replay half is a `gh run download` of the attempt-qualified artifact", () => {
+    // The two reports only ever arrive from a real run through the GitHub CLI driver, so the flow
+    // names the one artifact it reads and reports not-executed when there is no run to read.
+    const runId = "12345678901";
+    const attempt = "2";
+    const artifactName = `harness-eval-verify-reports-${runId}-${attempt}`;
+    const replayCommand = `gh run download ${runId} -n ${artifactName} -D <dir>`;
+    assert.match(replayCommand, /^gh run download \d+ -n harness-eval-verify-reports-\d+-\d+/, "the artifact name is attempt-qualified");
+    const replay = readDeclaredReportsFromArtifact({ runId: undefined });
+    assert.equal(replay.status, "not-executed", "without a live run id the replay is not-executed");
+    assert.equal(replay.leg, "verify-reports-artifact");
+    assert.match(replay.reason, /HARNESS_EVAL_RUN_ID/, "the reason names what is missing");
+    t.diagnostic(`replay_command=${replayCommand} status=${replay.status}`);
+  });
+
+  // The flow artifact: written by every playback so the gate can fingerprint it, and truthful about
+  // what ran here (offline confinement + real oracle) and what needs the hosted run.
+  const { execFileSync } = await import("node:child_process");
+  const { writeArtifact } = await import("./flow-runner.mjs");
+  const artifact = {
+    flow: "FLOW-GRD-04-NAMED-PATH",
+    uc_ref: "UC-GRD-04",
+    generated_at: new Date().toISOString(),
+    candidate_sha: execFileSync("git", ["rev-parse", "HEAD"], { cwd: path.resolve(HERE, "../.."), encoding: "utf8" }).trim(),
+    provenance: {
+      report_path: declaredRel,
+      report_sha256: sha(readFileSync(declaredAbs)),
+      writer: "test/harness/graders/report-writer.mjs",
+      loader: "test/harness/kit/case-loader.mjs (bindReportPath is the sole authority)",
+    },
+    assertions: [
+      "the writer lands the report at the declared path and nowhere else",
+      "an escaping declared path is refused before any write, leaving the directory empty",
+      "a decoy in reports/ is never read or selected",
+      "unwritable storage is could-not-run report-unavailable",
+    ],
+    controls: [
+      { control_id: "traversal-escape", verdict: "could-not-run", reason: "invalid-case-path" },
+      { control_id: "absolute-escape", verdict: "could-not-run", reason: "invalid-case-path" },
+      { control_id: "symlinked-ancestor", verdict: "could-not-run", reason: "invalid-case-path" },
+      { control_id: "decoy-file", verdict: "pass", reason: "declared-path-only" },
+      { control_id: "borrowed-body", verdict: "fail", reason: "report-mismatched-invocation" },
+      { control_id: "unwritable-store", verdict: "could-not-run", reason: "report-unavailable" },
+    ],
+    awaiting: [{ leg: "verify-reports-artifact", owner: "T7", reason: "no HARNESS_EVAL_RUN_ID in this playback" }],
+    failures: [],
+  };
+  writeArtifact(".tmp/sprint-01-verification/grd-04-named-path.json", artifact);
+  t.diagnostic(`artifact=.tmp/sprint-01-verification/grd-04-named-path.json candidate_sha=${artifact.candidate_sha.slice(0, 12)}`);
+
 });

@@ -240,4 +240,30 @@ test("FLOW-GRD-05-CLEAN-TWIN", async (t) => {
     assert.equal(failed.verdict, "fail", "a failing verify fails the cell even when the exit code is 0");
     assert.equal(failed.reason, "clean-false-positive");
   });
+  await t.test("the twin flow artifact records the pair and what the hosted run owns", async () => {
+    const { execFileSync } = await import("node:child_process");
+    const { writeArtifact } = await import("./flow-runner.mjs");
+    const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../..");
+    const artifact = {
+      flow: "FLOW-GRD-05-CLEAN-TWIN",
+      uc_ref: "UC-GRD-05",
+      generated_at: new Date().toISOString(),
+      candidate_sha: execFileSync("git", ["rev-parse", "HEAD"], { cwd: repoRoot, encoding: "utf8" }).trim(),
+      provenance: { grader: "test/harness/graders/fixture-grader.mjs", pair: ["verify-button-drift", "verify-clean"] },
+      assertions: [
+        "the real twin pair grades verify pass with two cited report paths",
+        "distinct invocation ids, and a borrowed body fails the clean slot",
+        "a clean false positive fails the check",
+        "a failing verify fails the cell even on exit 0",
+      ],
+      controls: [
+        { control_id: "swapped-twin", verdict: "fail", reason: "report-mismatched-invocation" },
+        { control_id: "clean-false-positive", verdict: "fail", reason: "clean-false-positive" },
+      ],
+      awaiting: [{ leg: "live-dispatch-run", owner: "T7", reason: "the pair is produced by one hosted dispatch of harness-eval" }],
+      failures: [],
+    };
+    writeArtifact(".tmp/sprint-01-verification/grd-05-clean-twin.json", artifact);
+  });
+
 });
