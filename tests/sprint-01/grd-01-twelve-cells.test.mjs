@@ -9,7 +9,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -24,6 +25,21 @@ import {
   loadPins,
 } from "../../test/harness/pins.mjs";
 import { validateAgainst, validateResult } from "../../test/harness/validate.mjs";
+import { inspectWorkflowDeclaration, parseYaml, readWorkflow } from "./flow-runner.mjs";
+import {
+  RESULT_FILENAME,
+  assembleResult,
+  collectCells,
+  copyJobTimestamps,
+  readCellArtifacts,
+  recorderExit,
+  runContextFromEnv,
+  uploadPlan,
+  writeResult,
+  writeVerifyReceipt,
+} from "../../test/harness/recorder.mjs";
+import { runVerifyCase } from "./flow-runner.mjs";
+import { renderSummary } from "../../test/harness/recorder/summary.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const REPORT_DIR = join(ROOT, ".tmp", "sprint-01-verification");
@@ -77,7 +93,24 @@ function writeReport(report) {
   writeFileSync(join(REPORT_DIR, "grd-01-twelve-cells.json"), `${JSON.stringify(report, null, 2)}\n`);
 }
 
+// --- the gate itself, outside any test() ------------------------------------
+// `node --test --test-name-pattern` reports exit 0 when the named test is skipped or renamed away
+// (Node then counts the FILE as the passing test). Both halves of this flow's proof live here —
+// T2's pins/schema half and T8's recorder half — so the tripwire counts them: skipping or dropping
+// either one leaves the count short and the frozen check red.
+const EXPECTED_TESTS = 2;
+let testsExecuted = 0;
+process.on("exit", () => {
+  if (testsExecuted !== EXPECTED_TESTS) {
+    console.error(
+      `FLOW-GRD-01-TWELVE-CELLS: ${testsExecuted} of ${EXPECTED_TESTS} tests executed (skipped, or renamed out of --test-name-pattern) — a gate that asserts nothing is not a pass`,
+    );
+    process.exitCode = 1;
+  }
+});
+
 test("FLOW-GRD-01-TWELVE-CELLS", async (t) => {
+  testsExecuted += 1;
   // ---- pins authority: the digest is of the manifest bytes, recomputed here ----
   const pins = loadPins();
   const recomputed = createHash("sha256").update(pins.bytes).digest("hex");
@@ -408,4 +441,408 @@ test("FLOW-GRD-01-TWELVE-CELLS", async (t) => {
   t.diagnostic(`cells=${cells.length} harnesses=${[...harnesses].sort().join(",")} pairs=${pairs.size}`);
   t.diagnostic(`observed=${JSON.stringify(observed)}`);
   t.diagnostic(`live_artifact=${live}`);
+});
+
+// ---------------------------------------------------------------------------
+// T8 — the grade recorder: the one component that refuses eleven cells, a duplicate pair, an
+// invented verdict word or a made-up timestamp.
+//
+// The real things this test exercises: the on-disk pins bytes and its recomputed digest, the six
+// installed CLIs probed for a real `--version`, this worktree's real commit as the dispatch
+// commit, the REAL Actions API job list of a real run in this repository (fetched with `gh api`),
+// and the real bytes of .github/workflows/harness-eval.yml. The hosted half of the flow — the
+// recorder's own run inside workflow_dispatch — is reported `not-executed` with its reason, never
+// asserted.
+// ---------------------------------------------------------------------------
+
+const RECORDER = "test/harness/recorder.mjs";
+
+function gitHead() {
+  return execFileSync("git", ["rev-parse", "HEAD"], { cwd: ROOT, encoding: "utf8" }).trim();
+}
+
+/** Mirrors the artifact layout the smoke matrix uploads: <artifact-name>/cell/cell.json. */
+function writeCellArtifacts(dir, records, { prefix = "harness-eval-cell-9000000001-1" } = {}) {
+  for (const record of records) {
+    const folder = join(dir, `${prefix}-${record.harness}-${record.track}`, "cell");
+    mkdirSync(folder, { recursive: true });
+    writeFileSync(join(folder, "cell.json"), `${JSON.stringify(record, null, 2)}\n`, "utf8");
+  }
+  return dir;
+}
+
+/** The bare smoke-cell record T1's matrix writes today: identity plus an honest named reason. */
+function bareCell(harness, track, reason, installMode = "checkout") {
+  return {
+    harness,
+    track,
+    cell_state: "could-not-run",
+    reason,
+    install_mode: installMode,
+    event: "workflow_dispatch",
+    run_id: "9000000001",
+    run_attempt: "1",
+  };
+}
+
+function writeRecorderReport(report) {
+  mkdirSync(REPORT_DIR, { recursive: true });
+  writeFileSync(join(REPORT_DIR, "grd-01-twelve-cells-recorder.json"), `${JSON.stringify(report, null, 2)}\n`);
+}
+
+function listFiles(dir) {
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir, { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => join(entry.parentPath ?? entry.path, entry.name))
+    .sort();
+}
+
+test("FLOW-GRD-01-TWELVE-CELLS recorder", async (t) => {
+  testsExecuted += 1;
+
+  // ---- real inputs: the pins authority, real CLI probes, the real credential names ----
+  const pins = loadPins();
+  const observed = Object.fromEntries(HARNESSES.map((harness) => [harness, probeObservedVersion(harness)]));
+  const gradedCells = cellsFromPins(pins.manifest, { observed, credentialEnv: process.env });
+  assert.equal(gradedCells.length, 12);
+
+  const sandbox = mkdtempSync(join(tmpdir(), "pp-recorder-"));
+  const cellsDir = writeCellArtifacts(join(sandbox, "cells"), gradedCells);
+  const outDir = join(sandbox, "grade");
+
+  // ---- the recorder reads the artifact layout, not a hand-built array ----
+  const artifacts = readCellArtifacts(cellsDir);
+  assert.equal(artifacts.cells.length, 12, "every cell artifact is read");
+  assert.deepEqual(artifacts.controls, [], "no controls artifact arrived, so none is invented");
+
+  const cells = collectCells(artifacts.cells, { pins, installMode: "checkout" });
+  assert.equal(cells.length, 12);
+  assert.equal(new Set(cells.map((cell) => `${cell.harness}/${cell.track}`)).size, 12, "twelve unique pairs");
+  assert.equal(new Set(cells.map((cell) => cell.harness)).size, 6, "six harnesses");
+  for (const cell of cells) assert.notEqual(cell.verdict, "pass", "this run graded nothing");
+
+  // ---- a bare smoke cell is accepted as present-as-could-not-run, never as a verdict ----
+  const bareDir = writeCellArtifacts(
+    join(sandbox, "cells-bare"),
+    HARNESSES.flatMap((harness) => TRACKS.map((track) => bareCell(harness, track, "smoke-not-implemented"))),
+  );
+  const bare = collectCells(readCellArtifacts(bareDir).cells, { pins, installMode: "checkout" });
+  assert.equal(bare.length, 12, "twelve bare smoke cells are twelve cells");
+  const bareCursor = bare.find((cell) => cell.harness === "cursor" && cell.track === "pinned");
+  assert.equal(bareCursor.verdict, "could-not-run");
+  assert.equal(bareCursor.reason, "smoke-not-implemented", "the reason travels from the artifact, never a default");
+  assert.equal(bareCursor.installation.requested_cli_version, "2026.10.01-e373342", "the pinned request comes from the pins authority");
+  assert.equal(bareCursor.installation.observed_cli_version, null, "an unobserved version is null, never invented");
+
+  // ---- real job timestamps from the real Actions API: copied, and blocked when absent ----
+  const repo = "hackerpug-ai/pixel-perfect";
+  const latest = JSON.parse(
+    execFileSync("gh", ["run", "list", "--repo", repo, "--limit", "1", "--json", "databaseId,workflowName"], { encoding: "utf8" }),
+  )[0];
+  assert.ok(latest?.databaseId, "a real run exists in this repository");
+  const jobPayload = JSON.parse(
+    execFileSync("gh", ["api", `repos/${repo}/actions/runs/${latest.databaseId}/jobs?per_page=100`], { encoding: "utf8" }),
+  );
+  assert.ok(jobPayload.jobs.length > 0, `run ${latest.databaseId} reports jobs`);
+
+  // Derivation checked against an independent computation over the same real payload.
+  const allJobs = copyJobTimestamps(jobPayload.jobs, { match: () => true });
+  const starts = jobPayload.jobs.map((job) => job.started_at).filter(Boolean).sort();
+  const completions = jobPayload.jobs.map((job) => job.completed_at).filter(Boolean).sort();
+  assert.equal(allJobs.evaluation_started_at, starts[0], "started_at is the earliest real job start");
+  assert.equal(allJobs.evaluation_completed_at, completions.at(-1), "completed_at is the latest real job completion");
+
+  // The required-smoke predicate finds no smoke job in a run without the matrix, and that BLOCKS.
+  assert.throws(
+    () => copyJobTimestamps(jobPayload.jobs),
+    (error) => error.reason === "timestamps-missing" && /smoke job/.test(error.message),
+    "a run with no required smoke job blocks with timestamps-missing",
+  );
+  // A required smoke job that never completed blocks too — an inferred completion is a defect.
+  assert.throws(
+    () => copyJobTimestamps([{ name: "smoke claude-code pinned", started_at: starts[0], completed_at: null }]),
+    (error) => error.reason === "timestamps-missing" && /not completed/.test(error.message),
+    "an incomplete required smoke job blocks with timestamps-missing",
+  );
+  assert.throws(
+    () => copyJobTimestamps([{ name: "smoke claude-code pinned", started_at: null, completed_at: null }]),
+    (error) => error.reason === "timestamps-missing",
+    "a required smoke job that never started blocks",
+  );
+
+  // ---- AC-2 shape, read here too: one run, one mode, from GitHub context only ----
+  const dispatchSha = gitHead();
+  const context = runContextFromEnv({
+    INSTALL_MODE: "checkout",
+    GITHUB_RUN_ID: "9000000001",
+    GITHUB_RUN_NUMBER: "7",
+    GITHUB_RUN_ATTEMPT: "1",
+    GITHUB_EVENT_NAME: "workflow_dispatch",
+    GITHUB_SHA: dispatchSha,
+    GITHUB_REPOSITORY: repo,
+    GITHUB_REF_NAME: "main",
+  });
+  assert.equal(context.dispatchSha, dispatchSha, "the dispatch commit is the workflow commit GitHub supplies");
+
+  const result = assembleResult({ cells, pins, context, timestamps: allJobs });
+  validateAgainst("harness-eval-result.v1.schema.json", result);
+  assert.equal(result.cells.length, 12);
+  assert.equal(new Set(result.cells.map((cell) => cell.harness)).size, 6);
+  assert.match(result.pins_sha256, /^[0-9a-f]{64}$/, "pins_sha256 is a 64-hex digest");
+  assert.equal(result.pins_sha256, createHash("sha256").update(pins.bytes).digest("hex"), "bound to the exact pins bytes");
+  assert.equal(result.evaluation_started_at, allJobs.evaluation_started_at, "the start is the copied GitHub timestamp");
+  assert.equal(result.evaluation_completed_at, allJobs.evaluation_completed_at, "the completion is the copied timestamp");
+  assert.equal(result.run_id, 9000000001);
+  assert.equal(result.run_attempt, 1);
+  assert.equal(result.event, "workflow_dispatch");
+  assert.equal(result.install_mode, "checkout");
+  assert.equal(result.candidate_sha, dispatchSha);
+  assert.deepEqual(validateResult(result, { dispatchSha, requiredPinsSha256: pins.pins_sha256 }), {
+    cells: 12,
+    harnesses: 6,
+    pairs: 12,
+  });
+
+  // ---- eleven cells and a duplicate pair are both refused, with their own names ----
+  const withoutCursorPinned = gradedCells.filter((cell) => !(cell.harness === "cursor" && cell.track === "pinned"));
+  assert.equal(withoutCursorPinned.length, 11, "the mutation drops exactly one cell");
+  const dropCellDir = writeCellArtifacts(join(sandbox, "cells-drop"), withoutCursorPinned);
+  const dropped = readCellArtifacts(dropCellDir).cells;
+  assert.throws(
+    () => collectCells(dropped, { pins, installMode: "checkout" }),
+    (error) => error.reason === "cells-incomplete" && /cursor\/pinned/.test(error.message),
+    "eleven cells are refused with cells-incomplete naming the absent cursor/pinned cell",
+  );
+  // A duplicate arrives as its own artifact folder, so it cannot overwrite the original file.
+  const withoutCursorNewest = gradedCells.filter((cell) => !(cell.harness === "cursor" && cell.track === "newest"));
+  const duplicateDir = writeCellArtifacts(join(sandbox, "cells-dup"), withoutCursorNewest);
+  writeCellArtifacts(duplicateDir, [{ ...gradedCells[0] }], { prefix: "harness-eval-cell-9000000001-1-dup" });
+  assert.throws(
+    () => collectCells(readCellArtifacts(duplicateDir).cells, { pins, installMode: "checkout" }),
+    (error) => error.reason === "cells-duplicate" && /claude-code\/pinned/.test(error.message),
+    "a duplicate (harness, track) pair is refused with cells-duplicate",
+  );
+  // ...and a refusal writes nothing, so no partial artifact can look valid.
+  assert.deepEqual(listFiles(outDir), [], "a refused cell set leaves the output directory empty");
+
+  // ---- a verdict word outside the closed vocabulary is refused ----
+  const badVerdict = structuredClone(gradedCells);
+  badVerdict[0].verdict = "passs";
+  assert.throws(
+    () => collectCells(badVerdict, { pins, installMode: "checkout" }),
+    (error) => error.reason === "verdict-vocabulary" && /passs/.test(error.message),
+    "an invented verdict word is refused by name",
+  );
+  // A bare smoke cell may not claim a verdict it has no grade record for.
+  const barePass = HARNESSES.flatMap((harness) => TRACKS.map((track) => bareCell(harness, track, "r")));
+  barePass[0].cell_state = "pass";
+  assert.throws(
+    () => collectCells(barePass, { pins, installMode: "checkout" }),
+    (error) => error.reason === "cell-state-not-a-verdict",
+    "a bare cell claiming pass is refused — a verdict needs a grade record",
+  );
+
+  // ---- InstallationIdentity completeness is enforced before a cell is accepted ----
+  const tornIdentity = structuredClone(gradedCells);
+  delete tornIdentity[3].installation.observed_plugin_manifest_sha256;
+  assert.throws(
+    () => collectCells(tornIdentity, { pins, installMode: "checkout" }),
+    (error) => error.reason === "schema-invalid" && /observed_plugin_manifest_sha256/.test(error.message),
+    "an incomplete InstallationIdentity is refused, not filled in",
+  );
+  // One run has one install mode: a cell from another mode is refused.
+  const otherMode = structuredClone(gradedCells);
+  otherMode[2].installation.install_mode = "published";
+  assert.throws(
+    () => collectCells(otherMode, { pins, installMode: "checkout" }),
+    (error) => error.reason === "cell-install-mode-mismatch",
+    "a cell installed in another mode is refused",
+  );
+
+  // ---- attempt-qualified physical names, overwrite disabled, 90-day retention ----
+  const plan = uploadPlan({ runId: 9000000001, attempt: 1 });
+  assert.deepEqual(plan.map((entry) => entry.name), [
+    "harness-eval-result-9000000001-1",
+    "harness-eval-verify-reports-9000000001-1",
+  ]);
+  for (const entry of plan) {
+    assert.equal(entry.overwrite, false, `${entry.name} must not overwrite`);
+    assert.equal(entry.retentionDays, 90, `${entry.name} keeps 90 days`);
+  }
+  assert.notDeepEqual(uploadPlan({ runId: 9000000001, attempt: 2 }).map((e) => e.name), plan.map((e) => e.name), "a rerun gets its own names");
+  assert.throws(
+    () => uploadPlan({ runId: null, attempt: 1 }),
+    (error) => error.reason === "run-identity-missing",
+    "an unqualified name is refused rather than reused",
+  );
+
+  // ---- the summary is rendered from the same validated object that is uploaded ----
+  const summary = renderSummary(result);
+  const rows = summary.split("\n").filter((line) => /^\|\s*(claude-code|codex|grok|opencode|pi|cursor)\s*\|/.test(line));
+  assert.equal(rows.length, 12, `the summary renders twelve cell rows, not ${rows.length}`);
+  const cursorRow = rows.find((line) => /^\|\s*cursor\s*\|\s*pinned\s*\|/.test(line));
+  assert.ok(cursorRow, "cursor is present in the summary");
+  assert.match(cursorRow, /could-not-run/);
+  assert.match(cursorRow, /missing-api-key/);
+  for (const row of rows) {
+    assert.match(row, /\|\s*(pass|fail|could-not-run)\s*\|/, `a verdict word appears in ${row}`);
+  }
+  // The observed CLI version column is filled from the cell itself, never re-derived.
+  const claudeRow = rows.find((line) => /^\|\s*claude-code\s*\|\s*pinned\s*\|/.test(line));
+  const observedVersion = result.cells.find((c) => c.harness === "claude-code" && c.track === "pinned").installation
+    .observed_cli_version;
+  assert.ok(claudeRow.includes(observedVersion ?? "not observed"), `the observed version appears in the summary: ${claudeRow}`);
+  assert.match(summary, /Blocks release|No effect|newest warning/, "each row carries its release effect");
+
+  // ---- the write path: atomic, and the summary on disk is the summary of the uploaded record ----
+  const written = writeResult({ outDir, result, summary });
+  assert.equal(written.resultPath, join(outDir, RESULT_FILENAME));
+  assert.equal(existsSync(`${written.resultPath}.partial`), false, "no partial file survives the rename");
+  const onDisk = JSON.parse(readFileSync(written.resultPath, "utf8"));
+  assert.deepEqual(onDisk, result, "the file on disk is the record that was validated");
+  assert.equal(readFileSync(written.summaryPath, "utf8"), summary, "the page is rendered from the same object");
+
+  // ---- verify reports are bundled under invocation-specific paths, from the real report bytes ----
+  const realReport = runVerifyCase("verify-button-drift", { keep: true });
+  const verifyDir = join(sandbox, "verify-reports");
+  const bundled = join(verifyDir, "harness-eval-verify-button-drift", "reports");
+  mkdirSync(bundled, { recursive: true });
+  const realReportBytes = readFileSync(realReport.bound_path);
+  writeFileSync(join(bundled, "verify-button-drift.json"), realReportBytes);
+  const receipt = writeVerifyReceipt({ outDir, verifyDir });
+  assert.equal(receipt.reports.length, 1);
+  assert.equal(receipt.reports[0].path, "harness-eval-verify-button-drift/reports/verify-button-drift.json");
+  assert.equal(receipt.reports[0].sha256, createHash("sha256").update(realReportBytes).digest("hex"), "the digest is of the real report bytes");
+  assert.deepEqual(
+    JSON.parse(readFileSync(join(outDir, "verify-reports", "INDEX.json"), "utf8")),
+    receipt,
+    "the index on disk is the receipt that was returned",
+  );
+  // An attempt with no reports states that, and still produces a bundle rather than an absent one.
+  const emptyReceipt = writeVerifyReceipt({ outDir: join(sandbox, "grade-empty"), verifyDir: join(sandbox, "no-reports") });
+  assert.deepEqual(emptyReceipt.reports, []);
+  assert.match(emptyReceipt.reason, /no verify report artifact arrived/);
+  rmSync(realReport.dir, { recursive: true, force: true });
+
+  // ---- the exit rule: one function, and nothing but a cell verdict reaches it ----
+  const gradedRun = structuredClone(gradedCells);
+  assert.equal(recorderExit({ cells: gradedRun }).code, 1, "a could-not-run cell exits non-zero (cursor on day one)");
+  assert.equal(recorderExit({ cells: gradedRun }).reason, "could-not-run");
+
+  const allPass = gradedCells.map((cell) => ({ ...cell, verdict: "pass" }));
+  assert.equal(recorderExit({ cells: allPass }).code, 0, "twelve passes exit zero");
+  const newestOnlyFail = allPass.map((cell) =>
+    cell.track === "newest" ? { ...cell, verdict: "fail" } : cell,
+  );
+  assert.equal(recorderExit({ cells: newestOnlyFail }).code, 0, "newest-only graded failures exit zero");
+  const pinnedFail = allPass.map((cell) =>
+    cell.harness === "claude-code" && cell.track === "pinned" ? { ...cell, verdict: "fail" } : cell,
+  );
+  assert.equal(recorderExit({ cells: pinnedFail }).code, 1, "a live pinned failure exits non-zero");
+  // Later checks, controls and drift never change it.
+  assert.equal(
+    recorderExit({ cells: newestOnlyFail, controls: [{ control_id: "exit0-denied-read", verdict: "fail", reason: "denied_tool_call" }], laterChecks: [{ verdict: "fail" }] }).code,
+    0,
+    "a failing later check or control cannot change the exit",
+  );
+  assert.equal(
+    recorderExit({ cells: allPass, controls: [{ control_id: "exit0-denied-read", verdict: "fail", reason: "denied_tool_call" }] }).code,
+    0,
+    "a failing control cannot change the exit",
+  );
+
+  // ---- the recorder job block: no environment, no secret, actions: read, if: always() ----
+  const workflow = readWorkflow();
+  assert.deepEqual(inspectWorkflowDeclaration(workflow.yaml).failures, [], "the workflow still satisfies the T1 declaration rules");
+  const grade = workflow.yaml.jobs.grade;
+  assert.ok(grade, "the recorder job exists");
+  assert.equal(grade.if, "always()", "the recorder runs even when the smoke matrix failed");
+  assert.equal(grade.environment, undefined, "the recorder holds no environment");
+  assert.deepEqual(grade.permissions, { contents: "read", actions: "read" }, "contents: read + actions: read only");
+  const gradeText = JSON.stringify(grade);
+  assert.doesNotMatch(gradeText, /secrets\s*(?:\.|\[)/, "the recorder binds no secret");
+  const recorderStep = grade.steps.find((step) => String(step.run ?? "").includes(RECORDER));
+  assert.ok(recorderStep, `a step runs ${RECORDER}`);
+  assert.equal(recorderStep.env.INSTALL_MODE, "${{ inputs.install_mode }}", "the mode reaches the recorder from the dispatch input");
+  const gradeUploads = grade.steps.filter((step) => /actions\/upload-artifact/.test(String(step.uses ?? "")));
+  assert.equal(gradeUploads.length, 2, "the recorder uploads the result and the verify reports");
+  assert.deepEqual(
+    gradeUploads.map((step) => step.with.name),
+    ["harness-eval-result-${{ github.run_id }}-${{ github.run_attempt }}", "harness-eval-verify-reports-${{ github.run_id }}-${{ github.run_attempt }}"],
+  );
+  for (const step of gradeUploads) {
+    assert.equal(step.with.overwrite, false, `${step.with.name} must not overwrite`);
+    assert.equal(step.with["retention-days"], 90, `${step.with.name} keeps 90 days`);
+    assert.match(String(step.if ?? ""), /always\(\)/, `${step.with.name} uploads even when the recorder refused`);
+  }
+
+  // ---- the hosted half is not executed here, and says so ----
+  const notExecuted = [
+    {
+      leg: "recorder-in-workflow_dispatch",
+      reason:
+        "no harness-eval run exists for this branch: the workflow is only dispatchable from the default branch, so the recorder's own run, its smoke-job timestamps and its uploaded artifact are read at the sprint gate",
+      owner: "T1",
+    },
+    {
+      leg: "smoke-job-timestamps",
+      reason:
+        "evaluation_started_at/completed_at must equal the real smoke matrix timestamps; no run of this workflow exists yet, so the copy is proven on the real Actions API job list of another run in this repository",
+      owner: "T1",
+    },
+    {
+      leg: "live-grade-verdicts",
+      reason: "T7's graders and T5's adapter produce the first graded cells; until they land every cell is could-not-run",
+      owner: "T5/T7",
+    },
+  ];
+  for (const leg of notExecuted) assert.ok(leg.reason.length > 30, `${leg.leg} states why it was not executed`);
+
+  writeRecorderReport({
+    flow: "FLOW-GRD-01-TWELVE-CELLS",
+    task: "T8",
+    recorder: RECORDER,
+    artifact: `harness-eval-result-${context.runId}-${context.attempt}`,
+    result_file: RESULT_FILENAME,
+    pins_sha256: result.pins_sha256,
+    cells: result.cells.length,
+    harnesses: [...new Set(result.cells.map((cell) => cell.harness))].sort(),
+    verdicts: result.cells.map((cell) => ({
+      cell: `${cell.harness}/${cell.track}`,
+      verdict: cell.verdict,
+      reason: cell.reason,
+      observed_cli_version: cell.installation.observed_cli_version,
+    })),
+    timestamps: {
+      evaluation_started_at: result.evaluation_started_at,
+      evaluation_completed_at: result.evaluation_completed_at,
+      source: `gh api repos/${repo}/actions/runs/${latest.databaseId}/jobs`,
+      source_run: latest.databaseId,
+      source_workflow: latest.workflowName,
+      note: "the copy is proven on a real run's real job list; the smoke-matrix run is read at the gate",
+    },
+    upload_plan: plan,
+    exit: recorderExit({ cells: result.cells }),
+    negative_controls: [
+      "drop-one-cell -> cells-incomplete (cursor/pinned named), 0 files written",
+      "duplicate pair -> cells-duplicate (claude-code/pinned named)",
+      "verdict outside pass|fail|could-not-run -> verdict-vocabulary",
+      "bare cell claiming pass -> cell-state-not-a-verdict",
+      "incomplete InstallationIdentity -> schema-invalid",
+      "cell from another install mode -> cell-install-mode-mismatch",
+      "no required smoke job -> timestamps-missing",
+      "smoke job that never completed -> timestamps-missing",
+      "smoke job that never started -> timestamps-missing",
+      "unqualified artifact name -> run-identity-missing",
+    ],
+    not_executed: notExecuted,
+  });
+
+  t.diagnostic(`cells=${result.cells.length} harnesses=${new Set(result.cells.map((c) => c.harness)).size}`);
+  t.diagnostic(`pins_sha256=${result.pins_sha256}`);
+  t.diagnostic(`timestamps=${result.evaluation_started_at}..${result.evaluation_completed_at} (run ${latest.databaseId})`);
+  t.diagnostic(`exit=${recorderExit({ cells: result.cells }).code} ${recorderExit({ cells: result.cells }).reason}`);
+
+  rmSync(sandbox, { recursive: true, force: true });
 });
