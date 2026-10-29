@@ -1274,3 +1274,337 @@ test("FLOW-GRD-03-FILES-AND-STREAM", async (t) => {
     assert.equal(controlled.checks.find((check) => check.check_id === "command_list").verdict, "pass");
   });
 });
+
+// ===========================================================================================
+// T11 — the two controls this flow owns, qualified rather than merely observed.
+//
+// exit0-denied-read: a stream whose required read was denied and whose process exited 0. The
+// exit-code mapping says pass for 0; the control must read fail / denied_tool_call, citing the
+// denial's own byte offset. Its paired observation is the SAME stream shape without the denial,
+// which must pass — so a grader that fails everything cannot satisfy the control either.
+//
+// hidden-image-judge: the verify child tree, scanned in three places an image judge must touch —
+// its output tree, its model-request log and its captured bytes. The clean child tree is a real
+// one: the real verify case run in a fresh kit copy, its real oracle child under a real capture.
+// The paired observation is a PLANTED image judge in an otherwise identical tree, which the scan
+// must catch; and an unreadable tree must read could-not-run rather than pass.
+//
+// The capture the hosted half needs (the runner's own exit-0 denial capture) is T5/T6's archive, so
+// it is carried as `not-executed` with its owner named rather than manufactured here.
+// ===========================================================================================
+test("FLOW-GRD-03-FILES-AND-STREAM", async (t) => {
+  const controlsModule = await import("../../test/harness/controls/index.mjs");
+  const childTree = await import("../../test/harness/controls/child-tree.mjs");
+  const stream = await import("../../test/harness/stream/index.mjs");
+  const { runVerifyCase } = await import("./flow-runner.mjs");
+  const { ORACLE_SCRIPT } = await import("../../test/harness/kit/oracle-precheck.mjs");
+  const { manifestOf } = await import("../../test/harness/runtime/capture.mjs");
+
+  const ARCHIVE = join(ROOT, "test/harness/stream/captures/claude-code-stream-probe.capture.json");
+  const SECRET_NAME = /^(SMOKE_[A-Z0-9_]+|ANTHROPIC_API_KEY|CODEX_API_KEY|XAI_API_KEY|GEMINI_API_KEY|CURSOR_API_KEY|OPENAI_API_KEY|GOOGLE_API_KEY|ZAI_API_KEY)$/;
+  const REQUIRED_ROOT = "/tmp/t11-required-reads";
+  const keylessEnv = () => Object.fromEntries(Object.entries(process.env).filter(([name]) => !SECRET_NAME.test(name)));
+  // A planted image judge: a real child that really screenshots and really logs the image request.
+  const PLANTED_JUDGE = `
+const { mkdirSync, writeFileSync } = require("node:fs");
+const { join } = require("node:path");
+const root = process.argv[1];
+mkdirSync(join(root, "screenshots"), { recursive: true });
+writeFileSync(join(root, "screenshots", "home.png"), Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+writeFileSync(join(root, "judge-requests.json"), JSON.stringify([{ sequence: 0, content: [{ type: "image", source: { type: "base64", media_type: "image/png", data: "iVBORw0KGgo=" } }, { type: "text", text: "score the screenshot" }] }]) + "\\n");
+`;
+
+  const scratch = [];
+  const keep = (dir) => {
+    scratch.push(dir);
+    return dir;
+  };
+  const t11 = {
+    task: "T11",
+    flow: "FLOW-GRD-03-FILES-AND-STREAM",
+    candidate_sha: execFileSync("git", ["rev-parse", "HEAD"], { cwd: ROOT, encoding: "utf8" }).trim(),
+    observed: [],
+    assertions: [],
+    awaiting: [],
+  };
+
+  try {
+    // ---- exit0-denied-read: the denial is fatal, the exit code is a diagnostic --------
+    const archived = stream.readArchived(ARCHIVE);
+    assert.equal(archived.intact, true, "the archived bytes no longer hash to the record's citation");
+    const table = stream.loadTable({ version: "2.1.291" });
+    const installation = stream.provisionalInstallation("2.1.291");
+    const stage = (bytes, id) => {
+      const dir = keep(mkdtempSync(join(tmpdir(), "pp-t11-stream-")));
+      const stdoutPath = join(dir, `${id}.stdout.bin`);
+      const recordPath = join(dir, `${id}.capture.json`);
+      writeFileSync(stdoutPath, bytes);
+      const record = {
+        ...archived.record,
+        invocation_id: id,
+        stdout: { byte_length: bytes.length, sha256: sha256(bytes) },
+        evidence_root: dir,
+        evidence_relative_paths: [`${id}.capture.json`, `${id}.stdout.bin`],
+        evidence_paths: [recordPath, stdoutPath],
+        termination_kind: "native",
+        prefix_complete: true,
+        model_request_count: 1,
+        process_status: { ...archived.record.process_status, exit_code: 0 },
+      };
+      writeFileSync(recordPath, `${JSON.stringify(record, null, 2)}\n`, "utf8");
+      return { dir, record, bytes };
+    };
+    const line = (event) => `${JSON.stringify(event)}\n`;
+    const initEvent = { type: "system", subtype: "init", session_id: "s-t11", claude_code_version: "2.1.291", permissionMode: "dontAsk", plugins: [{ name: "pixel-perfect" }] };
+    const answerEvent = { type: "assistant", session_id: "s-t11", message: { id: "m-t11", content: [{ type: "text", text: "I read the contract." }] } };
+    const denialEvent = {
+      type: "result",
+      subtype: "success",
+      is_error: false,
+      stop_reason: "end_turn",
+      result: "read it",
+      permission_denials: [{ tool_name: "Read", input: { file_path: join(REQUIRED_ROOT, "RUNTIME-CONTRACT.md") } }],
+    };
+    const cleanResult = { type: "result", subtype: "success", is_error: false, stop_reason: "end_turn", result: "ready", permission_denials: [] };
+
+    const deniedBytes = Buffer.from(line(initEvent) + line(answerEvent) + line(denialEvent), "utf8");
+    const deniedStaged = stage(deniedBytes, "inv-t11-exit0-denied");
+    const deniedGrade = stream.gradeStreamCheck({
+      record: deniedStaged.record,
+      events: stream.normalise({ bytes: deniedBytes, table, required_read_paths: [REQUIRED_ROOT] }).events,
+      check_id: "verify",
+      required_facts: ["plugin-loaded", "required-read-denial"],
+      installation,
+    });
+    assert.equal(deniedGrade.cell.verdict, "fail", `a denied required read on exit 0 graded ${deniedGrade.cell.verdict}: ${JSON.stringify(deniedGrade.cell.block_reasons)}`);
+    assert.equal(deniedGrade.cell.reason, "denied_tool_call");
+    assert.equal(deniedGrade.cell.process_exit_code, 0, "the raw exit code must stay 0 beside the fail");
+    assert.equal(exitCodeVerdict(0), "pass", "exit 0 maps to pass, which is the trap this control exists for");
+    assert.notEqual(deniedGrade.cell.verdict, exitCodeVerdict(deniedGrade.cell.process_exit_code), "the verdict IS the exit-code mapping");
+    assert.equal(deniedGrade.cell.denied_tool_call.operation, "Read", "the denial does not name the operation");
+    assert.equal(deniedGrade.cell.denied_tool_call.target, join(REQUIRED_ROOT, "RUNTIME-CONTRACT.md"));
+    assert.ok(Number.isInteger(deniedGrade.cell.denied_tool_call.stream_offset), "the denial cites no byte offset");
+    assert.ok(deniedGrade.cell.evidence_paths.length > 0, "the fail cites no evidence path");
+
+    // The paired observation: the same stream shape, the required read not denied, must pass.
+    const cleanBytes = Buffer.from(line(initEvent) + line(answerEvent) + line(cleanResult), "utf8");
+    const cleanStaged = stage(cleanBytes, "inv-t11-exit0-clean");
+    const cleanGrade = stream.gradeStreamCheck({
+      record: cleanStaged.record,
+      events: stream.normalise({ bytes: cleanBytes, table, required_read_paths: [REQUIRED_ROOT] }).events,
+      check_id: "verify",
+      required_facts: ["plugin-loaded", "completion"],
+      installation,
+    });
+    assert.equal(cleanGrade.cell.process_exit_code, 0);
+    assert.equal(cleanGrade.cell.verdict, "pass", `the twin of the denial did not pass, so the control proves failure rather than discrimination: ${JSON.stringify(cleanGrade.cell.block_reasons)}`);
+    assert.notEqual(cleanGrade.cell.reason, "denied_tool_call", "the clean twin was graded as a denial");
+    t11.assertions.push(
+      "exit0-denied-read: the same stream shape without the denial passes, so the fail is the denial and not a grader that fails everything",
+    );
+
+    // ---- hidden-image-judge: the real verify child tree, scanned ----------------------
+    const captureDir = keep(mkdtempSync(join(tmpdir(), "pp-t11-childtree-")));
+    const childEnv = keylessEnv();
+    // Only the key names matter: no value is read, compared or recorded.
+    const credentialNames = Object.keys(childEnv).filter((name) => SECRET_NAME.test(name));
+    assert.deepEqual(credentialNames, [], "the verify child received a credential name, so its zero model requests prove nothing");
+
+    // The real oracle, run as the child it is, with its bytes and its tree captured.
+    const oracleUnderCapture = (projectDir, { platform = "web-desktop" } = {}) => {
+      const capture = createCapture({ harness: "claude-code", check_id: "verify", cwd: projectDir, timeout_ms: 120_000 });
+      capture.snapshotFixtures("before");
+      const args = [ORACLE_SCRIPT, "--check", projectDir, "--platform", platform, "--json"];
+      const run = spawnSync(process.execPath, args, { cwd: projectDir, env: childEnv, timeout: 120_000 });
+      capture.append(run.stdout ?? Buffer.alloc(0));
+      if (run.stderr?.length) capture.append(run.stderr, "stderr");
+      capture.finish({ exit_code: run.status, timed_out: false, termination_kind: "native", signal: null });
+      capture.snapshotFixtures("after");
+      const record = capture.persist(captureDir);
+      let report = null;
+      let parseError = null;
+      try {
+        report = JSON.parse((run.stdout ?? Buffer.alloc(0)).toString("utf8"));
+      } catch (error) {
+        parseError = error.message;
+      }
+      return { command: `${process.execPath} ${args.join(" ")}`, exit_code: run.status, report, parse_error: parseError, stderr: (run.stderr ?? "").toString().trim(), record };
+    };
+    let childRecord = null;
+    const clean = runVerifyCase("verify-clean", {
+      keep: true,
+      oracle: (projectDir, options) => {
+        const observed = oracleUnderCapture(projectDir, options);
+        childRecord = observed.record;
+        return observed;
+      },
+    });
+    keep(clean.dir);
+    assert.equal(clean.oracle.exit_code, 0, "the verify child did not exit 0");
+    assert.equal(clean.report.observed_verify_outcome, "clean");
+    assert.ok(childRecord, "the verify child produced no capture, so its tree is not observable");
+
+    const cleanScan = childTree.scanChildTree({
+      trees: [
+        { root: clean.dir, manifest: manifestOf(clean.dir) },
+        { root: captureDir, manifest: manifestOf(captureDir) },
+      ],
+      capture: childRecord,
+      environment: { credential_names: credentialNames },
+    });
+    const cleanVerdict = childTree.verdictForChildTreeScan(cleanScan);
+    assert.equal(cleanScan.accessible, true, `the verify child tree is not observable: ${cleanScan.inaccessible_because}`);
+    assert.deepEqual(cleanScan.image_inputs, [], `an image input was found in the verify child tree: ${JSON.stringify(cleanScan.image_inputs)}`);
+    assert.equal(cleanScan.scanned.model_requests, 0, "the verify child made a model request");
+    assert.equal(cleanVerdict.verdict, "pass");
+    assert.equal(cleanVerdict.reason, "no-image-judge-in-child-tree");
+    t.diagnostic(`t11_child_tree files=${cleanScan.scanned.files} bytes=${cleanScan.scanned.bytes} requests=${cleanScan.scanned.model_requests}`);
+
+    // The paired observation: a planted image judge in an otherwise identical tree.
+    const plantedRoot = keep(mkdtempSync(join(tmpdir(), "pp-t11-planted-judge-")));
+    const plantedCapture = createCapture({ harness: "claude-code", check_id: "verify", cwd: plantedRoot, timeout_ms: 60_000 });
+    const plantedStatus = await spawnCaptured({
+      command: process.execPath,
+      args: ["-e", PLANTED_JUDGE, plantedRoot],
+      cwd: plantedRoot,
+      capture: plantedCapture,
+      timeout_ms: 60_000,
+    });
+    plantedCapture.finish(plantedStatus);
+    const plantedRecord = plantedCapture.persist(plantedRoot);
+    const plantedScan = childTree.scanChildTree({
+      trees: [{ root: plantedRoot, manifest: manifestOf(plantedRoot) }],
+      capture: plantedRecord,
+      environment: { credential_names: ["ANTHROPIC_API_KEY"] },
+    });
+    const plantedVerdict = childTree.verdictForChildTreeScan(plantedScan);
+    assert.equal(plantedScan.accessible, true, `the planted tree was not observable: ${plantedScan.inaccessible_because}`);
+    assert.ok(plantedScan.image_inputs.some((entry) => entry.kind === "image-magic"), `the screenshot was not seen: ${JSON.stringify(plantedScan.image_inputs)}`);
+    assert.ok(plantedScan.image_inputs.some((entry) => entry.kind === "image-block-in-file"), `the logged image request was not seen: ${JSON.stringify(plantedScan.image_inputs)}`);
+    assert.equal(plantedVerdict.verdict, "fail", "a planted image judge passed the scan");
+    assert.equal(plantedVerdict.reason, "image-judge-observed");
+
+    // The request-log dimension catches what no file contains: an image block in the log.
+    const requestOnly = createCapture({ harness: "claude-code", check_id: "verify", cwd: plantedRoot, timeout_ms: 60_000 });
+    requestOnly.beginRequest({ content: [{ type: "image", source: { type: "base64", media_type: "image/png", data: "iVBORw0KGgo=" } }] });
+    requestOnly.finish({ exit_code: 0, timed_out: false, termination_kind: "native", signal: null });
+    const requestOnlyScan = childTree.scanChildTree({
+      trees: [{ root: plantedRoot, manifest: manifestOf(plantedRoot) }],
+      capture: requestOnly.toRecord(),
+      environment: { credential_names: ["ANTHROPIC_API_KEY"] },
+    });
+    assert.ok(requestOnlyScan.image_inputs.some((entry) => entry.kind.startsWith("model-request/")), "an image block in the request log was not seen");
+
+    // An unreadable child tree is could-not-run, never pass: the file the manifest names is gone.
+    const vanished = Object.keys(manifestOf(plantedRoot))[0];
+    rmSync(join(plantedRoot, vanished), { force: true });
+    const blindScan = childTree.scanChildTree({
+      trees: [{ root: plantedRoot, manifest: manifestOf(plantedRoot) }],
+      capture: null,
+      environment: { credential_names: ["ANTHROPIC_API_KEY"] },
+    });
+    const blindVerdict = childTree.verdictForChildTreeScan(blindScan);
+    assert.equal(blindScan.accessible, false, "a tree with no request log read as accessible");
+    assert.equal(blindVerdict.verdict, "could-not-run", "an unobservable child tree was graded");
+    assert.equal(blindVerdict.reason, "inaccessible-child-tree");
+    t11.assertions.push(
+      "hidden-image-judge: a planted image judge (real screenshot on disk + real logged image request) fails the scan, and an unobservable child tree is could-not-run",
+    );
+
+    // ---- the four rows: two observed here, two fail closed ----------------------------
+    const qualification = controlsModule.qualifyControls({
+      observations: {
+        "exit0-denied-read": {
+          verdict: deniedGrade.cell.verdict,
+          reason: deniedGrade.cell.reason,
+          evidence: {
+            process_exit_code: deniedGrade.cell.process_exit_code,
+            exit_code_mapping: exitCodeVerdict(deniedGrade.cell.process_exit_code),
+            denial: { ...deniedGrade.cell.denied_tool_call, target: deniedGrade.cell.denied_tool_call.target },
+            capture_sha256: deniedStaged.record.stdout.sha256,
+            stream_provenance: { base_capture_sha256: archived.sha256, shape: "permission_denials result event" },
+          },
+        },
+        "hidden-image-judge": {
+          verdict: cleanVerdict.verdict,
+          reason: cleanVerdict.reason,
+          evidence: { scan: cleanScan.scanned, image_inputs: cleanScan.image_inputs.length, roots: [clean.dir, captureDir] },
+        },
+      },
+      pairs: {
+        "exit0-denied-read": {
+          control_id: "exit0-clean-twin",
+          verdict: cleanGrade.cell.verdict,
+          discriminates: cleanGrade.cell.verdict === "pass" && cleanGrade.cell.reason !== "denied_tool_call",
+          evidence: { process_exit_code: cleanGrade.cell.process_exit_code },
+        },
+        "hidden-image-judge": {
+          control_id: "planted-image-judge",
+          verdict: plantedVerdict.verdict,
+          discriminates: plantedVerdict.verdict === "fail" && blindVerdict.verdict === "could-not-run",
+          evidence: { image_inputs: plantedScan.image_inputs.length, kinds: [...new Set(plantedScan.image_inputs.map((entry) => entry.kind))] },
+        },
+      },
+    });
+
+    controlsModule.assertControlRows(qualification.rows);
+    const exitRow = qualification.rows.find((row) => row.control_id === "exit0-denied-read");
+    assert.equal(exitRow.verdict, "fail");
+    assert.equal(exitRow.reason, "denied_tool_call");
+    assert.equal(exitRow.matched, true, exitRow.qualified_why);
+    assert.equal(exitRow.discriminates, true, "the exit-0 row has no clean twin, so it proves failure rather than discrimination");
+    assert.equal(exitRow.local.process_exit_code, 0, "the row does not carry the raw exit code beside the fail");
+    assert.equal(exitRow.hosted.status, "not-executed", "a machine-local tree cannot produce the hosted half");
+    assert.ok(exitRow.hosted.awaiting && exitRow.hosted.owner, "the awaiting half is not named");
+
+    const imageRow = qualification.rows.find((row) => row.control_id === "hidden-image-judge");
+    assert.equal(imageRow.verdict, "pass");
+    assert.equal(imageRow.reason, "no-image-judge-in-child-tree");
+    assert.equal(imageRow.matched, true, imageRow.qualified_why);
+    assert.equal(imageRow.discriminates, true, "the image-judge control was never made to catch anything");
+    assert.equal(imageRow.local.scan.model_requests, 0, "the row carries no child-tree scan evidence");
+    assert.ok(Number.isInteger(imageRow.local.scan.files) && imageRow.local.scan.files > 0, "the scan counted no files");
+    assert.equal(imageRow.hosted.status, "not-executed");
+
+    for (const control_id of ["missing-key", "stale-cache"]) {
+      const row = qualification.rows.find((candidate) => candidate.control_id === control_id);
+      assert.equal(row.verdict, "could-not-run", `${control_id} defaulted to something other than could-not-run`);
+      assert.equal(row.reason, controlsModule.UNOBSERVABLE_REASON);
+      assert.equal(row.local.status, "unobservable");
+      assert.notEqual(row.verdict, "pass");
+    }
+
+    const written = controlsModule.writeControls({ file: join(REPORT_DIR, "controls-grd-03.json"), rows: qualification.rows });
+    assert.equal(written.ok, true, `controls-grd-03.json did not read back: ${JSON.stringify(written.mismatches)}`);
+    const projection = controlsModule.controlRowsLine(qualification.rows).split("\n");
+    assert.equal(projection.length, 4, `the gate's projection is not four rows: ${JSON.stringify(projection)}`);
+    assert.ok(projection.includes("exit0-denied-read fail denied_tool_call"), `projection: ${JSON.stringify(projection)}`);
+    assert.ok(projection.includes("hidden-image-judge pass no-image-judge-in-child-tree"));
+    assert.equal(qualification.fully_qualified, false, "no row can be fully qualified without the hosted half");
+
+    t11.controls_path = written.path;
+    t11.controls = qualification.rows;
+    t11.projection = projection;
+    t11.observed.push(
+      "exit0-denied-read: raw process_exit_code 0 beside verdict fail/denied_tool_call, paired with the same stream shape passing",
+      "hidden-image-judge: the real verify child tree scanned clean, paired with a planted image judge the scan catches",
+      "missing-key and stale-cache: unobservable in this flow -> could-not-run/control-unobservable, never pass",
+    );
+    t11.awaiting.push(...qualification.rows.map((row) => `${row.control_id}: ${row.hosted.awaiting} [owner: ${row.hosted.owner}]`));
+
+    // ---- the published report carries the section that was checked -------------------
+    const prior = existsSync(ARTIFACT) ? JSON.parse(readFileSync(ARTIFACT, "utf8")) : {};
+    writeFileSync(ARTIFACT, `${JSON.stringify({ ...prior, t11 }, null, 2)}\n`, "utf8");
+    const readBack = JSON.parse(readFileSync(ARTIFACT, "utf8"));
+    assert.equal(readBack.t11.controls.length, 4, "the published report does not carry the four rows");
+    assert.equal(readBack.t11.controls.find((row) => row.control_id === "exit0-denied-read").reason, "denied_tool_call");
+    assert.equal(readBack.t11.controls.find((row) => row.control_id === "hidden-image-judge").verdict, "pass");
+
+    t.diagnostic(`t11_exit0=${exitRow.verdict}/${exitRow.reason} exit_code=${exitRow.local.process_exit_code} mapping=${exitRow.local.exit_code_mapping}`);
+    t.diagnostic(`t11_image_judge=${imageRow.verdict}/${imageRow.reason} files=${imageRow.local.scan.files} requests=${imageRow.local.scan.model_requests}`);
+    t.diagnostic(`t11_controls=${projection.join(" | ")}`);
+    t.diagnostic(`t11_fully_qualified=${qualification.fully_qualified} unqualified=${qualification.unqualified.join(",")}`);
+  } finally {
+    for (const dir of scratch) rmSync(dir, { recursive: true, force: true });
+  }
+});
