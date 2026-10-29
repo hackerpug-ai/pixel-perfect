@@ -31,3 +31,11 @@ CLAUDE.md
 
 
 .env
+# Session and run state (not product files)
+.kb-run-sprint/
+.opencode/
+.pi/
+.tmp/
+
+# Review run evidence (generated)
+.spec/reviews/
