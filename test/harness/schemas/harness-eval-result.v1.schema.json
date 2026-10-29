@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "harness-eval-result.v1.schema.json",
+  "title": "HarnessEvalResult",
+  "description": "The single result record one run uploads as harness-eval-result-<run_id>-<run_attempt>. One run, one install mode, twelve unique (harness, track) cells, pins_sha256 of the exact pins.json bytes (03-data-schema.md § HarnessEvalResult).",
+  "type": "object",
+  "required": [
+    "schema",
+    "repository_id",
+    "repository_full_name",
+    "workflow_id",
+    "workflow_path",
+    "workflow_source_sha",
+    "source_branch",
+    "run_id",
+    "run_number",
+    "run_attempt",
+    "event",
+    "head_sha",
+    "candidate_sha",
+    "install_mode",
+    "plugin_requested_ref",
+    "plugin_revision",
+    "expected_plugin_manifest_sha256",
+    "pins_sha256",
+    "resolution_completed_at",
+    "versions",
+    "evaluation_started_at",
+    "evaluation_completed_at",
+    "cells",
+    "later_checks",
+    "drift",
+    "release",
+    "fix"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "harness-eval-result/v1"
+    },
+    "repository_id": {
+      "type": ["integer", "null"]
+    },
+    "repository_full_name": {
+      "type": "string"
+    },
+    "workflow_id": {
+      "type": ["integer", "string", "null"]
+    },
+    "workflow_path": {
+      "type": "string"
+    },
+    "workflow_source_sha": {
+      "type": ["string", "null"]
+    },
+    "source_branch": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": ["integer", "string", "null"]
+    },
+    "run_number": {
+      "type": ["integer", "null"]
+    },
+    "run_attempt": {
+      "type": ["integer", "null"]
+    },
+    "event": {
+      "type": "string",
+      "enum": ["schedule", "workflow_dispatch", "push"]
+    },
+    "head_sha": {
+      "description": "The workflow commit.",
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"
+    },
+    "candidate_sha": {
+      "description": "The checkout commit, or null for a published run.",
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"
+    },
+    "install_mode": {
+      "type": "string",
+      "enum": ["checkout", "published"]
+    },
+    "plugin_requested_ref": {
+      "type": ["string", "null"]
+    },
+    "plugin_revision": {
+      "type": ["string", "null"]
+    },
+    "expected_plugin_manifest_sha256": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "pins_sha256": {
+      "description": "SHA-256 of the exact test/harness/pins.json bytes. Never a registry, cache or npm-resolved digest.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "resolution_completed_at": {
+      "type": ["string", "null"]
+    },
+    "versions": {
+      "description": "Requested/resolved CLI versions for all twelve cells.",
+      "type": "object"
+    },
+    "evaluation_started_at": {
+      "description": "GitHub start of the first required smoke job.",
+      "type": ["string", "null"]
+    },
+    "evaluation_completed_at": {
+      "description": "GitHub completion of the last required smoke job.",
+      "type": ["string", "null"]
+    },
+    "cells": {
+      "type": "array",
+      "items": {
+        "$ref": "harness-cell.v1.schema.json"
+      }
+    },
+    "controls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["control_id", "verdict", "reason"],
+        "properties": {
+          "control_id": { "type": "string" },
+          "verdict": { "type": "string", "enum": ["pass", "fail", "could-not-run"] },
+          "reason": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "later_checks": {
+      "type": "array"
+    },
+    "drift": {
+      "type": ["object", "null"]
+    },
+    "release": {
+      "type": ["object", "null"]
+    },
+    "fix": {
+      "type": ["object", "null"]
+    }
+  }
+}
