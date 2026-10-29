@@ -1,0 +1,24 @@
+{
+  "require_any": [
+    "gh\\s+(run|api|workflow)",
+    "harness-eval"
+  ],
+  "require_product_target_any": [
+    "harness-eval-result",
+    "pins_sha256",
+    "verify-button-drift",
+    "verify-clean",
+    "controls\\[",
+    "cells\\["
+  ],
+  "banned_success_oracles": ["body", "html", "main", "document", "*"],
+  "flows": {
+    "FLOW-GRD-01-TWELVE-CELLS": "Read-only against GitHub: lists workflows, fetches run metadata, downloads the harness-eval-result artifact by explicit run id. Writes only under .tmp/sprint-01-verification/ and a scratch download dir. Banned: any repo push/commit, workflow file mutation, secret material in the report, and any artifact other than the named attempt-qualified one.",
+    "FLOW-GRD-02-FOUR-GRADES": "Read-only artifact replay plus offline fixtures. Fixtures must be real captured event bytes with capture hashes and source-run provenance under test/harness/fixtures/streams/ — hand-authored event JSON is banned (it would validate the grader against fiction). Writes only the flow report under .tmp/sprint-01-verification/.",
+    "FLOW-GRD-03-FILES-AND-STREAM": "Read-only artifact replay. The deny-under-default-mode fixture must be the REAL capture recorded during T5/T11 qualification — a synthesized denial event is banned. The check itself must fail any verdict whose value equals its exit-code mapping; the test asserts that sin is refused, not reproduced. Writes only the flow report.",
+    "FLOW-GRD-04-NAMED-PATH": "Confinement edge runs inside a mkdtemp sandbox: the case loader is fed manifests declaring '../escape.json', '/abs.json', symlinked ancestors, and a decoy reports/verify-button-drift.backup.json — the flow must write zero files and record the refusal plus a directory listing proving nothing was created. No writes outside the sandbox and .tmp/sprint-01-verification/. Read-only GitHub for the replay half.",
+    "FLOW-GRD-05-CLEAN-TWIN": "Read-only artifact replay plus offline fixtures. The swapped-twin attack (planted report body submitted as the clean twin) must be rejected by body-to-invocation binding (T-GRD-016); a clean-false-positive capture grades fail. Fixtures are real captured pairs; no report reuse across invocations. Writes only the flow report.",
+    "FLOW-GRD-06-MISSING-KEY": "Environment manipulation is confined to child-process env of the spawned guard (ANTHROPIC_API_KEY unset there only) — the runner's own environment is never mutated. Both ways enforced: key-absent must refuse with missing-api-key and zero model requests; key-present must NOT record missing-api-key (an always-refusing guard fails the flow). Cursor cell reason must textually equal the controls-array missing-key reason — a special-cased string is a fabricated verdict and fails. No secret values ever appear in the report; only key-presence booleans.",
+    "FLOW-JRN-PLANTED-AND-TWIN": "Read-only replay of ONE real dispatched run, walking the chain oracle -> planted invocation -> clean invocation -> report pair -> summary links; the runner dispatches nothing itself (the run under test is the gate's own run). Missing-planted-report must downgrade the cell to fail report-missing — not could-not-run, not pass. Writes only the flow report."
+  }
+}

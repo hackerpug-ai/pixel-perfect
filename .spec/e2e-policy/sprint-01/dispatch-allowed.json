@@ -1,0 +1,15 @@
+{
+  "require_any": [
+    "workflow_dispatch",
+    "gh\\s+workflow\\s+run"
+  ],
+  "require_product_target_any": [
+    "install_mode",
+    "candidate_sha",
+    "harness-eval-result"
+  ],
+  "banned_success_oracles": ["body", "html", "main", "document", "*"],
+  "flows": {
+    "FLOW-RUN-02-HAND": "The single write surface in this verification set: one workflow_dispatch of harness-eval with NO inputs beyond optionally install_mode — creating a run is the product acting. Banned: dispatching any other workflow, passing fixture/debug inputs that could alter mode selection, dispatching from a fork or non-main ref, and inferring success from the run's conclusion (fail-closed cursor failure is the expected day-one state). The result must record event workflow_dispatch and install_mode matching the invocation; a mode/identity disagreement fails the flow (R-mode-mixup guard)."
+  }
+}
