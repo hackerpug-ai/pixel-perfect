@@ -11,13 +11,26 @@
 //      or dispatch `harness-eval` ourselves), download the attempt-qualified
 //      verify-reports artifact, and require its oracle transcript and both reports
 //      to agree with the case manifests;
-//   3. honest not-executed for exactly ONE cause: the harness-eval workflow not being on
-//      this branch, which T7 lands (post-integration obligation
-//      obl-FLOW-JRN-PLANTED-AND-TWIN). Only that cause may defer, and it carries its
-//      reason. Every other way the live leg can fail to start — gh unauthenticated, the
-//      dispatch refused, the run list unreadable, no run appearing — is a failure to
-//      execute the leg and goes RED. A catch-all deferral would let T7's gate step stay
-//      green while the journey's THEN was never observed.
+//   3. honest not-executed for exactly THREE kinds of cause, all probed BEFORE any dispatch
+//      but only when NO run id is supplied,
+//      is attempted and all carried with their reason (one helper, `preDispatchRefusal`):
+//        a. the workflow file is not in this tree (T7 lands it, post-integration obligation
+//           obl-FLOW-JRN-PLANTED-AND-TWIN);
+//        b. the remote has not registered a workflow of that name yet — GitHub registers it
+//           only once the file lands on main, so a branch that carries the file still has
+//           nothing to dispatch (probe: gh api .../actions/workflows/harness-eval.yml → 404);
+//        c. the flow's surface policy does not permit a dispatch from this ref at all (it
+//           bans a non-main ref, so a task branch may never dispatch).
+//      Every other way the live leg can fail — gh unauthenticated, an attempted dispatch
+//      that failed, the run list unreadable, no run appearing, a registered workflow whose
+//      probe cannot be read, a foreign commit — is a failure to execute the leg and goes
+//      RED. A catch-all deferral would let T7's gate step stay green while the journey's
+//      THEN was never observed.
+//
+// The seven shapes are reproducible as process exit codes (0 = the leg honestly records
+// not-executed, 1 = it goes red): `node tests/sprint-01/jrn-planted-and-twin.test.mjs
+// --shape=<absent|unregistered-remote|policy-refused|dispatch-failed|unauthenticated|
+// run-list-error|no-run>`.
 
 import assert from "node:assert/strict";
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
@@ -28,6 +41,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { loadCase, sha256File } from "../../test/harness/kit/case-loader.mjs";
+import { validateDispatchIdentity } from "../../test/harness/validate.mjs";
 import { missingPlantedReport } from "./flow-runner.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -72,33 +86,110 @@ export function readOracleTranscript(dir) {
   return null;
 }
 
+const POLICY_PATH = ".spec/e2e-policy/sprint-01/dispatch-allowed.json";
+const DISPATCH_FLOW = "FLOW-RUN-02-HAND";
+const WORKFLOW_SLUG = "harness-eval";
+/** Where the remote registers this workflow, once its file has landed on main. */
+export const REGISTRATION_ENDPOINT = `repos/${REPO}/actions/workflows/${WORKFLOW_SLUG}.yml`;
+
+/** The ref this checkout is on, when no env names it (CI sets GITHUB_REF_NAME). */
+function currentRef() {
+  if (process.env.GITHUB_REF_NAME) return process.env.GITHUB_REF_NAME;
+  const res = spawnSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], { encoding: "utf8", cwd: REPO_ROOT });
+  return (res.stdout || "").trim() || "HEAD";
+}
+
+/**
+ * Whether the flow's surface policy permits a dispatch at all from `ref`. The policy bans
+ * "dispatching from a fork or non-main ref", so a non-main checkout may never dispatch:
+ * that is a refusal to attempt, not a dispatch that failed. No policy file means nothing
+ * forbids the dispatch, so the leg goes on to attempt it and hard-fails if it fails.
+ */
+export function dispatchAllowedFrom(ref, { policyPath = path.join(REPO_ROOT, POLICY_PATH) } = {}) {
+  const flow = existsSync(policyPath) ? JSON.parse(readFileSync(policyPath, "utf8"))?.flows?.[DISPATCH_FLOW] : null;
+  if (typeof flow !== "string") return { allowed: true };
+  if (/\bnon-main ref\b/.test(flow) && ref !== "main") {
+    return {
+      allowed: false,
+      reason: `the ${DISPATCH_FLOW} surface policy (${POLICY_PATH}) does not permit a dispatch from a non-main ref, and this checkout is ${ref}`,
+    };
+  }
+  return { allowed: true };
+}
+
+/**
+ * The one place the three legitimate pre-dispatch impossibilities live. Each is established by
+ * a probe, in order, BEFORE any dispatch is attempted, and each returns a named cause with its
+ * reason. `null` means none of them applies: the leg must go on and earn a run — a dispatch it
+ * then fails to start is a failure, never a deferral.
+ *
+ *   workflow-file-absent     the file is not in this tree            (no gh consulted)
+ *   remote-not-registered    gh api .../workflows/harness-eval.yml → 404
+ *   policy-refused-ref       dispatch-allowed.json bans a non-main ref from dispatching
+ *
+ * A probe that fails some other way (5xx, a permissions error) is NOT a refusal: it is an
+ * unreadable probe, so it falls through and the dispatch decides.
+ */
+export function preDispatchRefusal({
+  ref = currentRef(),
+  hasWorkflow = () => existsSync(path.join(REPO_ROOT, WORKFLOW_PATH)),
+  probe = gh,
+  policyPath = path.join(REPO_ROOT, POLICY_PATH),
+} = {}) {
+  if (!hasWorkflow()) {
+    return {
+      cause: "workflow-file-absent",
+      reason: `no ${WORKFLOW_PATH} to dispatch — the harness-eval workflow is not on this branch (T7 owns it)`,
+    };
+  }
+
+  // GitHub registers a workflow only once its file lands on main. A branch that carries the
+  // file therefore still has no dispatchable workflow on the remote, and `gh workflow run`
+  // answers "could not find any workflows named harness-eval" — which is a cannot-yet, not a
+  // failure to attempt.
+  const registered = probe(["api", REGISTRATION_ENDPOINT]);
+  if (registered.status !== 0 && /\b404\b|Not Found/.test(registered.stderr || "")) {
+    return {
+      cause: "remote-not-registered",
+      reason: `the remote has not registered ${WORKFLOW_PATH} yet (gh api ${REGISTRATION_ENDPOINT} → 404) — GitHub registers a workflow only once its file has landed on main`,
+    };
+  }
+
+  const policy = dispatchAllowedFrom(ref, { policyPath });
+  if (!policy.allowed) return { cause: "policy-refused-ref", reason: policy.reason };
+
+  return null;
+}
+
 export function resolveLiveRun({
   hasWorkflow = () => existsSync(path.join(REPO_ROOT, WORKFLOW_PATH)),
   gh: runGh = gh,
   env = process.env,
+  ref = currentRef(),
+  policyPath = path.join(REPO_ROOT, POLICY_PATH),
 } = {}) {
-  // The one legitimate deferral: T7 has not landed the workflow yet, so there is nothing
-  // to dispatch. Everything below is a genuine failure and must not reach the green branch.
-  if (!hasWorkflow()) {
-    return {
-      ok: false,
-      deferral: true,
-      reason: `no ${WORKFLOW_PATH} to dispatch — the harness-eval workflow is not on this branch (T7 owns it)`,
-    };
-  }
-  const auth = runGh(["auth", "status"]);
-  if (auth.status !== 0) return { ok: false, reason: "gh is not authenticated" };
-
+  // A pinned run wins over everything, including the three pre-dispatch refusals: the leg
+  // already has the run it was told to grade, so no refusal is a reason to discard it. That
+  // is how T7's gate step 8 replays a run from a task branch, where all three can apply.
+  // A pinned run that cannot be fetched is a hard failure (downloadVerifyReports throws).
   const suppliedRun = env.HARNESS_EVAL_RUN_ID;
   if (suppliedRun) {
     return { ok: true, runId: suppliedRun, attempt: env.HARNESS_EVAL_RUN_ATTEMPT || "1", dispatched: false };
   }
 
-  const dispatch = runGh(["workflow", "run", "harness-eval", "--repo", REPO]);
+  // With no run supplied, the only deferral is a probed pre-dispatch refusal. Everything
+  // below is a genuine failure to execute the leg and must not reach the green branch.
+  const refusal = preDispatchRefusal({ ref, hasWorkflow, probe: runGh, policyPath });
+  if (refusal) return { ok: false, deferral: true, cause: refusal.cause, reason: refusal.reason };
+
+  const auth = runGh(["auth", "status"]);
+  if (auth.status !== 0) return { ok: false, reason: "gh is not authenticated" };
+
+  const dispatch = runGh(["workflow", "run", WORKFLOW_SLUG, "--repo", REPO]);
   if (dispatch.status !== 0) {
     return { ok: false, reason: `gh workflow run harness-eval failed: ${(dispatch.stderr || "").trim()}` };
   }
-  const list = runGh(["run", "list", "--repo", REPO, "--workflow", "harness-eval", "--limit", "1", "--json", "databaseId,attempt,status"]);
+  const list = runGh(["run", "list", "--repo", REPO, "--workflow", WORKFLOW_SLUG, "--limit", "1", "--json", "databaseId,attempt,status"]);
   if (list.status !== 0) return { ok: false, reason: `gh run list failed: ${(list.stderr || "").trim()}` };
   const [latest] = JSON.parse(list.stdout || "[]");
   if (!latest) return { ok: false, reason: "no harness-eval run appeared after dispatch" };
@@ -106,8 +197,8 @@ export function resolveLiveRun({
 }
 
 /**
- * Grade the live leg's resolution. Only `deferral: true` — the missing-workflow cause —
- * may record not-executed; any other failure to start the leg fails the check.
+ * Grade the live leg's resolution. Only `deferral: true` — one of `preDispatchRefusal`'s three
+ * probed causes — may record not-executed; any other failure to start the leg fails the check.
  */
 export function gradeLiveRun(run, emitDiagnostic) {
   if (run.ok) return;
@@ -119,11 +210,64 @@ export function gradeLiveRun(run, emitDiagnostic) {
   assert.fail(`live-dispatched-run could not execute: ${run.reason}`);
 }
 
-function downloadVerifyReports(runId, attempt) {
+/**
+ * Fetch the attempt-qualified verify-reports artifact for one run. An unfetchable run throws:
+ * the live leg has no third outcome, so a pinned run the remote cannot serve is red, never a
+ * not-executed record.
+ */
+export function downloadVerifyReports(runId, attempt, { runGh = gh } = {}) {
   const dir = mkdtempSync(path.join(tmpdir(), `pp-verify-reports-${runId}-`));
   const name = `harness-eval-verify-reports-${runId}-${attempt}`;
-  const res = gh(["run", "download", runId, "--repo", REPO, "-n", name, "-D", dir]);
-  return { dir, name, ok: res.status === 0, stderr: (res.stderr || "").trim() };
+  const res = runGh(["run", "download", runId, "--repo", REPO, "-n", name, "-D", dir]);
+  if (res.status !== 0) {
+    rmSync(dir, { recursive: true, force: true });
+    assert.fail(`could not download ${name}: ${(res.stderr || "").trim()}`);
+  }
+  return { dir, name };
+}
+
+/**
+ * A `gh` TEST DOUBLE — never the thing under test. It models only the calls the live leg makes,
+ * and exactly the three registration-probe outcomes a `gh api .../workflows/harness-eval.yml`
+ * can answer with: `registered` (200), `unregistered` (404 — the file is not on main yet), and
+ * `unreadable` (502 — an error that is NOT a refusal). Each shape is posed by name instead of
+ * by hand-rolled ternaries, and any gh call it does not model throws, so a new call cannot
+ * silently pass through it. `calls` is the probe log the controls assert on.
+ */
+export function modelGh({ auth = 0, registration = "registered", dispatch = 0, listStatus = 0, runList = "[]", download = 0 } = {}) {
+  const outcomes = {
+    registered: { status: 0, stdout: '{"id":1}', stderr: "" },
+    unregistered: { status: 1, stdout: "", stderr: "gh: Not Found (HTTP 404)" },
+    unreadable: { status: 1, stdout: "", stderr: "gh: Server Error (HTTP 502)" },
+  };
+  if (!outcomes[registration]) throw new Error(`modelGh: unknown registration outcome ${registration}`);
+  const calls = [];
+  const double = (args) => {
+    calls.push(args.join(" "));
+    if (args[0] === "auth") return { status: auth, stdout: "", stderr: auth === 0 ? "" : "gh: not logged in" };
+    if (args[0] === "api") return outcomes[registration];
+    if (args[0] === "workflow" && args[1] === "run") {
+      return { status: dispatch, stdout: "", stderr: dispatch === 0 ? "" : "could not find any workflows named harness-eval" };
+    }
+    if (args[0] === "run" && args[1] === "list") {
+      return listStatus === 0 ? { status: 0, stdout: runList, stderr: "" } : { status: listStatus, stdout: "", stderr: "gh: run list failed" };
+    }
+    if (args[0] === "run" && args[1] === "download") {
+      return { status: download, stdout: "", stderr: download === 0 ? "" : "gh: run not found (HTTP 404)" };
+    }
+    throw new Error(`modelGh: does not model gh ${args.join(" ")}`);
+  };
+  double.calls = calls;
+  return double;
+}
+
+const DISPATCH_CALL = `workflow run ${WORKFLOW_SLUG} --repo ${REPO}`;
+
+/** Write a throwaway surface policy; `undefined` body means "no policy file at all". */
+function writePolicy(dir, name, body) {
+  const p = path.join(dir, name);
+  if (body !== undefined) writeFileSync(p, JSON.stringify(body), "utf8");
+  return p;
 }
 
 test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
@@ -170,65 +314,228 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
     }
   });
 
-  // ---- Part 2/3: the live journey, or the one legitimate not-executed -------
-  await t.test("only the missing workflow defers; any other failure to dispatch goes red", () => {
-    // Control 1: a dispatch failure that is NOT the missing-workflow case. The workflow
-    // is present, gh answers, and the dispatch is refused — nothing this leg owns is
-    // absent, so it must fail rather than quietly defer.
-    // Each control pins its own env: this subtest asserts the deferral shape itself, so it
-    // must not inherit an operator's HARNESS_EVAL_RUN_ID (which short-circuits to ok:true).
-    const dispatchFailed = resolveLiveRun({
+  // ---- Part 2/3: the live journey, or one of the three probed not-executed causes ----
+  await t.test("pre-dispatch refusal 1: the workflow file is absent", () => {
+    const ghDouble = modelGh();
+    const absent = resolveLiveRun({ env: {}, ref: "main", hasWorkflow: () => false, gh: ghDouble });
+    assert.equal(absent.ok, false);
+    assert.equal(absent.deferral, true);
+    assert.equal(absent.cause, "workflow-file-absent");
+    assert.deepEqual(ghDouble.calls, [], "a missing file is decided without gh");
+    const emitted = [];
+    gradeLiveRun(absent, (m) => emitted.push(m));
+    assert.equal(emitted.length, 1);
+    assert.match(
+      emitted[0],
+      /^not-executed leg=live-dispatched-run owner=T7 .*reason=no \.github\/workflows\/harness-eval\.yml to dispatch/,
+    );
+  });
+
+  await t.test("pre-dispatch refusal 2: the remote has not registered the workflow", () => {
+    // The file is in this tree, but GitHub only registers a workflow once the file lands on
+    // main — so `gh workflow run` would answer "could not find any workflows named
+    // harness-eval". The 404 probe establishes that before anything is dispatched.
+    const ghDouble = modelGh({ registration: "unregistered" });
+    const unregistered = resolveLiveRun({ env: {}, ref: "main", hasWorkflow: () => true, gh: ghDouble });
+    assert.equal(unregistered.ok, false);
+    assert.equal(unregistered.deferral, true, "an unregistered workflow is a cannot-yet, not a failed attempt");
+    assert.equal(unregistered.cause, "remote-not-registered");
+    assert.deepEqual(
+      ghDouble.calls,
+      [`api ${REGISTRATION_ENDPOINT}`],
+      "only the registration probe runs — no auth, no dispatch attempt, and no run list",
+    );
+    const emitted = [];
+    gradeLiveRun(unregistered, (m) => emitted.push(m));
+    assert.equal(emitted.length, 1);
+    assert.match(
+      emitted[0],
+      /^not-executed leg=live-dispatched-run owner=T7 .*reason=the remote has not registered \.github\/workflows\/harness-eval\.yml yet .*→ 404/,
+    );
+
+    // The probe outcome is what decides, not the file's presence: the same tree whose
+    // workflow IS registered goes on to attempt the dispatch.
+    const registeredGh = modelGh();
+    const registered = resolveLiveRun({ env: {}, ref: "main", hasWorkflow: () => true, gh: registeredGh });
+    assert.equal(registered.deferral, undefined, "a registered workflow is never excused as not-yet-registered");
+    assert.ok(registeredGh.calls.includes(DISPATCH_CALL), "a registered workflow really dispatches");
+  });
+
+  await t.test("pre-dispatch refusal 3: the surface policy forbids this ref,", () => {
+    // The file is present and registered, so neither earlier excuse applies; the flow's
+    // surface policy bans dispatching from a non-main ref, so no dispatch is attempted at all.
+    const refusedGh = modelGh();
+    const refused = resolveLiveRun({
       env: {},
+      ref: "kb-run-sprint/sprint-01-evaluator-evidence-spine/T4",
       hasWorkflow: () => true,
-      gh: (args) =>
-        args[0] === "auth"
-          ? { status: 0, stdout: "", stderr: "" }
-          : { status: 1, stdout: "", stderr: "could not find any workflows named harness-eval" },
+      gh: refusedGh,
     });
+    assert.equal(refused.ok, false);
+    assert.equal(refused.deferral, true, "a policy refusal is a pre-dispatch refusal, not an attempt");
+    assert.equal(refused.cause, "policy-refused-ref");
+    assert.deepEqual(refusedGh.calls, [`api ${REGISTRATION_ENDPOINT}`], "the refusal costs a probe, never a dispatch");
+    const emitted = [];
+    gradeLiveRun(refused, (m) => emitted.push(m));
+    assert.equal(emitted.length, 1);
+    assert.match(
+      emitted[0],
+      /^not-executed leg=live-dispatched-run owner=T7 .*reason=the FLOW-RUN-02-HAND surface policy .*non-main ref/,
+    );
+
+    // F-T4-11: the refusal is READ OUT OF dispatch-allowed.json, not assumed from the ref.
+    // Each policy below is a non-main-ref-shaped mutant killer: a check that defers on any
+    // non-main ref while ignoring the file fails every one of them.
+    const dir = mkdtempSync(path.join(tmpdir(), "pp-policy-"));
+    try {
+      for (const [label, policyPath] of [
+        ["a policy permitting any ref", writePolicy(dir, "permits.json", { flows: { [DISPATCH_FLOW]: "One workflow_dispatch of harness-eval, from any ref." } })],
+        ["a policy with no entry for this flow", writePolicy(dir, "no-flow.json", { flows: {} })],
+        ["no policy file at all", writePolicy(dir, "absent.json", undefined)],
+      ]) {
+        const permittingGh = modelGh({ dispatch: 1 });
+        const run = resolveLiveRun({ env: {}, ref: "kb-run-sprint/sprint-01-evaluator-evidence-spine/T4", hasWorkflow: () => true, gh: permittingGh, policyPath });
+        assert.equal(run.deferral, undefined, `${label} must not excuse a non-main ref`);
+        assert.ok(permittingGh.calls.includes(DISPATCH_CALL), `the dispatch really was attempted under ${label}`);
+        assert.throws(
+          () => gradeLiveRun(run, () => {}),
+          /live-dispatched-run could not execute: gh workflow run harness-eval failed/,
+          `${label} leaves a failed attempt red`,
+        );
+      }
+
+      // …and a throwaway policy that DOES ban a non-main ref defers again, so the file is read
+      // in both directions rather than the answer being hard-coded either way.
+      const banning = writePolicy(dir, "bans.json", { flows: { [DISPATCH_FLOW]: "Banned: dispatching from a fork or non-main ref." } });
+      const banningGh = modelGh({ dispatch: 1 });
+      const deferredAgain = resolveLiveRun({ env: {}, ref: "not-main", hasWorkflow: () => true, gh: banningGh, policyPath: banning });
+      assert.equal(deferredAgain.cause, "policy-refused-ref");
+      assert.ok(!banningGh.calls.includes(DISPATCH_CALL));
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  await t.test("a pinned run id outranks every pre-dispatch refusal, and an unfetchable one is red", () => {
+    // T7's gate step 8 replays a pinned run from a task branch, where all three refusals can
+    // apply at once. The supplied run must win: the leg already has the run it was told to
+    // grade, so no refusal is a reason to discard it (F-T4-12).
+    const pinnedEnv = { HARNESS_EVAL_RUN_ID: "4242", HARNESS_EVAL_RUN_ATTEMPT: "2" };
+    const shapes = [
+      ["a non-main ref the policy bans", { ref: T4_REF, hasWorkflow: () => true, gh: modelGh() }],
+      ["a remote that has not registered the workflow", { ref: "main", hasWorkflow: () => true, gh: modelGh({ registration: "unregistered" }) }],
+      ["a tree with no workflow file at all", { ref: T4_REF, hasWorkflow: () => false, gh: modelGh() }],
+    ];
+    for (const [label, opts] of shapes) {
+      const pinnedGh = opts.gh;
+      const pinned = resolveLiveRun({ ...opts, env: pinnedEnv });
+      assert.deepEqual(
+        { ok: pinned.ok, runId: pinned.runId, attempt: pinned.attempt, dispatched: pinned.dispatched, deferral: pinned.deferral },
+        { ok: true, runId: "4242", attempt: "2", dispatched: false, deferral: undefined },
+        `${label} must not discard the pinned run`,
+      );
+      assert.deepEqual(pinnedGh.calls, [], `${label}: a pinned run neither probes nor dispatches`);
+      const emitted = [];
+      gradeLiveRun(pinned, (m) => emitted.push(m));
+      assert.deepEqual(emitted, [], `${label}: a pinned run is never recorded not-executed`);
+    }
+
+    // The precedence is one-way: with no run id supplied, the same three shapes still defer,
+    // so honouring the pinned run did not turn an honest not-executed into a red.
+    const policyRefused = resolveLiveRun({ env: {}, ref: T4_REF, hasWorkflow: () => true, gh: modelGh() });
+    assert.equal(policyRefused.cause, "policy-refused-ref", "with no run id the refusal still applies");
+    assert.equal(policyRefused.deferral, true);
+
+    // And a pinned run that cannot be fetched is an error, never a deferral: the only green
+    // escape on this path is `deferral`, which a pinned run never carries, so the fetch throws.
+    assert.throws(
+      () => downloadVerifyReports("4242", "2", { runGh: modelGh({ download: 1 }) }),
+      /could not download harness-eval-verify-reports-4242-2: gh: run not found \(HTTP 404\)/,
+      "an unfetchable pinned run must fail the check rather than record not-executed",
+    );
+  });
+
+  await t.test("everything that is not a probed refusal still goes red", () => {
+    // Control 0: once the workflow is registered and the ref may dispatch, the leg is NOT
+    // deferrable — it earns a run. A mutant that defers whenever it consulted the probe dies here.
+    const goodGh = modelGh({ runList: JSON.stringify([{ databaseId: 42, attempt: 1, status: "completed" }]) });
+    const earned = resolveLiveRun({ env: {}, ref: "main", hasWorkflow: () => true, gh: goodGh });
+    assert.deepEqual(
+      { ok: earned.ok, runId: earned.runId, dispatched: earned.dispatched, deferral: earned.deferral },
+      { ok: true, runId: "42", dispatched: true, deferral: undefined },
+    );
+
+    // An operator-supplied run still short-circuits without a dispatch.
+    const supplied = resolveLiveRun({ env: { HARNESS_EVAL_RUN_ID: "777", HARNESS_EVAL_RUN_ATTEMPT: "2" }, ref: "main", hasWorkflow: () => true, gh: modelGh() });
+    assert.deepEqual({ ok: supplied.ok, runId: supplied.runId, attempt: supplied.attempt, dispatched: supplied.dispatched }, { ok: true, runId: "777", attempt: "2", dispatched: false });
+
+    // 1. An ATTEMPTED dispatch that fails: nothing this leg owns is absent, so it must fail.
+    const dispatchGh = modelGh({ dispatch: 1 });
+    const dispatchFailed = resolveLiveRun({ env: {}, ref: "main", hasWorkflow: () => true, gh: dispatchGh });
     assert.equal(dispatchFailed.ok, false);
     assert.equal(dispatchFailed.deferral, undefined, "a refused dispatch is not a deferral");
+    assert.ok(dispatchGh.calls.includes(DISPATCH_CALL), "the dispatch really was attempted");
     const emitted = [];
     assert.throws(
       () => gradeLiveRun(dispatchFailed, (m) => emitted.push(m)),
-      /live-dispatched-run could not execute: gh workflow run harness-eval failed/,
-      "a genuine dispatch failure must fail the check, not record not-executed",
+      /live-dispatched-run could not execute: gh workflow run harness-eval failed: could not find any workflows named harness-eval/,
+      "a genuine dispatch failure must fail the check, not record not-executed — even though its message reads like cause 2",
     );
     assert.deepEqual(emitted, [], "a failed dispatch emits no not-executed diagnostic");
 
-    // Control 2: gh unauthenticated, likewise not a deferral.
-    const unauthenticated = resolveLiveRun({ env: {}, hasWorkflow: () => true, gh: () => ({ status: 1, stdout: "", stderr: "" }) });
-    assert.equal(unauthenticated.deferral, undefined);
-    assert.throws(() => gradeLiveRun(unauthenticated, () => {}), /gh is not authenticated/);
+    // 2. gh unauthenticated.
+    assert.throws(
+      () => gradeLiveRun(resolveLiveRun({ env: {}, ref: "main", hasWorkflow: () => true, gh: modelGh({ auth: 1 }) }), () => {}),
+      /gh is not authenticated/,
+    );
 
-    // Control 3: the one legitimate cause still defers, with its reason.
-    const absent = resolveLiveRun({
-      env: {},
-      hasWorkflow: () => false,
-      gh: () => assert.fail("must not call gh when the workflow is absent"),
-    });
-    assert.equal(absent.ok, false);
-    assert.equal(absent.deferral, true);
-    const deferred = [];
-    gradeLiveRun(absent, (m) => deferred.push(m));
-    assert.equal(deferred.length, 1);
-    assert.match(deferred[0], /^not-executed leg=live-dispatched-run owner=T7 .*reason=no \.github\/workflows\/harness-eval\.yml to dispatch/);
+    // 3. The run list unreadable.
+    const listError = resolveLiveRun({ env: {}, ref: "main", hasWorkflow: () => true, gh: modelGh({ listStatus: 1 }) });
+    assert.equal(listError.deferral, undefined);
+    assert.throws(() => gradeLiveRun(listError, () => {}), /live-dispatched-run could not execute: gh run list failed/);
 
-    // A deferral with no reason cannot hide behind the marker.
+    // 4. No run appeared after the dispatch.
+    assert.throws(
+      () => gradeLiveRun(resolveLiveRun({ env: {}, ref: "main", hasWorkflow: () => true, gh: modelGh({ runList: "[]" }) }), () => {}),
+      /no harness-eval run appeared after dispatch/,
+    );
+
+    // 5. A registration probe that fails some other way (a 502, a permissions error) is not a
+    // 404: it is an unreadable probe, so the leg attempts the dispatch and stays red.
+    const unreadable = resolveLiveRun({ env: {}, ref: "main", hasWorkflow: () => true, gh: modelGh({ registration: "unreadable", dispatch: 1 }) });
+    assert.equal(unreadable.deferral, undefined, "only a 404 means not-registered; any other probe error is not a refusal");
+    assert.throws(() => gradeLiveRun(unreadable, () => {}), /live-dispatched-run could not execute/);
+
+    // 6. A foreign commit. No deferral marker reaches it: the identity guard throws against the
+    // trusted dispatch sha, and refuses a record that offers no comparable sha at all.
+    const head = (spawnSync("git", ["rev-parse", "HEAD"], { encoding: "utf8", cwd: REPO_ROOT }).stdout || "").trim();
+    assert.equal(head.length, 40);
+    assert.throws(
+      () => validateDispatchIdentity({ install_mode: "checkout", candidate_sha: "a".repeat(40) }, { dispatchSha: head }),
+      (error) => error.reason === "candidate-sha-mismatch",
+      "a grade produced at another commit is refused as this commit's",
+    );
+    assert.throws(
+      () => validateDispatchIdentity({ install_mode: "checkout", candidate_sha: "a".repeat(40) }, {}),
+      (error) => error.reason === "dispatch-sha-unknown",
+    );
+
+    // 7. A deferral with no reason cannot hide behind the marker.
     assert.throws(() => gradeLiveRun({ ok: false, deferral: true, reason: "" }, () => {}), /always carries its reason/);
   });
 
   await t.test("one live dispatched run: oracle precheck, both reports, distinct invocation_ids", (tt) => {
     const run = resolveLiveRun();
     if (!run.ok) {
-      // Red unless the sole legitimate cause above applies: T7 has not landed the
-      // workflow, so there is nothing to dispatch and the leg records not-executed with
-      // its owner and obligation. This task's own failures still fail the check.
+      // Red unless a pre-dispatch refusal above applies: the workflow is absent (T7 owns
+      // it), or the surface policy forbids dispatching from this ref. Either way the leg
+      // records not-executed with its owner and obligation. This task's own failures still
+      // fail the check.
       gradeLiveRun(run, (m) => tt.diagnostic(m));
       return;
     }
     const download = downloadVerifyReports(run.runId, run.attempt);
     tt.after(() => rmSync(download.dir, { recursive: true, force: true }));
-    assert.equal(download.ok, true, `could not download ${download.name}: ${download.stderr}`);
 
     // Oracle transcript: planted exit 1 with the canonical drifted key, clean exit 0.
     const oracle = readOracleTranscript(download.dir);
@@ -262,3 +569,42 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
     assert.equal(provenance.live, true, provenance.reason);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Exit-code reproduction of the seven shapes, one process each, through the real
+// `resolveLiveRun` + `gradeLiveRun`: 0 = the leg honestly records not-executed,
+// 1 = it goes red. `node --test` never passes --shape, so it never reaches here.
+// ---------------------------------------------------------------------------
+
+const T4_REF = "kb-run-sprint/sprint-01-evaluator-evidence-spine/T4";
+
+export const EXIT_SHAPES = {
+  absent: () => ({ env: {}, ref: "main", hasWorkflow: () => false, gh: modelGh() }),
+  "unregistered-remote": () => ({ env: {}, ref: T4_REF, hasWorkflow: () => true, gh: modelGh({ registration: "unregistered" }) }),
+  "policy-refused": () => ({ env: {}, ref: T4_REF, hasWorkflow: () => true, gh: modelGh() }),
+  "dispatch-failed": () => ({ env: {}, ref: "main", hasWorkflow: () => true, gh: modelGh({ dispatch: 1 }) }),
+  unauthenticated: () => ({ env: {}, ref: "main", hasWorkflow: () => true, gh: modelGh({ auth: 1 }) }),
+  "run-list-error": () => ({ env: {}, ref: "main", hasWorkflow: () => true, gh: modelGh({ listStatus: 1 }) }),
+  "no-run": () => ({ env: {}, ref: "main", hasWorkflow: () => true, gh: modelGh({ runList: "[]" }) }),
+};
+
+function exitShape(name) {
+  const shape = EXIT_SHAPES[name];
+  if (!shape) {
+    process.stderr.write(`unknown or missing --shape; known: ${Object.keys(EXIT_SHAPES).join(", ")}\n`);
+    return 2;
+  }
+  const run = resolveLiveRun(shape());
+  try {
+    const diagnostic = [];
+    gradeLiveRun(run, (m) => diagnostic.push(m));
+    process.stdout.write(`${JSON.stringify({ shape: name, exit: 0, verdict: "not-executed", cause: run.cause ?? null, reason: run.reason, diagnostic }, null, 2)}\n`);
+    return 0;
+  } catch (err) {
+    process.stdout.write(`${JSON.stringify({ shape: name, exit: 1, verdict: "red", reason: err.message }, null, 2)}\n`);
+    return 1;
+  }
+}
+
+const shapeArg = process.argv.find((arg) => arg.startsWith("--shape="));
+if (shapeArg) process.exit(exitShape(shapeArg.slice("--shape=".length)));
