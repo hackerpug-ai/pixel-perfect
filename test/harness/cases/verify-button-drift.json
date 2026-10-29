@@ -1,0 +1,27 @@
+{
+  "schema": "harness-case/v1",
+  "case_id": "verify-button-drift",
+  "kind": "verify",
+  "role": "defect",
+  "harness": "claude-code",
+  "track": "pinned",
+  "platform_arg": "--platform web-desktop",
+  "platform": "web-desktop",
+  "verification_scope": "structural-only",
+  "overlay": "overlays/button-drift",
+  "overlay_files": ["sandbox/stories/atoms/Button/default.txt"],
+  "defect_key": "atoms/Button/default",
+  "display_name": "Button",
+  "oracle": {
+    "script": "plugins/pixel-perfect/scripts/verify-catalog.mjs",
+    "args": ["--check", ".", "--platform", "web-desktop", "--json"],
+    "expectation": "defect",
+    "exit_code": 1,
+    "drifted_key_includes": "atoms/Button/default"
+  },
+  "capture_path": "design/.captures/web-desktop/atoms/Button/default.txt",
+  "golden_path": "design/goldens/web-desktop/atoms/Button/default.txt",
+  "gate_path": "platforms.web-desktop.gates.molecules",
+  "gate_seeded_value": "pending",
+  "report_relative_path": "reports/verify-button-drift.json"
+}
