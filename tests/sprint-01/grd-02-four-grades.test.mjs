@@ -908,3 +908,165 @@ test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
   const { writeArtifact } = await import("./flow-runner.mjs");
   writeArtifact(ARTIFACT, { ok: true, ...report });
 });
+
+// ===========================================================================================
+// T6 — the CanonicalEvent stream mapping, its per-version validator and the question boundary.
+//
+// This second block of the same flow grades the four check ids from the EVENT STREAM rather than
+// from the record's advisory observations, and it is where the question boundary is decided. What
+// is real here: an archived capture of the local claude-code CLI's own stdout (keyless, zero model
+// requests, every credential name stripped), together with its measured byte offsets and hashes.
+// What is not: a capture at the pinned 2.1.291 — the local CLI reports 2.1.312, so the validator
+// must refuse it as unqualified, and it does. That refusal is asserted, not described.
+// ===========================================================================================
+test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
+  const stream = await import("../../test/harness/stream/index.mjs");
+  const { exitCodeVerdict } = await import("../../test/harness/lib/verdict.mjs");
+  const ARCHIVE = join(ROOT, "test/harness/stream/captures/claude-code-stream-probe.capture.json");
+  const report = { flow: "FLOW-GRD-02-FOUR-GRADES", generated_at: new Date().toISOString(), legs: [], not_executed: [], evidence: {} };
+
+  // ---- TC-1: all six required facts are mapped, by rule, with a source event path -----------
+  const table = stream.loadTable({ version: "2.1.291" });
+  const coverage = stream.tableCoverage(table);
+  assert.equal(coverage.verdict, "pass", `the pinned table maps every required fact: ${JSON.stringify(coverage.missing)}`);
+  assert.deepEqual(
+    coverage.facts.map((fact) => fact.fact_id),
+    ["incremental-text", "question-tool-start", "expensive-tool-start", "required-read-denial", "native-session-identity", "completion"],
+    "the six required facts of 03-data-schema § Canonical stream and capture",
+  );
+  for (const fact of coverage.facts) {
+    assert.equal(fact.mapped, true, `${fact.fact_id} has a rule`);
+    assert.ok(fact.rule_id, `${fact.fact_id} is backed by a named rule`);
+    assert.ok(stream.CANONICAL_TYPES.includes(fact.canonical_type), `${fact.fact_id} maps to a canonical type`);
+    assert.ok(fact.source_event_path.includes("/") || fact.source_event_path.length > 0, `${fact.fact_id} names its source event path`);
+  }
+
+  // The fail-closed direction. A required fact with no rule is could-not-run, and the fallback type
+  // may never be used as a rule: a `harness_specific` mapping would swallow the whole stream.
+  const crippled = { ...table, rules: table.rules.filter((rule) => rule.fact_id !== "question-tool-start" && rule.also_fact_id !== "question-tool-start") };
+  const crippledCoverage = stream.tableCoverage(crippled);
+  assert.equal(crippledCoverage.verdict, "could-not-run", "an unmapped required fact is not covered");
+  assert.deepEqual(crippledCoverage.missing, ["question-tool-start"]);
+  assert.throws(
+    () => stream.validateTable({ ...table, rules: [...table.rules, { rule_id: "catch-all", canonical_type: "harness_specific", source_event_path: "x", match: { text_match: "." } }] }),
+    (error) => error.reason === "mapping-table-invalid" && error.detail.problems.some((problem) => problem.includes("fallback")),
+    "a permissive catch-all mapping is refused at table load",
+  );
+  assert.throws(() => stream.loadTable({ version: "2.1.312" }), (error) => error.reason === "mapping-table-absent", "an unqualified version has no table");
+  assert.throws(() => stream.loadTable({ version: "latest" }), (error) => error.reason === "version-not-exact", "`latest` is not a version");
+
+  // ---- the four check ids carry verdicts from the stream -----------------------------------
+  const archived = stream.readArchived(ARCHIVE);
+  assert.equal(archived.intact, true, "the archived bytes hash to the hash the record cites");
+  const real = stream.normalise({ bytes: archived.bytes, table, invocation_id: archived.record.invocation_id });
+  assert.equal(real.tiling.ok, true, `the real capture tiles exactly once: ${JSON.stringify(real.tiling)}`);
+  assert.equal(real.missing.length, 3, "exactly the three facts the keyless turn could not reach");
+
+  const installation = {
+    requested_cli_version: "2.1.291",
+    resolved_cli_version: "2.1.291",
+    observed_cli_version: null,
+    install_mode: "checkout",
+    plugin_revision: null,
+    expected_plugin_manifest_sha256: null,
+    observed_plugin_manifest_sha256: null,
+    loaded_plugin_root: null,
+    plugin_load_evidence: null,
+  };
+  const cells = ["command_list", "status", "verify", "question_before_expensive_work"].map((check_id) => {
+    const ask_policy = check_id === "question_before_expensive_work" ? "must-ask" : "ask-nothing";
+    return stream.gradeStreamCheck({
+      record: archived.record,
+      events: real.events,
+      check_id,
+      ask_policy,
+      required_facts: ["plugin-loaded", "result-event"],
+      installation,
+    }).cell;
+  });
+  assert.deepEqual(cells.map((cell) => cell.check_id), ["command_list", "status", "verify", "question_before_expensive_work"]);
+  for (const cell of cells) {
+    assert.ok(["pass", "fail", "could-not-run"].includes(cell.verdict), `${cell.check_id} carries a binary verdict`);
+    assert.ok(cell.reason !== null || cell.verdict === "pass", `${cell.check_id} names its reason`);
+    assert.equal(cell.source, "files-and-event-stream", `${cell.check_id} cites the files-and-stream source`);
+  }
+  assert.ok(cells.every((cell) => cell.verdict === "could-not-run"), "a keyless turn answers nothing, so no check can pass");
+  assert.equal(cells.filter((cell) => cell.verdict === exitCodeVerdict(archived.record.process_status.exit_code)).length, 0,
+    "no verdict equals its exit-code mapping (exit 1 would map to fail)");
+
+  // ---- TC-2: ask-nothing fails on the FIRST question, at its offset ------------------------
+  const questionLine = JSON.stringify({
+    type: "assistant",
+    session_id: "spliced",
+    message: { id: "m-q", content: [{ type: "tool_use", id: "tu-q", name: "AskUserQuestion", input: { question: "Which platform?" } }] },
+  });
+  const splicedBytes = Buffer.concat([archived.bytes, Buffer.from(`${questionLine}\n`)]);
+  const spliced = stream.normalise({ bytes: splicedBytes, table });
+  assert.equal(spliced.tiling.ok, true);
+  const questionEvent = spliced.events.find((event) => event.classification === "question");
+  const questionOffset = questionEvent.stream_offset;
+  assert.equal(questionOffset, archived.bytes.length, "the question sits at the byte offset the splice put it at");
+
+  const askNothing = stream.gradeAskNothing(spliced.events);
+  assert.equal(askNothing.verdict, "fail", "a question in an ask-nothing stream fails the check");
+  assert.equal(askNothing.blocks[0].reason, "question-in-ask-nothing");
+  assert.equal(askNothing.blocks[0].first_offset, questionOffset, "the failure cites the question's own stream offset");
+  // The same stream on a check that declares must-ask clears the block: the policy is the check's.
+  assert.equal(stream.gradeQuestionPolicy({ events: spliced.events, ask_policy: "ask-nothing", record: archived.record }).verdict, "fail");
+  assert.equal(stream.gradeQuestionPolicy({ events: real.events, ask_policy: "ask-nothing", record: archived.record }).blocks.length, 0,
+    "the real capture asks nothing, so ask-nothing has nothing to fail");
+
+  // ---- TC-2: must-ask passes on exactly one question, zero answers, a complete prefix ------
+  const boundaryRecord = { ...archived.record, termination_kind: "boundary-stop", boundary_event_offset: questionOffset, prefix_complete: true };
+  const mustAsk = stream.gradeMustAsk(spliced.events, { record: boundaryRecord });
+  assert.equal(mustAsk.verdict, "pass", `one question, nothing sent: ${JSON.stringify(mustAsk.blocks)}`);
+  assert.equal(mustAsk.blocks[0].reason, null, "a pass carries no failing reason");
+  assert.equal(mustAsk.boundary.count, 1, "exactly 1 USER_CHOICE");
+  assert.equal(mustAsk.boundary.answers_delivered, 0, "0 answer deliveries");
+  assert.equal(mustAsk.stop.exception, "boundary-stop", "the pass names the exception it used");
+  const facts = stream.mustAskFacts(spliced.events);
+  assert.deepEqual(facts.expensive_before_question, [], "no expensive tool started before the question");
+
+  // The exception may not be widened: a truncated prefix, a timeout, and an offset that names no
+  // question are each could-not-run even though a question is visibly present.
+  const truncated = stream.gradeMustAsk(spliced.events, { record: { ...boundaryRecord, prefix_complete: false } });
+  assert.equal(truncated.verdict, "could-not-run", "a boundary stop may not rescue a truncated capture");
+  assert.equal(truncated.blocks[0].reason, "capture-prefix-incomplete");
+  const timedOut = stream.gradeMustAsk(spliced.events, { record: { ...boundaryRecord, termination_kind: "timeout" } });
+  assert.equal(timedOut.verdict, "could-not-run", "a timeout is never a boundary stop");
+  assert.equal(timedOut.blocks[0].reason, "termination-timeout");
+  const wrongOffset = stream.gradeMustAsk(spliced.events, { record: { ...boundaryRecord, boundary_event_offset: 0 } });
+  assert.equal(wrongOffset.verdict, "could-not-run", "a boundary offset that names no question is refused");
+  assert.equal(wrongOffset.blocks[0].reason, "boundary-offset-not-a-question");
+  const unmapped = stream.gradeMustAsk(spliced.events, { record: boundaryRecord, question_mapped: false });
+  assert.equal(unmapped.verdict, "could-not-run", "an unmapped question marker is not 'no question was asked'");
+  assert.equal(unmapped.blocks[0].reason, "question-mapping-unavailable");
+  const noQuestion = stream.gradeMustAsk(real.events, { record: { ...archived.record, termination_kind: "native", boundary_event_offset: null } });
+  assert.equal(noQuestion.verdict, "fail", "a complete capture with no question fails the must-ask probe");
+  assert.equal(noQuestion.blocks[0].reason, "no-question-asked");
+  const twoQuestions = stream.normalise({ bytes: Buffer.concat([splicedBytes, Buffer.from(`${questionLine}\n`)]), table });
+  assert.equal(stream.gradeMustAsk(twoQuestions.events, { record: { ...boundaryRecord, boundary_event_offset: twoQuestions.events.find((event) => event.classification === "question").stream_offset } }).blocks[0].reason,
+    "more-than-one-question");
+
+  report.legs.push(
+    { leg: "table-coverage", observed: "6/6 required facts mapped to canonical types with source event paths; an unmapped fact is could-not-run; a harness_specific catch-all rule is refused" },
+    { leg: "four-verdicts-from-stream", observed: `4 check ids graded from ${real.events.length} events; all could-not-run (a keyless turn answers nothing); none equals its exit-code mapping` },
+    { leg: "ask-nothing", observed: `1 question spliced at byte ${questionOffset} -> fail question-in-ask-nothing citing that offset; the real capture has 0 questions` },
+    { leg: "must-ask", observed: "1 question + 0 deliveries + complete prefix -> pass on the boundary-stop exception; truncated / timeout / non-question offset / unmapped / 0-question / 2-question each fail or could-not-run" },
+  );
+  report.not_executed.push({
+    leg: "qualified-2.1.291-capture",
+    owner: "T11",
+    why: `the local CLI reports ${real.observed.cli_version}; the pinned version is 2.1.291, so the archived bytes prove shape and offsets, not version qualification`,
+  });
+  report.not_executed.push({ leg: "hosted-four-pass-cell", owner: "T7/T11", why: "the four graded invocations need the harness-smoke credential on the hosted runner" });
+  report.evidence = { table: table.id, capture_sha256: archived.sha256, events: real.events.length, unknown_lines: real.unknown_lines, question_offset: questionOffset };
+
+  // Merge into the flow's artifact rather than replacing what the earlier leg recorded.
+  const { writeArtifact } = await import("./flow-runner.mjs");
+  const prior = existsSync(ARTIFACT) ? JSON.parse(readFileSync(ARTIFACT, "utf8")) : { ok: true };
+  const merged = { ...prior, ok: true, stream: { ...report, legs: [...(prior.stream?.legs ?? []), ...report.legs], not_executed: [...(prior.stream?.not_executed ?? []), ...report.not_executed] } };
+  writeArtifact(ARTIFACT, merged);
+  t.diagnostic(`stream_table=${table.id} coverage=${coverage.verdict} capture_missing=${real.missing.join(",")}`);
+  t.diagnostic(`stream_not_executed=${report.not_executed.map((entry) => entry.leg).join(",")}`);
+});
