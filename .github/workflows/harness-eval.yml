@@ -96,6 +96,157 @@ jobs:
           set -eu
           echo "install slot reserved: ${{ matrix.harness }} ${{ matrix.track }} (T2 pins, T5 install, T9 key)"
 
+      # --- T9: the credential binding -----------------------------------------------------
+      # A cell's own model step is the ONLY step in this workflow that may hold that harness's
+      # key, and its `if:` keeps the other eleven cells out of it, so no cell ever receives a key
+      # it does not consume. The install, record, upload, download, drift and recorder steps stay
+      # keyless. Each step records credential PRESENCE — names and booleans, never a value — and
+      # refuses with the guard's own reason when the binding is absent, so a harness whose key is
+      # not in the environment reads `could-not-run / missing-api-key` instead of passing.
+      # T10 replaces these probes with the real invocations and leaves the bindings where they are.
+      # Environment, the five names and the placement rule: test/harness/ENVIRONMENT.md.
+      - name: Smoke model step claude-code ${{ matrix.track }}
+        if: matrix.harness == 'claude-code'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.SMOKE_CLAUDE_KEY }}
+        run: |
+          set -eu
+          mkdir -p cell
+          node --input-type=module -e '
+          import { writeFileSync } from "node:fs";
+          import { resolveCredential } from "./test/harness/runtime/guard.mjs";
+          const c = resolveCredential({ harness: process.argv[1] });
+          const row = { harness: c.harness, credential_env: c.credential_env, binding_env: c.binding_env, present: c.present, present_name: c.present_name, checked: c.checked, verdict: c.present ? "bound" : "could-not-run", reason: c.present ? null : "missing-api-key" };
+          writeFileSync("cell/binding.json", JSON.stringify(row) + "\n");
+          console.log(JSON.stringify(row));
+          ' claude-code
+
+      - name: Smoke model step codex ${{ matrix.track }}
+        if: matrix.harness == 'codex'
+        env:
+          CODEX_API_KEY: ${{ secrets.SMOKE_CODEX_KEY }}
+        run: |
+          set -eu
+          mkdir -p cell
+          node --input-type=module -e '
+          import { writeFileSync } from "node:fs";
+          import { resolveCredential } from "./test/harness/runtime/guard.mjs";
+          const c = resolveCredential({ harness: process.argv[1] });
+          const row = { harness: c.harness, credential_env: c.credential_env, binding_env: c.binding_env, present: c.present, present_name: c.present_name, checked: c.checked, verdict: c.present ? "bound" : "could-not-run", reason: c.present ? null : "missing-api-key" };
+          writeFileSync("cell/binding.json", JSON.stringify(row) + "\n");
+          console.log(JSON.stringify(row));
+          ' codex
+
+      # grok's keyed step passes no --trust: a keyed invocation never widens its own permissions.
+      - name: Smoke model step grok ${{ matrix.track }}
+        if: matrix.harness == 'grok'
+        env:
+          XAI_API_KEY: ${{ secrets.SMOKE_GROK_KEY }}
+        run: |
+          set -eu
+          mkdir -p cell
+          node --input-type=module -e '
+          import { writeFileSync } from "node:fs";
+          import { resolveCredential } from "./test/harness/runtime/guard.mjs";
+          const c = resolveCredential({ harness: process.argv[1] });
+          const row = { harness: c.harness, credential_env: c.credential_env, binding_env: c.binding_env, present: c.present, present_name: c.present_name, checked: c.checked, verdict: c.present ? "bound" : "could-not-run", reason: c.present ? null : "missing-api-key" };
+          writeFileSync("cell/binding.json", JSON.stringify(row) + "\n");
+          console.log(JSON.stringify(row));
+          ' grok
+
+      # opencode's pinned provider is anthropic, so its key reaches ANTHROPIC_API_KEY — in this cell
+      # only, from its own environment secret. No --auto: a keyed step never self-approves.
+      - name: Smoke model step opencode ${{ matrix.track }}
+        if: matrix.harness == 'opencode'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.SMOKE_OPENCODE_KEY }}
+        run: |
+          set -eu
+          mkdir -p cell
+          node --input-type=module -e '
+          import { writeFileSync } from "node:fs";
+          import { resolveCredential } from "./test/harness/runtime/guard.mjs";
+          const c = resolveCredential({ harness: process.argv[1] });
+          const row = { harness: c.harness, credential_env: c.credential_env, binding_env: c.binding_env, present: c.present, present_name: c.present_name, checked: c.checked, verdict: c.present ? "bound" : "could-not-run", reason: c.present ? null : "missing-api-key" };
+          writeFileSync("cell/binding.json", JSON.stringify(row) + "\n");
+          console.log(JSON.stringify(row));
+          ' opencode
+
+      - name: Smoke model step pi ${{ matrix.track }}
+        if: matrix.harness == 'pi'
+        env:
+          GEMINI_API_KEY: ${{ secrets.SMOKE_PI_KEY }}
+        run: |
+          set -eu
+          mkdir -p cell
+          node --input-type=module -e '
+          import { writeFileSync } from "node:fs";
+          import { resolveCredential } from "./test/harness/runtime/guard.mjs";
+          const c = resolveCredential({ harness: process.argv[1] });
+          const row = { harness: c.harness, credential_env: c.credential_env, binding_env: c.binding_env, present: c.present, present_name: c.present_name, checked: c.checked, verdict: c.present ? "bound" : "could-not-run", reason: c.present ? null : "missing-api-key" };
+          writeFileSync("cell/binding.json", JSON.stringify(row) + "\n");
+          console.log(JSON.stringify(row));
+          ' pi
+
+      # cursor has no secret in harness-smoke and invents none: its cell resolves the same guard,
+      # records could-not-run / missing-api-key, and is never omitted from the grid.
+      - name: Smoke model step cursor ${{ matrix.track }}
+        if: matrix.harness == 'cursor'
+        run: |
+          set -eu
+          mkdir -p cell
+          node --input-type=module -e '
+          import { writeFileSync } from "node:fs";
+          import { resolveCredential } from "./test/harness/runtime/guard.mjs";
+          const c = resolveCredential({ harness: process.argv[1] });
+          const row = { harness: c.harness, credential_env: c.credential_env, binding_env: c.binding_env, present: c.present, present_name: c.present_name, checked: c.checked, verdict: c.present ? "bound" : "could-not-run", reason: c.present ? null : "missing-api-key" };
+          writeFileSync("cell/binding.json", JSON.stringify(row) + "\n");
+          console.log(JSON.stringify(row));
+          ' cursor
+
+      # The keyless control. It binds nothing, asserts in-step that the consumed key AND every
+      # permitted fallback are absent, then asks the real guard what a keyless invocation is:
+      # could-not-run / missing-api-key with zero model requests. It runs beside the authenticated
+      # claude-code cells, so one run carries both the refusal and the grades it must not resemble.
+      # An unset environment secret reaches this step's binding as "", not undefined, so the guard
+      # is the empty-string shape a hosted runner really produces. The zero-request count is read
+      # off the guard's own capture and the no-spawn claim off a marker file that would exist only
+      # if a child had started, so neither half of the row is a constant copied from the refusal.
+      - name: Keyless control - a missing credential must refuse
+        if: matrix.harness == 'claude-code' && matrix.track == 'pinned'
+        run: |
+          set -eu
+          mkdir -p cell
+          for name in ANTHROPIC_API_KEY CODEX_API_KEY XAI_API_KEY GEMINI_API_KEY CURSOR_API_KEY; do
+            if [ -n "${!name:-}" ]; then
+              echo "::error::the keyless control is invalid: $name is present on this step, so absence would prove nothing"
+              exit 1
+            fi
+          done
+          node --input-type=module -e '
+          import { existsSync, writeFileSync } from "node:fs";
+          import { createCapture } from "./test/harness/runtime/capture.mjs";
+          import { runGuarded } from "./test/harness/runtime/guard.mjs";
+          const marker = "cell/child-ran.marker";
+          const capture = createCapture({ harness: "claude-code", check_id: "verify", cwd: process.cwd(), timeout_ms: 20000 });
+          const { decision } = await runGuarded({
+            harness: "claude-code",
+            stance: null,
+            capture,
+            command: process.execPath,
+            args: ["-e", `require("node:fs").writeFileSync(${JSON.stringify(marker)}, "ran")`],
+            timeout_ms: 20000,
+          });
+          const record = capture.persist("cell/evidence");
+          const row = { control_id: "missing-key", verdict: decision.refusal?.verdict ?? "pass", reason: decision.refusal?.reason ?? null, model_requests: record.model_request_count, child_ran: existsSync(marker) };
+          writeFileSync("cell/keyless-control.json", JSON.stringify(row) + "\n");
+          console.log(JSON.stringify(row));
+          if (row.verdict !== "could-not-run" || row.reason !== "missing-api-key" || row.model_requests !== 0 || row.child_ran !== false) {
+            console.error("::error::the keyless control did not refuse with missing-api-key and zero model requests: " + JSON.stringify(row));
+            process.exit(1);
+          }
+          '
+
       # This cell records itself honestly. Sprint 01 ships no verdict logic: nothing reads this
       # file to decide a grade, and no grade is ever inferred from a process exit code.
       - name: Record the cell

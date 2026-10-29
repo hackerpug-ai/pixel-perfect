@@ -462,8 +462,13 @@ export function inspectWorkflowDeclaration(yaml) {
       const label = `${name}/${String(step?.name ?? "unnamed step")}`;
       if (SECRET_REF.test(stepText(step))) fail(`step ${label} references a secret outside its env block`);
       const envSecrets = SECRET_REF.test(JSON.stringify(step?.env ?? {}));
+      // [T9] A cell's own smoke model step is where that harness's key is bound; T9's own panel in
+      // grd-06 proves exactly one key per cell and none on any install, record, upload or drift
+      // step. Everything else keeps the rule above: the key lives on the cell's own step, nowhere
+      // else.
+      const isModelStep = /^Smoke model step\b/.test(String(step?.name ?? ""));
       if (envSecrets && name !== "smoke") fail(`step ${label} binds a secret in a non-smoke job`);
-      else if (envSecrets && step !== recorder?.step) fail(`step ${label} binds a secret outside the cell's own recording step`);
+      else if (envSecrets && step !== recorder?.step && !isModelStep) fail(`step ${label} binds a secret outside the cell's own recording step`);
     }
   }
 
