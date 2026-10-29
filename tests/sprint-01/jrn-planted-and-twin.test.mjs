@@ -12,6 +12,7 @@
 //      verify-reports artifact, and require its oracle transcript and both reports
 //      to agree with the case manifests;
 //   3. honest not-executed for exactly THREE kinds of cause, all probed BEFORE any dispatch
+//      but only when NO run id is supplied,
 //      is attempted and all carried with their reason (one helper, `preDispatchRefusal`):
 //        a. the workflow file is not in this tree (T7 lands it, post-integration obligation
 //           obl-FLOW-JRN-PLANTED-AND-TWIN);
@@ -167,18 +168,22 @@ export function resolveLiveRun({
   ref = currentRef(),
   policyPath = path.join(REPO_ROOT, POLICY_PATH),
 } = {}) {
-  // The only deferral is a probed pre-dispatch refusal. Everything below is a genuine
-  // failure to execute the leg and must not reach the green branch.
+  // A pinned run wins over everything, including the three pre-dispatch refusals: the leg
+  // already has the run it was told to grade, so no refusal is a reason to discard it. That
+  // is how T7's gate step 8 replays a run from a task branch, where all three can apply.
+  // A pinned run that cannot be fetched is a hard failure (downloadVerifyReports throws).
+  const suppliedRun = env.HARNESS_EVAL_RUN_ID;
+  if (suppliedRun) {
+    return { ok: true, runId: suppliedRun, attempt: env.HARNESS_EVAL_RUN_ATTEMPT || "1", dispatched: false };
+  }
+
+  // With no run supplied, the only deferral is a probed pre-dispatch refusal. Everything
+  // below is a genuine failure to execute the leg and must not reach the green branch.
   const refusal = preDispatchRefusal({ ref, hasWorkflow, probe: runGh, policyPath });
   if (refusal) return { ok: false, deferral: true, cause: refusal.cause, reason: refusal.reason };
 
   const auth = runGh(["auth", "status"]);
   if (auth.status !== 0) return { ok: false, reason: "gh is not authenticated" };
-
-  const suppliedRun = env.HARNESS_EVAL_RUN_ID;
-  if (suppliedRun) {
-    return { ok: true, runId: suppliedRun, attempt: env.HARNESS_EVAL_RUN_ATTEMPT || "1", dispatched: false };
-  }
 
   const dispatch = runGh(["workflow", "run", WORKFLOW_SLUG, "--repo", REPO]);
   if (dispatch.status !== 0) {
@@ -205,11 +210,20 @@ export function gradeLiveRun(run, emitDiagnostic) {
   assert.fail(`live-dispatched-run could not execute: ${run.reason}`);
 }
 
-function downloadVerifyReports(runId, attempt) {
+/**
+ * Fetch the attempt-qualified verify-reports artifact for one run. An unfetchable run throws:
+ * the live leg has no third outcome, so a pinned run the remote cannot serve is red, never a
+ * not-executed record.
+ */
+export function downloadVerifyReports(runId, attempt, { runGh = gh } = {}) {
   const dir = mkdtempSync(path.join(tmpdir(), `pp-verify-reports-${runId}-`));
   const name = `harness-eval-verify-reports-${runId}-${attempt}`;
-  const res = gh(["run", "download", runId, "--repo", REPO, "-n", name, "-D", dir]);
-  return { dir, name, ok: res.status === 0, stderr: (res.stderr || "").trim() };
+  const res = runGh(["run", "download", runId, "--repo", REPO, "-n", name, "-D", dir]);
+  if (res.status !== 0) {
+    rmSync(dir, { recursive: true, force: true });
+    assert.fail(`could not download ${name}: ${(res.stderr || "").trim()}`);
+  }
+  return { dir, name };
 }
 
 /**
@@ -220,7 +234,7 @@ function downloadVerifyReports(runId, attempt) {
  * by hand-rolled ternaries, and any gh call it does not model throws, so a new call cannot
  * silently pass through it. `calls` is the probe log the controls assert on.
  */
-export function modelGh({ auth = 0, registration = "registered", dispatch = 0, listStatus = 0, runList = "[]" } = {}) {
+export function modelGh({ auth = 0, registration = "registered", dispatch = 0, listStatus = 0, runList = "[]", download = 0 } = {}) {
   const outcomes = {
     registered: { status: 0, stdout: '{"id":1}', stderr: "" },
     unregistered: { status: 1, stdout: "", stderr: "gh: Not Found (HTTP 404)" },
@@ -238,7 +252,9 @@ export function modelGh({ auth = 0, registration = "registered", dispatch = 0, l
     if (args[0] === "run" && args[1] === "list") {
       return listStatus === 0 ? { status: 0, stdout: runList, stderr: "" } : { status: listStatus, stdout: "", stderr: "gh: run list failed" };
     }
-    if (args[0] === "run" && args[1] === "download") return { status: 0, stdout: "", stderr: "" };
+    if (args[0] === "run" && args[1] === "download") {
+      return { status: download, stdout: "", stderr: download === 0 ? "" : "gh: run not found (HTTP 404)" };
+    }
     throw new Error(`modelGh: does not model gh ${args.join(" ")}`);
   };
   double.calls = calls;
@@ -400,6 +416,45 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
     }
   });
 
+  await t.test("a pinned run id outranks every pre-dispatch refusal, and an unfetchable one is red", () => {
+    // T7's gate step 8 replays a pinned run from a task branch, where all three refusals can
+    // apply at once. The supplied run must win: the leg already has the run it was told to
+    // grade, so no refusal is a reason to discard it (F-T4-12).
+    const pinnedEnv = { HARNESS_EVAL_RUN_ID: "4242", HARNESS_EVAL_RUN_ATTEMPT: "2" };
+    const shapes = [
+      ["a non-main ref the policy bans", { ref: T4_REF, hasWorkflow: () => true, gh: modelGh() }],
+      ["a remote that has not registered the workflow", { ref: "main", hasWorkflow: () => true, gh: modelGh({ registration: "unregistered" }) }],
+      ["a tree with no workflow file at all", { ref: T4_REF, hasWorkflow: () => false, gh: modelGh() }],
+    ];
+    for (const [label, opts] of shapes) {
+      const pinnedGh = opts.gh;
+      const pinned = resolveLiveRun({ ...opts, env: pinnedEnv });
+      assert.deepEqual(
+        { ok: pinned.ok, runId: pinned.runId, attempt: pinned.attempt, dispatched: pinned.dispatched, deferral: pinned.deferral },
+        { ok: true, runId: "4242", attempt: "2", dispatched: false, deferral: undefined },
+        `${label} must not discard the pinned run`,
+      );
+      assert.deepEqual(pinnedGh.calls, [], `${label}: a pinned run neither probes nor dispatches`);
+      const emitted = [];
+      gradeLiveRun(pinned, (m) => emitted.push(m));
+      assert.deepEqual(emitted, [], `${label}: a pinned run is never recorded not-executed`);
+    }
+
+    // The precedence is one-way: with no run id supplied, the same three shapes still defer,
+    // so honouring the pinned run did not turn an honest not-executed into a red.
+    const policyRefused = resolveLiveRun({ env: {}, ref: T4_REF, hasWorkflow: () => true, gh: modelGh() });
+    assert.equal(policyRefused.cause, "policy-refused-ref", "with no run id the refusal still applies");
+    assert.equal(policyRefused.deferral, true);
+
+    // And a pinned run that cannot be fetched is an error, never a deferral: the only green
+    // escape on this path is `deferral`, which a pinned run never carries, so the fetch throws.
+    assert.throws(
+      () => downloadVerifyReports("4242", "2", { runGh: modelGh({ download: 1 }) }),
+      /could not download harness-eval-verify-reports-4242-2: gh: run not found \(HTTP 404\)/,
+      "an unfetchable pinned run must fail the check rather than record not-executed",
+    );
+  });
+
   await t.test("everything that is not a probed refusal still goes red", () => {
     // Control 0: once the workflow is registered and the ref may dispatch, the leg is NOT
     // deferrable — it earns a run. A mutant that defers whenever it consulted the probe dies here.
@@ -481,7 +536,6 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
     }
     const download = downloadVerifyReports(run.runId, run.attempt);
     tt.after(() => rmSync(download.dir, { recursive: true, force: true }));
-    assert.equal(download.ok, true, `could not download ${download.name}: ${download.stderr}`);
 
     // Oracle transcript: planted exit 1 with the canonical drifted key, clean exit 0.
     const oracle = readOracleTranscript(download.dir);
