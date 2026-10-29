@@ -1123,6 +1123,8 @@ test("FLOW-GRD-01-TWELVE-CELLS adapter cells", async (t) => {
       assert.ok(cell, `${harness}/${track} exists`);
       assert.equal(cell.verdict, "could-not-run", `${harness}/${track} is never a pass`);
       assert.equal(cell.reason, absentReason(harness), `${harness}/${track} carries its own named reason`);
+      // Distinctness alone lets a meaningless string through, so pin the documented shape.
+      assert.match(cell.reason, new RegExp(`^${harness}-adapter-not-implemented$`), `${harness}/${track} names why nothing was graded`);
       assert.equal(cell.source, CELL_SOURCES.ABSENT);
       assert.notEqual(cell.reason, cursorPinned.reason, `${harness} is not reported as a key problem`);
     }

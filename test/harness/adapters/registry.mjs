@@ -47,7 +47,9 @@ function cellOf({ harness, track, reason, source, requested, observed, installMo
     track,
     installation: {
       requested_cli_version: requested,
-      resolved_cli_version: requested,
+      // Nothing was resolved for a cell the registry decides: it never reached a CLI, so reporting
+      // the requested pin as "resolved" would claim an observation this cell does not have.
+      resolved_cli_version: null,
       observed_cli_version: observed,
       install_mode: installMode,
       plugin_revision: null,

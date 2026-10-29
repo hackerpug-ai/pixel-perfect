@@ -333,6 +333,8 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
         assert.ok(cell, `${harness}/${track} exists`);
         assert.equal(cell.verdict, "could-not-run", `${harness}/${track} is never a pass`);
         assert.equal(cell.reason, absentReason(harness), `${harness}/${track} names its own absent adapter`);
+        // Distinctness alone lets a meaningless string through, so pin the documented shape.
+        assert.match(cell.reason, new RegExp(`^${harness}-adapter-not-implemented$`), `${harness}/${track} names why nothing was graded`);
         assert.equal(cell.source, CELL_SOURCES.ABSENT);
         assert.notEqual(cell.reason, "missing-api-key", `${harness} has a key here, so a key problem would be a lie`);
       }
@@ -438,6 +440,12 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
 
   mkdirSync(REPORT_DIR, { recursive: true });
   writeFileSync(ARTIFACT, `${JSON.stringify(artifact, null, 2)}\n`, "utf8");
+
+  // The product-owned success target: the report the gate reads back off disk, not the in-memory
+  // object. It must carry the pins identity and every cell, or the cell counts prove nothing.
+  const published = JSON.parse(readFileSync(ARTIFACT, "utf8"));
+  assert.match(published.t10.pins_sha256, /^[0-9a-f]{64}$/, "the published report carries a 64-hex pins_sha256 identity");
+  assert.equal(published.t10.cells_detail.length, 12, "the published report carries all twelve cells");
 
   t.diagnostic(`controls=${artifact.controls.map((row) => `${row.control_id}:${row.verdict}/${row.reason}`).join(",")}`);
   t.diagnostic(`rejected_mode_hits=${artifact.stance_scan.rejected_mode_hits}`);
