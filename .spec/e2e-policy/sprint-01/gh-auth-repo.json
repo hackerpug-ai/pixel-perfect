@@ -1,0 +1,7 @@
+{
+  "forbidden_seed_patterns": [
+    "--run\\s+\\d",
+    "RUN_ID\\s*=\\s*['\"]?\\d"
+  ],
+  "coldboot": "Every sprint-01 flow boots cold: fresh clone at the sprint-01 revision, Node >= 22.19 (CI pins 24), gh authenticated to hackerpug-ai/pixel-perfect (repo scope; workflow scope for the FLOW-RUN-02-HAND dispatch), network reachability to api.github.com and the artifact CDN where the flow replays, and an empty .tmp/sprint-01-verification/ — no prior artifact cache; run ids are re-fetched every cold boot and never reused across boots. The guard half of FLOW-GRD-06 runs offline with a scrubbed child env, and an interactive login on the cold machine must not leak into it."
+}
