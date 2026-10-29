@@ -15,6 +15,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { createCapture } from "../../test/harness/runtime/capture.mjs";
+import { gradeFromEvidence, readGrade, writeGrade } from "../../test/harness/runtime/grade-writer.mjs";
 import { guardInvocation, resolveCredential, runGuarded, sessionId } from "../../test/harness/runtime/guard.mjs";
 import { APPROVED_MODES, assertStance, recordStance, serializeStance } from "../../test/harness/runtime/stance.mjs";
 
@@ -44,6 +45,20 @@ const names = Object.keys(process.env).filter((name) => new RegExp("^(SMOKE_[A-Z
 process.stdout.write(JSON.stringify({ type: "child_env", secret_names: names }) + "\\n");
 `;
 
+function installation() {
+  return {
+    requested_cli_version: "2.1.291",
+    resolved_cli_version: "2.1.291",
+    observed_cli_version: null,
+    install_mode: "checkout",
+    plugin_revision: null,
+    expected_plugin_manifest_sha256: null,
+    observed_plugin_manifest_sha256: null,
+    loaded_plugin_root: null,
+    plugin_load_evidence: null,
+  };
+}
+
 /** The both-ways assertion an always-refusing guard must fail. */
 function bothWays({ keylessDecision, keyedDecision }) {
   const failures = [];
@@ -62,6 +77,7 @@ function alwaysRefuse() {
 test("FLOW-GRD-06-MISSING-KEY", async (t) => {
   const projectDir = mkdtempSync(join(tmpdir(), "pp-grd-06-"));
   const evidenceDir = mkdtempSync(join(tmpdir(), "pp-grd-06-evidence-"));
+  const gradeDir = mkdtempSync(join(tmpdir(), "pp-grd-06-grades-"));
   const markerPath = join(projectDir, "child-ran.marker");
   const runnerKeyBefore = Boolean(process.env.ANTHROPIC_API_KEY);
   const stance = recordStance({ harness: "claude-code", plugin_root: PLUGIN_ROOT });
@@ -112,6 +128,39 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
       reason: keyless.decision.refusal.reason,
       model_request_count: keylessRecord.model_request_count,
       child_ran: existsSync(markerPath),
+    });
+
+    // ---- the one write path expresses the refusal (F-T3-1) ------------------------------
+    // The guard refuses, so no process ever ran: the writer must carry the guard's OWN reason,
+    // and must not dress a never-started invocation up as a crash or a truncated capture.
+    const keylessCell = gradeFromEvidence({
+      record: keylessRecord,
+      installation: installation(),
+      harness: "claude-code",
+      track: "pinned",
+      check_id: "verify",
+      evidence_paths: keylessRecord.evidence_paths,
+      report_paths: [],
+      required_facts: [],
+    });
+    assert.equal(keylessCell.verdict, "could-not-run", "a refused invocation is never a pass");
+    assert.equal(keylessCell.reason, "missing-api-key", "the guard's own reason reaches the written cell");
+    assert.deepEqual(
+      keylessCell.block_reasons.map((entry) => entry.reason),
+      ["missing-api-key"],
+      "a refusal is neither a termination-unexpected nor a capture-prefix-incomplete",
+    );
+    const keylessWritten = writeGrade({ dir: gradeDir, cell: keylessCell });
+    assert.equal(keylessWritten.ok, true, `keyless grade did not read back: ${JSON.stringify(keylessWritten.mismatches)}`);
+    const keylessRead = readGrade(keylessWritten.path);
+    assert.equal(keylessRead.verdict, "could-not-run");
+    assert.equal(keylessRead.reason, "missing-api-key", "the reason survives temp->fsync->rename->read-back");
+    artifact.controls.push({
+      control_id: "missing-key-cell",
+      verdict: keylessRead.verdict,
+      reason: keylessRead.reason,
+      block_reasons: keylessCell.block_reasons.map((entry) => entry.reason),
+      grade_path: keylessWritten.path,
     });
 
     // ---- bound: the same guard proceeds down the same code path --------------------------
@@ -256,6 +305,7 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
     );
     rmSync(projectDir, { recursive: true, force: true });
     rmSync(evidenceDir, { recursive: true, force: true });
+    rmSync(gradeDir, { recursive: true, force: true });
   }
 
   mkdirSync(REPORT_DIR, { recursive: true });

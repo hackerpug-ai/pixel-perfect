@@ -9,7 +9,7 @@ import { join } from "node:path";
 
 import { assertPassEvidence, validateAgainst } from "../validate.mjs";
 import { worstVerdict } from "../lib/verdict.mjs";
-import { denials, observedFacts, resolveObservation } from "./capture.mjs";
+import { denials, observedFacts, resolveEvidencePath, resolveObservation, undeclaredDenials } from "./capture.mjs";
 
 export const GRADE_SCHEMA = "harness-cell/v1";
 export const SOURCE = "files-and-event-stream";
@@ -20,22 +20,23 @@ function block(verdict, reason, detail = {}) {
   return { verdict, reason, ...detail };
 }
 
-/** Every cited path must be a file that is really on this disk. */
-function evidenceBlocks(evidencePaths) {
+/** Every cited path must be a file that is really on this disk (or on the root the record was moved to). */
+function evidenceBlocks(evidencePaths, { record = null, root = null } = {}) {
   const blocks = [];
   if (!Array.isArray(evidencePaths) || evidencePaths.length === 0) {
     return [block("could-not-run", "evidence-unresolvable", { why: "no evidence path was cited" })];
   }
-  for (const path of evidencePaths) {
+  for (const cited of evidencePaths) {
+    const path = resolveEvidencePath(record, cited, root);
     if (typeof path !== "string" || path.trim() === "" || !existsSync(path) || !statSync(path).isFile()) {
-      blocks.push(block("could-not-run", "evidence-unresolvable", { path }));
+      blocks.push(block("could-not-run", "evidence-unresolvable", { path: cited }));
       continue;
     }
     // A captured byte stream may legitimately be empty (a process killed before it wrote anything),
     // but any other cited artifact must carry something or it is not evidence of anything.
     const byteArtifact = /\.(stdout|stderr)\.bin$/.test(path);
     if (!byteArtifact && statSync(path).size === 0) {
-      blocks.push(block("could-not-run", "evidence-unresolvable", { path, why: "empty" }));
+      blocks.push(block("could-not-run", "evidence-unresolvable", { path: cited, why: "empty" }));
     }
   }
   return blocks;
@@ -53,21 +54,33 @@ export function gradeFromEvidence({
   track,
   check_id,
   evidence_paths = record?.evidence_paths ?? [],
+  evidence_root = null,
   report_paths = [],
   required_facts = [],
   observed_verify_outcome = null,
 }) {
-  const blocks = [...evidenceBlocks(evidence_paths)];
+  const blocks = [...evidenceBlocks(evidence_paths, { record, root: evidence_root })];
+  // A refused invocation never started a process, so the guard's own reason is the reason: it is not
+  // an unexpected termination and nothing was truncated. Without this the guard's verdict exists only
+  // in its decision object and the one write path could never put it in a cell.
+  if (record?.refusal) {
+    blocks.push(
+      block("could-not-run", record.refusal.reason, {
+        refusal_check: record.refusal.check ?? null,
+        model_requests: record.refusal.model_requests ?? 0,
+      }),
+    );
+  }
   const kind = record?.termination_kind;
   if (kind === "timeout") blocks.push(block("could-not-run", "termination-timeout", { timeout_ms: record.timeout_ms ?? null }));
-  if (kind === "unexpected") blocks.push(block("could-not-run", "termination-unexpected", { process_status: record.process_status ?? null }));
+  if (kind === "unexpected" && !record?.refusal) blocks.push(block("could-not-run", "termination-unexpected", { process_status: record.process_status ?? null }));
   if (record?.prefix_complete === false) blocks.push(block("could-not-run", "capture-prefix-incomplete", { boundary_event_offset: record.boundary_event_offset ?? null }));
 
   const observations = record?.observations ?? [];
   const unresolved = [];
   for (const observation of observations) {
     try {
-      resolveObservation(record, observation);
+      resolveObservation(record, observation, { root: evidence_root });
     } catch (error) {
       unresolved.push({ sequence: observation.sequence ?? null, reason: error.reason ?? String(error.message ?? error) });
     }
@@ -77,6 +90,12 @@ export function gradeFromEvidence({
   const seen = observedFacts(record);
   const missingFacts = required_facts.filter((fact) => !seen.has(fact.fact_id)).map((fact) => fact.fact_id);
   if (missingFacts.length > 0) blocks.push(block("could-not-run", "required-fact-unobserved", { missing: missingFacts }));
+
+  // Absence of a requiredness declaration is not permission: an undeclared denial is not a pass.
+  const undeclared = undeclaredDenials(record);
+  if (undeclared.length > 0) {
+    blocks.push(block("could-not-run", "requiredness-undeclared", { denials: undeclared.length }));
+  }
 
   const denied = denials(record);
   if (denied.length > 0) {

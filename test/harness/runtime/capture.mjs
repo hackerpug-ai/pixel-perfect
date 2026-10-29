@@ -7,9 +7,14 @@
 // than travelling into a grade as if it were evidence.
 //
 // Nothing at module load reads the environment, spawns a process or writes a file.
+//
+// Contract note (F-T3-7): an observation's citation proves its span is real captured bytes with the
+// cited digest, not that those bytes say what the observation claims. Re-deriving a claim from its
+// span needs the harness mapper that T6 owns; until it lands, treat record.observations as advisory
+// provenance and the archived capture as the corroborating artefact.
 import { spawn } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
 export const TERMINATION_KINDS = ["native", "boundary-stop", "timeout", "unexpected"];
@@ -170,6 +175,9 @@ export function createCapture({
     /**
      * Maps captured lines to observations. Each observation inherits the span and digest of the line
      * that produced it, and its raw bytes are re-hashed here so an inflated citation is caught.
+     * Requiredness is three-valued: true (declared required), false (declared optional because the
+     * caller named the required paths and this is not one), null (undeclared). Undeclared is not
+     * optional - the grader fails closed on it rather than reading silence as permission.
      */
     observe(mapper, { required_read_paths = null } = {}) {
       for (const line of lines()) {
@@ -179,9 +187,11 @@ export function createCapture({
           if (observation.raw_sha256 && observation.raw_sha256 !== sha256(span)) {
             throw new CaptureError("span-digest-mismatch", { offset: line.offset, cited: observation.raw_sha256 });
           }
-          const required =
-            observation.required_read === true ||
-            (required_read_paths !== null && observation.target != null && required_read_paths.includes(observation.target));
+          let required = null;
+          if (observation.required_read === true) required = true;
+          else if (required_read_paths !== null && observation.target != null) {
+            required = required_read_paths.includes(observation.target);
+          }
           observations.push({
             sequence: observations.length,
             fact_id: observation.fact_id ?? null,
@@ -210,9 +220,14 @@ export function createCapture({
     },
 
     toRecord() {
+      // A refused invocation never spawned, so it has no status. `unexpected` is the only slot the
+      // locked enum (03-data-schema:110) has for "no status", which is why `refusal` travels beside
+      // it and why the writer derives the reason from `refusal`: a refusal can never be graded with
+      // the crash reason. Nothing was truncated either - there was never a longer stream to truncate.
       const kind = status === null ? "unexpected" : terminationKind({ ...status, boundary_event_offset: boundaryStop });
+      const neverStarted = refusal !== null && status === null;
       const prefixComplete =
-        kind === "native" || (kind === "boundary-stop" && boundaryStop !== null && boundaryStop <= stdout.length);
+        neverStarted || kind === "native" || (kind === "boundary-stop" && boundaryStop !== null && boundaryStop <= stdout.length);
       return {
         schema: CAPTURE_SCHEMA,
         harness,
@@ -254,7 +269,13 @@ export function createCapture({
         paths.push(stderrPath);
       }
       const recordPath = join(dir, `${invocation_id}.capture.json`);
-      const record = { ...api.toRecord(), evidence_paths: [recordPath, ...paths] };
+      const cited = [recordPath, ...paths];
+      const record = {
+        ...api.toRecord(),
+        evidence_root: dir,
+        evidence_relative_paths: cited.map((path) => path.split(/[\\/]/).pop()),
+        evidence_paths: cited,
+      };
       writeFileSync(recordPath, `${JSON.stringify(record, null, 2)}\n`, "utf8");
       return record;
     },
@@ -276,20 +297,50 @@ export function denials(record) {
   );
 }
 
-/** Required facts the record actually observed, by fact id. */
+/**
+ * Denials whose requiredness nobody declared. An undeclared read is not an optional one: these make
+ * a cell could-not-run rather than letting the absence of a declaration read as permission.
+ */
+export function undeclaredDenials(record) {
+  return (record?.observations ?? []).filter(
+    (observation) =>
+      observation.kind === "permission_denied" && observation.required_read !== true && observation.required_read !== false,
+  );
+}
+
+/** Required facts the record actually observed, by fact id. A read declared optional is not one. */
 export function observedFacts(record) {
   const seen = new Map();
   for (const observation of record?.observations ?? []) {
-    if (observation.required === false || !observation.fact_id) continue;
+    if (observation.required_read === false || !observation.fact_id) continue;
     if (!seen.has(observation.fact_id)) seen.set(observation.fact_id, observation);
   }
   return seen;
 }
 
+/**
+ * Where a cited artifact actually is. A record travels with its bytes - `evidence_root` plus
+ * `evidence_relative_paths` - so a downloaded artifact regrades wherever it landed; the recorded
+ * absolute path is the last resort, not the only answer.
+ */
+export function resolveEvidencePath(record, path, root = null) {
+  if (typeof path !== "string" || path.length === 0) return path;
+  if (existsSync(path)) return path;
+  const name = path.split(/[\\/]/).pop();
+  if (!(record?.evidence_relative_paths ?? []).includes(name)) return path;
+  for (const dir of [root, record?.evidence_root]) {
+    if (typeof dir !== "string" || dir.length === 0) continue;
+    const candidate = join(dir, name);
+    if (existsSync(candidate)) return candidate;
+  }
+  return path;
+}
+
 /** A citation must resolve: its span exists in the original bytes and hashes to the cited digest. */
-export function resolveObservation(record, observation) {
-  const stdoutPath = (record.evidence_paths ?? []).find((path) => path.endsWith(".stdout.bin"));
-  if (!stdoutPath) throw new CaptureError("captured-bytes-absent", { invocation_id: record.invocation_id });
+export function resolveObservation(record, observation, { root = null } = {}) {
+  const citedPath = (record.evidence_paths ?? []).find((path) => path.endsWith(".stdout.bin"));
+  if (!citedPath) throw new CaptureError("captured-bytes-absent", { invocation_id: record.invocation_id });
+  const stdoutPath = resolveEvidencePath(record, citedPath, root);
   const bytes = readFileSync(stdoutPath);
   if (sha256(bytes) !== record.stdout?.sha256) {
     throw new CaptureError("captured-bytes-tampered", { path: stdoutPath, expected: record.stdout?.sha256 });

@@ -57,6 +57,13 @@ process.stdin.on("data", (chunk) => { bytes += chunk.length; });
 process.stdin.on("end", () => { process.stdout.write(JSON.stringify({ type: "stdin", bytes, eof: true }) + "\\n"); });
 `;
 
+// Reports the required read as done, then dies of an unexplained signal: real bytes, no exit status.
+const KILLED_AFTER_READ = `
+const { writeSync } = require("node:fs");
+writeSync(1, JSON.stringify({ type: "read_attempt", ok: true, path: process.argv[1] }) + "\\n");
+process.kill(process.pid, "SIGKILL");
+`;
+
 function seedProject() {
   const dir = mkdtempSync(join(tmpdir(), "pp-grd-03-"));
   mkdirSync(join(dir, "design"), { recursive: true });
@@ -116,6 +123,14 @@ function readAttemptMapper() {
   };
 }
 
+// A mapper for a cell that really succeeded: a completed read is the fact the case claims.
+function passMapper() {
+  return (line) => {
+    if (line.type !== "read_attempt" || line.ok !== true) return [];
+    return [{ kind: "required_read_ok", operation: "read", target: line.path, fact_id: "required_read_ok" }];
+  };
+}
+
 function installation() {
   return {
     requested_cli_version: "2.1.291",
@@ -165,6 +180,12 @@ test("FLOW-GRD-03-FILES-AND-STREAM", async (t) => {
     assert.equal(denied.length, 1, "exactly the required denial is in the stream");
     assert.equal(denied[0].target, requiredPath);
     assert.equal(denied[0].raw_event.code, "EACCES", "the denial is the OS's errno, not a synthesized event");
+
+    // The before/after fixture manifests are recorded, not decorative: they are what makes a
+    // mutable-project case trustworthy, so they must really hash the fixtures.
+    assert.ok(Object.keys(record.fixture_manifests.before).length >= 2, "the before manifest hashes the fixtures");
+    assert.deepEqual(Object.keys(record.fixture_manifests.after), Object.keys(record.fixture_manifests.before));
+    assert.deepEqual(record.fixture_manifests.changed, [], "nothing changed between the two snapshots");
 
     // The citation resolves to bytes that really are in the capture, at the cited offset.
     const stdoutBytes = readFileSync(record.evidence_paths.find((path) => path.endsWith("stdout.bin")));
@@ -227,6 +248,42 @@ test("FLOW-GRD-03-FILES-AND-STREAM", async (t) => {
     assert.ok(tampered.mismatches.some((entry) => entry.field === "verdict"));
     artifact.controls.push({ control_id: "tampered-readback", verdict: tampered.verdict, reason: tampered.reason });
 
+    // Every identity field is compared, one at a time: a read-back that checks three of five is a
+    // grade from the wrong harness/version/track waiting to be read as this one.
+    const fieldMutations = {
+      verdict: (copy) => {
+        copy.verdict = copy.verdict === "pass" ? "fail" : "pass";
+      },
+      harness: (copy) => {
+        copy.harness = "codex";
+      },
+      version: (copy) => {
+        copy.installation.resolved_cli_version = "0.0.0-not-the-graded-version";
+      },
+      track: (copy) => {
+        copy.track = copy.track === "pinned" ? "newest" : "pinned";
+      },
+      check_id: (copy) => {
+        copy.check_id = "status";
+      },
+    };
+    for (const field of ["verdict", "harness", "version", "track", "check_id"]) {
+      const copy = JSON.parse(JSON.stringify(readBack));
+      fieldMutations[field](copy);
+      const path = join(gradeDir, `identity-${field}.json`);
+      writeFileSync(path, JSON.stringify(copy), "utf8");
+      const result = verifyReadBack(cell, readGrade(path));
+      assert.equal(result.ok, false, `a read-back differing only in ${field} must not be accepted`);
+      assert.equal(result.verdict, "could-not-run");
+      assert.equal(result.reason, "read-back-mismatch");
+      assert.deepEqual(
+        result.mismatches.map((entry) => entry.field),
+        [field],
+        `${field} is one of the five identity fields the read-back compares`,
+      );
+    }
+    artifact.assertions.push("read-back compares all five identity fields: verdict, harness, version, track, check_id");
+
     // ---- negative control: a partial file is could-not-run --------------------------------
     const partialPath = join(gradeDir, "partial.json");
     writeFileSync(partialPath, JSON.stringify(cell), "utf8");
@@ -282,6 +339,61 @@ test("FLOW-GRD-03-FILES-AND-STREAM", async (t) => {
     assert.equal(unbacked.reason, "evidence-unresolvable");
     artifact.controls.push({ control_id: "absent-evidence-path", verdict: unbacked.verdict, reason: unbacked.reason });
 
+    // ---- an undeclared required read is never read as optional (F-T3-2) -----------------
+    // The same real denial, observed with observe()'s default: nobody declared which target was
+    // required, and absence of a declaration must not be graded as "optional".
+    const { capture: undeclaredCapture } = await captureReader({ dir: projectDir });
+    undeclaredCapture.observe(readAttemptMapper());
+    const undeclaredRecord = undeclaredCapture.persist(evidenceDir);
+    assert.equal(denials(undeclaredRecord).length, 0, "without a declaration the capture counts no denial");
+    assert.equal(
+      undeclaredRecord.observations.find((observation) => observation.kind === "permission_denied").required_read,
+      null,
+      "undeclared requiredness is recorded as undeclared, not as false",
+    );
+    const undeclared = gradeFromEvidence({
+      record: undeclaredRecord,
+      installation: installation(),
+      harness: "claude-code",
+      track: "pinned",
+      check_id: "verify",
+      evidence_paths: undeclaredRecord.evidence_paths,
+      report_paths: [],
+      required_facts: [],
+    });
+    assert.notEqual(undeclared.verdict, "pass", "a visible denial must never grade pass by default");
+    assert.equal(undeclared.verdict, "could-not-run");
+    assert.equal(undeclared.reason, "requiredness-undeclared");
+    artifact.controls.push({ control_id: "undeclared-required-read", verdict: undeclared.verdict, reason: undeclared.reason });
+
+    // ---- the record still regrades after the artifact is moved (F-T3-8) -----------------
+    // A downloaded artifact lives at a new path and the recorded absolute paths are gone; the record
+    // travels with its bytes, so it must regrade off the root it now sits in.
+    const movedDir = mkdtempSync(join(tmpdir(), "pp-moved-"));
+    for (const path of record.evidence_paths) writeFileSync(join(movedDir, path.split("/").pop()), readFileSync(path));
+    for (const path of record.evidence_paths) rmSync(path, { force: true });
+    assert.equal(
+      existsSync(record.evidence_paths.find((path) => path.endsWith("stdout.bin"))),
+      false,
+      "the recorded absolute path is gone: only the moved copy is left",
+    );
+    const moved = gradeFromEvidence({
+      record,
+      installation: installation(),
+      harness: "claude-code",
+      track: "pinned",
+      check_id: "verify",
+      evidence_paths: record.evidence_paths,
+      evidence_root: movedDir,
+      report_paths: [],
+      required_facts: [],
+    });
+    assert.equal(moved.verdict, "fail", "a moved artifact still resolves its citations");
+    assert.equal(moved.reason, "denied_tool_call");
+    assert.equal(moved.denied_tool_call.stream_offset, denied[0].stream_offset);
+    artifact.controls.push({ control_id: "moved-artifact-regrade", verdict: moved.verdict, reason: moved.reason });
+    rmSync(movedDir, { recursive: true, force: true });
+
     // ---- a pass is impossible without an observed required fact --------------------------
     // The required file is readable now, so the same child reports a successful read.
     chmodSync(join(projectDir, "workflows/RUNTIME-CONTRACT.md"), 0o600);
@@ -302,6 +414,132 @@ test("FLOW-GRD-03-FILES-AND-STREAM", async (t) => {
     assert.equal(unevidenced.verdict, "could-not-run", "exit 0 with an unobserved required fact is never a pass");
     assert.equal(unevidenced.reason, "required-fact-unobserved");
     artifact.controls.push({ control_id: "exit0-no-required-fact", verdict: unevidenced.verdict, reason: unevidenced.reason });
+
+    // ---- a real pass: the required fact was observed, and it survives the write path -----
+    // Without this the only verdicts ever asserted are fail and could-not-run, so a writer that
+    // can never return pass - or that dropped its pass-evidence gate - would ship green.
+    const readable = join(projectDir, "workflows/RUNTIME-CONTRACT.md");
+    const { capture: passCapture } = await captureReader({ dir: projectDir });
+    passCapture.observe(passMapper(), { required_read_paths: [readable] });
+    const passRecord = passCapture.persist(evidenceDir);
+    const passCell = gradeFromEvidence({
+      record: passRecord,
+      installation: installation(),
+      harness: "claude-code",
+      track: "pinned",
+      check_id: "verify",
+      evidence_paths: passRecord.evidence_paths,
+      report_paths: [],
+      required_facts: [{ fact_id: "required_read_ok" }],
+    });
+    assert.equal(passCell.verdict, "pass", "an observed required fact on a clean exit is a pass");
+    assert.equal(passCell.reason, null);
+    assert.equal(passCell.denied_tool_call, null);
+    assert.equal(passCell.process_exit_code, 0);
+    const passWritten = writeGrade({ dir: gradeDir, cell: passCell });
+    assert.equal(passWritten.ok, true, `pass grade did not read back: ${JSON.stringify(passWritten.mismatches)}`);
+    assert.equal(readGrade(passWritten.path).verdict, "pass", "the pass survives temp->fsync->rename->read-back");
+    artifact.controls.push({ control_id: "required-fact-observed-pass", verdict: passCell.verdict, reason: passCell.reason });
+
+    // A citation outside the captured bytes is refused at capture time, not only at grading.
+    assert.throws(
+      () => passCapture.spanOf(0, passRecord.stdout.byte_length + 1),
+      (error) => error.reason === "span-outside-capture",
+      "a span nobody captured cannot be cited",
+    );
+
+    // A mapper cannot supply its own digest: the runtime re-hashes the span it really produced.
+    const { capture: lyingCapture } = await captureReader({ dir: projectDir });
+    assert.throws(
+      () =>
+        lyingCapture.observe(() => [
+          { kind: "permission_denied", operation: "read", target: readable, required_read: true, raw_sha256: "0".repeat(64) },
+        ]),
+      (error) => error.reason === "span-digest-mismatch",
+      "an inflated citation is caught here rather than travelling into a grade",
+    );
+    artifact.assertions.push("span bounds and span digests are enforced at capture time");
+
+    // Negative twin: the same capture with the required fact removed is not a pass.
+    const factRemoved = gradeFromEvidence({      record: { ...passRecord, observations: passRecord.observations.filter((row) => row.fact_id === null) },
+      installation: installation(),
+      harness: "claude-code",
+      track: "pinned",
+      check_id: "verify",
+      evidence_paths: passRecord.evidence_paths,
+      report_paths: [],
+      required_facts: [{ fact_id: "required_read_ok" }],
+    });
+    assert.equal(factRemoved.verdict, "could-not-run", "the pass above is the fact, not the exit code");
+    assert.equal(factRemoved.reason, "required-fact-unobserved");
+    artifact.controls.push({ control_id: "pass-twin-fact-removed", verdict: factRemoved.verdict, reason: factRemoved.reason });
+
+    // A fact the capture itself classified as not-required cannot carry a pass either, and exit 0
+    // with nothing declared for the cell to prove is could-not-run rather than an empty pass.
+    const optionalFact = gradeFromEvidence({
+      record: {
+        ...passRecord,
+        observations: passRecord.observations.map((row) =>
+          row.fact_id === "required_read_ok" ? { ...row, required_read: false } : row,
+        ),
+      },
+      installation: installation(),
+      harness: "claude-code",
+      track: "pinned",
+      check_id: "verify",
+      evidence_paths: passRecord.evidence_paths,
+      report_paths: [],
+      required_facts: [{ fact_id: "required_read_ok" }],
+    });
+    assert.equal(optionalFact.verdict, "could-not-run", "an optional read is not the required fact");
+    assert.equal(optionalFact.reason, "required-fact-unobserved");
+    artifact.controls.push({ control_id: "optional-fact-not-required", verdict: optionalFact.verdict, reason: optionalFact.reason });
+
+    const undeclaredFacts = gradeFromEvidence({
+      record: passRecord,
+      installation: installation(),
+      harness: "claude-code",
+      track: "pinned",
+      check_id: "verify",
+      evidence_paths: passRecord.evidence_paths,
+      report_paths: [],
+      required_facts: [],
+    });
+    assert.equal(undeclaredFacts.verdict, "could-not-run", "a clean exit with nothing declared graded nothing");
+    assert.equal(undeclaredFacts.reason, "nothing-graded");
+    artifact.controls.push({ control_id: "nothing-declared", verdict: undeclaredFacts.verdict, reason: undeclaredFacts.reason });
+
+    // ---- a pass with no raw exit status is refused, not graded (assertPassEvidence) -----
+    const killedCapture = createCapture({ harness: "claude-code", check_id: "verify", cwd: projectDir, timeout_ms: 20_000 });
+    const killedStatus = await spawnCaptured({
+      command: process.execPath,
+      args: ["-e", KILLED_AFTER_READ, readable],
+      cwd: projectDir,
+      capture: killedCapture,
+      timeout_ms: 20_000,
+    });
+    killedCapture.finish(killedStatus);
+    killedCapture.observe(passMapper(), { required_read_paths: [readable] });
+    const killedRecord = killedCapture.persist(evidenceDir);
+    assert.equal(killedStatus.timed_out, false);
+    assert.equal(killedRecord.process_status.exit_code, null, "an unexplained kill leaves no exit code");
+    assert.equal(killedRecord.observations.length, 1, "the required fact was really captured before the kill");
+    assert.throws(
+      () =>
+        gradeFromEvidence({
+          record: killedRecord,
+          installation: installation(),
+          harness: "claude-code",
+          track: "pinned",
+          check_id: "verify",
+          evidence_paths: killedRecord.evidence_paths,
+          report_paths: [],
+          required_facts: [{ fact_id: "required_read_ok" }],
+        }),
+      (error) => error.reason === "pass-without-evidence",
+      "a pass needs a raw integer exit status: an unexplained kill is could-not-run",
+    );
+    artifact.controls.push({ control_id: "pass-without-exit-status", verdict: "refused", reason: "pass-without-evidence" });
 
     // ---- a real timeout is could-not-run, never a silent pass ----------------------------
     const slow = createCapture({ harness: "claude-code", check_id: "status", cwd: projectDir, timeout_ms: 250 });
@@ -345,6 +583,44 @@ test("FLOW-GRD-03-FILES-AND-STREAM", async (t) => {
     assert.equal(stdinLine.eof, true);
     assert.equal(stdinLine.bytes, 0);
     artifact.assertions.push("stdin closed: the child observed EOF with 0 bytes");
+
+    // ---- a boundary stop is only gradeable when its prefix is complete (F-T3-5) ---------
+    // A question boundary is the one kind that may skip a native end, so a truncated prefix is
+    // could-not-run: the exception must never turn a partial capture into a pass.
+    const boundaryCapture = createCapture({
+      harness: "claude-code",
+      check_id: "question_before_expensive_work",
+      cwd: projectDir,
+      timeout_ms: 20_000,
+    });
+    const boundaryStatus = await spawnCaptured({
+      command: process.execPath,
+      args: ["-e", STDIN_PROBE],
+      cwd: projectDir,
+      capture: boundaryCapture,
+      timeout_ms: 20_000,
+    });
+    boundaryCapture.finish({
+      ...boundaryStatus,
+      stop_reason: "question-boundary",
+      boundary_event_offset: boundaryCapture.byteLength + 1,
+    });
+    const truncatedRecord = boundaryCapture.persist(evidenceDir);
+    assert.equal(truncatedRecord.termination_kind, "boundary-stop");
+    assert.equal(truncatedRecord.prefix_complete, false, "the boundary offset lies past the captured bytes");
+    const truncated = gradeFromEvidence({
+      record: truncatedRecord,
+      installation: installation(),
+      harness: "claude-code",
+      track: "pinned",
+      check_id: "question_before_expensive_work",
+      evidence_paths: truncatedRecord.evidence_paths,
+      report_paths: [],
+      required_facts: [],
+    });
+    assert.equal(truncated.verdict, "could-not-run", "a truncated prefix is not gradeable");
+    assert.equal(truncated.reason, "capture-prefix-incomplete");
+    artifact.controls.push({ control_id: "truncated-boundary-prefix", verdict: truncated.verdict, reason: truncated.reason });
 
     // ---- the first-party capture and the live artifact, when they exist ------------------
     const archived = existsSync(ARCHIVED_CAPTURE_DIR)
