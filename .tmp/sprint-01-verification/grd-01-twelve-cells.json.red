@@ -1,12 +1,10 @@
-# RED — FLOW-GRD-01-TWELVE-CELLS recorder half, T8 (captured 2026-10-29T02:52:34Z)
-# command: node --test tests/sprint-01/grd-01-twelve-cells.test.mjs --test-name-pattern FLOW-GRD-01-TWELVE-CELLS
-# base sha: f5423e74d0c9b23e3d5c260b69b7ca257f1d81ec (branch main)
-# the recorder does not exist yet, so the flow module cannot load:
+@@RUN-FLOW flow=FLOW-GRD-01-TWELVE-CELLS sprint=sprint-01-evaluator-evidence-spine expect=red cmd_sha=c6d9abf415370d8d9be4368636767b099a954fd7c86fb5a988cf1d5f74a3b6e6 head=a3238db8b8f861e5c86004db117305d6cfeb0c9d+dirty at=2026-10-29T04:34:24Z timeout=900s(default)@@
++ node --test tests/sprint-01/grd-01-twelve-cells.test.mjs --test-name-pattern FLOW-GRD-01-TWELVE-CELLS
 node:internal/modules/esm/resolve:275
     throw new ERR_MODULE_NOT_FOUND(
           ^
 
-Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/Users/justinrich/Projects/pixel-perfect/test/harness/recorder.mjs' imported from /Users/justinrich/Projects/pixel-perfect/tests/sprint-01/grd-01-twelve-cells.test.mjs
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/Users/justinrich/Projects/pixel-perfect/.kb-run-sprint/worktrees/sprint-01-evaluator-evidence-spine/T10/test/harness/adapters/absent.mjs' imported from /Users/justinrich/Projects/pixel-perfect/.kb-run-sprint/worktrees/sprint-01-evaluator-evidence-spine/T10/tests/sprint-01/grd-01-twelve-cells.test.mjs
     at finalizeResolution (node:internal/modules/esm/resolve:275:11)
     at moduleResolve (node:internal/modules/esm/resolve:865:10)
     at defaultResolve (node:internal/modules/esm/resolve:991:11)
@@ -18,11 +16,11 @@ Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/Users/justinrich/Projects/pix
     at ModuleJob.syncLink (node:internal/modules/esm/module_job:160:33)
     at ModuleJob.link (node:internal/modules/esm/module_job:245:17) {
   code: 'ERR_MODULE_NOT_FOUND',
-  url: 'file:///Users/justinrich/Projects/pixel-perfect/test/harness/recorder.mjs'
+  url: 'file:///Users/justinrich/Projects/pixel-perfect/.kb-run-sprint/worktrees/sprint-01-evaluator-evidence-spine/T10/test/harness/adapters/absent.mjs'
 }
 
 Node.js v24.14.0
-✖ tests/sprint-01/grd-01-twelve-cells.test.mjs (61.616834ms)
+✖ tests/sprint-01/grd-01-twelve-cells.test.mjs (64.102041ms)
 ℹ tests 1
 ℹ suites 0
 ℹ pass 0
@@ -30,11 +28,11 @@ Node.js v24.14.0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 68.873667
+ℹ duration_ms 70.646333
 
 ✖ failing tests:
 
 test at tests/sprint-01/grd-01-twelve-cells.test.mjs:1:1
-✖ tests/sprint-01/grd-01-twelve-cells.test.mjs (61.616834ms)
+✖ tests/sprint-01/grd-01-twelve-cells.test.mjs (64.102041ms)
   'test failed'
-# exit code: 1
+@@GATE-EXIT=1@@
