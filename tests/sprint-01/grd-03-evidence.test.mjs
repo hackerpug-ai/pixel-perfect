@@ -1142,6 +1142,8 @@ test("FLOW-GRD-03-FILES-AND-STREAM", async (t) => {
       verifyPart,
       questionPart,
     ],
+    // The pair's own invocation directories, plus the repo root for the archived stream capture.
+    evidence_roots: [planted.dir, clean.dir, ROOT],
   });
 
   await t.test("four checks cite files-and-event-stream, and each carries at least one evidence path", () => {
@@ -1184,10 +1186,11 @@ test("FLOW-GRD-03-FILES-AND-STREAM", async (t) => {
       process_exit_code: 0,
       parts: [
         graders.part({ check_id: "command_list", verdict: "pass", evidence_paths: [] }),
-        graders.part({ check_id: "status", verdict: "pass", evidence_paths: ["a"] }),
+        graders.part({ check_id: "status", verdict: "pass", evidence_paths: [planted.bound_path] }),
         verifyPart,
         questionPart,
       ],
+      evidence_roots: [planted.dir, clean.dir, ROOT],
     });
     const downgraded = unevidenced.checks.find((check) => check.check_id === "command_list");
     assert.equal(downgraded.verdict, "could-not-run", "a pass with nothing behind it is not a pass");
@@ -1196,22 +1199,78 @@ test("FLOW-GRD-03-FILES-AND-STREAM", async (t) => {
     assert.ok(unevidenced.block_reasons.some((entry) => entry.reason === "check-unevidenced" && entry.check_id === "command_list"));
   });
 
-  await t.test("a non-pass check with no reason is refused, so no verdict travels unexplained", () => {
-    const reasonless = graders.gradeCell({
+  await t.test("a non-pass check with no reason — or a whitespace-only one — is refused, so no verdict travels unexplained", () => {
+    for (const [label, reason] of [
+      ["absent", undefined],
+      ["whitespace-only", "   "],
+    ]) {
+      const reasonless = graders.gradeCell({
+        harness: "claude-code",
+        track: "pinned",
+        installation,
+        invocation_id: planted.invocation.invocationId,
+        process_exit_code: 0,
+        parts: [
+          graders.part({ check_id: "command_list", verdict: "fail", ...(reason === undefined ? {} : { reason }), evidence_paths: [planted.bound_path] }),
+          graders.part({ check_id: "status", verdict: "pass", evidence_paths: [planted.bound_path] }),
+          verifyPart,
+          questionPart,
+        ],
+        evidence_roots: [planted.dir, clean.dir, ROOT],
+      });
+      const repaired = reasonless.checks.find((check) => check.check_id === "command_list");
+      assert.equal(repaired.reason, "check-reason-absent", `a ${label} reason is not an explanation`);
+      assert.equal(reasonless.verdict, "could-not-run");
+    }
+  });
+
+  await t.test("a pass whose citation does not resolve to bytes is could-not-run, never a pass", () => {
+    // The reviewer's three shapes: an empty string, a path that names no file, and ANOTHER
+    // invocation's real report. None of them is evidence for this cell.
+    const foreign = runVerifyCase("verify-button-drift", { keep: true });
+    t.after(() => remove(foreign.dir, { recursive: true, force: true }));
+    const shapes = [
+      ["empty string", [""]],
+      ["a path that names no file", [join(planted.dir, "reports/never-written.json")]],
+      ["another invocation's report", [foreign.bound_path]],
+    ];
+    for (const [label, cited] of shapes) {
+      const claimed = graders.gradeCell({
+        harness: "claude-code",
+        track: "pinned",
+        installation,
+        invocation_id: planted.invocation.invocationId,
+        process_exit_code: 0,
+        parts: [
+          graders.part({ check_id: "command_list", verdict: "pass", evidence_paths: cited }),
+          graders.part({ check_id: "status", verdict: "pass", evidence_paths: [planted.bound_path] }),
+          verifyPart,
+          questionPart,
+        ],
+        evidence_roots: [planted.dir, clean.dir, ROOT],
+      });
+      const downgraded = claimed.checks.find((check) => check.check_id === "command_list");
+      assert.equal(downgraded.verdict, "could-not-run", `a pass citing ${label} is not a pass: ${JSON.stringify(downgraded)}`);
+      assert.equal(downgraded.reason, "evidence-unresolvable", `${label} names what it could not resolve`);
+      assert.equal(claimed.verdict, "could-not-run", `the aggregate inherits the downgrade for ${label}`);
+      const detail = claimed.block_reasons.find((entry) => entry.check_id === "command_list" && entry.reason === "evidence-unresolvable");
+      assert.ok(detail?.citations?.length > 0, `${label} records the citation that failed: ${JSON.stringify(detail)}`);
+    }
+    // Control: the same cell with the pair's own report cited grades the check pass.
+    const controlled = graders.gradeCell({
       harness: "claude-code",
       track: "pinned",
       installation,
       invocation_id: planted.invocation.invocationId,
       process_exit_code: 0,
       parts: [
-        graders.part({ check_id: "command_list", verdict: "fail", evidence_paths: ["a"] }),
-        graders.part({ check_id: "status", verdict: "pass", evidence_paths: ["a"] }),
+        graders.part({ check_id: "command_list", verdict: "pass", evidence_paths: [planted.bound_path] }),
+        graders.part({ check_id: "status", verdict: "pass", evidence_paths: [planted.bound_path] }),
         verifyPart,
         questionPart,
       ],
+      evidence_roots: [planted.dir, clean.dir, ROOT],
     });
-    const repaired = reasonless.checks.find((check) => check.check_id === "command_list");
-    assert.equal(repaired.reason, "check-reason-absent");
-    assert.equal(reasonless.verdict, "could-not-run");
+    assert.equal(controlled.checks.find((check) => check.check_id === "command_list").verdict, "pass");
   });
 });

@@ -20,7 +20,7 @@ import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, re
 import { createHash } from "node:crypto";
 import path from "node:path";
 
-import { CasePathRefused, bindReportPath } from "../kit/case-loader.mjs";
+import { CasePathRefused, assertConfined, bindReportPath } from "../kit/case-loader.mjs";
 
 export const REPORT_SCHEMA = "verify-report/v1";
 
@@ -124,6 +124,41 @@ export function writeVerifyReport({ caseManifest, invocation, body }) {
     };
   }
   return { ok: true, path: target, sha256: digest, byte_length: readBack.length, wrote: 1, read_back: JSON.parse(readBack.toString("utf8")) };
+}
+
+/**
+ * Resolves the capture a report cites, under the invocation that produced the report.
+ *
+ * A detection cites bytes, never a shape: the capture file must exist inside the invocation, hash to
+ * the digest the report claims, and hold the byte span the report names. Nothing here consults the
+ * case manifest, so a body that copies its case's `capture_path` and `capture_sha256` still has to
+ * produce the bytes — copied metadata cannot pass.
+ */
+export function resolveCaptureEvidence(invocation, evidence = {}) {
+  const cited = evidence?.capture_path ?? null;
+  if (typeof invocation?.dir !== "string" || invocation.dir.length === 0) return { ok: false, why: "invocation-dir", cited };
+  let abs;
+  try {
+    abs = assertConfined(cited, invocation.dir);
+  } catch (error) {
+    return { ok: false, why: "capture-path", cited, refusal: error?.why ?? String(error?.message ?? error) };
+  }
+  let bytes;
+  try {
+    bytes = readFileSync(abs);
+  } catch (error) {
+    if (!isStorageError(error)) throw error;
+    return { ok: false, why: "capture-absent", path: abs, code: error.code };
+  }
+  const digest = sha256(bytes);
+  if (evidence?.capture_sha256 !== digest) {
+    return { ok: false, why: "capture-sha256", path: abs, cited: evidence?.capture_sha256 ?? null, measured: digest, byte_length: bytes.length };
+  }
+  const { offset, end_offset: endOffset } = evidence?.event_offsets ?? {};
+  if (!Number.isInteger(offset) || !Number.isInteger(endOffset) || offset < 0 || offset >= endOffset || endOffset > bytes.length) {
+    return { ok: false, why: "event-span", path: abs, offset: offset ?? null, end_offset: endOffset ?? null, byte_length: bytes.length };
+  }
+  return { ok: true, path: abs, sha256: digest, byte_length: bytes.length };
 }
 
 /**

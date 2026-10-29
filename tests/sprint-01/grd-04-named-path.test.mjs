@@ -211,9 +211,22 @@ test("FLOW-GRD-04-NAMED-PATH", async (t) => {
   const control = loadCase("verify-clean");
 
   const real = runVerifyCase("verify-button-drift", { keep: true });
-  t.after(() => rmSync(real.dir, { recursive: true, force: true }));
+  const twin = runVerifyCase("verify-clean", { keep: true });
+  t.after(() => {
+    rmSync(real.dir, { recursive: true, force: true });
+    rmSync(twin.dir, { recursive: true, force: true });
+  });
   const declaredRel = planned.report_relative_path;
   const declaredAbs = path.join(real.dir, declaredRel);
+  // Each control the artifact reports is recorded here from the verdict the grader returned.
+  const controls = [];
+  const record = (control_id, expected, result, reason = result.reason ?? null) =>
+    controls.push({ control_id, expected, verdict: result.verdict ?? result, reason });
+  const gradePair = () =>
+    grader.gradeVerifyCheck({
+      planted: { caseManifest: planned, invocation: real.invocation },
+      clean: { caseManifest: control, invocation: twin.invocation },
+    });
 
   await t.test("the writer lands the report at exactly the declared path and leaves nothing else behind", () => {
     // Start from the real report, remove it, and let the WRITER put it back: same bytes, same path.
@@ -252,6 +265,61 @@ test("FLOW-GRD-04-NAMED-PATH", async (t) => {
     t.diagnostic(`capture_sha256=${report.evidence.capture_sha256} offsets=${JSON.stringify(report.evidence.event_offsets)}`);
   });
 
+  await t.test("a detection that cites metadata instead of bytes is not a detection", () => {
+    // FLOW-GRD-04's own negative control: copied metadata cannot pass. Each attack keeps the case's
+    // outcome line intact and breaks exactly one thing the citation has to be true about.
+    const original = readFileSync(declaredAbs);
+    const body = JSON.parse(original.toString("utf8"));
+    const attacks = [
+      ["capture_sha256 that matches no bytes", { ...body.evidence, capture_sha256: "0".repeat(64), event_offsets: { offset: 0, end_offset: 4 } }, "capture-sha256"],
+      ["an event span past the end of the capture", { ...body.evidence, event_offsets: { offset: 999999, end_offset: 1000000 } }, "event-span"],
+      ["a capture_path naming a file that was never written", { ...body.evidence, capture_path: "design/.captures/web-desktop/atoms/Button/never-written.txt" }, "capture-absent"],
+      ["a capture_path escaping the invocation", { ...body.evidence, capture_path: "../../outside.txt" }, "capture-path"],
+    ];
+    try {
+      for (const [label, evidence, why] of attacks) {
+        writeFileSync(declaredAbs, `${JSON.stringify({ ...body, evidence }, null, 2)}\n`, "utf8");
+        assert.equal(existsSync(path.join(real.dir, evidence.capture_path ?? "")), evidence.capture_path === body.evidence.capture_path, `${label}: the cited file is exactly as absent or present as claimed`);
+        const part = gradePair();
+        assert.equal(part.verdict, "fail", `${label} must not grade pass: ${JSON.stringify(part.blocks)}`);
+        assert.equal(part.reason, "detection-unevidenced", `${label} names the unevidenced detection`);
+        const block = part.blocks.find((entry) => entry.reason === "detection-unevidenced");
+        assert.equal(block.side, "planted");
+        assert.deepEqual(block.missing, [why], `${label} names what did not resolve: ${JSON.stringify(block)}`);
+        record(`fabricated-${why}`, "fail", part);
+      }
+    } finally {
+      writeFileSync(declaredAbs, original);
+    }
+    // Control: the untouched body still grades pass, so the refusals above are about the citation.
+    assert.equal(gradePair().verdict, "pass");
+  });
+
+  await t.test("the report's own defect keys are compared with the case it claims to verify", () => {
+    const original = readFileSync(declaredAbs);
+    const body = JSON.parse(original.toString("utf8"));
+    try {
+      const other = { ...body, expected_defect_key: "molecules/Card/default" };
+      writeFileSync(declaredAbs, `${JSON.stringify(other, null, 2)}\n`, "utf8");
+      const mismatch = gradePair();
+      assert.equal(mismatch.verdict, "fail", "a body that names a different expected key verifies a different case");
+      assert.equal(mismatch.reason, "verify-defect-key-mismatch");
+      assert.equal(mismatch.blocks.find((entry) => entry.reason === "verify-defect-key-mismatch").field, "expected_defect_key");
+      record("expected-defect-key-mismatch", "fail", mismatch);
+
+      const observed = { ...body, observed_defect_key: "molecules/Card/default" };
+      writeFileSync(declaredAbs, `${JSON.stringify(observed, null, 2)}\n`, "utf8");
+      const contradiction = gradePair();
+      assert.equal(contradiction.verdict, "fail", "an observed key that contradicts the case is not a detection of it");
+      assert.equal(contradiction.reason, "verify-defect-key-mismatch");
+      assert.equal(contradiction.blocks.find((entry) => entry.reason === "verify-defect-key-mismatch").field, "observed_defect_key");
+      record("observed-defect-key-contradiction", "fail", contradiction);
+    } finally {
+      writeFileSync(declaredAbs, original);
+    }
+    assert.equal(gradePair().verdict, "pass", "the untouched body still grades pass");
+  });
+
   await t.test("a decoy in reports/ is never read and never chosen", () => {
     const decoy = path.join(real.dir, "reports/verify-button-drift.backup.json");
     writeFileSync(decoy, `${JSON.stringify({ observed_defect_key: "atoms/Decoy/default", invocation_id: "decoy" })}\n`, "utf8");
@@ -262,6 +330,7 @@ test("FLOW-GRD-04-NAMED-PATH", async (t) => {
     const reread = grader.readVerifyReportAt({ caseManifest: planned, invocation: real.invocation });
     assert.equal(reread.path, declaredAbs, "the reader reads the declared path only");
     assert.equal(reread.report.observed_defect_key, "atoms/Button/default", "the decoy body never becomes the report");
+    record("decoy-file", "pass", reread.path === declaredAbs ? "pass" : "fail", "declared-path-only");
     rmSync(decoy, { force: true });
   });
 
@@ -277,6 +346,7 @@ test("FLOW-GRD-04-NAMED-PATH", async (t) => {
       assert.equal(result.ok, false, `${label} must be refused`);
       assert.equal(result.verdict, "could-not-run", `${label} is a setup refusal, not a defect`);
       assert.equal(result.reason, "invalid-case-path", `${label} names the refusal`);
+      record(`${label}-escape`, "could-not-run", result);
       assert.equal(result.wrote, 0, `${label} wrote nothing`);
       assert.deepEqual(listDir(fresh.dir), [], `${label} left the invocation directory empty`);
       rmSync(fresh.dir, { recursive: true, force: true });
@@ -286,6 +356,7 @@ test("FLOW-GRD-04-NAMED-PATH", async (t) => {
     symlinkSync(elsewhere.dir, path.join(symlinked.dir, "reports"), "dir");
     const result = grader.writeVerifyReport({ caseManifest: planned, invocation: symlinked, body: real.report });
     assert.equal(result.reason, "invalid-case-path", "a symlinked reports/ ancestor is refused");
+    record("symlinked-ancestor", "could-not-run", result);
     assert.deepEqual(listDir(elsewhere.dir), [], "nothing was written through the symlink");
     assert.deepEqual(listDir(symlinked.dir), ["reports"], "the symlink is untouched and nothing landed beside it");
     rmSync(symlinked.dir, { recursive: true, force: true });
@@ -300,6 +371,7 @@ test("FLOW-GRD-04-NAMED-PATH", async (t) => {
     assert.equal(result.reason, "report-mismatched-invocation");
     assert.equal(result.wrote, 0, "nothing was written");
     assert.deepEqual(listDir(fresh.dir), []);
+    record("borrowed-body", "fail", result);
     // The clean case's declared path is a different file, so the twin can never borrow either report.
     assert.notEqual(control.report_relative_path, planned.report_relative_path);
     rmSync(fresh.dir, { recursive: true, force: true });
@@ -318,6 +390,7 @@ test("FLOW-GRD-04-NAMED-PATH", async (t) => {
       assert.equal(write.reason, "report-unavailable");
       assert.equal(write.wrote, 0);
       assert.deepEqual(listDir(fresh.dir), ["reports"], "the failed write left no temp file behind");
+      record("unwritable-store", "could-not-run", write);
     } finally {
       chmodSync(reports, 0o700);
     }
@@ -331,6 +404,7 @@ test("FLOW-GRD-04-NAMED-PATH", async (t) => {
     assert.equal(missing.verdict, "fail", "an unterminated run that leaves no report is a failure");
     assert.equal(missing.reason, "report-missing");
     assert.notEqual(missing.reason, "report-unavailable");
+    record("missing-report", "fail", missing);
     rmSync(fresh.dir, { recursive: true, force: true });
   });
   await t.test("the replay half is a `gh run download` of the attempt-qualified artifact", () => {
@@ -351,7 +425,8 @@ test("FLOW-GRD-04-NAMED-PATH", async (t) => {
   // The flow artifact: written by every playback so the gate can fingerprint it, and truthful about
   // what ran here (offline confinement + real oracle) and what needs the hosted run.
   const { execFileSync } = await import("node:child_process");
-  const { writeArtifact } = await import("./flow-runner.mjs");
+  const { readDeclaredReportsFromArtifact: readHosted, writeArtifact } = await import("./flow-runner.mjs");
+  const hosted = readHosted();
   const artifact = {
     flow: "FLOW-GRD-04-NAMED-PATH",
     uc_ref: "UC-GRD-04",
@@ -366,19 +441,15 @@ test("FLOW-GRD-04-NAMED-PATH", async (t) => {
     assertions: [
       "the writer lands the report at the declared path and nowhere else",
       "an escaping declared path is refused before any write, leaving the directory empty",
+      "a detection that cites metadata instead of bytes fails detection-unevidenced",
+      "the report's own expected_defect_key is compared with the case manifest",
       "a decoy in reports/ is never read or selected",
       "unwritable storage is could-not-run report-unavailable",
     ],
-    controls: [
-      { control_id: "traversal-escape", verdict: "could-not-run", reason: "invalid-case-path" },
-      { control_id: "absolute-escape", verdict: "could-not-run", reason: "invalid-case-path" },
-      { control_id: "symlinked-ancestor", verdict: "could-not-run", reason: "invalid-case-path" },
-      { control_id: "decoy-file", verdict: "pass", reason: "declared-path-only" },
-      { control_id: "borrowed-body", verdict: "fail", reason: "report-mismatched-invocation" },
-      { control_id: "unwritable-store", verdict: "could-not-run", reason: "report-unavailable" },
-    ],
-    awaiting: [{ leg: "verify-reports-artifact", owner: "T7", reason: "no HARNESS_EVAL_RUN_ID in this playback" }],
-    failures: [],
+    // Derived, not typed: each row is the verdict and reason the grader returned in the subtest above.
+    controls,
+    failures: controls.filter((row) => row.verdict !== row.expected).map((row) => `${row.control_id}: expected ${row.expected}, got ${row.verdict}`),
+    awaiting: hosted.status === "observed" ? [] : [{ leg: hosted.leg, owner: hosted.owner, reason: hosted.reason }],
   };
   writeArtifact(".tmp/sprint-01-verification/grd-04-named-path.json", artifact);
   t.diagnostic(`artifact=.tmp/sprint-01-verification/grd-04-named-path.json candidate_sha=${artifact.candidate_sha.slice(0, 12)}`);

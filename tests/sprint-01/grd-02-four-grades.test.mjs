@@ -1219,6 +1219,9 @@ test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
       })
     : graders.notExecutedPart({ check_id: "command_list", reason: "no claude CLI on PATH to capture the command list", owner: "T11" });
 
+  // The roots the cell's citations may live in: the pair's own invocation directories, plus the repo
+  // root for the archived stream capture and the product's own workflow document they cite.
+  const evidence_roots = [plantedRun.dir, cleanRun.dir, ROOT];
   const cell = graders.gradeCell({
     harness: HARNESS,
     track: "pinned",
@@ -1226,6 +1229,7 @@ test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
     invocation_id: plantedRun.invocation.invocationId,
     process_exit_code: plantedRun.oracle.exit_code,
     parts: [commandPart, statusPart, verifyPart, questionPart],
+    evidence_roots,
   });
 
   await t.test("the grader assembles exactly four check records, in order, each citing its own source", () => {
@@ -1260,14 +1264,16 @@ test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
   });
 
   await t.test("the aggregate is could-not-run before fail before pass, and every constituent survives", () => {
+    // A pass part cites a file the pair's own invocation produced; nothing here invents a citation.
+    const cited = plantedRun.bound_path;
     const order = [
       { parts: [verifyPart, questionPart, statusPart, commandPart], expected: "could-not-run" },
-      { parts: [verifyPart, questionPart, graders.part({ check_id: "status", verdict: "fail", reason: "status-facts-absent", evidence_paths: ["a"] }), commandPart], expected: "could-not-run" },
-      { parts: [verifyPart, questionPart, graders.part({ check_id: "status", verdict: "fail", reason: "status-facts-absent", evidence_paths: ["a"] }), graders.part({ check_id: "command_list", verdict: "pass", evidence_paths: ["b"] })], expected: "fail" },
-      { parts: [verifyPart, questionPart, graders.part({ check_id: "status", verdict: "pass", evidence_paths: ["a"] }), graders.part({ check_id: "command_list", verdict: "pass", evidence_paths: ["b"] })], expected: "pass" },
+      { parts: [verifyPart, questionPart, graders.part({ check_id: "status", verdict: "fail", reason: "status-facts-absent", evidence_paths: [cited] }), commandPart], expected: "could-not-run" },
+      { parts: [verifyPart, questionPart, graders.part({ check_id: "status", verdict: "fail", reason: "status-facts-absent", evidence_paths: [cited] }), graders.part({ check_id: "command_list", verdict: "pass", evidence_paths: [cited] })], expected: "fail" },
+      { parts: [verifyPart, questionPart, graders.part({ check_id: "status", verdict: "pass", evidence_paths: [cited] }), graders.part({ check_id: "command_list", verdict: "pass", evidence_paths: [cited] })], expected: "pass" },
     ];
     for (const { parts, expected } of order) {
-      const built = graders.gradeCell({ harness: HARNESS, track: "pinned", installation, invocation_id: plantedRun.invocation.invocationId, process_exit_code: 0, parts });
+      const built = graders.gradeCell({ harness: HARNESS, track: "pinned", installation, invocation_id: plantedRun.invocation.invocationId, process_exit_code: 0, parts, evidence_roots });
       assert.equal(built.verdict, expected, `four parts graded ${parts.map((p) => p.verdict).join("/")} aggregate to ${expected}`);
       assert.equal(built.checks.length, 4, "the constituents are preserved, not collapsed");
       for (const part of parts) {
@@ -1278,6 +1284,39 @@ test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
         assert.ok(reason.check_id, `block ${reason.reason} names the check that produced it`);
       }
     }
+  });
+
+  await t.test("a lane that produced nothing is filled could-not-run check-set-incomplete, never a pass", () => {
+    // The fail-closed filler: a cell built from fewer than four parts must still report all four ids,
+    // and every absent id must be could-not-run. A filler that invents a pass would be one edit away
+    // from reporting a lane nobody graded as a pass, so it is pinned here rather than assumed.
+    const cited = plantedRun.bound_path;
+    const three = graders.gradeCell({
+      harness: HARNESS,
+      track: "pinned",
+      installation,
+      invocation_id: plantedRun.invocation.invocationId,
+      process_exit_code: 0,
+      parts: [verifyPart, questionPart, graders.part({ check_id: "status", verdict: "pass", evidence_paths: [cited] })],
+      evidence_roots,
+    });
+    assert.equal(three.checks.length, 4, "an absent lane is still reported, not dropped from the array");
+    assert.deepEqual(three.checks.map((check) => check.check_id), graders.CHECK_IDS);
+    const filler = three.checks.find((check) => check.check_id === "command_list");
+    assert.equal(filler.verdict, "could-not-run", "a lane that produced nothing is not a pass");
+    assert.equal(filler.reason, "check-set-incomplete");
+    assert.deepEqual(filler.evidence_paths, [], "the filler cites nothing, so it cannot launder a citation in");
+    assert.equal(three.verdict, "could-not-run", "and the aggregate inherits it");
+    assert.ok(three.block_reasons.some((entry) => entry.check_id === "command_list" && entry.reason === "check-set-incomplete" && entry.missing === "command_list"));
+
+    const none = graders.gradeCell({ harness: HARNESS, track: "pinned", installation, invocation_id: plantedRun.invocation.invocationId, process_exit_code: 0, parts: [], evidence_roots });
+    assert.equal(none.checks.length, 4, "a cell with no parts at all still reports four lanes");
+    for (const check of none.checks) {
+      assert.equal(check.verdict, "could-not-run", `${check.check_id} is could-not-run when nothing ran`);
+      assert.equal(check.reason, "check-set-incomplete");
+    }
+    assert.equal(none.verdict, "could-not-run", "nothing at all is not a pass");
+    t.diagnostic(`incomplete_filler=${three.checks.map((check) => `${check.check_id}:${check.verdict}`).join(",")}`);
   });
 
   await t.test("a question spliced into the real verify stream fails that check at its offset, and no pass is launderable", () => {
@@ -1312,6 +1351,7 @@ test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
       invocation_id: splicedRecord.invocation_id,
       process_exit_code: 0,
       parts: [commandPart, statusPart, verifyPart, failing],
+      evidence_roots: [plantedRun.dir, cleanRun.dir, ROOT],
     });
     assert.equal(laundered.verdict, "could-not-run");
     assert.equal(laundered.checks.find((check) => check.check_id === "question_before_expensive_work").verdict, "fail", "an exit code of 0 cannot lift a failing check");

@@ -1,25 +1,62 @@
 // The fixture-grader: four checks per graded cell, decided from files and the event stream.
 //
 // This module is the only place a cell's verdict is assembled. It runs with no model credential and
-// reads no API key. Every part it accepts names the evidence that produced it, and the aggregate is
+// reads no API key. Every part it accepts names the evidence that produced it, and names it by BYTES:
+// a citation resolves to a real file inside the invocation that produced the cell, and a detection's
+// capture hashes to the digest the report claims with its span inside the capture. The aggregate is
 // could-not-run before fail before pass — with every constituent part kept, so a setup or storage
 // failure can never be relabelled as a plugin defect, and a detected defect can never be relabelled
 // as a setup failure.
 //
 // The process exit code travels beside a verdict as a diagnostic and is never an input to one:
 // `gradeVerifyCheck` passes on the planted case while the oracle's own exit code is 1.
+import { statSync } from "node:fs";
+import path from "node:path";
+
 import { worstVerdict, VERDICTS } from "../lib/verdict.mjs";
 import { assertPassEvidence, validateAgainst } from "../validate.mjs";
 import { commandNames, parseCommandList, statusFacts } from "../adapters/claude-code.mjs";
 import { gradeQuestionPolicy, mustAskFacts } from "../stream/question-boundary.mjs";
 
-import { REPORT_REASONS, readVerifyReportAt } from "./report-writer.mjs";
+import { REPORT_REASONS, readVerifyReportAt, resolveCaptureEvidence } from "./report-writer.mjs";
 
 export const SOURCE = "files-and-event-stream";
 /** The four checks one graded cell carries, in the order the cell reports them. */
 export const CHECK_IDS = Object.freeze(["command_list", "status", "verify", "question_before_expensive_work"]);
 
 const block = (verdict, reason, detail = {}) => ({ verdict, reason, ...detail });
+
+/**
+ * The citations a cell may not claim: anything that is not a non-empty string naming a real file
+ * inside one of the roots this cell's evidence may live in. A relative citation resolves against
+ * each root in turn; an absolute one only counts if it lands inside one.
+ */
+function unresolvableCitations(citations, roots) {
+  const allowed = (Array.isArray(roots) ? roots : [roots]).filter((root) => typeof root === "string" && root.length > 0).map((root) => path.resolve(root));
+  const bad = [];
+  for (const cited of citations) {
+    if (typeof cited !== "string" || cited.trim().length === 0) {
+      bad.push({ path: cited ?? null, why: "empty" });
+      continue;
+    }
+    const inside = allowed
+      .map((root) => ({ root, abs: path.resolve(root, cited) }))
+      .find(({ root, abs }) => abs.startsWith(`${root}${path.sep}`));
+    if (!inside) {
+      bad.push({ path: cited, why: "outside-the-invocation" });
+      continue;
+    }
+    let stat;
+    try {
+      stat = statSync(inside.abs);
+    } catch (error) {
+      bad.push({ path: cited, why: error?.code ?? "unreadable" });
+      continue;
+    }
+    if (!stat.isFile()) bad.push({ path: cited, why: "not-a-file" });
+  }
+  return bad;
+}
 
 /** One check record. Every field a later reader needs to re-derive the verdict travels with it. */
 export function part({ check_id, verdict, reason = null, invocation_id = null, evidence_paths = [], blocks = null, ...detail }) {
@@ -55,7 +92,9 @@ export function gradeVerifyCheck({ planted, clean }) {
     ["planted", planted],
     ["clean", clean],
   ];
-  const read = sides.map(([side, entry]) => [side, readVerifyReportAt({ caseManifest: entry.caseManifest, invocation: entry.invocation })]);
+  // A missing half is a lane with no report to read, so it grades could-not-run through the same
+  // refusal an unusable declared path gets — never a TypeError that takes down the whole run.
+  const read = sides.map(([side, entry]) => [side, readVerifyReportAt({ caseManifest: entry?.caseManifest ?? null, invocation: entry?.invocation ?? null })]);
   const blocks = [];
   const evidence_paths = [];
 
@@ -75,18 +114,27 @@ export function gradeVerifyCheck({ planted, clean }) {
     }
     const plantedKey = planted.caseManifest?.defect_key ?? null;
     const named = plantedReport.observed_defect_key ?? null;
+    const claimed = plantedReport.expected_defect_key ?? null;
     const drifted = (plantedReport.evidence?.drifted_keys ?? []).includes(plantedKey);
-    if (plantedKey && named !== plantedKey && !drifted) {
-      blocks.push(block("fail", "verify-defect-key-mismatch", { side: "planted", expected: plantedKey, named }));
+    // The report's own claims are compared with the case it says it verifies: a body that names a
+    // different expected key, or an observed key that contradicts the one the case plants, is not a
+    // detection of this case no matter how clean its outcome line reads.
+    if (plantedKey && claimed !== plantedKey) {
+      blocks.push(block("fail", "verify-defect-key-mismatch", { side: "planted", field: "expected_defect_key", expected: plantedKey, named: claimed }));
     }
-    // Detection is a citation, not a word: the capture and the byte span the oracle measured.
+    if (plantedKey && named !== null && named !== plantedKey) {
+      blocks.push(block("fail", "verify-defect-key-mismatch", { side: "planted", field: "observed_defect_key", expected: plantedKey, named }));
+    } else if (plantedKey && named === null && !drifted) {
+      blocks.push(block("fail", "verify-defect-key-mismatch", { side: "planted", field: "observed_defect_key", expected: plantedKey, named, drifted }));
+    }
+    // Detection is a citation, not a word: the capture the report names must exist inside the
+    // invocation that wrote it, hash to the digest the report claims, and hold the cited span.
     const evidence = plantedReport.evidence ?? {};
     const unevidenced = [];
-    if (typeof evidence.capture_path !== "string" || evidence.capture_path.length === 0) unevidenced.push("capture_path");
-    if (typeof evidence.capture_sha256 !== "string" || !/^[0-9a-f]{64}$/.test(evidence.capture_sha256)) unevidenced.push("capture_sha256");
-    if (!evidence.event_offsets || !Number.isInteger(evidence.event_offsets.offset)) unevidenced.push("event_offsets");
+    const capture = resolveCaptureEvidence(planted.invocation, evidence);
+    if (!capture.ok) unevidenced.push(capture.why);
     if (unevidenced.length > 0) {
-      blocks.push(block("fail", REPORT_REASONS.unboundEvidence, { side: "planted", missing: unevidenced }));
+      blocks.push(block("fail", REPORT_REASONS.unboundEvidence, { side: "planted", missing: unevidenced, capture }));
     }
 
     if (cleanReport.clean_project_failed === true) {
@@ -260,8 +308,10 @@ export function completeCheckSet(parts = []) {
  *
  * - aggregate: could-not-run before fail before pass, over the four parts
  * - every part's own verdict, reason and block reasons are preserved under `block_reasons`
- * - a part claiming pass without a citation is downgraded to could-not-run, never promoted
- * - a non-pass part without a reason is downgraded for the same reason
+ * - a pass needs a citation that RESOLVES: a non-empty string naming a real file inside
+ *   `evidence_roots`. A pass with nothing cited is `check-unevidenced`; one citing an empty string, an
+ *   absent file, or another invocation's report is `evidence-unresolvable`. Both are could-not-run
+ * - a non-pass part without a reason (or with a whitespace-only one) is downgraded for the same reason
  */
 export function gradeCell({
   harness = "claude-code",
@@ -272,18 +322,25 @@ export function gradeCell({
   parts = [],
   report_paths = null,
   denied_tool_call = null,
+  evidence_roots = [],
 } = {}) {
   const completed = completeCheckSet(parts);
   const checks = completed.checks.map((entry) => {
-    if (entry.verdict === "pass" && (entry.evidence_paths ?? []).length === 0) {
-      return {
-        ...entry,
-        verdict: "could-not-run",
-        reason: "check-unevidenced",
-        blocks: [...(entry.blocks ?? []), block("could-not-run", "check-unevidenced")],
-      };
+    if (entry.verdict === "pass") {
+      const cited = entry.evidence_paths ?? [];
+      const unresolvable = cited.length === 0 ? [{ why: "none" }] : unresolvableCitations(cited, evidence_roots);
+      if (unresolvable.length > 0) {
+        const reason = cited.length === 0 ? "check-unevidenced" : "evidence-unresolvable";
+        return {
+          ...entry,
+          verdict: "could-not-run",
+          reason,
+          blocks: [...(entry.blocks ?? []), block("could-not-run", reason, { citations: unresolvable })],
+        };
+      }
+      return entry;
     }
-    if (entry.verdict !== "pass" && !entry.reason) {
+    if (typeof entry.reason !== "string" || entry.reason.trim().length === 0) {
       return { ...entry, verdict: "could-not-run", reason: "check-reason-absent", blocks: [...(entry.blocks ?? []), block("could-not-run", "check-reason-absent")] };
     }
     return entry;

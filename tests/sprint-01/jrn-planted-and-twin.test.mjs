@@ -689,6 +689,9 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
     const c = runVerifyCase("verify-clean", { keep: true });
     return { p, c, dispose: () => [p, c].forEach((side) => rmSync(side.dir, { recursive: true, force: true })) };
   };
+  // Each control the journey artifact reports is recorded here from the verdict the grader returned.
+  const controls = [];
+  const record = (control_id, expected, result) => controls.push({ control_id, expected, verdict: result.verdict, reason: result.reason ?? null });
 
   await t.test("a deleted planted report grades fail report-missing through the grader, not could-not-run", () => {
     const run = pair();
@@ -703,6 +706,7 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
     assert.equal(part.reason, "report-missing");
     assert.equal(part.blocks[0].side, "planted", "the failing half is named");
     assert.ok(!part.blocks.some((entry) => entry.reason === "report-unavailable"), "a missing file is never excused as storage");
+    record("missing-planted-report", "fail", part);
     t.diagnostic(`missing_planted=${part.reason} declared=${plantedCase.report_relative_path}`);
   });
 
@@ -723,6 +727,7 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
       assert.ok(preserved, "the missing planted report is still recorded as a fail block");
       assert.equal(preserved.verdict, "fail");
       assert.equal(preserved.side, "planted");
+      record("unreadable-report-store", "could-not-run", part);
       t.diagnostic(`unavailable_outranks_missing=${part.blocks.map((entry) => `${entry.verdict}:${entry.reason}`).join(",")}`);
     } finally {
       chmodSync(run.c.bound_path, 0o600);
@@ -731,7 +736,14 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
 
   await t.test("neither lane can be laundered into a pass by the cell aggregate", () => {
     const installation = { requested_cli_version: "2.1.291", resolved_cli_version: "2.1.291", observed_cli_version: null, install_mode: "checkout", plugin_revision: null, expected_plugin_manifest_sha256: null, observed_plugin_manifest_sha256: null, loaded_plugin_root: null, plugin_load_evidence: null };
-    const pass = (check_id) => graders.part({ check_id, verdict: "pass", evidence_paths: [`${check_id}.json`] });
+    // The three passing lanes cite a real file inside the run's own evidence root, so the only thing
+    // that can fail this cell is the verify lane. A cell that could pass on an unresolvable citation
+    // would make this assertion meaningless.
+    const evidenceRoot = mkdtempSync(path.join(tmpdir(), "pp-jrn-cell-"));
+    t.after(() => rmSync(evidenceRoot, { recursive: true, force: true }));
+    const cited = path.join(evidenceRoot, "status.json");
+    writeFileSync(cited, `${JSON.stringify({ facts: "observed" })}\n`, "utf8");
+    const pass = (check_id) => graders.part({ check_id, verdict: "pass", evidence_paths: [cited] });
     const cell = graders.gradeCell({
       harness: "claude-code",
       track: "pinned",
@@ -739,6 +751,7 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
       invocation_id: "run-1",
       process_exit_code: 1,
       parts: [pass("command_list"), pass("status"), graders.part({ check_id: "verify", verdict: "fail", reason: "report-missing", evidence_paths: ["reports/verify-clean.json"] }), pass("question_before_expensive_work")],
+      evidence_roots: [evidenceRoot],
     });
     assert.equal(cell.verdict, "fail", "one failing verify fails the cell");
     assert.equal(cell.reason, "report-missing");
@@ -759,10 +772,9 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
         "the fail block survives inside the could-not-run that outranks it",
         "no cell aggregate can launder a missing report into a pass",
       ],
-      controls: [
-        { control_id: "missing-planted-report", verdict: "fail", reason: "report-missing" },
-        { control_id: "unreadable-report-store", verdict: "could-not-run", reason: "report-unavailable" },
-      ],
+      // Derived, not typed: each row is the verdict and reason the grader returned in the lane above.
+      controls,
+      failures: controls.filter((row) => row.verdict !== row.expected).map((row) => `${row.control_id}: expected ${row.expected}, got ${row.verdict}`),
       awaiting: [
         { leg: "live-dispatched-run", owner: "T7", reason: "the harness-eval workflow must be registered on the remote before a run can be dispatched" },
         { leg: "harness-verify-pair", owner: "T11", reason: "the report bodies need a model that answers; the harness-smoke credential exists only on the hosted runner" },
