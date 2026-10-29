@@ -21,6 +21,7 @@ import {
   BANNED_TRIGGERS,
   HARNESSES,
   chooseProofTier,
+  readProbeOutcome,
   ROOT,
   WORKFLOW_PATH,
   inspectWorkflowDeclaration,
@@ -187,5 +188,39 @@ test("FLOW-RUN-02-HAND starts the hand grade with the checkout default and a twe
   assert.ok(
     outsideSmoke.some((failure) => /binds a secret in a non-smoke job/.test(failure)),
     `a key bound outside the smoke job was accepted: ${JSON.stringify(outsideSmoke)}`,
+  );
+  // A key on any other smoke step — the install slot above all — is a leak too.
+  const onInstall = mutate("      - name: Install ${{ matrix.harness }} ${{ matrix.track }}\n", "      - name: Install ${{ matrix.harness }} ${{ matrix.track }}\n        env:\n          SMOKE_KEY: ${{ secrets.SMOKE_CELL_KEY }}\n", "key on the install slot");
+  assert.ok(
+    onInstall.some((failure) => /binds a secret outside the cell's own recording step/.test(failure)),
+    `a key on the install slot was accepted: ${JSON.stringify(onInstall)}`,
+  );
+  // An `env:` map above step level hands the key to every step that inherits it — the install
+  // slot included — without any step declaring it, so the step scan alone cannot see it.
+  const workflowEnv = mutate("\npermissions: {}\n", "\npermissions: {}\n\nenv:\n  SMOKE_KEY: ${{ secrets.SMOKE_CELL_KEY }}\n", "workflow-level env");
+  assert.ok(
+    workflowEnv.some((failure) => /the workflow env binds a secret/.test(failure)),
+    `a workflow-level env holding a key was accepted: ${JSON.stringify(workflowEnv)}`,
+  );
+  const smokeJobEnv = mutate("    environment: harness-smoke\n", "    environment: harness-smoke\n    env:\n      SMOKE_KEY: ${{ secrets.SMOKE_CELL_KEY }}\n", "job-level env");
+  assert.ok(
+    smokeJobEnv.some((failure) => /the jobs\.smoke env binds a secret/.test(failure)),
+    `a job-level env holding a key was accepted: ${JSON.stringify(smokeJobEnv)}`,
+  );
+
+  // --- F-T1-10: only a 404 means "not registered" -----------------------------------
+  // Anything else (no gh, no token, no network) proves nothing about the repository, so it is
+  // refused rather than graded as an honest declaration.
+  assert.equal(readProbeOutcome({ ok: false, stderr: "gh: Not Found (HTTP 404)" }).error, undefined);
+  assert.equal(readProbeOutcome({ ok: true, stderr: "" }).available, true);
+  assert.match(
+    String(readProbeOutcome({ ok: false, stderr: "gh: Bad credentials (HTTP 401)" }).error),
+    /HTTP 401/,
+    "a broken token must not read as 'not registered'",
+  );
+  assert.match(
+    String(readProbeOutcome({ ok: false, stderr: "spawnSync gh ENOENT" }).error),
+    /ENOENT/,
+    "a missing gh must not read as 'not registered'",
   );
 });

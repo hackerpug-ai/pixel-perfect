@@ -399,22 +399,35 @@ export function inspectWorkflowDeclaration(yaml) {
     }
   }
 
-  // A harness key may only ever sit in a matrix cell's own step `env:` block (T9). Any other
-  // surface — a `run:` body, a `with:` input, a step name — is a leak, whatever the step is
-  // called, and no non-smoke job may hold one at all.
-  for (const [name, job] of Object.entries(jobs)) {
-    for (const step of stepsOf(job)) {
-      const label = `${name}/${String(step?.name ?? "unnamed step")}`;
-      if (/secrets\./.test(stepText(step))) fail(`step ${label} references a secret outside its env block`);
-      const envSecrets = JSON.stringify(step?.env ?? {});
-      if (/secrets\./.test(envSecrets) && name !== "smoke") fail(`step ${label} binds a secret in a non-smoke job`);
-    }
-  }
-
   // The dispatch input must reach the record, not a literal that happens to look like it.
   const recorder = Object.entries(jobs).flatMap(([name, job]) =>
     stepsOf(job).map((step) => ({ job: name, step })),
   ).find(({ step }) => /cell\/cell\.json/.test(String(step?.run ?? "")));
+
+  // A harness key may only ever sit in the cell's own recording step `env:` block (T9). Any
+  // other surface — a `run:` body, a `with:` input, a step name — is a leak, whatever the step
+  // is called, no non-smoke job may hold one, and no *other* smoke step may either (the install
+  // slot sits in the same job). An `env:` map above step level is checked too: it binds the key
+  // into every step that inherits it without any step declaring it, so the step scan is blind
+  // to exactly the leak this rule exists to prevent.
+  for (const [surface, env] of [
+    ["workflow", yaml?.env],
+    ...Object.entries(jobs).map(([name, job]) => [`jobs.${name}`, job?.env]),
+  ]) {
+    if (/secrets\./.test(JSON.stringify(env ?? {}))) {
+      fail(`the ${surface} env binds a secret, so every step below it inherits the key`);
+    }
+  }
+  for (const [name, job] of Object.entries(jobs)) {
+    for (const step of stepsOf(job)) {
+      const label = `${name}/${String(step?.name ?? "unnamed step")}`;
+      if (/secrets\./.test(stepText(step))) fail(`step ${label} references a secret outside its env block`);
+      const envSecrets = /secrets\./.test(JSON.stringify(step?.env ?? {}));
+      if (envSecrets && name !== "smoke") fail(`step ${label} binds a secret in a non-smoke job`);
+      else if (envSecrets && step !== recorder?.step) fail(`step ${label} binds a secret outside the cell's own recording step`);
+    }
+  }
+
   if (!recorder) fail("no step writes cell/cell.json, so nothing records the cell");
   else {
     const run = String(recorder.step.run);
@@ -524,14 +537,32 @@ export function dispatchWorkflow({ repo, inputs = {}, ref } = {}) {
 }
 
 /**
+ * Reads what a `gh api` probe actually said. Only HTTP 404 means the workflow is not registered
+ * on the default branch; a missing gh, a bad token or an unreachable api.github.com says nothing
+ * about the repository, so it may never be graded as an honest declaration.
+ */
+export function readProbeOutcome({ ok, stderr } = {}) {
+  const detail = String(stderr ?? "").trim().split("\n").at(-1);
+  if (ok) return { available: true, detail };
+  if (/HTTP 404\b/.test(detail)) return { available: false, detail };
+  return {
+    available: false,
+    detail,
+    error: `the live-dispatch probe failed for a reason other than "not registered": ${detail || "gh api said nothing"}`,
+  };
+}
+
+/**
  * Can a live dispatch happen at all? `gh workflow run` only resolves a workflow registered on
  * the repo's default branch, so this is the honest test of whether the declaration tier is
  * still the best proof available.
  */
 export function probeLiveDispatch({ repo } = {}) {
   const result = runCommand("gh", ["api", `repos/${repo}/actions/workflows/${WORKFLOW_NAME}.yml`, "--silent"]);
-  if (result.ok) return { available: true, detail: `${WORKFLOW_NAME}.yml is registered on the default branch of ${repo}` };
-  return { available: false, detail: (result.stderr || `gh api exited ${result.status}`).trim().split("\n").at(-1) };
+  const verdict = readProbeOutcome({ ok: result.ok, stderr: result.stderr || `gh api exited ${result.status}` });
+  return verdict.available
+    ? { available: true, detail: `${WORKFLOW_NAME}.yml is registered on the default branch of ${repo}` }
+    : verdict;
 }
 
 /** One run record, read from GitHub rather than from a log. */
@@ -621,6 +652,9 @@ async function run02Hand(options = {}) {
   const live = probe({ repo });
   artifact.live_dispatch.available = live.available;
   artifact.live_dispatch.probe = live.detail;
+  // A probe that failed for any reason other than "not registered" proves nothing, so the flow
+  // fails instead of grading the declaration - a broken environment is never an honest proof.
+  if (live.error) artifact.failures.push(live.error);
 
   const identity = {
     event: declaration.event,
