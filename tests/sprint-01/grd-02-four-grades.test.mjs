@@ -90,6 +90,17 @@ const REAL_DETAILS_INVENTORY = `Component inventory
   MCP servers (0)  
   LSP servers (0)  `;
 
+/**
+ * The status workflow's own `## Sample Output`, read out of the product file at run time so the gate
+ * comparison is pinned against what the product emits rather than against a transcription of it.
+ */
+function statusSample() {
+  const workflow = readFileSync(join(PLUGIN_ROOT, "workflows", "status.md"), "utf8");
+  const block = workflow.split("## Sample Output")[1]?.match(/```\n([\s\S]*?)\n```/)?.[1];
+  assert.ok(block, "plugins/pixel-perfect/workflows/status.md declares a fenced Sample Output");
+  return block;
+}
+
 /** A throwaway HOME: the isolated config dir the load leg installs into. */
 function isolatedConfigDir() {
   const home = mkdtempSync(join(tmpdir(), "pp-claude-home-"));
@@ -648,6 +659,10 @@ test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
     const statusCase = loadCase("status-a");
     const expected = statusCase.expected_facts;
     assert.deepEqual(Object.keys(expected.gates ?? {}), ["atoms", "molecules", "screens"], "the case declares the gate state this check must grade");
+    // The case's `screens` key names the screens layer, whose gate key in the manifest is `compose`
+    // (scripts/gate.mjs LAYER_GATE: screens -> compose), which is the phase the status workflow
+    // prints. Both spellings are accepted here, so the declared key is satisfiable either way; the
+    // case manifest itself belongs to T4 and would more precisely declare `compose`.
 
     const complete =
       "Platform: web-desktop. Phase: atoms. Gates: atoms=approved, molecules=pending, screens=pending. Inventory: 3 atoms, 1 molecules, 1 screens.";
@@ -664,19 +679,54 @@ test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
       `a status reply that omits the gate state is not a pass: ${JSON.stringify(noGatesFacts)}`,
     );
 
-    // The status workflow prints the gates as its own icons (`Phases:` with [x] / [ ]), not as
-    // `key=value`: that shape states the same seeded gate state and must satisfy the comparison.
-    const iconShape = [
-      "pixel-perfect - Project Status",
-      "Platforms:",
-      "  web-desktop  [compose passed]",
-      "  Phases:",
-      "    [x] ATOMS       - 3/3 components built",
-      "    [ ] MOLECULES   - Pending",
-      "    [ ] SCREENS     - Pending",
-    ].join("\n");
-    assert.deepEqual(statusFacts(iconShape, { ...expected, inventory: null }).missing, [], `the workflow's own icon shape states the gates: ${JSON.stringify(statusFacts(iconShape, expected))}`);
-    assert.deepEqual(statusFacts(iconShape).gates, expected.gates);
+    // The positive control is the product's own reply, not a fixture written to the parser: the
+    // fenced Sample Output of plugins/pixel-perfect/workflows/status.md. It prints one
+    // `--- <platform> ---` section per platform, then a `Phases:` list whose names are SCAFFOLD /
+    // PLAN / ATOMS / MOLECULES / COMPOSE, with `[x]` passed and `[ ]` pending. It never prints a
+    // SCREENS gate: the screens layer's gate key is `compose` (scripts/gate.mjs LAYER_GATE).
+    const documented = statusSample();
+    assert.match(documented, /^--- web-desktop ---$/m, "the product scopes its detail per platform");
+    assert.match(documented, /^    \[x\] COMPOSE /m, "the screens gate prints as COMPOSE");
+    assert.doesNotMatch(documented, /\bSCREENS\b/, "the product never prints a SCREENS gate");
+
+    const documentedFacts = statusFacts(documented);
+    assert.equal(documentedFacts.gates?.scaffold, "approved");
+    assert.equal(documentedFacts.gates?.atoms, "approved");
+    assert.equal(documentedFacts.gates?.screens, "approved", "[x] COMPOSE is the screens gate passed");
+    assert.equal(documentedFacts.phase, "screens", "the phase is the furthest layer the reply marks passed");
+    // The sample's web-desktop project is finished, so the only gates it genuinely misses are the
+    // two the seeded case leaves pending - `gates.screens` is read from COMPOSE now, not reported
+    // absent because the product never prints that word.
+    assert.deepEqual(statusFacts(documented, { platform: "web-desktop", gates: expected.gates }).missing, ["gates.molecules", "gates.screens"]);
+
+    // Platform scoping: the same reply read for the other platform reports the other platform's
+    // gates (all pending), and a platform with no section is refused rather than graded on a
+    // neighbour's section.
+    const iosFacts = statusFacts(documented, { platform: "mobile-ios", gates: { scaffold: "pending", screens: "pending" } });
+    assert.deepEqual(iosFacts.missing, [], `the mobile-ios section states its own gates: ${JSON.stringify(iosFacts)}`);
+    assert.equal(iosFacts.gates?.atoms, "pending");
+    const absentPlatform = statusFacts(documented, { platform: "android-tablet", gates: { atoms: "approved" } });
+    assert.deepEqual(absentPlatform.missing, ["platform", "gates.atoms"]);
+
+    // The documented shape, seeded to the case's numbers (only the icons and the per-layer counts
+    // change, inside the headers the product prints), satisfies the whole comparison.
+    const seeded = documented
+      .replace("[x] MOLECULES   — 2/2 molecules verified · molecules_capture passed", "[ ] MOLECULES   — Pending")
+      .replace("[x] COMPOSE     — 2/2 screens verified · compose_capture passed", "[ ] COMPOSE     — Pending")
+      .replace("Atoms (5/5 built, 3 verified):", "Atoms (3/3 built, 3 verified):")
+      .replace("  Screens (2/2 verified):", "  Molecules (1/1 molecules verified):\n\n  Screens (1/1 verified):");
+    assert.notEqual(seeded, documented, "the seeded variant actually changed the documented reply");
+    assert.deepEqual(statusFacts(documented, { platform: "web-desktop" }).gates?.molecules, "approved");
+    const seededFacts = statusFacts(seeded, expected);
+    assert.deepEqual(seededFacts.missing, [], `the product's own shape states every declared fact: ${JSON.stringify(seededFacts)}`);
+    assert.equal(seededFacts.phase, "atoms");
+
+    // F-T5-9: the phase is read from the phase-bearing construct, never the first layer word in the
+    // reply - so a reply naming a layer in its gate list and a different phase in its field is
+    // graded on the field.
+    const contradictory = "Platform: web-desktop. Gates: atoms=approved, molecules=pending, screens=pending. Phase: screens. Inventory: 3 atoms, 1 molecules, 1 screens.";
+    assert.equal(statusFacts(contradictory).phase, "screens", "the Phase field wins over the gate list");
+    assert.deepEqual(statusFacts(contradictory, expected).missing, ["phase"]);
 
     // A gate state that disagrees with the seeded one is a miss, per declared key.
     const wrongGate = "Platform: web-desktop. Phase: atoms. Gates: atoms=approved, molecules=approved, screens=pending. Inventory: 3 atoms, 1 molecules, 1 screens.";
@@ -702,7 +752,18 @@ test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
     assert.equal(graded.cell.verdict, "fail", `a status reply without the gate state cannot pass: ${JSON.stringify(graded.cell.block_reasons)}`);
     assert.equal(graded.cell.reason, "status-facts-absent");
     assert.deepEqual(graded.blocks[0].missing, ["gates.atoms", "gates.molecules", "gates.screens"]);
-    report.legs.push({ leg: "status-facts", observed: "gate state and keyed counts compared; a reply without gates grades fail status-facts-absent" });
+
+    // And the seeded product reply grades pass through the same path, so the gate comparison is
+    // satisfiable by what the product emits rather than only by what the parser expected.
+    const seededResult = { type: "result", is_error: false, result: seeded };
+    const seededRecord = captureOf(dir, "status-seeded", [init, seededResult], new Map([[JSON.stringify(init), "plugin-loaded"], [JSON.stringify(seededResult), "result-event"]]));
+    const seededGraded = gradeCheck({ record: seededRecord, entry: statusEntry, track: "pinned", installation: identityForCell() });
+    assert.equal(seededGraded.cell.verdict, "pass", `the product's documented shape passes: ${JSON.stringify(seededGraded.cell.block_reasons)}`);
+    report.legs.push({
+      leg: "status-facts",
+      vocabulary: "gates are the manifest's layer keys atoms|molecules|organisms|screens (scripts/gate.mjs LAYER_GATE: screens -> compose); the reply prints them as the phases SCAFFOLD|PLAN|ATOMS|MOLECULES|COMPOSE with icons [x] passed, [ ] pending, [~] in progress, [!] drift, scoped to the `--- <platform> ---` section",
+      observed: "the product's own documented reply, seeded to the case numbers, states every declared fact and grades pass; a reply without gates grades fail status-facts-absent",
+    });
   });
 
   // ---- F-T5-2: the question detector has a POSITIVE control --------------------------------

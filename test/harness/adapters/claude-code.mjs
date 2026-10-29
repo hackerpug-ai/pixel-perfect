@@ -759,34 +759,82 @@ function isRequiredPath(target, entry) {
 }
 
 /**
- * The gate state a status reply must state, per layer: the manifest's own vocabulary beside the
- * layer name (`atoms approved`, `atoms=approved`), or the status workflow's own icon before it
- * (`[x] ATOMS` = approved, `[ ] ATOMS` = pending). Anything else is not a stated gate state, so a
- * reply that drops the gates is a miss rather than a silent pass.
+ * The gate state a status reply must state, in the product's own vocabulary, keyed by the manifest's
+ * layer names. `workflows/status.md` prints one `--- <platform> ---` section per platform whose
+ * `Phases:` list names SCAFFOLD / PLAN / ATOMS / MOLECULES / COMPOSE with its own icons; the screens
+ * layer's gate key is `compose` (scripts/gate.mjs LAYER_GATE), so `[x] COMPOSE` is the screens gate
+ * passed and the product never prints a SCREENS gate. A reply may also state its gates as words
+ * (`atoms=approved`, `screens pending`). Anything else states no gate, so a reply that drops them is
+ * a miss rather than a silent pass.
  */
-const GATE_WORDS = ["approved", "pending"];
-const GATE_ICONS = Object.freeze({ "[x]": "approved", "[ ]": "pending" });
+const GATE_ICONS = Object.freeze({ x: "approved", " ": "pending", "~": "in-progress", "!": "drift" });
+const PHASE_LAYER = Object.freeze({ scaffold: "scaffold", plan: "plan", atoms: "atoms", molecules: "molecules", organisms: "organisms", compose: "screens" });
+const LAYER_OF = (name) => PHASE_LAYER[String(name).toLowerCase()] ?? String(name).toLowerCase();
+const LAYER_WORDS = ["scaffold", "plan", "atoms", "molecules", "organisms", "screens", "compose"];
+const PHASE_LINE = /\[([x ~!])\]\s*([A-Za-z]+)/;
+
+/**
+ * The reply's section for one platform, or "" when the reply is sectioned but has no such section -
+ * a status reply carries a section per platform, so reading another platform's gates for this case
+ * would report the wrong platform's state.
+ */
+function platformScope(text, platform) {
+  const marks = [...text.matchAll(/^---[ \t]*(\S+)[ \t]*---[ \t]*$/gm)];
+  if (marks.length === 0) return { scope: text, sectioned: false };
+  const index = marks.findIndex((mark) => mark[1].toLowerCase() === String(platform ?? "").toLowerCase());
+  if (index < 0) return { scope: "", sectioned: true };
+  const start = marks[index].index + marks[index][0].length;
+  const end = marks[index + 1]?.index ?? text.length;
+  return { scope: text.slice(start, end), sectioned: true };
+}
 
 function parseGates(text) {
   const gates = {};
-  for (const layer of ["atoms", "molecules", "screens"]) {
-    const word = text.match(new RegExp(`\\b${layer}\\b[^\\w\\n]{0,12}?(${GATE_WORDS.join("|")})\\b`, "i"))?.[1];
-    const icon = text.match(new RegExp(`(\\[[x !~]\\])\\s*${layer}\\b`, "i"))?.[1];
-    const state = word?.toLowerCase() ?? GATE_ICONS[icon?.toLowerCase()] ?? null;
-    if (state) gates[layer] = state;
+  for (const line of text.split("\n")) {
+    const icon = line.match(PHASE_LINE);
+    const layer = icon ? PHASE_LAYER[icon[2].toLowerCase()] : null;
+    if (layer && !(layer in gates)) gates[layer] = GATE_ICONS[icon[1].toLowerCase()];
+  }
+  for (const match of text.matchAll(new RegExp(`\\b(${LAYER_WORDS.join("|")})\\b[^\\w\\n]{0,12}?(approved|pending)\\b`, "gi"))) {
+    const layer = LAYER_OF(match[1]);
+    if (!(layer in gates)) gates[layer] = match[2].toLowerCase();
   }
   return Object.keys(gates).length > 0 ? gates : null;
+}
+
+/**
+ * The phase, from a phase-bearing construct only: an explicit `Phase: <name>` field when the reply
+ * states one, otherwise the furthest layer the reply's own icon list marks passed. The first layer
+ * word anywhere in the reply is not a phase - a gate list naming atoms before a `Phase: screens`
+ * field would otherwise be graded on the wrong word.
+ */
+function parsePhase(text) {
+  const labelled = text.match(/\bphase\s*[:=]\s*([A-Za-z]+)/i);
+  if (labelled && LAYER_WORDS.includes(labelled[1].toLowerCase())) return LAYER_OF(labelled[1]);
+  let furthest = null;
+  for (const line of text.split("\n")) {
+    const icon = line.match(PHASE_LINE);
+    const layer = icon ? PHASE_LAYER[icon[2].toLowerCase()] : null;
+    if (layer && GATE_ICONS[icon[1].toLowerCase()] === "approved") furthest = layer;
+  }
+  return furthest;
 }
 
 /** Facts a status reply must state. A generic acknowledgement states none of them. */
 export function statusFacts(reply, expected = null) {
   const text = String(reply ?? "");
-  const counts = text.match(/\b(\d+)\b/g)?.map(Number) ?? [];
+  const want = expected?.platform ?? null;
+  const scoped = want ? platformScope(text, want) : null;
+  const scope = scoped ? scoped.scope : text;
+  const platform = want
+    ? (scoped.sectioned ? (scope.length > 0 ? want : null) : text.toLowerCase().includes(want.toLowerCase()) ? want : null)
+    : (/web-desktop/.test(text) ? "web-desktop" : null);
+  const counts = scope.match(/\b(\d+)\b/g)?.map(Number) ?? [];
   const facts = {
-    platform: /web-desktop/.test(text) ? "web-desktop" : null,
-    phase: text.match(/\b(atoms|molecules|screens|tokens)\b/i)?.[1]?.toLowerCase() ?? null,
-    gates: parseGates(text),
-    inventory: /\binventory\b/i.test(text) ? { counts } : null,
+    platform,
+    phase: parsePhase(scope),
+    gates: parseGates(scope),
+    inventory: /\binventory\b/i.test(scope) ? { counts } : null,
     nonzero_counts: counts.some((count) => count > 0),
   };
   if (!expected) return facts;
@@ -794,12 +842,15 @@ export function statusFacts(reply, expected = null) {
   if (expected.platform && facts.platform !== expected.platform) missing.push("platform");
   if (expected.phase && facts.phase !== expected.phase) missing.push("phase");
   for (const [key, value] of Object.entries(expected.gates ?? {})) {
-    if (facts.gates?.[key.toLowerCase()] !== String(value).toLowerCase()) missing.push(`gates.${key}`);
+    if (facts.gates?.[LAYER_OF(key)] !== String(value).toLowerCase()) missing.push(`gates.${key}`);
   }
-  // A count satisfies the inventory only when it is stated beside its own key; three numbers
+  // A count satisfies the inventory only when it is stated beside its own key, as `3 atoms` or in
+  // the per-layer header the product prints (`Atoms (3/3 built, 3 verified):`); three numbers
   // appearing anywhere in the reply are not three inventories.
   for (const [key, value] of Object.entries(expected.inventory ?? {})) {
-    if (!new RegExp(`\\b${value}\\s+${key}\\b|\\b${key}\\b\\s*[:=]\\s*${value}\\b`, "i").test(text)) missing.push(`inventory.${key}`);
+    const keyed = new RegExp(`\\b${value}\\s+${key}\\b|\\b${key}\\b\\s*[:=]\\s*${value}\\b`, "i").test(scope);
+    const header = new RegExp(`^[ \\t]*${key}\\s*\\(\\s*${value}\\s*/`, "im").test(scope);
+    if (!keyed && !header) missing.push(`inventory.${key}`);
   }
   return { ...facts, missing };
 }
