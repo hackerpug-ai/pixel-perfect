@@ -75,6 +75,7 @@ export function readOracleTranscript(dir) {
 export function resolveLiveRun({
   hasWorkflow = () => existsSync(path.join(REPO_ROOT, WORKFLOW_PATH)),
   gh: runGh = gh,
+  env = process.env,
 } = {}) {
   // The one legitimate deferral: T7 has not landed the workflow yet, so there is nothing
   // to dispatch. Everything below is a genuine failure and must not reach the green branch.
@@ -88,9 +89,9 @@ export function resolveLiveRun({
   const auth = runGh(["auth", "status"]);
   if (auth.status !== 0) return { ok: false, reason: "gh is not authenticated" };
 
-  const suppliedRun = process.env.HARNESS_EVAL_RUN_ID;
+  const suppliedRun = env.HARNESS_EVAL_RUN_ID;
   if (suppliedRun) {
-    return { ok: true, runId: suppliedRun, attempt: process.env.HARNESS_EVAL_RUN_ATTEMPT || "1", dispatched: false };
+    return { ok: true, runId: suppliedRun, attempt: env.HARNESS_EVAL_RUN_ATTEMPT || "1", dispatched: false };
   }
 
   const dispatch = runGh(["workflow", "run", "harness-eval", "--repo", REPO]);
@@ -174,7 +175,10 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
     // Control 1: a dispatch failure that is NOT the missing-workflow case. The workflow
     // is present, gh answers, and the dispatch is refused — nothing this leg owns is
     // absent, so it must fail rather than quietly defer.
+    // Each control pins its own env: this subtest asserts the deferral shape itself, so it
+    // must not inherit an operator's HARNESS_EVAL_RUN_ID (which short-circuits to ok:true).
     const dispatchFailed = resolveLiveRun({
+      env: {},
       hasWorkflow: () => true,
       gh: (args) =>
         args[0] === "auth"
@@ -192,12 +196,16 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
     assert.deepEqual(emitted, [], "a failed dispatch emits no not-executed diagnostic");
 
     // Control 2: gh unauthenticated, likewise not a deferral.
-    const unauthenticated = resolveLiveRun({ hasWorkflow: () => true, gh: () => ({ status: 1, stdout: "", stderr: "" }) });
+    const unauthenticated = resolveLiveRun({ env: {}, hasWorkflow: () => true, gh: () => ({ status: 1, stdout: "", stderr: "" }) });
     assert.equal(unauthenticated.deferral, undefined);
     assert.throws(() => gradeLiveRun(unauthenticated, () => {}), /gh is not authenticated/);
 
     // Control 3: the one legitimate cause still defers, with its reason.
-    const absent = resolveLiveRun({ hasWorkflow: () => false, gh: () => assert.fail("must not call gh when the workflow is absent") });
+    const absent = resolveLiveRun({
+      env: {},
+      hasWorkflow: () => false,
+      gh: () => assert.fail("must not call gh when the workflow is absent"),
+    });
     assert.equal(absent.ok, false);
     assert.equal(absent.deferral, true);
     const deferred = [];
