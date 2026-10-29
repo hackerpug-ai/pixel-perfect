@@ -137,15 +137,33 @@ function eventFor({ table, rule, line, invocationId, sequence, namespacedSession
  * target is one of the paths the check declared, `false` when the check declared its paths and this
  * is not one, `null` when nobody declared anything — which the grade-writer refuses to read as
  * permission (`requiredness-undeclared`).
+ *
+ * A declared case that cannot attribute a denial to a path has not decided whether that read was
+ * required, so it gets `null` too. Answering `false` there is the fail-open the sprint exists to
+ * close: an unattributable denial would vanish and an exit-0 stream would grade pass with it.
  */
 function requirednessFor(target, requiredReadPaths) {
   if (requiredReadPaths === null || requiredReadPaths === undefined) return null;
-  if (typeof target !== "string" || target.length === 0) return false;
+  if (typeof target !== "string" || target.length === 0) return null;
   const absolute = resolve(target);
   return (requiredReadPaths ?? []).some((path) => {
     const wanted = resolve(String(path));
     return absolute === wanted || absolute.startsWith(`${wanted}/`);
   });
+}
+
+/** The path a denial names, across the payload shapes a harness actually emits. */
+function denialTarget(denial) {
+  return (
+    denial?.input?.file_path ??
+    denial?.input?.path ??
+    denial?.tool_input?.file_path ??
+    denial?.tool_input?.path ??
+    denial?.target ??
+    denial?.path ??
+    denial?.file_path ??
+    null
+  );
 }
 
 /**
@@ -195,7 +213,7 @@ export function normalise({ bytes, table, invocation_id = null, required_read_pa
       // A denial rule expands its array: zero denials means zero events, never one empty denial.
       if (rule.rule_id === "required-read-denial") {
         for (const denial of extractValue(line.json, rule.extract?.denials) ?? []) {
-          const target = denial?.input?.file_path ?? denial?.input?.path ?? denial?.target ?? null;
+          const target = denialTarget(denial);
           events.push({
             ...eventFor({ table, rule, line, invocationId: invocation_id, sequence: events.length, namespacedSession: sessionOf }),
             operation: denial?.tool_name ?? denial?.tool ?? null,

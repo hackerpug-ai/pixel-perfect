@@ -83,6 +83,22 @@
       "source_event_path": "assistant.message.content[].type=tool_use"
     },
     {
+      "rule_id": "question-user-choice-event",
+      "canonical_type": "tool_call",
+      "classification": "question",
+      "match": { "type": "user_choice" },
+      "extract": null,
+      "source_event_path": "user_choice"
+    },
+    {
+      "rule_id": "question-assistant-subtype",
+      "canonical_type": "tool_call",
+      "classification": "question",
+      "match": { "type": "assistant", "subtype": "ask_user_question" },
+      "extract": null,
+      "source_event_path": "assistant.subtype=ask_user_question"
+    },
+    {
       "rule_id": "expensive-tool-call",
       "canonical_type": "tool_call",
       "fact_id": "expensive-tool-start",

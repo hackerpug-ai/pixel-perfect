@@ -24,6 +24,6 @@ export { ASK_POLICIES, boundaryStopCheck, gradeAskNothing, gradeMustAsk, gradeQu
 
 export { bytesOf, formatVerdict, validateMapping } from "./validate-mapping.mjs";
 
-export { gradeStreamCheck, provisionalInstallation, streamAnswer, streamDenials } from "./grade-stream.mjs";
+export { gradeStreamCheck, captureIntegrity, provisionalInstallation, streamAnswer, streamDenials } from "./grade-stream.mjs";
 
 export { CAPTURE_DIR, PROBE_ARGV, archive, captureFirstTurn, claudeOnPath, readArchived } from "./archive-capture.mjs";

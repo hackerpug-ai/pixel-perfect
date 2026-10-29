@@ -14,13 +14,17 @@
 //
 // The process exit code is never read here. It travels beside the verdict as a diagnostic, which is
 // exactly because it is not one.
+import { createHash } from "node:crypto";
+
 import { worstVerdict } from "../lib/verdict.mjs";
 
 import { gradeFromEvidence } from "../runtime/grade-writer.mjs";
 import { assertPassEvidence, validateAgainst } from "../validate.mjs";
+import { reconstruct } from "./normalise.mjs";
 import { gradeQuestionPolicy, questionBoundary } from "./question-boundary.mjs";
 
 const block = (verdict, reason, detail = {}) => ({ verdict, reason, ...detail });
+const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
 /** The identity a caller may omit: every unproven field null, which the schema still accepts. */
 export function provisionalInstallation(version) {
@@ -113,6 +117,40 @@ export function streamDenials(events = []) {
 }
 
 /**
+ * Tiling and losslessness over the events a grade will consume, against the bytes the record cites.
+ *
+ * This lives on the GRADING path, not only in the per-version validator: a capture whose events
+ * cannot rebuild its own bytes, or whose spans leave a gap, is a capture a grade cannot account
+ * for — so it is could-not-run here rather than pass on the validator's separate verdict.
+ */
+export function captureIntegrity(events = [], record = null) {
+  const cited = record?.stdout ?? null;
+  const byOffset = new Map();
+  for (const event of events) if (!byOffset.has(event.stream_offset)) byOffset.set(event.stream_offset, event);
+  const spans = [...byOffset.values()].sort((a, b) => a.stream_offset - b.stream_offset);
+  const gaps = [];
+  const overlaps = [];
+  let cursor = 0;
+  for (const span of spans) {
+    if (span.stream_offset > cursor) gaps.push({ from: cursor, to: span.stream_offset });
+    else if (span.stream_offset < cursor) overlaps.push({ from: span.stream_offset, to: Math.min(cursor, span.stream_end_offset) });
+    cursor = Math.max(cursor, span.stream_end_offset);
+  }
+  const byteLength = Number.isInteger(cited?.byte_length) ? cited.byte_length : cursor;
+  if (cursor < byteLength) gaps.push({ from: cursor, to: byteLength });
+  const tiling = { ok: gaps.length === 0 && overlaps.length === 0 && cursor === byteLength, byte_length: byteLength, covered: cursor, gaps, overlaps };
+  const rebuilt = reconstruct(events);
+  const rebuilt_sha256 = sha256(rebuilt);
+  const lossless_ok = typeof cited?.sha256 === "string" && rebuilt.length === byteLength && rebuilt_sha256 === cited.sha256;
+  return {
+    ok: tiling.ok && lossless_ok,
+    reason: !tiling.ok ? "capture-not-tiled" : !lossless_ok ? "capture-not-lossless" : null,
+    tiling,
+    lossless: { ok: lossless_ok, rebuilt_sha256, cited_sha256: cited?.sha256 ?? null },
+  };
+}
+
+/**
  * Grades one check from a stream and its capture record.
  *
  * @param {object} options
@@ -120,7 +158,11 @@ export function streamDenials(events = []) {
  * @param {object[]} options.events the CanonicalEvents for that record's bytes
  * @param {string} options.check_id
  * @param {string} [options.ask_policy] ask-nothing | must-ask
- * @param {string[]} [options.required_facts] fact ids the check must see (default: what the events claim)
+ * @param {string[]} [options.required_facts] fact ids the check must see. Mandatory: either this
+ *   list or a mapping `table` whose `required_facts` supply it. A check may never derive its
+ *   expectations from the events it is grading — the stream would supply both sides.
+ * @param {object} [options.table] the mapping table, when the check's required facts are the
+ *   table's
  */
 export function gradeStreamCheck({
   record,
@@ -128,6 +170,7 @@ export function gradeStreamCheck({
   check_id,
   ask_policy = "ask-nothing",
   required_facts = null,
+  table = null,
   installation = null,
   harness = "claude-code",
   track = "pinned",
@@ -138,7 +181,11 @@ export function gradeStreamCheck({
   if (!record) throw new Error("gradeStreamCheck needs a capture record");
   if (!Array.isArray(events)) throw new Error("gradeStreamCheck needs normalised events");
 
-  const facts = required_facts ?? [...new Set(events.flatMap((event) => event.fact_ids ?? []))];
+  const declared = required_facts ?? (table ? (table.required_facts ?? []).map((fact) => fact.fact_id) : null);
+  if (!Array.isArray(declared)) {
+    throw new Error("gradeStreamCheck needs required_facts (or a mapping table): a check may not take its expectations from the events it grades");
+  }
+  const facts = declared;
   const streamRecord = { ...record, observations: observationsFromEvents(events) };
   const base = gradeFromEvidence({
     record: streamRecord,
@@ -157,8 +204,13 @@ export function gradeStreamCheck({
 
   const blocks = [];
   const answer = streamAnswer(events);
+  const integrity = captureIntegrity(events, record);
   const pluginEvent = events.find((event) => event.rule_id === "plugin-loaded" || event.rule_id === "plugin-absent") ?? null;
   const pluginLoaded = pluginEvent?.rule_id === "plugin-loaded";
+
+  if (!integrity.ok) {
+    blocks.push(block("could-not-run", integrity.reason, { tiling: integrity.tiling, lossless: integrity.lossless }));
+  }
 
   if (graded && (record.model_request_count ?? 0) > 0 && pluginEvent && !pluginLoaded) {
     blocks.push(block("could-not-run", "plugin-not-loaded", { plugins: pluginEvent.plugin_names ?? [] }));
@@ -197,6 +249,7 @@ export function gradeStreamCheck({
         : null,
       questions: questionBoundary(events),
       boundary_stop: policy.stop,
+      capture_integrity: integrity,
     },
   };
   if (worstVerdict([base.verdict, verdict]) !== verdict) {

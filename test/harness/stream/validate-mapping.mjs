@@ -12,13 +12,15 @@
 // A capture validates only when both pass. A capture from another CLI version is `could-not-run`
 // even when every shape inside it matches, because the table's promise is version-scoped.
 import { existsSync, readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { StreamError, loadTable, tableCoverage } from "./table.mjs";
 import { lossless, normalise } from "./normalise.mjs";
 
-/** Reads the bytes a capture record cites. A record without its bytes is a refusal. */
+/** Reads the bytes a capture record cites. A record without its bytes, or whose citation does not
+ * name them, is a refusal: the hash a reviewer reads must be the hash of the bytes that were graded. */
 export function bytesOf(recordPath) {
   const path = resolve(recordPath);
   const record = JSON.parse(readFileSync(path, "utf8"));
@@ -28,7 +30,12 @@ export function bytesOf(recordPath) {
   if (!name) throw new StreamError("captured-bytes-uncited", { recordPath: path });
   const stdoutPath = join(dirname(path), name);
   if (!existsSync(stdoutPath)) throw new StreamError("captured-bytes-absent", { stdoutPath });
-  return { record, bytes: readFileSync(stdoutPath), stdoutPath };
+  const bytes = readFileSync(stdoutPath);
+  const intact = record?.stdout?.sha256 === createHash("sha256").update(bytes).digest("hex") && record?.stdout?.byte_length === bytes.length;
+  if (!intact) {
+    throw new StreamError("capture-citation-mismatch", { stdoutPath, cited_sha256: record?.stdout?.sha256 ?? null, cited_bytes: record?.stdout?.byte_length ?? null, read_bytes: bytes.length });
+  }
+  return { record, bytes, stdoutPath };
 }
 
 /**
@@ -52,6 +59,16 @@ export function validateMapping({ version, bytes, record = null, required_read_p
 
   const reasons = [];
   if (coverage.verdict !== "pass") reasons.push({ reason: "required-fact-unmapped", missing: coverage.missing });
+  // The record's own citation is checked against the bytes read: a hash nobody verifies is decoration.
+  if (record && (!record.stdout || record.stdout.sha256 !== intact.expected || record.stdout.byte_length !== bytes.length)) {
+    reasons.push({
+      reason: "capture-citation-mismatch",
+      cited_sha256: record.stdout?.sha256 ?? null,
+      read_sha256: intact.expected,
+      cited_byte_length: record.stdout?.byte_length ?? null,
+      read_byte_length: bytes.length,
+    });
+  }
   if (!stream.tiling.ok) reasons.push({ reason: "capture-not-tiled", tiling: stream.tiling });
   if (!intact.ok) reasons.push({ reason: "capture-not-lossless", rebuilt: intact.sha256, captured: intact.expected });
   if (!versionQualified) reasons.push({ reason: "version-not-qualified", observed: observedVersion, expected: expectedVersion });
@@ -83,7 +100,8 @@ export function validateMapping({ version, bytes, record = null, required_read_p
 
 /** A one-line verdict for a terminal, and the whole report for an artifact. */
 export function formatVerdict(report) {
-  const head = report.verdict === "pass" ? `pass ${report.table.id}` : `could-not-run: ${report.reason}`;
+  const qualification = report.table.qualified ? "qualified" : `unqualified (${report.table.unqualified_reason ?? "no reason recorded"})`;
+  const head = report.verdict === "pass" ? `pass ${report.table.id} [${qualification}]` : `could-not-run: ${report.reason} ${report.table.id} [${qualification}]`;
   const facts = report.table_coverage.facts
     .map((fact) => `${fact.fact_id}=${fact.mapped ? "mapped" : "UNMAPPED"}${observedMark(report, fact.fact_id)}`)
     .join(" ");
@@ -116,8 +134,15 @@ if (isMain) {
     if (!capturePath) {
       const coverage = tableCoverage(table);
       const report = { table: { id: table.id, cli_version: table.cli_version, qualified: coverage.qualified, unqualified_reason: coverage.unqualified_reason }, table_coverage: coverage };
-      process.stdout.write(json ? `${JSON.stringify(report, null, 2)}\n` : `table ${table.id}: ${coverage.verdict} (${coverage.facts.filter((fact) => fact.mapped).length}/${coverage.facts.length} required facts mapped, qualified=${coverage.qualified})\n`);
-      process.exitCode = coverage.verdict === "pass" ? 0 : 1;
+      const state = `qualified=${coverage.qualified}`;
+      // An unqualified table is a gate failure, not a label: every evidence gate in this sprint
+      // reads exit codes, so a 0 here would be indistinguishable from a qualified table.
+      process.stdout.write(
+        json
+          ? `${JSON.stringify(report, null, 2)}\n`
+          : `table ${table.id}: ${coverage.qualified ? "qualified" : `UNQUALIFIED (${coverage.unqualified_reason ?? "no reason recorded"})`} — coverage ${coverage.verdict} (${coverage.facts.filter((fact) => fact.mapped).length}/${coverage.facts.length} required facts mapped, ${state})\n`,
+      );
+      process.exitCode = coverage.verdict === "pass" && coverage.qualified ? 0 : 1;
     } else {
       const resolved = resolve(capturePath);
       const loaded = resolved.endsWith(".stdout.bin") ? { record: null, bytes: readFileSync(resolved) } : bytesOf(resolved);

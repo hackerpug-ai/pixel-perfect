@@ -923,7 +923,7 @@ test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
   const stream = await import("../../test/harness/stream/index.mjs");
   const { exitCodeVerdict } = await import("../../test/harness/lib/verdict.mjs");
   const ARCHIVE = join(ROOT, "test/harness/stream/captures/claude-code-stream-probe.capture.json");
-  const report = { flow: "FLOW-GRD-02-FOUR-GRADES", generated_at: new Date().toISOString(), legs: [], not_executed: [], evidence: {} };
+  const report = { flow: "FLOW-GRD-02-FOUR-GRADES", generated_at: new Date().toISOString(), legs: [], branch_conformance: [], not_executed: [], evidence: {} };
 
   // ---- TC-1: all six required facts are mapped, by rule, with a source event path -----------
   const table = stream.loadTable({ version: "2.1.291" });
@@ -1007,6 +1007,33 @@ test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
   const questionOffset = questionEvent.stream_offset;
   assert.equal(questionOffset, archived.bytes.length, "the question sits at the byte offset the splice put it at");
 
+  // A spliced capture is branch conformance, never evidence: its bytes are authored, so it is
+  // persisted under its own record with its own hashes and cited, and it never becomes a leg a
+  // consumer could read as an observation of the claude-code CLI. It lives beside the flow report
+  // (the policy's only writable area) so the citation stays resolvable after the run.
+  const splicedDir = join(REPORT_DIR, "grd-02-must-ask-splice");
+  mkdirSync(splicedDir, { recursive: true });
+  const splicedStdout = join(splicedDir, "must-ask-splice.stdout.bin");
+  const splicedRecordPath = join(splicedDir, "must-ask-splice.capture.json");
+  writeFileSync(splicedStdout, splicedBytes);
+  const splicedRecord = {
+    ...archived.record,
+    invocation_id: "must-ask-splice",
+    stdout: { byte_length: splicedBytes.length, sha256: sha256Hex(splicedBytes) },
+    evidence_paths: [splicedRecordPath, splicedStdout],
+    // The recorder has no boundary-stop producer; this rewrite is authored and labelled as such.
+    termination_kind: "boundary-stop",
+    boundary_event_offset: questionOffset,
+    prefix_complete: true,
+  };
+  writeFileSync(splicedRecordPath, `${JSON.stringify(splicedRecord, null, 2)}\n`, "utf8");
+  // The citation has to survive the run and be checkable, or it is decoration: the persisted bytes
+  // are read back and hashed against the record that names them.
+  const splicedReadBack = readFileSync(splicedStdout);
+  assert.equal(splicedReadBack.length, splicedRecord.stdout.byte_length, "the spliced capture's byte_length is the bytes on disk");
+  assert.equal(sha256Hex(splicedReadBack), splicedRecord.stdout.sha256, "the spliced capture's sha256 is the bytes on disk");
+  t.diagnostic(`spliced_capture_sha256=${splicedRecord.stdout.sha256} byte_length=${splicedRecord.stdout.byte_length} record=${splicedRecordPath}`);
+
   const askNothing = stream.gradeAskNothing(spliced.events);
   assert.equal(askNothing.verdict, "fail", "a question in an ask-nothing stream fails the check");
   assert.equal(askNothing.blocks[0].reason, "question-in-ask-nothing");
@@ -1016,8 +1043,28 @@ test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
   assert.equal(stream.gradeQuestionPolicy({ events: real.events, ask_policy: "ask-nothing", record: archived.record }).blocks.length, 0,
     "the real capture asks nothing, so ask-nothing has nothing to fail");
 
+  // ---- F-3: EVERY declared question shape fails an ask-nothing stream ----------------------
+  // T5's mapper recognises three shapes; a stream table that maps only the tool_use one lets the
+  // other two through as harness_specific, so the count is 0 and the check passes with a question
+  // visibly present. Each shape must fail at its own offset.
+  const declaredQuestionShapes = {
+    "user_choice": { type: "user_choice", id: "choice-1" },
+    "assistant/ask_user_question": { type: "assistant", subtype: "ask_user_question", message: { content: [] } },
+    "assistant/tool_use AskUserQuestion": JSON.parse(questionLine),
+  };
+  for (const [shape, line] of Object.entries(declaredQuestionShapes)) {
+    const bytes = Buffer.concat([archived.bytes, Buffer.from(`${JSON.stringify(line)}\n`)]);
+    const normalised = stream.normalise({ bytes, table });
+    const graded = stream.gradeAskNothing(normalised.events);
+    assert.equal(normalised.events.filter((event) => event.type === "harness_specific").length, 4,
+      `${shape} is mapped to a canonical type, not left as harness_specific`);
+    assert.equal(graded.verdict, "fail", `${shape} in an ask-nothing stream fails the check: ${JSON.stringify(graded.blocks)}`);
+    assert.equal(graded.blocks[0].reason, "question-in-ask-nothing", `${shape} fails with question-in-ask-nothing`);
+    assert.equal(graded.blocks[0].first_offset, archived.bytes.length, `${shape} is cited at its own offset`);
+  }
+
   // ---- TC-2: must-ask passes on exactly one question, zero answers, a complete prefix ------
-  const boundaryRecord = { ...archived.record, termination_kind: "boundary-stop", boundary_event_offset: questionOffset, prefix_complete: true };
+  const boundaryRecord = splicedRecord;
   const mustAsk = stream.gradeMustAsk(spliced.events, { record: boundaryRecord });
   assert.equal(mustAsk.verdict, "pass", `one question, nothing sent: ${JSON.stringify(mustAsk.blocks)}`);
   assert.equal(mustAsk.blocks[0].reason, null, "a pass carries no failing reason");
@@ -1049,23 +1096,67 @@ test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
     "more-than-one-question");
 
   report.legs.push(
-    { leg: "table-coverage", observed: "6/6 required facts mapped to canonical types with source event paths; an unmapped fact is could-not-run; a harness_specific catch-all rule is refused" },
-    { leg: "four-verdicts-from-stream", observed: `4 check ids graded from ${real.events.length} events; all could-not-run (a keyless turn answers nothing); none equals its exit-code mapping` },
-    { leg: "ask-nothing", observed: `1 question spliced at byte ${questionOffset} -> fail question-in-ask-nothing citing that offset; the real capture has 0 questions` },
-    { leg: "must-ask", observed: "1 question + 0 deliveries + complete prefix -> pass on the boundary-stop exception; truncated / timeout / non-question offset / unmapped / 0-question / 2-question each fail or could-not-run" },
+    { leg: "table-coverage", evidence: true, observed: "6/6 required facts mapped to canonical types with source event paths; an unmapped fact is could-not-run; a harness_specific catch-all rule is refused" },
+    { leg: "four-verdicts-from-stream", evidence: true, observed: `4 check ids graded from ${real.events.length} events; all could-not-run (a keyless turn answers nothing); none equals its exit-code mapping` },
+    { leg: "ask-nothing", evidence: true, observed: "the real capture asks nothing, so ask-nothing has nothing to fail" },
+  );
+  // Every leg below is graded from a spliced question line and/or an authored boundary-stop record.
+  // It is branch conformance: the code path is exercised, but no claude-code process produced these
+  // bytes or that termination_kind. `evidence: false` is machine-readable so no consumer can mistake
+  // it for an observation. The real must-ask capture is T11's (the recorder has no boundary-stop).
+  report.branch_conformance.push(
+    {
+      leg: "ask-nothing",
+      evidence: false,
+      basis: "spliced question line appended to the archived capture",
+      spliced_capture_sha256: splicedRecord.stdout.sha256,
+      spliced_capture_record: splicedRecordPath,
+      observed: `3 declared question shapes, each at byte ${questionOffset} -> fail question-in-ask-nothing citing that offset`,
+    },
+    {
+      leg: "must-ask",
+      evidence: false,
+      basis: "spliced question line + an authored termination_kind: boundary-stop the recorder never produced",
+      spliced_capture_sha256: splicedRecord.stdout.sha256,
+      spliced_capture_record: splicedRecordPath,
+      observed: "1 question + 0 deliveries + complete prefix -> pass on the boundary-stop exception; truncated / timeout / non-question offset / unmapped / 0-question / 2-question each fail or could-not-run",
+    },
   );
   report.not_executed.push({
     leg: "qualified-2.1.291-capture",
     owner: "T11",
     why: `the local CLI reports ${real.observed.cli_version}; the pinned version is 2.1.291, so the archived bytes prove shape and offsets, not version qualification`,
   });
+  report.not_executed.push({
+    leg: "recorded-boundary-stop-must-ask-capture",
+    owner: "T11",
+    why: "the recorder exposes no boundary-stop producer, so the must-ask pass above is branch conformance; a real must-ask capture is unobserved",
+  });
   report.not_executed.push({ leg: "hosted-four-pass-cell", owner: "T7/T11", why: "the four graded invocations need the harness-smoke credential on the hosted runner" });
-  report.evidence = { table: table.id, capture_sha256: archived.sha256, events: real.events.length, unknown_lines: real.unknown_lines, question_offset: questionOffset };
+  report.evidence = {
+    table: table.id,
+    capture_sha256: archived.sha256,
+    events: real.events.length,
+    unknown_lines: real.unknown_lines,
+    question_offset: questionOffset,
+    spliced_capture_sha256: splicedRecord.stdout.sha256,
+    spliced_capture_record: splicedRecordPath,
+    spliced_capture_evidence: false,
+  };
 
   // Merge into the flow's artifact rather than replacing what the earlier leg recorded.
   const { writeArtifact } = await import("./flow-runner.mjs");
   const prior = existsSync(ARTIFACT) ? JSON.parse(readFileSync(ARTIFACT, "utf8")) : { ok: true };
-  const merged = { ...prior, ok: true, stream: { ...report, legs: [...(prior.stream?.legs ?? []), ...report.legs], not_executed: [...(prior.stream?.not_executed ?? []), ...report.not_executed] } };
+  const merged = {
+    ...prior,
+    ok: true,
+    stream: {
+      ...report,
+      legs: [...(prior.stream?.legs ?? []), ...report.legs],
+      branch_conformance: [...(prior.stream?.branch_conformance ?? []), ...report.branch_conformance],
+      not_executed: [...(prior.stream?.not_executed ?? []), ...report.not_executed],
+    },
+  };
   writeArtifact(ARTIFACT, merged);
   t.diagnostic(`stream_table=${table.id} coverage=${coverage.verdict} capture_missing=${real.missing.join(",")}`);
   t.diagnostic(`stream_not_executed=${report.not_executed.map((entry) => entry.leg).join(",")}`);
