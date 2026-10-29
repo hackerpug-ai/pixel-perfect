@@ -8,6 +8,8 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { loadPins } from "./pins.mjs";
+
 const SCHEMA_DIR = join(dirname(fileURLToPath(import.meta.url)), "schemas");
 
 export const HARNESSES = ["claude-code", "codex", "grok", "opencode", "pi", "cursor"];
@@ -96,15 +98,54 @@ function walk(schema, value, path, errors) {
 }
 
 /**
- * Validate a harness-eval-result/v1 record: structure, then the rules a schema cannot state —
- * twelve unique cells over six harnesses, a 64-hex pins digest, and one install mode.
+ * The pins digest the artifact must bind to, computed here from the manifest bytes. A caller cannot
+ * opt out of the binding, and an unreadable manifest is a refusal, never a skipped check.
  */
-export function validateResult(record, { requiredPinsSha256 } = {}) {
+export function manifestPinsDigest() {
+  try {
+    return loadPins().pins_sha256;
+  } catch (cause) {
+    throw new SchemaError("pins-manifest-unreadable", { reason: cause.reason ?? String(cause) });
+  }
+}
+
+/**
+ * A pass needs evidence: artifacts on disk, the invocation that produced them, its raw exit status,
+ * and at least one check that actually ran. A version match alone is not a grade.
+ */
+export function assertPassEvidence(cell) {
+  if (cell?.verdict !== "pass") return true;
+  const missing = [];
+  if (!Array.isArray(cell.evidence_paths) || cell.evidence_paths.length === 0) missing.push("evidence_paths");
+  if (typeof cell.invocation_id !== "string" || cell.invocation_id.length === 0) missing.push("invocation_id");
+  if (!Number.isInteger(cell.process_exit_code)) missing.push("process_exit_code");
+  const checks = Array.isArray(cell.checks) ? cell.checks : [];
+  if (checks.length === 0 || checks.every((check) => check.verdict === "could-not-run")) missing.push("checks");
+  if (missing.length > 0) {
+    throw new SchemaError("pass-without-evidence", { cell: `${cell.harness}/${cell.track}`, missing });
+  }
+  return true;
+}
+
+/**
+ * Validate a harness-eval-result/v1 record: structure, then the rules a schema cannot state —
+ * twelve unique cells over six harnesses, a pins digest bound to this tree's manifest bytes, an
+ * evidenced-only pass, and one install mode compared with a trusted dispatch sha.
+ */
+export function validateResult(record, { dispatchSha = null, requiredPinsSha256 } = {}) {
   // Identity first: an absent or non-hex digest is named for what it is, not for a schema symptom.
   if (typeof record?.pins_sha256 !== "string" || !SHA256_PATTERN.test(record.pins_sha256)) {
     throw new SchemaError("pins-digest-invalid", { pins_sha256: record?.pins_sha256 ?? null });
   }
   validateAgainst("harness-eval-result.v1.schema.json", record);
+
+  const manifestSha256 = manifestPinsDigest();
+  if (record.pins_sha256 !== manifestSha256) {
+    throw new SchemaError("pins-digest-mismatch", { artifact: record.pins_sha256, manifest: manifestSha256 });
+  }
+  if (requiredPinsSha256 !== undefined && requiredPinsSha256 !== manifestSha256) {
+    throw new SchemaError("pins-digest-caller-mismatch", { caller: requiredPinsSha256, manifest: manifestSha256 });
+  }
 
   const cells = record.cells ?? [];
   const pairs = new Set(cells.map((cell) => `${cell.harness}::${cell.track}`));
@@ -118,11 +159,9 @@ export function validateResult(record, { requiredPinsSha256 } = {}) {
   }
   if (problems.length > 0) throw new SchemaError("cells-incomplete", problems);
 
-  if (requiredPinsSha256 !== undefined && record.pins_sha256 !== requiredPinsSha256) {
-    throw new SchemaError("pins-digest-mismatch", { artifact: record.pins_sha256, manifest: requiredPinsSha256 });
-  }
+  for (const cell of cells) assertPassEvidence(cell);
 
-  validateDispatchIdentity(record, { dispatchSha: record.candidate_sha ?? null });
+  validateDispatchIdentity(record, { dispatchSha });
   return { cells: cells.length, harnesses: pairs.size === 0 ? 0 : new Set(cells.map((cell) => cell.harness)).size, pairs: pairs.size };
 }
 
@@ -140,7 +179,11 @@ export function validateDispatchIdentity(record, { dispatchSha = null } = {}) {
     if (typeof record.candidate_sha !== "string" || !COMMIT_PATTERN.test(record.candidate_sha)) {
       throw new SchemaError("candidate-sha-missing", { candidate_sha: record.candidate_sha ?? null });
     }
-    if (dispatchSha && record.candidate_sha !== dispatchSha) {
+    // The comparison target is the caller's trusted dispatch commit, never the record's own value.
+    if (!dispatchSha) {
+      throw new SchemaError("dispatch-sha-unknown", { candidate_sha: record.candidate_sha });
+    }
+    if (record.candidate_sha !== dispatchSha) {
       throw new SchemaError("candidate-sha-mismatch", { candidate_sha: record.candidate_sha, dispatch_sha: dispatchSha });
     }
   } else {

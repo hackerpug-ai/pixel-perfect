@@ -160,9 +160,15 @@ test("FLOW-GRD-01-TWELVE-CELLS", async (t) => {
   for (const cell of cells) {
     assert.ok(cell.verdict, `${cell.harness}/${cell.track} carries a verdict word`);
     assert.ok(cell.reason, `${cell.harness}/${cell.track} carries a named reason, never an omission`);
+    assert.notEqual(cell.verdict, "pass", `${cell.harness}/${cell.track} may not read pass without a hosted run`);
+    assert.ok(
+      cell.verdict !== "pass" || cell.evidence_paths.length > 0,
+      `${cell.harness}/${cell.track}: a pass always implies evidence`,
+    );
     validateAgainst("harness-cell.v1.schema.json", cell);
     assert.equal(cell.checks.length, 4);
   }
+  assert.equal(cells.filter((cell) => cell.verdict === "pass").length, 0, "a version match is not a grade");
 
   const cursorCell = cells.find((cell) => cell.harness === "cursor" && cell.track === "pinned");
   assert.equal(cursorCell.verdict, "could-not-run", "cursor day one is could-not-run, never pass");
@@ -183,7 +189,7 @@ test("FLOW-GRD-01-TWELVE-CELLS", async (t) => {
     installMode: "checkout",
     now: new Date().toISOString(),
   });
-  const summary = validateResult(record, { requiredPinsSha256: pins.pins_sha256 });
+  const summary = validateResult(record, { dispatchSha: head, requiredPinsSha256: pins.pins_sha256 });
   assert.deepEqual(summary, { cells: 12, harnesses: 6, pairs: 12 });
   assert.match(record.pins_sha256, /^[0-9a-f]{64}$/);
   assert.equal(record.candidate_sha, head);
@@ -218,6 +224,70 @@ test("FLOW-GRD-01-TWELVE-CELLS", async (t) => {
     "an absent or non-hex pins_sha256 is refused",
   );
 
+  // ---- F-T2-2: the digest binds to the manifest bytes even when the caller passes no option ----
+  const derivativeDigest = createHash("sha256").update(JSON.stringify(pins.manifest)).digest("hex");
+  assert.notEqual(derivativeDigest, recomputed, "a serialized re-encoding is not the manifest bytes digest");
+  assert.throws(
+    () => validateResult({ ...record, pins_sha256: derivativeDigest }),
+    (error) => error.reason === "pins-digest-mismatch" && error.message.includes(recomputed),
+    "a digest of a derivative document is refused with only default arguments",
+  );
+  assert.throws(
+    () => validateResult(record, { dispatchSha: head, requiredPinsSha256: "0".repeat(64) }),
+    (error) => error.reason === "pins-digest-caller-mismatch",
+    "a caller-supplied digest that disagrees with the manifest bytes is refused, never obeyed",
+  );
+
+  // ---- F-T2-1: a pass needs evidence, an invocation, an exit status and a check that ran ----
+  const unevidenced = structuredClone(record);
+  for (const cell of unevidenced.cells) {
+    cell.verdict = "pass";
+    cell.reason = null;
+  }
+  assert.throws(
+    () => validateResult(unevidenced, { dispatchSha: head }),
+    (error) =>
+      error.reason === "pass-without-evidence" &&
+      ["evidence_paths", "invocation_id", "process_exit_code", "checks"].every((field) =>
+        error.details.missing.includes(field),
+      ),
+    "twelve passes with no evidence at all are refused",
+  );
+
+  const evidencedButUnrun = structuredClone(record);
+  evidencedButUnrun.cells[0].verdict = "pass";
+  evidencedButUnrun.cells[0].evidence_paths = ["reports/verify.json"];
+  evidencedButUnrun.cells[0].invocation_id = "inv-1";
+  evidencedButUnrun.cells[0].process_exit_code = 0;
+  assert.throws(
+    () => validateResult(evidencedButUnrun, { dispatchSha: head }),
+    (error) => error.reason === "pass-without-evidence" && error.details.missing.join() === "checks",
+    "a pass whose four checks all read could-not-run is refused",
+  );
+
+  // ---- F-T2-3: the candidate sha is compared with the dispatch commit, never with itself ----
+  const foreignCommit = { ...record, candidate_sha: "a".repeat(40) };
+  assert.notEqual(foreignCommit.candidate_sha, head, "the fixture commit is not this worktree's HEAD");
+  assert.throws(
+    () => validateResult(foreignCommit),
+    (error) => error.reason === "dispatch-sha-unknown",
+    "a checkout record with no trusted dispatch sha is refused rather than self-compared",
+  );
+  assert.throws(
+    () => validateResult(foreignCommit, { dispatchSha: head }),
+    (error) => error.reason === "candidate-sha-mismatch",
+    "a candidate sha that is not the dispatch commit is refused",
+  );
+
+  // ---- F-T2-6: verdict is required, not merely described ----
+  const noVerdictKey = structuredClone(record);
+  delete noVerdictKey.cells[0].verdict;
+  assert.throws(
+    () => validateResult(noVerdictKey, { dispatchSha: head }),
+    (error) => error.reason === "schema-invalid" && /missing required property verdict/.test(error.message),
+    "a cell without a verdict key is refused by the schema's required list",
+  );
+
   // ---- newest-version lookup: frozen once per run, parsed from each CLI's real output shape ----
   const calls = [];
   const resolver = createVersionResolver({
@@ -249,6 +319,34 @@ test("FLOW-GRD-01-TWELVE-CELLS", async (t) => {
     cursor: "2026.10.01-e373342",
   });
 
+  // ---- F-T2-4: a failed newest lookup is null and frozen null, never a substituted version ----
+  const failedCommand = pins.manifest.harnesses.codex.newest_lookup;
+  const failing = [];
+  const failingResolver = createVersionResolver({
+    manifest: pins.manifest,
+    exec: (command) => {
+      failing.push(command);
+      if (command === failedCommand) throw new Error("lookup failed");
+      return "9.9.9\n";
+    },
+  });
+  assert.equal(failingResolver.resolve("codex"), null, "a failed lookup resolves to null, not a default version");
+  assert.equal(failingResolver.resolve("codex"), null, "the second resolve is served from the frozen null");
+  assert.equal(failing.filter((command) => command === failedCommand).length, 1, "the failed lookup ran only once");
+  const unresolved = cellsFromPins(pins.manifest, {
+    observed: { codex: "0.160.1" },
+    credentialEnv: { ...process.env, SMOKE_CODEX_KEY: "set" },
+    resolvedNewest: failingResolver.snapshot(),
+  });
+  for (const track of TRACKS) {
+    const cell = unresolved.find((candidate) => candidate.harness === "codex" && candidate.track === track);
+    assert.equal(cell.installation.requested_cli_version === null, track === "newest", `${track}: no substitution`);
+    if (track === "newest") {
+      assert.equal(cell.verdict, "could-not-run", "an unresolved newest track grades nothing");
+      assert.equal(cell.reason, "newest-version-not-resolved", "the reason names the failed lookup");
+    }
+  }
+
   // ---- the pins' lookup commands are the PRD's documented per-harness lookups ----
   for (const [harness, command] of Object.entries(PRD_LOOKUPS)) {
     assert.equal(pins.manifest.harnesses[harness].newest_lookup, command, `${harness} newest_lookup matches the PRD`);
@@ -260,7 +358,10 @@ test("FLOW-GRD-01-TWELVE-CELLS", async (t) => {
   let live = "absent";
   if (existsSync(LIVE_ARTIFACT)) {
     const artifact = JSON.parse(readFileSync(LIVE_ARTIFACT, "utf8"));
-    validateResult(artifact, { requiredPinsSha256: pins.pins_sha256 });
+    // A dispatch's trusted commit is GitHub's recorded workflow head; the checkout must be the same.
+    const dispatchSha = process.env.HARNESS_EVAL_DISPATCH_SHA ?? artifact.head_sha ?? null;
+    assert.equal(artifact.candidate_sha, dispatchSha, "the checkout commit is the dispatch commit");
+    validateResult(artifact, { dispatchSha, requiredPinsSha256: pins.pins_sha256 });
     live = "validated";
   }
 
@@ -286,7 +387,15 @@ test("FLOW-GRD-01-TWELVE-CELLS", async (t) => {
       "drop-cell -> cells-incomplete",
       "duplicate-pair -> cells-incomplete",
       "verdict vocabulary -> schema-invalid",
+      "missing required property verdict -> schema-invalid",
       "non-hex pins_sha256 -> pins-digest-invalid",
+      "derivative-document pins_sha256 (default args) -> pins-digest-mismatch",
+      "caller digest disagreeing with the manifest bytes -> pins-digest-caller-mismatch",
+      "unevidenced pass -> pass-without-evidence",
+      "pass with all four checks could-not-run -> pass-without-evidence",
+      "checkout without trusted dispatch sha -> dispatch-sha-unknown",
+      "candidate sha != dispatch commit -> candidate-sha-mismatch",
+      "failed newest lookup -> newest-version-not-resolved, no substitution",
       "semver range -> version-not-exact",
       "latest alias -> version-not-exact",
       "missing harness -> harness-missing",

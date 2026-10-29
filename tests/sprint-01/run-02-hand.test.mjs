@@ -44,6 +44,9 @@ test("FLOW-RUN-02-HAND", async (t) => {
   const packageJsonPath = join(ROOT, "package.json");
   const before = fileFingerprint(packageJsonPath);
 
+  // ---- the digest is recomputed from the manifest bytes here, not taken from the loader ----
+  assert.equal(pins.pins_sha256, createHash("sha256").update(pins.bytes).digest("hex"));
+
   // ---- pins.json wins; every difference from package.json is a named exception with a reason ----
   const reconciliation = assertReconciled(reconcilePackageJson({ manifest: pins.manifest, packageJsonPath }));
   const piRow = reconciliation.comparisons.find((row) => row.harness === "pi");
@@ -109,7 +112,7 @@ test("FLOW-RUN-02-HAND", async (t) => {
     installMode: "checkout",
     now: new Date().toISOString(),
   });
-  validateResult(checkout, { requiredPinsSha256: pins.pins_sha256 });
+  validateResult(checkout, { dispatchSha: head, requiredPinsSha256: pins.pins_sha256 });
   assert.equal(checkout.event, "workflow_dispatch", "a hand dispatch records its real event");
   assert.equal(checkout.install_mode, "checkout", "a no-input dispatch defaults to checkout");
   assert.equal(checkout.candidate_sha, head, "candidate_sha is the dispatch commit");
@@ -145,6 +148,29 @@ test("FLOW-RUN-02-HAND", async (t) => {
     (error) => error.reason === "candidate-sha-mismatch",
     "a checkout candidate that is not the dispatch commit is refused",
   );
+
+  // ---- F-T2-2: check-AC-2 defends the manifest bytes too, with only default arguments ----
+  const derivativeDigest = createHash("sha256").update(JSON.stringify(pins.manifest)).digest("hex");
+  assert.notEqual(derivativeDigest, pins.pins_sha256);
+  assert.throws(
+    () => validateResult({ ...checkout, pins_sha256: derivativeDigest }),
+    (error) => error.reason === "pins-digest-mismatch" && error.message.includes(pins.pins_sha256),
+    "a registry-style derivative digest is refused without the caller opting in",
+  );
+
+  // ---- F-T2-3: the dispatch comparison is against a trusted sha, never the record's own value ----
+  const foreignCommit = { ...checkout, candidate_sha: "a".repeat(40) };
+  assert.notEqual(foreignCommit.candidate_sha, head);
+  assert.throws(
+    () => validateResult(foreignCommit),
+    (error) => error.reason === "dispatch-sha-unknown",
+    "a checkout record with no trusted dispatch sha is refused",
+  );
+  assert.throws(
+    () => validateResult(foreignCommit, { dispatchSha: head }),
+    (error) => error.reason === "candidate-sha-mismatch",
+    "a grade produced at another commit is refused as this commit's",
+  );
   const logInferred = { ...checkout, logs: "install_mode: checkout" };
   delete logInferred.install_mode;
   assert.throws(
@@ -153,7 +179,13 @@ test("FLOW-RUN-02-HAND", async (t) => {
     "a mode asserted from logs instead of artifact fields is refused",
   );
   const gradedPublished = structuredClone(published);
-  gradedPublished.cells[0].verdict = "pass";
+  const gradedCell = gradedPublished.cells[0];
+  // A fully evidenced pass, so the refusal comes from the mode guard and not from pass-without-evidence.
+  gradedCell.verdict = "pass";
+  gradedCell.evidence_paths = ["reports/verify.json"];
+  gradedCell.invocation_id = "inv-1";
+  gradedCell.process_exit_code = 0;
+  gradedCell.checks[0] = { ...gradedCell.checks[0], verdict: "pass" };
   assert.throws(
     () => validateResult(gradedPublished),
     (error) => error.reason === "published-mode-graded",
@@ -164,10 +196,11 @@ test("FLOW-RUN-02-HAND", async (t) => {
   let live = "absent";
   if (existsSync(LIVE_ARTIFACT)) {
     const artifact = JSON.parse(readFileSync(LIVE_ARTIFACT, "utf8"));
-    validateResult(artifact, { requiredPinsSha256: pins.pins_sha256 });
+    const dispatchSha = process.env.HARNESS_EVAL_DISPATCH_SHA ?? artifact.head_sha ?? null;
+    validateResult(artifact, { dispatchSha, requiredPinsSha256: pins.pins_sha256 });
     assert.equal(artifact.event, "workflow_dispatch");
     assert.equal(artifact.install_mode, "checkout");
-    assert.equal(artifact.candidate_sha, head);
+    assert.equal(artifact.candidate_sha, dispatchSha);
     live = "validated";
   }
 
@@ -192,8 +225,10 @@ test("FLOW-RUN-02-HAND", async (t) => {
     negative_controls: [
       "unnamed disagreement -> pins-package-disagreement",
       "stale exception -> exception-without-disagreement",
+      "derivative-document pins_sha256 (default args) -> pins-digest-mismatch",
       "published + checkout sha -> mode-mixup",
       "checkout + null sha -> candidate-sha-missing",
+      "checkout without trusted dispatch sha -> dispatch-sha-unknown",
       "candidate != dispatch sha -> candidate-sha-mismatch",
       "mode from logs -> schema-invalid(install_mode)",
       "published pass verdict -> published-mode-graded",
