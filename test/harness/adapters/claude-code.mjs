@@ -366,7 +366,7 @@ export function loadPlan({ workspace = ROOT, configDir = null, pluginRoot = PLUG
 }
 
 /** A keyless step that carries a credential name is a bug, not a configuration: refuse it. */
-function assertKeylessStep(step) {
+export function assertKeylessStep(step) {
   const surfaces = [step.name, ...(step.argv ?? []), ...Object.entries(step.env ?? {}).flatMap(([name, value]) => [name, String(value)])];
   for (const surface of surfaces) {
     if (SECRET_NAME.test(String(surface))) {
@@ -558,9 +558,8 @@ export function approveIdentity(identity, { requested_cli_version = identity?.re
   if (typeof identity?.expected_plugin_manifest_sha256 !== "string" || !HEX64.test(identity.expected_plugin_manifest_sha256)) {
     return mismatch("expected_plugin_manifest_sha256", identity?.expected_plugin_manifest_sha256, "64 hex characters");
   }
-  if (typeof identity?.observed_plugin_manifest_sha256 !== "string" || !HEX64.test(identity.observed_plugin_manifest_sha256)) {
-    return mismatch("observed_plugin_manifest_sha256", identity?.observed_plugin_manifest_sha256, "64 hex characters");
-  }
+  // The expected digest is hex-validated above, so any non-hex observed digest is already unequal
+  // to it: one comparison refuses both a mismatched and an unparseable observation.
   if (identity.observed_plugin_manifest_sha256 !== identity.expected_plugin_manifest_sha256) {
     return mismatch("observed_plugin_manifest_sha256", identity.observed_plugin_manifest_sha256, identity.expected_plugin_manifest_sha256);
   }
@@ -759,14 +758,34 @@ function isRequiredPath(target, entry) {
   return roots.some((root) => absolute === root || absolute.startsWith(`${root}/`));
 }
 
+/**
+ * The gate state a status reply must state, per layer: the manifest's own vocabulary beside the
+ * layer name (`atoms approved`, `atoms=approved`), or the status workflow's own icon before it
+ * (`[x] ATOMS` = approved, `[ ] ATOMS` = pending). Anything else is not a stated gate state, so a
+ * reply that drops the gates is a miss rather than a silent pass.
+ */
+const GATE_WORDS = ["approved", "pending"];
+const GATE_ICONS = Object.freeze({ "[x]": "approved", "[ ]": "pending" });
+
+function parseGates(text) {
+  const gates = {};
+  for (const layer of ["atoms", "molecules", "screens"]) {
+    const word = text.match(new RegExp(`\\b${layer}\\b[^\\w\\n]{0,12}?(${GATE_WORDS.join("|")})\\b`, "i"))?.[1];
+    const icon = text.match(new RegExp(`(\\[[x !~]\\])\\s*${layer}\\b`, "i"))?.[1];
+    const state = word?.toLowerCase() ?? GATE_ICONS[icon?.toLowerCase()] ?? null;
+    if (state) gates[layer] = state;
+  }
+  return Object.keys(gates).length > 0 ? gates : null;
+}
+
 /** Facts a status reply must state. A generic acknowledgement states none of them. */
 export function statusFacts(reply, expected = null) {
   const text = String(reply ?? "");
   const counts = text.match(/\b(\d+)\b/g)?.map(Number) ?? [];
   const facts = {
     platform: /web-desktop/.test(text) ? "web-desktop" : null,
-    phase: text.match(/\b(atoms|molecules|screens|tokens)\b/)?.[1] ?? null,
-    gates: /gates?/i.test(text) ? Object.fromEntries([...text.matchAll(/\b(atoms|molecules|screens)\s*(?:=|:)\s*([a-z-]+)/gi)].map((m) => [m[1].toLowerCase(), m[2].toLowerCase()])) : null,
+    phase: text.match(/\b(atoms|molecules|screens|tokens)\b/i)?.[1]?.toLowerCase() ?? null,
+    gates: parseGates(text),
     inventory: /\binventory\b/i.test(text) ? { counts } : null,
     nonzero_counts: counts.some((count) => count > 0),
   };
@@ -774,8 +793,13 @@ export function statusFacts(reply, expected = null) {
   const missing = [];
   if (expected.platform && facts.platform !== expected.platform) missing.push("platform");
   if (expected.phase && facts.phase !== expected.phase) missing.push("phase");
+  for (const [key, value] of Object.entries(expected.gates ?? {})) {
+    if (facts.gates?.[key.toLowerCase()] !== String(value).toLowerCase()) missing.push(`gates.${key}`);
+  }
+  // A count satisfies the inventory only when it is stated beside its own key; three numbers
+  // appearing anywhere in the reply are not three inventories.
   for (const [key, value] of Object.entries(expected.inventory ?? {})) {
-    if (!counts.includes(value)) missing.push(`inventory.${key}`);
+    if (!new RegExp(`\\b${value}\\s+${key}\\b|\\b${key}\\b\\s*[:=]\\s*${value}\\b`, "i").test(text)) missing.push(`inventory.${key}`);
   }
   return { ...facts, missing };
 }

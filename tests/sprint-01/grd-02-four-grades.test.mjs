@@ -7,7 +7,8 @@
 //     the real pins manifest, the real plugin directory and the real case manifests; the plugin
 //     manifest digest rebuilt from sorted relative paths + file contents; the stance allow-list;
 //     the plugin gate's decision on a real `system/init` event; the question detector's
-//     fail-closed direction.
+//     fail-closed direction; the status-fact, question-detector and verify-report grading logic,
+//     driven over in-memory streams and temp report files (no model, no hosted run).
 //   * when a `claude` CLI is on PATH: the checkout load runs for real in an isolated config dir
 //     (marketplace add + plugin install + `plugin details`, all keyless with DISABLE_AUTOUPDATER=1),
 //     and real headless `-p` invocations produce the captured event streams the plugin gate and the
@@ -17,10 +18,13 @@
 //     `not-executed` with a reason, never as a pass and never as a fabricated failure.
 //
 // Every fixture this module grades is real bytes: captured stdout from a real process, or the
-// on-disk plugin payload. No hand-authored event JSON is used as evidence (the surface policy bans
-// it: it would validate the grader against fiction).
+// on-disk plugin payload. No hand-authored event JSON is used as EVIDENCE (the surface policy bans
+// it: it would validate the grader against fiction). A negative control is the opposite of
+// evidence: the controls that pin the question detector, the status comparison and the verify
+// binding hand the grader a stream it must REJECT, and each of them is proven by deleting the
+// check it guards and watching that control fail.
 import assert from "node:assert/strict";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
@@ -33,15 +37,18 @@ import {
   PLUGIN_SELECTOR,
   PROBE_ENV_NAME,
   approveIdentity,
+  assertKeylessStep,
   bindReport,
   cellFor,
   claudeAvailable,
   commandNames,
   describe,
   executeLoad,
+  gradeCheck,
   installationIdentity,
   invocationTable,
   loadPlan,
+  mapCapturedLine,
   manifestDigest,
   observedCliVersion,
   parseCommandList,
@@ -49,11 +56,13 @@ import {
   prepareRunDirs,
   questionBoundary,
   readInstalledPlugin,
+  readVerifyReport,
   runCheck,
+  statusFacts,
 } from "../../test/harness/adapters/claude-code.mjs";
 import { REGISTERED, adapterFor, describeRegistry } from "../../test/harness/adapters/registry.mjs";
-import { loadCase } from "../../test/harness/kit/case-loader.mjs";
-import { loadPins } from "../../test/harness/pins.mjs";
+import { bindReportPath, loadCase } from "../../test/harness/kit/case-loader.mjs";
+import { loadPins, sha256Hex } from "../../test/harness/pins.mjs";
 import { APPROVED_MODES, recordStance } from "../../test/harness/runtime/stance.mjs";
 import { COMMIT_PATTERN, SHA256_PATTERN, validateAgainst } from "../../test/harness/validate.mjs";
 
@@ -290,6 +299,7 @@ test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
 
     const cases = [
       ["a digest that differs from the installed payload", { observed_plugin_manifest_sha256: "a".repeat(64) }, "observed_plugin_manifest_sha256"],
+      ["a digest that is not hex at all", { observed_plugin_manifest_sha256: "z".repeat(64) }, "observed_plugin_manifest_sha256"],
       ["no digest at all", { observed_plugin_manifest_sha256: null }, "observed_plugin_manifest_sha256"],
       ["no observed version", { observed_cli_version: null }, "observed_cli_version"],
       ["no loaded root", { loaded_plugin_root: null }, "loaded_plugin_root"],
@@ -577,6 +587,258 @@ test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
     assert.equal(borrowed.verdict, "fail");
     assert.equal(bindReport({ invocation: mine, reported: null }).reason, "report-missing");
     report.legs.push({ leg: "report-binding", observed: "a borrowed report body is fail report-mismatched-invocation" });
+  });
+
+  // ---- F-T5-1: the status facts are COMPARED, not merely parsed -------------------------------
+  // A self-consistent identity for the local checkout: a graded cell must carry one, and these two
+  // controls grade a stream, never the identity.
+  const identityForCell = () => {
+    const digest = manifestDigest(PLUGIN_ROOT);
+    return installationIdentity({
+      requested_cli_version: pinnedVersion,
+      resolved_cli_version: pinnedVersion,
+      observed_cli_version: pinnedVersion,
+      install_mode: "checkout",
+      plugin_revision: "f".repeat(40),
+      expected_plugin_manifest_sha256: digest,
+      observed_plugin_manifest_sha256: digest,
+      loaded_plugin_root: PLUGIN_ROOT,
+      plugin_load_evidence: "system/init plugins includes pixel-perfect",
+    });
+  };
+
+  // A capture record over real byte offsets, no model and no hosted run: the stream is written to
+  // disk, hashed, and its observations cite the spans of the facts the check requires - so the base
+  // verdict can be `pass` and only the check's own block can fail it.
+  const captureOf = (dir, name, lines, factIds) => {
+    const bytes = Buffer.from(lines.map((line) => `${JSON.stringify(line)}\n`).join(""));
+    const stdoutPath = join(dir, `${name}.stdout.bin`);
+    writeFileSync(stdoutPath, bytes);
+    const observations = [];
+    let at = 0;
+    for (const line of lines) {
+      const text = JSON.stringify(line);
+      const factId = factIds.get(text);
+      if (factId) {
+        observations.push({
+          sequence: observations.length + 1,
+          fact_id: factId,
+          required_read: true,
+          stream_offset: at,
+          stream_end_offset: at + Buffer.byteLength(text),
+          raw_sha256: sha256Hex(bytes.subarray(at, at + Buffer.byteLength(text))),
+        });
+      }
+      at += Buffer.byteLength(text) + 1;
+    }
+    return {
+      harness: HARNESS,
+      track: "pinned",
+      invocation_id: `inv-${name}`,
+      evidence_paths: [stdoutPath],
+      stdout: { sha256: sha256Hex(bytes) },
+      model_request_count: 1,
+      termination_kind: "exit",
+      observations,
+      process_status: { exit_code: 0 },
+    };
+  };
+
+  await t.test("the status facts are compared against the seeded gate state: a reply with the right platform, phase and counts but no gate state fails", () => {
+    const statusCase = loadCase("status-a");
+    const expected = statusCase.expected_facts;
+    assert.deepEqual(Object.keys(expected.gates ?? {}), ["atoms", "molecules", "screens"], "the case declares the gate state this check must grade");
+
+    const complete =
+      "Platform: web-desktop. Phase: atoms. Gates: atoms=approved, molecules=pending, screens=pending. Inventory: 3 atoms, 1 molecules, 1 screens.";
+    const completeFacts = statusFacts(complete, expected);
+    assert.deepEqual(completeFacts.missing, [], `every declared fact is stated: ${JSON.stringify(completeFacts)}`);
+    assert.deepEqual(completeFacts.gates, expected.gates);
+
+    // The reply the reviewer's probe used: platform, phase and all three counts, and NO gate state.
+    const noGates = "Platform: web-desktop. Phase: atoms. Inventory: 3 atoms, 1 molecules, 1 screens.";
+    const noGatesFacts = statusFacts(noGates, expected);
+    assert.deepEqual(
+      noGatesFacts.missing,
+      ["gates.atoms", "gates.molecules", "gates.screens"],
+      `a status reply that omits the gate state is not a pass: ${JSON.stringify(noGatesFacts)}`,
+    );
+
+    // The status workflow prints the gates as its own icons (`Phases:` with [x] / [ ]), not as
+    // `key=value`: that shape states the same seeded gate state and must satisfy the comparison.
+    const iconShape = [
+      "pixel-perfect - Project Status",
+      "Platforms:",
+      "  web-desktop  [compose passed]",
+      "  Phases:",
+      "    [x] ATOMS       - 3/3 components built",
+      "    [ ] MOLECULES   - Pending",
+      "    [ ] SCREENS     - Pending",
+    ].join("\n");
+    assert.deepEqual(statusFacts(iconShape, { ...expected, inventory: null }).missing, [], `the workflow's own icon shape states the gates: ${JSON.stringify(statusFacts(iconShape, expected))}`);
+    assert.deepEqual(statusFacts(iconShape).gates, expected.gates);
+
+    // A gate state that disagrees with the seeded one is a miss, per declared key.
+    const wrongGate = "Platform: web-desktop. Phase: atoms. Gates: atoms=approved, molecules=approved, screens=pending. Inventory: 3 atoms, 1 molecules, 1 screens.";
+    assert.deepEqual(statusFacts(wrongGate, expected).missing, ["gates.molecules"]);
+
+    // The other three declared facts keep their own controls.
+    const noPlatform = "Phase: atoms. Gates: atoms=approved, molecules=pending, screens=pending. Inventory: 3 atoms, 1 molecules, 1 screens.";
+    assert.ok(statusFacts(noPlatform, expected).missing.includes("platform"), "a reply that never names the platform is a miss");
+    const wrongPhase = "Platform: web-desktop. Phase: screens. Gates: atoms=approved, molecules=pending, screens=pending. Inventory: 3 atoms, 1 molecules, 1 screens.";
+    assert.deepEqual(statusFacts(wrongPhase, expected).missing, ["phase"]);
+    // Counts that appear in the text but are not tied to their key do not satisfy the inventory.
+    const unlabeled = "Platform: web-desktop. Phase: atoms. Gates: atoms=approved, molecules=pending, screens=pending. Inventory: 3 components, 1 more, 1 last.";
+    assert.deepEqual(statusFacts(unlabeled, expected).missing, ["inventory.atoms", "inventory.molecules", "inventory.screens"]);
+
+    // Through the grading path: the same reply grades `fail status-facts-absent`.
+    const statusEntry = invocationTable().find((entry) => entry.check_id === "status");
+    const dir = mkdtempSync(join(tmpdir(), "pp-status-facts-"));
+    t.after(() => rmSync(dir, { recursive: true, force: true }));
+    const init = { type: "system", subtype: "init", plugins: [{ name: PLUGIN_NAME }], claude_code_version: pinnedVersion, permissionMode: "dontAsk" };
+    const resultLine = { type: "result", is_error: false, result: noGates };
+    const record = captureOf(dir, "status", [init, resultLine], new Map([[JSON.stringify(init), "plugin-loaded"], [JSON.stringify(resultLine), "result-event"]]));
+    const graded = gradeCheck({ record, entry: statusEntry, track: "pinned", installation: identityForCell() });
+    assert.equal(graded.cell.verdict, "fail", `a status reply without the gate state cannot pass: ${JSON.stringify(graded.cell.block_reasons)}`);
+    assert.equal(graded.cell.reason, "status-facts-absent");
+    assert.deepEqual(graded.blocks[0].missing, ["gates.atoms", "gates.molecules", "gates.screens"]);
+    report.legs.push({ leg: "status-facts", observed: "gate state and keyed counts compared; a reply without gates grades fail status-facts-absent" });
+  });
+
+  // ---- F-T5-2: the question detector has a POSITIVE control --------------------------------
+  await t.test("the question detector recognises all three declared question shapes, and one real question in an ask-nothing stream fails that check", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pp-question-detector-"));
+    t.after(() => rmSync(dir, { recursive: true, force: true }));
+    const init = { type: "system", subtype: "init", plugins: [{ name: PLUGIN_NAME }], claude_code_version: pinnedVersion, permissionMode: "dontAsk" };
+    const shapes = [
+      { type: "user_choice", id: "choice-1" },
+      { type: "assistant", subtype: "ask_user_question", message: { content: [] } },
+      { type: "assistant", message: { content: [{ type: "tool_use", id: "tu-1", name: "AskUserQuestion", input: { question: "which platform?" } }] } },
+    ];
+    const notAQuestion = { type: "assistant", message: { content: [{ type: "tool_use", id: "tu-2", name: "Read", input: { file_path: "README.md" } }] } };
+    const lines = [init, ...shapes, notAQuestion];
+    const stdoutPath = join(dir, "questions.stdout.bin");
+    const bytes = Buffer.from(lines.map((line) => `${JSON.stringify(line)}\n`).join(""));
+    writeFileSync(stdoutPath, bytes);
+
+    // Each declared shape is detected, and the non-question tool start is not.
+    for (const shape of shapes) {
+      assert.ok(mapCapturedLine({ json: shape }).some((fact) => fact.kind === "question"), `detected: ${JSON.stringify(shape)}`);
+    }
+    assert.deepEqual(mapCapturedLine({ json: notAQuestion }).filter((fact) => fact.kind === "question"), [], "a non-question tool start is not a question");
+
+    const record = { harness: HARNESS, track: "pinned", invocation_id: "inv-detector", evidence_paths: [stdoutPath], stdout: { sha256: sha256Hex(bytes) }, model_request_count: 1, termination_kind: "exit", observations: [] };
+    const boundary = questionBoundary(record);
+    assert.equal(boundary.count, 3, "three question events, one per declared shape");
+    const expectedOffsets = [];
+    let offset = 0;
+    for (const line of lines) {
+      if (shapes.some((shape) => JSON.stringify(shape) === JSON.stringify(line))) expectedOffsets.push(offset);
+      offset += Buffer.byteLength(JSON.stringify(line)) + 1;
+    }
+    assert.deepEqual(boundary.offsets, expectedOffsets, "each question is cited at its own byte offset");
+    assert.equal(boundary.answers_delivered, 0);
+
+    // The direction that matters: ONE real question inside an ask-nothing stream that would
+    // otherwise PASS. The record cites the two facts the check requires, so its base verdict is
+    // `pass` and only the question can make it fail.
+    const result = { type: "result", is_error: false, result: "Records inventoried." };
+    const oneRecord = captureOf(dir, "one-question", [init, shapes[2], result], new Map([[JSON.stringify(init), "plugin-loaded"], [JSON.stringify(result), "result-event"]]));
+    assert.equal(questionBoundary(oneRecord).count, 1);
+
+    const base = { check_id: "question_before_expensive_work", graded: true, required_facts: ["plugin-loaded", "result-event"], caseManifest: null, bound_path: null };
+    const askNothing = gradeCheck({ record: oneRecord, entry: { ...base, ask_policy: "ask-nothing" }, track: "pinned", installation: identityForCell() });
+    assert.ok(
+      askNothing.blocks.some((entryBlock) => entryBlock.reason === "question-in-ask-nothing"),
+      `a question in an ask-nothing stream fails that check: ${JSON.stringify(askNothing.blocks.map((entryBlock) => entryBlock.reason))}`,
+    );
+    assert.equal(askNothing.cell.verdict, "fail", `the question flips a pass-shaped record to fail: ${JSON.stringify(askNothing.cell.block_reasons)}`);
+    assert.equal(askNothing.cell.reason, "question-in-ask-nothing");
+
+    // The same record on the must-ask entry is exactly what that entry is for: the block clears.
+    const mustAsk = gradeCheck({ record: oneRecord, entry: { ...base, ask_policy: "must-ask" }, track: "pinned", installation: identityForCell() });
+    assert.deepEqual(mustAsk.blocks.filter((entryBlock) => entryBlock.reason === "question-in-ask-nothing"), []);
+    assert.deepEqual(mustAsk.blocks.filter((entryBlock) => entryBlock.verdict === "fail"), [], `one question satisfies must-ask: ${JSON.stringify(mustAsk.blocks)}`);
+    assert.equal(mustAsk.cell.verdict, "pass", `the same record passes the must-ask check: ${JSON.stringify(mustAsk.cell.block_reasons)}`);
+    report.legs.push({ leg: "question-detector", observed: "three question shapes detected at their offsets; 1 question in ask-nothing -> fail question-in-ask-nothing, cleared on must-ask" });
+  });
+
+  // ---- F-T5-3: the verify grade is read from its bound file --------------------------------
+  await t.test("the verify report is graded from its bound file: a borrowed, mis-outcomed or wrong-key body each fails, and the correct body passes", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pp-verify-grade-"));
+    t.after(() => rmSync(dir, { recursive: true, force: true }));
+    const planted = loadCase("verify-button-drift");
+    const clean = loadCase("verify-clean");
+    const entryFor = (caseManifest, invocationId) => {
+      const bound = bindReportPath(caseManifest, dir);
+      mkdirSync(dirname(bound), { recursive: true });
+      return { caseManifest, invocation_id: invocationId, bound_path: bound, check_id: "verify" };
+    };
+    const plantedEntry = entryFor(planted, "inv-planted-1");
+    const cleanEntry = entryFor(clean, "inv-clean-1");
+    const put = (entry, body) => writeFileSync(entry.bound_path, `${JSON.stringify(body)}\n`);
+
+    // Nothing written yet: the case-declared path is empty, which is fail report-missing.
+    assert.equal(existsSync(plantedEntry.bound_path), false);
+    const missing = readVerifyReport({ entry: plantedEntry });
+    assert.equal(missing.ok, false);
+    assert.equal(missing.verdict, "fail");
+    assert.equal(missing.reason, "report-missing");
+
+    const plantedBody = { invocation_id: "inv-planted-1", observed_verify_outcome: "defect-detected", observed_defect_key: planted.defect_key, evidence: { drifted_keys: [planted.defect_key] } };
+    const cleanBody = { invocation_id: "inv-clean-1", observed_verify_outcome: "clean", observed_defect_key: null, evidence: { drifted_keys: [] } };
+
+    put(plantedEntry, plantedBody);
+    const good = readVerifyReport({ entry: plantedEntry });
+    assert.equal(good.ok, true, `the correctly bound planted body passes: ${JSON.stringify(good)}`);
+    assert.equal(good.observed_verify_outcome, "defect-detected");
+
+    // The clean twin's body submitted under the planted invocation: a borrowed body.
+    put(plantedEntry, { ...cleanBody, invocation_id: "inv-planted-1" });
+    const wrongOutcome = readVerifyReport({ entry: plantedEntry });
+    assert.equal(wrongOutcome.ok, false);
+    assert.equal(wrongOutcome.reason, "verify-clean", "a planted case that reports clean has not detected the defect");
+
+    put(plantedEntry, { ...cleanBody, invocation_id: "inv-clean-1" });
+    const borrowed = readVerifyReport({ entry: plantedEntry });
+    assert.equal(borrowed.ok, false);
+    assert.equal(borrowed.verdict, "fail");
+    assert.equal(borrowed.reason, "report-mismatched-invocation");
+
+    put(plantedEntry, { ...plantedBody, observed_defect_key: "molecules/Card/default", evidence: { drifted_keys: [] } });
+    const wrongKey = readVerifyReport({ entry: plantedEntry });
+    assert.equal(wrongKey.ok, false);
+    assert.equal(wrongKey.reason, "verify-defect-key-mismatch");
+
+    // The clean twin both ways: its own body passes, a body claiming a defect fails.
+    put(cleanEntry, cleanBody);
+    const cleanOk = readVerifyReport({ entry: cleanEntry });
+    assert.equal(cleanOk.ok, true, `the clean twin's own body passes: ${JSON.stringify(cleanOk)}`);
+    assert.equal(cleanOk.observed_verify_outcome, "clean");
+    put(cleanEntry, { ...cleanBody, observed_verify_outcome: "defect-detected" });
+    const falsePositive = readVerifyReport({ entry: cleanEntry });
+    assert.equal(falsePositive.ok, false);
+    assert.equal(falsePositive.reason, "verify-defect-detected");
+
+    report.legs.push({ leg: "verify-grade-from-file", observed: "borrowed / wrong-outcome / wrong-key bodies each refused; planted and clean bodies pass" });
+  });
+
+  // ---- F-T5-5: the keyless refusal has a negative control -----------------------------------
+  await t.test("a keyless step that names a credential is refused at declaration time", () => {
+    const clean = { name: "plugin-details", argv: ["claude", "plugin", "details", PLUGIN_NAME], env: { DISABLE_AUTOUPDATER: "1" }, keyless: true };
+    assert.equal(assertKeylessStep(clean), clean, "a clean keyless step is returned unchanged");
+    assert.throws(
+      () => assertKeylessStep({ ...clean, name: "graded-run", env: { ...clean.env, ANTHROPIC_API_KEY: "" } }),
+      /carries the credential name/,
+      "a step whose env names the credential is refused",
+    );
+    assert.throws(
+      () => assertKeylessStep({ ...clean, argv: [...clean.argv, "--api-key", "ANTHROPIC_API_KEY"] }),
+      /carries the credential name/,
+      "a step whose argv names the credential is refused",
+    );
+    assert.throws(() => assertKeylessStep({ ...clean, keyless: false }), /not declared keyless/, "an undeclared step is refused");
+    report.legs.push({ leg: "keyless-refusal", observed: "a keyless step naming a credential throws; a clean one passes through" });
   });
 
   t.diagnostic(`pins_sha256=${pins.pins_sha256}`);
