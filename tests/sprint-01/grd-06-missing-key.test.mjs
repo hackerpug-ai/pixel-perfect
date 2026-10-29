@@ -18,6 +18,9 @@ import { createCapture } from "../../test/harness/runtime/capture.mjs";
 import { gradeFromEvidence, readGrade, writeGrade } from "../../test/harness/runtime/grade-writer.mjs";
 import { guardInvocation, resolveCredential, runGuarded, sessionId } from "../../test/harness/runtime/guard.mjs";
 import { APPROVED_MODES, assertStance, recordStance, serializeStance } from "../../test/harness/runtime/stance.mjs";
+import { loadPins } from "../../test/harness/pins.mjs";
+import { ADAPTER_PENDING, ABSENT_REASONS, absentReason } from "../../test/harness/adapters/absent.mjs";
+import { CELL_SOURCES, cellFor, planCells } from "../../test/harness/adapters/registry.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const RUNTIME_DIR = join(ROOT, "test/harness/runtime");
@@ -29,6 +32,16 @@ const PLUGIN_ROOT = join(ROOT, "plugins/pixel-perfect");
 
 // Every credential name the eval knows about. Built here, never spelled into the runtime.
 const SECRET_NAMES = /^(SMOKE_[A-Z0-9_]+|ANTHROPIC_API_KEY|CODEX_API_KEY|XAI_API_KEY|GEMINI_API_KEY|CURSOR_API_KEY)$/;
+// § CommandTranslation / CredentialBinding: the five bindings harness-smoke supplies, mapped onto
+// the CLI variables the guard checks. Cursor's own name is the one harness-smoke does not have.
+const SMOKE_BINDINGS = {
+  "claude-code": "ANTHROPIC_API_KEY",
+  codex: "CODEX_API_KEY",
+  grok: "XAI_API_KEY",
+  opencode: "ANTHROPIC_API_KEY",
+  pi: "GEMINI_API_KEY",
+};
+
 // The stance the owner rejected; assembled at run time so it is not spelled into the repo.
 const REJECTED_MODE = ["bypass", "Permissions"].join("");
 
@@ -269,6 +282,121 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
       `session ids are harness-namespaced: ${sessionId("claude-code")}`,
     ];
     artifact.session_id_sample = sessionId("claude-code");
+
+    // ---- T10: the twelve cells come from that same guard decision ------------------------
+    // The registry decides who owns each (harness, track) cell. It is fed the harness-smoke
+    // binding shape as a child env: five bindings mapped onto their CLI variables, Cursor's absent.
+    const pins = loadPins();
+    const placeholder = (name) => `placeholder-not-a-credential-${name.toLowerCase()}`;
+    const smokeEnv = withoutSecrets(process.env);
+    for (const name of new Set(Object.values(SMOKE_BINDINGS))) smokeEnv[name] = placeholder(name);
+
+    // Env absence is asserted through the guard's own check BEFORE any refusal is asserted.
+    assert.equal(resolveCredential({ harness: "cursor", env: smokeEnv }).present, false, "cursor's binding is absent in the smoke shape");
+    for (const harness of Object.keys(SMOKE_BINDINGS)) {
+      assert.equal(resolveCredential({ harness, env: smokeEnv }).present, true, `${harness}'s binding is present, so absence cannot be what refuses it`);
+    }
+
+    const keyedPlan = planCells({ manifest: pins.manifest, env: smokeEnv, adapters: new Set(), observed: {}, installMode: "checkout" });
+    assert.equal(keyedPlan.pairs.length, 12, "twelve pairs are enumerated");
+    assert.equal(new Set(keyedPlan.pairs).size, 12, "no duplicate pair");
+    assert.equal(keyedPlan.cells.length + keyedPlan.adapterOwned.length, 12, "no cell is dropped");
+    assert.deepEqual(keyedPlan.adapterOwned, [], "no adapter is loaded, so every cell is decided here");
+    assert.deepEqual(
+      [...new Set(keyedPlan.cells.map((cell) => cell.harness))].sort(),
+      [...Object.keys(ABSENT_REASONS)].sort(),
+      "six harnesses, cursor included",
+    );
+    for (const cell of keyedPlan.cells) {
+      assert.equal(cell.verdict, "could-not-run", `${cell.harness}/${cell.track} may not pass`);
+    }
+
+    // TC-4: the cursor reason is the live guard refusal from THIS run, not a constant anywhere.
+    for (const track of ["pinned", "newest"]) {
+      const cell = keyedPlan.cells.find((candidate) => candidate.harness === "cursor" && candidate.track === track);
+      assert.equal(cell.verdict, "could-not-run");
+      assert.equal(cell.reason, keyless.decision.refusal.reason, `cursor/${track} carries the guard's own reason`);
+      assert.equal(cell.reason, "missing-api-key");
+      assert.equal(cell.source, CELL_SOURCES.GUARD, `cursor/${track} was decided by the guard, not by the registry's fallback`);
+    }
+    for (const decision of keyedPlan.decisions.filter((entry) => entry.harness === "cursor")) {
+      assert.equal(decision.refusal.check, "credential", "cursor is refused by the credential check");
+      assert.equal(decision.refusal.model_requests, 0, "zero model requests before the refusal");
+      assert.equal(decision.refusal.decided_before, "model-request");
+    }
+
+    // TC-3: the four adapter-pending harnesses are real cells with distinct named reasons.
+    const pendingReasons = [];
+    for (const harness of ADAPTER_PENDING) {
+      for (const track of ["pinned", "newest"]) {
+        const cell = keyedPlan.cells.find((candidate) => candidate.harness === harness && candidate.track === track);
+        assert.ok(cell, `${harness}/${track} exists`);
+        assert.equal(cell.verdict, "could-not-run", `${harness}/${track} is never a pass`);
+        assert.equal(cell.reason, absentReason(harness), `${harness}/${track} names its own absent adapter`);
+        assert.equal(cell.source, CELL_SOURCES.ABSENT);
+        assert.notEqual(cell.reason, "missing-api-key", `${harness} has a key here, so a key problem would be a lie`);
+      }
+      pendingReasons.push(absentReason(harness));
+    }
+    assert.equal(new Set(pendingReasons).size, 4, "four distinct named reasons, not one shared string");
+
+    // The control a static always-refusing guard fails: with a binding present the registry
+    // defers to the loaded adapter instead of refusing. Pinned needs no lookup, so this leg makes
+    // no network call and no version is borrowed from anywhere.
+    const deferred = cellFor("claude-code", "pinned", { manifest: pins.manifest, env: smokeEnv, adapters: new Set(["claude-code"]), observed: {} });
+    assert.equal(deferred.decision.credential.present, true, "the binding is present");
+    assert.equal(deferred.decision.refusal, null, "a present binding records no refusal");
+    assert.equal(deferred.cell, null, "a loaded adapter grades this cell; this module does not");
+
+    // The fully keyless plan: every cell is the guard's own reason, and still twelve cells.
+    const keylessPlan = planCells({ manifest: pins.manifest, env: withoutSecrets(process.env), adapters: new Set(), observed: {}, installMode: "checkout" });
+    assert.equal(keylessPlan.cells.length, 12, "a keyless environment still yields twelve cells");
+    for (const cell of keylessPlan.cells) {
+      assert.equal(cell.verdict, "could-not-run");
+      assert.equal(cell.reason, keyless.decision.refusal.reason, `${cell.harness}/${cell.track} carries the live guard reason`);
+      assert.equal(cell.reason, "missing-api-key");
+    }
+
+    // No placeholder value reaches any record this flow writes.
+    for (const name of new Set(Object.values(SMOKE_BINDINGS))) {
+      assert.equal(
+        JSON.stringify({ cells: keyedPlan.cells, decisions: keyedPlan.decisions }).includes(placeholder(name)),
+        false,
+        `no credential value for ${name} reaches the record`,
+      );
+    }
+
+    artifact.t10 = {
+      task: "T10",
+      pins_sha256: pins.pins_sha256,
+      cells: keyedPlan.cells.length,
+      pairs: keyedPlan.pairs.length,
+      cells_detail: keyedPlan.cells.map((cell) => ({
+        cell: `${cell.harness}/${cell.track}`,
+        verdict: cell.verdict,
+        reason: cell.reason,
+        source: cell.source,
+      })),
+      cursor_reason: keyedPlan.cells.find((cell) => cell.harness === "cursor" && cell.track === "pinned").reason,
+      guard_refusal_reason: keyless.decision.refusal.reason,
+      pending_adapters: Object.fromEntries(ADAPTER_PENDING.map((harness) => [harness, absentReason(harness)])),
+      bindings_checked: [...new Set(Object.values(SMOKE_BINDINGS)), "CURSOR_API_KEY"],
+      deferred_when_adapter_loaded: deferred.cell === null ? ["claude-code/pinned"] : [],
+      negative_controls: [
+        "binding present -> no missing-api-key (a static always-refuse guard fails this)",
+        "adapter absent with a key -> named absent reason, never a key problem",
+        "adapter loaded -> the registry defers instead of grading",
+        "four pending harnesses -> four distinct reasons",
+        "keyless environment -> twelve cells, all the guard's reason",
+      ],
+    };
+    artifact.controls.push({
+      control_id: "registry-missing-key",
+      verdict: artifact.t10.cursor_reason === keyless.decision.refusal.reason ? "could-not-run" : "invalid",
+      reason: artifact.t10.cursor_reason,
+      same_reason_as_guard: artifact.t10.cursor_reason === keyless.decision.refusal.reason,
+      cells: keyedPlan.cells.length,
+    });
 
     // ---- the hosted run's controls rows, when an artifact exists -------------------------
     if (existsSync(LIVE_ARTIFACT)) {

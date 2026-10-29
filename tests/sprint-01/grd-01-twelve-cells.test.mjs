@@ -41,8 +41,12 @@ import {
 } from "../../test/harness/recorder.mjs";
 import { runVerifyCase } from "./flow-runner.mjs";
 import { renderSummary } from "../../test/harness/recorder/summary.mjs";
+import { ADAPTER_PENDING, ABSENT_REASONS, absentReason } from "../../test/harness/adapters/absent.mjs";
+import { CELL_SOURCES, LOOKUP_FAILED_REASON, planCells } from "../../test/harness/adapters/registry.mjs";
+import { guardInvocation } from "../../test/harness/runtime/guard.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
+const ADAPTERS_DIR = join(ROOT, "test/harness/adapters");
 const REPORT_DIR = join(ROOT, ".tmp", "sprint-01-verification");
 // A downloaded attempt-qualified artifact, when one exists. No hosted run exists in this worktree.
 const LIVE_ARTIFACT =
@@ -119,7 +123,7 @@ function writeReport(report) {
 // (Node then counts the FILE as the passing test). Both halves of this flow's proof live here —
 // T2's pins/schema half and T8's recorder half — so the tripwire counts them: skipping or dropping
 // either one leaves the count short and the frozen check red.
-const EXPECTED_TESTS = 2;
+const EXPECTED_TESTS = 3;
 let testsExecuted = 0;
 process.on("exit", () => {
   if (testsExecuted !== EXPECTED_TESTS) {
@@ -957,4 +961,294 @@ test("FLOW-GRD-01-TWELVE-CELLS recorder", async (t) => {
   t.diagnostic(`exit=${recorderExit({ cells: result.cells }).code} ${recorderExit({ cells: result.cells }).reason}`);
 
   rmSync(sandbox, { recursive: true, force: true });
+});
+
+// ---------------------------------------------------------------------------
+// T10 — the fail-closed half of the twelve-cell promise: every cell exists, cursor reads
+// could-not-run `missing-api-key` from the guard's own credential check, and the four
+// adapter-pending harnesses read could-not-run with their own named reasons.
+//
+// What is real here: the on-disk pins bytes, a real `--version` probe of each installed CLI, the
+// runtime's real invocation-guard, the recorder's real twelve-cell validator applied to the cells
+// this registry produces, and the module bytes of the registry itself (scanned to prove the cursor
+// reason is not a constant written there). The newest-version lookup seam is driven with the pinned
+// command strings, never with a restated command.
+// ---------------------------------------------------------------------------
+
+const SURVEYED_NEWEST = {
+  // 02-system-components.md § version-lookup: the observed versions on 2026-10-06.
+  "claude-code": "2.1.291",
+  codex: "0.160.1",
+  grok: "1.0.46",
+  opencode: "1.18.34",
+  pi: "1.0.4",
+  cursor: "2026.10.01-e373342",
+};
+
+/**
+ * A lookup resolver whose `exec` answers from the pins' own command strings, so a simulated run
+ * cannot restate a command the pins own. `failing` names a harness whose lookup throws.
+ */
+function simulatedResolver(pins, { failing = null, versions = SURVEYED_NEWEST } = {}) {
+  const byCommand = new Map(Object.entries(pins.manifest.harnesses).map(([harness, pin]) => [pin.newest_lookup, harness]));
+  const commands = [];
+  const resolver = createVersionResolver({
+    manifest: pins.manifest,
+    exec: (command) => {
+      commands.push(command);
+      const harness = byCommand.get(command);
+      if (harness === undefined) throw new Error(`unexpected lookup command: ${command}`);
+      if (harness === failing) throw new Error(`simulated lookup failure for ${harness}`);
+      const version = versions[harness];
+      // Cursor's lookup is the install script; its version is the first downloads.cursor.com/lab token.
+      return harness === "cursor"
+        ? `curl -fsSL https://downloads.cursor.com/lab/${version}/linux/x64/agent-cli-package.tar.gz`
+        : `${version}\n`;
+    },
+  });
+  return { resolver, commands };
+}
+
+/** The harness-smoke binding shape as a child env: five bindings present, Cursor's absent. */
+function smokeShapedEnv() {
+  const env = { ...SCRUBBED_ENV };
+  const placeholders = new Set(Object.values(SMOKE_BINDINGS));
+  for (const name of placeholders) env[name] = `placeholder-not-a-credential-${name.toLowerCase()}`;
+  return env;
+}
+
+// § CommandTranslation / CredentialBinding: the five bindings harness-smoke supplies, and Cursor's
+// own name, which harness-smoke does not.
+const SMOKE_BINDINGS = {
+  "claude-code": "ANTHROPIC_API_KEY",
+  codex: "CODEX_API_KEY",
+  grok: "XAI_API_KEY",
+  opencode: "ANTHROPIC_API_KEY",
+  pi: "GEMINI_API_KEY",
+};
+const CURSOR_BINDING = "CURSOR_API_KEY";
+
+test("FLOW-GRD-01-TWELVE-CELLS adapter cells", async (t) => {
+  testsExecuted += 1;
+  const pins = loadPins();
+  assert.match(pins.pins_sha256, /^[0-9a-f]{64}$/, "pins_sha256 is a 64-hex digest");
+
+  // Real observations: each installed CLI reports its own version, or null when it is absent.
+  const observed = Object.fromEntries(HARNESSES.map((harness) => [harness, probeObservedVersion(harness)]));
+
+  // ---- day one: the harness-smoke binding shape, and no adapter loaded -------------------
+  const env = smokeShapedEnv();
+  assert.equal(Boolean(env[CURSOR_BINDING]), false, "cursor's binding is absent before any refusal is asserted");
+  for (const name of new Set(Object.values(SMOKE_BINDINGS))) {
+    assert.equal(typeof env[name], "string", `${name} is present, so absence is the only thing that can refuse`);
+  }
+
+  const { resolver, commands } = simulatedResolver(pins);
+  const dayOne = planCells({ manifest: pins.manifest, env, adapters: new Set(), resolver, observed, installMode: "checkout" });
+
+  // The twelve-cell rule, asserted on the cells this registry actually produced.
+  assert.equal(dayOne.pairs.length, 12, "twelve (harness, track) pairs are enumerated, not discovered");
+  assert.equal(new Set(dayOne.pairs).size, 12, "no duplicate pair");
+  assert.equal(dayOne.cells.length + dayOne.adapterOwned.length, 12, "no cell is dropped between the registry and the adapters");
+  assert.deepEqual(dayOne.adapterOwned, [], "no adapter is loaded in this worktree");
+  assert.equal(dayOne.cells.length, 12);
+  assert.deepEqual(
+    [...new Set(dayOne.cells.map((cell) => cell.harness))].sort(),
+    [...HARNESSES].sort(),
+    "six harnesses, cursor included",
+  );
+  for (const cell of dayOne.cells) {
+    assert.equal(cell.verdict, "could-not-run", `${cell.harness}/${cell.track} has graded nothing, so it may not pass`);
+    assert.ok(cell.reason && cell.reason.length > 0, `${cell.harness}/${cell.track} names its reason`);
+    assert.ok(
+      Object.hasOwn(cell.installation, "observed_cli_version"),
+      `${cell.harness}/${cell.track} carries the observed version field`,
+    );
+  }
+  // The observed version is the CLI's own, and an uninstalled CLI is null — never invented.
+  const claudePinned = dayOne.cells.find((cell) => cell.harness === "claude-code" && cell.track === "pinned");
+  assert.equal(claudePinned.installation.observed_cli_version, observed["claude-code"], "the observed version is the probe's");
+  assert.equal(claudePinned.installation.requested_cli_version, pins.manifest.harnesses["claude-code"].pinned_cli_version, "the pinned request is the pins authority's");
+  const cursorPinned = dayOne.cells.find((cell) => cell.harness === "cursor" && cell.track === "pinned");
+  assert.equal(cursorPinned.installation.observed_cli_version, null, "no Cursor CLI is installed here, and none is invented");
+  assert.equal(commands.length, 0, "no adapter is loaded, so no newest lookup ran at all — a lookup can never stand in for a grade");
+
+  // The default path a caller takes: no manifest argument, so the registry loads the pins bytes.
+  const defaulted = planCells({ env, adapters: new Set() });
+  assert.equal(defaulted.cells.length, 12, "the registry loads the pins authority itself");
+  assert.equal(
+    defaulted.cells.find((cell) => cell.harness === "codex" && cell.track === "pinned").installation.requested_cli_version,
+    pins.manifest.harnesses.codex.pinned_cli_version,
+    "the pinned request still comes from the pins authority when the caller passes no manifest",
+  );
+
+  // ---- cursor reads could-not-run missing-api-key from the guard's own check -------------
+  const cursorDecision = guardInvocation({ harness: "cursor", stance: null, env });
+  assert.equal(cursorDecision.credential.present, false, "the guard's own check sees the absent binding");
+  assert.equal(cursorDecision.refusal.check, "credential", "the refusal is the credential check, not the stance");
+  assert.equal(cursorDecision.refusal.model_requests, 0, "nothing was spawned before the refusal");
+  assert.equal(cursorDecision.refusal.decided_before, "model-request");
+  for (const track of TRACKS) {
+    const cell = dayOne.cells.find((candidate) => candidate.harness === "cursor" && candidate.track === track);
+    assert.equal(cell.verdict, "could-not-run", `cursor/${track} is never a pass`);
+    assert.equal(cell.reason, cursorDecision.refusal.reason, `cursor/${track} carries the guard's own reason, not a constant`);
+    assert.equal(cell.source, CELL_SOURCES.GUARD, `cursor/${track} was decided by the guard`);
+  }
+  assert.equal(cursorPinned.reason, "missing-api-key", "the AC's own words, produced by the guard");
+
+  // ...and that reason cannot be a string written in this task's modules.
+  for (const modulePath of [ADAPTERS_DIR + "/registry.mjs", ADAPTERS_DIR + "/absent.mjs"]) {
+    assert.equal(
+      readFileSync(modulePath, "utf8").includes(cursorPinned.reason),
+      false,
+      `${modulePath} must not spell the cursor reason; it comes from the guard`,
+    );
+  }
+
+  // ---- a key-present environment must not refuse: the control a hardcoded reason fails ----
+  const keyedEnv = { ...env, [CURSOR_BINDING]: "placeholder-not-a-credential-cursor" };
+  const keyedCursor = planCells({ manifest: pins.manifest, env: keyedEnv, adapters: new Set(), resolver, observed, installMode: "checkout" });
+  const keyedCursorPinned = keyedCursor.cells.find((cell) => cell.harness === "cursor" && cell.track === "pinned");
+  assert.equal(keyedCursor.decisions.find((d) => d.harness === "cursor").credential.present, true, "the guard sees the binding now");
+  assert.notEqual(keyedCursorPinned.reason, cursorPinned.reason, "a per-harness constant would refuse here too");
+  assert.equal(keyedCursorPinned.reason, absentReason("cursor"), "with a key present, the honest reason is the absent adapter");
+  assert.equal(keyedCursorPinned.source, CELL_SOURCES.ABSENT);
+
+  // ---- the four adapter-pending harnesses are present with distinct named reasons --------
+  assert.deepEqual([...ADAPTER_PENDING], ["codex", "grok", "opencode", "pi"], "the four pending harnesses");
+  const pendingReasons = [];
+  for (const harness of ADAPTER_PENDING) {
+    for (const track of TRACKS) {
+      const cell = dayOne.cells.find((candidate) => candidate.harness === harness && candidate.track === track);
+      assert.ok(cell, `${harness}/${track} exists`);
+      assert.equal(cell.verdict, "could-not-run", `${harness}/${track} is never a pass`);
+      assert.equal(cell.reason, absentReason(harness), `${harness}/${track} carries its own named reason`);
+      assert.equal(cell.source, CELL_SOURCES.ABSENT);
+      assert.notEqual(cell.reason, cursorPinned.reason, `${harness} is not reported as a key problem`);
+    }
+    pendingReasons.push(absentReason(harness));
+  }
+  assert.equal(new Set(pendingReasons).size, 4, "four distinct named reasons, not one shared string");
+  for (const harness of HARNESSES) assert.ok(ABSENT_REASONS[harness], `${harness} has a named absent reason`);
+  assert.throws(() => absentReason("not-a-harness"), /no absent reason/, "an unknown harness cannot borrow a reason");
+
+  // ---- a failed newest lookup keeps the cell and names the lookup ------------------------
+  const failing = simulatedResolver(pins, { failing: "cursor" }).resolver;
+  const lookupFailed = planCells({
+    manifest: pins.manifest,
+    // A key present AND an adapter loaded is the only way the lookup is reached at all.
+    env: keyedEnv,
+    adapters: new Set(["cursor"]),
+    resolver: failing,
+    observed,
+    installMode: "checkout",
+  });
+  assert.equal(lookupFailed.pairs.length, 12, "the lookup failure did not drop a pair");
+  assert.equal(lookupFailed.cells.length + lookupFailed.adapterOwned.length, 12, "the cell count stays at twelve");
+  const unresolvedCursor = lookupFailed.cells.find((cell) => cell.harness === "cursor" && cell.track === "newest");
+  assert.ok(unresolvedCursor, "cursor/newest is present as a cell, not omitted");
+  assert.equal(unresolvedCursor.verdict, "could-not-run");
+  assert.equal(unresolvedCursor.reason, LOOKUP_FAILED_REASON, "the reason names the lookup");
+  assert.equal(unresolvedCursor.installation.requested_cli_version, null, "no version is substituted for the failed lookup");
+  assert.equal(unresolvedCursor.source, CELL_SOURCES.LOOKUP);
+  assert.deepEqual(
+    lookupFailed.adapterOwned.map((entry) => entry.pair),
+    ["cursor/pinned"],
+    "pinned needs no lookup, so it is the adapter's to grade",
+  );
+  // The credential still outranks the lookup: the keyless cursor cell never mentions a lookup.
+  assert.equal(
+    dayOne.cells.find((cell) => cell.harness === "cursor" && cell.track === "newest").reason,
+    cursorDecision.refusal.reason,
+    "the credential check is decided before any lookup",
+  );
+
+  // A newest cell with no resolver is a caller error, named — never a silent unresolved version.
+  assert.throws(
+    () => planCells({ manifest: pins.manifest, env: keyedEnv, adapters: new Set(["cursor"]) }),
+    (error) => error.reason === "resolver-missing" && error.detail.track === "newest",
+    "a newest cell without a resolver is refused by name",
+  );
+
+  // ---- the recorder's own validator accepts these cells, and refuses a dropped one --------
+  const accepted = collectCells(dayOne.cells, { pins, installMode: "checkout" });
+  assert.equal(accepted.length, 12);
+  assert.equal(new Set(accepted.map((cell) => `${cell.harness}/${cell.track}`)).size, 12);
+  assert.equal(new Set(accepted.map((cell) => cell.harness)).size, 6);
+  for (const cell of accepted) assert.notEqual(cell.verdict, "pass", "a could-not-run cell never reads as a pass");
+
+  const droppedPair = "cursor/pinned";
+  const dropped = dayOne.cells.filter((cell) => `${cell.harness}/${cell.track}` !== droppedPair);
+  assert.equal(dropped.length, 11, "the mutation drops exactly one cell");
+  assert.throws(
+    () => collectCells(dropped, { pins, installMode: "checkout" }),
+    (error) => error.reason === "cells-incomplete" && error.details.missing.includes(droppedPair),
+    "eleven cells produced here are refused with cells-incomplete naming the absent cell",
+  );
+  const duplicated = [...dayOne.cells, dayOne.cells[0]];
+  assert.throws(
+    () => collectCells(duplicated, { pins, installMode: "checkout" }),
+    (error) => error.reason === "cells-duplicate",
+    "a thirteenth record cannot complete an eleven-cell set",
+  );
+
+  // ---- the hosted half: the downloaded artifact, when one exists -------------------------
+  let live = "absent";
+  if (existsSync(LIVE_ARTIFACT)) {
+    const artifact = JSON.parse(readFileSync(LIVE_ARTIFACT, "utf8"));
+    assert.equal(artifact.cells.length, 12, "the hosted artifact carries twelve cells");
+    assert.equal(new Set(artifact.cells.map((cell) => `${cell.harness}/${cell.track}`)).size, 12);
+    assert.ok(artifact.cells.some((cell) => cell.harness === "cursor"), "cursor is in the hosted artifact");
+    const hosted = artifact.cells.find((cell) => cell.harness === "cursor" && cell.track === "pinned");
+    assert.equal(hosted.verdict, "could-not-run");
+    assert.equal(hosted.reason, "missing-api-key", "cursor/pinned reads could-not-run missing-api-key on a real run");
+    assert.match(artifact.pins_sha256, /^[0-9a-f]{64}$/);
+    live = "validated";
+  }
+
+  mkdirSync(REPORT_DIR, { recursive: true });
+  writeFileSync(
+    join(REPORT_DIR, "grd-01-twelve-cells-adapters.json"),
+    `${JSON.stringify(
+      {
+        flow: "FLOW-GRD-01-TWELVE-CELLS",
+        task: "T10",
+        pins_sha256: pins.pins_sha256,
+        cells: dayOne.cells.length,
+        pairs: dayOne.pairs.length,
+        harnesses: [...new Set(dayOne.cells.map((cell) => cell.harness))].sort(),
+        cells_detail: dayOne.cells.map((cell) => ({
+          cell: `${cell.harness}/${cell.track}`,
+          verdict: cell.verdict,
+          reason: cell.reason,
+          source: cell.source,
+          observed_cli_version: cell.installation.observed_cli_version,
+        })),
+        cursor_reason: { value: cursorPinned.reason, from_guard: cursorDecision.refusal.check, model_requests: cursorDecision.refusal.model_requests },
+        pending_adapters: Object.fromEntries(ADAPTER_PENDING.map((harness) => [harness, absentReason(harness)])),
+        lookup_mutation: {
+          reason: unresolvedCursor.reason,
+          requested: unresolvedCursor.installation.requested_cli_version,
+          cells_after_failure: lookupFailed.cells.length + lookupFailed.adapterOwned.length,
+        },
+        negative_controls: [
+          "drop one cell -> cells-incomplete (cursor/pinned named)",
+          "duplicate record -> cells-duplicate",
+          "cursor key present -> not missing-api-key, the absent-adapter reason",
+          "cursor reason spelled in registry.mjs/absent.mjs -> refused by the module scan",
+          "failed newest lookup -> version-lookup-failed, requested null, twelve cells kept",
+          "unknown harness -> no absent reason invented",
+        ],
+        live_artifact: { path: LIVE_ARTIFACT, status: live },
+      },
+      null,
+      2,
+    )}\n`,
+  );
+
+  t.diagnostic(`cells=${dayOne.cells.length} pairs=${dayOne.pairs.length} harnesses=${[...new Set(dayOne.cells.map((c) => c.harness))].sort().join(",")}`);
+  t.diagnostic(`cursor/pinned=${cursorPinned.verdict} ${cursorPinned.reason} (check=${cursorDecision.refusal.check})`);
+  t.diagnostic(`pending=${ADAPTER_PENDING.map((h) => absentReason(h)).join(",")}`);
+  t.diagnostic(`lookup_mutation=${unresolvedCursor.reason} cells=${lookupFailed.cells.length + lookupFailed.adapterOwned.length}`);
+  t.diagnostic(`live_artifact=${live}`);
 });
