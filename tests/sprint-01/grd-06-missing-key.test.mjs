@@ -980,6 +980,7 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
     assert.equal(missingKeyRow.reason, "missing-api-key");
     assert.equal(missingKeyRow.matched, true, missingKeyRow.qualified_why);
     assert.equal(missingKeyRow.discriminates, true, "the missing-key row was not paired with a proceeding invocation");
+    assert.equal(missingKeyRow.pair_claimed_discrimination, true, "the caller's pairing claim disagrees with the qualifier's computation");
     assert.equal(missingKeyRow.hosted.status, "not-executed", "a machine-local tree cannot produce the hosted half");
     assert.ok(missingKeyRow.hosted.awaiting && missingKeyRow.hosted.owner, "the hosted half is not named");
     assert.equal(missingKeyRow.qualified, false, "the row claims a hosted qualification it does not have");
@@ -989,6 +990,7 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
     assert.equal(staleRow.reason, "installation-identity-mismatch");
     assert.equal(staleRow.matched, true, staleRow.qualified_why);
     assert.equal(staleRow.discriminates, true);
+    assert.equal(staleRow.pair_claimed_discrimination, true);
     assert.notEqual(staleRow.verdict, "fail", "a stale cache is never a candidate failure");
 
     // The fail-closed rule, on the two controls this flow cannot observe.
@@ -1002,7 +1004,12 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
     }
     assert.equal(qualification.fully_qualified, false, "no row can be fully qualified without the hosted half");
 
-    // key-present-misfire: the qualification rejects an always-refusing guard's twin.
+    // key-present-misfire: the real static always-refusing guard (`alwaysRefuse()`, the same one the
+    // both-ways control above catches) returns the SAME could-not-run/missing-api-key on the
+    // key-present environment as the keyless control observed, while still claiming its twin
+    // discriminates. The qualifier must COMPUTE that from the two outcomes; copying the claim
+    // would accept it, and the misfire would stop being pinned.
+    const misfireDecision = alwaysRefuse();
     const misfire = controlsModule.qualifyControls({
       observations: {
         "missing-key": {
@@ -1011,11 +1018,20 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
           evidence: { env_secret_names: survivingNames },
         },
       },
-      pairs: { "missing-key": { control_id: "key-present", verdict: "refused", discriminates: false } },
+      pairs: {
+        "missing-key": {
+          control_id: "key-present",
+          verdict: misfireDecision.refusal.verdict,
+          reason: misfireDecision.refusal.reason,
+          discriminates: true,
+        },
+      },
     });
     const misfireRow = misfire.rows.find((row) => row.control_id === "missing-key");
     assert.equal(misfireRow.matched, true, "the refusal itself still matched");
+    assert.equal(misfireRow.pair_claimed_discrimination, true, "the misfire fixture lost the claim under test");
     assert.equal(misfireRow.discriminates, false, "an always-refusing guard was accepted as discrimination");
+    assert.equal(misfireRow.pair.reason, misfireDecision.refusal.reason, "the pair's own outcome was not recorded");
     assert.equal(misfire.local_ok, false, "the qualification accepted a control whose pair came out the same way");
     assert.ok(misfire.failures.some((failure) => failure.startsWith("missing-key:")), `no failure names the misfire: ${JSON.stringify(misfire.failures)}`);
 

@@ -1553,6 +1553,7 @@ writeFileSync(join(root, "judge-requests.json"), JSON.stringify([{ sequence: 0, 
     assert.equal(exitRow.reason, "denied_tool_call");
     assert.equal(exitRow.matched, true, exitRow.qualified_why);
     assert.equal(exitRow.discriminates, true, "the exit-0 row has no clean twin, so it proves failure rather than discrimination");
+    assert.equal(exitRow.pair_claimed_discrimination, true, "the caller's pairing claim disagrees with the qualifier's computation");
     assert.equal(exitRow.local.process_exit_code, 0, "the row does not carry the raw exit code beside the fail");
     assert.equal(exitRow.hosted.status, "not-executed", "a machine-local tree cannot produce the hosted half");
     assert.ok(exitRow.hosted.awaiting && exitRow.hosted.owner, "the awaiting half is not named");
@@ -1562,6 +1563,7 @@ writeFileSync(join(root, "judge-requests.json"), JSON.stringify([{ sequence: 0, 
     assert.equal(imageRow.reason, "no-image-judge-in-child-tree");
     assert.equal(imageRow.matched, true, imageRow.qualified_why);
     assert.equal(imageRow.discriminates, true, "the image-judge control was never made to catch anything");
+    assert.equal(imageRow.pair_claimed_discrimination, true);
     assert.equal(imageRow.local.scan.model_requests, 0, "the row carries no child-tree scan evidence");
     assert.ok(Number.isInteger(imageRow.local.scan.files) && imageRow.local.scan.files > 0, "the scan counted no files");
     assert.equal(imageRow.hosted.status, "not-executed");

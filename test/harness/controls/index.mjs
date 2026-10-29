@@ -2,8 +2,9 @@
 //
 // A grader that has only seen correct input is unproven. These four are the evidence that the
 // framework REFUSES, and each is qualified so that it proves discrimination rather than mere
-// failure: every row is written beside a paired observation that had to come out the other way
-// (`pair.discriminates`), because a guard that always refuses, a checker that always passes and a
+// failure: every row is written beside a paired observation that had to come out the other way,
+// and `discriminates` is COMPUTED from that pair's outcome against the control's — never copied
+// from a caller's boolean — because a guard that always refuses, a checker that always passes and a
 // scanner that always finds nothing all produce the expected verdict for free.
 //
 // Two halves, never one:
@@ -106,6 +107,7 @@ export function recordControl({ control_id, observed = null, pair = null, hosted
     matched: false,
     discriminates: false,
     pair: null,
+    pair_claimed_discrimination: null,
     local: null,
     hosted: hostHalf(hosted ?? definition.hosted),
     qualified: false,
@@ -123,8 +125,12 @@ export function recordControl({ control_id, observed = null, pair = null, hosted
   }
 
   if (pair) {
-    row.pair = { pair_id: pair.control_id ?? null, verdict: pair.verdict ?? null, ...(pair.evidence ?? {}) };
-    row.discriminates = pair.discriminates === true;
+    row.pair = { pair_id: pair.control_id ?? null, verdict: pair.verdict ?? null, reason: pair.reason ?? null, ...(pair.evidence ?? {}) };
+    // COMPUTED, never copied from the caller. A pair whose outcome came out the same way as the
+    // control's proves failure, not discrimination — a guard that refuses unconditionally produces
+    // both halves for free, and it would still claim `discriminates: true`.
+    row.discriminates = pair.verdict != null && !(pair.verdict === row.verdict && (pair.reason ?? null) === (row.reason ?? null));
+    row.pair_claimed_discrimination = pair.discriminates === true;
   }
   row.qualified = row.matched && row.discriminates && row.hosted.status === "observed";
   row.qualified_why = row.qualified
