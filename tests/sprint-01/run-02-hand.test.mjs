@@ -90,18 +90,21 @@ assert.equal(
 
 // A test that never executed asserted nothing, so the file refuses to pass: Node reports exit 0
 // for a skipped test ("skipped 1") and for a name filter that matches no test ("pass 1", the
-// FILE counted as the test). Whoever edits this lane next — T9, T12 — cannot make the frozen
-// check green by disabling this flow, only by keeping it true.
-let namedTestRan = false;
+// FILE counted as the test). Both halves of the flow's proof live in this file, so the tripwire
+// counts them: skipping either one leaves the count short and the check red. Whoever edits this
+// lane next — T9, T12 — cannot make the frozen check green by disabling this flow, only by
+// keeping it true.
+const EXPECTED_TESTS = 2;
+let testsExecuted = 0;
 process.on("exit", () => {
-  if (!namedTestRan) {
-    console.error(`${FLOW}: the named test did not execute (skipped, or renamed out of --test-name-pattern) — a gate that asserts nothing is not a pass`);
+  if (testsExecuted !== EXPECTED_TESTS) {
+    console.error(`${FLOW}: ${testsExecuted} of ${EXPECTED_TESTS} tests executed (skipped, or renamed out of --test-name-pattern) — a gate that asserts nothing is not a pass`);
     process.exitCode = 1;
   }
 });
 
 test("FLOW-RUN-02-HAND starts the hand grade with the checkout default and a twelve-cell, trigger-safe workflow", async () => {
-  namedTestRan = true;
+  testsExecuted += 1;
   const artifact = flowRun;
   const label = JSON.stringify({ tier: artifact.proof_tier, failures: artifact.failures }, null, 2);
 
@@ -266,6 +269,17 @@ test("FLOW-RUN-02-HAND starts the hand grade with the checkout default and a twe
     /ENOENT/,
     "a missing gh must not read as 'not registered'",
   );
+  // ...and the flow consumes that refusal for real: a probe that broke for any other reason
+  // must leave the flow RED, or a broken environment grades as an honest declaration again.
+  const brokenProbe = await runFlow(FLOW, {
+    probe: () => ({ available: false, detail: "probe broke", error: "probe broke: gh is unreachable" }),
+    out: path.join(ARTIFACT_DIR, "run-02-hand.probe-error.json"),
+  });
+  assert.equal(brokenProbe.ok, false, "a broken probe must not grade as a declaration");
+  assert.ok(
+    brokenProbe.failures.includes("probe broke: gh is unreachable"),
+    `the probe's reason must reach the flow's failures: ${JSON.stringify(brokenProbe.failures)}`,
+  );
 });
 
 // --- T2's half: one pinned authority, reconciled, and a hand dispatch's identity ------------
@@ -274,6 +288,7 @@ test("FLOW-RUN-02-HAND starts the hand grade with the checkout default and a twe
 // after), and this worktree's real commit `git rev-parse HEAD` as the dispatch commit. Mode
 // comes from artifact fields only. Grades are not claimed: no hosted run exists in this worktree.
 test("FLOW-RUN-02-HAND", async (t) => {
+  testsExecuted += 1;
   const pins = loadPins();
   const packageJsonPath = join(ROOT, "package.json");
   const before = fileFingerprint(packageJsonPath);

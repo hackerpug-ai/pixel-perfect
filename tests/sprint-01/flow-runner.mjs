@@ -318,6 +318,10 @@ function stepText(step) {
 
 const NOOP_BODY = /^(?:true|:|exit 0|echo)$/;
 
+// Matches the construct, not one spelling of it: `secrets.NAME` and `secrets['NAME']` (and the
+// matrix form `secrets[matrix.name]`) all reach a context secret and must be refused alike.
+const SECRET_REF = /secrets\s*(?:\.|\[)/;
+
 function needsOf(job) {
   const needs = job?.needs;
   if (Array.isArray(needs)) return needs.map(String);
@@ -414,15 +418,15 @@ export function inspectWorkflowDeclaration(yaml) {
     ["workflow", yaml?.env],
     ...Object.entries(jobs).map(([name, job]) => [`jobs.${name}`, job?.env]),
   ]) {
-    if (/secrets\./.test(JSON.stringify(env ?? {}))) {
+    if (SECRET_REF.test(JSON.stringify(env ?? {}))) {
       fail(`the ${surface} env binds a secret, so every step below it inherits the key`);
     }
   }
   for (const [name, job] of Object.entries(jobs)) {
     for (const step of stepsOf(job)) {
       const label = `${name}/${String(step?.name ?? "unnamed step")}`;
-      if (/secrets\./.test(stepText(step))) fail(`step ${label} references a secret outside its env block`);
-      const envSecrets = /secrets\./.test(JSON.stringify(step?.env ?? {}));
+      if (SECRET_REF.test(stepText(step))) fail(`step ${label} references a secret outside its env block`);
+      const envSecrets = SECRET_REF.test(JSON.stringify(step?.env ?? {}));
       if (envSecrets && name !== "smoke") fail(`step ${label} binds a secret in a non-smoke job`);
       else if (envSecrets && step !== recorder?.step) fail(`step ${label} binds a secret outside the cell's own recording step`);
     }
