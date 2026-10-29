@@ -1,0 +1,19 @@
+{
+  "schema": "harness-case/v1",
+  "case_id": "first-question-init",
+  "kind": "first-question",
+  "harness": "claude-code",
+  "track": "pinned",
+  "check_id": "stop-at-first-question",
+  "command": "init",
+  "ask_policy": "must-ask",
+  "fixture": {
+    "kind": "fresh-empty-dir",
+    "must_not_contain": ["requirements.md", "goal.md", "package.json", "design/manifest.json", "src"]
+  },
+  "expected_question": "a goal/platform/initialization decision using the current USER_CHOICE shape",
+  "allowed_prefix": ["read", "list"],
+  "forbidden_prefix": ["search", "install", "render", "model-dispatch", "file-write"],
+  "stop": "immediately at first valid question text or question-tool start; send no answer",
+  "report_relative_path": "reports/first-question-init.json"
+}

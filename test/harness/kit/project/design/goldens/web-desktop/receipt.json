@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "platform": "web-desktop",
+  "pixels": "none",
+  "pixelsReason": "Structural text medium for CI without a browser (sandbox/capture.mjs); the normalized story text is the render in this fixture.",
+  "goldens": {
+    "atoms/Badge/default": {
+      "hash": "cdef96721332f59f",
+      "ext": ".txt",
+      "mode": "baseline"
+    },
+    "atoms/Button/default": {
+      "hash": "a5395e1ed973ab84",
+      "ext": ".txt",
+      "mode": "baseline"
+    },
+    "atoms/UnusedChip/default": {
+      "hash": "1ba239a09e1d9d87",
+      "ext": ".txt",
+      "mode": "baseline"
+    },
+    "molecules/Card/default": {
+      "hash": "496ee396e25be429",
+      "ext": ".txt",
+      "mode": "baseline"
+    },
+    "screens/Home/default": {
+      "hash": "f49ac723641499cb",
+      "ext": ".txt",
+      "mode": "baseline"
+    }
+  }
+}

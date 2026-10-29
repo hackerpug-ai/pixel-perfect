@@ -1,0 +1,17 @@
+{
+  "schema": "harness-cases/v1",
+  "fixture": {
+    "project": "kit/project",
+    "overlays": "kit/overlays",
+    "protected": ["design/manifest.json", "design/goldens", "sandbox", "src", "package.json"],
+    "debris_exclusions": ["design/.captures", "node_modules", ".git"]
+  },
+  "reportable_path_prefix": "reports/",
+  "cases": [
+    "verify-button-drift",
+    "verify-clean",
+    "status-a",
+    "status-b",
+    "first-question-init"
+  ]
+}
