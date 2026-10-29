@@ -144,37 +144,80 @@ jobs:
           overwrite: false
 
   grade:
-    name: grade recorder (skeleton)
+    name: grade recorder
     needs: download
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # The recorder is the only job allowed to read trusted run/job metadata, so `actions: read` is
+    # asked for here and nowhere else. No environment and no model key: this job grades nothing and
+    # holds nothing secret. It runs even when the smoke matrix or the drift proof failed, so a broken
+    # cell still produces evidence instead of a missing artifact.
     permissions:
       contents: read
+      actions: read
     steps:
-      - name: Fetch the collected cells
+      - name: Check out the dispatch commit
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # No package-manager cache here: the recorder needs no dependency, and a cached tree is not
+      # provenance for what was evaluated.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Fetch the collected cells from this attempt
         uses: actions/download-artifact@v4
         with:
           name: harness-eval-cells-${{ github.run_id }}-${{ github.run_attempt }}
           path: cells
 
-      # T8 fills the recorder here: schema validation, twelve-unique-cell enforcement, the
-      # GitHub job timestamps, harness-eval-result.json and the Actions summary. T8 also adds
-      # `actions: read` to this job to obtain the trusted run/job metadata. This task ships no
-      # verdict logic, so the job only inventories what arrived.
-      - name: Inventory the cells that arrived
-        run: |
-          set -eu
-          mkdir -p receipt
-          find cells -type f -name '*.json' | sort > receipt/cell-artifacts.txt
-          cat receipt/cell-artifacts.txt
+      # T7 uploads the verify reports per cell. They are bundled below under invocation-specific
+      # paths, so two invocations can never collide.
+      - name: Fetch the verify reports this attempt produced
+        uses: actions/download-artifact@v4
+        with:
+          pattern: harness-eval-verify-*
+          path: verify-reports
+          merge-multiple: false
 
-      - name: Upload the recorder input receipt
+      # Validates every record, enforces the twelve unique cells, copies the real smoke-job
+      # timestamps from the Actions API, writes the result atomically, renders the summary and
+      # applies the exit rule. A refusal writes no result file at all.
+      - name: Record the result
+        env:
+          INSTALL_MODE: ${{ inputs.install_mode }}
+          HARNESS_EVAL_CELLS_DIR: cells
+          HARNESS_EVAL_VERIFY_DIR: verify-reports
+          HARNESS_EVAL_OUT_DIR: grade
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -o pipefail
+          node test/harness/recorder.mjs 2>&1 | tee recorder.log
+
+      # The refusal reason only ever exists in the step log, so the log rides along with the result:
+      # on a refusal this step still uploads the named reason instead of failing on a missing file.
+      - name: Upload the attempt-qualified result, or the refusal log when the recorder refused
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: harness-eval-grade-inputs-${{ github.run_id }}-${{ github.run_attempt }}
-          path: receipt/
-          if-no-files-found: warn
+          name: harness-eval-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            grade/harness-eval-result.json
+            recorder.log
+          if-no-files-found: error
+          retention-days: 90
+          overwrite: false
+
+      - name: Upload the attempt-qualified verify reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: harness-eval-verify-reports-${{ github.run_id }}-${{ github.run_attempt }}
+          path: grade/verify-reports
+          if-no-files-found: error
           retention-days: 90
           overwrite: false

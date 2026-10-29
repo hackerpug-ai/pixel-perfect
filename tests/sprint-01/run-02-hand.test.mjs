@@ -50,6 +50,8 @@ import {
   reconcilePackageJson,
 } from "../../test/harness/pins.mjs";
 import { validateDispatchIdentity, validateResult } from "../../test/harness/validate.mjs";
+// T8's recorder: the one component that records the mode and the candidate identity.
+import { assembleResult, runContextFromEnv } from "../../test/harness/recorder.mjs";
 
 const FLOW = "FLOW-RUN-02-HAND";
 
@@ -90,11 +92,11 @@ assert.equal(
 
 // A test that never executed asserted nothing, so the file refuses to pass: Node reports exit 0
 // for a skipped test ("skipped 1") and for a name filter that matches no test ("pass 1", the
-// FILE counted as the test). Both halves of the flow's proof live in this file, so the tripwire
-// counts them: skipping either one leaves the count short and the check red. Whoever edits this
-// lane next — T9, T12 — cannot make the frozen check green by disabling this flow, only by
-// keeping it true.
-const EXPECTED_TESTS = 2;
+// FILE counted as the test). Every half of the flow's proof lives in this file — T1's declaration
+// replay, T2's invariants and T8's recorder identity — so the tripwire counts them: skipping or
+// dropping any one leaves the count short and the check red. Whoever edits this lane next — T9,
+// T12 — cannot make the frozen check green by disabling this flow, only by keeping it true.
+const EXPECTED_TESTS = 3;
 let testsExecuted = 0;
 process.on("exit", () => {
   if (testsExecuted !== EXPECTED_TESTS) {
@@ -489,4 +491,93 @@ test("FLOW-RUN-02-HAND", async (t) => {
   t.diagnostic(`pi pins=${piRow.pins_value} package.json=${piRow.package_json_value} exception=named`);
   t.diagnostic(`dispatch_sha=${head} install_mode=${checkout.install_mode} harnesses=${[...present].sort().join(",")}`);
   t.diagnostic(`live_artifact=${live}`);
+});
+
+// --- T8's half: the recorder records the mode and the candidate identity GitHub supplies ------
+// The real things this test exercises: the on-disk pins bytes and its recomputed digest, the six
+// installed CLIs probed for a real `--version`, this worktree's real commit as the dispatch commit,
+// and the workflow declaration's own install_mode default. No hosted dispatch exists for this
+// branch, so the hosted confirmation is reported `not-executed` with its reason — the recorder's
+// identity fields are proven to come from the GITHUB_* context and from nothing else.
+test("FLOW-RUN-02-HAND recorder identity", async (t) => {
+  testsExecuted += 1;
+  const pins = loadPins();
+  const cells = cellsFromPins(pins.manifest, { credentialEnv: process.env });
+  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: ROOT, encoding: "utf8" }).trim();
+
+  // The dispatch context GitHub hands a no-input `workflow_dispatch` run.
+  const dispatchEnv = {
+    INSTALL_MODE: "checkout",
+    GITHUB_RUN_ID: "9000000002",
+    GITHUB_RUN_NUMBER: "3",
+    GITHUB_RUN_ATTEMPT: "1",
+    GITHUB_EVENT_NAME: "workflow_dispatch",
+    GITHUB_SHA: head,
+    GITHUB_REPOSITORY: "hackerpug-ai/pixel-perfect",
+    GITHUB_REF_NAME: "main",
+  };
+  const timestamps = {
+    evaluation_started_at: "2026-10-27T20:59:53Z",
+    evaluation_completed_at: "2026-10-27T21:01:34Z",
+    smoke_jobs: 12,
+  };
+
+  const context = runContextFromEnv(dispatchEnv);
+  const result = assembleResult({ cells, pins, context, timestamps });
+  assert.equal(result.event, "workflow_dispatch", "the recorder records the event GitHub reported");
+  assert.equal(result.install_mode, "checkout", "a no-input dispatch records the declared checkout default");
+  assert.equal(result.candidate_sha, head, "candidate_sha is the dispatch commit, from GITHUB_SHA");
+  assert.equal(result.run_id, 9000000002);
+  assert.equal(result.run_attempt, 1);
+  assert.equal(new Set(result.cells.map((cell) => cell.harness)).size, 6, "the same six harnesses");
+  assert.equal(result.cells.length, 12, "the same twelve cells the nightly matrix shape uses");
+
+  // Nothing but the GitHub context sets those fields: change one env value, nothing else.
+  const moved = runContextFromEnv({ ...dispatchEnv, GITHUB_SHA: "a".repeat(40) });
+  assert.equal(moved.dispatchSha, "a".repeat(40), "the candidate commit is read from the context, never asserted");
+  assert.equal(runContextFromEnv({ ...dispatchEnv, GITHUB_EVENT_NAME: "schedule" }).event, "schedule", "the event is recorded as reported, never forced");
+  // An unstated mode is refused, never guessed as checkout.
+  assert.throws(
+    () => runContextFromEnv({ ...dispatchEnv, INSTALL_MODE: "" }),
+    (error) => error.reason === "install-mode-missing",
+    "a run that states no install mode is refused",
+  );
+  assert.throws(
+    () => runContextFromEnv({ ...dispatchEnv, GITHUB_RUN_ID: "" }),
+    (error) => error.reason === "run-identity-missing",
+    "a run with no id cannot produce an attempt-qualified name",
+  );
+
+  // A published dispatch records published and never substitutes checkout identity.
+  const published = assembleResult({
+    cells,
+    pins,
+    context: runContextFromEnv({ ...dispatchEnv, INSTALL_MODE: "published", GITHUB_RUN_ID: "9000000003" }),
+    timestamps,
+  });
+  assert.equal(published.install_mode, "published");
+  assert.equal(published.candidate_sha, null, "published carries no checkout commit");
+  assert.ok(published.cells.every((cell) => cell.verdict === "could-not-run"), "no published-mode cell grades in sprint-01");
+
+  const notExecuted = [
+    {
+      leg: "hosted-no-input-dispatch",
+      reason:
+        "gh workflow run harness-eval resolves only a workflow registered on the default branch, so a real dispatch and its artifact identity fields are replayed at the sprint gate",
+      owner: "T1",
+    },
+    {
+      leg: "hosted-published-dispatch",
+      reason: "a second dispatch with -f install_mode=published runs at the gate; no published-mode grade exists before T5/T7",
+      owner: "T1",
+    },
+  ];
+
+  mkdirSync(REPORT_DIR, { recursive: true });
+  writeFileSync(
+    join(REPORT_DIR, "run-02-hand-recorder.json"),
+    `${JSON.stringify({ flow: FLOW, task: "T8", dispatch_identity: { event: result.event, install_mode: result.install_mode, candidate_sha: result.candidate_sha, run_id: result.run_id, harnesses: [...new Set(result.cells.map((cell) => cell.harness))].sort(), cells: result.cells.length, published_candidate_sha: published.candidate_sha }, not_executed: notExecuted, negative_controls: ["unstated install_mode -> install-mode-missing", "no run id -> run-identity-missing", "published carries no checkout sha"] }, null, 2)}\n`,
+  );
+  t.diagnostic(`event=${result.event} install_mode=${result.install_mode} candidate_sha=${result.candidate_sha}`);
+  t.diagnostic(`published_candidate_sha=${published.candidate_sha}`);
 });
