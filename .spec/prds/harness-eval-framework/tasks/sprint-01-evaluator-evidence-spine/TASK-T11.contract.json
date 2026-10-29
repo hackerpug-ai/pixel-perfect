@@ -1,0 +1,818 @@
+{
+ "task_id": "T11",
+ "provenance": {
+  "planner": "evals-planner",
+  "proposed_by": "github-agentic-workflow-planner + evals-planner",
+  "proposal_path": ".tmp/kb-sprint-tasks-plan/sprint-01/proposals",
+  "proposal_sha256": "088075273650f546b496a5ba13327c80b920af9b0803a131652ec92174d943e0"
+ },
+ "planner_json": {
+  "task_id": "T11",
+  "task_type": "FEATURE",
+  "title": "Qualify the negative controls on a real hosted run and record them in the result's controls array",
+  "agent": "evals-implementer",
+  "planner": "evals-planner",
+  "proposed_by": "github-agentic-workflow-planner + evals-planner",
+  "estimate_points": 5,
+  "repo": null,
+  "repo_root": "/Users/justinrich/Projects/pixel-perfect",
+  "write_allowed": [
+   "test/harness/controls/**",
+   "tests/sprint-01/grd-06-missing-key.test.mjs",
+   "tests/sprint-01/grd-03-evidence.test.mjs",
+   "tests/sprint-01/flow-runner.mjs"
+  ],
+  "guardrails": {
+   "write_allowed": [
+    "test/harness/controls/**",
+    "tests/sprint-01/grd-06-missing-key.test.mjs",
+    "tests/sprint-01/grd-03-evidence.test.mjs",
+    "tests/sprint-01/flow-runner.mjs"
+   ],
+   "write_prohibited": [
+    "plugins/pixel-perfect/**"
+   ]
+  },
+  "depends_on": [
+   "T5 (claude-code-cells@v1)",
+   "T7 (grader@v1)",
+   "T8 (recorder@v1)",
+   "T9 (env-wiring@v1)"
+  ],
+  "dark_justification": null,
+  "requirements": [
+   {
+    "id": "AC-1",
+    "type": "acceptance_criterion",
+    "primary": false,
+    "flow_ref": "FLOW-GRD-03-FILES-AND-STREAM",
+    "title": "Evidence-not-exit-code grading: verdicts cite files and stream offsets; a denied read fails on exit 0",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "verify": "node --test tests/sprint-01/grd-03-evidence.test.mjs --test-name-pattern FLOW-GRD-03-FILES-AND-STREAM",
+    "test_file": "tests/sprint-01/grd-03-evidence.test.mjs",
+    "test_function": "FLOW-GRD-03-FILES-AND-STREAM",
+    "positive_example": "Controls row exit0-denied-read fail denied_tool_call present next to a raw process_exit_code of 0, and every graded check citing at least 1 evidence path \u2014 module exits 0.",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "a denied required read with exit 0 graded pass \u2014 the real exit0-denied-read capture yields fail denied_tool_call",
+       "an unmapped required fact silently omitted \u2014 version-bumped capture yields could-not-run",
+       "the stored exit code could influence the verdict"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "CanonicalEvent records with original_event preserved",
+       "capture hashes and stream_offset citations",
+       "controls row exit0-denied-read"
+      ],
+      "examples": [
+       "source files-and-event-stream count == 4",
+       "process_exit_code 0 next to verdict fail",
+       "denied_tool_call naming operation and target path"
+      ],
+      "required_capture": "the raw exit-0 denial capture from T11 qualification with before/after fixture manifests"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/live-dispatch-run",
+       "action": {
+        "actor": "maintainer",
+        "steps": [
+         "download result artifact",
+         "jq claude-code/pinned checks for source and process_exit_code"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "checks with .source files-and-event-stream count == 4",
+         "raw integer `process_exit_code` present as diagnostic",
+         "controls row exit0-denied-read fail denied_tool_call"
+        ],
+        "must_not_observe": [
+         "any check where verdict equals an exit-code mapping",
+         "pass verdict with non-empty denied_tool_call",
+         "opaque events used to infer absence"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/streams/exit0-denied-read",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-03 --fixture exit0-denied-read --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "verdict fail with denied_tool_call citing the denial offset while process_exit_code reads 0",
+         "mapping-validator \"pass\" on the qualified version"
+        ],
+        "must_not_observe": [
+         "pass or could-not-run on an observable denial",
+         "fabricated denial events with no capture provenance"
+        ]
+       }
+      }
+     ],
+     "topology_note": "InvocationCapture records stdout with byte offsets; stream-grader normalizes to CanonicalEvent; grader cites offsets and capture hashes; live artifact carries source and process_exit_code per check",
+     "test_tier": "e2e"
+    },
+    "red_input": "Base main: no grader exists, module exits 1 with .red. Behavior RED: a verdict equal to its exit-code mapping (pass with exit 0 and a denied-read stream) makes the module exit 1 \u2014 the negative fixture is the recorded deny-under-default-mode stream from T5.",
+    "red_proof": ".tmp/sprint-01-verification/grd-03-evidence.json.red",
+    "description": "GIVEN seed/live-dispatch-run (RUN_ID + attempt-qualified artifacts via gh run download) WHEN download result artifact; jq claude-code/pinned checks for source and process_exit_code THEN checks with .source files-and-event-stream count == 4; raw integer `process_exit_code` present as diagnostic; controls row exit0-denied-read fail denied_tool_call",
+    "maps_to_ac": null
+   },
+   {
+    "id": "AC-2",
+    "type": "acceptance_criterion",
+    "primary": false,
+    "flow_ref": "FLOW-GRD-06-MISSING-KEY",
+    "title": "Missing credential fails closed: could-not-run missing-api-key before any model request, never readable as pass",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "verify": "node --test tests/sprint-01/grd-06-missing-key.test.mjs --test-name-pattern FLOW-GRD-06-MISSING-KEY",
+    "test_file": "tests/sprint-01/grd-06-missing-key.test.mjs",
+    "test_function": "FLOW-GRD-06-MISSING-KEY",
+    "positive_example": "Controls row missing-key could-not-run missing-api-key with an empty request stream, paired with the authenticated claude-code pass rows from the same run \u2014 module exits 0.",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "the guard recorded missing-api-key while the key was present (key-present-misfire: a static always-refusing guard)",
+       "any model request appeared in the missing-key capture before the refusal \u2014 control invalid",
+       "the missing-key result readable as pass anywhere",
+       "the cursor cell reason came from a special-cased string instead of the guard code path"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "controls rows control_id/verdict/reason",
+       "missing-key capture empty of model events",
+       "cursor cell reason string"
+      ],
+      "examples": [
+       "missing-key could-not-run missing-api-key",
+       "stale-cache could-not-run installation-identity-mismatch",
+       "exit0-denied-read fail denied_tool_call",
+       "hidden-image-judge row with child-tree scan evidence",
+       "cursor reason identical to the control row's reason"
+      ],
+      "required_capture": "the keyless step's env-absence assertion, its capture with zero model events before refusal, and the authenticated cells' passes in the same run"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/env/key-removed",
+       "action": {
+        "actor": "workflow",
+        "steps": [
+         "run guard-evaluated invocation with ANTHROPIC_API_KEY and all fallbacks removed",
+         "run paired authenticated invocations in the same workflow"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "controls row missing-key reads \"could-not-run missing-api-key\"",
+         "missing-key capture has 0 model-request events before refusal",
+         "paired authenticated cells grade \"pass\" (guard fires on absence, not unconditionally)",
+         "cursor/pinned reason == \"missing-api-key\" from the same guard path"
+        ],
+        "must_not_observe": [
+         "pass on the keyless cell",
+         "0 model requests in the keyless capture",
+         "the authenticated control also recording missing-api-key"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/env/anthropic-key-present",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-06 --fixture key-present-misfire --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "guard does not emit \"missing-api-key\" when the binding is present",
+         ".red records the with-key guard decision (\"no missing-api-key refusal\")"
+        ],
+        "must_not_observe": [
+         "a \"missing-api-key\" refusal on a key-present environment (the fallback-store enumeration comes up empty)",
+         "refusal logged before the credential check ran"
+        ]
+       }
+      }
+     ],
+     "topology_note": "invocation-guard evaluates the credential binding inside the real workflow; one control step runs with the key actually removed; paired authenticated cells in the same run; results in the controls array",
+     "test_tier": "e2e"
+    },
+    "red_input": "Base main: no guard exists, module exits 1 with .red. Behavior RED: env with ANTHROPIC_API_KEY unset and all fallback stores absent \u2014 guard must refuse with missing-api-key and zero model requests in the capture; on base nothing refuses, exit 1.",
+    "red_proof": ".tmp/sprint-01-verification/grd-06-missing-key.json.red",
+    "description": "GIVEN seed/env/key-removed (missing-key refusal capture with zero model events) WHEN run guard-evaluated invocation with ANTHROPIC_API_KEY and all fallbacks removed; run paired authenticated invocations in the same workflow THEN controls row missing-key reads \"could-not-run missing-api-key\"; missing-key capture has 0 model-request events before refusal; paired authenticated cells grade \"pass\" (guard fires on absence, not unconditionally); cursor/pinned reason == \"missing-api-key\" from the same guard path",
+    "maps_to_ac": null
+   },
+   {
+    "id": "TC-1",
+    "type": "test_criterion",
+    "primary": false,
+    "description": "The missing-key control refuses before any model request with all fallback credential stores removed",
+    "verify": "node --test tests/sprint-01/grd-06-missing-key.test.mjs --test-name-pattern FLOW-GRD-06-MISSING-KEY",
+    "maps_to_ac": "AC-2",
+    "test_file": "tests/sprint-01/grd-06-missing-key.test.mjs",
+    "test_function": "FLOW-GRD-06-MISSING-KEY",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "the guard recorded missing-api-key while the key was present (key-present-misfire: a static always-refusing guard)",
+       "any model request appeared in the missing-key capture before the refusal \u2014 control invalid",
+       "the missing-key result readable as pass anywhere",
+       "the cursor cell reason came from a special-cased string instead of the guard code path"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "controls rows control_id/verdict/reason",
+       "missing-key capture empty of model events",
+       "cursor cell reason string"
+      ],
+      "examples": [
+       "missing-key could-not-run missing-api-key",
+       "stale-cache could-not-run installation-identity-mismatch",
+       "exit0-denied-read fail denied_tool_call",
+       "hidden-image-judge row with child-tree scan evidence",
+       "cursor reason identical to the control row's reason"
+      ],
+      "required_capture": "the keyless step's env-absence assertion, its capture with zero model events before refusal, and the authenticated cells' passes in the same run"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/env/key-removed",
+       "action": {
+        "actor": "workflow",
+        "steps": [
+         "run guard-evaluated invocation with ANTHROPIC_API_KEY and all fallbacks removed",
+         "run paired authenticated invocations in the same workflow"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "controls row missing-key reads \"could-not-run missing-api-key\"",
+         "missing-key capture has 0 model-request events before refusal",
+         "paired authenticated cells grade \"pass\" (guard fires on absence, not unconditionally)",
+         "cursor/pinned reason == \"missing-api-key\" from the same guard path"
+        ],
+        "must_not_observe": [
+         "pass on the keyless cell",
+         "0 model requests in the keyless capture",
+         "the authenticated control also recording missing-api-key"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/env/anthropic-key-present",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-06 --fixture key-present-misfire --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "guard does not emit \"missing-api-key\" when the binding is present",
+         ".red records the with-key guard decision (\"no missing-api-key refusal\")"
+        ],
+        "must_not_observe": [
+         "a \"missing-api-key\" refusal on a key-present environment (the fallback-store enumeration comes up empty)",
+         "refusal logged before the credential check ran"
+        ]
+       }
+      }
+     ],
+     "topology_note": "invocation-guard evaluates the credential binding inside the real workflow; one control step runs with the key actually removed; paired authenticated cells in the same run; results in the controls array",
+     "test_tier": "e2e"
+    },
+    "flow_ref": null,
+    "red_input": "a guard that logs the refusal after a model request has started fails the control",
+    "positive_example": "the keyless step's capture holds 0 model-request events before the guard records could-not-run missing-api-key"
+   },
+   {
+    "id": "TC-2",
+    "type": "test_criterion",
+    "primary": false,
+    "description": "The stale-cache control reads could-not-run installation-identity-mismatch and is never attributed to the candidate",
+    "verify": "node --test tests/sprint-01/grd-06-missing-key.test.mjs --test-name-pattern FLOW-GRD-06-MISSING-KEY",
+    "maps_to_ac": "AC-2",
+    "test_file": "tests/sprint-01/grd-06-missing-key.test.mjs",
+    "test_function": "FLOW-GRD-06-MISSING-KEY",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "the guard recorded missing-api-key while the key was present (key-present-misfire: a static always-refusing guard)",
+       "any model request appeared in the missing-key capture before the refusal \u2014 control invalid",
+       "the missing-key result readable as pass anywhere",
+       "the cursor cell reason came from a special-cased string instead of the guard code path"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "controls rows control_id/verdict/reason",
+       "missing-key capture empty of model events",
+       "cursor cell reason string"
+      ],
+      "examples": [
+       "missing-key could-not-run missing-api-key",
+       "stale-cache could-not-run installation-identity-mismatch",
+       "exit0-denied-read fail denied_tool_call",
+       "hidden-image-judge row with child-tree scan evidence",
+       "cursor reason identical to the control row's reason"
+      ],
+      "required_capture": "the keyless step's env-absence assertion, its capture with zero model events before refusal, and the authenticated cells' passes in the same run"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/env/key-removed",
+       "action": {
+        "actor": "workflow",
+        "steps": [
+         "run guard-evaluated invocation with ANTHROPIC_API_KEY and all fallbacks removed",
+         "run paired authenticated invocations in the same workflow"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "controls row missing-key reads \"could-not-run missing-api-key\"",
+         "missing-key capture has 0 model-request events before refusal",
+         "paired authenticated cells grade \"pass\" (guard fires on absence, not unconditionally)",
+         "cursor/pinned reason == \"missing-api-key\" from the same guard path"
+        ],
+        "must_not_observe": [
+         "pass on the keyless cell",
+         "0 model requests in the keyless capture",
+         "the authenticated control also recording missing-api-key"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/env/anthropic-key-present",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-06 --fixture key-present-misfire --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "guard does not emit \"missing-api-key\" when the binding is present",
+         ".red records the with-key guard decision (\"no missing-api-key refusal\")"
+        ],
+        "must_not_observe": [
+         "a \"missing-api-key\" refusal on a key-present environment (the fallback-store enumeration comes up empty)",
+         "refusal logged before the credential check ran"
+        ]
+       }
+      }
+     ],
+     "topology_note": "invocation-guard evaluates the credential binding inside the real workflow; one control step runs with the key actually removed; paired authenticated cells in the same run; results in the controls array",
+     "test_tier": "e2e"
+    },
+    "flow_ref": null,
+    "red_input": "a stale cache graded as a product fail, or as pass, fails the control",
+    "positive_example": "the stale-cache control reads could-not-run installation-identity-mismatch with both digests recorded"
+   },
+   {
+    "id": "TC-3",
+    "type": "test_criterion",
+    "primary": false,
+    "description": "A denied required read fails on exit 0 and is recorded as fail denied_tool_call",
+    "verify": "node --test tests/sprint-01/grd-03-evidence.test.mjs --test-name-pattern FLOW-GRD-03-FILES-AND-STREAM",
+    "maps_to_ac": "AC-1",
+    "test_file": "tests/sprint-01/grd-03-evidence.test.mjs",
+    "test_function": "FLOW-GRD-03-FILES-AND-STREAM",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "a denied required read with exit 0 graded pass \u2014 the real exit0-denied-read capture yields fail denied_tool_call",
+       "an unmapped required fact silently omitted \u2014 version-bumped capture yields could-not-run",
+       "the stored exit code could influence the verdict"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "CanonicalEvent records with original_event preserved",
+       "capture hashes and stream_offset citations",
+       "controls row exit0-denied-read"
+      ],
+      "examples": [
+       "source files-and-event-stream count == 4",
+       "process_exit_code 0 next to verdict fail",
+       "denied_tool_call naming operation and target path"
+      ],
+      "required_capture": "the raw exit-0 denial capture from T11 qualification with before/after fixture manifests"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/live-dispatch-run",
+       "action": {
+        "actor": "maintainer",
+        "steps": [
+         "download result artifact",
+         "jq claude-code/pinned checks for source and process_exit_code"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "checks with .source files-and-event-stream count == 4",
+         "raw integer `process_exit_code` present as diagnostic",
+         "controls row exit0-denied-read fail denied_tool_call"
+        ],
+        "must_not_observe": [
+         "any check where verdict equals an exit-code mapping",
+         "pass verdict with non-empty denied_tool_call",
+         "opaque events used to infer absence"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/streams/exit0-denied-read",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-03 --fixture exit0-denied-read --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "verdict fail with denied_tool_call citing the denial offset while process_exit_code reads 0",
+         "mapping-validator \"pass\" on the qualified version"
+        ],
+        "must_not_observe": [
+         "pass or could-not-run on an observable denial",
+         "fabricated denial events with no capture provenance"
+        ]
+       }
+      }
+     ],
+     "topology_note": "InvocationCapture records stdout with byte offsets; stream-grader normalizes to CanonicalEvent; grader cites offsets and capture hashes; live artifact carries source and process_exit_code per check",
+     "test_tier": "e2e"
+    },
+    "flow_ref": null,
+    "red_input": "a clean exit graded pass despite an observed denial fails the control",
+    "positive_example": "the exit0-denied-read control reads fail denied_tool_call beside a raw process_exit_code of 0"
+   },
+   {
+    "id": "TC-4",
+    "type": "test_criterion",
+    "primary": false,
+    "description": "The hidden-image-judge control proves no screenshot judging occurred anywhere in the verify child tree",
+    "verify": "node --test tests/sprint-01/grd-03-evidence.test.mjs --test-name-pattern FLOW-GRD-03-FILES-AND-STREAM",
+    "maps_to_ac": "AC-1",
+    "test_file": "tests/sprint-01/grd-03-evidence.test.mjs",
+    "test_function": "FLOW-GRD-03-FILES-AND-STREAM",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "a denied required read with exit 0 graded pass \u2014 the real exit0-denied-read capture yields fail denied_tool_call",
+       "an unmapped required fact silently omitted \u2014 version-bumped capture yields could-not-run",
+       "the stored exit code could influence the verdict"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "CanonicalEvent records with original_event preserved",
+       "capture hashes and stream_offset citations",
+       "controls row exit0-denied-read"
+      ],
+      "examples": [
+       "source files-and-event-stream count == 4",
+       "process_exit_code 0 next to verdict fail",
+       "denied_tool_call naming operation and target path"
+      ],
+      "required_capture": "the raw exit-0 denial capture from T11 qualification with before/after fixture manifests"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/live-dispatch-run",
+       "action": {
+        "actor": "maintainer",
+        "steps": [
+         "download result artifact",
+         "jq claude-code/pinned checks for source and process_exit_code"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "checks with .source files-and-event-stream count == 4",
+         "raw integer `process_exit_code` present as diagnostic",
+         "controls row exit0-denied-read fail denied_tool_call"
+        ],
+        "must_not_observe": [
+         "any check where verdict equals an exit-code mapping",
+         "pass verdict with non-empty denied_tool_call",
+         "opaque events used to infer absence"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/streams/exit0-denied-read",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-03 --fixture exit0-denied-read --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "verdict fail with denied_tool_call citing the denial offset while process_exit_code reads 0",
+         "mapping-validator \"pass\" on the qualified version"
+        ],
+        "must_not_observe": [
+         "pass or could-not-run on an observable denial",
+         "fabricated denial events with no capture provenance"
+        ]
+       }
+      }
+     ],
+     "topology_note": "InvocationCapture records stdout with byte offsets; stream-grader normalizes to CanonicalEvent; grader cites offsets and capture hashes; live artifact carries source and process_exit_code per check",
+     "test_tier": "e2e"
+    },
+    "flow_ref": null,
+    "red_input": "a hidden image-judge call in the child tree, or an unscannable child process, fails the control",
+    "positive_example": "the hidden-image-judge control row carries the child-tree scan evidence and reads pass for a structural-only verify run"
+   }
+  ],
+  "fixtures": {
+   "seed/live-dispatch-run": {
+    "entrypoint": "gh workflow run harness-eval --repo hackerpug-ai/pixel-perfect (real dispatch, checkout default)",
+    "description": "RUN_ID + attempt-qualified artifacts via gh run download",
+    "seed_method": "cli"
+   },
+   "seed/live-dispatch-published": {
+    "entrypoint": "gh workflow run harness-eval -f install_mode=published",
+    "description": "second RUN_ID recording published mode",
+    "seed_method": "cli"
+   },
+   "seed/result-artifact": {
+    "entrypoint": "gh run download <RUN_ID> -n harness-eval-result-<RUN_ID>-1",
+    "description": "harness-eval-result.json with cells, controls, pins_sha256, identity fields",
+    "seed_method": "cli"
+   },
+   "seed/verify-reports-artifact": {
+    "entrypoint": "gh run download <RUN_ID> -n harness-eval-verify-reports-<RUN_ID>-1",
+    "description": "reports/verify-button-drift.json and reports/verify-clean.json",
+    "seed_method": "cli"
+   },
+   "seed/streams/exit0-denied-read": {
+    "entrypoint": "real claude-code capture from T11 qualification (recorded-stance run, reads denied, exit 0); archived under test/harness/fixtures/streams/ with capture hash",
+    "description": "raw stream bytes with offsets",
+    "seed_method": "recorded_external"
+   },
+   "seed/streams/clean-verify-pass": {
+    "entrypoint": "real captured clean-verify invocation from the same qualification run",
+    "description": "grader-passing capture fixture",
+    "seed_method": "recorded_external"
+   },
+   "seed/streams/question-in-ask-nothing": {
+    "entrypoint": "splice of real bytes only: USER_CHOICE from the must-ask capture inserted into the real verify stream, provenance hashes recorded",
+    "description": "the GRD-02 red fixture",
+    "seed_method": "recorded_external"
+   },
+   "seed/case/verify-button-drift": {
+    "entrypoint": "test/harness/kit/project fresh copy + overlays/button-drift by the case loader",
+    "description": "planted invocation dir with declared report path",
+    "seed_method": "migration_fixture"
+   },
+   "seed/case/verify-clean": {
+    "entrypoint": "same kit copy without overlay, separate fresh dir",
+    "description": "clean invocation dir",
+    "seed_method": "migration_fixture"
+   },
+   "seed/scratch-invocation-dir": {
+    "entrypoint": "mkdtemp created by the case loader",
+    "description": "empty workspace for confinement negatives with post-run listings",
+    "seed_method": "migration_fixture"
+   },
+   "seed/env/anthropic-key-present": {
+    "entrypoint": "harness-smoke environment, ANTHROPIC_API_KEY on exec steps (owner secret)",
+    "description": "authenticated cells + key-present-misfire control",
+    "seed_method": "cli"
+   },
+   "seed/env/key-removed": {
+    "entrypoint": "control step's real environment with ANTHROPIC_API_KEY and all fallbacks unset (asserted in-step)",
+    "description": "missing-key refusal capture with zero model events",
+    "seed_method": "cli"
+   }
+  },
+  "touches_capabilities": [
+   "CAP-EVAL-01"
+  ],
+  "acceptance_criteria": [
+   {
+    "id": "AC-1",
+    "type": "acceptance_criterion",
+    "primary": false,
+    "flow_ref": "FLOW-GRD-03-FILES-AND-STREAM",
+    "title": "Evidence-not-exit-code grading: verdicts cite files and stream offsets; a denied read fails on exit 0",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "verify": "node --test tests/sprint-01/grd-03-evidence.test.mjs --test-name-pattern FLOW-GRD-03-FILES-AND-STREAM",
+    "test_file": "tests/sprint-01/grd-03-evidence.test.mjs",
+    "test_function": "FLOW-GRD-03-FILES-AND-STREAM",
+    "positive_example": "Controls row exit0-denied-read fail denied_tool_call present next to a raw process_exit_code of 0, and every graded check citing at least 1 evidence path \u2014 module exits 0.",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "a denied required read with exit 0 graded pass \u2014 the real exit0-denied-read capture yields fail denied_tool_call",
+       "an unmapped required fact silently omitted \u2014 version-bumped capture yields could-not-run",
+       "the stored exit code could influence the verdict"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "CanonicalEvent records with original_event preserved",
+       "capture hashes and stream_offset citations",
+       "controls row exit0-denied-read"
+      ],
+      "examples": [
+       "source files-and-event-stream count == 4",
+       "process_exit_code 0 next to verdict fail",
+       "denied_tool_call naming operation and target path"
+      ],
+      "required_capture": "the raw exit-0 denial capture from T11 qualification with before/after fixture manifests"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/live-dispatch-run",
+       "action": {
+        "actor": "maintainer",
+        "steps": [
+         "download result artifact",
+         "jq claude-code/pinned checks for source and process_exit_code"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "checks with .source files-and-event-stream count == 4",
+         "raw integer `process_exit_code` present as diagnostic",
+         "controls row exit0-denied-read fail denied_tool_call"
+        ],
+        "must_not_observe": [
+         "any check where verdict equals an exit-code mapping",
+         "pass verdict with non-empty denied_tool_call",
+         "opaque events used to infer absence"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/streams/exit0-denied-read",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-03 --fixture exit0-denied-read --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "verdict fail with denied_tool_call citing the denial offset while process_exit_code reads 0",
+         "mapping-validator \"pass\" on the qualified version"
+        ],
+        "must_not_observe": [
+         "pass or could-not-run on an observable denial",
+         "fabricated denial events with no capture provenance"
+        ]
+       }
+      }
+     ],
+     "topology_note": "InvocationCapture records stdout with byte offsets; stream-grader normalizes to CanonicalEvent; grader cites offsets and capture hashes; live artifact carries source and process_exit_code per check",
+     "test_tier": "e2e"
+    },
+    "red_input": "Base main: no grader exists, module exits 1 with .red. Behavior RED: a verdict equal to its exit-code mapping (pass with exit 0 and a denied-read stream) makes the module exit 1 \u2014 the negative fixture is the recorded deny-under-default-mode stream from T5.",
+    "red_proof": ".tmp/sprint-01-verification/grd-03-evidence.json.red",
+    "description": "GIVEN seed/live-dispatch-run (RUN_ID + attempt-qualified artifacts via gh run download) WHEN download result artifact; jq claude-code/pinned checks for source and process_exit_code THEN checks with .source files-and-event-stream count == 4; raw integer `process_exit_code` present as diagnostic; controls row exit0-denied-read fail denied_tool_call",
+    "maps_to_ac": null
+   },
+   {
+    "id": "AC-2",
+    "type": "acceptance_criterion",
+    "primary": false,
+    "flow_ref": "FLOW-GRD-06-MISSING-KEY",
+    "title": "Missing credential fails closed: could-not-run missing-api-key before any model request, never readable as pass",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "verify": "node --test tests/sprint-01/grd-06-missing-key.test.mjs --test-name-pattern FLOW-GRD-06-MISSING-KEY",
+    "test_file": "tests/sprint-01/grd-06-missing-key.test.mjs",
+    "test_function": "FLOW-GRD-06-MISSING-KEY",
+    "positive_example": "Controls row missing-key could-not-run missing-api-key with an empty request stream, paired with the authenticated claude-code pass rows from the same run \u2014 module exits 0.",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "the guard recorded missing-api-key while the key was present (key-present-misfire: a static always-refusing guard)",
+       "any model request appeared in the missing-key capture before the refusal \u2014 control invalid",
+       "the missing-key result readable as pass anywhere",
+       "the cursor cell reason came from a special-cased string instead of the guard code path"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "controls rows control_id/verdict/reason",
+       "missing-key capture empty of model events",
+       "cursor cell reason string"
+      ],
+      "examples": [
+       "missing-key could-not-run missing-api-key",
+       "stale-cache could-not-run installation-identity-mismatch",
+       "exit0-denied-read fail denied_tool_call",
+       "hidden-image-judge row with child-tree scan evidence",
+       "cursor reason identical to the control row's reason"
+      ],
+      "required_capture": "the keyless step's env-absence assertion, its capture with zero model events before refusal, and the authenticated cells' passes in the same run"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/env/key-removed",
+       "action": {
+        "actor": "workflow",
+        "steps": [
+         "run guard-evaluated invocation with ANTHROPIC_API_KEY and all fallbacks removed",
+         "run paired authenticated invocations in the same workflow"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "controls row missing-key reads \"could-not-run missing-api-key\"",
+         "missing-key capture has 0 model-request events before refusal",
+         "paired authenticated cells grade \"pass\" (guard fires on absence, not unconditionally)",
+         "cursor/pinned reason == \"missing-api-key\" from the same guard path"
+        ],
+        "must_not_observe": [
+         "pass on the keyless cell",
+         "0 model requests in the keyless capture",
+         "the authenticated control also recording missing-api-key"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/env/anthropic-key-present",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-06 --fixture key-present-misfire --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "guard does not emit \"missing-api-key\" when the binding is present",
+         ".red records the with-key guard decision (\"no missing-api-key refusal\")"
+        ],
+        "must_not_observe": [
+         "a \"missing-api-key\" refusal on a key-present environment (the fallback-store enumeration comes up empty)",
+         "refusal logged before the credential check ran"
+        ]
+       }
+      }
+     ],
+     "topology_note": "invocation-guard evaluates the credential binding inside the real workflow; one control step runs with the key actually removed; paired authenticated cells in the same run; results in the controls array",
+     "test_tier": "e2e"
+    },
+    "red_input": "Base main: no guard exists, module exits 1 with .red. Behavior RED: env with ANTHROPIC_API_KEY unset and all fallback stores absent \u2014 guard must refuse with missing-api-key and zero model requests in the capture; on base nothing refuses, exit 1.",
+    "red_proof": ".tmp/sprint-01-verification/grd-06-missing-key.json.red",
+    "description": "GIVEN seed/env/key-removed (missing-key refusal capture with zero model events) WHEN run guard-evaluated invocation with ANTHROPIC_API_KEY and all fallbacks removed; run paired authenticated invocations in the same workflow THEN controls row missing-key reads \"could-not-run missing-api-key\"; missing-key capture has 0 model-request events before refusal; paired authenticated cells grade \"pass\" (guard fires on absence, not unconditionally); cursor/pinned reason == \"missing-api-key\" from the same guard path",
+    "maps_to_ac": null
+   }
+  ],
+  "reviewer": "evals-reviewer",
+  "tdd_mode": "red_first",
+  "verification_policy": {
+   "requires_tests": true,
+   "requires_red_evidence": true,
+   "requires_seeded_evidence": true
+  },
+  "sprint_id": "sprint-01",
+  "integration_obligations": []
+ }
+}

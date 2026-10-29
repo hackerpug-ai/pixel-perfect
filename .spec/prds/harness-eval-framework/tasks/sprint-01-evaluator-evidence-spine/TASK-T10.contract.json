@@ -1,0 +1,868 @@
+{
+ "task_id": "T10",
+ "provenance": {
+  "planner": "evals-planner",
+  "proposed_by": "github-agentic-workflow-planner + evals-planner",
+  "proposal_path": ".tmp/kb-sprint-tasks-plan/sprint-01/proposals",
+  "proposal_sha256": "088075273650f546b496a5ba13327c80b920af9b0803a131652ec92174d943e0"
+ },
+ "planner_json": {
+  "task_id": "T10",
+  "task_type": "FEATURE",
+  "title": "Wire fail-closed cells: cursor version-lookup + could-not-run missing-api-key on every check, and adapter-absent could-not-run for codex/grok/opencode/pi so all twelve cells always exist",
+  "agent": "evals-implementer",
+  "planner": "evals-planner",
+  "proposed_by": "github-agentic-workflow-planner + evals-planner",
+  "estimate_points": 3,
+  "repo": null,
+  "repo_root": "/Users/justinrich/Projects/pixel-perfect",
+  "write_allowed": [
+   "test/harness/adapters/absent.mjs",
+   "test/harness/adapters/registry.mjs",
+   "tests/sprint-01/grd-01-twelve-cells.test.mjs",
+   "tests/sprint-01/grd-06-missing-key.test.mjs"
+  ],
+  "guardrails": {
+   "write_allowed": [
+    "test/harness/adapters/absent.mjs",
+    "test/harness/adapters/registry.mjs",
+    "tests/sprint-01/grd-01-twelve-cells.test.mjs",
+    "tests/sprint-01/grd-06-missing-key.test.mjs"
+   ],
+   "write_prohibited": [
+    "plugins/pixel-perfect/**",
+    ".github/workflows/**"
+   ]
+  },
+  "depends_on": [
+   "T3 (capture@v1)",
+   "T8 (recorder@v1)"
+  ],
+  "dark_justification": null,
+  "requirements": [
+   {
+    "id": "AC-1",
+    "type": "acceptance_criterion",
+    "primary": false,
+    "flow_ref": "FLOW-GRD-01-TWELVE-CELLS",
+    "title": "Twelve-cell summary: every (harness, track) cell present with verdict word and observed CLI version, cursor never omitte",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "verify": "node --test tests/sprint-01/grd-01-twelve-cells.test.mjs --test-name-pattern FLOW-GRD-01-TWELVE-CELLS",
+    "test_file": "tests/sprint-01/grd-01-twelve-cells.test.mjs",
+    "test_function": "FLOW-GRD-01-TWELVE-CELLS",
+    "positive_example": "A fixture artifact with exactly 12 unique (harness,track) cells, each carrying an observed_cli_version, cursor present with could-not-run \u2014 the module exits 0. Mutation fixture (drop the cursor/pinned cell) flips it to 1.",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "the recorder emitted fewer than 12 cells or a duplicate (harness, track) pair \u2014 the .red drop-cell mutation must be rejected with reason cells-incomplete",
+       "any verdict outside pass|fail|could-not-run appeared \u2014 vocabulary rejection fires",
+       "an absent adapter were omitted instead of present-as-could-not-run \u2014 cells|length != 12 fails",
+       "pins_sha256 were absent or not 64-hex \u2014 identity binding fails"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "harness-eval-result artifact JSON",
+       "Actions run metadata"
+      ],
+      "examples": [
+       "cells|length == 12",
+       "unique harnesses == 6",
+       "pins_sha256 matches ^[0-9a-f]{64}$"
+      ],
+      "required_capture": "the downloaded artifact file plus its gh api artifact listing line so cell counts are bound to a real run"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/live-dispatch-run",
+       "action": {
+        "actor": "maintainer",
+        "steps": [
+         "gh workflow run harness-eval",
+         "gh run watch <RUN_ID> until completed",
+         "gh run download <RUN_ID> -n harness-eval-result-<RUN_ID>-1 -D /tmp/he1"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "jq '.cells|length' prints 12",
+         "unique harness count prints 6 with cursor in the set",
+         "claude-code/pinned checks print exactly: command_list pass, status pass, verify pass, question_before_expensive_work pass",
+         "cursor/pinned prints \"could-not-run missing-api-key\"",
+         "pins_sha256 is a 64-character hex string"
+        ],
+        "must_not_observe": [
+         "any empty or null .verdict field",
+         "a cursor cell with reason adapter-absent",
+         "any of codex/grok/opencode/pi cells with verdict pass",
+         "cells|length of 11 or 13, or a duplicate (harness,track) pair"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/live-dispatch-run",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-01 --run latest --mutate drop-cell --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "exit code non-zero with rejection reason containing \"cells-incomplete\"",
+         ".red file written recording the 11-cell mutated artifact hash"
+        ],
+        "must_not_observe": [
+         "validator acceptance of the 11-cell result",
+         "any write to the downloaded original artifact (0 writes besides the flow report)"
+        ]
+       }
+      }
+     ],
+     "topology_note": "GitHub-hosted runner runs harness-eval (12-cell matrix) + grade recorder; local replay downloads harness-eval-result-<run_id>-<attempt> via gh and validates with the recorder's own schema validator",
+     "test_tier": "e2e"
+    },
+    "red_input": "Run the same command on base main: gh workflow list shows no harness-eval row, the download 404s, the module exits 1 and writes the .red report \u2014 exists today, verified by step 1's before state.",
+    "red_proof": ".tmp/sprint-01-verification/grd-01-twelve-cells.json.red",
+    "description": "GIVEN seed/live-dispatch-run (RUN_ID + attempt-qualified artifacts via gh run download) WHEN gh workflow run harness-eval; gh run watch <RUN_ID> until completed; gh run download <RUN_ID> -n harness-eval-result-<RUN_ID>-1 -D /tmp/he1 THEN jq '.cells|length' prints 12; unique harness count prints 6 with cursor in the set; claude-code/pinned checks print exactly: command_list pass, status pass, verify pass, question_before_expensive_work pass; cursor/pinned prints \"could-not-run missing-api-key\"; pins_sha256 is a 64-character hex string",
+    "maps_to_ac": null
+   },
+   {
+    "id": "AC-2",
+    "type": "acceptance_criterion",
+    "primary": true,
+    "flow_ref": "FLOW-GRD-06-MISSING-KEY",
+    "title": "Missing credential fails closed: could-not-run missing-api-key before any model request, never readable as pass",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "verify": "node --test tests/sprint-01/grd-06-missing-key.test.mjs --test-name-pattern FLOW-GRD-06-MISSING-KEY",
+    "test_file": "tests/sprint-01/grd-06-missing-key.test.mjs",
+    "test_function": "FLOW-GRD-06-MISSING-KEY",
+    "positive_example": "Controls row missing-key could-not-run missing-api-key with an empty request stream, paired with the authenticated claude-code pass rows from the same run \u2014 module exits 0.",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "the guard recorded missing-api-key while the key was present (key-present-misfire: a static always-refusing guard)",
+       "any model request appeared in the missing-key capture before the refusal \u2014 control invalid",
+       "the missing-key result readable as pass anywhere",
+       "the cursor cell reason came from a special-cased string instead of the guard code path"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "controls rows control_id/verdict/reason",
+       "missing-key capture empty of model events",
+       "cursor cell reason string"
+      ],
+      "examples": [
+       "missing-key could-not-run missing-api-key",
+       "stale-cache could-not-run installation-identity-mismatch",
+       "exit0-denied-read fail denied_tool_call",
+       "hidden-image-judge row with child-tree scan evidence",
+       "cursor reason identical to the control row's reason"
+      ],
+      "required_capture": "the keyless step's env-absence assertion, its capture with zero model events before refusal, and the authenticated cells' passes in the same run"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/env/key-removed",
+       "action": {
+        "actor": "workflow",
+        "steps": [
+         "run guard-evaluated invocation with ANTHROPIC_API_KEY and all fallbacks removed",
+         "run paired authenticated invocations in the same workflow"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "controls row missing-key reads \"could-not-run missing-api-key\"",
+         "missing-key capture has 0 model-request events before refusal",
+         "paired authenticated cells grade \"pass\" (guard fires on absence, not unconditionally)",
+         "cursor/pinned reason == \"missing-api-key\" from the same guard path"
+        ],
+        "must_not_observe": [
+         "pass on the keyless cell",
+         "0 model requests in the keyless capture",
+         "the authenticated control also recording missing-api-key"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/env/anthropic-key-present",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-06 --fixture key-present-misfire --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "guard does not emit \"missing-api-key\" when the binding is present",
+         ".red records the with-key guard decision (\"no missing-api-key refusal\")"
+        ],
+        "must_not_observe": [
+         "a \"missing-api-key\" refusal on a key-present environment (the fallback-store enumeration comes up empty)",
+         "refusal logged before the credential check ran"
+        ]
+       }
+      }
+     ],
+     "topology_note": "invocation-guard evaluates the credential binding inside the real workflow; one control step runs with the key actually removed; paired authenticated cells in the same run; results in the controls array",
+     "test_tier": "e2e"
+    },
+    "red_input": "Base main: no guard exists, module exits 1 with .red. Behavior RED: env with ANTHROPIC_API_KEY unset and all fallback stores absent \u2014 guard must refuse with missing-api-key and zero model requests in the capture; on base nothing refuses, exit 1.",
+    "red_proof": ".tmp/sprint-01-verification/grd-06-missing-key.json.red",
+    "description": "GIVEN seed/env/key-removed (missing-key refusal capture with zero model events) WHEN run guard-evaluated invocation with ANTHROPIC_API_KEY and all fallbacks removed; run paired authenticated invocations in the same workflow THEN controls row missing-key reads \"could-not-run missing-api-key\"; missing-key capture has 0 model-request events before refusal; paired authenticated cells grade \"pass\" (guard fires on absence, not unconditionally); cursor/pinned reason == \"missing-api-key\" from the same guard path",
+    "maps_to_ac": null
+   },
+   {
+    "id": "TC-1",
+    "type": "test_criterion",
+    "primary": false,
+    "description": "Every one of the twelve cells exists and carries an observed CLI version, with cursor present and never omitted",
+    "verify": "node --test tests/sprint-01/grd-01-twelve-cells.test.mjs --test-name-pattern FLOW-GRD-01-TWELVE-CELLS",
+    "maps_to_ac": "AC-1",
+    "test_file": "tests/sprint-01/grd-01-twelve-cells.test.mjs",
+    "test_function": "FLOW-GRD-01-TWELVE-CELLS",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "the recorder emitted fewer than 12 cells or a duplicate (harness, track) pair \u2014 the .red drop-cell mutation must be rejected with reason cells-incomplete",
+       "any verdict outside pass|fail|could-not-run appeared \u2014 vocabulary rejection fires",
+       "an absent adapter were omitted instead of present-as-could-not-run \u2014 cells|length != 12 fails",
+       "pins_sha256 were absent or not 64-hex \u2014 identity binding fails"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "harness-eval-result artifact JSON",
+       "Actions run metadata"
+      ],
+      "examples": [
+       "cells|length == 12",
+       "unique harnesses == 6",
+       "pins_sha256 matches ^[0-9a-f]{64}$"
+      ],
+      "required_capture": "the downloaded artifact file plus its gh api artifact listing line so cell counts are bound to a real run"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/live-dispatch-run",
+       "action": {
+        "actor": "maintainer",
+        "steps": [
+         "gh workflow run harness-eval",
+         "gh run watch <RUN_ID> until completed",
+         "gh run download <RUN_ID> -n harness-eval-result-<RUN_ID>-1 -D /tmp/he1"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "jq '.cells|length' prints 12",
+         "unique harness count prints 6 with cursor in the set",
+         "claude-code/pinned checks print exactly: command_list pass, status pass, verify pass, question_before_expensive_work pass",
+         "cursor/pinned prints \"could-not-run missing-api-key\"",
+         "pins_sha256 is a 64-character hex string"
+        ],
+        "must_not_observe": [
+         "any empty or null .verdict field",
+         "a cursor cell with reason adapter-absent",
+         "any of codex/grok/opencode/pi cells with verdict pass",
+         "cells|length of 11 or 13, or a duplicate (harness,track) pair"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/live-dispatch-run",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-01 --run latest --mutate drop-cell --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "exit code non-zero with rejection reason containing \"cells-incomplete\"",
+         ".red file written recording the 11-cell mutated artifact hash"
+        ],
+        "must_not_observe": [
+         "validator acceptance of the 11-cell result",
+         "any write to the downloaded original artifact (0 writes besides the flow report)"
+        ]
+       }
+      }
+     ],
+     "topology_note": "GitHub-hosted runner runs harness-eval (12-cell matrix) + grade recorder; local replay downloads harness-eval-result-<run_id>-<attempt> via gh and validates with the recorder's own schema validator",
+     "test_tier": "e2e"
+    },
+    "flow_ref": null,
+    "red_input": "a result artifact with 11 cells, a duplicate pair, or no cursor cell is rejected with reason cells-incomplete",
+    "positive_example": "the live artifact prints 12 cells, 6 unique harnesses including cursor, and a dotted observed_cli_version on each"
+   },
+   {
+    "id": "TC-2",
+    "type": "test_criterion",
+    "primary": false,
+    "description": "A version-lookup failure makes the newest track could-not-run and never omits the cell",
+    "verify": "node --test tests/sprint-01/grd-01-twelve-cells.test.mjs --test-name-pattern FLOW-GRD-01-TWELVE-CELLS",
+    "maps_to_ac": "AC-1",
+    "test_file": "tests/sprint-01/grd-01-twelve-cells.test.mjs",
+    "test_function": "FLOW-GRD-01-TWELVE-CELLS",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "the recorder emitted fewer than 12 cells or a duplicate (harness, track) pair \u2014 the .red drop-cell mutation must be rejected with reason cells-incomplete",
+       "any verdict outside pass|fail|could-not-run appeared \u2014 vocabulary rejection fires",
+       "an absent adapter were omitted instead of present-as-could-not-run \u2014 cells|length != 12 fails",
+       "pins_sha256 were absent or not 64-hex \u2014 identity binding fails"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "harness-eval-result artifact JSON",
+       "Actions run metadata"
+      ],
+      "examples": [
+       "cells|length == 12",
+       "unique harnesses == 6",
+       "pins_sha256 matches ^[0-9a-f]{64}$"
+      ],
+      "required_capture": "the downloaded artifact file plus its gh api artifact listing line so cell counts are bound to a real run"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/live-dispatch-run",
+       "action": {
+        "actor": "maintainer",
+        "steps": [
+         "gh workflow run harness-eval",
+         "gh run watch <RUN_ID> until completed",
+         "gh run download <RUN_ID> -n harness-eval-result-<RUN_ID>-1 -D /tmp/he1"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "jq '.cells|length' prints 12",
+         "unique harness count prints 6 with cursor in the set",
+         "claude-code/pinned checks print exactly: command_list pass, status pass, verify pass, question_before_expensive_work pass",
+         "cursor/pinned prints \"could-not-run missing-api-key\"",
+         "pins_sha256 is a 64-character hex string"
+        ],
+        "must_not_observe": [
+         "any empty or null .verdict field",
+         "a cursor cell with reason adapter-absent",
+         "any of codex/grok/opencode/pi cells with verdict pass",
+         "cells|length of 11 or 13, or a duplicate (harness,track) pair"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/live-dispatch-run",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-01 --run latest --mutate drop-cell --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "exit code non-zero with rejection reason containing \"cells-incomplete\"",
+         ".red file written recording the 11-cell mutated artifact hash"
+        ],
+        "must_not_observe": [
+         "validator acceptance of the 11-cell result",
+         "any write to the downloaded original artifact (0 writes besides the flow report)"
+        ]
+       }
+      }
+     ],
+     "topology_note": "GitHub-hosted runner runs harness-eval (12-cell matrix) + grade recorder; local replay downloads harness-eval-result-<run_id>-<attempt> via gh and validates with the recorder's own schema validator",
+     "test_tier": "e2e"
+    },
+    "flow_ref": null,
+    "red_input": "a failed lookup that drops the cell, or reports it pass, fails the check",
+    "positive_example": "a simulated Cursor lookup failure still yields 12 cells with cursor/newest reading could-not-run and a named reason"
+   },
+   {
+    "id": "TC-3",
+    "type": "test_criterion",
+    "primary": false,
+    "description": "An absent adapter is a real cell reading could-not-run with a named reason, and never a pass",
+    "verify": "node --test tests/sprint-01/grd-06-missing-key.test.mjs --test-name-pattern FLOW-GRD-06-MISSING-KEY",
+    "maps_to_ac": "AC-2",
+    "test_file": "tests/sprint-01/grd-06-missing-key.test.mjs",
+    "test_function": "FLOW-GRD-06-MISSING-KEY",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "the guard recorded missing-api-key while the key was present (key-present-misfire: a static always-refusing guard)",
+       "any model request appeared in the missing-key capture before the refusal \u2014 control invalid",
+       "the missing-key result readable as pass anywhere",
+       "the cursor cell reason came from a special-cased string instead of the guard code path"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "controls rows control_id/verdict/reason",
+       "missing-key capture empty of model events",
+       "cursor cell reason string"
+      ],
+      "examples": [
+       "missing-key could-not-run missing-api-key",
+       "stale-cache could-not-run installation-identity-mismatch",
+       "exit0-denied-read fail denied_tool_call",
+       "hidden-image-judge row with child-tree scan evidence",
+       "cursor reason identical to the control row's reason"
+      ],
+      "required_capture": "the keyless step's env-absence assertion, its capture with zero model events before refusal, and the authenticated cells' passes in the same run"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/env/key-removed",
+       "action": {
+        "actor": "workflow",
+        "steps": [
+         "run guard-evaluated invocation with ANTHROPIC_API_KEY and all fallbacks removed",
+         "run paired authenticated invocations in the same workflow"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "controls row missing-key reads \"could-not-run missing-api-key\"",
+         "missing-key capture has 0 model-request events before refusal",
+         "paired authenticated cells grade \"pass\" (guard fires on absence, not unconditionally)",
+         "cursor/pinned reason == \"missing-api-key\" from the same guard path"
+        ],
+        "must_not_observe": [
+         "pass on the keyless cell",
+         "0 model requests in the keyless capture",
+         "the authenticated control also recording missing-api-key"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/env/anthropic-key-present",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-06 --fixture key-present-misfire --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "guard does not emit \"missing-api-key\" when the binding is present",
+         ".red records the with-key guard decision (\"no missing-api-key refusal\")"
+        ],
+        "must_not_observe": [
+         "a \"missing-api-key\" refusal on a key-present environment (the fallback-store enumeration comes up empty)",
+         "refusal logged before the credential check ran"
+        ]
+       }
+      }
+     ],
+     "topology_note": "invocation-guard evaluates the credential binding inside the real workflow; one control step runs with the key actually removed; paired authenticated cells in the same run; results in the controls array",
+     "test_tier": "e2e"
+    },
+    "flow_ref": null,
+    "red_input": "any of the four adapter-pending cells reading pass, or being omitted, fails the check",
+    "positive_example": "the four adapter-pending cells read could-not-run with distinct named reasons on pinned and newest"
+   },
+   {
+    "id": "TC-4",
+    "type": "test_criterion",
+    "primary": false,
+    "description": "cursor reads could-not-run missing-api-key from the same guard code path, not from a special-cased string",
+    "verify": "node --test tests/sprint-01/grd-06-missing-key.test.mjs --test-name-pattern FLOW-GRD-06-MISSING-KEY",
+    "maps_to_ac": "AC-2",
+    "test_file": "tests/sprint-01/grd-06-missing-key.test.mjs",
+    "test_function": "FLOW-GRD-06-MISSING-KEY",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "the guard recorded missing-api-key while the key was present (key-present-misfire: a static always-refusing guard)",
+       "any model request appeared in the missing-key capture before the refusal \u2014 control invalid",
+       "the missing-key result readable as pass anywhere",
+       "the cursor cell reason came from a special-cased string instead of the guard code path"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "controls rows control_id/verdict/reason",
+       "missing-key capture empty of model events",
+       "cursor cell reason string"
+      ],
+      "examples": [
+       "missing-key could-not-run missing-api-key",
+       "stale-cache could-not-run installation-identity-mismatch",
+       "exit0-denied-read fail denied_tool_call",
+       "hidden-image-judge row with child-tree scan evidence",
+       "cursor reason identical to the control row's reason"
+      ],
+      "required_capture": "the keyless step's env-absence assertion, its capture with zero model events before refusal, and the authenticated cells' passes in the same run"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/env/key-removed",
+       "action": {
+        "actor": "workflow",
+        "steps": [
+         "run guard-evaluated invocation with ANTHROPIC_API_KEY and all fallbacks removed",
+         "run paired authenticated invocations in the same workflow"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "controls row missing-key reads \"could-not-run missing-api-key\"",
+         "missing-key capture has 0 model-request events before refusal",
+         "paired authenticated cells grade \"pass\" (guard fires on absence, not unconditionally)",
+         "cursor/pinned reason == \"missing-api-key\" from the same guard path"
+        ],
+        "must_not_observe": [
+         "pass on the keyless cell",
+         "0 model requests in the keyless capture",
+         "the authenticated control also recording missing-api-key"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/env/anthropic-key-present",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-06 --fixture key-present-misfire --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "guard does not emit \"missing-api-key\" when the binding is present",
+         ".red records the with-key guard decision (\"no missing-api-key refusal\")"
+        ],
+        "must_not_observe": [
+         "a \"missing-api-key\" refusal on a key-present environment (the fallback-store enumeration comes up empty)",
+         "refusal logged before the credential check ran"
+        ]
+       }
+      }
+     ],
+     "topology_note": "invocation-guard evaluates the credential binding inside the real workflow; one control step runs with the key actually removed; paired authenticated cells in the same run; results in the controls array",
+     "test_tier": "e2e"
+    },
+    "flow_ref": null,
+    "red_input": "a cursor reason produced by a cursor-specific constant rather than the guard fails the check",
+    "positive_example": "cursor/pinned prints could-not-run missing-api-key, identical to the missing-key control row"
+   }
+  ],
+  "fixtures": {
+   "seed/live-dispatch-run": {
+    "entrypoint": "gh workflow run harness-eval --repo hackerpug-ai/pixel-perfect (real dispatch, checkout default)",
+    "description": "RUN_ID + attempt-qualified artifacts via gh run download",
+    "seed_method": "cli"
+   },
+   "seed/live-dispatch-published": {
+    "entrypoint": "gh workflow run harness-eval -f install_mode=published",
+    "description": "second RUN_ID recording published mode",
+    "seed_method": "cli"
+   },
+   "seed/result-artifact": {
+    "entrypoint": "gh run download <RUN_ID> -n harness-eval-result-<RUN_ID>-1",
+    "description": "harness-eval-result.json with cells, controls, pins_sha256, identity fields",
+    "seed_method": "cli"
+   },
+   "seed/verify-reports-artifact": {
+    "entrypoint": "gh run download <RUN_ID> -n harness-eval-verify-reports-<RUN_ID>-1",
+    "description": "reports/verify-button-drift.json and reports/verify-clean.json",
+    "seed_method": "cli"
+   },
+   "seed/streams/exit0-denied-read": {
+    "entrypoint": "real claude-code capture from T11 qualification (recorded-stance run, reads denied, exit 0); archived under test/harness/fixtures/streams/ with capture hash",
+    "description": "raw stream bytes with offsets",
+    "seed_method": "recorded_external"
+   },
+   "seed/streams/clean-verify-pass": {
+    "entrypoint": "real captured clean-verify invocation from the same qualification run",
+    "description": "grader-passing capture fixture",
+    "seed_method": "recorded_external"
+   },
+   "seed/streams/question-in-ask-nothing": {
+    "entrypoint": "splice of real bytes only: USER_CHOICE from the must-ask capture inserted into the real verify stream, provenance hashes recorded",
+    "description": "the GRD-02 red fixture",
+    "seed_method": "recorded_external"
+   },
+   "seed/case/verify-button-drift": {
+    "entrypoint": "test/harness/kit/project fresh copy + overlays/button-drift by the case loader",
+    "description": "planted invocation dir with declared report path",
+    "seed_method": "migration_fixture"
+   },
+   "seed/case/verify-clean": {
+    "entrypoint": "same kit copy without overlay, separate fresh dir",
+    "description": "clean invocation dir",
+    "seed_method": "migration_fixture"
+   },
+   "seed/scratch-invocation-dir": {
+    "entrypoint": "mkdtemp created by the case loader",
+    "description": "empty workspace for confinement negatives with post-run listings",
+    "seed_method": "migration_fixture"
+   },
+   "seed/env/anthropic-key-present": {
+    "entrypoint": "harness-smoke environment, ANTHROPIC_API_KEY on exec steps (owner secret)",
+    "description": "authenticated cells + key-present-misfire control",
+    "seed_method": "cli"
+   },
+   "seed/env/key-removed": {
+    "entrypoint": "control step's real environment with ANTHROPIC_API_KEY and all fallbacks unset (asserted in-step)",
+    "description": "missing-key refusal capture with zero model events",
+    "seed_method": "cli"
+   }
+  },
+  "touches_capabilities": [
+   "CAP-EVAL-01"
+  ],
+  "acceptance_criteria": [
+   {
+    "id": "AC-1",
+    "type": "acceptance_criterion",
+    "primary": false,
+    "flow_ref": "FLOW-GRD-01-TWELVE-CELLS",
+    "title": "Twelve-cell summary: every (harness, track) cell present with verdict word and observed CLI version, cursor never omitte",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "verify": "node --test tests/sprint-01/grd-01-twelve-cells.test.mjs --test-name-pattern FLOW-GRD-01-TWELVE-CELLS",
+    "test_file": "tests/sprint-01/grd-01-twelve-cells.test.mjs",
+    "test_function": "FLOW-GRD-01-TWELVE-CELLS",
+    "positive_example": "A fixture artifact with exactly 12 unique (harness,track) cells, each carrying an observed_cli_version, cursor present with could-not-run \u2014 the module exits 0. Mutation fixture (drop the cursor/pinned cell) flips it to 1.",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "the recorder emitted fewer than 12 cells or a duplicate (harness, track) pair \u2014 the .red drop-cell mutation must be rejected with reason cells-incomplete",
+       "any verdict outside pass|fail|could-not-run appeared \u2014 vocabulary rejection fires",
+       "an absent adapter were omitted instead of present-as-could-not-run \u2014 cells|length != 12 fails",
+       "pins_sha256 were absent or not 64-hex \u2014 identity binding fails"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "harness-eval-result artifact JSON",
+       "Actions run metadata"
+      ],
+      "examples": [
+       "cells|length == 12",
+       "unique harnesses == 6",
+       "pins_sha256 matches ^[0-9a-f]{64}$"
+      ],
+      "required_capture": "the downloaded artifact file plus its gh api artifact listing line so cell counts are bound to a real run"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/live-dispatch-run",
+       "action": {
+        "actor": "maintainer",
+        "steps": [
+         "gh workflow run harness-eval",
+         "gh run watch <RUN_ID> until completed",
+         "gh run download <RUN_ID> -n harness-eval-result-<RUN_ID>-1 -D /tmp/he1"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "jq '.cells|length' prints 12",
+         "unique harness count prints 6 with cursor in the set",
+         "claude-code/pinned checks print exactly: command_list pass, status pass, verify pass, question_before_expensive_work pass",
+         "cursor/pinned prints \"could-not-run missing-api-key\"",
+         "pins_sha256 is a 64-character hex string"
+        ],
+        "must_not_observe": [
+         "any empty or null .verdict field",
+         "a cursor cell with reason adapter-absent",
+         "any of codex/grok/opencode/pi cells with verdict pass",
+         "cells|length of 11 or 13, or a duplicate (harness,track) pair"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/live-dispatch-run",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-01 --run latest --mutate drop-cell --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "exit code non-zero with rejection reason containing \"cells-incomplete\"",
+         ".red file written recording the 11-cell mutated artifact hash"
+        ],
+        "must_not_observe": [
+         "validator acceptance of the 11-cell result",
+         "any write to the downloaded original artifact (0 writes besides the flow report)"
+        ]
+       }
+      }
+     ],
+     "topology_note": "GitHub-hosted runner runs harness-eval (12-cell matrix) + grade recorder; local replay downloads harness-eval-result-<run_id>-<attempt> via gh and validates with the recorder's own schema validator",
+     "test_tier": "e2e"
+    },
+    "red_input": "Run the same command on base main: gh workflow list shows no harness-eval row, the download 404s, the module exits 1 and writes the .red report \u2014 exists today, verified by step 1's before state.",
+    "red_proof": ".tmp/sprint-01-verification/grd-01-twelve-cells.json.red",
+    "description": "GIVEN seed/live-dispatch-run (RUN_ID + attempt-qualified artifacts via gh run download) WHEN gh workflow run harness-eval; gh run watch <RUN_ID> until completed; gh run download <RUN_ID> -n harness-eval-result-<RUN_ID>-1 -D /tmp/he1 THEN jq '.cells|length' prints 12; unique harness count prints 6 with cursor in the set; claude-code/pinned checks print exactly: command_list pass, status pass, verify pass, question_before_expensive_work pass; cursor/pinned prints \"could-not-run missing-api-key\"; pins_sha256 is a 64-character hex string",
+    "maps_to_ac": null
+   },
+   {
+    "id": "AC-2",
+    "type": "acceptance_criterion",
+    "primary": true,
+    "flow_ref": "FLOW-GRD-06-MISSING-KEY",
+    "title": "Missing credential fails closed: could-not-run missing-api-key before any model request, never readable as pass",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "verify": "node --test tests/sprint-01/grd-06-missing-key.test.mjs --test-name-pattern FLOW-GRD-06-MISSING-KEY",
+    "test_file": "tests/sprint-01/grd-06-missing-key.test.mjs",
+    "test_function": "FLOW-GRD-06-MISSING-KEY",
+    "positive_example": "Controls row missing-key could-not-run missing-api-key with an empty request stream, paired with the authenticated claude-code pass rows from the same run \u2014 module exits 0.",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "the guard recorded missing-api-key while the key was present (key-present-misfire: a static always-refusing guard)",
+       "any model request appeared in the missing-key capture before the refusal \u2014 control invalid",
+       "the missing-key result readable as pass anywhere",
+       "the cursor cell reason came from a special-cased string instead of the guard code path"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "controls rows control_id/verdict/reason",
+       "missing-key capture empty of model events",
+       "cursor cell reason string"
+      ],
+      "examples": [
+       "missing-key could-not-run missing-api-key",
+       "stale-cache could-not-run installation-identity-mismatch",
+       "exit0-denied-read fail denied_tool_call",
+       "hidden-image-judge row with child-tree scan evidence",
+       "cursor reason identical to the control row's reason"
+      ],
+      "required_capture": "the keyless step's env-absence assertion, its capture with zero model events before refusal, and the authenticated cells' passes in the same run"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/env/key-removed",
+       "action": {
+        "actor": "workflow",
+        "steps": [
+         "run guard-evaluated invocation with ANTHROPIC_API_KEY and all fallbacks removed",
+         "run paired authenticated invocations in the same workflow"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "controls row missing-key reads \"could-not-run missing-api-key\"",
+         "missing-key capture has 0 model-request events before refusal",
+         "paired authenticated cells grade \"pass\" (guard fires on absence, not unconditionally)",
+         "cursor/pinned reason == \"missing-api-key\" from the same guard path"
+        ],
+        "must_not_observe": [
+         "pass on the keyless cell",
+         "0 model requests in the keyless capture",
+         "the authenticated control also recording missing-api-key"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/env/anthropic-key-present",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-06 --fixture key-present-misfire --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "guard does not emit \"missing-api-key\" when the binding is present",
+         ".red records the with-key guard decision (\"no missing-api-key refusal\")"
+        ],
+        "must_not_observe": [
+         "a \"missing-api-key\" refusal on a key-present environment (the fallback-store enumeration comes up empty)",
+         "refusal logged before the credential check ran"
+        ]
+       }
+      }
+     ],
+     "topology_note": "invocation-guard evaluates the credential binding inside the real workflow; one control step runs with the key actually removed; paired authenticated cells in the same run; results in the controls array",
+     "test_tier": "e2e"
+    },
+    "red_input": "Base main: no guard exists, module exits 1 with .red. Behavior RED: env with ANTHROPIC_API_KEY unset and all fallback stores absent \u2014 guard must refuse with missing-api-key and zero model requests in the capture; on base nothing refuses, exit 1.",
+    "red_proof": ".tmp/sprint-01-verification/grd-06-missing-key.json.red",
+    "description": "GIVEN seed/env/key-removed (missing-key refusal capture with zero model events) WHEN run guard-evaluated invocation with ANTHROPIC_API_KEY and all fallbacks removed; run paired authenticated invocations in the same workflow THEN controls row missing-key reads \"could-not-run missing-api-key\"; missing-key capture has 0 model-request events before refusal; paired authenticated cells grade \"pass\" (guard fires on absence, not unconditionally); cursor/pinned reason == \"missing-api-key\" from the same guard path",
+    "maps_to_ac": null
+   }
+  ],
+  "reviewer": "evals-reviewer",
+  "tdd_mode": "red_first",
+  "verification_policy": {
+   "requires_tests": true,
+   "requires_red_evidence": true,
+   "requires_seeded_evidence": true
+  },
+  "sprint_id": "sprint-01",
+  "integration_obligations": [
+   {
+    "id": "obl-FLOW-GRD-06-MISSING-KEY",
+    "flow_ref": "FLOW-GRD-06-MISSING-KEY",
+    "phase": "post-integration",
+    "mandatory": true,
+    "owner_task_id": "T10",
+    "available_after": [
+     "T10",
+     "T11",
+     "T3",
+     "T9"
+    ],
+    "required_by": [
+     "T12"
+    ],
+    "recheck_on": [
+     "T12"
+    ],
+    "recheck_paths": [
+     "tests/sprint-01/grd-06-missing-key.test.mjs",
+     "test/harness/pins.json",
+     ".github/workflows/harness-eval.yml"
+    ],
+    "completion_rule": "FLOW-GRD-06-MISSING-KEY passes on the trunk when `node --test tests/sprint-01/grd-06-missing-key.test.mjs --test-name-pattern FLOW-GRD-06-MISSING-KEY` exits 0 and the flow's artifact .tmp/sprint-01-verification/grd-06-missing-key.json is retained with its expected observations matched.",
+    "verification_gates": [],
+    "requirements": [],
+    "owner_bindings": [
+     {
+      "owner_task_id": "T10",
+      "flow_ref": "FLOW-GRD-06-MISSING-KEY",
+      "command": "node --test tests/sprint-01/grd-06-missing-key.test.mjs --test-name-pattern FLOW-GRD-06-MISSING-KEY"
+     }
+    ]
+   }
+  ]
+ }
+}

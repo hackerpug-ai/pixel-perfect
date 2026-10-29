@@ -1,0 +1,754 @@
+{
+ "task_id": "T6",
+ "provenance": {
+  "planner": "evals-planner",
+  "proposed_by": "github-agentic-workflow-planner + evals-planner",
+  "proposal_path": ".tmp/kb-sprint-tasks-plan/sprint-01/proposals",
+  "proposal_sha256": "088075273650f546b496a5ba13327c80b920af9b0803a131652ec92174d943e0"
+ },
+ "planner_json": {
+  "task_id": "T6",
+  "task_type": "FEATURE",
+  "title": "Implement the claude-code CanonicalEvent stream mapping, the per-version mapping validator, and question-boundary semantics (ask-nothing + FirstQuestion boundary-stop)",
+  "agent": "evals-implementer",
+  "planner": "evals-planner",
+  "proposed_by": "github-agentic-workflow-planner + evals-planner",
+  "estimate_points": 8,
+  "repo": null,
+  "repo_root": "/Users/justinrich/Projects/pixel-perfect",
+  "write_allowed": [
+   "test/harness/stream/**",
+   "tests/sprint-01/grd-03-evidence.test.mjs",
+   "tests/sprint-01/grd-02-four-grades.test.mjs"
+  ],
+  "guardrails": {
+   "write_allowed": [
+    "test/harness/stream/**",
+    "tests/sprint-01/grd-03-evidence.test.mjs",
+    "tests/sprint-01/grd-02-four-grades.test.mjs"
+   ],
+   "write_prohibited": [
+    "plugins/pixel-perfect/**",
+    "test/harness/adapters/**"
+   ]
+  },
+  "depends_on": [
+   "T5 (claude-code-cells@v1)"
+  ],
+  "dark_justification": null,
+  "requirements": [
+   {
+    "id": "AC-1",
+    "type": "acceptance_criterion",
+    "primary": false,
+    "flow_ref": "FLOW-GRD-02-FOUR-GRADES",
+    "title": "Four grades per graded cell: command_list, status, verify, question_before_expensive_work \u2014 ask-nothing enforced, must-a",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "verify": "node --test tests/sprint-01/grd-02-four-grades.test.mjs --test-name-pattern FLOW-GRD-02-FOUR-GRADES",
+    "test_file": "tests/sprint-01/grd-02-four-grades.test.mjs",
+    "test_function": "FLOW-GRD-02-FOUR-GRADES",
+    "positive_example": "Fixture pair: claude-code pinned cell with four pass verdicts where list/status/verify streams contain zero question events and the init prefix stops at the first USER_CHOICE with no answer sent \u2014 module exits 0.",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "a question event appeared in any list/status/verify stream and the grader still passed that check (an empty question count must fail ask-nothing)",
+       "the must-ask probe graded pass with zero question events or with an answer delivered",
+       "a generic status reply passed the status check",
+       "verdicts were derived from exit codes instead of streams"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "CanonicalEvent streams with original_event bytes and offsets",
+       "grade records per check",
+       "archived real captures with provenance hashes"
+      ],
+      "examples": [
+       "four check_ids with verdicts for claude-code/pinned",
+       "question event count 0 in ask-nothing streams",
+       "USER_CHOICE count 1, answers sent 0 in must-ask"
+      ],
+      "required_capture": "raw captured stdout per invocation with byte offsets, capture hashes, grader evidence citations"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/live-dispatch-run",
+       "action": {
+        "actor": "workflow",
+        "steps": [
+         "adapter runs the five real invocations via claude -p with stream-json",
+         "grader assigns four verdicts from files and streams"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "claude-code/pinned cell shows all 4 checks \"pass\"",
+         "status reply states platform \"web-desktop\", seeded phase, gate state, nonzero inventory counts matching StatusCase",
+         "must-ask capture contains exactly 1 valid USER_CHOICE and 0 answer deliveries"
+        ],
+        "must_not_observe": [
+         "any question event in list/status/verify streams",
+         "a scripted answer consumed by any first check",
+         "an empty checks array or null reason on a pass verdict"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/streams/question-in-ask-nothing",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-02 --fixture question-in-ask-nothing --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "grader returns \"fail\" citing the question event offset",
+         ".red records the spliced capture's \"provenance hashes\""
+        ],
+        "must_not_observe": [
+         "pass on a stream containing a question",
+         "synthetic event JSON with no capture provenance"
+        ]
+       }
+      }
+     ],
+     "topology_note": "real claude-code CLI executes list/status/planted-verify/clean-verify/must-ask-init; keyless grader reads files plus CanonicalEvent streams; replay runs the same grader over archived real captures",
+     "test_tier": "e2e"
+    },
+    "red_input": "On base main the module cannot find any grade record (no test/harness exists) and exits 1 writing .red; locally, a fixture where the status check's stream contains a question flips verdict to fail.",
+    "red_proof": ".tmp/sprint-01-verification/grd-02-four-grades.json.red",
+    "description": "GIVEN seed/live-dispatch-run (RUN_ID + attempt-qualified artifacts via gh run download) WHEN adapter runs the five real invocations via claude -p with stream-json; grader assigns four verdicts from files and streams THEN claude-code/pinned cell shows all 4 checks \"pass\"; status reply states platform \"web-desktop\", seeded phase, gate state, nonzero inventory counts matching StatusCase; must-ask capture contains exactly 1 valid USER_CHOICE and 0 answer deliveries",
+    "maps_to_ac": null
+   },
+   {
+    "id": "AC-2",
+    "type": "acceptance_criterion",
+    "primary": true,
+    "flow_ref": "FLOW-GRD-03-FILES-AND-STREAM",
+    "title": "Evidence-not-exit-code grading: verdicts cite files and stream offsets; a denied read fails on exit 0",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "verify": "node --test tests/sprint-01/grd-03-evidence.test.mjs --test-name-pattern FLOW-GRD-03-FILES-AND-STREAM",
+    "test_file": "tests/sprint-01/grd-03-evidence.test.mjs",
+    "test_function": "FLOW-GRD-03-FILES-AND-STREAM",
+    "positive_example": "Controls row exit0-denied-read fail denied_tool_call present next to a raw process_exit_code of 0, and every graded check citing at least 1 evidence path \u2014 module exits 0.",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "a denied required read with exit 0 graded pass \u2014 the real exit0-denied-read capture yields fail denied_tool_call",
+       "an unmapped required fact silently omitted \u2014 version-bumped capture yields could-not-run",
+       "the stored exit code could influence the verdict"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "CanonicalEvent records with original_event preserved",
+       "capture hashes and stream_offset citations",
+       "controls row exit0-denied-read"
+      ],
+      "examples": [
+       "source files-and-event-stream count == 4",
+       "process_exit_code 0 next to verdict fail",
+       "denied_tool_call naming operation and target path"
+      ],
+      "required_capture": "the raw exit-0 denial capture from T11 qualification with before/after fixture manifests"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/live-dispatch-run",
+       "action": {
+        "actor": "maintainer",
+        "steps": [
+         "download result artifact",
+         "jq claude-code/pinned checks for source and process_exit_code"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "checks with .source files-and-event-stream count == 4",
+         "raw integer `process_exit_code` present as diagnostic",
+         "controls row exit0-denied-read fail denied_tool_call"
+        ],
+        "must_not_observe": [
+         "any check where verdict equals an exit-code mapping",
+         "pass verdict with non-empty denied_tool_call",
+         "opaque events used to infer absence"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/streams/exit0-denied-read",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-03 --fixture exit0-denied-read --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "verdict fail with denied_tool_call citing the denial offset while process_exit_code reads 0",
+         "mapping-validator \"pass\" on the qualified version"
+        ],
+        "must_not_observe": [
+         "pass or could-not-run on an observable denial",
+         "fabricated denial events with no capture provenance"
+        ]
+       }
+      }
+     ],
+     "topology_note": "InvocationCapture records stdout with byte offsets; stream-grader normalizes to CanonicalEvent; grader cites offsets and capture hashes; live artifact carries source and process_exit_code per check",
+     "test_tier": "e2e"
+    },
+    "red_input": "Base main: no grader exists, module exits 1 with .red. Behavior RED: a verdict equal to its exit-code mapping (pass with exit 0 and a denied-read stream) makes the module exit 1 \u2014 the negative fixture is the recorded deny-under-default-mode stream from T5.",
+    "red_proof": ".tmp/sprint-01-verification/grd-03-evidence.json.red",
+    "description": "GIVEN seed/live-dispatch-run (RUN_ID + attempt-qualified artifacts via gh run download) WHEN download result artifact; jq claude-code/pinned checks for source and process_exit_code THEN checks with .source files-and-event-stream count == 4; raw integer `process_exit_code` present as diagnostic; controls row exit0-denied-read fail denied_tool_call",
+    "maps_to_ac": null
+   },
+   {
+    "id": "TC-1",
+    "type": "test_criterion",
+    "primary": false,
+    "description": "Every required fact in a qualified capture maps to a CanonicalEvent type, and an unmapped required fact makes the affected check could-not-run",
+    "verify": "node --test tests/sprint-01/grd-02-four-grades.test.mjs --test-name-pattern FLOW-GRD-02-FOUR-GRADES",
+    "maps_to_ac": "AC-1",
+    "test_file": "tests/sprint-01/grd-02-four-grades.test.mjs",
+    "test_function": "FLOW-GRD-02-FOUR-GRADES",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "a question event appeared in any list/status/verify stream and the grader still passed that check (an empty question count must fail ask-nothing)",
+       "the must-ask probe graded pass with zero question events or with an answer delivered",
+       "a generic status reply passed the status check",
+       "verdicts were derived from exit codes instead of streams"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "CanonicalEvent streams with original_event bytes and offsets",
+       "grade records per check",
+       "archived real captures with provenance hashes"
+      ],
+      "examples": [
+       "four check_ids with verdicts for claude-code/pinned",
+       "question event count 0 in ask-nothing streams",
+       "USER_CHOICE count 1, answers sent 0 in must-ask"
+      ],
+      "required_capture": "raw captured stdout per invocation with byte offsets, capture hashes, grader evidence citations"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/live-dispatch-run",
+       "action": {
+        "actor": "workflow",
+        "steps": [
+         "adapter runs the five real invocations via claude -p with stream-json",
+         "grader assigns four verdicts from files and streams"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "claude-code/pinned cell shows all 4 checks \"pass\"",
+         "status reply states platform \"web-desktop\", seeded phase, gate state, nonzero inventory counts matching StatusCase",
+         "must-ask capture contains exactly 1 valid USER_CHOICE and 0 answer deliveries"
+        ],
+        "must_not_observe": [
+         "any question event in list/status/verify streams",
+         "a scripted answer consumed by any first check",
+         "an empty checks array or null reason on a pass verdict"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/streams/question-in-ask-nothing",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-02 --fixture question-in-ask-nothing --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "grader returns \"fail\" citing the question event offset",
+         ".red records the spliced capture's \"provenance hashes\""
+        ],
+        "must_not_observe": [
+         "pass on a stream containing a question",
+         "synthetic event JSON with no capture provenance"
+        ]
+       }
+      }
+     ],
+     "topology_note": "real claude-code CLI executes list/status/planted-verify/clean-verify/must-ask-init; keyless grader reads files plus CanonicalEvent streams; replay runs the same grader over archived real captures",
+     "test_tier": "e2e"
+    },
+    "flow_ref": null,
+    "red_input": "a capture whose question-tool start has no mapping is graded pass instead of could-not-run",
+    "positive_example": "the qualified 2.1.291 mapping table covers incremental text, question-tool start, expensive-tool start, required-read denial, native session identity and completion"
+   },
+   {
+    "id": "TC-2",
+    "type": "test_criterion",
+    "primary": false,
+    "description": "A question event in an ask-nothing invocation fails that check, and a must-ask probe stops at the first valid question with zero answers sent",
+    "verify": "node --test tests/sprint-01/grd-02-four-grades.test.mjs --test-name-pattern FLOW-GRD-02-FOUR-GRADES",
+    "maps_to_ac": "AC-1",
+    "test_file": "tests/sprint-01/grd-02-four-grades.test.mjs",
+    "test_function": "FLOW-GRD-02-FOUR-GRADES",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "a question event appeared in any list/status/verify stream and the grader still passed that check (an empty question count must fail ask-nothing)",
+       "the must-ask probe graded pass with zero question events or with an answer delivered",
+       "a generic status reply passed the status check",
+       "verdicts were derived from exit codes instead of streams"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "CanonicalEvent streams with original_event bytes and offsets",
+       "grade records per check",
+       "archived real captures with provenance hashes"
+      ],
+      "examples": [
+       "four check_ids with verdicts for claude-code/pinned",
+       "question event count 0 in ask-nothing streams",
+       "USER_CHOICE count 1, answers sent 0 in must-ask"
+      ],
+      "required_capture": "raw captured stdout per invocation with byte offsets, capture hashes, grader evidence citations"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/live-dispatch-run",
+       "action": {
+        "actor": "workflow",
+        "steps": [
+         "adapter runs the five real invocations via claude -p with stream-json",
+         "grader assigns four verdicts from files and streams"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "claude-code/pinned cell shows all 4 checks \"pass\"",
+         "status reply states platform \"web-desktop\", seeded phase, gate state, nonzero inventory counts matching StatusCase",
+         "must-ask capture contains exactly 1 valid USER_CHOICE and 0 answer deliveries"
+        ],
+        "must_not_observe": [
+         "any question event in list/status/verify streams",
+         "a scripted answer consumed by any first check",
+         "an empty checks array or null reason on a pass verdict"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/streams/question-in-ask-nothing",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-02 --fixture question-in-ask-nothing --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "grader returns \"fail\" citing the question event offset",
+         ".red records the spliced capture's \"provenance hashes\""
+        ],
+        "must_not_observe": [
+         "pass on a stream containing a question",
+         "synthetic event JSON with no capture provenance"
+        ]
+       }
+      }
+     ],
+     "topology_note": "real claude-code CLI executes list/status/planted-verify/clean-verify/must-ask-init; keyless grader reads files plus CanonicalEvent streams; replay runs the same grader over archived real captures",
+     "test_tier": "e2e"
+    },
+    "flow_ref": null,
+    "red_input": "a spliced stream carrying a question in an ask-nothing check is graded pass",
+    "positive_example": "the must-ask capture holds exactly 1 USER_CHOICE and 0 answer deliveries, graded pass from a complete prefix"
+   },
+   {
+    "id": "TC-3",
+    "type": "test_criterion",
+    "primary": false,
+    "description": "Unknown lines are preserved as harness_specific with their original bytes, so completeness can be stated rather than inferred",
+    "verify": "node --test tests/sprint-01/grd-03-evidence.test.mjs --test-name-pattern FLOW-GRD-03-FILES-AND-STREAM",
+    "maps_to_ac": "AC-2",
+    "test_file": "tests/sprint-01/grd-03-evidence.test.mjs",
+    "test_function": "FLOW-GRD-03-FILES-AND-STREAM",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "a denied required read with exit 0 graded pass \u2014 the real exit0-denied-read capture yields fail denied_tool_call",
+       "an unmapped required fact silently omitted \u2014 version-bumped capture yields could-not-run",
+       "the stored exit code could influence the verdict"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "CanonicalEvent records with original_event preserved",
+       "capture hashes and stream_offset citations",
+       "controls row exit0-denied-read"
+      ],
+      "examples": [
+       "source files-and-event-stream count == 4",
+       "process_exit_code 0 next to verdict fail",
+       "denied_tool_call naming operation and target path"
+      ],
+      "required_capture": "the raw exit-0 denial capture from T11 qualification with before/after fixture manifests"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/live-dispatch-run",
+       "action": {
+        "actor": "maintainer",
+        "steps": [
+         "download result artifact",
+         "jq claude-code/pinned checks for source and process_exit_code"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "checks with .source files-and-event-stream count == 4",
+         "raw integer `process_exit_code` present as diagnostic",
+         "controls row exit0-denied-read fail denied_tool_call"
+        ],
+        "must_not_observe": [
+         "any check where verdict equals an exit-code mapping",
+         "pass verdict with non-empty denied_tool_call",
+         "opaque events used to infer absence"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/streams/exit0-denied-read",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-03 --fixture exit0-denied-read --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "verdict fail with denied_tool_call citing the denial offset while process_exit_code reads 0",
+         "mapping-validator \"pass\" on the qualified version"
+        ],
+        "must_not_observe": [
+         "pass or could-not-run on an observable denial",
+         "fabricated denial events with no capture provenance"
+        ]
+       }
+      }
+     ],
+     "topology_note": "InvocationCapture records stdout with byte offsets; stream-grader normalizes to CanonicalEvent; grader cites offsets and capture hashes; live artifact carries source and process_exit_code per check",
+     "test_tier": "e2e"
+    },
+    "flow_ref": null,
+    "red_input": "a normalizer that drops unknown lines cannot state capture completeness and fails the tiling check",
+    "positive_example": "the qualified capture's offsets tile the raw stdout exactly once, and unknown lines survive as harness_specific"
+   }
+  ],
+  "fixtures": {
+   "seed/live-dispatch-run": {
+    "entrypoint": "gh workflow run harness-eval --repo hackerpug-ai/pixel-perfect (real dispatch, checkout default)",
+    "description": "RUN_ID + attempt-qualified artifacts via gh run download",
+    "seed_method": "cli"
+   },
+   "seed/live-dispatch-published": {
+    "entrypoint": "gh workflow run harness-eval -f install_mode=published",
+    "description": "second RUN_ID recording published mode",
+    "seed_method": "cli"
+   },
+   "seed/result-artifact": {
+    "entrypoint": "gh run download <RUN_ID> -n harness-eval-result-<RUN_ID>-1",
+    "description": "harness-eval-result.json with cells, controls, pins_sha256, identity fields",
+    "seed_method": "cli"
+   },
+   "seed/verify-reports-artifact": {
+    "entrypoint": "gh run download <RUN_ID> -n harness-eval-verify-reports-<RUN_ID>-1",
+    "description": "reports/verify-button-drift.json and reports/verify-clean.json",
+    "seed_method": "cli"
+   },
+   "seed/streams/exit0-denied-read": {
+    "entrypoint": "real claude-code capture from T11 qualification (recorded-stance run, reads denied, exit 0); archived under test/harness/fixtures/streams/ with capture hash",
+    "description": "raw stream bytes with offsets",
+    "seed_method": "recorded_external"
+   },
+   "seed/streams/clean-verify-pass": {
+    "entrypoint": "real captured clean-verify invocation from the same qualification run",
+    "description": "grader-passing capture fixture",
+    "seed_method": "recorded_external"
+   },
+   "seed/streams/question-in-ask-nothing": {
+    "entrypoint": "splice of real bytes only: USER_CHOICE from the must-ask capture inserted into the real verify stream, provenance hashes recorded",
+    "description": "the GRD-02 red fixture",
+    "seed_method": "recorded_external"
+   },
+   "seed/case/verify-button-drift": {
+    "entrypoint": "test/harness/kit/project fresh copy + overlays/button-drift by the case loader",
+    "description": "planted invocation dir with declared report path",
+    "seed_method": "migration_fixture"
+   },
+   "seed/case/verify-clean": {
+    "entrypoint": "same kit copy without overlay, separate fresh dir",
+    "description": "clean invocation dir",
+    "seed_method": "migration_fixture"
+   },
+   "seed/scratch-invocation-dir": {
+    "entrypoint": "mkdtemp created by the case loader",
+    "description": "empty workspace for confinement negatives with post-run listings",
+    "seed_method": "migration_fixture"
+   },
+   "seed/env/anthropic-key-present": {
+    "entrypoint": "harness-smoke environment, ANTHROPIC_API_KEY on exec steps (owner secret)",
+    "description": "authenticated cells + key-present-misfire control",
+    "seed_method": "cli"
+   },
+   "seed/env/key-removed": {
+    "entrypoint": "control step's real environment with ANTHROPIC_API_KEY and all fallbacks unset (asserted in-step)",
+    "description": "missing-key refusal capture with zero model events",
+    "seed_method": "cli"
+   }
+  },
+  "touches_capabilities": [
+   "CAP-EVAL-01"
+  ],
+  "acceptance_criteria": [
+   {
+    "id": "AC-1",
+    "type": "acceptance_criterion",
+    "primary": false,
+    "flow_ref": "FLOW-GRD-02-FOUR-GRADES",
+    "title": "Four grades per graded cell: command_list, status, verify, question_before_expensive_work \u2014 ask-nothing enforced, must-a",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "verify": "node --test tests/sprint-01/grd-02-four-grades.test.mjs --test-name-pattern FLOW-GRD-02-FOUR-GRADES",
+    "test_file": "tests/sprint-01/grd-02-four-grades.test.mjs",
+    "test_function": "FLOW-GRD-02-FOUR-GRADES",
+    "positive_example": "Fixture pair: claude-code pinned cell with four pass verdicts where list/status/verify streams contain zero question events and the init prefix stops at the first USER_CHOICE with no answer sent \u2014 module exits 0.",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "a question event appeared in any list/status/verify stream and the grader still passed that check (an empty question count must fail ask-nothing)",
+       "the must-ask probe graded pass with zero question events or with an answer delivered",
+       "a generic status reply passed the status check",
+       "verdicts were derived from exit codes instead of streams"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "CanonicalEvent streams with original_event bytes and offsets",
+       "grade records per check",
+       "archived real captures with provenance hashes"
+      ],
+      "examples": [
+       "four check_ids with verdicts for claude-code/pinned",
+       "question event count 0 in ask-nothing streams",
+       "USER_CHOICE count 1, answers sent 0 in must-ask"
+      ],
+      "required_capture": "raw captured stdout per invocation with byte offsets, capture hashes, grader evidence citations"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/live-dispatch-run",
+       "action": {
+        "actor": "workflow",
+        "steps": [
+         "adapter runs the five real invocations via claude -p with stream-json",
+         "grader assigns four verdicts from files and streams"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "claude-code/pinned cell shows all 4 checks \"pass\"",
+         "status reply states platform \"web-desktop\", seeded phase, gate state, nonzero inventory counts matching StatusCase",
+         "must-ask capture contains exactly 1 valid USER_CHOICE and 0 answer deliveries"
+        ],
+        "must_not_observe": [
+         "any question event in list/status/verify streams",
+         "a scripted answer consumed by any first check",
+         "an empty checks array or null reason on a pass verdict"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/streams/question-in-ask-nothing",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-02 --fixture question-in-ask-nothing --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "grader returns \"fail\" citing the question event offset",
+         ".red records the spliced capture's \"provenance hashes\""
+        ],
+        "must_not_observe": [
+         "pass on a stream containing a question",
+         "synthetic event JSON with no capture provenance"
+        ]
+       }
+      }
+     ],
+     "topology_note": "real claude-code CLI executes list/status/planted-verify/clean-verify/must-ask-init; keyless grader reads files plus CanonicalEvent streams; replay runs the same grader over archived real captures",
+     "test_tier": "e2e"
+    },
+    "red_input": "On base main the module cannot find any grade record (no test/harness exists) and exits 1 writing .red; locally, a fixture where the status check's stream contains a question flips verdict to fail.",
+    "red_proof": ".tmp/sprint-01-verification/grd-02-four-grades.json.red",
+    "description": "GIVEN seed/live-dispatch-run (RUN_ID + attempt-qualified artifacts via gh run download) WHEN adapter runs the five real invocations via claude -p with stream-json; grader assigns four verdicts from files and streams THEN claude-code/pinned cell shows all 4 checks \"pass\"; status reply states platform \"web-desktop\", seeded phase, gate state, nonzero inventory counts matching StatusCase; must-ask capture contains exactly 1 valid USER_CHOICE and 0 answer deliveries",
+    "maps_to_ac": null
+   },
+   {
+    "id": "AC-2",
+    "type": "acceptance_criterion",
+    "primary": true,
+    "flow_ref": "FLOW-GRD-03-FILES-AND-STREAM",
+    "title": "Evidence-not-exit-code grading: verdicts cite files and stream offsets; a denied read fails on exit 0",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "verify": "node --test tests/sprint-01/grd-03-evidence.test.mjs --test-name-pattern FLOW-GRD-03-FILES-AND-STREAM",
+    "test_file": "tests/sprint-01/grd-03-evidence.test.mjs",
+    "test_function": "FLOW-GRD-03-FILES-AND-STREAM",
+    "positive_example": "Controls row exit0-denied-read fail denied_tool_call present next to a raw process_exit_code of 0, and every graded check citing at least 1 evidence path \u2014 module exits 0.",
+    "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "negative_control": {
+      "would_fail_if": [
+       "a denied required read with exit 0 graded pass \u2014 the real exit0-denied-read capture yields fail denied_tool_call",
+       "an unmapped required fact silently omitted \u2014 version-bumped capture yields could-not-run",
+       "the stored exit code could influence the verdict"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "CanonicalEvent records with original_event preserved",
+       "capture hashes and stream_offset citations",
+       "controls row exit0-denied-read"
+      ],
+      "examples": [
+       "source files-and-event-stream count == 4",
+       "process_exit_code 0 next to verdict fail",
+       "denied_tool_call naming operation and target path"
+      ],
+      "required_capture": "the raw exit-0 denial capture from T11 qualification with before/after fixture manifests"
+     },
+     "cases": [
+      {
+       "start_ref": "seed/live-dispatch-run",
+       "action": {
+        "actor": "maintainer",
+        "steps": [
+         "download result artifact",
+         "jq claude-code/pinned checks for source and process_exit_code"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "checks with .source files-and-event-stream count == 4",
+         "raw integer `process_exit_code` present as diagnostic",
+         "controls row exit0-denied-read fail denied_tool_call"
+        ],
+        "must_not_observe": [
+         "any check where verdict equals an exit-code mapping",
+         "pass verdict with non-empty denied_tool_call",
+         "opaque events used to infer absence"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/streams/exit0-denied-read",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "node tests/sprint-01/flow-runner.mjs grd-03 --fixture exit0-denied-read --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "verdict fail with denied_tool_call citing the denial offset while process_exit_code reads 0",
+         "mapping-validator \"pass\" on the qualified version"
+        ],
+        "must_not_observe": [
+         "pass or could-not-run on an observable denial",
+         "fabricated denial events with no capture provenance"
+        ]
+       }
+      }
+     ],
+     "topology_note": "InvocationCapture records stdout with byte offsets; stream-grader normalizes to CanonicalEvent; grader cites offsets and capture hashes; live artifact carries source and process_exit_code per check",
+     "test_tier": "e2e"
+    },
+    "red_input": "Base main: no grader exists, module exits 1 with .red. Behavior RED: a verdict equal to its exit-code mapping (pass with exit 0 and a denied-read stream) makes the module exit 1 \u2014 the negative fixture is the recorded deny-under-default-mode stream from T5.",
+    "red_proof": ".tmp/sprint-01-verification/grd-03-evidence.json.red",
+    "description": "GIVEN seed/live-dispatch-run (RUN_ID + attempt-qualified artifacts via gh run download) WHEN download result artifact; jq claude-code/pinned checks for source and process_exit_code THEN checks with .source files-and-event-stream count == 4; raw integer `process_exit_code` present as diagnostic; controls row exit0-denied-read fail denied_tool_call",
+    "maps_to_ac": null
+   }
+  ],
+  "reviewer": "evals-reviewer",
+  "tdd_mode": "red_first",
+  "verification_policy": {
+   "requires_tests": true,
+   "requires_red_evidence": true,
+   "requires_seeded_evidence": true
+  },
+  "sprint_id": "sprint-01",
+  "integration_obligations": [
+   {
+    "id": "obl-FLOW-GRD-03-FILES-AND-STREAM",
+    "flow_ref": "FLOW-GRD-03-FILES-AND-STREAM",
+    "phase": "post-integration",
+    "mandatory": true,
+    "owner_task_id": "T6",
+    "available_after": [
+     "T11",
+     "T3",
+     "T6",
+     "T7",
+     "T9"
+    ],
+    "required_by": [
+     "T12"
+    ],
+    "recheck_on": [
+     "T12"
+    ],
+    "recheck_paths": [
+     "tests/sprint-01/grd-03-evidence.test.mjs",
+     "test/harness/pins.json",
+     ".github/workflows/harness-eval.yml"
+    ],
+    "completion_rule": "FLOW-GRD-03-FILES-AND-STREAM passes on the trunk when `node --test tests/sprint-01/grd-03-evidence.test.mjs --test-name-pattern FLOW-GRD-03-FILES-AND-STREAM` exits 0 and the flow's artifact .tmp/sprint-01-verification/grd-03-evidence.json is retained with its expected observations matched.",
+    "verification_gates": [],
+    "requirements": [],
+    "owner_bindings": [
+     {
+      "owner_task_id": "T6",
+      "flow_ref": "FLOW-GRD-03-FILES-AND-STREAM",
+      "command": "node --test tests/sprint-01/grd-03-evidence.test.mjs --test-name-pattern FLOW-GRD-03-FILES-AND-STREAM"
+     }
+    ]
+   }
+  ]
+ }
+}

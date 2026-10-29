@@ -1,0 +1,207 @@
+{
+ "deferred_journeys": [
+  {
+   "covers_ucs": [
+    "UC-GRD-06",
+    "UC-REL-04",
+    "UC-REL-05",
+    "UC-RPT-01",
+    "UC-RPT-02",
+    "UC-RUN-02",
+    "UC-RUN-03"
+   ],
+   "id": "FLOW-JRN-GAPS-DRIFT-LATER",
+   "outstanding_ucs": [
+    "UC-REL-04",
+    "UC-REL-05",
+    "UC-RPT-01",
+    "UC-RPT-02",
+    "UC-RUN-03"
+   ]
+  },
+  {
+   "covers_ucs": [
+    "UC-GRD-01",
+    "UC-GRD-02",
+    "UC-GRD-03",
+    "UC-REL-01",
+    "UC-RUN-01"
+   ],
+   "id": "FLOW-JRN-NIGHTLY-PINNED-BLOCK",
+   "outstanding_ucs": [
+    "UC-REL-01",
+    "UC-RUN-01"
+   ]
+  }
+ ],
+ "derived_from": {
+  "prior_scope": [],
+  "scenarios": ".spec/scenarios",
+  "scope": [
+   "UC-GRD-01",
+   "UC-GRD-02",
+   "UC-GRD-03",
+   "UC-GRD-04",
+   "UC-GRD-05",
+   "UC-GRD-06",
+   "UC-RUN-02"
+  ]
+ },
+ "flows": [
+  {
+   "artifact": ".tmp/sprint-01-verification/grd-01-twelve-cells.json",
+   "coldboot_policy": ".spec/e2e-policy/sprint-01/gh-auth-repo.json",
+   "desc": null,
+   "gate_steps": [
+    1,
+    3,
+    4,
+    5,
+    9,
+    12
+   ],
+   "id": "FLOW-GRD-01-TWELVE-CELLS",
+   "manual_physical": false,
+   "red_proof": ".tmp/sprint-01-verification/grd-01-twelve-cells.json.red",
+   "run_cmd": "node --test tests/sprint-01/grd-01-twelve-cells.test.mjs --test-name-pattern FLOW-GRD-01-TWELVE-CELLS",
+   "scope": "task",
+   "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+   "test": "tests/sprint-01/grd-01-twelve-cells.test.mjs",
+   "type": "core",
+   "uc_ref": "UC-GRD-01",
+   "replay_cmd": "node tests/sprint-01/flow-runner.mjs FLOW-GRD-01-TWELVE-CELLS --repo hackerpug-ai/pixel-perfect --run latest --out .tmp/sprint-01-verification/grd-01-twelve-cells.json"
+  },
+  {
+   "artifact": ".tmp/sprint-01-verification/grd-02-four-grades.json",
+   "coldboot_policy": ".spec/e2e-policy/sprint-01/gh-auth-repo.json",
+   "desc": null,
+   "gate_steps": [
+    6
+   ],
+   "id": "FLOW-GRD-02-FOUR-GRADES",
+   "manual_physical": false,
+   "red_proof": ".tmp/sprint-01-verification/grd-02-four-grades.json.red",
+   "run_cmd": "node --test tests/sprint-01/grd-02-four-grades.test.mjs --test-name-pattern FLOW-GRD-02-FOUR-GRADES",
+   "scope": "task",
+   "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+   "test": "tests/sprint-01/grd-02-four-grades.test.mjs",
+   "type": "core",
+   "uc_ref": "UC-GRD-02",
+   "replay_cmd": "node tests/sprint-01/flow-runner.mjs FLOW-GRD-02-FOUR-GRADES --repo hackerpug-ai/pixel-perfect --run latest --out .tmp/sprint-01-verification/grd-02-four-grades.json"
+  },
+  {
+   "artifact": ".tmp/sprint-01-verification/grd-03-evidence.json",
+   "coldboot_policy": ".spec/e2e-policy/sprint-01/gh-auth-repo.json",
+   "desc": null,
+   "gate_steps": [
+    10,
+    11
+   ],
+   "id": "FLOW-GRD-03-FILES-AND-STREAM",
+   "manual_physical": false,
+   "red_proof": ".tmp/sprint-01-verification/grd-03-evidence.json.red",
+   "run_cmd": "node --test tests/sprint-01/grd-03-evidence.test.mjs --test-name-pattern FLOW-GRD-03-FILES-AND-STREAM",
+   "scope": "task",
+   "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+   "test": "tests/sprint-01/grd-03-evidence.test.mjs",
+   "type": "core",
+   "uc_ref": "UC-GRD-03",
+   "replay_cmd": "node tests/sprint-01/flow-runner.mjs FLOW-GRD-03-FILES-AND-STREAM --repo hackerpug-ai/pixel-perfect --run latest --out .tmp/sprint-01-verification/grd-03-evidence.json"
+  },
+  {
+   "artifact": ".tmp/sprint-01-verification/grd-04-named-path.json",
+   "coldboot_policy": ".spec/e2e-policy/sprint-01/gh-auth-repo.json",
+   "desc": null,
+   "gate_steps": [
+    8
+   ],
+   "id": "FLOW-GRD-04-NAMED-PATH",
+   "manual_physical": false,
+   "red_proof": ".tmp/sprint-01-verification/grd-04-named-path.json.red",
+   "run_cmd": "node --test tests/sprint-01/grd-04-named-path.test.mjs --test-name-pattern FLOW-GRD-04-NAMED-PATH",
+   "scope": "task",
+   "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+   "test": "tests/sprint-01/grd-04-named-path.test.mjs",
+   "type": "core",
+   "uc_ref": "UC-GRD-04",
+   "replay_cmd": "node tests/sprint-01/flow-runner.mjs FLOW-GRD-04-NAMED-PATH --repo hackerpug-ai/pixel-perfect --run latest --out .tmp/sprint-01-verification/grd-04-named-path.json"
+  },
+  {
+   "artifact": ".tmp/sprint-01-verification/grd-05-clean-twin.json",
+   "coldboot_policy": ".spec/e2e-policy/sprint-01/gh-auth-repo.json",
+   "desc": null,
+   "gate_steps": [
+    8
+   ],
+   "id": "FLOW-GRD-05-CLEAN-TWIN",
+   "manual_physical": false,
+   "red_proof": ".tmp/sprint-01-verification/grd-05-clean-twin.json.red",
+   "run_cmd": "node --test tests/sprint-01/grd-05-clean-twin.test.mjs --test-name-pattern FLOW-GRD-05-CLEAN-TWIN",
+   "scope": "task",
+   "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+   "test": "tests/sprint-01/grd-05-clean-twin.test.mjs",
+   "type": "core",
+   "uc_ref": "UC-GRD-05",
+   "replay_cmd": "node tests/sprint-01/flow-runner.mjs FLOW-GRD-05-CLEAN-TWIN --repo hackerpug-ai/pixel-perfect --run latest --out .tmp/sprint-01-verification/grd-05-clean-twin.json"
+  },
+  {
+   "artifact": ".tmp/sprint-01-verification/grd-06-missing-key.json",
+   "coldboot_policy": ".spec/e2e-policy/sprint-01/gh-auth-repo.json",
+   "desc": null,
+   "gate_steps": [
+    9,
+    11
+   ],
+   "id": "FLOW-GRD-06-MISSING-KEY",
+   "manual_physical": false,
+   "red_proof": ".tmp/sprint-01-verification/grd-06-missing-key.json.red",
+   "run_cmd": "node --test tests/sprint-01/grd-06-missing-key.test.mjs --test-name-pattern FLOW-GRD-06-MISSING-KEY",
+   "scope": "task",
+   "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+   "test": "tests/sprint-01/grd-06-missing-key.test.mjs",
+   "type": "core",
+   "uc_ref": "UC-GRD-06",
+   "replay_cmd": "node tests/sprint-01/flow-runner.mjs FLOW-GRD-06-MISSING-KEY --repo hackerpug-ai/pixel-perfect --run latest --out .tmp/sprint-01-verification/grd-06-missing-key.json"
+  },
+  {
+   "artifact": ".tmp/sprint-01-verification/jrn-planted-and-twin.json",
+   "coldboot_policy": ".spec/e2e-policy/sprint-01/gh-auth-repo.json",
+   "desc": null,
+   "gate_steps": [
+    8
+   ],
+   "id": "FLOW-JRN-PLANTED-AND-TWIN",
+   "manual_physical": false,
+   "red_proof": ".tmp/sprint-01-verification/jrn-planted-and-twin.json.red",
+   "run_cmd": "node --test tests/sprint-01/jrn-planted-and-twin.test.mjs --test-name-pattern FLOW-JRN-PLANTED-AND-TWIN",
+   "scope": "journey",
+   "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+   "test": "tests/sprint-01/jrn-planted-and-twin.test.mjs",
+   "type": "core",
+   "uc_refs": [
+    "UC-GRD-04",
+    "UC-GRD-05"
+   ],
+   "replay_cmd": "node tests/sprint-01/flow-runner.mjs FLOW-JRN-PLANTED-AND-TWIN --repo hackerpug-ai/pixel-perfect --run latest --out .tmp/sprint-01-verification/jrn-planted-and-twin.json"
+  },
+  {
+   "artifact": ".tmp/sprint-01-verification/run-02-hand.json",
+   "coldboot_policy": ".spec/e2e-policy/sprint-01/gh-auth-repo.json",
+   "desc": null,
+   "gate_steps": [
+    2,
+    3
+   ],
+   "id": "FLOW-RUN-02-HAND",
+   "manual_physical": false,
+   "red_proof": ".tmp/sprint-01-verification/run-02-hand.json.red",
+   "run_cmd": "node --test tests/sprint-01/run-02-hand.test.mjs --test-name-pattern FLOW-RUN-02-HAND",
+   "scope": "task",
+   "surface_policy": ".spec/e2e-policy/sprint-01/dispatch-allowed.json",
+   "test": "tests/sprint-01/run-02-hand.test.mjs",
+   "type": "core",
+   "uc_ref": "UC-RUN-02",
+   "replay_cmd": "node tests/sprint-01/flow-runner.mjs FLOW-RUN-02-HAND --dispatch --repo hackerpug-ai/pixel-perfect --out .tmp/sprint-01-verification/run-02-hand.json"
+  }
+ ]
+}

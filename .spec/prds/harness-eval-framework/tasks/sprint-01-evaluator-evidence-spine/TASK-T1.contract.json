@@ -1,0 +1,353 @@
+{
+ "task_id": "T1",
+ "provenance": {
+  "planner": "github-agentic-workflow-planner",
+  "proposed_by": "github-agentic-workflow-planner + evals-planner",
+  "proposal_path": ".tmp/kb-sprint-tasks-plan/sprint-01/proposals/github-agentic-workflow-planner.json",
+  "proposal_sha256": "84348d362a36ec3cd841933f6d311914e2431288fc8e0fe42e24ab093f6dd2e2"
+ },
+ "planner_json": {
+  "task_id": "T1",
+  "task_type": "FEATURE",
+  "title": "Scaffold .github/workflows/harness-eval.yml: workflow_dispatch (install_mode input, checkout default), empty default permissions, six-harness by two-track smoke matrix (fail-fast false, no cache, keyless install), no banned events",
+  "agent": "github-platform-implementer",
+  "planner": "github-agentic-workflow-planner",
+  "proposed_by": "github-agentic-workflow-planner + evals-planner",
+  "estimate_points": 5,
+  "repo": null,
+  "repo_root": "/Users/justinrich/Projects/pixel-perfect",
+  "write_allowed": [
+   ".github/workflows/harness-eval.yml",
+   "tests/sprint-01/run-02-hand.test.mjs",
+   "tests/sprint-01/flow-runner.mjs"
+  ],
+  "guardrails": {
+   "write_allowed": [
+    ".github/workflows/harness-eval.yml",
+    "tests/sprint-01/run-02-hand.test.mjs",
+    "tests/sprint-01/flow-runner.mjs"
+   ],
+   "write_prohibited": [
+    "scripts/release.mjs",
+    ".github/workflows/ci.yml",
+    ".github/workflows/tag-release.yml",
+    "plugins/pixel-perfect/**",
+    "anything under a root-level harness/ directory"
+   ]
+  },
+  "depends_on": [],
+  "dark_justification": null,
+  "requirements": [
+   {
+    "id": "AC-1",
+    "type": "acceptance_criterion",
+    "primary": true,
+    "flow_ref": "FLOW-RUN-02-HAND",
+    "title": "Hand dispatch: maintainer starts the grade by hand, checkout default, same matrix and checks as nightly",
+    "description": "GIVEN the harness-eval workflow does not exist on main WHEN the maintainer runs gh workflow run harness-eval with no inputs THEN a run exists with event workflow_dispatch, install_mode checkout, candidate_sha equal to the dispatch commit, and six harnesses including cursor",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "verify": "node --test tests/sprint-01/run-02-hand.test.mjs --test-name-pattern FLOW-RUN-02-HAND",
+    "test_file": "tests/sprint-01/run-02-hand.test.mjs",
+    "test_function": "FLOW-RUN-02-HAND",
+    "positive_example": "Dispatch with no inputs creates a run with event workflow_dispatch and install_mode=checkout recorded in the result (same twelve cells, same four checks as the nightly matrix shape) \u2014 module exits 0. Explicit published input is accepted and recorded as mode; full published grading resolution lands in sprint-03 by dependency plan (not declined debt).",
+    "surface_policy": ".spec/e2e-policy/sprint-01/dispatch-allowed.json",
+    "maps_to_ac": null,
+    "red_input": "Base main: gh workflow run harness-eval fails with 'could not find any workflows named harness-eval' \u2014 the module captures that failure, exits 1, writes .red. Exists today.",
+    "red_proof": ".tmp/sprint-01-verification/run-02-hand.json.red",
+    "scenario": {
+     "tier": "e2e-automated",
+     "topology_note": "workflow_dispatch on main with install_mode input (checkout default); artifact records event, install_mode, candidate_sha; a second dispatch with explicit published records published mode without checkout substitution",
+     "test_tier": "e2e",
+     "negative_control": {
+      "would_fail_if": [
+       "a default (no-input) dispatch recorded install_mode published or a release candidate_sha \u2014 the checkout identity is omitted",
+       "a published dispatch carried checkout identity \u2014 R-mode-mixup guard fires",
+       "mode were inferred from logs instead of artifact fields"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "artifact identity fields (event, install_mode, candidate_sha, plugin_revision)",
+       "gh run list event column"
+      ],
+      "examples": [
+       "event workflow_dispatch",
+       "install_mode checkout with candidate_sha == dispatch commit",
+       "published input yields install_mode published, candidate_sha null, could-not-run cells naming release resolution"
+      ],
+      "required_capture": "dispatch commit sha from git and the artifact's candidate_sha for equality, plus both run ids"
+     },
+     "build_proof": {
+      "range": "anything that proves a real dispatch created a real run whose artifact records the checkout identity",
+      "examples": [
+       "gh workflow run + gh run list row + downloaded harness-eval-result-<RUN_ID>-1"
+      ]
+     },
+     "cases": [
+      {
+       "start_ref": "seed/live-dispatch-run",
+       "action": {
+        "actor": "maintainer",
+        "steps": [
+         "git rev-parse HEAD",
+         "gh workflow run harness-eval with no inputs",
+         "download artifact and read event/install_mode/candidate_sha"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "event == workflow_dispatch",
+         "install_mode == checkout",
+         "candidate_sha == the dispatch commit sha",
+         "six harnesses present (\"claude-code\", \"codex\", \"grok\", \"opencode\", \"pi\", \"cursor\")"
+        ],
+        "must_not_observe": [
+         "install_mode \"published\" on a default (no-input) dispatch",
+         "candidate_sha null on the checkout run",
+         "mode asserted from logs"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/live-dispatch-published",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "gh workflow run harness-eval -f install_mode=published",
+         "node tests/sprint-01/flow-runner.mjs run-02 --fixture published-dispatch --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "artifact records install_mode \"published\" and candidate_sha null",
+         "cells honestly read \"could-not-run\" naming release resolution, never checkout-substituted"
+        ],
+        "must_not_observe": [
+         "candidate_sha == dispatch commit on the published run",
+         "a pass verdict on any published-mode cell in sprint-01 (no graded cells exist there)"
+        ]
+       }
+      }
+     ]
+    }
+   },
+   {
+    "id": "TC-1",
+    "type": "test_criterion",
+    "description": "The hand-dispatch flow records install_mode checkout when a dispatch passes no install_mode input",
+    "verify": "node --test tests/sprint-01/run-02-hand.test.mjs --test-name-pattern FLOW-RUN-02-HAND",
+    "maps_to_ac": "AC-1"
+   },
+   {
+    "id": "TC-2",
+    "type": "test_criterion",
+    "description": "The hand-dispatch flow rejects a workflow that declares any of the banned triggers",
+    "verify": "node --test tests/sprint-01/run-02-hand.test.mjs --test-name-pattern FLOW-RUN-02-HAND",
+    "maps_to_ac": "AC-1"
+   },
+   {
+    "id": "TC-3",
+    "type": "test_criterion",
+    "description": "A default dispatch records event workflow_dispatch and install_mode checkout in the result artifact",
+    "verify": "node --test tests/sprint-01/run-02-hand.test.mjs --test-name-pattern FLOW-RUN-02-HAND",
+    "maps_to_ac": "AC-1"
+   }
+  ],
+  "fixtures": {
+   "seed/live-dispatch-run": {
+    "entrypoint": "gh workflow run harness-eval --repo hackerpug-ai/pixel-perfect (real dispatch, checkout default)",
+    "description": "RUN_ID + attempt-qualified artifacts via gh run download",
+    "seed_method": "cli"
+   },
+   "seed/live-dispatch-published": {
+    "entrypoint": "gh workflow run harness-eval -f install_mode=published",
+    "description": "second RUN_ID recording published mode",
+    "seed_method": "cli"
+   }
+  },
+  "touches_capabilities": [
+   "CAP-EVAL-01"
+  ],
+  "acceptance_criteria": [
+   {
+    "id": "AC-1",
+    "type": "acceptance_criterion",
+    "primary": true,
+    "flow_ref": "FLOW-RUN-02-HAND",
+    "title": "Hand dispatch: maintainer starts the grade by hand, checkout default, same matrix and checks as nightly",
+    "test_tier": "integration",
+    "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+    "verify": "node --test tests/sprint-01/run-02-hand.test.mjs --test-name-pattern FLOW-RUN-02-HAND",
+    "test_file": "tests/sprint-01/run-02-hand.test.mjs",
+    "test_function": "FLOW-RUN-02-HAND",
+    "positive_example": "Dispatch with no inputs creates a run with event workflow_dispatch and install_mode=checkout recorded in the result (same twelve cells, same four checks as the nightly matrix shape) \u2014 module exits 0. Explicit published input is accepted and recorded as mode; full published grading resolution lands in sprint-03 by dependency plan (not declined debt).",
+    "surface_policy": ".spec/e2e-policy/sprint-01/dispatch-allowed.json",
+    "scenario": {
+     "tier": "e2e-automated",
+     "topology_note": "workflow_dispatch on main with install_mode input (checkout default); artifact records event, install_mode, candidate_sha; a second dispatch with explicit published records published mode without checkout substitution",
+     "test_tier": "e2e",
+     "negative_control": {
+      "would_fail_if": [
+       "a default (no-input) dispatch recorded install_mode published or a release candidate_sha \u2014 the checkout identity is omitted",
+       "a published dispatch carried checkout identity \u2014 R-mode-mixup guard fires",
+       "mode were inferred from logs instead of artifact fields"
+      ]
+     },
+     "evidence": {
+      "forms": [
+       "artifact identity fields (event, install_mode, candidate_sha, plugin_revision)",
+       "gh run list event column"
+      ],
+      "examples": [
+       "event workflow_dispatch",
+       "install_mode checkout with candidate_sha == dispatch commit",
+       "published input yields install_mode published, candidate_sha null, could-not-run cells naming release resolution"
+      ],
+      "required_capture": "dispatch commit sha from git and the artifact's candidate_sha for equality, plus both run ids"
+     },
+     "build_proof": {
+      "range": "anything that proves a real dispatch created a real run whose artifact records the checkout identity",
+      "examples": [
+       "gh workflow run + gh run list row + downloaded harness-eval-result-<RUN_ID>-1"
+      ]
+     },
+     "cases": [
+      {
+       "start_ref": "seed/live-dispatch-run",
+       "action": {
+        "actor": "maintainer",
+        "steps": [
+         "git rev-parse HEAD",
+         "gh workflow run harness-eval with no inputs",
+         "download artifact and read event/install_mode/candidate_sha"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "event == workflow_dispatch",
+         "install_mode == checkout",
+         "candidate_sha == the dispatch commit sha",
+         "six harnesses present (\"claude-code\", \"codex\", \"grok\", \"opencode\", \"pi\", \"cursor\")"
+        ],
+        "must_not_observe": [
+         "install_mode \"published\" on a default (no-input) dispatch",
+         "candidate_sha null on the checkout run",
+         "mode asserted from logs"
+        ]
+       }
+      },
+      {
+       "start_ref": "seed/live-dispatch-published",
+       "action": {
+        "actor": "runner",
+        "steps": [
+         "gh workflow run harness-eval -f install_mode=published",
+         "node tests/sprint-01/flow-runner.mjs run-02 --fixture published-dispatch --expect red"
+        ]
+       },
+       "end_state": {
+        "must_observe": [
+         "artifact records install_mode \"published\" and candidate_sha null",
+         "cells honestly read \"could-not-run\" naming release resolution, never checkout-substituted"
+        ],
+        "must_not_observe": [
+         "candidate_sha == dispatch commit on the published run",
+         "a pass verdict on any published-mode cell in sprint-01 (no graded cells exist there)"
+        ]
+       }
+      }
+     ]
+    },
+    "red_input": "Base main: gh workflow run harness-eval fails with 'could not find any workflows named harness-eval' \u2014 the module captures that failure, exits 1, writes .red. Exists today.",
+    "red_proof": ".tmp/sprint-01-verification/run-02-hand.json.red",
+    "description": "GIVEN the harness-eval workflow does not exist on main WHEN the maintainer runs gh workflow run harness-eval with no inputs THEN a run exists with event workflow_dispatch, install_mode checkout, candidate_sha equal to the dispatch commit, and six harnesses including cursor",
+    "maps_to_ac": null
+   }
+  ],
+  "reviewer": "github-agentic-workflow-reviewer",
+  "tdd_mode": "red_first",
+  "verification_policy": {
+   "requires_tests": true,
+   "requires_red_evidence": true,
+   "requires_seeded_evidence": true
+  },
+  "agent_rationale": "Repo platform control work \u2014 a real GitHub Actions workflow, its permissions and its triggers \u2014 is the surface github-platform-implementer owns per AGENTS.md.",
+  "coding_standards": [
+   ".github/workflows/ci.yml",
+   "AGENTS.md"
+  ],
+  "specification": {
+   "objective": "Ship the dispatchable skeleton of `harness-eval` \u2014 trigger, permissions, twelve-cell matrix shape, and empty transfer jobs \u2014 so a real hand dispatch exists and every later task has a file to extend.",
+   "success_state": "`gh workflow list --all` shows `harness-eval` active; a no-input dispatch creates a run with `event: workflow_dispatch`; the run page shows a twelve-cell matrix (all six harnesses, `pinned` and `newest`) and the grade-recorder placeholder, with no `pull_request`-family trigger anywhere in the file."
+  },
+  "design": {
+   "references": [
+    ".spec/prds/harness-eval-framework/09-technical-requirements/03-data-schema.md"
+   ],
+   "pattern": "none \u2014 headless product; the reader is the result artifact and the Actions summary (UC-GRD-01)",
+   "pattern_source": ".spec/prds/harness-eval-framework/09-technical-requirements/03-data-schema.md:1"
+  },
+  "test_criteria": [
+   {
+    "id": "TC-1",
+    "type": "test_criterion",
+    "description": "The hand-dispatch flow records install_mode checkout when a dispatch passes no install_mode input",
+    "verify": "node --test tests/sprint-01/run-02-hand.test.mjs --test-name-pattern FLOW-RUN-02-HAND",
+    "maps_to_ac": "AC-1"
+   },
+   {
+    "id": "TC-2",
+    "type": "test_criterion",
+    "description": "The hand-dispatch flow rejects a workflow that declares any of the banned triggers",
+    "verify": "node --test tests/sprint-01/run-02-hand.test.mjs --test-name-pattern FLOW-RUN-02-HAND",
+    "maps_to_ac": "AC-1"
+   },
+   {
+    "id": "TC-3",
+    "type": "test_criterion",
+    "description": "A default dispatch records event workflow_dispatch and install_mode checkout in the result artifact",
+    "verify": "node --test tests/sprint-01/run-02-hand.test.mjs --test-name-pattern FLOW-RUN-02-HAND",
+    "maps_to_ac": "AC-1"
+   }
+  ],
+  "integration_obligations": [
+   {
+    "id": "obl-FLOW-RUN-02-HAND",
+    "obligation_id": "obl-FLOW-RUN-02-HAND",
+    "flow_ref": "FLOW-RUN-02-HAND",
+    "phase": "post-integration",
+    "mandatory": true,
+    "owner_task_id": "T1",
+    "available_after": [
+     "T1",
+     "T2",
+     "T8"
+    ],
+    "required_by": [
+     "T9",
+     "T12"
+    ],
+    "recheck_on": [
+     "T9",
+     "T12"
+    ],
+    "recheck_paths": [
+     "tests/sprint-01/run-02-hand.test.mjs",
+     "test/harness/pins.json",
+     ".github/workflows/harness-eval.yml"
+    ],
+    "completion_rule": "After T1, T2 and T8 land, replay FLOW-RUN-02-HAND on the trunk: a no-input dispatch must produce a run with event workflow_dispatch, install_mode checkout, candidate_sha equal to the dispatch commit, and six harnesses including cursor.",
+    "verification_gates": [],
+    "requirements": [],
+    "owner_bindings": [
+     {
+      "owner_task_id": "T1",
+      "flow_ref": "FLOW-RUN-02-HAND",
+      "command": "node --test tests/sprint-01/run-02-hand.test.mjs --test-name-pattern FLOW-RUN-02-HAND"
+     }
+    ]
+   }
+  ]
+ }
+}

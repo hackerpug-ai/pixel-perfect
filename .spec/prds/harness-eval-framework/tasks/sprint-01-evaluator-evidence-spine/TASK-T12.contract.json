@@ -1,0 +1,179 @@
+{
+  "task_id": "T12",
+  "provenance": {
+    "planner": "github-agentic-workflow-planner",
+    "proposed_by": "github-agentic-workflow-planner + evals-planner",
+    "proposal_path": ".tmp/kb-sprint-tasks-plan/sprint-01/proposals/github-agentic-workflow-planner.json",
+    "proposal_sha256": "84348d362a36ec3cd841933f6d311914e2431288fc8e0fe42e24ab093f6dd2e2"
+  },
+  "planner_json": {
+    "task_id": "T12",
+    "task_type": "INFRA",
+    "title": "Review the evaluator workflow, capture layer, and grader contracts: secret placement, banned triggers, path confinement, aggregation order, exit-code independence, twelve-cell completeness, no root-level harness/ or branch-9624a4b gate wiring landing",
+    "agent": "github-agentic-workflow-reviewer",
+    "planner": "github-agentic-workflow-planner",
+    "proposed_by": "github-agentic-workflow-planner + evals-planner",
+    "estimate_points": 3,
+    "repo": null,
+    "repo_root": "/Users/justinrich/Projects/pixel-perfect",
+    "write_allowed": [
+      "review comments only"
+    ],
+    "guardrails": {
+      "write_allowed": [
+        "review comments only"
+      ],
+      "write_prohibited": [
+        "everything \u2014 review task writes no files"
+      ]
+    },
+    "depends_on": [
+      "T1 (workflow@v1)",
+      "T2 (pins@v1 + schemas@v1 + lookup@v1)",
+      "T3 (capture@v1)",
+      "T4 (cases@v1)",
+      "T5 (claude-code-cells@v1)",
+      "T6 (stream-mapping@v1)",
+      "T7 (grader@v1)",
+      "T8 (recorder@v1)",
+      "T9 (env-wiring@v1)",
+      "T10 (complete twelve-cell guarantee with honest absent reasons; guard evaluates the cursor credential binding)",
+      "T11 (controls@v1)"
+    ],
+    "dark_justification": "A review task produces no observable product-surface behavior; its checks are exercised indirectly through gate steps 6-11 which fail if the reviewed contracts are broken. Only dark task: 3 of 60 points (~5%), under the 30% ceiling.",
+    "requirements": [
+      {
+        "id": "AC-1",
+        "type": "acceptance_criterion",
+        "primary": false,
+        "flow_ref": null,
+        "title": "Review findings filed; merge-blocking contract violations resolved or named",
+        "description": "GIVEN the eleven implementation tasks of sprint 01 landed on main plus one real dispatched run and its artifact WHEN the reviewer works the ten-edge checklist against the landed bytes and the artifact THEN each edge carries pass/finding/blocked with a file:line or command-output receipt and each BLOCKER is fixed-and-re-reviewed or reported unresolved",
+        "test_tier": "unit",
+        "verification_service": "review checklist",
+        "verify": null,
+        "test_file": null,
+        "test_function": null,
+        "positive_example": "checklist clean with receipts",
+        "surface_policy": "read-only",
+        "maps_to_ac": null,
+        "observation_gates": [
+          {
+            "gate": "review checklist complete",
+            "expected": "every contract edge answered with a receipt; any fabricated-file path rejected"
+          }
+        ]
+      },
+      {
+        "id": "TC-1",
+        "type": "test_criterion",
+        "description": "No secrets. reference in the workflow sits outside a cell model-step env block (receipt command: grep -n 'secrets\\.' .github/workflows/harness-eval.yml)",
+        "verify": null,
+        "maps_to_ac": "AC-1"
+      },
+      {
+        "id": "TC-2",
+        "type": "test_criterion",
+        "description": "The workflow declares none of the banned triggers pull_request, pull_request_target or workflow_run (receipt command: grep -Ec '^  (pull_request|pull_request_target|workflow_run):' .github/workflows/harness-eval.yml)",
+        "verify": null,
+        "maps_to_ac": "AC-1"
+      },
+      {
+        "id": "TC-3",
+        "type": "test_criterion",
+        "description": "No root-level harness directory, no harness-matrix workflow and no branch-9624a4b gate wiring exist on main (receipt command: test ! -d harness && grep -c 'harness-matrix' scripts/release.mjs)",
+        "verify": null,
+        "maps_to_ac": "AC-1"
+      }
+    ],
+    "fixtures": {
+      "seed/live-dispatch-run": {
+        "entrypoint": "gh workflow run harness-eval --repo hackerpug-ai/pixel-perfect (real dispatch, checkout default)",
+        "description": "RUN_ID + attempt-qualified artifacts via gh run download",
+        "seed_method": "cli"
+      },
+      "seed/result-artifact": {
+        "entrypoint": "gh run download <RUN_ID> -n harness-eval-result-<RUN_ID>-1",
+        "description": "harness-eval-result.json with cells, controls, pins_sha256, identity fields",
+        "seed_method": "cli"
+      },
+      "seed/verify-reports-artifact": {
+        "entrypoint": "gh run download <RUN_ID> -n harness-eval-verify-reports-<RUN_ID>-1",
+        "description": "reports/verify-button-drift.json and reports/verify-clean.json",
+        "seed_method": "cli"
+      }
+    },
+    "touches_capabilities": [],
+    "acceptance_criteria": [
+      {
+        "id": "AC-1",
+        "type": "acceptance_criterion",
+        "primary": false,
+        "flow_ref": null,
+        "title": "Review findings filed; merge-blocking contract violations resolved or named",
+        "test_tier": "unit",
+        "verification_service": "review checklist",
+        "verify": null,
+        "test_file": null,
+        "test_function": null,
+        "positive_example": "checklist clean with receipts",
+        "surface_policy": "read-only",
+        "observation_gates": [
+          {
+            "gate": "review checklist complete",
+            "expected": "every contract edge answered with a receipt; any fabricated-file path rejected"
+          }
+        ],
+        "description": "GIVEN the eleven implementation tasks of sprint 01 landed on main plus one real dispatched run and its artifact WHEN the reviewer works the ten-edge checklist against the landed bytes and the artifact THEN each edge carries pass/finding/blocked with a file:line or command-output receipt and each BLOCKER is fixed-and-re-reviewed or reported unresolved",
+        "maps_to_ac": null
+      }
+    ],
+    "reviewer": "code-reviewer",
+    "tdd_mode": "skipped",
+    "verification_policy": {
+      "requires_tests": false,
+      "requires_red_evidence": false,
+      "requires_seeded_evidence": false
+    },
+    "agent_rationale": "The review itself is performed by github-agentic-workflow-reviewer (adversarial workflow review is its specialty); a second, general code-quality reviewer audits the review's own receipts for independence.",
+    "coding_standards": [
+      "AGENTS.md"
+    ],
+    "specification": {
+      "objective": "Independently certify \u2014 or refuse \u2014 the evaluator's cross-task contracts before the sprint is called done.",
+      "success_state": "A review record in which every checklist edge has a verdict and a receipt, and every BLOCKER is either fixed by its owner and re-reviewed or explicitly named as an unresolved blocker."
+    },
+    "design": {
+      "references": [
+        ".spec/prds/harness-eval-framework/09-technical-requirements/02-system-components.md"
+      ],
+      "pattern": "none \u2014 headless product; the reader is the result artifact and the Actions summary (UC-GRD-01)",
+      "pattern_source": ".spec/prds/harness-eval-framework/09-technical-requirements/02-system-components.md:1"
+    },
+    "test_criteria": [
+      {
+        "id": "TC-1",
+        "type": "test_criterion",
+        "description": "No secrets. reference in the workflow sits outside a cell model-step env block (receipt command: grep -n 'secrets\\.' .github/workflows/harness-eval.yml)",
+        "verify": null,
+        "maps_to_ac": "AC-1"
+      },
+      {
+        "id": "TC-2",
+        "type": "test_criterion",
+        "description": "The workflow declares none of the banned triggers pull_request, pull_request_target or workflow_run (receipt command: grep -Ec '^  (pull_request|pull_request_target|workflow_run):' .github/workflows/harness-eval.yml)",
+        "verify": null,
+        "maps_to_ac": "AC-1"
+      },
+      {
+        "id": "TC-3",
+        "type": "test_criterion",
+        "description": "No root-level harness directory, no harness-matrix workflow and no branch-9624a4b gate wiring exist on main (receipt command: test ! -d harness && grep -c 'harness-matrix' scripts/release.mjs)",
+        "verify": null,
+        "maps_to_ac": "AC-1"
+      }
+    ],
+    "integration_obligations": [],
+    "why_required": "protects FLOW-GRD-01-TWELVE-CELLS, FLOW-GRD-02-FOUR-GRADES and FLOW-GRD-03-FILES-AND-STREAM: the twelve-cell recorder, the four-grade adapter, and the evidence-not-exit-code capture are exactly the contracts this review reads; exercised only indirectly through human-testing gate steps 6-11"
+  }
+}

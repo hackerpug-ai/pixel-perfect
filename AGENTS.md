@@ -43,3 +43,17 @@ All agents below are verified present in the roster (`~/Projects/brain/agents/`)
   (`github-agentic-workflow-planner` + `evals-planner`), which this table now makes canonical.
 - **Known roster gap**: `ai-tooling-planner` does not exist. If adapter-domain planning volume
   grows, create it (triad symmetry) via `/set-experts`; until then the two planners above cover it.
+
+## Declared Specialist Suites
+
+Read by `tools/task-assignment/resolve_planner.py`. Each row is one unambiguous
+planner/implementer/reviewer triad for work in this repo. Added 2026-10-28 for the
+harness-eval framework, whose workflow/platform/devops work has no same-suffix planner.
+
+| Domain | Planner | Implementer | Reviewer |
+|--------|---------|-------------|----------|
+| GitHub Actions workflow scaffolding and grade-recorder jobs | `github-agentic-workflow-planner` | `github-platform-implementer` | `github-agentic-workflow-reviewer` |
+| Workflow environment and credential wiring | `github-agentic-workflow-planner` | `devops-engineer` | `github-agentic-workflow-reviewer` |
+| Capture-layer runtime and harness adapters inside the evaluator workflow | `github-agentic-workflow-planner` | `ai-tooling-implementer` | `ai-tooling-reviewer` |
+| Evaluator grading, fixtures, and negative controls | `evals-planner` | `evals-implementer` | `evals-reviewer` |
+| Review of the review itself (receipt audit) | `github-agentic-workflow-planner` | `github-agentic-workflow-reviewer` | `code-reviewer` |

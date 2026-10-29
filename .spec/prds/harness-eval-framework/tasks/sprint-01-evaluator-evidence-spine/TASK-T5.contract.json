@@ -1,0 +1,534 @@
+{
+  "task_id": "T5",
+  "provenance": {
+    "planner": "github-agentic-workflow-planner",
+    "proposed_by": "github-agentic-workflow-planner + evals-planner",
+    "proposal_path": ".tmp/kb-sprint-tasks-plan/sprint-01/proposals/github-agentic-workflow-planner.json",
+    "proposal_sha256": "84348d362a36ec3cd841933f6d311914e2431288fc8e0fe42e24ab093f6dd2e2"
+  },
+  "planner_json": {
+    "task_id": "T5",
+    "task_type": "FEATURE",
+    "title": "Implement the claude-code adapter: pinned/newest install with DISABLE_AUTOUPDATER=1, marketplace add + plugin install, plugin-details list (no model), headless -p graded runs, system/init plugin gate, InstallationIdentity digest verification",
+    "agent": "ai-tooling-implementer",
+    "planner": "github-agentic-workflow-planner",
+    "proposed_by": "github-agentic-workflow-planner + evals-planner",
+    "estimate_points": 8,
+    "repo": null,
+    "repo_root": "/Users/justinrich/Projects/pixel-perfect",
+    "write_allowed": [
+      "test/harness/adapters/claude-code.mjs",
+      "test/harness/adapters/registry.mjs",
+      "tests/sprint-01/grd-02-four-grades.test.mjs",
+      "tests/sprint-01/jrn-planted-and-twin.test.mjs"
+    ],
+    "guardrails": {
+      "write_allowed": [
+        "test/harness/adapters/claude-code.mjs",
+        "test/harness/adapters/registry.mjs",
+        "tests/sprint-01/grd-02-four-grades.test.mjs",
+        "tests/sprint-01/jrn-planted-and-twin.test.mjs"
+      ],
+      "write_prohibited": [
+        "plugins/pixel-perfect/**",
+        ".github/workflows/**"
+      ]
+    },
+    "depends_on": [
+      "T2 (pins@v1 + schemas@v1 + lookup@v1)",
+      "T3 (capture@v1)",
+      "T4 (cases@v1)"
+    ],
+    "dark_justification": null,
+    "requirements": [
+      {
+        "id": "AC-1",
+        "type": "acceptance_criterion",
+        "primary": false,
+        "flow_ref": "FLOW-GRD-02-FOUR-GRADES",
+        "title": "Four grades per graded cell: command_list, status, verify, question_before_expensive_work \u2014 ask-nothing enforced, must-ask stops unanswered",
+        "description": "GIVEN a claude-code cell installed at the resolved version with the plugin proven loaded on a real hosted runner WHEN the adapter runs the command list, the status check, the planted and clean verify invocations and the must-ask init probe THEN the cell carries four verdicts graded from files and event stream with zero question events in the ask-nothing streams and exactly one unanswered question in the must-ask probe",
+        "test_tier": "integration",
+        "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+        "verify": "node --test tests/sprint-01/grd-02-four-grades.test.mjs --test-name-pattern FLOW-GRD-02-FOUR-GRADES",
+        "test_file": "tests/sprint-01/grd-02-four-grades.test.mjs",
+        "test_function": "FLOW-GRD-02-FOUR-GRADES",
+        "positive_example": "Fixture pair: claude-code pinned cell with four pass verdicts where list/status/verify streams contain zero question events and the init prefix stops at the first USER_CHOICE with no answer sent \u2014 module exits 0.",
+        "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+        "maps_to_ac": null,
+        "red_input": "On base main the module cannot find any grade record (no test/harness exists) and exits 1 writing .red; locally, a fixture where the status check's stream contains a question flips verdict to fail.",
+        "red_proof": ".tmp/sprint-01-verification/grd-02-four-grades.json.red",
+        "scenario": {
+          "tier": "e2e-automated",
+          "topology_note": "real claude-code CLI executes list/status/planted-verify/clean-verify/must-ask-init; keyless grader reads files plus CanonicalEvent streams; replay runs the same grader over archived real captures",
+          "test_tier": "e2e",
+          "negative_control": {
+            "would_fail_if": [
+              "a question event appeared in any list/status/verify stream and the grader still passed that check (an empty question count must fail ask-nothing)",
+              "the must-ask probe graded pass with zero question events or with an answer delivered",
+              "a generic status reply passed the status check",
+              "verdicts were derived from exit codes instead of streams"
+            ]
+          },
+          "evidence": {
+            "forms": [
+              "CanonicalEvent streams with original_event bytes and offsets",
+              "grade records per check",
+              "archived real captures with provenance hashes"
+            ],
+            "examples": [
+              "four check_ids with verdicts for claude-code/pinned",
+              "question event count 0 in ask-nothing streams",
+              "USER_CHOICE count 1, answers sent 0 in must-ask"
+            ],
+            "required_capture": "raw captured stdout per invocation with byte offsets, capture hashes, grader evidence citations"
+          },
+          "build_proof": {
+            "range": "anything that proves the four verdicts come from captured files and streams of real invocations",
+            "examples": [
+              "per-check grade record citing a capture hash and stream offsets"
+            ]
+          },
+          "cases": [
+            {
+              "start_ref": "seed/live-dispatch-run",
+              "action": {
+                "actor": "workflow",
+                "steps": [
+                  "adapter runs the five real invocations via claude -p with stream-json",
+                  "grader assigns four verdicts from files and streams"
+                ]
+              },
+              "end_state": {
+                "must_observe": [
+                  "claude-code/pinned cell shows all 4 checks \"pass\"",
+                  "status reply states platform \"web-desktop\", seeded phase, gate state, nonzero inventory counts matching StatusCase",
+                  "must-ask capture contains exactly 1 valid USER_CHOICE and 0 answer deliveries"
+                ],
+                "must_not_observe": [
+                  "any question event in list/status/verify streams",
+                  "a scripted answer consumed by any first check",
+                  "an empty checks array or null reason on a pass verdict"
+                ]
+              }
+            },
+            {
+              "start_ref": "seed/streams/question-in-ask-nothing",
+              "action": {
+                "actor": "runner",
+                "steps": [
+                  "node tests/sprint-01/flow-runner.mjs grd-02 --fixture question-in-ask-nothing --expect red"
+                ]
+              },
+              "end_state": {
+                "must_observe": [
+                  "grader returns \"fail\" citing the question event offset",
+                  ".red records the spliced capture's \"provenance hashes\""
+                ],
+                "must_not_observe": [
+                  "pass on a stream containing a question",
+                  "synthetic event JSON with no capture provenance"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "AC-2",
+        "type": "acceptance_criterion",
+        "primary": false,
+        "flow_ref": null,
+        "title": "Journey: planted-and-clean verify pair through a real dispatched run, from oracle precheck to summary links",
+        "description": "GIVEN a dispatched harness-eval run on the hosted runner with the claude-code cells live WHEN the run completes and the maintainer downloads the verify-reports artifact THEN the planted report names atoms/Button/default with defect-detected and the clean twin reports clean_project_failed false, bound to distinct invocation ids of the same live run",
+        "test_tier": "e2e",
+        "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+        "verify": "node --test tests/sprint-01/jrn-planted-and-twin.test.mjs --test-name-pattern FLOW-JRN-PLANTED-AND-TWIN",
+        "test_file": "tests/sprint-01/jrn-planted-and-twin.test.mjs",
+        "test_function": "FLOW-JRN-PLANTED-AND-TWIN",
+        "positive_example": "One real dispatched run whose artifact chain satisfies: oracle exited 1 on planted with drifted[].key atoms/Button/default and 0 on clean, planted report defect-detected at its declared path, clean report clean, both linked from the summary \u2014 module exits 0.",
+        "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+        "maps_to_ac": null,
+        "red_input": "Base main: the journey cannot start (no workflow to dispatch, no oracle wrapper) \u2014 module exits 1 with .red.",
+        "red_proof": ".tmp/sprint-01-verification/jrn-planted-and-twin.json.red",
+        "scenario": {
+          "tier": "e2e-automated",
+          "topology_note": "one live dispatch drives planted verify and clean twin through the real CLI on the runner; maintainer reads both reports; replay revalidates the downloaded pair",
+          "test_tier": "e2e",
+          "negative_control": {
+            "would_fail_if": [
+              "the planted report went missing from an otherwise-evaluable run and the cell still passed \u2014 fail report-missing",
+              "the journey claimed execution from a cached replay instead of a live run \u2014 a static replay must grade not-executed, never pass"
+            ]
+          },
+          "evidence": {
+            "forms": [
+              "verify-reports pair",
+              "live run result cells",
+              "oracle precheck transcript"
+            ],
+            "examples": [
+              "planted: atoms/Button/default defect-detected; clean: clean_project_failed false"
+            ],
+            "required_capture": "live run_id/attempt binding, both invocation captures, maintainer's gate-step-13 reading"
+          },
+          "build_proof": {
+            "range": "anything that proves both reports came from one live run's distinct invocations",
+            "examples": [
+              "two invocation ids in one run's verify-reports artifact"
+            ]
+          },
+          "cases": [
+            {
+              "start_ref": "seed/live-dispatch-run",
+              "action": {
+                "actor": "maintainer",
+                "steps": [
+                  "dispatch",
+                  "watch to completion",
+                  "download verify-reports",
+                  "read the defect name and twin result"
+                ]
+              },
+              "end_state": {
+                "must_observe": [
+                  "planted names \"atoms/Button/default\" with \"defect-detected\"",
+                  "clean twin clean_project_failed == false",
+                  "both bound to distinct `invocation_id`s of the same live run"
+                ],
+                "must_not_observe": [
+                  "pass claimed from a replay with no live run",
+                  "either report absent"
+                ]
+              }
+            },
+            {
+              "start_ref": "seed/verify-reports-artifact",
+              "action": {
+                "actor": "runner",
+                "steps": [
+                  "delete planted report from a copied artifact",
+                  "node tests/sprint-01/flow-runner.mjs jrn-planted-twin --fixture missing-planted-report --expect red"
+                ]
+              },
+              "end_state": {
+                "must_observe": [
+                  "validator downgrades the check to fail \"report-missing\" (not could-not-run, not pass)"
+                ],
+                "must_not_observe": [
+                  "the missing report excused as could-not-run report-unavailable",
+                  "a silent pass",
+                  "no report-missing downgrade recorded for the missing report"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "TC-1",
+        "type": "test_criterion",
+        "description": "The claude-code pinned cell grades four separate check verdicts from files and event stream",
+        "verify": "node --test tests/sprint-01/grd-02-four-grades.test.mjs --test-name-pattern FLOW-GRD-02-FOUR-GRADES",
+        "maps_to_ac": "AC-1"
+      },
+      {
+        "id": "TC-2",
+        "type": "test_criterion",
+        "description": "The ask-nothing streams contain zero question events while the must-ask probe stops at exactly one unanswered question",
+        "verify": "node --test tests/sprint-01/grd-02-four-grades.test.mjs --test-name-pattern FLOW-GRD-02-FOUR-GRADES",
+        "maps_to_ac": "AC-1"
+      },
+      {
+        "id": "TC-3",
+        "type": "test_criterion",
+        "description": "The four-grades flow module requires each claude-code cell to record a dotted observed CLI version and a 64-hex plugin manifest digest",
+        "verify": "node --test tests/sprint-01/grd-02-four-grades.test.mjs --test-name-pattern FLOW-GRD-02-FOUR-GRADES",
+        "maps_to_ac": "AC-2"
+      },
+      {
+        "id": "TC-4",
+        "type": "test_criterion",
+        "description": "The four-grades flow module finds no harness API key on an install, marketplace, plugin-install or command-list step",
+        "verify": "node --test tests/sprint-01/grd-02-four-grades.test.mjs --test-name-pattern FLOW-GRD-02-FOUR-GRADES",
+        "maps_to_ac": "AC-1"
+      }
+    ],
+    "fixtures": {
+      "seed/live-dispatch-run": {
+        "entrypoint": "gh workflow run harness-eval --repo hackerpug-ai/pixel-perfect (real dispatch, checkout default)",
+        "description": "RUN_ID + attempt-qualified artifacts via gh run download",
+        "seed_method": "cli"
+      },
+      "seed/verify-reports-artifact": {
+        "entrypoint": "gh run download <RUN_ID> -n harness-eval-verify-reports-<RUN_ID>-1",
+        "description": "reports/verify-button-drift.json and reports/verify-clean.json",
+        "seed_method": "cli"
+      },
+      "seed/streams/question-in-ask-nothing": {
+        "entrypoint": "splice of real bytes only: USER_CHOICE from the must-ask capture inserted into the real verify stream, provenance hashes recorded",
+        "description": "the GRD-02 red fixture",
+        "seed_method": "recorded_external"
+      },
+      "seed/streams/clean-verify-pass": {
+        "entrypoint": "real captured clean-verify invocation from the same qualification run",
+        "description": "grader-passing capture fixture",
+        "seed_method": "recorded_external"
+      },
+      "seed/case/verify-button-drift": {
+        "entrypoint": "test/harness/kit/project fresh copy + overlays/button-drift by the case loader",
+        "description": "planted invocation dir with declared report path",
+        "seed_method": "migration_fixture"
+      },
+      "seed/case/verify-clean": {
+        "entrypoint": "same kit copy without overlay, separate fresh dir",
+        "description": "clean invocation dir",
+        "seed_method": "migration_fixture"
+      }
+    },
+    "touches_capabilities": [
+      "CAP-EVAL-01"
+    ],
+    "acceptance_criteria": [
+      {
+        "id": "AC-1",
+        "type": "acceptance_criterion",
+        "primary": false,
+        "flow_ref": "FLOW-GRD-02-FOUR-GRADES",
+        "title": "Four grades per graded cell: command_list, status, verify, question_before_expensive_work \u2014 ask-nothing enforced, must-ask stops unanswered",
+        "test_tier": "integration",
+        "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+        "verify": "node --test tests/sprint-01/grd-02-four-grades.test.mjs --test-name-pattern FLOW-GRD-02-FOUR-GRADES",
+        "test_file": "tests/sprint-01/grd-02-four-grades.test.mjs",
+        "test_function": "FLOW-GRD-02-FOUR-GRADES",
+        "positive_example": "Fixture pair: claude-code pinned cell with four pass verdicts where list/status/verify streams contain zero question events and the init prefix stops at the first USER_CHOICE with no answer sent \u2014 module exits 0.",
+        "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+        "scenario": {
+          "tier": "e2e-automated",
+          "topology_note": "real claude-code CLI executes list/status/planted-verify/clean-verify/must-ask-init; keyless grader reads files plus CanonicalEvent streams; replay runs the same grader over archived real captures",
+          "test_tier": "e2e",
+          "negative_control": {
+            "would_fail_if": [
+              "a question event appeared in any list/status/verify stream and the grader still passed that check (an empty question count must fail ask-nothing)",
+              "the must-ask probe graded pass with zero question events or with an answer delivered",
+              "a generic status reply passed the status check",
+              "verdicts were derived from exit codes instead of streams"
+            ]
+          },
+          "evidence": {
+            "forms": [
+              "CanonicalEvent streams with original_event bytes and offsets",
+              "grade records per check",
+              "archived real captures with provenance hashes"
+            ],
+            "examples": [
+              "four check_ids with verdicts for claude-code/pinned",
+              "question event count 0 in ask-nothing streams",
+              "USER_CHOICE count 1, answers sent 0 in must-ask"
+            ],
+            "required_capture": "raw captured stdout per invocation with byte offsets, capture hashes, grader evidence citations"
+          },
+          "build_proof": {
+            "range": "anything that proves the four verdicts come from captured files and streams of real invocations",
+            "examples": [
+              "per-check grade record citing a capture hash and stream offsets"
+            ]
+          },
+          "cases": [
+            {
+              "start_ref": "seed/live-dispatch-run",
+              "action": {
+                "actor": "workflow",
+                "steps": [
+                  "adapter runs the five real invocations via claude -p with stream-json",
+                  "grader assigns four verdicts from files and streams"
+                ]
+              },
+              "end_state": {
+                "must_observe": [
+                  "claude-code/pinned cell shows all 4 checks \"pass\"",
+                  "status reply states platform \"web-desktop\", seeded phase, gate state, nonzero inventory counts matching StatusCase",
+                  "must-ask capture contains exactly 1 valid USER_CHOICE and 0 answer deliveries"
+                ],
+                "must_not_observe": [
+                  "any question event in list/status/verify streams",
+                  "a scripted answer consumed by any first check",
+                  "an empty checks array or null reason on a pass verdict"
+                ]
+              }
+            },
+            {
+              "start_ref": "seed/streams/question-in-ask-nothing",
+              "action": {
+                "actor": "runner",
+                "steps": [
+                  "node tests/sprint-01/flow-runner.mjs grd-02 --fixture question-in-ask-nothing --expect red"
+                ]
+              },
+              "end_state": {
+                "must_observe": [
+                  "grader returns \"fail\" citing the question event offset",
+                  ".red records the spliced capture's \"provenance hashes\""
+                ],
+                "must_not_observe": [
+                  "pass on a stream containing a question",
+                  "synthetic event JSON with no capture provenance"
+                ]
+              }
+            }
+          ]
+        },
+        "red_input": "On base main the module cannot find any grade record (no test/harness exists) and exits 1 writing .red; locally, a fixture where the status check's stream contains a question flips verdict to fail.",
+        "red_proof": ".tmp/sprint-01-verification/grd-02-four-grades.json.red",
+        "description": "GIVEN a claude-code cell installed at the resolved version with the plugin proven loaded on a real hosted runner WHEN the adapter runs the command list, the status check, the planted and clean verify invocations and the must-ask init probe THEN the cell carries four verdicts graded from files and event stream with zero question events in the ask-nothing streams and exactly one unanswered question in the must-ask probe",
+        "maps_to_ac": null
+      },
+      {
+        "id": "AC-2",
+        "type": "acceptance_criterion",
+        "primary": false,
+        "flow_ref": null,
+        "title": "Journey: planted-and-clean verify pair through a real dispatched run, from oracle precheck to summary links",
+        "test_tier": "e2e",
+        "verification_service": "GitHub Actions harness-eval workflow + real harness CLIs + harness-smoke keys",
+        "verify": "node --test tests/sprint-01/jrn-planted-and-twin.test.mjs --test-name-pattern FLOW-JRN-PLANTED-AND-TWIN",
+        "test_file": "tests/sprint-01/jrn-planted-and-twin.test.mjs",
+        "test_function": "FLOW-JRN-PLANTED-AND-TWIN",
+        "positive_example": "One real dispatched run whose artifact chain satisfies: oracle exited 1 on planted with drifted[].key atoms/Button/default and 0 on clean, planted report defect-detected at its declared path, clean report clean, both linked from the summary \u2014 module exits 0.",
+        "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+        "scenario": {
+          "tier": "e2e-automated",
+          "topology_note": "one live dispatch drives planted verify and clean twin through the real CLI on the runner; maintainer reads both reports; replay revalidates the downloaded pair",
+          "test_tier": "e2e",
+          "negative_control": {
+            "would_fail_if": [
+              "the planted report went missing from an otherwise-evaluable run and the cell still passed \u2014 fail report-missing",
+              "the journey claimed execution from a cached replay instead of a live run \u2014 a static replay must grade not-executed, never pass"
+            ]
+          },
+          "evidence": {
+            "forms": [
+              "verify-reports pair",
+              "live run result cells",
+              "oracle precheck transcript"
+            ],
+            "examples": [
+              "planted: atoms/Button/default defect-detected; clean: clean_project_failed false"
+            ],
+            "required_capture": "live run_id/attempt binding, both invocation captures, maintainer's gate-step-13 reading"
+          },
+          "build_proof": {
+            "range": "anything that proves both reports came from one live run's distinct invocations",
+            "examples": [
+              "two invocation ids in one run's verify-reports artifact"
+            ]
+          },
+          "cases": [
+            {
+              "start_ref": "seed/live-dispatch-run",
+              "action": {
+                "actor": "maintainer",
+                "steps": [
+                  "dispatch",
+                  "watch to completion",
+                  "download verify-reports",
+                  "read the defect name and twin result"
+                ]
+              },
+              "end_state": {
+                "must_observe": [
+                  "planted names \"atoms/Button/default\" with \"defect-detected\"",
+                  "clean twin clean_project_failed == false",
+                  "both bound to distinct `invocation_id`s of the same live run"
+                ],
+                "must_not_observe": [
+                  "pass claimed from a replay with no live run",
+                  "either report absent"
+                ]
+              }
+            },
+            {
+              "start_ref": "seed/verify-reports-artifact",
+              "action": {
+                "actor": "runner",
+                "steps": [
+                  "delete planted report from a copied artifact",
+                  "node tests/sprint-01/flow-runner.mjs jrn-planted-twin --fixture missing-planted-report --expect red"
+                ]
+              },
+              "end_state": {
+                "must_observe": [
+                  "validator downgrades the check to fail \"report-missing\" (not could-not-run, not pass)"
+                ],
+                "must_not_observe": [
+                  "the missing report excused as could-not-run report-unavailable",
+                  "a silent pass",
+                  "no report-missing downgrade recorded for the missing report"
+                ]
+              }
+            }
+          ]
+        },
+        "red_input": "Base main: the journey cannot start (no workflow to dispatch, no oracle wrapper) \u2014 module exits 1 with .red.",
+        "red_proof": ".tmp/sprint-01-verification/jrn-planted-and-twin.json.red",
+        "description": "GIVEN a dispatched harness-eval run on the hosted runner with the claude-code cells live WHEN the run completes and the maintainer downloads the verify-reports artifact THEN the planted report names atoms/Button/default with defect-detected and the clean twin reports clean_project_failed false, bound to distinct invocation ids of the same live run",
+        "maps_to_ac": null
+      }
+    ],
+    "reviewer": "ai-tooling-reviewer",
+    "tdd_mode": "red_first",
+    "verification_policy": {
+      "requires_tests": true,
+      "requires_red_evidence": true,
+      "requires_seeded_evidence": true
+    },
+    "agent_rationale": "Claude Code adapter code \u2014 CLI install, plugin manifest, headless invocation flags \u2014 is ai-tooling-implementer's stated surface per AGENTS.md.",
+    "coding_standards": [
+      "test/adapters.test.mjs",
+      "AGENTS.md"
+    ],
+    "specification": {
+      "objective": "Make claude-code a real, identity-bound, evidence-graded harness on a hosted runner \u2014 install, load proof, command list, and four graded invocations \u2014 for both tracks.",
+      "success_state": "A dispatched run yields two claude-code cells, each with `observed_cli_version` and `observed_plugin_manifest_sha256` present and matching the installed payload, the pinned cell's four checks graded `pass` from files and event stream, and the planted/clean verify pair landing at exactly their case-declared report paths."
+    },
+    "design": {
+      "references": [
+        ".spec/prds/harness-eval-framework/09-technical-requirements/02-system-components.md"
+      ],
+      "pattern": "none \u2014 headless product; the reader is the result artifact and the Actions summary (UC-GRD-01)",
+      "pattern_source": ".spec/prds/harness-eval-framework/09-technical-requirements/02-system-components.md:1"
+    },
+    "test_criteria": [
+      {
+        "id": "TC-1",
+        "type": "test_criterion",
+        "description": "The claude-code pinned cell grades four separate check verdicts from files and event stream",
+        "verify": "node --test tests/sprint-01/grd-02-four-grades.test.mjs --test-name-pattern FLOW-GRD-02-FOUR-GRADES",
+        "maps_to_ac": "AC-1"
+      },
+      {
+        "id": "TC-2",
+        "type": "test_criterion",
+        "description": "The ask-nothing streams contain zero question events while the must-ask probe stops at exactly one unanswered question",
+        "verify": "node --test tests/sprint-01/grd-02-four-grades.test.mjs --test-name-pattern FLOW-GRD-02-FOUR-GRADES",
+        "maps_to_ac": "AC-1"
+      },
+      {
+        "id": "TC-3",
+        "type": "test_criterion",
+        "description": "The four-grades flow module requires each claude-code cell to record a dotted observed CLI version and a 64-hex plugin manifest digest",
+        "verify": "node --test tests/sprint-01/grd-02-four-grades.test.mjs --test-name-pattern FLOW-GRD-02-FOUR-GRADES",
+        "maps_to_ac": "AC-2"
+      },
+      {
+        "id": "TC-4",
+        "type": "test_criterion",
+        "description": "The four-grades flow module finds no harness API key on an install, marketplace, plugin-install or command-list step",
+        "verify": "node --test tests/sprint-01/grd-02-four-grades.test.mjs --test-name-pattern FLOW-GRD-02-FOUR-GRADES",
+        "maps_to_ac": "AC-1"
+      }
+    ],
+    "integration_obligations": [],
+    "why_required": "serves FLOW-GRD-02-FOUR-GRADES and FLOW-JRN-PLANTED-AND-TWIN: the claude-code adapter is what produces the four graded invocations and the planted/clean verify pair those two flows read"
+  }
+}
