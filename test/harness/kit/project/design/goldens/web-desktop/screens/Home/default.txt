@@ -1,0 +1,12 @@
+Home
+route=/
+--- composed:Card ---
+Card
+title=Job card
+--- composed:Button ---
+Button
+variant=primary
+label=Save
+size=md
+--- end ---
+--- end ---

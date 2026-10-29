@@ -1,0 +1,40 @@
+{
+  "goal": "Harness-eval kit project: the fixture the real public verify route runs against",
+  "version": "8.0.0",
+  "platforms": {
+    "web-desktop": {
+      "phase": "atoms",
+      "gates": {
+        "atoms": "approved",
+        "molecules": "pending",
+        "screens": "pending"
+      },
+      "tools": {
+        "framework": "vite",
+        "sandbox": "custom"
+      },
+      "capture": {
+        "command": "npm run sandbox:capture",
+        "medium": "text",
+        "pixels": "none",
+        "pixels_reason": "Structural text medium for CI without a browser (sandbox/capture.mjs); the normalized story text is the render in this fixture.",
+        "goldens": "design/goldens/web-desktop",
+        "catalog": "sandbox/stories",
+        "staging": "design/.captures/web-desktop"
+      },
+      "pinned": ["Button"],
+      "deprecations": {},
+      "atoms": [
+        { "name": "Button", "status": "verified" },
+        { "name": "Badge", "status": "verified" },
+        { "name": "UnusedChip", "status": "verified" }
+      ],
+      "molecules": [
+        { "name": "Card", "status": "verified" }
+      ],
+      "screens": [
+        { "name": "Home", "route": "/", "states": ["default"], "status": "verified" }
+      ]
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "schema": "harness-case/v1",
+  "case_id": "status-a",
+  "kind": "status",
+  "harness": "claude-code",
+  "track": "pinned",
+  "platform_arg": "--platform web-desktop",
+  "overlay": null,
+  "expected_facts": {
+    "platform": "web-desktop",
+    "phase": "atoms",
+    "gates": { "atoms": "approved", "molecules": "pending", "screens": "pending" },
+    "inventory": { "atoms": 3, "molecules": 1, "screens": 1 }
+  },
+  "facts_mutation": null,
+  "report_relative_path": "reports/status-a.json"
+}
