@@ -1,0 +1,30 @@
+{
+  "capture_id": "claude-code-keyless-first-turn",
+  "harness": "claude-code",
+  "argv": [
+    "-p",
+    "reply with the single word: ready",
+    "--output-format",
+    "stream-json",
+    "--verbose",
+    "--permission-mode",
+    "dontAsk"
+  ],
+  "stream_source": "live-subprocess",
+  "captured_at": "2026-10-29T05:02:03.037Z",
+  "platform": "darwin",
+  "stdout_sha256": "47298ec50ca80cde9ef86eabce7c3de0da7a591f1722da4263730eb4bef100ab",
+  "stdout_byte_length": 6233,
+  "exit_code": 1,
+  "termination_kind": "native",
+  "credential_names_removed": [
+    "XAI_API_KEY"
+  ],
+  "credential_names_in_child": [],
+  "model_requests": 0,
+  "how": "keyless first turn: isolated CLAUDE_CONFIG_DIR, stdin closed, DISABLE_AUTOUPDATER=1, every credential name stripped",
+  "why_unqualified": "the local CLI reports 2.1.312; the sprint pins 2.1.291, so these bytes prove shape, not version qualification",
+  "stdout_path": "claude-code-stream-probe.stdout.bin",
+  "record_path": "claude-code-stream-probe.capture.json",
+  "observations": 0
+}

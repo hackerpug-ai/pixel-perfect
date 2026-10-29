@@ -1,0 +1,107 @@
+{
+  "schema": "invocation-capture/v1",
+  "harness": "claude-code",
+  "check_id": "stream-probe",
+  "invocation_id": "claude-code-stream-probe",
+  "argv": [
+    "-p",
+    "reply with the single word: ready",
+    "--output-format",
+    "stream-json",
+    "--verbose",
+    "--permission-mode",
+    "dontAsk"
+  ],
+  "cwd": "/Users/justinrich/Projects/pixel-perfect/.kb-run-sprint/worktrees/sprint-01-evaluator-evidence-spine/T6",
+  "stream_source": "live-subprocess",
+  "timeout_ms": 90000,
+  "stdout": {
+    "byte_length": 6233,
+    "sha256": "47298ec50ca80cde9ef86eabce7c3de0da7a591f1722da4263730eb4bef100ab"
+  },
+  "stderr": {
+    "byte_length": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "chunks": [
+    {
+      "stream": "stdout",
+      "offset": 0,
+      "end_offset": 253,
+      "byte_length": 253,
+      "sha256": "b0e2f5ef83be2350d2837a55d4a7e7d4376d16fd54f969988d6c8b30562126da"
+    },
+    {
+      "stream": "stdout",
+      "offset": 253,
+      "end_offset": 506,
+      "byte_length": 253,
+      "sha256": "eefbf471af3ea36c2ec0e5feb76c619a2c67d1a1be6271fb2c078c73956f9218"
+    },
+    {
+      "stream": "stdout",
+      "offset": 506,
+      "end_offset": 838,
+      "byte_length": 332,
+      "sha256": "f2048f09027a1b4418d3043690da7f6b70e90f6bc3a48fe979a6deed245c7936"
+    },
+    {
+      "stream": "stdout",
+      "offset": 838,
+      "end_offset": 1162,
+      "byte_length": 324,
+      "sha256": "bc555b73d3617d5422a5f43ac6fb94c2ad0c71e763a77f6954c7da726284b681"
+    },
+    {
+      "stream": "stdout",
+      "offset": 1162,
+      "end_offset": 4048,
+      "byte_length": 2886,
+      "sha256": "1a5cd2f8a84ae39106432267186e6564c8eeaaafc245909203c8e61378e9a05d"
+    },
+    {
+      "stream": "stdout",
+      "offset": 4048,
+      "end_offset": 4984,
+      "byte_length": 936,
+      "sha256": "8bff4cf8329cb1cc7139cfc1c32e2171d55b9aa91382f48b3d2554b8f5b26f89"
+    },
+    {
+      "stream": "stdout",
+      "offset": 4984,
+      "end_offset": 6233,
+      "byte_length": 1249,
+      "sha256": "5969307715c1a1106a6607038224da79c1a0dbd7448decc3cf52a366db286299"
+    }
+  ],
+  "termination_kind": "native",
+  "boundary_event_offset": null,
+  "prefix_complete": true,
+  "process_status": {
+    "exit_code": 1,
+    "signal": null,
+    "timed_out": false,
+    "spawn_error": null,
+    "stop_reason": null,
+    "duration_ms": 1383
+  },
+  "refusal": null,
+  "decided_before": null,
+  "model_requests": [],
+  "model_request_count": 0,
+  "observations": [],
+  "fixture_manifests": {
+    "before": null,
+    "after": null,
+    "changed": null
+  },
+  "evidence_root": "/Users/justinrich/Projects/pixel-perfect/.kb-run-sprint/worktrees/sprint-01-evaluator-evidence-spine/T6/test/harness/stream/captures",
+  "evidence_relative_paths": [
+    "claude-code-stream-probe.capture.json",
+    "claude-code-stream-probe.stdout.bin"
+  ],
+  "evidence_paths": [
+    "/Users/justinrich/Projects/pixel-perfect/.kb-run-sprint/worktrees/sprint-01-evaluator-evidence-spine/T6/test/harness/stream/captures/claude-code-stream-probe.capture.json",
+    "/Users/justinrich/Projects/pixel-perfect/.kb-run-sprint/worktrees/sprint-01-evaluator-evidence-spine/T6/test/harness/stream/captures/claude-code-stream-probe.stdout.bin"
+  ]
+}

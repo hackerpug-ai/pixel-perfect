@@ -1,0 +1,197 @@
+{
+  "schema": "stream-mapping/v1",
+  "harness": "claude-code",
+  "cli_package": "@anthropic-ai/claude-code",
+  "cli_version": "2.1.291",
+  "observed_version_path": "claude_code_version",
+  "session_id_path": "session_id",
+  "question_tool_names": ["AskUserQuestion"],
+  "tool_classification": {
+    "question": ["AskUserQuestion"],
+    "local_read": ["Read", "Grep", "Glob", "LS", "NotebookRead", "ToolSearch", "ListAgents", "Skill"],
+    "expensive": ["Task", "Workflow", "WebFetch", "WebSearch", "Bash", "Write", "Edit", "NotebookEdit", "Monitor", "ScheduleWakeup", "SendMessage", "Skill"],
+    "image_judge": []
+  },
+  "provenance": {
+    "qualified": false,
+    "unqualified_reason": "no capture at the pinned 2.1.291 exists; the only archived capture is from the local 2.1.312 CLI, so it proves shape and offsets, not version qualification. Owner: T11.",
+    "captures": [
+      {
+        "capture_id": "claude-code-keyless-first-turn",
+        "record_path": "captures/claude-code-stream-probe.capture.json",
+        "stdout_path": "captures/claude-code-stream-probe.stdout.bin",
+        "meta_path": "captures/claude-code-keyless-first-turn.meta.json",
+        "argv": ["-p", "reply with the single word: ready", "--output-format", "stream-json", "--verbose", "--permission-mode", "dontAsk"],
+        "stream_source": "live-subprocess",
+        "observed_cli_version": "2.1.312",
+        "stdout_sha256": "47298ec50ca80cde9ef86eabce7c3de0da7a591f1722da4263730eb4bef100ab",
+        "stdout_byte_length": 6233,
+        "exit_code": 1,
+        "model_requests": 0,
+        "credential_names_in_child": [],
+        "status": "real-local-keyless",
+        "facts_proven": ["incremental-text", "native-session-identity", "completion"],
+        "facts_absent_and_why": {
+          "question-tool-start": "the CLI refused before any tool was dispatched (result.terminal_reason = api_error)",
+          "expensive-tool-start": "the CLI refused before any tool was dispatched",
+          "required-read-denial": "result.permission_denials is empty: no read was attempted"
+        }
+      }
+    ]
+  },
+  "rules": [
+    {
+      "rule_id": "session-init",
+      "canonical_type": "session_started",
+      "fact_id": "native-session-identity",
+      "match": { "type": "system", "subtype": "init" },
+      "extract": { "session_id": "session_id", "cli_version": "claude_code_version", "permission_mode": "permissionMode" },
+      "source_event_path": "system/init"
+    },
+    {
+      "rule_id": "plugin-loaded",
+      "canonical_type": "session_started",
+      "fact_id": "plugin-loaded",
+      "match": { "type": "system", "subtype": "init", "plugin_named": "pixel-perfect" },
+      "extract": null,
+      "source_event_path": "system/init.plugins[].name"
+    },
+    {
+      "rule_id": "plugin-absent",
+      "canonical_type": "session_started",
+      "fact_id": "plugin-absent",
+      "match": { "type": "system", "subtype": "init", "plugin_absent": "pixel-perfect" },
+      "extract": null,
+      "source_event_path": "system/init.plugins[] (name not present)"
+    },
+    {
+      "rule_id": "agent-text",
+      "canonical_type": "agent_message",
+      "fact_id": "incremental-text",
+      "match": { "type": "assistant", "content_block": { "type": "text" } },
+      "extract": { "text": "message.content[].text" },
+      "source_event_path": "assistant.message.content[].text"
+    },
+    {
+      "rule_id": "question-tool-call",
+      "canonical_type": "tool_call",
+      "fact_id": "question-tool-start",
+      "also_fact_id": "question-start",
+      "classification": "question",
+      "match": { "type": "assistant", "content_block": { "type": "tool_use", "name_in": "question" } },
+      "extract": { "call_id": "id", "name": "name", "arguments": "input" },
+      "source_event_path": "assistant.message.content[].type=tool_use"
+    },
+    {
+      "rule_id": "question-user-choice-event",
+      "canonical_type": "tool_call",
+      "classification": "question",
+      "match": { "type": "user_choice" },
+      "extract": null,
+      "source_event_path": "user_choice"
+    },
+    {
+      "rule_id": "question-assistant-subtype",
+      "canonical_type": "tool_call",
+      "classification": "question",
+      "match": { "type": "assistant", "subtype": "ask_user_question" },
+      "extract": null,
+      "source_event_path": "assistant.subtype=ask_user_question"
+    },
+    {
+      "rule_id": "expensive-tool-call",
+      "canonical_type": "tool_call",
+      "fact_id": "expensive-tool-start",
+      "classification": "expensive",
+      "match": { "type": "assistant", "content_block": { "type": "tool_use", "name_in": "expensive" } },
+      "extract": { "call_id": "id", "name": "name", "arguments": "input" },
+      "source_event_path": "assistant.message.content[].type=tool_use"
+    },
+    {
+      "rule_id": "local-read-tool-call",
+      "canonical_type": "tool_call",
+      "classification": "local-read",
+      "match": { "type": "assistant", "content_block": { "type": "tool_use", "name_in": "local_read" } },
+      "extract": { "call_id": "id", "name": "name", "arguments": "input" },
+      "source_event_path": "assistant.message.content[].type=tool_use"
+    },
+    {
+      "rule_id": "other-tool-call",
+      "canonical_type": "tool_call",
+      "classification": "other",
+      "match": { "type": "assistant", "content_block": { "type": "tool_use" } },
+      "extract": { "call_id": "id", "name": "name", "arguments": "input" },
+      "source_event_path": "assistant.message.content[].type=tool_use"
+    },
+    {
+      "rule_id": "tool-result",
+      "canonical_type": "tool_result",
+      "match": { "type": "user", "content_block": { "type": "tool_result" } },
+      "extract": { "call_id": "tool_use_id", "is_error": "is_error" },
+      "source_event_path": "user.message.content[].type=tool_result"
+    },
+    {
+      "rule_id": "required-read-denial",
+      "canonical_type": "permission_denied",
+      "fact_id": "required-read-denial",
+      "match": { "type": "result", "has_key": "permission_denials" },
+      "extract": { "denials": "permission_denials" },
+      "source_event_path": "result.permission_denials[]"
+    },
+    {
+      "rule_id": "completion",
+      "canonical_type": "session_ended",
+      "fact_id": "completion",
+      "also_fact_id": "result-event",
+      "match": { "type": "result" },
+      "extract": { "stop_reason": "stop_reason", "is_error": "is_error", "subtype": "subtype", "terminal_reason": "terminal_reason" },
+      "source_event_path": "result"
+    },
+    {
+      "rule_id": "command-list-text",
+      "canonical_type": "agent_message",
+      "fact_id": "command-list",
+      "match": { "text_match": "Component inventory" },
+      "extract": null,
+      "source_event_path": "stdout text (claude plugin details)"
+    }
+  ],
+  "required_facts": [
+    {
+      "fact_id": "incremental-text",
+      "canonical_type": "agent_message",
+      "source_event_path": "assistant.message.content[].text",
+      "why": "the model's own words, incrementally; a final reply file can corroborate but cannot prove ordering"
+    },
+    {
+      "fact_id": "question-tool-start",
+      "canonical_type": "tool_call",
+      "source_event_path": "assistant.message.content[].type=tool_use name=AskUserQuestion",
+      "why": "the question boundary; the turn ending is never the signal"
+    },
+    {
+      "fact_id": "expensive-tool-start",
+      "canonical_type": "tool_call",
+      "source_event_path": "assistant.message.content[].type=tool_use",
+      "why": "a must-ask probe may only pass when no expensive work started before the question"
+    },
+    {
+      "fact_id": "required-read-denial",
+      "canonical_type": "permission_denied",
+      "source_event_path": "result.permission_denials[]",
+      "why": "a denied required read is a failure even on exit 0"
+    },
+    {
+      "fact_id": "native-session-identity",
+      "canonical_type": "session_started",
+      "source_event_path": "system/init.session_id",
+      "why": "resume-with-text can only resume a session the stream names"
+    },
+    {
+      "fact_id": "completion",
+      "canonical_type": "session_ended",
+      "source_event_path": "result",
+      "why": "native completion, distinct from an intentional question boundary stop"
+    }
+  ]
+}
