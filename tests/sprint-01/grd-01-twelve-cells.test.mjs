@@ -31,6 +31,7 @@ import {
   assembleResult,
   collectCells,
   copyJobTimestamps,
+  main,
   readCellArtifacts,
   recorderExit,
   runContextFromEnv,
@@ -62,6 +63,26 @@ const BINARIES = {
   pi: "pi",
   cursor: "cursor-agent",
 };
+
+// The job lists the timestamp rules are proven against. They are bytes in this file on purpose:
+// deriving the control from `gh run list --limit 1` made this check's verdict a function of which
+// run happened to be newest, so a harness-eval run — the state this flow's own required dispatch
+// creates — turned it red. A fixed payload owns the evidence; the live read below is supplementary.
+const FIXED_SMOKE_JOBS = [
+  { name: "drift proof", started_at: "2026-02-01T10:00:00Z", completed_at: "2026-02-01T10:01:00Z" },
+  { name: "smoke claude-code pinned", started_at: "2026-02-01T10:01:30Z", completed_at: "2026-02-01T10:09:00Z" },
+  { name: "smoke claude-code newest", started_at: "2026-02-01T10:01:30Z", completed_at: "2026-02-01T10:08:00Z" },
+  { name: "smoke cursor pinned", started_at: "2026-02-01T10:02:00Z", completed_at: "2026-02-01T10:12:30Z" },
+  { name: "download the collected cells", started_at: "2026-02-01T10:13:00Z", completed_at: "2026-02-01T10:13:20Z" },
+  { name: "grade", started_at: "2026-02-01T10:13:30Z", completed_at: "2026-02-01T10:15:00Z" },
+];
+// A run whose jobs are not a smoke matrix at all (the CodeQL shape this control was first written
+// against). No job name matches `smoke <harness> <track>`, so the interval is not knowable.
+const FIXED_NO_SMOKE_JOBS = [
+  { name: "Analyze (python)", started_at: "2026-02-01T09:00:00Z", completed_at: "2026-02-01T09:04:00Z" },
+  { name: "Analyze (javascript-typescript)", started_at: "2026-02-01T09:00:00Z", completed_at: "2026-02-01T09:05:00Z" },
+  { name: "Adjust Configuration", started_at: "2026-02-01T09:05:30Z", completed_at: "2026-02-01T09:05:40Z" },
+];
 
 /** Real `--version` of the CLI that is installed right now; null when it is not installed. */
 function probeObservedVersion(harness) {
@@ -449,10 +470,11 @@ test("FLOW-GRD-01-TWELVE-CELLS", async (t) => {
 //
 // The real things this test exercises: the on-disk pins bytes and its recomputed digest, the six
 // installed CLIs probed for a real `--version`, this worktree's real commit as the dispatch
-// commit, the REAL Actions API job list of a real run in this repository (fetched with `gh api`),
-// and the real bytes of .github/workflows/harness-eval.yml. The hosted half of the flow — the
-// recorder's own run inside workflow_dispatch — is reported `not-executed` with its reason, never
-// asserted.
+// commit, the recorder's own entry point driven end to end, and the real bytes of
+// .github/workflows/harness-eval.yml. The job payloads the timestamp rules are proven against are
+// pinned bytes in this file, never whichever run happens to be newest. The hosted half of the flow
+// — the recorder's own run inside workflow_dispatch — is reported `not-executed` with its reason,
+// never asserted.
 // ---------------------------------------------------------------------------
 
 const RECORDER = "test/harness/recorder.mjs";
@@ -535,27 +557,24 @@ test("FLOW-GRD-01-TWELVE-CELLS recorder", async (t) => {
   assert.equal(bareCursor.installation.requested_cli_version, "2026.10.01-e373342", "the pinned request comes from the pins authority");
   assert.equal(bareCursor.installation.observed_cli_version, null, "an unobserved version is null, never invented");
 
-  // ---- real job timestamps from the real Actions API: copied, and blocked when absent ----
+  // ---- job timestamps: the copy and its refusals are proven on pinned payload bytes ----
   const repo = "hackerpug-ai/pixel-perfect";
-  const latest = JSON.parse(
-    execFileSync("gh", ["run", "list", "--repo", repo, "--limit", "1", "--json", "databaseId,workflowName"], { encoding: "utf8" }),
-  )[0];
-  assert.ok(latest?.databaseId, "a real run exists in this repository");
-  const jobPayload = JSON.parse(
-    execFileSync("gh", ["api", `repos/${repo}/actions/runs/${latest.databaseId}/jobs?per_page=100`], { encoding: "utf8" }),
-  );
-  assert.ok(jobPayload.jobs.length > 0, `run ${latest.databaseId} reports jobs`);
+  // The required-smoke predicate selects the matrix jobs alone, so the interval is theirs.
+  const smokeOnly = copyJobTimestamps(FIXED_SMOKE_JOBS);
+  assert.equal(smokeOnly.smoke_jobs, 3, "three required smoke jobs in the pinned payload");
+  assert.equal(smokeOnly.evaluation_started_at, "2026-02-01T10:01:30Z", "the start is the earliest smoke start, not the run's");
+  assert.equal(smokeOnly.evaluation_completed_at, "2026-02-01T10:12:30Z", "the completion is the latest smoke completion, not the grade job's");
 
-  // Derivation checked against an independent computation over the same real payload.
-  const allJobs = copyJobTimestamps(jobPayload.jobs, { match: () => true });
-  const starts = jobPayload.jobs.map((job) => job.started_at).filter(Boolean).sort();
-  const completions = jobPayload.jobs.map((job) => job.completed_at).filter(Boolean).sort();
+  // Derivation checked against an independent computation over the same pinned bytes.
+  const allJobs = copyJobTimestamps(FIXED_SMOKE_JOBS, { match: () => true });
+  const starts = FIXED_SMOKE_JOBS.map((job) => job.started_at).filter(Boolean).sort();
+  const completions = FIXED_SMOKE_JOBS.map((job) => job.completed_at).filter(Boolean).sort();
   assert.equal(allJobs.evaluation_started_at, starts[0], "started_at is the earliest real job start");
   assert.equal(allJobs.evaluation_completed_at, completions.at(-1), "completed_at is the latest real job completion");
 
-  // The required-smoke predicate finds no smoke job in a run without the matrix, and that BLOCKS.
+  // A job list with no required smoke job blocks — whatever the repository's newest run happens to be.
   assert.throws(
-    () => copyJobTimestamps(jobPayload.jobs),
+    () => copyJobTimestamps(FIXED_NO_SMOKE_JOBS),
     (error) => error.reason === "timestamps-missing" && /smoke job/.test(error.message),
     "a run with no required smoke job blocks with timestamps-missing",
   );
@@ -571,6 +590,35 @@ test("FLOW-GRD-01-TWELVE-CELLS recorder", async (t) => {
     "a required smoke job that never started blocks",
   );
 
+  // Supplementary, non-required observation: what this repository's newest run reports right now.
+  // Recorded for a human, never asserted — a check whose verdict moves with repo traffic is not proof.
+  const liveObservation = (() => {
+    try {
+      const [newest] = JSON.parse(
+        execFileSync("gh", ["run", "list", "--repo", repo, "--limit", "1", "--json", "databaseId,workflowName"], {
+          encoding: "utf8",
+          stdio: ["ignore", "pipe", "ignore"],
+        }),
+      );
+      const payload = JSON.parse(
+        execFileSync("gh", ["api", `repos/${repo}/actions/runs/${newest.databaseId}/jobs?per_page=100`], {
+          encoding: "utf8",
+          stdio: ["ignore", "pipe", "ignore"],
+        }),
+      );
+      const jobs = Array.isArray(payload?.jobs) ? payload.jobs : [];
+      return {
+        ok: true,
+        newest_run: newest.databaseId,
+        workflow: newest.workflowName,
+        jobs: jobs.length,
+        required_smoke_jobs: jobs.filter((job) => /^smoke\s+\S+\s+\S+$/.test(String(job.name ?? "").trim())).length,
+      };
+    } catch (error) {
+      return { ok: false, why: String(error.message ?? error).slice(0, 200) };
+    }
+  })();
+
   // ---- AC-2 shape, read here too: one run, one mode, from GitHub context only ----
   const dispatchSha = gitHead();
   const context = runContextFromEnv({
@@ -585,14 +633,14 @@ test("FLOW-GRD-01-TWELVE-CELLS recorder", async (t) => {
   });
   assert.equal(context.dispatchSha, dispatchSha, "the dispatch commit is the workflow commit GitHub supplies");
 
-  const result = assembleResult({ cells, pins, context, timestamps: allJobs });
+  const result = assembleResult({ cells, pins, context, timestamps: smokeOnly });
   validateAgainst("harness-eval-result.v1.schema.json", result);
   assert.equal(result.cells.length, 12);
   assert.equal(new Set(result.cells.map((cell) => cell.harness)).size, 6);
   assert.match(result.pins_sha256, /^[0-9a-f]{64}$/, "pins_sha256 is a 64-hex digest");
   assert.equal(result.pins_sha256, createHash("sha256").update(pins.bytes).digest("hex"), "bound to the exact pins bytes");
-  assert.equal(result.evaluation_started_at, allJobs.evaluation_started_at, "the start is the copied GitHub timestamp");
-  assert.equal(result.evaluation_completed_at, allJobs.evaluation_completed_at, "the completion is the copied timestamp");
+  assert.equal(result.evaluation_started_at, smokeOnly.evaluation_started_at, "the start is the copied GitHub timestamp");
+  assert.equal(result.evaluation_completed_at, smokeOnly.evaluation_completed_at, "the completion is the copied timestamp");
   assert.equal(result.run_id, 9000000001);
   assert.equal(result.run_attempt, 1);
   assert.equal(result.event, "workflow_dispatch");
@@ -623,8 +671,9 @@ test("FLOW-GRD-01-TWELVE-CELLS recorder", async (t) => {
     (error) => error.reason === "cells-duplicate" && /claude-code\/pinned/.test(error.message),
     "a duplicate (harness, track) pair is refused with cells-duplicate",
   );
-  // ...and a refusal writes nothing, so no partial artifact can look valid.
-  assert.deepEqual(listFiles(outDir), [], "a refused cell set leaves the output directory empty");
+  // ...and a refusal writes nothing, so no partial artifact can look valid. That is ENFORCED, not
+  // merely observed, further down: main() itself is driven through a refusal and through a throw
+  // after the result write, and the output directory is inspected there.
 
   // ---- a verdict word outside the closed vocabulary is refused ----
   const badVerdict = structuredClone(gradedCells);
@@ -658,6 +707,15 @@ test("FLOW-GRD-01-TWELVE-CELLS recorder", async (t) => {
     () => collectCells(otherMode, { pins, installMode: "checkout" }),
     (error) => error.reason === "cell-install-mode-mismatch",
     "a cell installed in another mode is refused",
+  );
+  // ...and the same contradiction is refused on the BARE path, where the record's own mode must not
+  // be relabelled into the run's mode before it is compared.
+  const bareForeign = HARNESSES.flatMap((harness) => TRACKS.map((track) => bareCell(harness, track, "smoke-not-implemented")));
+  bareForeign[0].install_mode = "published";
+  assert.throws(
+    () => collectCells(bareForeign, { pins, installMode: "checkout" }),
+    (error) => error.reason === "cell-install-mode-mismatch" && /published/.test(error.message),
+    "a bare cell whose artifact records another install mode is refused, not relabelled",
   );
 
   // ---- attempt-qualified physical names, overwrite disabled, 90-day retention ----
@@ -724,6 +782,57 @@ test("FLOW-GRD-01-TWELVE-CELLS recorder", async (t) => {
   assert.deepEqual(emptyReceipt.reports, []);
   assert.match(emptyReceipt.reason, /no verify report artifact arrived/);
   rmSync(realReport.dir, { recursive: true, force: true });
+
+  // ---- the entry point: a refusal writes nothing, and a late throw leaves no result behind ----
+  // Both legs drive main(), not a library function: the ordering inside the shell is exactly what
+  // F-T8-2 broke, and an assertion on a directory no code path wrote cannot catch that.
+  const entryEnv = {
+    INSTALL_MODE: "checkout",
+    GITHUB_RUN_ID: "9000000001",
+    GITHUB_RUN_NUMBER: "7",
+    GITHUB_RUN_ATTEMPT: "1",
+    GITHUB_EVENT_NAME: "workflow_dispatch",
+    GITHUB_SHA: dispatchSha,
+    GITHUB_REPOSITORY: repo,
+    GITHUB_REF_NAME: "main",
+  };
+  // The Actions API boundary: a pinned job payload, so the entry point is driven with fixed bytes.
+  const pinnedFetch = async () => ({ ok: true, json: async () => ({ jobs: FIXED_SMOKE_JOBS, total_count: FIXED_SMOKE_JOBS.length }) });
+  const allBare = HARNESSES.flatMap((harness) => TRACKS.map((track) => bareCell(harness, track, "smoke-not-implemented")));
+
+  const refusedOut = join(sandbox, "grade-entry-refused");
+  const refusedCode = await main({
+    env: {
+      ...entryEnv,
+      HARNESS_EVAL_CELLS_DIR: writeCellArtifacts(join(sandbox, "cells-entry-11"), allBare.slice(0, 11)),
+      HARNESS_EVAL_VERIFY_DIR: join(sandbox, "no-verify"),
+      HARNESS_EVAL_OUT_DIR: refusedOut,
+    },
+    fetchImpl: pinnedFetch,
+  });
+  assert.equal(refusedCode, 1, "eleven cells exit 1 through the entry point");
+  assert.deepEqual(listFiles(refusedOut), [], "a refused cell set leaves no file behind, not one written and orphaned");
+
+  // A throw AFTER the result write — here an unwritable step summary — must not leave the artifact.
+  const crashOut = join(sandbox, "grade-entry-crash");
+  const summaryAsDir = join(sandbox, "summary-is-a-directory");
+  mkdirSync(summaryAsDir, { recursive: true });
+  const crashCode = await main({
+    env: {
+      ...entryEnv,
+      HARNESS_EVAL_CELLS_DIR: writeCellArtifacts(join(sandbox, "cells-entry-12"), allBare),
+      HARNESS_EVAL_VERIFY_DIR: join(sandbox, "no-verify"),
+      HARNESS_EVAL_OUT_DIR: crashOut,
+      GITHUB_STEP_SUMMARY: summaryAsDir,
+    },
+    fetchImpl: pinnedFetch,
+  });
+  assert.equal(crashCode, 1, "a failure after the writes exits 1");
+  assert.equal(
+    existsSync(join(crashOut, RESULT_FILENAME)),
+    false,
+    "a failed run leaves no result file, so the uploaded artifact can never read as a success",
+  );
 
   // ---- the exit rule: one function, and nothing but a cell verdict reaches it ----
   const gradedRun = structuredClone(gradedCells);
@@ -817,10 +926,11 @@ test("FLOW-GRD-01-TWELVE-CELLS recorder", async (t) => {
     timestamps: {
       evaluation_started_at: result.evaluation_started_at,
       evaluation_completed_at: result.evaluation_completed_at,
-      source: `gh api repos/${repo}/actions/runs/${latest.databaseId}/jobs`,
-      source_run: latest.databaseId,
-      source_workflow: latest.workflowName,
-      note: "the copy is proven on a real run's real job list; the smoke-matrix run is read at the gate",
+      source: "pinned job payload in tests/sprint-01/grd-01-twelve-cells.test.mjs (FIXED_SMOKE_JOBS)",
+      source_run: null,
+      source_workflow: null,
+      note: "the refusals and the copy are proven on payload bytes this check owns; the smoke-matrix run is read at the gate",
+      live_observation: liveObservation,
     },
     upload_plan: plan,
     exit: recorderExit({ cells: result.cells }),
@@ -831,17 +941,19 @@ test("FLOW-GRD-01-TWELVE-CELLS recorder", async (t) => {
       "bare cell claiming pass -> cell-state-not-a-verdict",
       "incomplete InstallationIdentity -> schema-invalid",
       "cell from another install mode -> cell-install-mode-mismatch",
+      "bare cell whose artifact records another install mode -> cell-install-mode-mismatch",
       "no required smoke job -> timestamps-missing",
       "smoke job that never completed -> timestamps-missing",
       "smoke job that never started -> timestamps-missing",
       "unqualified artifact name -> run-identity-missing",
+      "a throw after the result write -> no result file survives (discarded)",
     ],
     not_executed: notExecuted,
   });
 
   t.diagnostic(`cells=${result.cells.length} harnesses=${new Set(result.cells.map((c) => c.harness)).size}`);
   t.diagnostic(`pins_sha256=${result.pins_sha256}`);
-  t.diagnostic(`timestamps=${result.evaluation_started_at}..${result.evaluation_completed_at} (run ${latest.databaseId})`);
+  t.diagnostic(`timestamps=${result.evaluation_started_at}..${result.evaluation_completed_at} (pinned payload; live ${JSON.stringify(liveObservation)})`);
   t.diagnostic(`exit=${recorderExit({ cells: result.cells }).code} ${recorderExit({ cells: result.cells }).reason}`);
 
   rmSync(sandbox, { recursive: true, force: true });

@@ -59,6 +59,16 @@ function bareCell(record, { pins, installMode }) {
   }
   const reason = String(record.reason ?? "").trim();
   if (reason === "") throw new RecorderRefusal("cell-reason-missing", { cell: pair, why: "a could-not-run cell names its reason" });
+  // A bare record carries its own install mode; a contradiction is refused here, before the run's
+  // mode replaces it, so the one-run-one-mode guard is reachable on the bare path too.
+  const recordedMode = record.install_mode ?? null;
+  if (recordedMode !== null && installMode && recordedMode !== installMode) {
+    throw new RecorderRefusal("cell-install-mode-mismatch", {
+      cell: pair,
+      cell_install_mode: recordedMode,
+      run_install_mode: installMode,
+    });
+  }
   // The pinned request comes from the pins authority; the newest request is only knowable from the
   // run's own lookup, which a bare cell did not perform — so it is null, never substituted.
   const requested = record.track === "pinned" ? pinnedVersion(pins, record.harness) : null;
@@ -69,7 +79,7 @@ function bareCell(record, { pins, installMode }) {
       requested_cli_version: requested,
       resolved_cli_version: requested,
       observed_cli_version: null,
-      install_mode: installMode ?? record.install_mode,
+      install_mode: recordedMode ?? installMode,
       plugin_revision: null,
       expected_plugin_manifest_sha256: null,
       observed_plugin_manifest_sha256: null,

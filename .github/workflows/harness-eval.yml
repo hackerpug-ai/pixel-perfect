@@ -198,12 +198,16 @@ jobs:
           set -o pipefail
           node test/harness/recorder.mjs 2>&1 | tee recorder.log
 
-      - name: Upload the attempt-qualified result even when the recorder refused
+      # The refusal reason only ever exists in the step log, so the log rides along with the result:
+      # on a refusal this step still uploads the named reason instead of failing on a missing file.
+      - name: Upload the attempt-qualified result, or the refusal log when the recorder refused
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: harness-eval-result-${{ github.run_id }}-${{ github.run_attempt }}
-          path: grade/harness-eval-result.json
+          path: |
+            grade/harness-eval-result.json
+            recorder.log
           if-no-files-found: error
           retention-days: 90
           overwrite: false

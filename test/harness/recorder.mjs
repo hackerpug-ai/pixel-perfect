@@ -14,7 +14,7 @@
 //
 // The pure layer (validate → enforce → timestamp → assemble → upload plan → summary → exit) is
 // exported so a flow module can drive it against real inputs; `main` is the thin job shell.
-import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync, copyFileSync, statSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync, copyFileSync, statSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -138,6 +138,22 @@ export function writeVerifyReceipt({ outDir, verifyDir }) {
   return index;
 }
 
+/**
+ * Removes every result file this process could have written. A refusal must leave nothing that reads
+ * as a success, and the write order alone cannot guarantee that: a summary append, a stdout write or
+ * an upload-plan refusal can still throw after the result landed. The catch block calls this.
+ */
+export function discardResults({ outDir }) {
+  const removed = [];
+  for (const name of [RESULT_FILENAME, SUMMARY_FILENAME, `${RESULT_FILENAME}.partial`]) {
+    const path = join(outDir, name);
+    if (!existsSync(path)) continue;
+    rmSync(path, { force: true });
+    removed.push(name);
+  }
+  return removed;
+}
+
 function appendStepSummary(path, text) {
   if (path) appendFileSync(path, text, "utf8");
 }
@@ -165,8 +181,10 @@ export async function main({ env = process.env, fetchImpl = globalThis.fetch } =
     const exit = recorderExit({ cells });
     const summary = renderSummary(result);
 
-    writeResult({ outDir, result, summary });
+    // The verify bundle is written first and the result last, so the artifact that reads as a
+    // success is the last thing on disk; discardResults() below removes it if anything still throws.
     writeVerifyReceipt({ outDir, verifyDir: env.HARNESS_EVAL_VERIFY_DIR ?? "verify-reports" });
+    writeResult({ outDir, result, summary });
     for (const entry of uploadPlan({ runId: context.runId, attempt: context.attempt })) {
       process.stdout.write(`upload ${entry.name} (overwrite ${entry.overwrite}, ${entry.retentionDays} days)\n`);
     }
@@ -176,11 +194,21 @@ export async function main({ env = process.env, fetchImpl = globalThis.fetch } =
   } catch (error) {
     const reason = error.reason ?? "recorder-crashed";
     const detail = error.details === undefined ? String(error.message ?? error) : JSON.stringify(error.details);
-    // No result file is written on a refusal: a partial artifact must never look valid.
-    appendStepSummary(
-      env.GITHUB_STEP_SUMMARY,
-      `## harness-eval recorder refused\n\n**${reason}**\n\n\`\`\`\n${detail}\n\`\`\`\n\nNo result was written, so no incomplete artifact can be read as a green run.\n`,
-    );
+    // No result file survives a refusal: a partial artifact must never look valid, whatever threw.
+    let discarded = [];
+    try {
+      discarded = discardResults({ outDir });
+    } catch {
+      // The refusal report below is the record; the removal is best effort on a broken filesystem.
+    }
+    try {
+      appendStepSummary(
+        env.GITHUB_STEP_SUMMARY,
+        `## harness-eval recorder refused\n\n**${reason}**\n\n\`\`\`\n${detail}\n\`\`\`\n\nDiscarded: ${discarded.length > 0 ? discarded.join(", ") : "nothing (no result was written)"}. No result was written, so no incomplete artifact can be read as a green run.\n`,
+      );
+    } catch {
+      // An unwritable step summary is often the failure being reported; the step log still carries it.
+    }
     process.stderr.write(`::error title=harness-eval recorder refused::${reason}\n${reason}: ${detail}\n`);
     return 1;
   }
