@@ -1,0 +1,85 @@
+{
+  "schema": "harness-pins/v1",
+  "authority": "test/harness/pins.json is the sole pinned authority for grading. package.json is read-only for reconciliation and is never a grading authority; any intentional difference is a named entry in exceptions[].",
+  "tracks": ["pinned", "newest"],
+  "checks": ["command_list", "status", "verify", "question_before_expensive_work"],
+  "harnesses": {
+    "claude-code": {
+      "pinned_cli_version": "2.1.291",
+      "package_name": "@anthropic-ai/claude-code",
+      "provider": "anthropic",
+      "model": "opus",
+      "model_kind": "cli-alias",
+      "credential_env": "SMOKE_CLAUDE_KEY",
+      "binding_env": "ANTHROPIC_API_KEY",
+      "newest_lookup": "npm view @anthropic-ai/claude-code version"
+    },
+    "codex": {
+      "pinned_cli_version": "0.160.1",
+      "package_name": "@openai/codex",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "model_kind": "exact-id",
+      "credential_env": "SMOKE_CODEX_KEY",
+      "binding_env": "CODEX_API_KEY",
+      "newest_lookup": "npm view @openai/codex version"
+    },
+    "grok": {
+      "pinned_cli_version": "1.0.46",
+      "package_name": null,
+      "provider": "xai",
+      "model": "grok-4.6",
+      "model_kind": "exact-id",
+      "credential_env": "SMOKE_GROK_KEY",
+      "binding_env": "XAI_API_KEY",
+      "newest_lookup": "curl -fsSL https://x.ai/cli/stable"
+    },
+    "opencode": {
+      "pinned_cli_version": "1.18.34",
+      "package_name": "opencode-ai",
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-5",
+      "model_kind": "exact-id",
+      "credential_env": "SMOKE_OPENCODE_KEY",
+      "binding_env": "ANTHROPIC_API_KEY",
+      "newest_lookup": "npm view opencode-ai version"
+    },
+    "pi": {
+      "pinned_cli_version": "1.0.4",
+      "package_name": "@earendil-works/pi-coding-agent",
+      "provider": "google",
+      "model": "gemini-2.5-pro",
+      "model_kind": "exact-id",
+      "credential_env": "SMOKE_PI_KEY",
+      "binding_env": "GEMINI_API_KEY",
+      "newest_lookup": "npm view @earendil-works/pi-coding-agent version"
+    },
+    "cursor": {
+      "pinned_cli_version": "2026.10.01-e373342",
+      "package_name": null,
+      "provider": "cursor",
+      "model": "composer-1",
+      "model_kind": "exact-id",
+      "credential_env": "CURSOR_API_KEY",
+      "binding_env": "CURSOR_API_KEY",
+      "newest_lookup": "curl -fsSL https://cursor.com/install | grep -oE downloads[.]cursor[.]com/lab/[0-9A-Za-z.-]+ | head -1"
+    }
+  },
+  "fixer_cli_version": "2.1.291",
+  "fixer_harness": "claude-code",
+  "qualification": {
+    "status": "unqualified",
+    "qualified_by": null,
+    "rule": "A pin is qualified only when a real hosted run's result artifact records that harness's observed_cli_version equal to pinned_cli_version (and, for a cli-alias model, the resolved model id). This file qualifies nothing by itself: claude-code 2.1.291 is the owner-pre-answered initial pin and stays unqualified until such a run exists, and every provider/model here is an unqualified selection.",
+    "owner_decision": "claude-code pinned at 2.1.291 (sprint-01 owner question 3); the pin is not a support promise."
+  },
+  "exceptions": [
+    {
+      "harness": "pi",
+      "package_name": "@earendil-works/pi-coding-agent",
+      "pins_value": "1.0.4",
+      "package_json_value": "0.84.4",
+      "reason": "package.json pins the locally-executed devDependency at 0.84.4; the graded harness pin is the surveyed newest 1.0.4 and pins.json wins for grading. Both values stay exact; this named exception is the only sanctioned disagreement between the two files."
+    }
+  ]
+}

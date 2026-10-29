@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "harness-cell.v1.schema.json",
+  "title": "HarnessCell / HarnessGrade",
+  "description": "One (harness, track) cell. Twelve cells exist on every run, even when pinned and newest resolve to the same version; an absent adapter is present-as-could-not-run, never omitted (03-data-schema.md § HarnessCell / HarnessGrade).",
+  "type": "object",
+  "required": [
+    "harness",
+    "track",
+    "installation",
+    "verdict",
+    "reason",
+    "checks",
+    "source",
+    "invocation_id",
+    "check_id",
+    "process_exit_code",
+    "denied_tool_call",
+    "evidence_paths",
+    "report_paths",
+    "observed_verify_outcome"
+  ],
+  "properties": {
+    "harness": {
+      "type": "string",
+      "enum": ["claude-code", "codex", "grok", "opencode", "pi", "cursor"]
+    },
+    "track": {
+      "type": "string",
+      "enum": ["pinned", "newest"]
+    },
+    "installation": {
+      "$ref": "installation-identity.v1.schema.json"
+    },
+    "verdict": {
+      "description": "Binary vocabulary. Aggregate could-not-run before fail before pass.",
+      "type": "string",
+      "enum": ["pass", "fail", "could-not-run"]
+    },
+    "reason": {
+      "type": ["string", "null"]
+    },
+    "invocation_id": {
+      "type": ["string", "null"]
+    },
+    "check_id": {
+      "type": ["string", "null"]
+    },
+    "process_exit_code": {
+      "description": "Raw process status, not authoritative.",
+      "type": ["integer", "null"]
+    },
+    "source": {
+      "type": "string"
+    },
+    "denied_tool_call": {
+      "type": ["object", "null"]
+    },
+    "evidence_paths": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "report_paths": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "observed_verify_outcome": {
+      "type": ["string", "null"],
+      "enum": [
+        "defect-detected",
+        "clean",
+        "missed-defect",
+        "false-positive",
+        "permission-denied",
+        "prohibited-mutation",
+        "unavailable",
+        null
+      ]
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["check_id", "verdict", "source"],
+        "properties": {
+          "check_id": {
+            "type": "string",
+            "enum": ["command_list", "status", "verify", "question_before_expensive_work"]
+          },
+          "verdict": {
+            "type": "string",
+            "enum": ["pass", "fail", "could-not-run"]
+          },
+          "reason": {
+            "type": ["string", "null"]
+          },
+          "source": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
