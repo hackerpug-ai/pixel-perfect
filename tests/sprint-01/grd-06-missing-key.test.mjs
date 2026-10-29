@@ -21,7 +21,7 @@ import { APPROVED_MODES, assertStance, recordStance, serializeStance } from "../
 import { loadPins } from "../../test/harness/pins.mjs";
 import { ADAPTER_PENDING, ABSENT_REASONS, absentReason } from "../../test/harness/adapters/absent.mjs";
 import { CELL_SOURCES, cellFor, planCells } from "../../test/harness/adapters/registry.mjs";
-import { readWorkflow } from "./flow-runner.mjs";
+import { inspectWorkflowDeclaration, readWorkflow } from "./flow-runner.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const RUNTIME_DIR = join(ROOT, "test/harness/runtime");
@@ -123,6 +123,13 @@ function runStepBody(step, env) {
       const path = join(dir, "cell", file);
       if (!existsSync(path)) return { missing: path, stdout: result.stdout, stderr: result.stderr };
       return JSON.parse(readFileSync(path, "utf8"));
+    },
+    /** The guard's own capture, when the step body ran an invocation: the observation, not a claim. */
+    capture() {
+      const dir = join(this.dir, "cell", "evidence");
+      if (!existsSync(dir)) return null;
+      const file = readdirSync(dir).find((entry) => entry.endsWith(".capture.json"));
+      return file ? JSON.parse(readFileSync(join(dir, file), "utf8")) : null;
     },
   };
 }
@@ -554,8 +561,11 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
       for (const [jobName, job] of Object.entries(workflow.yaml?.jobs ?? {})) {
         for (const step of job?.steps ?? []) {
           const label = `${jobName}/${nameOf(step)}`;
-          const surfaces = [nameOf(step), String(step?.run ?? ""), JSON.stringify(step?.with ?? {})].join("\n");
-          assert.equal(/secrets/.test(surfaces), false, `${label} names a secret in run/with/name, outside an env block`);
+          // `if:` is a surface too: `if: ${{ secrets.SMOKE_PI_KEY != '' }}` probes a credential's
+          // presence on any step without ever naming it in run/with/name, and it is evaluated by
+          // the runner, so the scan must read it or the placement proof is blind there.
+          const surfaces = [nameOf(step), String(step?.run ?? ""), JSON.stringify(step?.with ?? {}), String(step?.if ?? "")].join("\n");
+          assert.equal(/secrets/.test(surfaces), false, `${label} names a secret in name/run/with/if, outside an env block`);
           const isModelStep = Object.values(keyedSteps).includes(step);
           if (!isModelStep) assert.deepEqual(secretRefsIn(step), [], `${label} binds a key but is not a model step`);
         }
@@ -566,6 +576,25 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
       const recordStep = smokeSteps.find((step) => /cell\/cell\.json/.test(String(step?.run ?? "")));
       assert.ok(recordStep, "the smoke job has no step writing cell/cell.json");
       assert.deepEqual(secretRefsIn(recordStep), [], "the cell recorder binds a key");
+
+      // --- T9 widened a shared rule; this is the only check that exercises it, so pin it ------
+      // flow-runner's placement rule used to allow a key only on the cell's recording step. T9
+      // relaxed it to "any step named `Smoke model step ...`", which is load-bearing for grd-01
+      // and run-02. Both directions are asserted here: the real workflow's five model steps must
+      // pass, and the same binding moved onto a step that is not a model step must still fail.
+      const declaration = inspectWorkflowDeclaration(workflow.yaml);
+      assert.deepEqual(declaration.failures, [], `the workflow's declaration fails: ${declaration.failures.join("; ")}`);
+      const smuggled = structuredClone(workflow.yaml);
+      const movedStep = smuggled.jobs.smoke.steps.find((step) => /^Smoke model step pi /.test(nameOf(step)));
+      assert.ok(movedStep, "the pi model step is missing, so the relaxation has nothing to allow");
+      assert.equal(Object.keys(envOf(movedStep)).length, 1, "the pi model step holds no binding to move");
+      movedStep.name = "Install slot - not a model step";
+      const movedFailures = inspectWorkflowDeclaration(smuggled).failures;
+      assert.ok(
+        movedFailures.some((failure) => /binds a secret outside the cell's own recording step/.test(failure)),
+        `the placement rule no longer refuses a key on a non-model step: ${JSON.stringify(movedFailures)}`,
+      );
+      artifact.t9.observed.push("the shared placement rule exercised both ways: the five model steps pass, the same binding on a non-model step still fails");
 
       // --- the keyless control: asserts absence in-step, then refuses -------------------
       const controlStep = smokeSteps.find((step) => /^Keyless control\b/.test(nameOf(step)));
@@ -586,6 +615,15 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
       assert.equal(controlRow.verdict, "could-not-run", "a missing key was readable as a pass");
       assert.equal(controlRow.reason, "missing-api-key", `the control refused with ${String(controlRow.reason)}`);
       assert.equal(controlRow.model_requests, 0, "the control made a model request before refusing");
+      assert.equal(controlRow.child_ran, false, "a refused invocation started a child, so its zero requests prove nothing");
+      // The count must be the guard's own capture, not the refusal object's constant: guard.mjs
+      // writes model_requests: 0 into EVERY refusal, so a refusal placed after a spawn would still
+      // read 0 there while the capture knows no request was begun.
+      const controlCapture = keylessRun.capture();
+      assert.ok(controlCapture, "the keyless control persisted no capture, so its zero is a constant, not an observation");
+      assert.equal(controlRow.model_requests, controlCapture.model_request_count, "the recorded zero is not the observed count");
+      assert.deepEqual(controlCapture.model_requests, [], "a model request was begun before the refusal");
+      assert.equal(controlCapture.refusal.reason, "missing-api-key", `the captured refusal is ${String(controlCapture.refusal?.reason)}`);
       assert.equal(JSON.stringify(controlRow).includes("present-binding-not-a-model-call"), false, "a credential value reached the control row");
       artifact.t9.controls = [controlRow];
       artifact.t9.observed.push("keyless control executed with every binding absent -> missing-key could-not-run missing-api-key, 0 model requests");
@@ -598,6 +636,36 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
       assert.notEqual(controlWithKey.result.status, 0, "a key-present environment passed the absence assertion — the control is not wired to the real env");
       assert.match(String(controlWithKey.result.stdout), /the keyless control is invalid/, "the control did not refuse to run when the consumed key was present");
       artifact.t9.observed.push("keyless control executed with ANTHROPIC_API_KEY present -> in-step absence assertion fails, no refusal recorded");
+
+      // --- the EMPTY-string credential: the shape a real runner actually produces ---------
+      // A step `env:` binding whose environment secret is unset yields "" on the runner, not an
+      // absent variable. If the guard treats "" as present, a hosted keyless cell records bound
+      // and the missing-api-key refusal silently becomes stance-unrecorded — so the empty shape is
+      // pinned here on the guard, on the control step body, and on a model step body.
+      const emptyEnv = withoutSecrets(process.env);
+      const emptyCredential = resolveCredential({ harness: "claude-code", env: { ...emptyEnv, ANTHROPIC_API_KEY: "" } });
+      assert.deepEqual(emptyCredential.checks, [{ name: "ANTHROPIC_API_KEY", present: false }], "an empty string counted as a credential");
+      assert.equal(emptyCredential.present, false, "an empty credential read as present, so a hosted keyless cell could spawn");
+      const emptyRun = runStepBody(controlStep, { ...emptyEnv, ANTHROPIC_API_KEY: "" });
+      sandboxDirs.push(emptyRun.dir);
+      assert.equal(emptyRun.result.status, 0, `the keyless control exited ${emptyRun.result.status} with an empty credential: ${emptyRun.result.stderr}`);
+      const emptyRow = emptyRun.read("keyless-control.json");
+      assert.equal(emptyRow.verdict, "could-not-run", `an empty credential recorded ${String(emptyRow.verdict)}`);
+      assert.equal(emptyRow.reason, "missing-api-key", `an empty credential refused with ${String(emptyRow.reason)}`);
+      assert.equal(emptyRow.child_ran, false, "an empty credential started the child");
+      assert.equal(emptyRow.model_requests, 0, "an empty credential made a model request");
+      const emptyCapture = emptyRun.capture();
+      assert.ok(emptyCapture, "the empty-credential control persisted no capture");
+      assert.equal(emptyRow.model_requests, emptyCapture.model_request_count, "the empty-credential zero is not the observed count");
+
+      const emptyPi = runStepBody(keyedSteps.pi, { ...emptyEnv, GEMINI_API_KEY: "" });
+      sandboxDirs.push(emptyPi.dir);
+      assert.equal(emptyPi.result.status, 0, `the pi model step exited ${emptyPi.result.status} with an empty credential: ${emptyPi.result.stderr}`);
+      const emptyPiRow = emptyPi.read("binding.json");
+      assert.equal(emptyPiRow.present, false, "the pi model step read an empty GEMINI_API_KEY as present");
+      assert.equal(emptyPiRow.verdict, "could-not-run", `an empty pi credential recorded ${String(emptyPiRow.verdict)}`);
+      assert.equal(emptyPiRow.reason, "missing-api-key", `an empty pi credential refused with ${String(emptyPiRow.reason)}`);
+      artifact.t9.observed.push("an EMPTY-string credential — the runner's shape for an unset secret — refuses missing-api-key on the control and on a model step");
 
       // --- the pi cell's own step, both ways (TC-2) --------------------------------------
       const piAbsent = runStepBody(keyedSteps.pi, withoutSecrets(process.env));
