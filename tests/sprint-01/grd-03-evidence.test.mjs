@@ -11,7 +11,7 @@
 // the moment it exists under test/harness/fixtures/streams/; until then the artifact says so.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, truncateSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -677,4 +677,423 @@ test("FLOW-GRD-03-FILES-AND-STREAM", async (t) => {
   t.diagnostic(`archived_capture=${artifact.provenance.archived_capture.status}`);
   t.diagnostic(`live_artifact=${artifact.provenance.live_artifact.status}`);
   assert.equal(artifact.failures.length, 0, artifact.failures.join("; "));
+});
+
+// ===========================================================================================
+// T6 — a grade read from the CanonicalEvent stream: tiled, lossless, version-scoped.
+//
+// This second block of the same flow normalises a REAL captured claude-code stdout stream into
+// CanonicalEvents and checks the two properties that make a stream usable as evidence at all: the
+// measured spans tile the bytes exactly once, and the events rebuild to the same bytes. The capture
+// is archived under test/harness/stream/captures/ with its hashes; it is keyless (zero model
+// requests, every credential name stripped), so it can contain no answer — which is itself the
+// sharpest control here: `subtype: success` with `is_error: true` on exit 1 must never become a
+// verdict, and the block asserts it does not.
+// ===========================================================================================
+test("FLOW-GRD-03-FILES-AND-STREAM", async (t) => {
+  const stream = await import("../../test/harness/stream/index.mjs");
+  const { exitCodeVerdict, worstVerdict } = await import("../../test/harness/lib/verdict.mjs");
+  const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
+  const ARCHIVE = join(ROOT, "test/harness/stream/captures/claude-code-stream-probe.capture.json");
+
+  // A capture record may only be graded against the bytes it cites, so a constructed stream is
+  // persisted next to a record that hashes it. Building one here keeps the byte/digest coupling in
+  // the fixture rather than in the grader.
+  const stagedRecords = [];
+  t.after(() => { for (const dir of stagedRecords) rmSync(dir, { recursive: true, force: true }); });
+  const stageRecord = (bytes, overrides = {}, { id = "inv-staged" } = {}) => {
+    const dir = mkdtempSync(join(tmpdir(), "pp-stream-staged-"));
+    stagedRecords.push(dir);
+    const stdoutPath = join(dir, `${id}.stdout.bin`);
+    const recordPath = join(dir, `${id}.capture.json`);
+    writeFileSync(stdoutPath, bytes);
+    const record = {
+      ...archived.record,
+      invocation_id: id,
+      stdout: { byte_length: bytes.length, sha256: sha256(bytes) },
+      evidence_root: dir,
+      evidence_relative_paths: [`${id}.capture.json`, `${id}.stdout.bin`],
+      evidence_paths: [recordPath, stdoutPath],
+      ...overrides,
+    };
+    writeFileSync(recordPath, `${JSON.stringify(record, null, 2)}\n`, "utf8");
+    return { dir, record, bytes };
+  };
+  const artifact2 = {
+    flow: "FLOW-GRD-03-FILES-AND-STREAM",
+    uc_ref: "UC-GRD-03",
+    generated_at: new Date().toISOString(),
+    provenance: { stream_source: "live-subprocess", mapping: "test/harness/stream/tables/claude-code@2.1.291.json", mapped_by: "T6" },
+    controls: [],
+    assertions: [],
+    awaiting: [],
+  };
+
+  // ---- the archived bytes are the bytes the record cites ------------------------------------
+  const archived = stream.readArchived(ARCHIVE);
+  assert.equal(archived.intact, true, "the archived stdout hashes to the record's citation");
+  const meta = JSON.parse(readFileSync(join(ROOT, "test/harness/stream/captures/claude-code-keyless-first-turn.meta.json"), "utf8"));
+  assert.equal(archived.sha256, meta.stdout_sha256, "the archiver's own record and the bytes agree");
+  assert.equal(archived.record.process_status.exit_code, meta.exit_code);
+  assert.deepEqual(meta.credential_names_in_child, [], "the probe ran with no credential in the child");
+  assert.equal(meta.model_requests, 0, "the probe made no model request");
+
+  const table = stream.loadTable({ version: "2.1.291" });
+  const real = stream.normalise({ bytes: archived.bytes, table, invocation_id: archived.record.invocation_id });
+
+  // ---- TC-3: the offsets tile the capture exactly once, with no gap and no overlap ---------
+  assert.equal(real.tiling.ok, true, `tiling: ${JSON.stringify(real.tiling)}`);
+  assert.deepEqual(real.tiling.gaps, [], "no uncovered byte range");
+  assert.deepEqual(real.tiling.overlaps, [], "no byte range claimed twice");
+  assert.equal(real.tiling.covered, archived.bytes.length, "the spans cover the whole capture");
+  assert.equal(real.tiling.covered, real.tiling.byte_length);
+  // Every event's span is one of the measured line spans, and its own bytes are the bytes there.
+  const lineSpans = new Set(real.lines.map((line) => `${line.offset}:${line.end_offset}`));
+  for (const event of real.events) {
+    assert.ok(lineSpans.has(`${event.stream_offset}:${event.stream_end_offset}`), `event ${event.sequence} cites a measured span`);
+    assert.equal(
+      archived.bytes.subarray(event.stream_offset, event.stream_end_offset).toString("utf8"),
+      `${event.original_event}${event.terminator}`,
+      `event ${event.sequence} preserves its original bytes`,
+    );
+  }
+
+  // ---- TC-3: losslessness, and unknown lines survive as harness_specific -------------------
+  const intact = stream.lossless(real.events, archived.bytes);
+  assert.equal(intact.ok, true, "the events rebuild the capture byte for byte");
+  assert.equal(intact.sha256, archived.sha256, "the rebuild hashes to the capture");
+  assert.deepEqual(intact.rewritten, [], "no rule rewrote the line it cites");
+  // The real stream starts with four SessionStart hook lines this table does not map. They are
+  // preserved, they keep their bytes, and they satisfy no required fact.
+  assert.equal(real.unknown_lines, 4, `4 unmapped hook lines survive: ${real.unknown_lines}`);
+  const unknown = real.events.filter((event) => event.type === "harness_specific");
+  assert.equal(unknown.length, 4);
+  for (const event of unknown) {
+    assert.ok(event.original_event.includes("hook_"), "an unmapped line keeps its own content");
+    assert.deepEqual(event.fact_ids, [], "an unmapped line satisfies no required fact");
+  }
+  assert.equal(unknown.filter((event) => stream.CANONICAL_TYPES.indexOf(event.type) === -1).length, 0);
+  // A mapper that dropped those lines could not state completeness: this is the tiling failure.
+  assert.equal(stream.tilingReport(real.lines.slice(0, 3), archived.bytes.length).ok, false, "dropping lines leaves a gap");
+  assert.equal(stream.tilingReport(real.lines.slice(0, 3), archived.bytes.length).gaps.length > 0, true);
+
+  // ---- AC-2: the version-scoped validator refuses an unqualified capture -------------------
+  const report = stream.validateMapping({ version: "2.1.291", bytes: archived.bytes, record: archived.record });
+  assert.equal(report.table_coverage.verdict, "pass", "the table maps all six required facts");
+  assert.equal(report.table_coverage.facts.filter((fact) => fact.mapped).length, 6, "six of six mapped");
+  assert.equal(report.capture.observed_cli_version, "2.1.312");
+  assert.equal(report.capture.version_qualified, false, "the capture is not the pinned version");
+  assert.equal(report.verdict, "could-not-run", "an unqualified capture is never validated");
+  assert.ok(report.reasons.some((entry) => entry.reason === "version-not-qualified"));
+  assert.deepEqual(report.capture.missing, ["question-tool-start", "expensive-tool-start", "required-read-denial"]);
+  artifact2.controls.push({ control_id: "version-bumped-capture", verdict: report.verdict, reason: report.reason, observed: report.capture.observed_cli_version, expected: report.table.cli_version });
+  artifact2.controls.push({ control_id: "capture-facts-unobserved", verdict: report.capture.missing.length > 0 ? "could-not-run" : "pass", reason: report.capture.missing.join(",") });
+
+  // The pass branch is reachable, and this proves it is not dead code: the SAME real bytes, a table
+  // at the version the capture actually reports, plus the three declared event shapes the keyless
+  // turn never reached. This leg is branch conformance, NOT evidence: it is not a grade.
+  const shapes = [
+    { type: "assistant", session_id: "shape", message: { id: "m-q", content: [{ type: "tool_use", id: "tu-q", name: "AskUserQuestion", input: { question: "platform?" } }] } },
+    { type: "assistant", session_id: "shape", message: { id: "m-e", content: [{ type: "tool_use", id: "tu-e", name: "Task", input: { prompt: "x" } }] } },
+    { type: "result", subtype: "success", is_error: false, stop_reason: "end_turn", result: "done", permission_denials: [{ tool_name: "Read", input: { file_path: "/tmp/x" } }] },
+  ];
+  const shapeBytes = Buffer.concat([archived.bytes, Buffer.from(`${shapes.map((line) => JSON.stringify(line)).join("\n")}\n`)]);
+  // The branch-conformance leg cites the bytes it actually grades: a record whose stdout hash names
+  // different bytes is refused (F-7), so it is staged with its own record rather than borrowing one.
+  const shapeStaged = stageRecord(shapeBytes, { model_request_count: 0 }, { id: "inv-shapes" });
+  const conformantTable = { ...table, cli_version: "2.1.312" };
+  const conformant = stream.validateMapping({ version: "2.1.312", bytes: shapeBytes, record: shapeStaged.record, table: conformantTable });
+  assert.equal(conformant.table_coverage.verdict, "pass");
+  assert.equal(conformant.capture.version_qualified, true, "the capture reports the version this in-memory table is for");
+  assert.deepEqual(conformant.capture.missing, [], "all six required facts observed");
+  assert.equal(conformant.verdict, "pass", `the pass branch is reachable: ${JSON.stringify(conformant.reasons)}`);
+  artifact2.assertions.push("branch conformance (not evidence): all six facts + matching version -> pass; the shipped table still refuses the same bytes");
+
+  // ---- AC-2: the verdict comes from the stream, beside a raw exit code --------------------
+  const installation = stream.provisionalInstallation("2.1.291");
+  const graded = stream.gradeStreamCheck({
+    record: archived.record,
+    events: real.events,
+    check_id: "verify",
+    ask_policy: "ask-nothing",
+    required_facts: ["plugin-loaded", "result-event"],
+    installation,
+  });
+  const cell = graded.cell;
+  assert.equal(cell.source, "files-and-event-stream", "the grade declares where it came from");
+  assert.equal(cell.process_exit_code, 1, "the raw exit code is carried as a diagnostic");
+  assert.equal(cell.verdict, "could-not-run", `subtype success + is_error true is not a verdict: ${JSON.stringify(cell.block_reasons)}`);
+  assert.equal(cell.reason, "model-never-answered");
+  assert.notEqual(cell.verdict, exitCodeVerdict(cell.process_exit_code), "the verdict is not the exit-code mapping (1 -> fail)");
+  assert.ok(cell.evidence_paths.length >= 1, "every graded check cites at least one evidence path");
+  assert.equal(cell.stream_evidence.completion.is_error, true);
+  assert.equal(cell.stream_evidence.completion.subtype, "success", "the CLI's success subtype is preserved and still not a verdict");
+  assert.equal(cell.stream_evidence.questions.count, 0, "the real capture asks nothing");
+  // Four check ids, four `files-and-event-stream` sources: the shape the live artifact must show.
+  const four = ["command_list", "status", "verify", "question_before_expensive_work"].map((check_id) =>
+    stream.gradeStreamCheck({ record: archived.record, events: real.events, check_id, required_facts: ["plugin-loaded"], installation }).cell,
+  );
+  assert.equal(four.filter((row) => row.source === "files-and-event-stream").length, 4, "4 checks cite files-and-event-stream");
+  assert.ok(four.every((row) => Number.isInteger(row.process_exit_code)));
+  assert.ok(four.every((row) => row.verdict !== "pass"), "no check passes on a stream whose required fact was not observed");
+
+  // ---- a denied required read is fail denied_tool_call, and requiredness is the case's -----
+  const denialLine = JSON.stringify({
+    type: "result",
+    subtype: "success",
+    is_error: false,
+    stop_reason: "end_turn",
+    result: "read it",
+    permission_denials: [{ tool_name: "Read", input: { file_path: "/tmp/pp-denied/RUNTIME-CONTRACT.md" } }],
+  });
+  const denialBytes = Buffer.concat([archived.bytes, Buffer.from(`${denialLine}\n`)]);
+  const denialOffset = archived.bytes.length;
+  const declaredBytes = stageRecord(denialBytes, {}, { id: "inv-denial" });
+  const declared = stream.normalise({ bytes: denialBytes, table, required_read_paths: ["/tmp/pp-denied"] });
+  const denialEvent = declared.events.find((event) => event.type === "permission_denied");
+  assert.equal(denialEvent.stream_offset, denialOffset, "the denial is cited at its own offset");
+  assert.equal(denialEvent.required_read, true, "a declared path makes the read required");
+  assert.equal(denialEvent.target, "/tmp/pp-denied/RUNTIME-CONTRACT.md");
+  const denialGrade = stream.gradeStreamCheck({
+    record: declaredBytes.record,
+    events: declared.events,
+    check_id: "verify",
+    required_facts: ["required-read-denial"],
+    installation,
+  });
+  // The denial is a `fail` block carrying its own offset, and the aggregate is could-not-run because
+  // this capture never got an answer: could-not-run outranks fail, so a visible denial is never lost
+  // to a missing model reply, and never turns into one.
+  const denialBlock = denialGrade.cell.block_reasons.find((entry) => entry.reason === "denied_tool_call");
+  assert.ok(denialBlock, `an observable denial is a fail block: ${JSON.stringify(denialGrade.cell.block_reasons)}`);
+  assert.equal(denialBlock.verdict, "fail");
+  assert.equal(denialGrade.cell.denied_tool_call.stream_offset, denialOffset, "the citation is the denial's own offset");
+  assert.equal(denialGrade.cell.denied_tool_call.operation, "Read");
+  assert.equal(denialGrade.cell.verdict, "could-not-run", "could-not-run outranks fail in the aggregate order");
+  assert.equal(denialGrade.cell.block_reasons.some((entry) => entry.reason === "evidence-unresolvable"), false, "the staged record cites the bytes it grades");
+  artifact2.controls.push({ control_id: "denied-required-read", verdict: denialBlock.verdict, reason: denialBlock.reason, denial_offset: denialOffset });
+
+  // The exit-0 form of the same trap: an answering run whose required read was denied, exiting 0.
+  const answeredDenial = Buffer.from(
+    `${JSON.stringify({ type: "system", subtype: "init", session_id: "s-exit0", claude_code_version: "2.1.291", permissionMode: "dontAsk", plugins: [{ name: "pixel-perfect" }] })}\n${JSON.stringify({
+      type: "assistant",
+      session_id: "s-exit0",
+      message: { id: "m-0", content: [{ type: "text", text: "I read it." }] },
+    })}\n${denialLine}\n`,
+    "utf8",
+  );
+  const exitZeroBytes = stageRecord(
+    answeredDenial,
+    { process_status: { ...archived.record.process_status, exit_code: 0 }, model_request_count: 1 },
+    { id: "inv-exit0" },
+  );
+  const exitZero = stream.gradeStreamCheck({
+    record: exitZeroBytes.record,
+    events: stream.normalise({ bytes: answeredDenial, table, required_read_paths: ["/tmp/pp-denied"] }).events,
+    check_id: "verify",
+    required_facts: ["plugin-loaded", "required-read-denial"],
+    installation,
+  });
+  assert.equal(exitZero.cell.verdict, "fail", `a denied required read fails even on exit 0: ${JSON.stringify(exitZero.cell.block_reasons)}`);
+  assert.equal(exitZero.cell.reason, "denied_tool_call");
+  assert.equal(exitZero.cell.process_exit_code, 0, "the raw exit code stays 0 beside a fail");
+  assert.notEqual(exitZero.cell.verdict, exitCodeVerdict(exitZero.cell.process_exit_code), "the verdict is not the exit-code mapping (0 -> pass)");
+  assert.equal(exitZero.cell.stream_evidence.completion.subtype, "success", "the success subtype is present and still is not a verdict");
+  artifact2.controls.push({ control_id: "exit0-denied-read-stream", verdict: exitZero.cell.verdict, reason: exitZero.cell.reason, process_exit_code: exitZero.cell.process_exit_code });
+
+  // The same denial with nobody declaring which read was required is undeclared, not optional.
+  const undeclaredGrade = stream.gradeStreamCheck({ record: declaredBytes.record, events: stream.normalise({ bytes: denialBytes, table }).events, check_id: "verify", required_facts: ["required-read-denial"], installation });
+  assert.equal(undeclaredGrade.cell.verdict, "could-not-run", "an undeclared denial is not a pass");
+  assert.ok(
+    undeclaredGrade.cell.block_reasons.some((entry) => entry.reason === "requiredness-undeclared" && entry.verdict === "could-not-run"),
+    `absence of a requiredness declaration is not permission: ${JSON.stringify(undeclaredGrade.cell.block_reasons)}`,
+  );
+  assert.equal(undeclaredGrade.cell.block_reasons.some((entry) => entry.reason === "denied_tool_call"), false, "an undeclared denial is not counted as a required-read failure either");
+  artifact2.controls.push({ control_id: "undeclared-denial", verdict: "could-not-run", reason: "requiredness-undeclared" });
+  // And a denial declared optional by the case is neither a failure nor a required fact.
+  const optional = stream.normalise({ bytes: denialBytes, table, required_read_paths: ["/somewhere/else"] });
+  assert.equal(optional.events.find((event) => event.type === "permission_denied").required_read, false);
+
+  // ---- F-1: a grade may not take its expectations from the events it grades ----------------
+  // A clean exit-0 stream whose own events claim facts. If the check's required facts default to
+  // what the stream says about itself, the stream supplies both the question and the answer and the
+  // grade is the exit-code mapping the flow exists to forbid.
+  const line = (event) => `${JSON.stringify(event)}\n`;
+  const cleanBytes = Buffer.from(
+    line({ type: "system", subtype: "init", session_id: "s-clean", claude_code_version: "2.1.291", permissionMode: "dontAsk", plugins: [{ name: "pixel-perfect" }] }) +
+      line({ type: "assistant", session_id: "s-clean", message: { id: "m-c", content: [{ type: "text", text: "ready" }] } }) +
+      line({ type: "result", subtype: "success", is_error: false, stop_reason: "end_turn", result: "ready", permission_denials: [] }),
+    "utf8",
+  );
+  const clean = stageRecord(
+    cleanBytes,
+    { termination_kind: "native", prefix_complete: true, model_request_count: 1, process_status: { ...archived.record.process_status, exit_code: 0 } },
+    { id: "inv-clean-exit0" },
+  );
+  const cleanEvents = stream.normalise({ bytes: cleanBytes, table }).events;
+  assert.throws(
+    () => stream.gradeStreamCheck({ record: clean.record, events: cleanEvents, check_id: "verify", installation }),
+    /required_facts/,
+    "a grade cannot be computed from a required-fact list the stream supplied about itself",
+  );
+  const tableDeclared = stream.gradeStreamCheck({ record: clean.record, events: cleanEvents, check_id: "verify", table, installation });
+  assert.equal(tableDeclared.cell.verdict, "could-not-run", `a clean exit 0 is not a pass when the table's facts are required: ${JSON.stringify(tableDeclared.cell.block_reasons)}`);
+  assert.ok(tableDeclared.cell.block_reasons.some((entry) => entry.reason === "required-fact-unobserved"), "the table's unobserved facts are what refuse it");
+  assert.notEqual(tableDeclared.cell.verdict, exitCodeVerdict(tableDeclared.cell.process_exit_code), "the verdict is not the exit-code mapping (0 -> pass)");
+  artifact2.controls.push({ control_id: "clean-exit-without-declared-facts", verdict: tableDeclared.cell.verdict, reason: tableDeclared.cell.reason });
+
+  // ---- F-2: an unattributable denial is undeclared, never optional ------------------------
+  // A real-shaped Bash denial names no file path in its input. An answering exit-0 stream carrying
+  // it must not pass: no one declared whether that read was required, so it cannot be graded.
+  const bashDenialLine = JSON.stringify({
+    type: "result",
+    subtype: "success",
+    is_error: false,
+    stop_reason: "end_turn",
+    result: "read it",
+    permission_denials: [{ tool_name: "Bash", input: { command: "cat /tmp/pp-denied/RUNTIME-CONTRACT.md" } }],
+  });
+  const answeredBash = Buffer.from(
+    line({ type: "system", subtype: "init", session_id: "s-bash", claude_code_version: "2.1.291", permissionMode: "dontAsk", plugins: [{ name: "pixel-perfect" }] }) +
+      line({ type: "assistant", session_id: "s-bash", message: { id: "m-b", content: [{ type: "text", text: "I read it." }] } }) +
+      `${bashDenialLine}\n`,
+    "utf8",
+  );
+  const bashStaged = stageRecord(
+    answeredBash,
+    { termination_kind: "native", prefix_complete: true, model_request_count: 1, process_status: { ...archived.record.process_status, exit_code: 0 } },
+    { id: "inv-bash-denial" },
+  );
+  const bashNormalised = stream.normalise({ bytes: answeredBash, table, required_read_paths: ["/tmp/pp-denied"] });
+  const bashEvent = bashNormalised.events.find((event) => event.type === "permission_denied");
+  assert.equal(bashEvent.target, null, "a Bash denial names no file path, so its target is unresolvable");
+  assert.equal(bashEvent.required_read, null, "a denial whose target cannot be extracted is undeclared, never optional");
+  const bashGraded = stream.gradeStreamCheck({ record: bashStaged.record, events: bashNormalised.events, check_id: "verify", required_facts: ["plugin-loaded", "required-read-denial"], installation });
+  assert.notEqual(bashGraded.cell.verdict, "pass", `an unattributable denial cannot pass on exit 0: ${JSON.stringify(bashGraded.cell.block_reasons)}`);
+  assert.ok(
+    bashGraded.cell.block_reasons.some((entry) => entry.reason === "requiredness-undeclared" && entry.verdict === "could-not-run"),
+    `an unattributable denial refuses the grade instead of disappearing: ${JSON.stringify(bashGraded.cell.block_reasons)}`,
+  );
+  artifact2.controls.push({ control_id: "unattributable-denial-exit0", verdict: bashGraded.cell.verdict, reason: bashGraded.cell.reason, process_exit_code: bashGraded.cell.process_exit_code });
+
+  // ---- F-4: a capture that cannot rebuild its own bytes cannot grade ----------------------
+  // An invalid-UTF-8 tail survives as harness_specific with replacement characters, so the events
+  // cannot rebuild the capture. The validator refuses it; the grading path must too.
+  const lossyBytes = Buffer.concat([archived.bytes, Buffer.from([0x61, 0xff, 0x0a])]);
+  const lossyStaged = stageRecord(
+    lossyBytes,
+    { termination_kind: "native", prefix_complete: true, model_request_count: 1, process_status: { ...archived.record.process_status, exit_code: 0 } },
+    { id: "inv-lossy" },
+  );
+  const lossyStream = stream.normalise({ bytes: lossyBytes, table });
+  assert.equal(stream.lossless(lossyStream.events, lossyBytes).ok, false, "the lossy capture cannot rebuild its bytes");
+  // A table at the version these bytes report, so losslessness is the ONLY thing that can refuse it.
+  const lossyReport = stream.validateMapping({ version: "2.1.312", bytes: lossyBytes, record: lossyStaged.record, table: conformantTable });
+  assert.notEqual(lossyReport.verdict, "pass", "the validator refuses a lossy capture");
+  assert.ok(lossyReport.reasons.some((entry) => entry.reason === "capture-not-lossless"), `losslessness is the refusal: ${JSON.stringify(lossyReport.reasons)}`);
+  const lossyGrade = stream.gradeStreamCheck({
+    record: lossyStaged.record,
+    events: lossyStream.events,
+    check_id: "verify",
+    required_facts: ["incremental-text", "completion"],
+    installation,
+  });
+  assert.equal(lossyGrade.cell.verdict, "could-not-run", `a lossy capture cannot grade: ${JSON.stringify(lossyGrade.cell.block_reasons)}`);
+  assert.ok(lossyGrade.cell.block_reasons.some((entry) => entry.reason === "capture-not-lossless"), "losslessness is checked on the grading path, not only in the validator");
+  artifact2.controls.push({ control_id: "lossy-capture", verdict: lossyGrade.cell.verdict, reason: lossyGrade.cell.reason });
+
+  // ---- F-7: the record's own citation is checked, not decorative --------------------------
+  // Same real bytes, a table at the version they report, so the ONLY thing that can refuse this is
+  // the citation itself: a record whose stdout hash does not name these bytes cannot validate.
+  const zeroRecord = { ...archived.record, stdout: { ...archived.record.stdout, sha256: "0".repeat(64) } };
+  const citation = stream.validateMapping({ version: "2.1.312", bytes: shapeBytes, record: zeroRecord, table: conformantTable });
+  assert.equal(citation.verdict, "could-not-run", "a record whose citation hash names other bytes is refused");
+  assert.ok(citation.reasons.some((entry) => entry.reason === "capture-citation-mismatch"), `the refusal names the citation: ${JSON.stringify(citation.reasons)}`);
+  artifact2.controls.push({ control_id: "citation-hash-mismatch", verdict: citation.verdict, reason: citation.reason });
+
+  // ---- F-8: table-only mode is a gate, not a label ----------------------------------------
+  // Every evidence gate in this sprint reads exit codes, so an unqualified table must not be
+  // indistinguishable from a qualified one to a caller that only sees the code.
+  const tableOnly = spawnSync(process.execPath, [join(ROOT, "test/harness/stream/validate-mapping.mjs"), "--version", "2.1.291"], { encoding: "utf8" });
+  assert.notEqual(tableOnly.status, 0, "an unqualified table does not exit 0 in table-only mode");
+  assert.match(tableOnly.stdout, /UNQUALIFIED/, "the qualification state is printed, not implied");
+  artifact2.controls.push({ control_id: "table-only-unqualified", verdict: tableOnly.status === 0 ? "pass" : "could-not-run", reason: "unqualified-table" });
+
+  // ---- F-9: the aggregate order is a recorded decision, not a consequence -----------------
+  // 'An observable denial is always fail' (the frozen flow's wording) and 'could-not-run outranks
+  // fail' (03-data-schema) collide when a denial sits on a stream that never answered. The schema's
+  // order wins, because could-not-run is never more permissive than fail: the denial is still a
+  // fail block carrying its own offset, only the aggregate is undecided. Asserted here so the
+  // choice cannot drift silently.
+  assert.equal(worstVerdict(["fail", "could-not-run"]), "could-not-run", "could-not-run outranks fail by decision");
+  assert.equal(worstVerdict(["pass", "fail"]), "fail", "fail outranks pass");
+
+  // A tampered archive is refused at read time, so a fixture cannot be edited into a cleaner story.
+  const tamperedDir = mkdtempSync(join(tmpdir(), "pp-stream-tamper-"));
+  try {
+    const tamperedBytes = Buffer.from(archived.bytes);
+    tamperedBytes[0] = 0x5b; // the original byte is "{" — change it to "["
+    writeFileSync(join(tamperedDir, "claude-code-stream-probe.stdout.bin"), tamperedBytes);
+    writeFileSync(join(tamperedDir, "claude-code-stream-probe.capture.json"), JSON.stringify(archived.record));
+    const tampered = stream.readArchived(join(tamperedDir, "claude-code-stream-probe.capture.json"));
+    assert.equal(tampered.intact, false, "edited bytes no longer hash to the citation");
+    artifact2.controls.push({ control_id: "tampered-archive", verdict: "could-not-run", reason: "captured-bytes-tampered" });
+  } finally {
+    rmSync(tamperedDir, { recursive: true, force: true });
+  }
+
+  // ---- the hosted artifact, when a run has been downloaded -------------------------------
+  if (existsSync(LIVE_ARTIFACT)) {
+    const live = JSON.parse(readFileSync(LIVE_ARTIFACT, "utf8"));
+    const sourceRows = (live.cells ?? [])
+      .filter((row) => row.harness === "claude-code" && row.track === "pinned")
+      .flatMap((row) => row.checks ?? [])
+      .filter((check) => check.source === "files-and-event-stream");
+    assert.equal(sourceRows.length, 4, "4 graded checks cite files-and-event-stream in the live artifact");
+    const control = (live.controls ?? []).find((row) => row.id === "exit0-denied-read" || row.control_id === "exit0-denied-read");
+    assert.ok(control, "the live artifact carries the exit0-denied-read control");
+    artifact2.assertions.push(`live artifact: ${sourceRows.length} files-and-event-stream checks, exit0-denied-read present`);
+  } else {
+    artifact2.awaiting.push({ leg: "live-result-artifact", owner: "T8/T11", path: LIVE_ARTIFACT, why: "no hosted harness-eval run has been downloaded into this worktree" });
+  }
+
+  artifact2.assertions.push(
+    "offsets tile the capture exactly once (no gap, no overlap) and every event preserves its original bytes",
+    "the events rebuild to the capture's own sha256; 4 unmapped hook lines survive as harness_specific with empty fact_ids",
+    "the validator refuses the archived capture: version-not-qualified (2.1.312 != 2.1.291) and 3 unobserved facts",
+    "subtype success + is_error true on exit 1 grades could-not-run, never pass and never its exit-code mapping",
+  );
+  const { loadPins } = await import("../../test/harness/pins.mjs");
+  artifact2.provenance.pins_sha256 = loadPins().pins_sha256;
+  artifact2.provenance.capture_sha256 = archived.sha256;
+  artifact2.provenance.capture_bytes = archived.bytes.length;
+  artifact2.provenance.events = real.events.length;
+  artifact2.provenance.unknown_lines = real.unknown_lines;
+
+  mkdirSync(REPORT_DIR, { recursive: true });
+  const prior = existsSync(ARTIFACT) ? JSON.parse(readFileSync(ARTIFACT, "utf8")) : {};
+  const merged = {
+    ...prior,
+    stream: {
+      ...artifact2,
+      controls: [...(prior.stream?.controls ?? []), ...artifact2.controls],
+      assertions: [...(prior.stream?.assertions ?? []), ...artifact2.assertions],
+      awaiting: [...(prior.stream?.awaiting ?? []), ...artifact2.awaiting],
+    },
+  };
+  writeFileSync(ARTIFACT, `${JSON.stringify(merged, null, 2)}\n`, "utf8");
+
+  // The product-owned success target: the report this flow publishes, read back off disk. Its
+  // pins_sha256 binds it to this tree's manifest bytes and its capture hash to the bytes that were
+  // graded, so a report from a different tree or a different capture is refused rather than read.
+  const published = JSON.parse(readFileSync(ARTIFACT, "utf8"));
+  assert.match(published.stream.provenance.pins_sha256, /^[0-9a-f]{64}$/, "the published report carries a 64-hex pins_sha256 identity");
+  assert.equal(published.stream.provenance.pins_sha256, loadPins().pins_sha256, "the report binds to this tree's pins manifest");
+  assert.equal(published.stream.provenance.capture_sha256, archived.sha256, "the report cites the capture it graded");
+  assert.notEqual(published.stream.controls.length, 0, "the report carries the controls the verdicts rest on");
+
+  t.diagnostic(`stream_capture_sha256=${archived.sha256} events=${real.events.length} unknown=${real.unknown_lines}`);
+  t.diagnostic(`stream_tiling=${real.tiling.ok} lossless=${intact.ok} validator=${report.verdict}/${report.reason}`);
+  t.diagnostic(`stream_controls=${artifact2.controls.map((row) => `${row.control_id}:${row.verdict}`).join(",")}`);
+  t.diagnostic(`stream_awaiting=${artifact2.awaiting.map((row) => row.leg).join(",")}`);
 });
