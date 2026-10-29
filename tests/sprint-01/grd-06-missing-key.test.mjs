@@ -8,8 +8,8 @@
 // environment is a child env, which is the only place a key can be absent without lying.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { execFileSync, spawnSync } from "node:child_process";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,6 +21,7 @@ import { APPROVED_MODES, assertStance, recordStance, serializeStance } from "../
 import { loadPins } from "../../test/harness/pins.mjs";
 import { ADAPTER_PENDING, ABSENT_REASONS, absentReason } from "../../test/harness/adapters/absent.mjs";
 import { CELL_SOURCES, cellFor, planCells } from "../../test/harness/adapters/registry.mjs";
+import { readWorkflow } from "./flow-runner.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const RUNTIME_DIR = join(ROOT, "test/harness/runtime");
@@ -85,6 +86,61 @@ function bothWays({ keylessDecision, keyedDecision }) {
 /** A static always-refuse guard: one refusal for every input. The control the flow must catch. */
 function alwaysRefuse() {
   return { allowed: false, refusal: { verdict: "could-not-run", reason: "missing-api-key" } };
+}
+
+// ---------------------------------------------------------------------------
+// [T9] The credential binding: which step may hold which key, and the keyless control that proves
+// a removed key is refused rather than read as a pass. The table below is the PRD's
+// CredentialBinding table; pins.json is the grading authority, so the two are cross-checked and
+// neither can drift alone. The workflow's own step bodies are then EXECUTED with the runner's
+// credentials stripped, so the control row is observed rather than read off the file.
+// ---------------------------------------------------------------------------
+const WORKFLOW_PATH = ".github/workflows/harness-eval.yml";
+const RUNBOOK_PATH = "test/harness/ENVIRONMENT.md";
+const REPO = process.env.HARNESS_EVAL_REPO ?? "hackerpug-ai/pixel-perfect";
+const SECRET_BINDINGS = {
+  "claude-code": { secret: "SMOKE_CLAUDE_KEY", variable: "ANTHROPIC_API_KEY" },
+  codex: { secret: "SMOKE_CODEX_KEY", variable: "CODEX_API_KEY" },
+  grok: { secret: "SMOKE_GROK_KEY", variable: "XAI_API_KEY" },
+  opencode: { secret: "SMOKE_OPENCODE_KEY", variable: "ANTHROPIC_API_KEY" },
+  pi: { secret: "SMOKE_PI_KEY", variable: "GEMINI_API_KEY" },
+};
+const BOUND_VARIABLES = [...new Set(Object.values(SECRET_BINDINGS).map((binding) => binding.variable)), "CURSOR_API_KEY"];
+// The workflow's own matrix expression and secret expression, assembled so a template literal here
+// never interpolates them.
+const MATRIX_TRACK_EXPR = `\${{ matrix.track }}`;
+const secretRefFor = (name) => ["$" + "{{", `secrets.${name}`, "}}"].join(" ");
+
+/** Runs one workflow step's own shell body in a sandbox, with the given child env. */
+function runStepBody(step, env) {
+  const dir = mkdtempSync(join(tmpdir(), "pp-grd-06-step-"));
+  symlinkSync(join(ROOT, "test"), join(dir, "test"), "dir");
+  const result = spawnSync("bash", ["-e"], { input: String(step?.run ?? ""), cwd: dir, env, encoding: "utf8", timeout: 120_000 });
+  return {
+    dir,
+    result,
+    read(file) {
+      const path = join(dir, "cell", file);
+      if (!existsSync(path)) return { missing: path, stdout: result.stdout, stderr: result.stderr };
+      return JSON.parse(readFileSync(path, "utf8"));
+    },
+  };
+}
+
+/** The environment's secret NAMES, read through gh's `--jq` name projection. Never a value. */
+function readEnvironmentSecretNames() {
+  const command = `gh api repos/${REPO}/environments/harness-smoke/secrets --jq '[.secrets[].name]|sort'`;
+  try {
+    const stdout = execFileSync("gh", ["api", `repos/${REPO}/environments/harness-smoke/secrets`, "--jq", "[.secrets[].name]|sort"], {
+      encoding: "utf8",
+      timeout: 30_000,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    return { status: "observed", command, names: JSON.parse(stdout) };
+  } catch (error) {
+    // No gh, no token, no network: the environment is unobservable here, which is not a pass.
+    return { status: "not-executed", command, reason: String(error.stderr || error.message).trim().slice(0, 300) };
+  }
 }
 
 test("FLOW-GRD-06-MISSING-KEY", async (t) => {
@@ -427,6 +483,216 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
         "paired authenticated claude-code pass rows in the same run",
       );
     }
+
+    // =====================================================================================
+    // T9 — the credential binding. Everything below reads or EXECUTES the real workflow.
+    // =====================================================================================
+    const workflow = readWorkflow(WORKFLOW_PATH);
+    const smokeSteps = workflow.yaml?.jobs?.smoke?.steps ?? [];
+    const nameOf = (step) => String(step?.name ?? "");
+    const envOf = (step) => step?.env ?? {};
+    const secretRefsIn = (step) => JSON.stringify(envOf(step)).match(/secrets\.[A-Za-z0-9_]+/g) ?? [];
+    const sandboxDirs = [];
+    artifact.t9 = { task: "T9", workflow: WORKFLOW_PATH, runbook: RUNBOOK_PATH, bindings: [], observed: [], provenance: {} };
+
+    try {
+      // --- TC-2: the workflow's table IS the pins authority's table, cross-checked --------
+      const pinsHarnesses = loadPins().manifest.harnesses;
+      for (const [harness, binding] of Object.entries(SECRET_BINDINGS)) {
+        assert.equal(pinsHarnesses[harness]?.credential_env, binding.secret, `${harness} credential_env disagrees with the binding table`);
+        assert.equal(pinsHarnesses[harness]?.binding_env, binding.variable, `${harness} binding_env disagrees with the binding table`);
+      }
+      assert.equal(pinsHarnesses.pi?.provider, "google", "pi's provider is google, so GEMINI_API_KEY is the variable it consumes");
+      assert.equal(pinsHarnesses.cursor?.credential_env, "CURSOR_API_KEY", "cursor's binding name is its own variable");
+
+      // --- the environment attaches to the smoke matrix, and to no other job -------------
+      assert.equal(workflow.yaml?.jobs?.smoke?.environment, "harness-smoke", "the smoke matrix is not bound to the harness-smoke environment");
+      for (const job of ["drift", "download", "grade"]) {
+        assert.equal(workflow.yaml?.jobs?.[job]?.environment, undefined, `jobs.${job} runs in an environment, so it could read a key`);
+      }
+
+      // --- TC-4: no write-all grant, and every job opts into read only -------------------
+      assert.deepEqual(workflow.yaml?.permissions, {}, `workflow-level permissions are ${JSON.stringify(workflow.yaml?.permissions)}`);
+      assert.equal(/write[-_]all/.test(workflow.text), false, "the workflow grants write-all");
+      for (const [jobName, job] of Object.entries(workflow.yaml?.jobs ?? {})) {
+        for (const [scope, level] of Object.entries(job?.permissions ?? {})) {
+          assert.equal(level, "read", `jobs.${jobName} permissions ${scope} is ${String(level)}, not read`);
+        }
+        assert.ok("contents" in (job?.permissions ?? {}), `jobs.${jobName} declares no contents scope`);
+        assert.equal(/id-token|packages|deployments|attestations|issues|pull-requests/.test(JSON.stringify(job?.permissions ?? {})), false, `jobs.${jobName} requests more than read`);
+      }
+
+      // --- TC-1/TC-2: one keyed step per harness, on that cell's own model step ----------
+      const keyedSteps = {};
+      for (const [harness, binding] of Object.entries(SECRET_BINDINGS)) {
+        const owners = smokeSteps.filter((step) => secretRefsIn(step).includes(`secrets.${binding.secret}`));
+        assert.equal(owners.length, 1, `${harness}: ${owners.length} smoke steps hold ${binding.secret}, expected exactly one`);
+        const [step] = owners;
+        assert.equal(nameOf(step), `Smoke model step ${harness} ${MATRIX_TRACK_EXPR}`, `${harness}'s key is not on its own model step`);
+        assert.deepEqual(
+          envOf(step),
+          { [binding.variable]: secretRefFor(binding.secret) },
+          `${harness} must bind exactly ${binding.variable} from ${binding.secret}, with no alternate provider`,
+        );
+        assert.match(String(step.if ?? ""), new RegExp(`matrix\\.harness == '${harness}'`), `${harness}'s keyed step is not gated to its own cells`);
+        keyedSteps[harness] = step;
+        artifact.t9.bindings.push({ harness, secret: binding.secret, variable: binding.variable, step: nameOf(step) });
+      }
+
+      // --- exactly those five secret names, and cursor invents none ---------------------
+      assert.deepEqual(
+        smokeSteps.flatMap(secretRefsIn).sort(),
+        Object.values(SECRET_BINDINGS).map((binding) => `secrets.${binding.secret}`).sort(),
+        "a smoke step references a secret outside the five SMOKE_ bindings",
+      );
+      assert.equal(/secrets\s*[.[]\s*['\"]?CURSOR_API_KEY/.test(workflow.text), false, "CURSOR_API_KEY is not in harness-smoke; referencing it would be invented");
+
+      // --- no other step, and no job/workflow env, ever reaches a secret -----------------
+      for (const [surface, env] of [["workflow", workflow.yaml?.env], ...Object.entries(workflow.yaml?.jobs ?? {}).map(([name, job]) => [`jobs.${name}`, job?.env])]) {
+        assert.equal(/secrets/.test(JSON.stringify(env ?? {})), false, `the ${surface} env binds a secret, so every step below it inherits the key`);
+      }
+      for (const [jobName, job] of Object.entries(workflow.yaml?.jobs ?? {})) {
+        for (const step of job?.steps ?? []) {
+          const label = `${jobName}/${nameOf(step)}`;
+          const surfaces = [nameOf(step), String(step?.run ?? ""), JSON.stringify(step?.with ?? {})].join("\n");
+          assert.equal(/secrets/.test(surfaces), false, `${label} names a secret in run/with/name, outside an env block`);
+          const isModelStep = Object.values(keyedSteps).includes(step);
+          if (!isModelStep) assert.deepEqual(secretRefsIn(step), [], `${label} binds a key but is not a model step`);
+        }
+      }
+      const installStep = smokeSteps.find((step) => /matrix\.harness/.test(String(step?.run ?? "")));
+      assert.ok(installStep, "the smoke job has no install slot");
+      assert.deepEqual(secretRefsIn(installStep), [], "the install slot binds a key");
+      const recordStep = smokeSteps.find((step) => /cell\/cell\.json/.test(String(step?.run ?? "")));
+      assert.ok(recordStep, "the smoke job has no step writing cell/cell.json");
+      assert.deepEqual(secretRefsIn(recordStep), [], "the cell recorder binds a key");
+
+      // --- the keyless control: asserts absence in-step, then refuses -------------------
+      const controlStep = smokeSteps.find((step) => /^Keyless control\b/.test(nameOf(step)));
+      assert.ok(controlStep, "the smoke job has no keyless control step");
+      assert.deepEqual(secretRefsIn(controlStep), [], "the keyless control binds a key, so it proves nothing");
+      for (const variable of BOUND_VARIABLES) {
+        assert.match(String(controlStep.run), new RegExp(variable), `the keyless control never asserts ${variable} is absent`);
+      }
+      assert.match(String(controlStep.run), /\[ -n "\$\{!name:-\}" \]/, "the keyless control does not assert the consumed key and every fallback are absent");
+      assert.match(String(controlStep.if ?? ""), /matrix\.harness == 'claude-code'/, "the keyless control must run beside the authenticated claude-code cells");
+
+      // ------------------- the keyless control, EXECUTED with every credential removed ------
+      const keylessRun = runStepBody(controlStep, withoutSecrets(process.env));
+      sandboxDirs.push(keylessRun.dir);
+      assert.equal(keylessRun.result.status, 0, `the keyless control exited ${keylessRun.result.status}: ${keylessRun.result.stderr}`);
+      const controlRow = keylessRun.read("keyless-control.json");
+      assert.equal(controlRow.control_id, "missing-key", `the control row is ${JSON.stringify(controlRow)}`);
+      assert.equal(controlRow.verdict, "could-not-run", "a missing key was readable as a pass");
+      assert.equal(controlRow.reason, "missing-api-key", `the control refused with ${String(controlRow.reason)}`);
+      assert.equal(controlRow.model_requests, 0, "the control made a model request before refusing");
+      assert.equal(JSON.stringify(controlRow).includes("present-binding-not-a-model-call"), false, "a credential value reached the control row");
+      artifact.t9.controls = [controlRow];
+      artifact.t9.observed.push("keyless control executed with every binding absent -> missing-key could-not-run missing-api-key, 0 model requests");
+
+      // --- the negative control: the same step body must NOT refuse when the key is there ---
+      // A placeholder, never a credential: it proves the refusal fires on absence, not always.
+      const placeholder = ["present", "binding", "not", "a", "model", "call"].join("-");
+      const controlWithKey = runStepBody(controlStep, { ...withoutSecrets(process.env), ANTHROPIC_API_KEY: placeholder });
+      sandboxDirs.push(controlWithKey.dir);
+      assert.notEqual(controlWithKey.result.status, 0, "a key-present environment passed the absence assertion — the control is not wired to the real env");
+      assert.match(String(controlWithKey.result.stdout), /the keyless control is invalid/, "the control did not refuse to run when the consumed key was present");
+      artifact.t9.observed.push("keyless control executed with ANTHROPIC_API_KEY present -> in-step absence assertion fails, no refusal recorded");
+
+      // --- the pi cell's own step, both ways (TC-2) --------------------------------------
+      const piAbsent = runStepBody(keyedSteps.pi, withoutSecrets(process.env));
+      sandboxDirs.push(piAbsent.dir);
+      assert.equal(piAbsent.result.status, 0, `the pi model step body exited ${piAbsent.result.status}: ${piAbsent.result.stderr}`);
+      const piRow = piAbsent.read("binding.json");
+      assert.equal(piRow.credential_env, "SMOKE_PI_KEY", "TC-2: pi's environment secret is SMOKE_PI_KEY");
+      assert.equal(piRow.binding_env, "GEMINI_API_KEY", "TC-2: pi's step variable is GEMINI_API_KEY");
+      assert.equal(piRow.verdict, "could-not-run");
+      assert.equal(piRow.reason, controlRow.reason, "the model step and the control must refuse for the same reason");
+      assert.deepEqual(piRow.checked, ["GEMINI_API_KEY"], "no login cache and no alternate provider is consulted");
+
+      const piPresent = runStepBody(keyedSteps.pi, { ...withoutSecrets(process.env), GEMINI_API_KEY: placeholder });
+      sandboxDirs.push(piPresent.dir);
+      assert.equal(piPresent.result.status, 0, `the bound pi body exited ${piPresent.result.status}: ${piPresent.result.stderr}`);
+      const piBound = piPresent.read("binding.json");
+      assert.equal(piBound.present, true, "the binding is refused even when it is present — a static guard");
+      assert.equal(piBound.present_name, "GEMINI_API_KEY");
+      assert.equal(piBound.verdict, "bound", `the bound pi step recorded ${String(piBound.verdict)}`);
+      assert.equal(JSON.stringify(piBound).includes(placeholder), false, "a credential value reached the record");
+      artifact.t9.cells = [piRow, piBound];
+
+      // --- cursor: no key to bind, and its reason comes from the same guard path ---------
+      const cursorStep = smokeSteps.find((step) => nameOf(step) === `Smoke model step cursor ${MATRIX_TRACK_EXPR}`);
+      assert.ok(cursorStep, "cursor has no cell step — a keyless cell may never be omitted");
+      assert.deepEqual(secretRefsIn(cursorStep), [], "cursor's step binds a key that does not exist");
+      const cursorAbsent = runStepBody(cursorStep, withoutSecrets(process.env));
+      sandboxDirs.push(cursorAbsent.dir);
+      assert.equal(cursorAbsent.result.status, 0, `the cursor step body exited ${cursorAbsent.result.status}: ${cursorAbsent.result.stderr}`);
+      const cursorRow = cursorAbsent.read("binding.json");
+      assert.equal(cursorRow.verdict, "could-not-run", "a keyless cursor cell must be could-not-run, never pass");
+      assert.equal(cursorRow.reason, controlRow.reason, "a special-cased cursor reason string would be a fabricated verdict");
+      assert.equal(cursorRow.credential_env, "CURSOR_API_KEY");
+      artifact.t9.cells.push(cursorRow);
+      artifact.t9.observed.push("cursor executed without a binding -> could-not-run missing-api-key, the control row's own reason");
+
+      // --- TC-1: the environment really holds exactly the five names --------------------
+      const environment = readEnvironmentSecretNames();
+      artifact.t9.provenance.environment = environment;
+      assert.notEqual(environment.status, "absent", "the environment lookup produced no status");
+      if (environment.status === "observed") {
+        assert.deepEqual(
+          environment.names,
+          Object.values(SECRET_BINDINGS).map((binding) => binding.secret).sort(),
+          `harness-smoke holds ${JSON.stringify(environment.names)}`,
+        );
+        assert.equal(
+          Object.values(SECRET_BINDINGS).every((binding) => environment.names.includes(binding.secret)),
+          true,
+          "every binding the workflow consumes is named in the environment",
+        );
+        artifact.t9.observed.push(`harness-smoke lists ${environment.names.join(",")} (names only, never a value)`);
+      } else {
+        artifact.t9.provenance.environment.why = "the environment's secret names are only observable through an authenticated gh api call";
+        artifact.t9.awaiting = [...(artifact.t9.awaiting ?? []), "harness-smoke secret names from an authenticated gh api call"];
+      }
+
+      // --- the runbook: the placement rule the next adapter must not widen --------------
+      const runbookPath = join(ROOT, RUNBOOK_PATH);
+      assert.ok(existsSync(runbookPath), `${RUNBOOK_PATH} is missing, so the binding rule is undocumented`);
+      const runbook = readFileSync(runbookPath, "utf8");
+      assert.match(runbook, /harness-smoke/, "the runbook never names the environment");
+      assert.match(runbook, /Smoke model step/, "the runbook never names the only step allowed to hold a key");
+      for (const binding of Object.values(SECRET_BINDINGS)) {
+        assert.ok(runbook.includes(binding.secret), `the runbook never names ${binding.secret}`);
+        assert.ok(runbook.includes(binding.variable), `the runbook never names ${binding.variable}`);
+      }
+      assert.match(runbook, /never creates|creates no|no agent creates|owner/i, "the runbook never states that no agent creates or rotates a secret");
+      for (const variable of BOUND_VARIABLES) assert.ok(runbook.includes(variable), `the runbook never names the fallback ${variable}`);
+      assert.equal(/secrets\.[A-Za-z0-9_]+\s*=\s*\S/.test(runbook), false, "the runbook shows a secret value");
+
+      // --- TC-3's paired half: authenticated cells grading beside the control row -------
+      if (existsSync(LIVE_ARTIFACT)) {
+        const live = JSON.parse(readFileSync(LIVE_ARTIFACT, "utf8"));
+        const hosted = (live.controls ?? []).find((row) => row.control_id === "missing-key");
+        assert.ok(hosted, "the hosted artifact carries no missing-key control row");
+        assert.equal(hosted.reason, controlRow.reason, "the hosted control row disagrees with the wired control");
+        const authenticatedLive = (live.cells ?? []).filter((cell) => cell.harness === "claude-code" && cell.verdict === "pass");
+        assert.ok(authenticatedLive.length > 0, "no authenticated claude-code cell graded in the same run");
+        artifact.t9.provenance.hosted = { status: "observed", path: LIVE_ARTIFACT, authenticated_cells: authenticatedLive.length };
+      } else {
+        artifact.t9.provenance.hosted = {
+          status: "not-executed",
+          path: LIVE_ARTIFACT,
+          why: "authenticated cells grading beside the control row exist only in a dispatched run's artifact",
+          owner: "T8/T11 (the recorder and the controls array)",
+        };
+        artifact.t9.awaiting = [
+          ...(artifact.t9.awaiting ?? []),
+          "paired authenticated claude-code pass rows in the same run as the control row",
+        ];
+      }
+    } finally {
+      for (const dir of sandboxDirs) rmSync(dir, { recursive: true, force: true });
+    }
   } finally {
     assert.equal(
       Boolean(process.env.ANTHROPIC_API_KEY),
@@ -446,9 +712,21 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
   const published = JSON.parse(readFileSync(ARTIFACT, "utf8"));
   assert.match(published.t10.pins_sha256, /^[0-9a-f]{64}$/, "the published report carries a 64-hex pins_sha256 identity");
   assert.equal(published.t10.cells_detail.length, 12, "the published report carries all twelve cells");
+  assert.equal(published.t9.bindings.length, 5, "the published report carries all five credential bindings");
+  assert.deepEqual(
+    published.t9.bindings.map((binding) => `${binding.secret}->${binding.variable}`).sort(),
+    Object.values(SECRET_BINDINGS).map((binding) => `${binding.secret}->${binding.variable}`).sort(),
+    "the published binding table is the one that was checked",
+  );
+  assert.equal(published.t9.controls[0].verdict, "could-not-run", "the published control row is not a refusal");
+  assert.equal(published.t9.controls[0].reason, "missing-api-key");
 
   t.diagnostic(`controls=${artifact.controls.map((row) => `${row.control_id}:${row.verdict}/${row.reason}`).join(",")}`);
   t.diagnostic(`rejected_mode_hits=${artifact.stance_scan.rejected_mode_hits}`);
   t.diagnostic(`live_artifact=${artifact.provenance.live_artifact.status}`);
+  t.diagnostic(`bindings=${artifact.t9.bindings.map((binding) => `${binding.harness}:${binding.secret}->${binding.variable}`).join(",")}`);
+  t.diagnostic(`keyless_control=${artifact.t9.controls.map((row) => `${row.control_id}:${row.verdict}/${row.reason}/${row.model_requests}`).join(",")}`);
+  t.diagnostic(`environment=${artifact.t9.provenance.environment.status}`);
+  t.diagnostic(`t9_hosted=${artifact.t9.provenance.hosted.status}`);
   assert.equal(artifact.failures.length, 0, artifact.failures.join("; "));
 });
