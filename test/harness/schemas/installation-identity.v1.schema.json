@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "installation-identity.v1.schema.json",
+  "title": "InstallationIdentity",
+  "description": "Per-cell identity of what was actually installed and loaded (03-data-schema.md § InstallationIdentity). A cache version label and an install command's exit code are not byte proof; a digest/version/load mismatch is could-not-run installation-identity-mismatch.",
+  "type": "object",
+  "required": [
+    "requested_cli_version",
+    "resolved_cli_version",
+    "observed_cli_version",
+    "install_mode",
+    "plugin_revision",
+    "expected_plugin_manifest_sha256",
+    "observed_plugin_manifest_sha256",
+    "loaded_plugin_root",
+    "plugin_load_evidence"
+  ],
+  "properties": {
+    "requested_cli_version": {
+      "description": "Exact CLI version requested from pins.json (pinned track) or the run-resolved newest version.",
+      "type": ["string", "null"],
+      "pattern": "^[0-9][0-9A-Za-z.+-]*$"
+    },
+    "resolved_cli_version": {
+      "description": "Exact CLI version resolved once before fan-out.",
+      "type": ["string", "null"],
+      "pattern": "^[0-9][0-9A-Za-z.+-]*$"
+    },
+    "observed_cli_version": {
+      "description": "Version the installed CLI reported, normalized to a dotted version. null when no CLI was observed.",
+      "type": ["string", "null"],
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+"
+    },
+    "install_mode": {
+      "type": "string",
+      "enum": ["checkout", "published"]
+    },
+    "plugin_revision": {
+      "type": ["string", "null"]
+    },
+    "expected_plugin_manifest_sha256": {
+      "description": "SHA-256 of the expected plugin manifest built from sorted relative paths and file contents.",
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "observed_plugin_manifest_sha256": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "loaded_plugin_root": {
+      "type": ["string", "null"]
+    },
+    "plugin_load_evidence": {
+      "type": ["string", "null"]
+    }
+  }
+}
