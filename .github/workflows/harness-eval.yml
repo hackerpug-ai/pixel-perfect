@@ -1,0 +1,180 @@
+name: harness-eval
+
+# One invocation = one install mode = twelve cells.
+#
+# Sprint 01 ships only the hand dispatch (UC-RUN-02). The nightly `schedule` (UC-RUN-01) and
+# the post-merge `push` (UC-RUN-03) triggers belong to a later sprint and must land there,
+# with the dispatch-eligibility rules in 09-technical-requirements/04-api-design.md.
+#
+# Banned events — never add these: pull_request, pull_request_target, workflow_run.
+# A pull request is never what starts this grade.
+on:
+  workflow_dispatch:
+    inputs:
+      install_mode:
+        description: Where the plugin under test comes from. checkout grades the dispatch commit; published grades the resolved release.
+        type: choice
+        options:
+          - checkout
+          - published
+        default: checkout
+
+# Default permissions are empty. Every job opts in to the narrowest scope it needs.
+permissions: {}
+
+# A new dispatch never cancels a grade already in progress.
+concurrency:
+  group: harness-eval
+  cancel-in-progress: false
+
+jobs:
+  drift:
+    name: drift proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the dispatch commit
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # Package-manager cache is allowed on this job only: it holds no harness key.
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install pinned dependencies
+        run: pnpm install --frozen-lockfile
+
+      # The existing release proof. A moved rule fails here, independently of any grade.
+      - name: Re-run the release proof
+        run: |
+          set -o pipefail
+          pnpm run verify 2>&1 | tee harness-eval-drift.log
+
+      - name: Upload the drift record even when the proof failed
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: harness-eval-drift-${{ github.run_id }}-${{ github.run_attempt }}
+          path: harness-eval-drift.log
+          if-no-files-found: warn
+          retention-days: 90
+          overwrite: false
+
+  smoke:
+    name: smoke ${{ matrix.harness }} ${{ matrix.track }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    # T9 finishes the harness-smoke binding. Only that cell's own smoke step ever holds that
+    # harness's key; no install, marketplace, plugin-install or command-list step holds one.
+    environment: harness-smoke
+    strategy:
+      fail-fast: false
+      matrix:
+        harness: [claude-code, codex, grok, opencode, pi, cursor]
+        track: [pinned, newest]
+    steps:
+      - name: Check out the dispatch commit
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # Install slot — deliberately keyless. T2 owns the pins, T5 owns the per-harness install
+      # command (the CLI invocation boundary is another lens's contract), T9 owns the key.
+      - name: Install ${{ matrix.harness }} ${{ matrix.track }}
+        run: |
+          set -eu
+          echo "install slot reserved: ${{ matrix.harness }} ${{ matrix.track }} (T2 pins, T5 install, T9 key)"
+
+      # This cell records itself honestly. Sprint 01 ships no verdict logic: nothing reads this
+      # file to decide a grade, and no grade is ever inferred from a process exit code.
+      - name: Record the cell
+        run: |
+          set -eu
+          mkdir -p cell
+          printf '{"harness":"%s","track":"%s","cell_state":"could-not-run","reason":"smoke-not-implemented","install_mode":"%s","event":"%s","run_id":"%s","run_attempt":"%s"}\n' \
+            '${{ matrix.harness }}' '${{ matrix.track }}' '${{ inputs.install_mode }}' '${{ github.event_name }}' '${{ github.run_id }}' '${{ github.run_attempt }}' \
+            > cell/cell.json
+          cat cell/cell.json
+
+      - name: Upload this cell even when the smoke step failed
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: harness-eval-cell-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.harness }}-${{ matrix.track }}
+          path: cell/
+          if-no-files-found: warn
+          retention-days: 90
+          overwrite: false
+
+  download:
+    name: download cell artifacts
+    needs: smoke
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Fetch every cell from this attempt
+        uses: actions/download-artifact@v4
+        with:
+          pattern: harness-eval-cell-${{ github.run_id }}-${{ github.run_attempt }}-*
+          path: cells
+          merge-multiple: false
+
+      - name: Hand the cells to the recorder
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: harness-eval-cells-${{ github.run_id }}-${{ github.run_attempt }}
+          path: cells/
+          if-no-files-found: warn
+          retention-days: 90
+          overwrite: false
+
+  grade:
+    name: grade recorder (skeleton)
+    needs: download
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Fetch the collected cells
+        uses: actions/download-artifact@v4
+        with:
+          name: harness-eval-cells-${{ github.run_id }}-${{ github.run_attempt }}
+          path: cells
+
+      # T8 fills the recorder here: schema validation, twelve-unique-cell enforcement, the
+      # GitHub job timestamps, harness-eval-result.json and the Actions summary. T8 also adds
+      # `actions: read` to this job to obtain the trusted run/job metadata. This task ships no
+      # verdict logic, so the job only inventories what arrived.
+      - name: Inventory the cells that arrived
+        run: |
+          set -eu
+          mkdir -p receipt
+          find cells -type f -name '*.json' | sort > receipt/cell-artifacts.txt
+          cat receipt/cell-artifacts.txt
+
+      - name: Upload the recorder input receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: harness-eval-grade-inputs-${{ github.run_id }}-${{ github.run_attempt }}
+          path: receipt/
+          if-no-files-found: warn
+          retention-days: 90
+          overwrite: false
