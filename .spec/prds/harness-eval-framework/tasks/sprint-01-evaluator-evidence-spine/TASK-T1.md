@@ -1,6 +1,8 @@
 # TASK-T1 — Scaffold `.github/workflows/harness-eval.yml`: `workflow_dispatch` (install_mode input, checkout default), empty default permissions, six-harness by two-track smoke matrix (fail-fast false, no cache, keyless install), no banned events
 
-> Status: Backlog
+> Status: ✅ Completed
+
+Commit: 164d28a8d4220c24bfb4598116d2af74533bdc68
 > Assignee: github-platform-implementer
 > Priority: P1
 > Points: 5
@@ -38,7 +40,6 @@ UC-RUN-02 says a hand start grades the same harnesses and the same checks as the
 
 ```
 TASK_TYPE:  FEATURE
-STATUS:     Backlog
 PRIORITY:   P1
 POINTS:     5
 AGENT:      planner=github-agentic-workflow-planner | implementer=github-platform-implementer | reviewer=github-agentic-workflow-reviewer
@@ -506,3 +507,68 @@ NOTES
 }
 -->
 </details>
+
+## Handoff
+
+```json
+{
+  "task": "T1",
+  "commit_sha": "164d28a8d4220c24bfb4598116d2af74533bdc68",
+  "done": "PROVISIONAL SUBSTITUTE-AUTHOR DRAFT ONLY; UNAPPROVED; not the original author's testimony. Reconstruction from approved candidate 164d28a8d4220c24bfb4598116d2af74533bdc68 against reviewed base 9f34390d85af730e149e99d757ef58b429fee4d4: the landed change adds .github/workflows/harness-eval.yml with workflow_dispatch, checkout/published install_mode choices and checkout default, empty default permissions, read-only jobs, concurrency without cancellation, a six-harness by pinned/newest smoke matrix, bounded jobs, keyless install slots, explicit could-not-run cell records, attempt-qualified uploads, and download/grade transfer skeletons. It also lands declaration/live-dispatch evidence handling and negative controls in tests/sprint-01/flow-runner.mjs and tests/sprint-01/run-02-hand.test.mjs, preserving the previously landed T2 and T4 shared-lane behavior. The recorded cycle-5 review is APPROVED and state records landing merge f5423e74d0c9b23e3d5c260b69b7ca257f1d81ec; this draft does not record a handoff or complete T1.",
+  "deviations": [
+    "The task outcome requires a real hosted no-input hand dispatch. Cycle-5 approved the scaffold with AC-1 and FLOW-RUN-02-HAND DEFERRED on T8. Its artifact is workflow-declaration with ac1_satisfied=false, candidate_sha=null, and a historical HTTP 404 registration probe. Local green checks are not hosted acceptance.",
+    "The workflow includes an executable drift-proof job with pnpm cache, frozen dependency installation and pnpm run verify. F-T1-8 retains this as non-blocking scope ambiguity because TASK-T1 says the drift-proof job is not this task. No smoke-matrix cache was added.",
+    "The smoke install step is a reserved echo slot and the cell recorder emits could-not-run with reason smoke-not-implemented. The download and grade jobs transfer/inventory artifacts without deciding grades. Real harness installation, keyed smoke execution and grading are not established by this scaffold.",
+    "The approved candidate incorporates trunk merges, including T4 additions to the shared flow runner and T2 pin/identity assertions. The frozen review reports no lost task function bodies or assertions, byte-identical workflow and hand-test files versus cycle 4, and the known HARNESSES-to-PINS_HARNESSES import rename."
+  ],
+  "concerns": [
+    "Authorship and authority remain unresolved: registered original implementer session 6734a304-a0d1-4c7 has pending handoff delivery. Its unreachability in this thread and the absence of substitution approval are recovery-task premises, not conclusions from a new native resume attempt. This writer is a substitute preparer and cannot attest to the original author's intent. No owner authorization, response receipt, session registration or completion is supplied by this draft.",
+    "U-T1-1 remains OPEN and non-blocking in the recorded review: hosted admission through environment harness-smoke before T9 provisioning was not observed.",
+    "U-T1-2 remains OPEN and non-blocking: twelve hosted jobs and their twelve attempt-qualified artifacts were not observed.",
+    "U-T1-3 remains OPEN and non-blocking: after registration the frozen test can dispatch automatically, select the newest run, and report its headSha without comparing it to local HEAD in auto mode. A live result may therefore describe a different commit or concurrent run.",
+    "Cycle-5 historical evidence reports two passing tests for the frozen command and 31 passing tests across seven sprint lane files, with no skips. These commands were inspected, not executed during this recovery preparation. No current workflow registration, dispatch, environment, harness service or hosted artifact was checked.",
+    "The cycle-5 reviewer did not rerun the governed run_flow.py gate runner; its policy-presence conclusion rests on tracked, unchanged policy blobs and the retained RED capture. This draft does not repair that proof gap.",
+    "Several advisory claim texts were frozen from earlier cycles and no longer describe the approved implementation literally. Their ADVISORY status and null resolution remain recorded; the draft carries those statuses while distinguishing superseded behavior from current residual gaps."
+  ],
+  "findings": [
+    "Cycle-5 records F-T1-1/2/3/4/5/6/9/16 as FIXED. That is a historical reviewer disposition, not a new review or a claim of hosted AC-1 satisfaction.",
+    "F-T1-7 remains ADVISORY, resolution null: the carried claim concerns writeRed proof overwrite, but cycle-5 E-10 reports that the module no longer has a writeRed/.red writer. Do not present the stale claim as a current defect.",
+    "F-T1-8 remains ADVISORY, resolution null: executable drift proof and package cache exceed the narrow scaffold wording; recorded impact is duplicated CI cost and scope ambiguity.",
+    "F-T1-10 remains ADVISORY, resolution null: the historical claim says all probe failures look like non-registration. Approved source distinguishes HTTP 404 from other failures and propagates probe errors; cycle-5 E-15 confirms refusal. Preserve the recorded status without reviving the superseded behavior claim.",
+    "F-T1-11 remains ADVISORY, resolution null: automatic live dispatch plus limit-one newest-run selection lacks local-HEAD binding in auto mode; linked to U-T1-3.",
+    "F-T1-12 remains ADVISORY, resolution null: the declaration checks and reserved install echo do not establish real harness installation, execution, or result-artifact grading.",
+    "F-T1-13 remains ADVISORY, resolution null: fixed workflow text anchors in secret-placement controls are fragile at the exact env insertion points T9 will edit.",
+    "F-T1-14 remains ADVISORY, resolution null: its old dot-only secret-scan claim is behaviorally fixed by the approved SECRET_REF dot/bracket matcher; E-17 confirms bracket-form refusal. The remaining regression-control gap is F-T1-18.",
+    "F-T1-15 remains ADVISORY, resolution null: its old missing probe-error-consumption control is behaviorally fixed by the broken-probe test and E-15, as the cycle-5 resume notes explain.",
+    "F-T1-17 remains ADVISORY, resolution null: the two-test execution counter detects skipped existing bodies but a newly added body without the manual counter increment can evade the accounting.",
+    "F-T1-18 remains ADVISORY, resolution null: reverting SECRET_REF to dot-only still passed the historical frozen check, so bracket-form secret refusal lacks an in-test regression control."
+  ],
+  "scope_impact": [
+    {
+      "target": "GATE:FLOW-RUN-02-HAND",
+      "found": "The approved review defers AC-1 and gate steps 2-3. The task obligation requires replay after T1/T2/T8 land and rechecks on T9/T12; historical declaration proof does not discharge it.",
+      "change": "Retain the existing mandatory integration obligation and obtain a governed hosted replay with exact dispatch identity, twelve cells and attempt-qualified artifacts. Preserve the explicit published-mode scenario: install_mode published, candidate_sha null and honest could-not-run cells naming release resolution. This is a carried proof requirement, not an authorized mutation or acceptance decision."
+    },
+    {
+      "target": "T8",
+      "found": "The download/grade jobs are artifact-transfer skeletons and the frozen deferral names T8. The live flow currently risks selecting the newest run instead of the dispatch it initiated.",
+      "change": "Use the existing recorder integration to produce authoritative result artifacts and bind hosted evidence to its dispatch commit, run and attempt. Do not count T1 declaration checks as recorder or hosted acceptance."
+    },
+    {
+      "target": "T9",
+      "found": "The smoke job already names harness-smoke; installation remains a keyless reserved slot, and secret controls mutate fixed Record-the-cell/env anchors. Admission and keyed runtime were not hosted-proven.",
+      "change": "When performing the already planned environment/key binding, preserve keyless installation, keep keys only at the cell smoke step, update affected controls without weakening their assertions, and replay the existing flow obligation."
+    },
+    {
+      "target": "T12",
+      "found": "The frozen review retains ten advisories, three open uncertainties and unexecuted governed/hosted proof. Several carried advisory claims are stale despite their unchanged status.",
+      "change": "Review the approved source and evidence resolutions together, preserve unresolved identity and regression-control gaps, and require the existing post-integration flow proof before treating the workflow as accepted. This draft supplies no new task or roadmap authorization."
+    }
+  ],
+  "feedback": [
+    "This provisional reconstruction uses exact approved Git bytes, the cycle-5 frozen context/review bundle/verdict and landing state. It is not first-person authorship and does not invent the original author's design rationale or execution receipts.",
+    "Evidence paths, line citations, artifact hash checks and command boundaries are retained in .kb-run-sprint/sprint-01-evaluator-evidence-spine/recovery/handoff-drafts/T1.evidence.md. Recovery preparation ran only read-only inspection and draft-file validation; no tests or hosted operations were executed.",
+    "Before any recording, the orchestrator must resolve whether a saved original final report exists and follow the current native provenance contract. An owner-authorized substitute envelope is required if the original-author path cannot supply the handoff; this draft alone authorizes nothing."
+  ]
+}
+```
