@@ -1,0 +1,380 @@
+{
+  "schema": "invocation-capture/v1",
+  "harness": "claude-code",
+  "check_id": "verify",
+  "invocation_id": "claude-code-denied-write",
+  "argv": [],
+  "cwd": "/private/var/folders/rt/8_hh9gmj43x4763f7_l_nk3c0000gn/T/tmp.Fkp7jVpML8",
+  "stream_source": "live-subprocess",
+  "timeout_ms": 180000,
+  "stdout": {
+    "byte_length": 172589,
+    "sha256": "dbbdfe9c54cc8c752af0ea16a17efe5e69c3988393d5995c16cb17509b59d94b"
+  },
+  "stderr": {
+    "byte_length": 153,
+    "sha256": "ea4b04c7cb46bc4e15459f82144a47bd2794a7bc5f1bb72e3565e7b753fe9f73"
+  },
+  "chunks": [
+    {
+      "stream": "stdout",
+      "offset": 0,
+      "end_offset": 759,
+      "byte_length": 759,
+      "sha256": "ba5a5696de5178bacaa74d335d78b9ba669afc75bb403062cbe5cd855e44794d"
+    },
+    {
+      "stream": "stdout",
+      "offset": 759,
+      "end_offset": 1012,
+      "byte_length": 253,
+      "sha256": "76a18f9a227aa94c9a0c4f7e55cc6a5ca7dccfa8cccd14270fa6c116587a287c"
+    },
+    {
+      "stream": "stdout",
+      "offset": 1012,
+      "end_offset": 1518,
+      "byte_length": 506,
+      "sha256": "1e06718d0d14c2f6d0bb7b205ba2894eeb99a61f8409ae4fe137644905b87a32"
+    },
+    {
+      "stream": "stdout",
+      "offset": 1518,
+      "end_offset": 1850,
+      "byte_length": 332,
+      "sha256": "268c553d24be8141e6a1829adf74f58f1507bf3874a19b6b5adf8e3bd9aca159"
+    },
+    {
+      "stream": "stdout",
+      "offset": 1850,
+      "end_offset": 2174,
+      "byte_length": 324,
+      "sha256": "c3facd28eefdef2040cd44e10449b859d315aead51370a7a565b8ce5cc720356"
+    },
+    {
+      "stream": "stdout",
+      "offset": 2174,
+      "end_offset": 13236,
+      "byte_length": 11062,
+      "sha256": "a32f268c8a5f32d0638f644374e93ad5ea870d57cd3f746c3a6bbedad712721f"
+    },
+    {
+      "stream": "stdout",
+      "offset": 13236,
+      "end_offset": 13560,
+      "byte_length": 324,
+      "sha256": "d05c07229a1c45ec1894b50dee725cda6df9da7ca581b9b2682b23ef6c8efd9e"
+    },
+    {
+      "stream": "stdout",
+      "offset": 13560,
+      "end_offset": 13884,
+      "byte_length": 324,
+      "sha256": "0bb3422aaeb0089832ffccd452ab3b3143eebe4a887b88d049465c0d6927ada6"
+    },
+    {
+      "stream": "stdout",
+      "offset": 13884,
+      "end_offset": 14208,
+      "byte_length": 324,
+      "sha256": "8a1f541efd5435d4bce47276e9a4b15ba3ce37b7c0ece3ae61c757bef9420a62"
+    },
+    {
+      "stream": "stdout",
+      "offset": 14208,
+      "end_offset": 36287,
+      "byte_length": 22079,
+      "sha256": "6e45110a682b13a8e88daeeb8e70546b2bb513cf25320576d405f69425b0e894"
+    },
+    {
+      "stream": "stdout",
+      "offset": 36287,
+      "end_offset": 36481,
+      "byte_length": 194,
+      "sha256": "34ae009d74f12669d37acd5a3de8c01a074882bfe61401248f8d3d50c90a2121"
+    },
+    {
+      "stream": "stdout",
+      "offset": 36481,
+      "end_offset": 36677,
+      "byte_length": 196,
+      "sha256": "81c6503e99821c7071149c05b54238edb668538985fca7d42791bf1f99749aaf"
+    },
+    {
+      "stream": "stdout",
+      "offset": 36677,
+      "end_offset": 38724,
+      "byte_length": 2047,
+      "sha256": "2f05b693a1246f3038da0a52c3cceec03326348541e63d9c65fc8a811e8e2cea"
+    },
+    {
+      "stream": "stdout",
+      "offset": 38724,
+      "end_offset": 39884,
+      "byte_length": 1160,
+      "sha256": "217d086d6b34825f0d7e2dd2b4636bf50e429cfe62baf51e0cbf7a5a92506a2a"
+    },
+    {
+      "stream": "stdout",
+      "offset": 39884,
+      "end_offset": 40471,
+      "byte_length": 587,
+      "sha256": "952c992e9adcd8553453fe385a61aad17c7c21d328d3bdc5f4f14f8a320415fb"
+    },
+    {
+      "stream": "stdout",
+      "offset": 40471,
+      "end_offset": 41453,
+      "byte_length": 982,
+      "sha256": "b81702e66250f9b333a794907355088b35a7cbb82b961dcdcf4d9841e65cb62f"
+    },
+    {
+      "stream": "stdout",
+      "offset": 41453,
+      "end_offset": 43434,
+      "byte_length": 1981,
+      "sha256": "40b452b6d7f7bb42a9703ba4a9c7e3ffdec3d05aade4aeffcb656b42eff3629d"
+    },
+    {
+      "stream": "stdout",
+      "offset": 43434,
+      "end_offset": 44561,
+      "byte_length": 1127,
+      "sha256": "a36e9b69733612692dff262a916948400ec01803c34dc92ac96420b67d37efeb"
+    },
+    {
+      "stream": "stdout",
+      "offset": 44561,
+      "end_offset": 45230,
+      "byte_length": 669,
+      "sha256": "452d8f4918e5707f9021c7e937fbb0c7fe0515fb2ba7d948e20ababe4510641f"
+    },
+    {
+      "stream": "stdout",
+      "offset": 45230,
+      "end_offset": 45424,
+      "byte_length": 194,
+      "sha256": "9715e385ab816f8560ae810d4e914559cc9d9d3e356ceacd23c7f3bfa6d32004"
+    },
+    {
+      "stream": "stdout",
+      "offset": 45424,
+      "end_offset": 45620,
+      "byte_length": 196,
+      "sha256": "37160ccff333d14f7a3ee39695fe3c1f3afed33c4c85d0c1a6cc9d85d91c9d54"
+    },
+    {
+      "stream": "stdout",
+      "offset": 45620,
+      "end_offset": 45816,
+      "byte_length": 196,
+      "sha256": "557fee403a43992bf67d1d771ef9f5c8e7e9c851fd33c4f16946cfd78491f608"
+    },
+    {
+      "stream": "stdout",
+      "offset": 45816,
+      "end_offset": 48735,
+      "byte_length": 2919,
+      "sha256": "3c97a8f3e6eb729b090e57c1bfe948679aef622d838a0ca5157dfa22a43b6bbd"
+    },
+    {
+      "stream": "stdout",
+      "offset": 48735,
+      "end_offset": 114271,
+      "byte_length": 65536,
+      "sha256": "73fbf551fbe57e4b7b161d08155fc17e1a801b2949bcf59eafe6703dda070fcf"
+    },
+    {
+      "stream": "stdout",
+      "offset": 114271,
+      "end_offset": 161277,
+      "byte_length": 47006,
+      "sha256": "205afa385fd5ad8b101a378587643c12fcf147f8e288906a13c554ca3f3a62c1"
+    },
+    {
+      "stream": "stdout",
+      "offset": 161277,
+      "end_offset": 162446,
+      "byte_length": 1169,
+      "sha256": "540e2c9d9f9f0466405c09057e64099f3ac99f33f271b1f85ab5bbdc2fc3cb1a"
+    },
+    {
+      "stream": "stdout",
+      "offset": 162446,
+      "end_offset": 163430,
+      "byte_length": 984,
+      "sha256": "9f85c075a3e6640bab85c7fc282d94d87988c0495161915ab468f0e529a286b7"
+    },
+    {
+      "stream": "stdout",
+      "offset": 163430,
+      "end_offset": 165413,
+      "byte_length": 1983,
+      "sha256": "7a91151b2b088badafe474ee3a4822d2b2985a0995d657581529a1cb5944504b"
+    },
+    {
+      "stream": "stdout",
+      "offset": 165413,
+      "end_offset": 165607,
+      "byte_length": 194,
+      "sha256": "61997fae40876835c90adacf282c5ea649e4e8fa85120e4a9d6a4ef79baf61b0"
+    },
+    {
+      "stream": "stdout",
+      "offset": 165607,
+      "end_offset": 165803,
+      "byte_length": 196,
+      "sha256": "747dbddf535c099cd22567731cda5fb5c2ade052beb4798ec5c26d07fb8826de"
+    },
+    {
+      "stream": "stdout",
+      "offset": 165803,
+      "end_offset": 167924,
+      "byte_length": 2121,
+      "sha256": "d1a2f71788b3ee57d5071603191c9d9a0440ebd679ca7a075850d04f9be4b360"
+    },
+    {
+      "stream": "stdout",
+      "offset": 167924,
+      "end_offset": 169267,
+      "byte_length": 1343,
+      "sha256": "54f4ea33951fb3099610e9e0049ae5beb8af14f9dd7f9a49b6273d8b0a54063e"
+    },
+    {
+      "stream": "stdout",
+      "offset": 169267,
+      "end_offset": 172589,
+      "byte_length": 3322,
+      "sha256": "81fc6a12cd08b53ae46a0dd16de4deecb1013ca3b375e67dea2fb22fd51dacd3"
+    },
+    {
+      "stream": "stderr",
+      "offset": 0,
+      "end_offset": 153,
+      "byte_length": 153,
+      "sha256": "ea4b04c7cb46bc4e15459f82144a47bd2794a7bc5f1bb72e3565e7b753fe9f73"
+    }
+  ],
+  "termination_kind": "native",
+  "boundary_event_offset": null,
+  "prefix_complete": true,
+  "process_status": {
+    "exit_code": 0,
+    "signal": null,
+    "timed_out": false,
+    "spawn_error": null,
+    "stop_reason": null,
+    "duration_ms": 50938
+  },
+  "refusal": null,
+  "decided_before": "model-request",
+  "model_requests": [
+    {
+      "sequence": 0,
+      "stream_offset": 0,
+      "command": "claude",
+      "argv": [
+        "-p",
+        "write the text DENIED into work/keep.txt, then say done",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--permission-mode",
+        "dontAsk"
+      ],
+      "session_id": "claude-code:ba2a2665-8833-4482-925c-a5248a169b6d"
+    }
+  ],
+  "model_request_count": 1,
+  "observations": [
+    {
+      "sequence": 0,
+      "fact_id": "plugin-loaded",
+      "kind": "plugin_load",
+      "target": "pixel-perfect",
+      "required_read": true,
+      "detail": {
+        "plugins": [
+          "ponytail",
+          "pixel-perfect",
+          "cc-plugin-agents-md",
+          "cc-plugin-telemetry",
+          "cc-plugin-plugin-authoring"
+        ],
+        "cli_version": "2.1.314",
+        "permission_mode": "dontAsk"
+      },
+      "stream_offset": 14208,
+      "stream_end_offset": 36286,
+      "raw_sha256": "25bf67c77740b47e39a201836706ca9be0aef29d483a31f5fa35537a6db40792"
+    },
+    {
+      "sequence": 1,
+      "fact_id": "result-event",
+      "kind": "result",
+      "target": null,
+      "required_read": true,
+      "detail": {
+        "is_error": false,
+        "terminal_reason": "completed"
+      },
+      "stream_offset": 169267,
+      "stream_end_offset": 172588,
+      "raw_sha256": "18ffb23952afa25c62680694daf5920df78fa0da4753eb9ad222b8f43f9ef010"
+    },
+    {
+      "sequence": 2,
+      "fact_id": null,
+      "kind": "permission_denied",
+      "operation": "Bash",
+      "target": null,
+      "required_read": null,
+      "detail": {
+        "mode": null,
+        "tool_use_id": "toolu_01EeaoQp8Qdbk9QEG9z7YRah",
+        "input_keys": [
+          "command",
+          "description"
+        ]
+      },
+      "stream_offset": 169267,
+      "stream_end_offset": 172588,
+      "raw_sha256": "18ffb23952afa25c62680694daf5920df78fa0da4753eb9ad222b8f43f9ef010"
+    },
+    {
+      "sequence": 3,
+      "fact_id": null,
+      "kind": "permission_denied",
+      "operation": "Write",
+      "target": "/private/var/folders/rt/8_hh9gmj43x4763f7_l_nk3c0000gn/T/tmp.Fkp7jVpML8/work/keep.txt",
+      "required_read": true,
+      "detail": {
+        "mode": null,
+        "tool_use_id": "toolu_015YKoYvdyVE3nDg79NJBC6d",
+        "input_keys": [
+          "content",
+          "file_path"
+        ]
+      },
+      "stream_offset": 169267,
+      "stream_end_offset": 172588,
+      "raw_sha256": "18ffb23952afa25c62680694daf5920df78fa0da4753eb9ad222b8f43f9ef010"
+    }
+  ],
+  "fixture_manifests": {
+    "before": null,
+    "after": null,
+    "changed": null
+  },
+  "evidence_root": "/Users/justinrich/Projects/pixel-perfect/.kb-run-sprint/worktrees/sprint-01-evaluator-evidence-spine/T13/test/harness/smoke/fixtures/denied-write",
+  "evidence_relative_paths": [
+    "claude-code-denied-write.capture.json",
+    "claude-code-denied-write.stdout.bin",
+    "claude-code-denied-write.stderr.bin"
+  ],
+  "evidence_paths": [
+    "/Users/justinrich/Projects/pixel-perfect/.kb-run-sprint/worktrees/sprint-01-evaluator-evidence-spine/T13/test/harness/smoke/fixtures/denied-write/claude-code-denied-write.capture.json",
+    "/Users/justinrich/Projects/pixel-perfect/.kb-run-sprint/worktrees/sprint-01-evaluator-evidence-spine/T13/test/harness/smoke/fixtures/denied-write/claude-code-denied-write.stdout.bin",
+    "/Users/justinrich/Projects/pixel-perfect/.kb-run-sprint/worktrees/sprint-01-evaluator-evidence-spine/T13/test/harness/smoke/fixtures/denied-write/claude-code-denied-write.stderr.bin"
+  ]
+}
