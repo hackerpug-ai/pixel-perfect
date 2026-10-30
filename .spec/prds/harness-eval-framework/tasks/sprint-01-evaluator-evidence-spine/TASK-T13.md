@@ -2,7 +2,9 @@
 
 > Task ID: T13
 > Sprint: [SPRINT.md](./SPRINT.md)
-> Status: Backlog
+> Status: ✅ Completed
+
+Commit: 45142ee711db83891a1b559e057fe699de79ba63
 > Assignee: evals-implementer
 > Priority: P1
 > Points: 8
@@ -684,3 +686,55 @@ A shared file is not a dependency, and needing another task's output to test aga
   ]
 }
 -->
+
+## Handoff
+
+```json
+{
+  "task": "T13",
+  "commit_sha": "45142ee711db83891a1b559e057fe699de79ba63",
+  "done": "All four blocking findings are fixed by making the observation real and by assertions that fail when it is removed. The hidden-image-judge control now scans what the verify invocations actually produced: `cell.mjs` derives `verifyRoots` from the records' own cited evidence paths (the `<key>.capture.json` and `<key>.stdout.bin` beside the model requests) plus the run dirs, the model step persists captures under `<cell-dir>/evidence`, and `scanTree` returns null when it inspected zero files, so an empty tree is control-unobservable, never a pass. The controls producer that runs in CI now skips nulls the way `mergeObservations` does, carries `control_pairs`, and passes them to `qualifyControls`; the owned test executes that exact step body over a populated cells dir and requires it to agree row for row with the module, including that a null in a later record or in the job output does not erase a real observation. AC-1's identity is read, not echoed: `observed_cli_version` comes out of the adapter's `observedCliVersion` over a captured `claude --version` line, a step reporting 2.1.314 must refuse on `observed_cli_version`, and the live load's measured version is compared with a version parsed independently in the test. AC-2's exit-0 denial is the declared `seed/denied-write-capture`, produced for real — one guarded `claude -p` under `--permission-mode dontAsk` whose instruction attempted a denied write, captured with its own exit 0 — and producing it exposed a second defect: the CLI sends denials under `tool_input`, which the stream mapper did not read, so every real denial was invisible; that is fixed and the archived capture now records the Write denial as required. A leg that never denies stays control-unobservable, asserted as such; the hand-written line survives only as a parser unit test. The stale-cache observation records the matching-digest half as its pair and labels a constructed drift `planted: true`, so `discriminates` is computed. Six mutations — empty tree passes, run-dirs-only scan, pin-echoing reader, producer drops the merge, null overwrites, `tool_input` unread — each fail the owned file.",
+  "deviations": [
+    "The producer step body still merges the cells' observations inline instead of importing `observations.mjs`, because the locked t11 flow runs that body in a sandbox that exposes only `test/harness/controls`; the compensation is a test that executes the real body over a populated cells dir and requires row-for-row agreement with the module.",
+    "AC-1 re-derives the identity version from `observedCliVersion`, but that reader lives inside `executeLoad`; to detect a pin-echoing stub deterministically the test feeds a 2.1.314 step and requires a refusal, and additionally compares a live load's measured version with a version parsed independently in the test.",
+    "The exit-0 denial row is demonstrated from a real captured stream produced on this host, not from a hosted run; a hosted leg that never denies reads `control-unobservable`, which the test now asserts explicitly."
+  ],
+  "concerns": [
+    "Only `stale-cache` can discriminate locally: `missing-key`, `exit0-denied-read` and `hidden-image-judge` still pass no pair to `qualifyControls`, so `local_ok` stays false and `qualified_why` still names the missing pair for those three — the pairs exist to be produced (the keyless step's with-binding half, the clean verify stream, and a planted capture scan).",
+    "`qualifyControls`' `qualified` also requires `hosted.status === 'observed'`, so even a discriminating row cannot read `qualified` from a local run; the hosted receipt is still the gate.",
+    "The recorded denied-write capture contains a real model reply and tool ids (~188 KB); it carries no credential string, but it is a transcript and will grow the repo.",
+    "`jobs.smoke.timeout-minutes` is 45 while the real leg now spawns five invocations against a live model; a full hosted run must fit install + load + five checks inside that budget.",
+    "The live-load cross-check in AC-1 runs only when a `claude` CLI is on PATH; on a runner without one it is a diagnostic, not a pass."
+  ],
+  "findings": [
+    "The CLI's real denial shape is `permission_denials: [{tool_name, tool_use_id, tool_input: {file_path, content}}]` — the adapter read `input` only, so a genuine exit-0 denial was invisible and the control could never fire on a real stream.",
+    "`capture.observe` silently converts a mapper-declared `required_read: false` into `null` unless `required_read_paths` is an array, which turns any optional denial into `could-not-run requiredness-undeclared` at grade time (see blockers).",
+    "`executeLoad`'s `claude --version` reader is exercised only by a live load, which is why a pin-echoing stub was invisible to cycle 1; the test now parses the CLI's own text independently.",
+    "A step body executed by a locked flow reaches `process.argv[1]` through a symlink, so `realpathSync` must be compared on both sides or the CLI silently does nothing.",
+    "`node --test --test-name-pattern '<name>' <file>` (pattern first) does filter on Node 24.14.0, and reports `tests 1`; the suffix form ignores the pattern entirely."
+  ],
+  "scope_impact": [
+    {
+      "target": "T11",
+      "found": "the producer now carries paired observations as well as the four, and passes `pairs` to `qualifyControls`, so `discriminates` can be computed instead of always false.",
+      "change": "T11's four ids, vocabulary, exactly-four rule and refusals are untouched; its locked test is green."
+    },
+    {
+      "target": "GATE:FLOW-GRD-03-FILES-AND-STREAM",
+      "found": "the stream mapper did not read `tool_input`, the shape the CLI actually uses for a denial, so a real exit-0 denial was invisible to the record.",
+      "change": "`mapCapturedLine` reads `tool_input` and `input`, records `tool_use_id` and the argument keys, and declares requiredness from the resolved path; a real archived denial now grades `fail denied_tool_call`."
+    },
+    {
+      "target": "GATE:FLOW-GRD-06-MISSING-KEY",
+      "found": "each `Smoke model step` still binds exactly one variable and the step bodies still execute under the sandbox's `test/` symlink (the main-module check now compares `realpathSync` on both sides).",
+      "change": "step bodies replaced; the locked flow is green."
+    }
+  ],
+  "feedback": [
+    "AC-2 should state that `seed/denied-write-capture` is recorded_external and therefore not producible in a hermetic CI sandbox: it needs an authenticated CLI, so a runner without one must skip-and-name rather than fail.",
+    "AC-2's complete-dir case should say explicitly that a leg which never denies reads `could-not-run control-unobservable`, so the four-row expectation does not read as 'all four must always show observed verdicts'.",
+    "AC-1 should name the negative case it wants — 'a version step reporting a different version must refuse on observed_cli_version' — because the positive assertion alone can be satisfied by echoing the pin.",
+    "The task's Boundary Contracts should say that a per-cell paired observation may travel as `control_pairs` beside `control_observations`, since `discriminates` cannot be computed without it."
+  ]
+}
+```
