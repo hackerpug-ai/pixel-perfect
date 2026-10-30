@@ -2,7 +2,9 @@
 
 > Task ID: T11-FIX2
 > Sprint: [SPRINT.md](./SPRINT.md)
-> Status: Backlog
+> Status: ✅ Completed
+
+Commit: 63503ce81e70004b0a8a2a1fb73900fcd93c6f2d
 > Assignee: github-platform-implementer
 > Priority: P1
 > Points: 3
@@ -816,3 +818,40 @@ A shared file is not a dependency, and needing another task's output to test aga
   ]
 }
 -->
+
+## Handoff
+
+```json
+{
+  "task": "T11-FIX2",
+  "commit_sha": "63503ce81e70004b0a8a2a1fb73900fcd93c6f2d",
+  "done": "Fixed the blocking defect (F-T11-FIX2-1) for real: in `jobs.download` of `.github/workflows/harness-eval.yml` the `actions/checkout@v4` + `actions/setup-node@v4` pair now runs ABOVE `Fetch every cell from this attempt`, so the workspace is reset and cloned before the twelve cell artifacts are written into `cells/` and the producer appends `controls.json` beside them instead of into an emptied directory. The producer, the `controls.json` it writes, and the `harness-eval-cells-*` handoff are otherwise unchanged, and `clean: false` was not attempted. The ordering is now pinned by the owned test, which asserts `jobs.download`'s checkout index is lower than its download-artifact index next to the existing producer-before-upload assertion. I also closed the advisory (F-T11-FIX2-2): the `main()` leg now asserts the refusal's IDENTITY rather than only its exit code — the step summary must name `controls-missing`, must carry the cells dir only main()'s guard reports, and must carry that guard's own `why` text, and a counting fetch stub proves the guard refuses before the Actions API is touched. Both pins were verified by mutation: restoring the cycle-1 step order fails `controls-producer`, and deleting `main()`'s guard (the reviewer's exact mutation, which previously left the file green) now fails it on the identity assertion. Cycle-2 evidence is captured at the new candidate under `implementer-cycle-2/green/`, with `red` still pointing at the cycle-1 capture because the base has not moved. The sprint-01 lane is 98 pass / 0 fail, `pnpm validate` passes, T11's untouched repro prints `F-T11-1 dead` / `F-T11-2 dead` with exit 0, and all four publication gates still pass with flow-coverage introducing zero findings.",
+  "deviations": [
+    "The F-T11-FIX2-2 pin asserts the refusal identity through the step summary's `dir` value and main()'s own `why` text, and additionally asserts `apiCalls === 0`. The reviewer's suggested form was to require the summary to contain 'controls-missing'; that alone does not survive the mutation the finding is about, so the assertion is stronger than suggested rather than different in kind.",
+    "The cycle-2 evidence directory also carries two mutation-probe logs (`mutation-F-T11-FIX2-1-…`, `mutation-F-T11-FIX2-2-…`) beyond the per-requirement green logs, so a reviewer can re-run the exact probes that prove both pins bite. They are evidence only; nothing under evidence is committed.",
+    "One commit only, touching exactly the two files the reviewer's remediation named; the task file and its contract are byte-identical to cycle 1."
+  ],
+  "concerns": [
+    "The fix is proven by declaration-level assertion plus a local model of the artefact layout; nothing in this task can execute `actions/checkout@v4` to demonstrate the workspace reset first-hand. The ordering is now correct per checkout's documented behaviour and is pinned against regression, but the only end-to-end confirmation remains a real dispatch (SPRINT step 11), which is out of this task's scope.",
+    "The `download` job still checks out the full dispatch commit and runs Node in what used to be a pure artefact-transfer job. That is now ordered correctly, but it means the job cannot be reasoned about from the workflow alone — the producer's behaviour depends on the checked-out tree.",
+    "The refusal-identity assertion matches on main()'s `why` sentence ('every run executes the four negative controls'). If someone legitimately rewords that message the test fails on wording rather than on behaviour; the more durable half of the same assertion is the cells-dir match plus `apiCalls === 0`.",
+    "`tests/sprint-01/grd-01-twelve-cells.test.mjs:824` still exercises its 'throw after the write' leg through the `controls-missing` refusal rather than a post-write throw, as I flagged last cycle; that leg remains weaker than its comment claims and is outside this task's write scope.",
+    "The producer still writes four `could-not-run` / `control-unobservable` rows on every run until something exports `HARNESS_EVAL_CONTROL_OBSERVATIONS`; a hosted dispatch now produces the receipt, but it is an honest 'we observed nothing' receipt rather than a discrimination proof."
+  ],
+  "findings": [
+    "F-T11-FIX2-1 is a real, run-killing ordering hazard that no local gate could see: `actions/checkout@v4` clears `$GITHUB_WORKSPACE` (removes the directory contents when `.git` is absent, `git clean -ffdx` when present), so any step that fetches artefacts before a checkout in the same job silently loses them. The plan's Patch 1 described adding checkout + setup-node to a job whose first step was a download-artifact step and never mentioned the interaction.",
+    "F-T11-FIX2-2's mutation is now closed at the reason level: deleting main()'s `controls-missing` guard fails `controls-producer` with 'the refusal must name the cells dir it read …', whereas before this cycle the same deletion left the file at 5/5 green.",
+    "The task file's Patch 1 remains incomplete about step ordering (checkout must precede the cells download, not merely precede the producer). A future implementer reading only Patch 1 can reproduce exactly this defect; the workflow comment and the test now carry the constraint, but the charter does not.",
+    "The reviewer's cycle-1 evidence (`reviewer-cycle-1-r0/`) already contained a standalone `checkout-ordering-probe.mjs` and a `mut-AC-1-main-guard-removed.log`; both reproduce cleanly against this candidate and agree with the findings, so the two reports converge rather than conflict.",
+    "`git diff --name-only HEAD~1 HEAD` at this candidate lists exactly `.github/workflows/harness-eval.yml` and `tests/sprint-01/t11-controls-wiring.test.mjs`, both inside the task's `write_allowed`; the working tree is clean at `63503ce`."
+  ],
+  "scope_impact": [],
+  "feedback": [
+    "Patch 1 of a workflow task should state the full step ORDER, not just where a new step goes: 'checkout, then setup-node, then download artifacts, then produce, then upload' would have prevented this cycle entirely.",
+    "Any task that adds `actions/checkout@v4` to a job with `actions/download-artifact` should carry an explicit note that checkout resets the workspace, because the failure mode is invisible to every local test — it only appears on a dispatched run.",
+    "When a review asks for 'assert the refusal identity', name the discriminator, not just the reason string: two different guards in this codebase raise `controls-missing`, so the reason alone cannot distinguish them. The `dir`/`why` pair plus a call count is what actually pins the guard.",
+    "The charter's Evidence Gates should include the mutation that proves each new assertion bites. Both findings in this cycle were reproducible by deletion or reordering, and a one-line 'delete X, the gate must fail' row per assertion would have caught F-T11-FIX2-2 before the first review.",
+    "The remediation brief's `red` convention (keep pointing at the cycle that first captured RED while the base is unchanged) is sound and should be stated in the task file's Agent Instructions, so an implementer does not re-capture a meaningless RED at an implemented tree."
+  ]
+}
+```
