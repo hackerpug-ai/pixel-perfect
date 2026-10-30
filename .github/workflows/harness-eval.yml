@@ -72,7 +72,7 @@ jobs:
   smoke:
     name: smoke ${{ matrix.harness }} ${{ matrix.track }}
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
     permissions:
       contents: read
     # T9 finishes the harness-smoke binding. Only that cell's own smoke step ever holds that
@@ -91,20 +91,28 @@ jobs:
 
       # Install slot — deliberately keyless. T2 owns the pins, T5 owns the per-harness install
       # command (the CLI invocation boundary is another lens's contract), T9 owns the key.
+      #
+      # The version is resolved for the track (the pin for `pinned`, the run's frozen newest lookup
+      # for `newest`), installed exactly with auto-update off, and followed by the keyless checkout
+      # load into an isolated CLAUDE_CONFIG_DIR. The load's record — the identity it measured — is
+      # what the keyed step below attributes its grades to; the step exits 0 and names any refusal
+      # in cell/install.json, so a failed install is a named cell, not a missing one.
       - name: Install ${{ matrix.harness }} ${{ matrix.track }}
         run: |
           set -eu
-          echo "install slot reserved: ${{ matrix.harness }} ${{ matrix.track }} (T2 pins, T5 install, T9 key)"
+          mkdir -p cell
+          node test/harness/smoke/install.mjs '${{ matrix.harness }}' '${{ matrix.track }}' --install-mode '${{ inputs.install_mode }}' --cell-dir cell
 
       # --- T9: the credential binding -----------------------------------------------------
       # A cell's own model step is the ONLY step in this workflow that may hold that harness's
       # key, and its `if:` keeps the other eleven cells out of it, so no cell ever receives a key
       # it does not consume. The install, record, upload, download, drift and recorder steps stay
       # keyless. Each step records credential PRESENCE — names and booleans, never a value — and
-      # refuses with the guard's own reason when the binding is absent, so a harness whose key is
-      # not in the environment reads `could-not-run / missing-api-key` instead of passing.
-      # T10 replaces these probes with the real invocations and leaves the bindings where they are.
-      # Environment, the five names and the placement rule: test/harness/ENVIRONMENT.md.
+      # runs the cell through the registry, so a harness whose key is not in the environment reads
+      # `could-not-run / missing-api-key` instead of passing.
+      # The graded invocations live here because this is where the key is: the registry answers
+      # first, an absent adapter is present-as-could-not-run, and the loaded adapter grades from
+      # captured bytes. Environment, the five names and the placement rule: test/harness/ENVIRONMENT.md.
       - name: Smoke model step claude-code ${{ matrix.track }}
         if: matrix.harness == 'claude-code'
         env:
@@ -112,14 +120,7 @@ jobs:
         run: |
           set -eu
           mkdir -p cell
-          node --input-type=module -e '
-          import { writeFileSync } from "node:fs";
-          import { resolveCredential } from "./test/harness/runtime/guard.mjs";
-          const c = resolveCredential({ harness: process.argv[1] });
-          const row = { harness: c.harness, credential_env: c.credential_env, binding_env: c.binding_env, present: c.present, present_name: c.present_name, checked: c.checked, verdict: c.present ? "bound" : "could-not-run", reason: c.present ? null : "missing-api-key" };
-          writeFileSync("cell/binding.json", JSON.stringify(row) + "\n");
-          console.log(JSON.stringify(row));
-          ' claude-code
+          node test/harness/smoke/model-step.mjs 'claude-code' '${{ matrix.track }}' --install-mode '${{ inputs.install_mode }}' --cell-dir cell
 
       - name: Smoke model step codex ${{ matrix.track }}
         if: matrix.harness == 'codex'
@@ -128,14 +129,7 @@ jobs:
         run: |
           set -eu
           mkdir -p cell
-          node --input-type=module -e '
-          import { writeFileSync } from "node:fs";
-          import { resolveCredential } from "./test/harness/runtime/guard.mjs";
-          const c = resolveCredential({ harness: process.argv[1] });
-          const row = { harness: c.harness, credential_env: c.credential_env, binding_env: c.binding_env, present: c.present, present_name: c.present_name, checked: c.checked, verdict: c.present ? "bound" : "could-not-run", reason: c.present ? null : "missing-api-key" };
-          writeFileSync("cell/binding.json", JSON.stringify(row) + "\n");
-          console.log(JSON.stringify(row));
-          ' codex
+          node test/harness/smoke/model-step.mjs 'codex' '${{ matrix.track }}' --install-mode '${{ inputs.install_mode }}' --cell-dir cell
 
       # grok's keyed step passes no --trust: a keyed invocation never widens its own permissions.
       - name: Smoke model step grok ${{ matrix.track }}
@@ -145,14 +139,7 @@ jobs:
         run: |
           set -eu
           mkdir -p cell
-          node --input-type=module -e '
-          import { writeFileSync } from "node:fs";
-          import { resolveCredential } from "./test/harness/runtime/guard.mjs";
-          const c = resolveCredential({ harness: process.argv[1] });
-          const row = { harness: c.harness, credential_env: c.credential_env, binding_env: c.binding_env, present: c.present, present_name: c.present_name, checked: c.checked, verdict: c.present ? "bound" : "could-not-run", reason: c.present ? null : "missing-api-key" };
-          writeFileSync("cell/binding.json", JSON.stringify(row) + "\n");
-          console.log(JSON.stringify(row));
-          ' grok
+          node test/harness/smoke/model-step.mjs 'grok' '${{ matrix.track }}' --install-mode '${{ inputs.install_mode }}' --cell-dir cell
 
       # opencode's pinned provider is anthropic, so its key reaches ANTHROPIC_API_KEY — in this cell
       # only, from its own environment secret. No --auto: a keyed step never self-approves.
@@ -163,14 +150,7 @@ jobs:
         run: |
           set -eu
           mkdir -p cell
-          node --input-type=module -e '
-          import { writeFileSync } from "node:fs";
-          import { resolveCredential } from "./test/harness/runtime/guard.mjs";
-          const c = resolveCredential({ harness: process.argv[1] });
-          const row = { harness: c.harness, credential_env: c.credential_env, binding_env: c.binding_env, present: c.present, present_name: c.present_name, checked: c.checked, verdict: c.present ? "bound" : "could-not-run", reason: c.present ? null : "missing-api-key" };
-          writeFileSync("cell/binding.json", JSON.stringify(row) + "\n");
-          console.log(JSON.stringify(row));
-          ' opencode
+          node test/harness/smoke/model-step.mjs 'opencode' '${{ matrix.track }}' --install-mode '${{ inputs.install_mode }}' --cell-dir cell
 
       - name: Smoke model step pi ${{ matrix.track }}
         if: matrix.harness == 'pi'
@@ -179,14 +159,7 @@ jobs:
         run: |
           set -eu
           mkdir -p cell
-          node --input-type=module -e '
-          import { writeFileSync } from "node:fs";
-          import { resolveCredential } from "./test/harness/runtime/guard.mjs";
-          const c = resolveCredential({ harness: process.argv[1] });
-          const row = { harness: c.harness, credential_env: c.credential_env, binding_env: c.binding_env, present: c.present, present_name: c.present_name, checked: c.checked, verdict: c.present ? "bound" : "could-not-run", reason: c.present ? null : "missing-api-key" };
-          writeFileSync("cell/binding.json", JSON.stringify(row) + "\n");
-          console.log(JSON.stringify(row));
-          ' pi
+          node test/harness/smoke/model-step.mjs 'pi' '${{ matrix.track }}' --install-mode '${{ inputs.install_mode }}' --cell-dir cell
 
       # cursor has no secret in harness-smoke and invents none: its cell resolves the same guard,
       # records could-not-run / missing-api-key, and is never omitted from the grid.
@@ -195,14 +168,7 @@ jobs:
         run: |
           set -eu
           mkdir -p cell
-          node --input-type=module -e '
-          import { writeFileSync } from "node:fs";
-          import { resolveCredential } from "./test/harness/runtime/guard.mjs";
-          const c = resolveCredential({ harness: process.argv[1] });
-          const row = { harness: c.harness, credential_env: c.credential_env, binding_env: c.binding_env, present: c.present, present_name: c.present_name, checked: c.checked, verdict: c.present ? "bound" : "could-not-run", reason: c.present ? null : "missing-api-key" };
-          writeFileSync("cell/binding.json", JSON.stringify(row) + "\n");
-          console.log(JSON.stringify(row));
-          ' cursor
+          node test/harness/smoke/model-step.mjs 'cursor' '${{ matrix.track }}' --install-mode '${{ inputs.install_mode }}' --cell-dir cell
 
       # The keyless control. It binds nothing, asserts in-step that the consumed key AND every
       # permitted fallback are absent, then asks the real guard what a keyless invocation is:
@@ -238,23 +204,40 @@ jobs:
             timeout_ms: 20000,
           });
           const record = capture.persist("cell/evidence");
-          const row = { control_id: "missing-key", verdict: decision.refusal?.verdict ?? "pass", reason: decision.refusal?.reason ?? null, model_requests: record.model_request_count, child_ran: existsSync(marker) };
+          const row = { control_id: "missing-key", verdict: decision.refusal?.verdict ?? "pass", reason: decision.refusal?.reason ?? null, model_requests: record.model_request_count, child_ran: existsSync(marker), capture_path: (record.evidence_paths ?? []).find((p) => p.endsWith(".capture.json")) ?? null };
           writeFileSync("cell/keyless-control.json", JSON.stringify(row) + "\n");
           console.log(JSON.stringify(row));
+          // The observation travels on the cell record: that file is the only thing this job ships,
+          // so an observation kept beside it would never leave the runner. The path is composed at
+          // run time so this KEYLESS step never becomes the first match in the recorder lookup.
+          const { attachMissingKey } = await import("./test/harness/smoke/observations.mjs");
+          const attached = attachMissingKey({ row, cellFile: ["cell", "cell.json"].join("/") });
+          console.log(JSON.stringify({ attached: attached.ok, why: attached.reason ?? null }));
           if (row.verdict !== "could-not-run" || row.reason !== "missing-api-key" || row.model_requests !== 0 || row.child_ran !== false) {
             console.error("::error::the keyless control did not refuse with missing-api-key and zero model requests: " + JSON.stringify(row));
             process.exit(1);
           }
           '
 
-      # This cell records itself honestly. Sprint 01 ships no verdict logic: nothing reads this
-      # file to decide a grade, and no grade is ever inferred from a process exit code.
+      # The cell records itself. A leg that graded writes its own record and this step passes it
+      # through; a leg that produced nothing gets a named fallback whose reason is the failure it
+      # stopped on (`cell/failure.json`) or `cell-not-recorded`. The verdict reports; the exit code
+      # here never carries one.
       - name: Record the cell
         run: |
           set -eu
           mkdir -p cell
-          printf '{"harness":"%s","track":"%s","cell_state":"could-not-run","reason":"smoke-not-implemented","install_mode":"%s","event":"%s","run_id":"%s","run_attempt":"%s"}\n' \
-            '${{ matrix.harness }}' '${{ matrix.track }}' '${{ inputs.install_mode }}' '${{ github.event_name }}' '${{ github.run_id }}' '${{ github.run_attempt }}' \
+          if [ -s cell/cell.json ]; then
+            echo "the leg recorded its own cell"
+            cat cell/cell.json
+            exit 0
+          fi
+          reason=cell-not-recorded
+          if [ -f cell/failure.json ]; then
+            reason=$(node -e 'const r = JSON.parse(require("node:fs").readFileSync("cell/failure.json", "utf8")); process.stdout.write(String(r.reason || "cell-not-recorded"))')
+          fi
+          printf '{"harness":"%s","track":"%s","cell_state":"could-not-run","reason":"%s","install_mode":"%s","event":"%s","run_id":"%s","run_attempt":"%s"}\n' \
+            '${{ matrix.harness }}' '${{ matrix.track }}' "$reason" '${{ inputs.install_mode }}' '${{ github.event_name }}' '${{ github.run_id }}' '${{ github.run_attempt }}' \
             > cell/cell.json
           cat cell/cell.json
 
@@ -331,16 +314,45 @@ jobs:
       # `if: always()` for the same reason the cells handoff below carries it: the receipt is part
       # of what a refused run reports, so a failed transfer must still leave the four rows (or the
       # producer's own refusal) behind rather than vanish into a skipped step.
+      # The four observations come from the run's own measurements: each smoke leg attached what it
+      # observed to its own cell record, and the cells dir this job already fetched carries them.
+      # A job output, if a producer above ever sets one, is merged on top — an empty value means
+      # "no extra observations", not a broken run. A control nobody observed stays
+      # could-not-run / control-unobservable; there is no default pass to fill the gap.
+      #
+      # The walk is inline on purpose: this step runs against the checkout and nothing else (the
+      # locked t11 flow executes this exact body in a sandbox where only test/harness/controls is
+      # reachable), so it may import node builtins and the controls module, and no more.
       - name: Qualify the four negative controls
         if: always()
         run: |
           set -eu
           mkdir -p cells
           node --input-type=module -e '
+          import { readdirSync, readFileSync, statSync } from "node:fs";
+          import { join } from "node:path";
           import { qualifyControls, assertControlRows, writeControls } from "./test/harness/controls/index.mjs";
-          const observations = JSON.parse(process.env.HARNESS_EVAL_CONTROL_OBSERVATIONS ?? "{}");
+          const walk = (dir, out = []) => {
+            if (!statSync(dir, { throwIfNoEntry: false })?.isDirectory()) return out;
+            for (const entry of readdirSync(dir, { withFileTypes: true })) {
+              const full = join(dir, entry.name);
+              if (entry.isDirectory()) walk(full, out);
+              else if (entry.isFile() && entry.name.endsWith(".json")) out.push(full);
+            }
+            return out;
+          };
+          const observations = {};
+          for (const file of walk("cells")) {
+            let record;
+            try { record = JSON.parse(readFileSync(file, "utf8")); } catch { continue; }
+            if (!record || typeof record !== "object" || typeof record.harness !== "string" || typeof record.track !== "string") continue;
+            Object.assign(observations, record.control_observations ?? {});
+          }
+          const raw = String(process.env.HARNESS_EVAL_CONTROL_OBSERVATIONS ?? "").trim();
+          if (raw !== "") Object.assign(observations, JSON.parse(raw));
           const rows = assertControlRows(qualifyControls({ observations }).rows);
           const written = writeControls({ file: "cells/controls.json", rows });
+          console.log(JSON.stringify({ observed: Object.keys(observations), rows: rows.map((row) => `${row.control_id} ${row.verdict} ${row.reason}`) }));
           if (!written.ok) { console.error("controls.json did not read back: " + JSON.stringify(written.mismatches)); process.exit(1); }
           '
 

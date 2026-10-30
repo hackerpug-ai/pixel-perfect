@@ -1176,7 +1176,7 @@ async function runKeyless({ step, evidenceDir, env }) {
  * evidence this run produces (the parsed command names and the payload digest), never by an exit
  * code alone.
  */
-export async function executeLoad({ workspace = ROOT, configDir, env = process.env, pluginRoot = PLUGIN_ROOT, evidenceDir = null } = {}) {
+export async function executeLoad({ workspace = ROOT, configDir, env = process.env, pluginRoot = PLUGIN_ROOT, evidenceDir = null, installMode = "checkout" } = {}) {
   if (!configDir) throw new Error("executeLoad needs an isolated configDir: the user's own plugin state must never be touched");
   const dir = evidenceDir ?? mkdtempSync(join(tmpdir(), `pp-${HARNESS}-load-evidence-`));
   mkdirSync(dir, { recursive: true });
@@ -1206,7 +1206,7 @@ export async function executeLoad({ workspace = ROOT, configDir, env = process.e
     requested_cli_version: harnessPin().pinned_cli_version,
     resolved_cli_version: harnessPin().pinned_cli_version,
     observed_cli_version: observed,
-    install_mode: "checkout",
+    install_mode: installMode,
     plugin_revision: installed.gitCommitSha,
     expected_plugin_manifest_sha256: expectedDigest,
     observed_plugin_manifest_sha256: observedDigest,
@@ -1275,17 +1275,30 @@ export function cellFor({ track, cells, installation, harness = HARNESS }) {
   const observed =
     perCheck.map((cell) => cell.observed_verify_outcome).find((outcome) => outcome != null) ?? null;
 
+  // The aggregate's evidence identity comes from the per-check record that carries the aggregate's
+  // own verdict: a pass needs a named invocation and its raw exit status, and a could-not-run cell
+  // still cites the run that produced the bytes it could not grade. Without this, `invocation_id`
+  // stays null and `assertPassEvidence` makes a graded pass unrepresentable.
+  const evidenceCell =
+    perCheck.find((cell) => cell.verdict === verdict && typeof cell.invocation_id === "string" && cell.invocation_id.length > 0) ??
+    perCheck.find((cell) => typeof cell.invocation_id === "string" && cell.invocation_id.length > 0) ??
+    perCheck[0] ??
+    null;
+  const exitCode = Number.isInteger(evidenceCell?.process_exit_code)
+    ? evidenceCell.process_exit_code
+    : (perCheck.map((entry) => entry.process_exit_code).find((code) => Number.isInteger(code)) ?? null);
+
   const cell = {
     harness,
     track,
     installation,
-    invocation_id: null,
-    check_id: null,
+    invocation_id: evidenceCell?.invocation_id ?? null,
+    check_id: evidenceCell?.check_id ?? null,
     verdict,
     reason: winner.reason ?? null,
     source: "files-and-event-stream",
     denied_tool_call: perCheck.map((entry) => entry.denied_tool_call).find((denial) => denial != null) ?? null,
-    process_exit_code: perCheck.map((entry) => entry.process_exit_code).find((code) => Number.isInteger(code)) ?? null,
+    process_exit_code: exitCode,
     evidence_paths: perCheck.flatMap((entry) => entry.evidence_paths ?? []),
     report_paths: perCheck.flatMap((entry) => entry.report_paths ?? []),
     observed_verify_outcome: observed,
