@@ -22,7 +22,7 @@ AGENT: planner=github-agentic-workflow-planner | implementer=github-platform-imp
   - **F-T11-1** — nothing produces `controls.json`. `.github/workflows/harness-eval.yml` has no controls job and never mentions controls, `controls` is absent from `test/harness/schemas/harness-eval-result.v1.schema.json`'s 27 required fields, and `test/harness/recorder/result.mjs:119` defaults it to `[]`. A dispatched run therefore publishes `controls: []`, still validates, and the gate's `jq -r '.controls[]'` prints zero rows forever.
   - **F-T11-2** — the smoke job uploads its whole `cell/` directory (`.github/workflows/harness-eval.yml:266`), so `binding.json`, `keyless-control.json` and `evidence/*.capture.json` land under `cells/`. `readCellArtifacts` walks recursively (`test/harness/recorder.mjs:52-58`) and classifies every `*.json` that is not `controls.json`/`INDEX.json` as a cell record (`:81-94`), so `collectCells` refuses the whole run with `cell-harness-unknown`/`cell-track-unknown` and the grade job produces no result at all.
 - **Handoff with the four exact patches:** `.tmp/sprint-01-verification/t11-out-of-scope-handoff.md` (sha256 `c2c3e5f7f23521bc6b796c880ba4810237b68ce65314191b9c8be110926fefd8`), written by T11 because every file either blocker needs is outside its four-path write scope.
-- **Replayable proof:** `.tmp/sprint-01-verification/t11-controls-wiring.repro.mjs` (sha256 `a71b4cfaa71cf5024a9130d7b87d1863bed9c6d25ff161d9608d5549b0339cf5`). Base-tree run recorded in `.tmp/sprint-01-verification/t11-controls-wiring.repro.log` (sha256 `387eff83e3f254d5769a37d1cfcd147d7ebad35397672ee6d36dd2249ae84cd7`): `F-T11-1 ALIVE`, `F-T11-2 ALIVE`, `@@EXIT=1@@`.
+- **Replayable receipt (gitignored, not a verify):** `.tmp/sprint-01-verification/t11-controls-wiring.repro.mjs` (sha256 `a71b4cfaa71cf5024a9130d7b87d1863bed9c6d25ff161d9608d5549b0339cf5`). Base-tree run recorded in `.tmp/sprint-01-verification/t11-controls-wiring.repro.log` (sha256 `387eff83e3f254d5769a37d1cfcd147d7ebad35397672ee6d36dd2249ae84cd7`): `F-T11-1 ALIVE`, `F-T11-2 ALIVE`, `@@EXIT=1@@`.
 - **Human testing gate steps that exercise this task:** 11 (SPRINT.md line 73 — `jq -r '.controls[] | .control_id + " " + .verdict + " " + .reason'` over the downloaded result).
 - **PRD references:** `03-data-schema.md` § HarnessEvalResult (the `controls` array); `02-system-components.md` § smoke matrix, § recorder, § stream-grader; `09-capability-chains.md` controls@v1; `04-uc-grd.md` UC-GRD-03 AC-3, UC-GRD-06; `10-e2e-testing-criteria.md` T-GRD-021, T-GRD-022
 - **Capabilities touched:** CAP-EVAL-01
@@ -44,7 +44,7 @@ AGENT: planner=github-agentic-workflow-planner | implementer=github-platform-imp
 ## Specification
 
 - **Objective:** Make a dispatched run's `controls` array non-empty, required, schema-validated and readable by the recorder — closing F-T11-1 and F-T11-2 without touching any other task's contract.
-- **Success state:** `node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs` exits 0 printing `F-T11-1 dead` and `F-T11-2 dead`; the workflow declares a controls job whose artifact lands at `cells/controls.json`; the schema requires exactly four controls rows; `assembleResult` refuses an explicitly empty array and defaults a silent caller to the four unobserved rows; `readCellArtifacts` classifies 12 cells out of a layout that also carries `binding.json`, `keyless-control.json` and `evidence/*.capture.json`.
+- **Success state:** `node --test tests/sprint-01/t11-controls-wiring.test.mjs` is green with `pass 5`, `fail 0`, its five tests encoding the repro's `F-T11-1 dead` / `F-T11-2 dead` assertions; the workflow declares a controls job whose artifact lands at `cells/controls.json`; the schema requires exactly four controls rows; `assembleResult` refuses an explicitly empty array and defaults a silent caller to the four unobserved rows; `readCellArtifacts` classifies 12 cells out of a layout that also carries `binding.json`, `keyless-control.json` and `evidence/*.capture.json`.
 
 ### Patch 1 — F-T11-1: a controls producer in `.github/workflows/harness-eval.yml`
 
@@ -188,13 +188,27 @@ Patch 4 stops a *future* run from carrying strays. It does not make an already-p
 
 `controlEvidence` is named, kept and never read as a cell or as one of the four controls: a per-cell keyless row MUST NOT stand in for the controls artifact, which is exactly what Patch 2's `controls-missing` refusal is for. An unrecognised record MUST still fail the run by name — this replaces "treated as a cell" with "refused as itself", it does not replace it with silence.
 
+### Owned test — `tests/sprint-01/t11-controls-wiring.test.mjs`
+
+This task owns one tracked sprint test, `tests/sprint-01/t11-controls-wiring.test.mjs`, added to WRITE-ALLOWED. It is where the repro's assertions land as five `node --test` tests, one per requirement row, so every row's `verify` selects exactly one test of a path this task owns:
+
+| Test (`--test-name-pattern`) | Encodes | Row |
+|---|---|---|
+| `controls-producer` | a controls producer job exists in `.github/workflows/harness-eval.yml`, the download job lands its artifact at `cells/controls.json`, and `controls` is in the result schema's `required` array with `minItems: 4` / `maxItems: 4` | AC-1 |
+| `controls-classification` | the `cell/` upload layout classifies into exactly 12 cells with no refusal | AC-2 |
+| `controls-refusal` | `assembleResult` refuses an explicitly empty `controls` array with `RecorderRefusal("controls-missing")`, and the schema cannot validate an empty one | TC-1 |
+| `controls-evidence-bucket` | `binding.json`, `keyless-control.json` and `evidence/*.capture.json` land in a separate `controlEvidence` bucket, never in `cells` or `controls`, while an unclassifiable record is refused by name (`cell-unclassified`) | TC-2 |
+| `controls-back-compat` | a silent caller — no `controls` argument, as `grd-01-twelve-cells.test.mjs:640` and `run-02-hand.test.mjs:526,552` call it — receives the four unobserved rows and a validating result | TC-3 |
+
+All five are RED at this task's base head: base has no controls job, no `controls` in the schema's `required`, an `assembleResult` that accepts `controls: []`, a walk that classifies 15 records as cells, and a silent caller that gets `[]`. The repro in `.tmp/` stays the recorded receipt of that RED run (it is gitignored and is not a verify command); the tracked test is the proof the runner runs.
+
 ## Acceptance Criteria (GIVEN-WHEN-THEN)
 
 ### AC-1: A run that publishes no controls row is a refused run — controls.json is produced, required, and exactly four rows
 
-- **GIVEN:** the base tree at `7e08e1a` (today's `main`) and `.tmp/sprint-01-verification/t11-controls-wiring.repro.mjs` (F-T11-1 half: `reproduceF1`)
-- **WHEN:** `node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs`
-- **THEN:** exit 0 and `F-T11-1 dead`; `controls_in_schema_required === true`; `controls_min_items === 4`; `assemble_result_refusal.reason === "controls-missing"`; the workflow declares a controls job whose `controls.json` reaches `cells/controls.json`, and `main()` refuses a cells dir that carries none
+- **GIVEN:** the base tree at `7e08e1a` (today's `main`) and `tests/sprint-01/t11-controls-wiring.test.mjs`, whose `controls-producer` test encodes the F-T11-1 half of `.tmp/sprint-01-verification/t11-controls-wiring.repro.mjs` (`reproduceF1`)
+- **WHEN:** `node --test tests/sprint-01/t11-controls-wiring.test.mjs --test-name-pattern controls-producer`
+- **THEN:** exit 0 and a TAP `ok` line for `controls-producer`; `controls_in_schema_required === true`; `controls_min_items === 4`; `assemble_result_refusal.reason === "controls-missing"`; the workflow declares a controls job whose `controls.json` reaches `cells/controls.json`, and `main()` refuses a cells dir that carries none
 
 ```text
 FINDING:               F-T11-1
@@ -202,21 +216,21 @@ TEST_TIER:             integration
 VERIFICATION_SERVICE:  local repro + node --test (no dispatch)
 SURFACE_POLICY:        .spec/e2e-policy/sprint-01/artifact-only-read.json
 TDD_STATE:             red_first
-VERIFY:                node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs
-EXPECT:                exit 0 · "F-T11-1 dead"
+VERIFY:                node --test tests/sprint-01/t11-controls-wiring.test.mjs --test-name-pattern controls-producer
+EXPECT:                exit 0 · TAP `ok` for controls-producer · fail 0
 ```
 
 - **RED input (fails on base):** on base `main` nothing writes `controls.json`, `controls` is absent from the schema's 27 required fields, and `assembleResult({ ..., controls: [] })` is accepted (`empty_controls_accepted_rows = 0`, `assemble_result_refusal = null`), so the repro prints `F-T11-1 ALIVE` and exits 1. Recorded at `.tmp/sprint-01-verification/t11-controls-wiring.repro.log`.
 - **RED proof:** `.tmp/sprint-01-verification/t11-controls-wiring.repro.log`; re-record at this task's base head into `.tmp/sprint-01-verification/t11-fix.repro.red.log` (same content, `F-T11-1 ALIVE`, `@@EXIT=1@@`).
-- **positive_example (passes after landing):** the same call throws `RecorderRefusal("controls-missing")`, `controls` is in the schema's `required` list with `minItems: 4`/`maxItems: 4`, and the controls job's `writeControls` read-back is `ok` with T11's four rows — the repro prints `F-T11-1 dead`, `controls_in_schema_required = true`, `assemble_result_refusal = {"reason":"controls-missing"}`, exit 0.
+- **positive_example (passes after landing):** the same call throws `RecorderRefusal("controls-missing")`, `controls` is in the schema's `required` list with `minItems: 4`/`maxItems: 4`, and the controls job's `writeControls` read-back is `ok` with T11's four rows — `controls-producer` asserts `controls_in_schema_required = true` and `assemble_result_refusal = {"reason":"controls-missing"}`, and the recorded repro receipt still prints `F-T11-1 dead`, exit 0.
 
 SCENARIO_SUMMARY: complete SCENARIO lives once, in this AC's row of the REQUIREMENT-CONTRACT block below.
 
 ### AC-2: The cells dir carries only cell records — a stray artifact no longer kills the run
 
-- **GIVEN:** the base tree at `7e08e1a` and the repro's `buildDownloadedCells()`, which mirrors what the `download` job really assembles — 12 `harness-eval-cell-*` artifacts, one of which also carries `binding.json`, `keyless-control.json` and `evidence/claude-code-verify.capture.json`
-- **WHEN:** `node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs`
-- **THEN:** exit 0 and `F-T11-2 dead`; `cells_classified === 12`; `expected_cells === 12`; `recorder_refusal === null`; and an unclassifiable record still stops the run by name
+- **GIVEN:** the base tree at `7e08e1a` and `tests/sprint-01/t11-controls-wiring.test.mjs`, whose `controls-classification` test encodes the repro's `buildDownloadedCells()`, which mirrors what the `download` job really assembles — 12 `harness-eval-cell-*` artifacts, one of which also carries `binding.json`, `keyless-control.json` and `evidence/claude-code-verify.capture.json`
+- **WHEN:** `node --test tests/sprint-01/t11-controls-wiring.test.mjs --test-name-pattern controls-classification`
+- **THEN:** exit 0 and a TAP `ok` line for `controls-classification`; `cells_classified === 12`; `expected_cells === 12`; `recorder_refusal === null`; and an unclassifiable record still stops the run by name
 
 ```text
 FINDING:               F-T11-2
@@ -224,13 +238,13 @@ TEST_TIER:             integration
 VERIFICATION_SERVICE:  local repro + node --test (no dispatch)
 SURFACE_POLICY:        .spec/e2e-policy/sprint-01/artifact-only-read.json
 TDD_STATE:             red_first
-VERIFY:                node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs
-EXPECT:                exit 0 · "F-T11-2 dead"
+VERIFY:                node --test tests/sprint-01/t11-controls-wiring.test.mjs --test-name-pattern controls-classification
+EXPECT:                exit 0 · TAP `ok` for controls-classification · fail 0
 ```
 
 - **RED input (fails on base):** on base `main` `readCellArtifacts` classifies 15 records as cells — the 12 real cells plus `binding.json`, `evidence/claude-code-verify.capture.json` and `keyless-control.json` — and `collectCells` refuses with `cell-track-unknown`/`cell-harness-unknown`, so the grade job publishes no result artifact at all. The repro prints `F-T11-2 ALIVE` and exits 1. Recorded at `.tmp/sprint-01-verification/t11-controls-wiring.repro.log`.
 - **RED proof:** `.tmp/sprint-01-verification/t11-controls-wiring.repro.log`; re-record into `.tmp/sprint-01-verification/t11-fix.repro.red.log` (`F-T11-2 ALIVE`, `cells_classified = 15`, `@@EXIT=1@@`).
-- **positive_example (passes after landing):** `readCellArtifacts` returns 12 cells with `refusal === null` — the three named control-evidence forms land in `controlEvidence` and `binding.json`/`keyless-control.json`/captures never enter `collectCells`; a record that is neither a cell nor a named form raises `cell-unclassified` naming the file. The repro prints `F-T11-2 dead`, `cells_classified = 12`, `recorder_refusal = null`, exit 0.
+- **positive_example (passes after landing):** `readCellArtifacts` returns 12 cells with `refusal === null` — the three named control-evidence forms land in `controlEvidence` and `binding.json`/`keyless-control.json`/captures never enter `collectCells`; a record that is neither a cell nor a named form raises `cell-unclassified` naming the file. `controls-classification` and `controls-evidence-bucket` assert `cells_classified = 12` and `recorder_refusal = null`; the recorded repro receipt still prints `F-T11-2 dead`, exit 0.
 
 SCENARIO_SUMMARY: complete SCENARIO lives once, in this AC's row of the REQUIREMENT-CONTRACT block below.
 
@@ -238,16 +252,16 @@ SCENARIO_SUMMARY: complete SCENARIO lives once, in this AC's row of the REQUIREM
 
 Each TC is an assertion inside its mapped AC's VERIFY command; its fail input and positive example are on its row in the REQUIREMENT-CONTRACT block.
 
-| TC | Statement | Maps to |
-|----|-----------|---------|
-| TC-1 | `assembleResult` refuses an explicitly empty `controls` array with `controls-missing`, and the result schema cannot validate an empty one | AC-1 |
-| TC-2 | A cells dir that also carries `binding.json`, `keyless-control.json` and `evidence/*.capture.json` yields exactly 12 cells and no refusal, while an unclassifiable record is refused by name | AC-2 |
-| TC-3 | `FLOW-GRD-03-FILES-AND-STREAM` and `FLOW-GRD-06-MISSING-KEY` stay green, and the whole sprint-01 lane stays green — no out-of-scope caller of `assembleResult` broke | AC-1, AC-2 |
+| TC | Statement | Maps to | Bound test (`--test-name-pattern`) |
+|----|-----------|---------|--------------------------------|
+| TC-1 | `assembleResult` refuses an explicitly empty `controls` array with `controls-missing`, and the result schema cannot validate an empty one | AC-1 | `controls-refusal` |
+| TC-2 | A cells dir that also carries `binding.json`, `keyless-control.json` and `evidence/*.capture.json` yields exactly 12 cells and no refusal, while an unclassifiable record is refused by name | AC-2 | `controls-evidence-bucket` |
+| TC-3 | `FLOW-GRD-03-FILES-AND-STREAM` and `FLOW-GRD-06-MISSING-KEY` stay green, and the whole sprint-01 lane stays green — no out-of-scope caller of `assembleResult` broke | AC-1, AC-2 | `controls-back-compat` (the two flow replays and the whole lane are gates TC-3a/3b/3c, not this row's verify) |
 
 ## Reading List
 
 1. `.tmp/sprint-01-verification/t11-out-of-scope-handoff.md` — the four exact patches this task owns (sha256 pinned in Background)
-2. `.tmp/sprint-01-verification/t11-controls-wiring.repro.mjs` — the replayable proof; read `reproduceF1`, `reproduceF2` and `buildDownloadedCells` before changing anything
+2. `.tmp/sprint-01-verification/t11-controls-wiring.repro.mjs` — the replayable receipt this task encodes as `tests/sprint-01/t11-controls-wiring.test.mjs`; read `reproduceF1`, `reproduceF2` and `buildDownloadedCells` before changing anything
 3. `.kb-run-sprint/sprint-01-evaluator-evidence-spine/T11/review-cycle-1.json` — findings F-T11-1 and F-T11-2 with their file:line locations
 4. `test/harness/controls/index.mjs` — `CONTROLS`, `qualifyControls`, `assertControlRows`, `writeControls`: the producer's only legal output shape
 5. `test/harness/recorder.mjs` § `readCellArtifacts`/`main`, `test/harness/recorder/result.mjs` § `assembleResult`, `test/harness/recorder/validate.mjs` § `toHarnessCell` — the reader being changed and the fail-closed checks that must survive it
@@ -271,6 +285,7 @@ WRITE-ALLOWED:
 - tests/sprint-01/grd-03-evidence.test.mjs
 - tests/sprint-01/grd-06-missing-key.test.mjs
 - tests/sprint-01/flow-runner.mjs
+- tests/sprint-01/t11-controls-wiring.test.mjs
 
 WRITE-PROHIBITED:
 
@@ -311,19 +326,19 @@ None. This task changes a workflow, a schema and the recorder; nothing lands on 
 
 Work the two ACs as two RED, GREEN, REFACTOR cycles in AC order, and land Patches 1–5 in the order the handoff gives them — Patch 1 depends on T11's module, Patch 2 and Patch 5 both touch the recorder.
 
-**PRECONDITION — the repro is gitignored.** `.tmp/` is in `.gitignore`, so `.tmp/sprint-01-verification/t11-controls-wiring.repro.mjs` does **not** travel with a branch. Before starting, confirm it exists at this task's repo root; if it does not, copy it (and `t11-controls-wiring.repro.log`) from T11's worktree at `.kb-run-sprint/worktrees/sprint-01-evaluator-evidence-spine/T11/.tmp/sprint-01-verification/`. If the repro is absent, this task is **BLOCKED**, not failed — do not rewrite the repro to pass.
+**PRECONDITION — the repro is gitignored, the owned test is not.** `.tmp/` is in `.gitignore`, so `.tmp/sprint-01-verification/t11-controls-wiring.repro.mjs` does **not** travel with a branch. Before starting, confirm it exists at this task's repo root; if it does not, copy it (and `t11-controls-wiring.repro.log`) from T11's worktree at `.kb-run-sprint/worktrees/sprint-01-evaluator-evidence-spine/T11/.tmp/sprint-01-verification/`. The proof the runner runs is `tests/sprint-01/t11-controls-wiring.test.mjs`, which this task owns and commits: write its five tests from the repro's `reproduceF1`/`reproduceF2`/`buildDownloadedCells` and the handoff, so a missing repro degrades the RED receipt to the recorded `.tmp/sprint-01-verification/t11-fix.repro.red.log` rather than blocking. Never rewrite the repro to pass.
 
-- **AC-1:** RED = the repro's `F-T11-1 ALIVE` at this task's base head, captured to `.tmp/sprint-01-verification/t11-fix.repro.red.log`. GREEN = Patches 2, 3, 1 in that order, then the repro prints `F-T11-1 dead`.
-- **AC-2:** RED = the same log's `F-T11-2 ALIVE` with `cells_classified = 15`. GREEN = Patch 4 and Patch 5, then `F-T11-2 dead` with `cells_classified = 12`.
-- After both: run the three regression gates (grd-03, grd-06, whole lane) and record them to `.tmp/sprint-01-verification/t11-fix.repro.green.log`.
+- **AC-1:** RED = `node --test tests/sprint-01/t11-controls-wiring.test.mjs --test-name-pattern controls-producer` fails at this task's base head (no controls job, `controls` not required), captured to `.tmp/sprint-01-verification/t11-fix.repro.red.log` beside the repro's `F-T11-1 ALIVE`. GREEN = Patches 2, 3, 1 in that order, then `controls-producer` and `controls-refusal` are TAP `ok`, and the repro receipt prints `F-T11-1 dead`.
+- **AC-2:** RED = the same log's `F-T11-2 ALIVE` with `cells_classified = 15`, and `--test-name-pattern controls-classification` fails. GREEN = Patch 4 and Patch 5, then `controls-classification` and `controls-evidence-bucket` are TAP `ok`, and the repro receipt prints `F-T11-2 dead` with `cells_classified = 12`.
+- After both: `node --test tests/sprint-01/t11-controls-wiring.test.mjs` reports `pass 5`, `fail 0`, and the three regression gates (grd-03, grd-06, whole lane) are recorded to `.tmp/sprint-01-verification/t11-fix.repro.green.log`.
 - Do not edit `tests/sprint-01/grd-01-twelve-cells.test.mjs` or `tests/sprint-01/run-02-hand.test.mjs`. If the lane fails there, Patch 2's default is wrong — fix `assembleResult`, not the test.
 - Do not dispatch the workflow. The hosted receipt is T11's gate, not this task's.
 
 ## Orchestrator Verification Protocol
 
-0. Confirm the repro exists at `.tmp/sprint-01-verification/t11-controls-wiring.repro.mjs` before dispatching (it is gitignored; copy it from T11's worktree if missing). Absent repro = BLOCKED, not FAILED.
-1. **VERIFY_RED:** at the task's base head the repro exits 1 with `F-T11-1 ALIVE` and `F-T11-2 ALIVE`, and `.tmp/sprint-01-verification/t11-fix.repro.red.log` records it.
-2. **VERIFY_GREEN:** `node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs` exits 0 printing `F-T11-1 dead` and `F-T11-2 dead`; the two flow replays and the whole lane exit 0.
+0. Confirm `.tmp/sprint-01-verification/t11-controls-wiring.repro.mjs` exists before dispatching (it is gitignored; copy it from T11's worktree if missing). It is the recorded receipt, not the proof: the proof is `tests/sprint-01/t11-controls-wiring.test.mjs`, which this task commits.
+1. **VERIFY_RED:** at the task's base head all five `node --test tests/sprint-01/t11-controls-wiring.test.mjs` tests fail, the repro exits 1 with `F-T11-1 ALIVE` and `F-T11-2 ALIVE`, and `.tmp/sprint-01-verification/t11-fix.repro.red.log` records both.
+2. **VERIFY_GREEN:** `node --test tests/sprint-01/t11-controls-wiring.test.mjs` reports `pass 5`, `fail 0`; the repro receipt exits 0 printing `F-T11-1 dead` and `F-T11-2 dead`; the two flow replays and the whole lane exit 0.
 3. Run every Evidence Gate and compare with Expected.
 4. `git diff --name-only` lists only WRITE-ALLOWED paths; `plugins/pixel-perfect/**` is untouched; no other task's test file is modified.
 5. Re-run T11's hosted controls gate (SPRINT.md step 11) on the next dispatch and confirm the downloaded result's `.controls[]` prints four rows. This is T11's gate, not this task's: record the outcome, do not fail T11-FIX for an undelivered dispatch.
@@ -339,8 +354,10 @@ Work the two ACs as two RED, GREEN, REFACTOR cycles in AC order, and land Patche
 
 ## Evidence Gates
 
-- **AC-1:** `node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs`. Expected: exit 0, prints `F-T11-1 dead` and `controls_in_schema_required = true`, `controls_min_items = 4`, `assemble_result_refusal = {"reason":"controls-missing",...}`
-- **AC-2:** `node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs`. Expected: exit 0, prints `F-T11-2 dead` and `cells_classified = 12`, `expected_cells = 12`, `recorder_refusal = null`
+- **AC-1:** `node --test tests/sprint-01/t11-controls-wiring.test.mjs --test-name-pattern controls-producer`. Expected: exit 0, a TAP `ok` line for `controls-producer`, `fail 0` — the test asserts the controls job exists in `harness-eval.yml`, its artifact lands at `cells/controls.json`, and `controls` is in the schema's `required` with `minItems: 4`/`maxItems: 4`. The recorded repro receipt (not a verify) still shows `controls_in_schema_required = true`, `assemble_result_refusal = {"reason":"controls-missing",...}`.
+- **AC-2:** `node --test tests/sprint-01/t11-controls-wiring.test.mjs --test-name-pattern controls-classification`. Expected: exit 0, a TAP `ok` line for `controls-classification`, `fail 0` — `cells_classified = 12`, `expected_cells = 12`, `recorder_refusal = null`; the recorded repro receipt (not a verify) prints `F-T11-2 dead`.
+- **Owned test file (all five):** `node --test tests/sprint-01/t11-controls-wiring.test.mjs`. Expected: `pass 5`, `fail 0` — `controls-producer`, `controls-classification`, `controls-refusal`, `controls-evidence-bucket`, `controls-back-compat`
+- **repro receipt (recorded, not a verify):** `node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs`. Expected: exit 0 printing `F-T11-1 dead` and `F-T11-2 dead`; captured into `.tmp/sprint-01-verification/t11-fix.repro.green.log`
 - **TC-3a:** `node --test tests/sprint-01/grd-03-evidence.test.mjs --test-name-pattern FLOW-GRD-03-FILES-AND-STREAM`. Expected: every matched `FLOW-GRD-03-FILES-AND-STREAM` test prints a TAP `ok` line; `fail 0`
 - **TC-3b:** `node --test tests/sprint-01/grd-06-missing-key.test.mjs --test-name-pattern FLOW-GRD-06-MISSING-KEY`. Expected: the `FLOW-GRD-06-MISSING-KEY` test prints a TAP `ok` line; `fail 0`
 - **TC-3c (whole lane):** `node --test tests/sprint-01/*.test.mjs`. Expected: `pass 95`, `fail 0` — and it is not green if `grd-01-twelve-cells` or `run-02-hand` needed an edit to get there
@@ -350,6 +367,7 @@ Work the two ACs as two RED, GREEN, REFACTOR cycles in AC order, and land Patche
 
 Must pass:
 
+- The owned test `tests/sprint-01/t11-controls-wiring.test.mjs` is committed and reports `pass 5`, `fail 0`, with `controls-producer`, `controls-classification`, `controls-refusal`, `controls-evidence-bucket` and `controls-back-compat` each asserting its row's THEN.
 - The repro exits 0 with both `F-T11-1 dead` and `F-T11-2 dead`; the RED log from the task's base head exists and shows both `ALIVE`.
 - `controls` is in the result schema's `required` list with `minItems: 4` and `maxItems: 4`; `assembleResult` has no `= []` default and refuses an explicitly empty array with `controls-missing`.
 - The workflow declares a controls job that runs T11's `qualifyControls` → `assertControlRows` → `writeControls`, and the download job lands its artifact at `cells/controls.json`.
@@ -404,6 +422,7 @@ A shared file is not a dependency, and needing another task's output to test aga
       "tests/sprint-01/grd-03-evidence.test.mjs",
       "tests/sprint-01/grd-06-missing-key.test.mjs",
       "tests/sprint-01/flow-runner.mjs",
+      "tests/sprint-01/t11-controls-wiring.test.mjs",
       ".spec/prds/harness-eval-framework/tasks/sprint-01-evaluator-evidence-spine/TASK-T11-FIX.md",
       ".spec/prds/harness-eval-framework/tasks/sprint-01-evaluator-evidence-spine/TASK-T11-FIX.contract.json"
     ],
@@ -449,9 +468,9 @@ A shared file is not a dependency, and needing another task's output to test aga
       "title": "A run that publishes no controls row is a refused run \u2014 controls.json is produced, required, and exactly four rows",
       "test_tier": "integration",
       "verification_service": "local repro + node --test (no dispatch)",
-      "verify": "node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs",
-      "test_file": null,
-      "test_function": null,
+      "verify": "node --test tests/sprint-01/t11-controls-wiring.test.mjs --test-name-pattern controls-producer",
+      "test_file": "tests/sprint-01/t11-controls-wiring.test.mjs",
+      "test_function": "controls-producer",
       "positive_example": "assembleResult({ ..., controls: [] }) throws RecorderRefusal(\"controls-missing\"); controls sits in the schema's required list with minItems 4 / maxItems 4; the controls job's writeControls read-back is ok with T11's four rows \u2014 the repro prints F-T11-1 dead with controls_in_schema_required = true and assemble_result_refusal = {\"reason\":\"controls-missing\"}, exit 0.",
       "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
       "scenario": {
@@ -484,7 +503,7 @@ A shared file is not a dependency, and needing another task's output to test aga
             "action": {
               "actor": "runner",
               "steps": [
-                "node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs"
+                "node --test tests/sprint-01/t11-controls-wiring.test.mjs --test-name-pattern controls-producer"
               ]
             },
             "end_state": {
@@ -529,7 +548,7 @@ A shared file is not a dependency, and needing another task's output to test aga
       },
       "red_input": "on base main nothing writes controls.json, controls is absent from the schema's required fields, and assembleResult({ ..., controls: [] }) is accepted (empty_controls_accepted_rows = 0, assemble_result_refusal = null), so the repro prints F-T11-1 ALIVE and exits 1",
       "red_proof": ".tmp/sprint-01-verification/t11-controls-wiring.repro.log",
-      "description": "GIVEN the base tree at 7e08e1a and .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs WHEN node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs THEN exit 0 with F-T11-1 dead; controls_in_schema_required === true; controls_min_items === 4; assemble_result_refusal.reason === \"controls-missing\"; the workflow declares a controls job whose controls.json reaches cells/controls.json and main() refuses a cells dir that carries none",
+      "description": "GIVEN the base tree at 7e08e1a and the repro .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs that the owned test encodes WHEN node --test tests/sprint-01/t11-controls-wiring.test.mjs --test-name-pattern controls-producer THEN exit 0 with F-T11-1 dead; controls_in_schema_required === true; controls_min_items === 4; assemble_result_refusal.reason === \"controls-missing\"; the workflow declares a controls job whose controls.json reaches cells/controls.json and main() refuses a cells dir that carries none",
       "maps_to_ac": null
     },
     {
@@ -540,9 +559,9 @@ A shared file is not a dependency, and needing another task's output to test aga
       "title": "The cells dir carries only cell records \u2014 a stray artifact no longer kills the run",
       "test_tier": "integration",
       "verification_service": "local repro + node --test (no dispatch)",
-      "verify": "node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs",
-      "test_file": null,
-      "test_function": null,
+      "verify": "node --test tests/sprint-01/t11-controls-wiring.test.mjs --test-name-pattern controls-classification",
+      "test_file": "tests/sprint-01/t11-controls-wiring.test.mjs",
+      "test_function": "controls-classification",
       "positive_example": "readCellArtifacts over the repro's real layout returns 12 cells with refusal === null \u2014 binding.json, keyless-control.json and evidence/*.capture.json land in controlEvidence and never enter collectCells \u2014 while a record that is neither a cell nor a named form raises cell-unclassified naming the file. The repro prints F-T11-2 dead with cells_classified = 12 and recorder_refusal = null, exit 0.",
       "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
       "scenario": {
@@ -575,7 +594,7 @@ A shared file is not a dependency, and needing another task's output to test aga
             "action": {
               "actor": "runner",
               "steps": [
-                "node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs"
+                "node --test tests/sprint-01/t11-controls-wiring.test.mjs --test-name-pattern controls-classification"
               ]
             },
             "end_state": {
@@ -618,7 +637,7 @@ A shared file is not a dependency, and needing another task's output to test aga
       },
       "red_input": "on base main readCellArtifacts classifies 15 records as cells \u2014 the 12 real cells plus binding.json, evidence/claude-code-verify.capture.json and keyless-control.json \u2014 and collectCells refuses with cell-track-unknown, so the grade job publishes no result artifact; the repro prints F-T11-2 ALIVE and exits 1",
       "red_proof": ".tmp/sprint-01-verification/t11-controls-wiring.repro.log",
-      "description": "GIVEN the base tree at 7e08e1a and the repro's buildDownloadedCells() mirroring what the download job assembles WHEN node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs THEN exit 0 with F-T11-2 dead; cells_classified === 12; expected_cells === 12; recorder_refusal === null; and an unclassifiable record still stops the run by name",
+      "description": "GIVEN the base tree at 7e08e1a and the repro's buildDownloadedCells() mirroring what the download job assembles WHEN node --test tests/sprint-01/t11-controls-wiring.test.mjs --test-name-pattern controls-classification THEN exit 0 with F-T11-2 dead; cells_classified === 12; expected_cells === 12; recorder_refusal === null; and an unclassifiable record still stops the run by name",
       "maps_to_ac": null
     },
     {
@@ -626,10 +645,10 @@ A shared file is not a dependency, and needing another task's output to test aga
       "type": "test_criterion",
       "primary": false,
       "description": "assembleResult refuses an explicitly empty controls array with controls-missing, and the result schema cannot validate an empty one",
-      "verify": "node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs",
+      "verify": "node --test tests/sprint-01/t11-controls-wiring.test.mjs --test-name-pattern controls-refusal",
       "maps_to_ac": "AC-1",
-      "test_file": null,
-      "test_function": "reproduceF1",
+      "test_file": "tests/sprint-01/t11-controls-wiring.test.mjs",
+      "test_function": "controls-refusal",
       "test_tier": "integration",
       "verification_service": "local repro + node --test (no dispatch)",
       "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
@@ -688,10 +707,10 @@ A shared file is not a dependency, and needing another task's output to test aga
       "type": "test_criterion",
       "primary": false,
       "description": "A cells dir that also carries binding.json, keyless-control.json and evidence/*.capture.json yields exactly 12 cells and no refusal, while an unclassifiable record is refused by name",
-      "verify": "node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs",
+      "verify": "node --test tests/sprint-01/t11-controls-wiring.test.mjs --test-name-pattern controls-evidence-bucket",
       "maps_to_ac": "AC-2",
-      "test_file": null,
-      "test_function": "reproduceF2",
+      "test_file": "tests/sprint-01/t11-controls-wiring.test.mjs",
+      "test_function": "controls-evidence-bucket",
       "test_tier": "integration",
       "verification_service": "local repro + node --test (no dispatch)",
       "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
@@ -753,10 +772,10 @@ A shared file is not a dependency, and needing another task's output to test aga
       "type": "test_criterion",
       "primary": false,
       "description": "FLOW-GRD-03-FILES-AND-STREAM and FLOW-GRD-06-MISSING-KEY stay green, and the whole sprint-01 lane stays green \u2014 no out-of-scope caller of assembleResult broke",
-      "verify": "node --test tests/sprint-01/*.test.mjs",
+      "verify": "node --test tests/sprint-01/t11-controls-wiring.test.mjs --test-name-pattern controls-back-compat",
       "maps_to_ac": "AC-1",
-      "test_file": "tests/sprint-01/grd-03-evidence.test.mjs",
-      "test_function": "FLOW-GRD-03-FILES-AND-STREAM",
+      "test_file": "tests/sprint-01/t11-controls-wiring.test.mjs",
+      "test_function": "controls-back-compat",
       "test_tier": "integration",
       "verification_service": "node --test over the sprint-01 lane (no dispatch)",
       "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
