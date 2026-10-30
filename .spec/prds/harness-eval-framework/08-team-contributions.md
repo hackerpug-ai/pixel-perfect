@@ -1,7 +1,7 @@
 ---
 stability: FEATURE_SPEC
-last_validated: 2026-10-14
-prd_version: 1.0.1
+last_validated: 2026-10-30
+prd_version: 2.0.0
 ---
 
 # Team Contributions
@@ -47,6 +47,7 @@ Keep one initiative. The later checks stay here because they must report without
 - List, status, and verify ask nothing; the independent must-ask probe stops at its first question and receives no answer. Later scripted answers use one resume-with-text path for every harness. That path is specified and not yet proven.
 - No model judges screenshots. Design fidelity stays out. A missing screenshot score is not a gap.
 - The permission stance is not approve-everything. Exact launch flags are not a product feature.
+- A finished run files one issue per distinct unexpected failure, unattended, under the owner's standing authorization. The issue follows the change-request format and names the eval to re-run. Filing changes no grade and no release state. See [Failure Issues](09-technical-requirements/11-failure-issues.md).
 
 ### Open decisions
 
@@ -54,7 +55,35 @@ Keep one initiative. The later checks stay here because they must report without
 - **Whether a newest-version behavior fix may change workflow files or adapter scripts, or must stay inside harness/*.json and skills/**.** Recommendation: Do not widen the allowlist. Research said behavior fixes may need workflows/ and scripts/adapters/, and that claim was not re-checked. Keep the allowlist until that re-check is done. Decide by: Before the first newest-version fix is opened, if that fix cannot be expressed inside harness/*.json and skills/**.
 - **Which confirmed goal, if any, the later-report area serves. Decline a change, scripted answers, resume, one full layer, and plain-language command choice are in the confirmed objective and report rather than block, but none of G1 through G4 states that outcome.** Recommendation: Leave the area in scope. Do not add a goal unless the owner confirms one, and do not drop the area to force a match with G1 through G4. Decide by: Before the overview goals are confirmed.
 - **Which exact permission flags the live harness commands use.** Recommendation: Leave the flags to engineering. The product stance is only that permission is not approve-everything. Decide by: Before the harness launch commands are written. This is not a product gate.
+- **Which confirmed goal, if any, the failure-issues area serves. It is in the objective statement by the owner's instruction, but none of G1 through G4 states that outcome.** Recommendation: Leave the area in scope and add no goal unless the owner confirms one. Decide by: Before the overview goals are confirmed.
+
+## Failure issues: decisions recorded on 2026-10-30
+
+Written in `--update` mode with no specialist lens consulted. It takes an independent read with `/review-red-hat` before the sprint treats it as settled.
+
+**The premise, corrected.** The owner's instruction cited command failures in the development runs. No `fail` verdict has ever been produced on any harness. Across the twenty hosted runs on 2026-10-30, eight were cancelled, four refused with `timestamps-missing`, and eight wrote a result. Five of those read could-not-run on all 48 checks. Three, at `09547bc`, read could-not-run on 46 and `pass` on 2 (`command_list` on both claude-code cells). All fourteen failures in the sprint 1 handoff are evaluator defects, not plugin defects. So a rule that filed only on graded failures would have filed nothing for the runs that motivated it. That is why could-not-run, recorder refusals, and control mismatches also file.
+
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| Who files | The run files by itself | The owner picked this over a person filing with `/change-request`, and over a new credential to read the private brain repository. It is an explicit exception to that skill's per-issue yes. |
+| Where it lands | Sprint 01, through plan amendment T17 | The owner named this sprint. A pinned failure and a could-not-run have no other route to a work item. T14 and T15 are other sessions' amendments. |
+| Evidence export | Its own task, T16, before T17 | An issue citing evidence nobody can open is a dead pointer, and real run 41140522995 proves that is today's state. Gate step 8 needs this with or without issues, and TASK-T13.md says it needs its own task. |
+| Rerun reference | Required section in every issue | Owner's instruction. |
+| Dedupe trust | Only `github-actions[bot]` issues and comments count | This repository is public. A stranger's issue could otherwise silence a finding. |
+| Recovery notes | Left out | A person closes an issue with the proof. Add a note when stale open issues get in the way. |
+
+**Where each acceptance criterion gets proven.** UC-ISS-01 AC-1 needs a real graded failure, and none exists yet. Report it deferred at review and prove it on the first real one, or on the staged failure Sprint 05 already asks the owner about. UC-ISS-01 AC-5 needs the DriftRecord in the result (Sprint 03). UC-ISS-05 AC-4 needs later checks (Sprint 06).
+
+**Evaluator facts found while writing this.** `command_list` takes its expected names from the plugin under test, so it does not catch a removed command; the drift proof does. The cell schema allows fewer than four checks. The sprint gate reads `harness-eval-result.json` at the artifact root, but the real file lands at `grade/harness-eval-result.json`, so those gate steps fail as written. The smoke job exports no evidence, so the gate's verify-report step cannot pass.
 
 ## Remediation choices accepted on 2026-10-14
 
 The owner chose published-only nightly evaluation and a 36-hour checkout-evidence lifetime. Direct CLI fixing preserves the existing no-GitHub-token model boundary. Allowlist patterns are plugin-root-relative. No Cursor exemption or allowlist expansion was accepted. The original goals remain proposed.
+
+### Accepted remediation decisions (moved from the scope section in 2.0.0)
+
+Nightly runs evaluate only the published plugin, resolved once per run. Plugin pushes evaluate the exact checkout. Manual runs select a mode and default to checkout. Each run retains twelve cells. Candidate release authorization requires the latest trusted complete checkout evaluation for that commit, at most 36 hours old; a newer pending, failed, or cancelled attempt invalidates the older pass. A blocking published observation requires a subsequent qualifying checkout evaluation to clear it. The detailed transition rules are in [API Design](09-technical-requirements/04-api-design.md).
+
+Correct planted-defect detection is an evaluation pass if the clean twin passes and evidence is valid. List, status, and verify ask nothing. The separate initialization question probe stops at its first valid question without an answer. Later scripted-answer checks remain report-only. Structural-only live verification must prove that no image judging occurred, including in child calls.
+
+The existing fix patterns are relative to plugins/pixel-perfect. Resolving that root does not widen the allowlist. A newest failure must reproduce on the recorded main repair base and its exact patch must pass confirmation before a human-reviewable PR exists. Repository enforcement must deny the heal app merge authority. These are specification requirements, not claims of deployed controls.

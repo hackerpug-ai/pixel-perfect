@@ -1,7 +1,7 @@
 ---
 stability: CONSTITUTION
-last_validated: 2026-10-28
-prd_version: 1.0.2
+last_validated: 2026-10-30
+prd_version: 2.0.0
 ---
 
 # System Components
@@ -20,11 +20,15 @@ No environment and no API keys. permissions contents: read. Runs the existing re
 
 ### smoke matrix
 
-Twelve cells: six harnesses by pinned and newest. fail-fast is false. Environment harness-smoke. permissions contents: read. No cache. Install and load steps receive no key. The smoke step for that cell is the only step with that harness key. The job uploads the grade file, the event stream, and any verify report even when the process exits non-zero. It does not decide the grade from the exit code.
+Twelve cells: six harnesses by pinned and newest. fail-fast is false. Environment harness-smoke. permissions contents: read. No cache. Install and load steps receive no key. The smoke step for that cell is the only step with that harness key. The job uploads the grade file, the event stream, and any verify report even when the process exits non-zero, as the per-cell artifact named in [Failure Issues](11-failure-issues.md). It does not decide the grade from the exit code.
 
 ### grade recorder
 
-No environment. permissions contents: read and actions: read (to obtain trusted run/job metadata). Runs even if smoke or drift failed. Validates grade and event schemas, InstallationIdentity, complete mapping coverage, and twelve unique cells; builds harness-eval-result.json and the Actions summary. Copies actual smoke-job timestamps from GitHub; missing timestamps block. Uploads the logical result and both planted/clean verify reports under run/attempt-qualified physical names with overwrite disabled for 90 days. Retains the immutable upload artifact ID/digest and attempt-specific recorder job/upload provenance for release binding. Retention does not extend the 36-hour authorization lifetime. Exits non-zero for a live pinned failure or could-not-run, zero for newest-only graded failures. Later checks never affect that exit. Correct planted detection is a pass, not a product failure. Mode and candidate eligibility remain explicit.
+No environment. permissions contents: read and actions: read (to obtain trusted run/job metadata). Runs even if smoke or drift failed. Validates grade and event schemas, InstallationIdentity, complete mapping coverage, and twelve unique cells; builds harness-eval-result.json and the Actions summary. Copies actual smoke-job timestamps from GitHub; missing timestamps block. Uploads the logical result and both planted/clean verify reports under run/attempt-qualified physical names with overwrite disabled for 90 days. Retains the immutable upload artifact ID/digest and attempt-specific recorder job/upload provenance for release binding. Retention does not extend the 36-hour authorization lifetime. Exits non-zero for a live pinned failure or could-not-run, zero for newest-only graded failures. Later checks never affect that exit. Correct planted detection is a pass, not a product failure. Mode and candidate eligibility remain explicit. On a refusal it also writes `grade/refusal.json` holding only the closed refusal reason, and uploads it with the log, so the issue job reads a record and never parses the log.
+
+### issue job
+
+Job `issues` in harness-eval.yml. `needs: grade`. Runs unless the run was cancelled, and only for hackerpug-ai/pixel-perfect on refs/heads/main, checked in the job condition and again in code. No environment, no model key, and no App token. permissions contents: read, actions: read, issues: write; no other job in this workflow gains issues: write. Downloads this attempt's result artifact, derives findings, renders each body in the change-request format, runs the secret scan, then creates issues or comments through one allowlisted helper. Uploads its receipt and appends to the run summary. It is not a required evaluation job: its failure changes no cell, no result artifact, and no status. Contract, boundaries, and the rerun proof are in [Failure Issues](11-failure-issues.md).
 
 ### pinned-channel status job
 
@@ -36,7 +40,7 @@ scripts/release.mjs publish and a gate job in tag-release.yml share the determin
 
 ### fix-agent job
 
-Select only newest evaluated fail checks, never pinned failures or could-not-run. Resolve current main as repair_base_sha and reproduce motivating failures there using the original resolved harness versions; if absent, record not-reproduced and stop. Environment heal-agent. A preparation step may read the repository with contents: read and persist-credentials false. Invoke the exact pinned Claude Code CLI directly, not anthropics/claude-code-action. The model process receives only ANTHROPIC_API_KEY, no GitHub/App/OIDC token, persisted git credential, or credential helper. It has restricted local read/edit tools, no network tool, and the turn/budget caps. Model-provider transport is the only required external access. Record the actual invocation/tool restrictions and prove them on a real hosted job before enabling healing. Upload the diff; do not open a PR.
+Select only newest evaluated fail checks, never pinned failures or could-not-run. Resolve current main as repair_base_sha and reproduce motivating failures there using the original resolved harness versions; if absent, record not-reproduced and stop. Environment heal-agent. A preparation step may read the repository with contents: read and persist-credentials false. Invoke the exact pinned Claude Code CLI directly, not anthropics/claude-code-action. The model process receives only ANTHROPIC_API_KEY, no GitHub/App/OIDC token, persisted git credential, or credential helper. It has restricted local read/edit tools, no network tool, and the turn/budget caps. Model-provider transport is the only required external access. Record the actual invocation/tool restrictions and prove them on a real hosted job before enabling healing. The model process never reads an issue or its comments, because anyone can comment on this public repository. Upload the diff; do not open a PR.
 
 ### patch recheck job
 
@@ -48,7 +52,7 @@ Environment harness-smoke. permissions contents: read. No cache. Fresh checkout 
 
 ### heal pull-request job
 
-Environment heal-pr only. permissions contents: read for GITHUB_TOKEN. Mint an installation token with SHA-pinned actions/create-github-app-token for app id 5156617. Verify main still equals repair_base_sha; on base-moved stop and require a new reproduction/recheck/confirmation, without silent rebase. Consume only the exact confirmed patch. Push heal/<run_id> and open one PR targeting main with original failure and confirmation evidence. Never merge, tag, or publish. The app is repository-scoped with contents write and pull requests write, no Actions/secrets permission; never print its token.
+Environment heal-pr only. permissions contents: read for GITHUB_TOKEN. Mint an installation token with SHA-pinned actions/create-github-app-token for app id 5156617. Verify main still equals repair_base_sha; on base-moved stop and require a new reproduction/recheck/confirmation, without silent rebase. Consume only the exact confirmed patch. Push heal/<run_id> and open one PR targeting main with original failure and confirmation evidence. When an open failure issue carries the same fingerprint, the PR body cites it with `Refs #<n>`, never a closing keyword, because closing the issue takes the proof run. Never merge, tag, or publish. The app is repository-scoped with contents write and pull requests write, no Actions/secrets permission; never print its token.
 
 Before enabling this job, the repository owner must activate and verify a main-branch update restriction. Designated human maintainers have bypass authority; the heal app has none. Do not apply that restriction to heal/* branches. A real app-token merge attempt must be denied while a designated human can merge or reject in GitHub. Missing rule or missing proof disables healing and reports a blocker, without changing the newest-only release warning. This is a deployment prerequisite, not a claim about today's repository settings.
 

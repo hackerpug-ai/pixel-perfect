@@ -18,14 +18,22 @@
 | UC-RUN-01 | FLOW-JRN-NIGHTLY-PINNED-BLOCK | FLOW-RUN-01-FORGED-SCHEDULE, FLOW-RUN-01-NIGHTLY, FLOW-RUN-01-SCHEDULER-CRASH, FLOW-RUN-01-UTC-EDGE | holdout+visible | specified; runtime unverified |
 | UC-RUN-02 | FLOW-JRN-GAPS-DRIFT-LATER | FLOW-RUN-02-DOUBLE-START, FLOW-RUN-02-FORK-TOKEN, FLOW-RUN-02-HAND, FLOW-RUN-02-MISSING-OUTDIR | holdout+visible | specified; runtime unverified |
 | UC-RUN-03 | FLOW-JRN-GAPS-DRIFT-LATER | FLOW-RUN-03-CHECKOUT-FAIL, FLOW-RUN-03-DOCS-ONLY, FLOW-RUN-03-FORK-MAIN, FLOW-RUN-03-MERGE, FLOW-RUN-03-TRUNK-HISTORY | holdout+visible | specified; runtime unverified |
+| UC-ISS-01 | FLOW-JRN-FAILURE-TO-PROOF | FLOW-ISS-01-CHECK-UNDER-AGGREGATE, FLOW-ISS-01-REAL-RUN-FILES, FLOW-ISS-01-RECORDER-REFUSED | holdout+visible | specified; runtime unverified |
+| UC-ISS-02 | FLOW-JRN-FAILURE-TO-PROOF | FLOW-ISS-02-EVIDENCE-NOT-EXPORTED, FLOW-ISS-02-FIXER-CONTEXT, FLOW-ISS-02-UNKNOWN-NOT-GUESSED | holdout+visible | specified; runtime unverified |
+| UC-ISS-03 | FLOW-JRN-FAILURE-TO-PROOF | FLOW-ISS-03-NEWEST-MOVED, FLOW-ISS-03-PROOF-COMMANDS-RUN, FLOW-ISS-03-RERUN-IS-NOT-PROOF | holdout+visible | specified; runtime unverified |
+| UC-ISS-04 | FLOW-JRN-FAILURE-TO-PROOF | FLOW-ISS-04-MANY-AT-ONCE, FLOW-ISS-04-NOT-PLANNED-STAYS-QUIET, FLOW-ISS-04-SECOND-RUN-ADDS-NOTHING, FLOW-ISS-04-STRANGER-FINGERPRINT | holdout+visible | specified; runtime unverified |
+| UC-ISS-05 | FLOW-JRN-FAILURE-TO-PROOF | FLOW-ISS-05-CONTROL-FAIL-ROW, FLOW-ISS-05-EXPECTED-FILES-NOTHING, FLOW-ISS-05-LOST-SECRET-FILES, FLOW-ISS-05-SIDE-BRANCH | holdout+visible | specified; runtime unverified |
+| UC-ISS-06 | FLOW-JRN-FAILURE-TO-PROOF | FLOW-ISS-06-DELETE-THE-PLUGIN-TEXT, FLOW-ISS-06-FILER-DOWN, FLOW-ISS-06-ONLY-CREATE-AND-COMMENT, FLOW-ISS-06-REMOVAL-FAILS-PROOF, FLOW-ISS-06-RUNNER-PATH-BLOCK | holdout+visible | specified; runtime unverified |
 
 ## Gap Report
 
-- All 16 use cases have linked journeys and scenarios. The 77 scenario definitions provide planning coverage; none is a runtime pass.
+- All 22 use cases have linked journeys and scenarios. The 100 scenario definitions provide planning coverage; none is a runtime pass.
 - T-RUN-010 uses a process/history gate, independently of the plugin-push trigger.
+- UC-ISS-01 AC-1 cannot be proven on this repository until a real graded failure exists. No run has produced one.
 
 Journeys:
 - FLOW-JRN-NIGHTLY-PINNED-BLOCK: Nightly grade through a pinned block — UC-RUN-01, UC-GRD-01, UC-GRD-02, UC-GRD-03, UC-REL-01
 - FLOW-JRN-PLANTED-AND-TWIN: Planted defect and clean twin — UC-GRD-04, UC-GRD-05
 - FLOW-JRN-NEWEST-HUMAN-MERGE: Newest warning through a human merge — UC-REL-02, UC-REL-03
 - FLOW-JRN-GAPS-DRIFT-LATER: Missing key, could-not-run, drift, both extra starts, and later reports — UC-GRD-06, UC-REL-04, UC-REL-05, UC-RUN-02, UC-RUN-03, UC-RPT-01, UC-RPT-02
+- FLOW-JRN-FAILURE-TO-PROOF: From a failed run to a proven fix — UC-ISS-01, UC-ISS-02, UC-ISS-03, UC-ISS-04, UC-ISS-05, UC-ISS-06

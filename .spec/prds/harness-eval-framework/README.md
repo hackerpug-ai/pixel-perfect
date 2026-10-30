@@ -1,6 +1,6 @@
 ---
 title: Harness eval framework
-version: 1.0.2
+version: 2.0.0
 scope_posture: full
 pr_sequencing: false
 base_branches: []
@@ -8,18 +8,20 @@ base_branches: []
 
 # Harness eval framework - PRD
 
-A nightly, hand-started, and post-merge grade of the pixel-perfect plugin on Claude Code, Codex, Grok, OpenCode, Pi, and Cursor. A pinned failure blocks the release. A newest-only graded failure opens a fix a person merges.
+A nightly, hand-started, and post-merge grade of the pixel-perfect plugin on Claude Code, Codex, Grok, OpenCode, Pi, and Cursor. A pinned failure blocks the release. A newest-only graded failure opens a fix a person merges. Each distinct unexpected failure files an issue on this repository that names the eval to re-run to prove the fix.
+
+> ⚠️ FEATURE_SPEC changed in v2.0.0. Sprint 01 takes it through plan amendments T16 (evidence export) and T17 (filing). Re-run `/kb-sprint-plan --delta-replan` for later sprints.
 
 ## PRD Metadata
 
 | Field | Value |
 |-------|-------|
-| Version | 1.0.2 |
+| Version | 2.0.0 |
 | Scope Posture | Full feature |
 | PR Sequencing | Disabled |
 | Base Branches | None (lands on trunk) |
 | Created | 2026-10-13 |
-| Last Updated | 2026-10-28 |
+| Last Updated | 2026-10-30 |
 
 ## Document Index
 
@@ -33,6 +35,7 @@ A nightly, hand-started, and post-merge grade of the pixel-perfect plugin on Cla
 | [Use cases: Release holds](05-uc-rel.md) | 05-uc-rel.md | FEATURE_SPEC |
 | [Use cases: Later reports](06-uc-rpt.md) | 06-uc-rpt.md | FEATURE_SPEC |
 | [Use cases: Scheduled and hand grades](07-uc-run.md) | 07-uc-run.md | FEATURE_SPEC |
+| [Use cases: Failure issues](12-uc-iss.md) | 12-uc-iss.md | FEATURE_SPEC |
 | [Team contributions](08-team-contributions.md) | 08-team-contributions.md | FEATURE_SPEC |
 | [Technical requirements](09-technical-requirements/README.md) | 09-technical-requirements/README.md | CONSTITUTION |
 | [E2E testing criteria](10-e2e-testing-criteria.md) | 10-e2e-testing-criteria.md | TEST_SPEC |
@@ -43,14 +46,15 @@ A nightly, hand-started, and post-merge grade of the pixel-perfect plugin on Cla
 
 | Item | Count |
 |------|-------|
-| Groups | 4 |
-| Use cases | 16 |
-| Test criteria | 65 |
+| Groups | 5 |
+| Use cases | 22 |
+| Test criteria | 99 |
 
 ## Version History
 
 | Version | Date | Change |
 |---------|------|--------|
+| 2.0.0 | 2026-10-30 | Failure issues. A finished run files one issue per distinct unexpected failure, in the change-request format, unattended under the owner's standing authorization, and every issue names the eval to re-run to prove the fix. New group ISS with six use cases and 34 criteria; new technical file 11-failure-issues.md; evidence export required so issues can cite something that exists. Objective statement changed. The accepted remediation decisions moved from the scope section to team contributions, unchanged. Written without a specialist lens; runtime proof remains unverified. |
 | 1.0.2 | 2026-10-28 | Review round 2 (red-hat-20261028T114257Z) applied: OpenCode and Cursor adapter premises refreshed to bd53ad0 reality (namespaced commands, real-copy install, serve password), resolver governs the adapter npm publish and disposes pages.yml, pins.json declared greenfield with package.json reconciliation, branch-9624a4b sequencing recorded, T-GRD-004 oracle fixed, per-cell observed CLI version required, day-one Cursor refusal framed as expected, scenario negative-control schema created (remaining template placeholders enumerated for the build). Ten changes; runtime proof remains unverified. |
 | 1.0.1 | 2026-10-14 | Seventeen review findings remediated in the specification; published-only nightly and 36-hour checkout evidence. Runtime proof remains unverified. |
 | 1.0.0 | 2026-10-13 | Initial PRD. Cursor is included. Goals G1–G4 are proposed, not confirmed. |

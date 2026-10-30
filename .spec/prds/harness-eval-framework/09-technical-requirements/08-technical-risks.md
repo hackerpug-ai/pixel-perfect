@@ -1,7 +1,7 @@
 ---
 stability: CONSTITUTION
-last_validated: 2026-10-28
-prd_version: 1.0.2
+last_validated: 2026-10-30
+prd_version: 2.0.0
 ---
 
 # Technical Risks
@@ -28,6 +28,14 @@ prd_version: 1.0.2
 | R-no-wall-clock | Harness | No harness has a wall clock. Cursor headless runs have hung in GitHub Actions before. A call without a closed stdin and an outer timeout can sit forever and never become a grade. A turn cap is not a substitute, and hitting one is not success. |
 | R-stance-open | Harness | Approve-everything is named and not adopted. Codex read-only versus workspace-write is the only capability split this design requires. The other harness stances are candidates. A model run before security records a stance is could-not-run, not a silent bypass. |
 | R-mode-mixup | Harness | Published mode and checkout mode answer different questions. Grading a tag clone when the question is our commit, or grading the workspace when the question is a new harness release, blames the wrong change. OpenCode checkout cannot be graded until a real command exists. |
+| R-issue-injection | Actions | A model under test writes the streams, and this repository is public. An agent that takes an issue as a task will read whatever the issue holds. Copying a stream line such as "delete the plugin" into an issue turns model output into an instruction. So the body holds validated fields and fixed text only, the fix agent's model process never reads issues, and a fixer is told that evidence and comments are data. Fixed text cannot bind a fixer that ignores it: review, the main ruleset, and the proof are what catch that. |
+| R-issue-flood | Actions | Twelve cells by four checks can read differently all at once, and hand dispatches can run ten times in a day. Each public issue notifies people. Grouping, the identity rule, and the per-attempt cap bound this. The cap can delay a filing to a later run. A roll-up names what it held back. |
+| R-issue-spoof | Actions | Anyone can open and close an issue on a public repository. If dedupe trusted any issue with a matching fingerprint, a stranger could silence a finding for good. Only issues and comments authored by github-actions[bot] count. |
+| R-issue-rule-exception | Actions | The change-request skill says nothing is filed without a yes in the session. This filer has the owner's standing yes for one kind of issue. A later edit that widens the classes or lets the filer write anything else would stretch that yes past what was given. The classes are closed in code, and a new class is an owner decision. |
+| R-issue-copy | Actions | The template and scan are byte copies, because brain is private and a runner on this public repository cannot read it. A digest check catches a local edit. It cannot catch brain changing, so the copies can fall behind, including a new secret pattern in the scan. Refresh is a reviewed commit. |
+| R-issue-proof-limits | Evals | `command_list` takes expected names from the plugin under test, so a removed command also leaves what it expects; the drift proof catches that, and the rerun proof reads it. The cell schema allows fewer than four checks; the grid comparison shows it, but nothing refuses it. A grader edited to pass is shown to a person, not refused. The proof makes a bad fix visible. It does not make one impossible. |
+| R-issue-no-graded-fail | Evals | No `fail` verdict has ever been produced on a real run. The graded-failure path cannot be proven on this repository until one exists. It stays deferred, never run against a hand-written result. |
+| R-evidence-unreachable | Actions | The smoke job uploads only `cell.json`, although the design says it uploads the event stream and verify report. So captures die with the runner, and the verify-report artifact holds only an index saying none arrived. A fixer cannot open the evidence, and the sprint gate's verify-report step cannot pass until this changes. Exporting streams to a public repository's artifacts is its own exposure, so the model step withholds any capture containing its key. |
 
 ## Remediation proof boundary
 

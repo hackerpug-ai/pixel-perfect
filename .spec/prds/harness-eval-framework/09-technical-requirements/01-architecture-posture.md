@@ -1,7 +1,7 @@
 ---
 stability: CONSTITUTION
-last_validated: 2026-10-14
-prd_version: 1.0.1
+last_validated: 2026-10-30
+prd_version: 2.0.0
 ---
 
 # Architecture Posture
@@ -19,3 +19,4 @@ prd_version: 1.0.1
 - Nightly is published-only; plugin pushes use their exact checkout; manual defaults to checkout with published selectable. Modes never share cells.
 - Only authoritative checkout evidence for the publish commit can authorize release, for at most 36 hours; newer incomplete attempts invalidate older success. Published blocking results require a subsequent qualifying checkout to clear.
 - Detecting the planted defect correctly is an evaluation pass when the clean twin also passes. The report is retained.
+- A finished run files issues for unexpected failures with plain code, no model, and a token that can write only issues. An issue grants no authority and has no effect on a grade or a release. See [Failure Issues](11-failure-issues.md).

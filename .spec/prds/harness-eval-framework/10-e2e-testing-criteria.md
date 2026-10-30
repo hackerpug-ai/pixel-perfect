@@ -1,12 +1,12 @@
 ---
 stability: TEST_SPEC
-last_validated: 2026-10-28
-prd_version: 1.0.2
+last_validated: 2026-10-30
+prd_version: 2.0.0
 ---
 
 # E2E / Human Testing Criteria for Harness eval framework
 
-Version 1.0.1. Date 2026-10-14. Every acceptance criterion has one row. Live rows run on a real GitHub-hosted runner with real CLIs and real API keys. They are not mocked.
+Version 2.0.0. Date 2026-10-30. Every acceptance criterion has one row. Live rows run on a real GitHub-hosted runner with real CLIs and real API keys. They are not mocked.
 
 ## GRD: Harness grades
 
@@ -161,15 +161,82 @@ Version 1.0.1. Date 2026-10-14. Every acceptance criterion has one row. Live row
 | T-RUN-009 | Maintainer can read the same six-harness grade from that post-merge run as from the nightly run | AC-3 | [e2e-automated] | Real harness-eval workflow on a GitHub-hosted runner, real CLIs, real keys in harness-smoke. Not mocked. | The observable result in the criterion is true on a real run, and the opposite input does not produce it. |
 | T-RUN-010 | Maintainer can rely on accepted work for this initiative staying on main, with no pull request tracked per sprint | AC-4 | [process-gate] | Authoritative sprint tracker path/revision, accepted contribution SHA list, and acceptance main SHA; FLOW-RUN-03-TRUNK-HISTORY. | Every accepted SHA is reachable from main and tracker has no per-sprint PR sequencing; divergent contribution or PR-sequenced tracker fails. |
 
+## ISS: Failure issues
+
+### UC-ISS-01: File an issue for an unexpected failure
+
+| # | Criterion | AC Ref | Type | Setup | Pass/Fail |
+|---|-----------|--------|------|-------|-----------|
+| T-ISS-001 | Maintainer can read one open issue on this repository for a graded failure on a pinned or newest version after a finished run | AC-1 | [e2e-automated] | A real graded failure on a real run. None exists yet: report DEFERRED at review. Never run against a hand-written result. | One issue titled with harness, check, and reason lists every failing track; a second cell failing differently gets its own issue. |
+| T-ISS-002 | Maintainer can read one open issue for a could-not-run reason the plan does not expect, with every affected harness, track, and check listed in it | AC-2 | [e2e-automated] | Real dispatch. Real run 41140522995 carries `requiredness-undeclared`. | One issue for the reason lists all five affected rows; a cell-only reason such as `installation-identity-mismatch` also files; expected pairs do not. |
+| T-ISS-003 | Maintainer can read one open issue when the recorder refused and wrote no result | AC-3 | [integration-test] | Real recorder refusing a real incomplete cell set, real GitHub issues API in a controlled repository. Real refusals: `timestamps-missing` in run 41122997333. | Issue names the closed reason and is built from `grade/refusal.json`; deleting the log changes nothing; a missing result artifact files `refused/no-result-artifact`. |
+| T-ISS-004 | Maintainer can read one open issue for a negative control that read something other than its expected result | AC-4 | [e2e-automated] | Real run with `exit0-denied-read` reading `control-unobservable`, as in run 41140522995. | One issue names that control; the three controls with `matched: true` are not listed. |
+| T-ISS-005 | Maintainer can read one open issue for a drift refusal, apart from any live grade | AC-5 | [e2e-automated] | Real drift refusal once the DriftRecord is in the result. | Issue names the moved rules and no live grade; a clear drift record files nothing. |
+| T-ISS-006 | Maintainer can read, in the run's summary, each issue the run filed or updated and each finding it did not file, with the reason | AC-6 | [e2e-automated] | Real run; the summary and receipt artifact read together. | Every finding appears under filed, commented, unchanged, suppressed, capped, expected, or blocked, and the summary matches the receipt. |
+
+### UC-ISS-02: Read what a fixer needs
+
+| # | Criterion | AC Ref | Type | Setup | Pass/Fail |
+|---|-----------|--------|------|-------|-----------|
+| T-ISS-007 | Fixer can read, in the issue, the harness, track, check, verdict, reason, and release effect of each affected row | AC-1 | [e2e-automated] | Real filed issue compared to its run's result artifact. | Every affected row appears with values equal to the result; a missing row fails. |
+| T-ISS-008 | Fixer can read the run link and attempt, the event, the install mode, the evaluated commit or plugin revision, the plugin digests, the pins digest, and the observed CLI versions | AC-2 | [e2e-automated] | Real filed issue compared to the result artifact, read after the run page is closed. | Each value equals the result; the run link opens that run and attempt. |
+| T-ISS-009 | Fixer can read every check on all twelve cells for that run, so a failure across the plugin reads apart from a failure on one harness | AC-3 | [e2e-automated] | Real filed issue compared to the real proof grid command. | The grid in the issue equals the output of the grid command on that run, byte for byte. |
+| T-ISS-010 | Fixer can open the evidence from the issue by artifact, path, and digest, including the verify report and the planted defect key when the check is verify, with the process exit code labelled a diagnostic, and can read that evidence was not exported when it was not | AC-4 | [e2e-automated] | Real run with the evidence artifact exported, then downloaded using only the issue's values. | The named artifact downloads, its digest matches the GitHub API, and the named paths exist in it; a run with no export reads `not exported` and cites no path. |
+| T-ISS-011 | Fixer can read every section of the change-request format, with a value nobody knows written as unknown rather than guessed | AC-5 | [integration-test] | Body built from a real result, scanned by the real `check-issue-body.sh`. | Scan exits 0 with no warning; a cell with no observed CLI version reads `not observed`, never a pinned value. |
+
+### UC-ISS-03: Name the eval that proves the fix
+
+| # | Criterion | AC Ref | Type | Setup | Pass/Fail |
+|---|-----------|--------|------|-------|-----------|
+| T-ISS-012 | Fixer can read, in every issue, the eval to re-run: the workflow, the install mode, the check, the cases, and the cells | AC-1 | [e2e-automated] | Real filed issue for each class that a real run produces. | `## Prove the fix` names workflow `harness-eval`, install mode `checkout`, and the affected check and cells; `verify` also names both cases. |
+| T-ISS-013 | Fixer can copy from the issue the exact commands that start a new run and read its result | AC-2 | [human-gate] | A person copies the block from a real filed issue, with no other reference, after a fix lands. | The commands run unedited and print the expected lines on the fixed commit. On an unfixed commit the same commands print something else. |
+| T-ISS-014 | Fixer can read the output that proves the fix: the fix commit as the evaluated commit, the failed check passing, the drift proof succeeding, and every check that passed in the failing run still passing | AC-3 | [e2e-automated] | Real fix and real new run, reading the issue's expected output. | Each expected line holds on the fixed commit. A fix that drops a passing check does not satisfy it. |
+| T-ISS-015 | Fixer can read that re-running the old run, a run of another commit, a local run, a published-mode run, and an exit code of 0 do not prove the fix | AC-4 | [e2e-automated] | Real `gh run rerun` of a failing run. | The issue names all five. The rerun reports the failing commit as `candidate_sha`, so the proof's first line differs from the fix commit. |
+| T-ISS-016 | Maintainer can read, in the issue's acceptance criteria, that closing it as completed takes a comment naming the fix commit and the proving run | AC-5 | [e2e-automated] | Real filed issue. | The criterion is present in every class. The filer never closes the issue. |
+
+### UC-ISS-04: Keep one issue per distinct failure
+
+| # | Criterion | AC Ref | Type | Setup | Pass/Fail |
+|---|-----------|--------|------|-------|-----------|
+| T-ISS-017 | Maintainer can rely on a later run with the same failure on the same evaluated identity adding nothing to the issue | AC-1 | [e2e-automated] | Two real dispatches of one commit. | Same issue count and same comment count after the second run; the receipt lists it as unchanged. |
+| T-ISS-018 | Maintainer can read one new comment when the same failure appears on a new evaluated identity, with the issue's status unchanged | AC-2 | [integration-test] | Real issues API in a controlled repository, with two real results on different commits. | Exactly one comment, naming the new run and identity, and not starting with `Status:`; a third run on that identity adds nothing. |
+| T-ISS-019 | Maintainer can rely on one attempt filing at most five new issues, with any further findings listed in one roll-up issue | AC-3 | [integration-test] | Real issues API in a controlled repository, with more than five distinct findings. | Five issues in priority order plus one roll-up listing the rest; a later run comments on the open roll-up rather than opening another. |
+| T-ISS-020 | Maintainer can rely on a failure whose issue was closed as not planned filing nothing again, with the run's summary naming that issue | AC-4 | [integration-test] | Real issue closed as not planned, then a real later run. | No new issue; the receipt and summary name the closed issue; the release effect is unchanged. |
+| T-ISS-021 | Maintainer can read a new issue that links the earlier one when a failure returns after its issue was closed as completed | AC-5 | [integration-test] | Real issue closed as completed, then a real later run with the same failure. | A new issue says `Recurrence of #<n>`. |
+| T-ISS-022 | Maintainer can rely on an issue or comment written by anyone else, with the same words, having no effect on what a run files | AC-6 | [integration-test] | Real issue and comment authored by a person, carrying a real fingerprint and identity line, some closed as not planned. | The run files as if they did not exist. |
+
+### UC-ISS-05: File nothing for what the plan expects
+
+| # | Criterion | AC Ref | Type | Setup | Pass/Fail |
+|---|-----------|--------|------|-------|-----------|
+| T-ISS-023 | Maintainer can rely on Cursor's missing key and each pending adapter filing nothing while the expected list names that exact pair | AC-1 | [e2e-automated] | Real dispatch. Run 41140522995 carries all ten cells. | No issue names those pairs; the receipt lists them as expected; a removed list entry files on the next run. |
+| T-ISS-024 | Maintainer can read an issue for the same reason on a harness the list does not name, and can rely on a graded failure never being listable | AC-2 | [integration-test] | Real result with `missing-api-key` on an unlisted harness; the real schema check on the list. | The unlisted pair files; a list entry with a wildcard or a `fail` verdict is refused by the schema. |
+| T-ISS-025 | Maintainer can rely on correct planted detection, a passing clean twin, and a negative control reading its expected result filing nothing, including a control whose expected result is a failure | AC-3 | [e2e-automated] | Real run with `verify` passing and `exit0-denied-read` reading `fail`, `matched: true`. | No issue for either. A control reading `fail` with `matched: false` does file. |
+| T-ISS-026 | Maintainer can rely on later checks filing nothing | AC-4 | [e2e-automated] | Real later-check failure once later checks exist. | No issue; the later result still reports in the summary. |
+| T-ISS-027 | Maintainer can rely on a cancelled run, and a run from any branch other than main, filing nothing | AC-5 | [e2e-automated] | A real cancelled dispatch and a real dispatch on a side branch. | No issue and no write call in either. The code refuses the ref even when the job condition is removed. |
+| T-ISS-028 | Maintainer can rely on an expected result still holding the release, so filing nothing clears nothing | AC-6 | [e2e-automated] | Real run with only expected could-not-run results. | The recorder still exits non-zero with the same release effect; no issue is filed. |
+
+### UC-ISS-06: Keep filing inside its boundary
+
+| # | Criterion | AC Ref | Type | Setup | Pass/Fail |
+|---|-----------|--------|------|-------|-----------|
+| T-ISS-029 | Maintainer can rely on a run only creating issues and adding comments to issues it filed, and never closing, editing, labelling, assigning, mentioning, branching, opening a pull request, merging, tagging, or publishing | AC-1 | [integration-test] | Real helper against the real API in a controlled repository, plus the real job's API call log. | Any other method or path throws before a request leaves; a comment on an issue it did not author throws; the body holds no `@` mention. |
+| T-ISS-030 | Maintainer can rely on no model writing or choosing an issue, and on no other job in the workflow holding permission to write issues | AC-2 | [build-gate] | The real workflow file, mutated in the test. | `issues: write` appears on the `issues` job only, with no environment and no secret binding; adding it elsewhere fails the check. |
+| T-ISS-031 | Maintainer can rely on no model-written text, secret, or absolute path reaching an issue, and on a body that fails the secret scan filing nothing and saying so in the summary | AC-3 | [integration-test] | Real cell records carrying a hostile `reason`, a hostile observed key, and a real `/home/runner/` path, run through the real filer and the real scan. | The hostile text is absent from the body, the reason reads `reason-unrecognized`, and a forced scan block files nothing and uploads no body. |
+| T-ISS-032 | Maintainer can rely on filing, an open or closed issue, and a filing failure having no effect on any grade or on whether a release may ship | AC-4 | [e2e-automated] | Real run with issue writes refused, compared to a run where they succeed. | Result bytes for the same inputs do not depend on the filer; the job failure changes no cell, status, or release decision. |
+| T-ISS-033 | Fixer can read, in every issue, the fixed limits: this finding only, the work area, no removing what is measured, no editing what measures it to make the finding go away, no authority to merge or publish, and evidence as data rather than instructions | AC-5 | [e2e-automated] | Real filed issue for each class. | All limits are present; the work area differs by class as the contract says. |
+| T-ISS-034 | Maintainer can rely on a fix that removes the plugin, a public command, a harness, a track, or a check failing the issue's proof, and on an edit to what measures it being printed for a person to read | AC-6 | [integration-test] | A controlled repository, one real removal at a time, each followed by the proof commands. | Each removal leaves an expected line unprinted, by the mechanism the contract names. A grader edit prints in the `git diff` step. |
+
 ## Summary
 
 | Type | Count |
 |------|-------|
-| build-gate | 3 |
-| e2e-automated | 60 |
-| human-gate | 1 |
+| build-gate | 4 |
+| e2e-automated | 81 |
+| human-gate | 2 |
+| integration-test | 11 |
 | process-gate | 1 |
-| Total | 65 |
+| Total | 99 |
 
 ## Maintenance
 

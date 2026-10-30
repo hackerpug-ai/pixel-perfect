@@ -1,7 +1,7 @@
 ---
 stability: CONSTITUTION
-last_validated: 2026-10-14
-prd_version: 1.0.1
+last_validated: 2026-10-30
+prd_version: 2.0.0
 ---
 
 # E2E Harness Constitution
@@ -31,6 +31,11 @@ One workflow, `harness-eval`, is the runner: schedule, hand dispatch, and push t
 - OpenCode published install clones the whole repository into the work directory. Slash text does not run a command.
 - Codex runs skills from its plugin cache, not from the working tree.
 - Nothing in the research has been run on Linux.
+- `gh run rerun` replays the commit of the run it reruns. It cannot prove a fix.
+- The result file lands at `grade/harness-eval-result.json` inside the artifact, not at its root.
+- A negative control can correctly read `fail`. Filing from the verdict word alone would raise a false alarm on `exit0-denied-read`.
+- A cell's aggregate verdict orders could-not-run above fail, so it can hide a real `fail`. Read the check rows.
+- Runner paths sit under `/home/runner/`, and the secret scan blocks those. An issue body cannot carry an absolute path.
 
 ## Proven reference flow
 
@@ -46,6 +51,6 @@ The pinned status blocks publish. The newest track does not, unless the cell cou
 
 ## Required discriminating controls
 
-Use real services and captures for loaded checkout versus stale cache; old success versus newer cancelled attempt; correct planted detection versus missed defect and clean false positive; exact report versus unrelated file; two factual status states; question before work versus expensive work first; actual consumed key removal; no-op/regressing repair; bot merge denial; lost persisted session; and hidden screenshot judging. Unknown observability is could-not-run. No core logic, provider, GitHub record, or CLI is stubbed.
+Use real services and captures for loaded checkout versus stale cache; old success versus newer cancelled attempt; correct planted detection versus missed defect and clean false positive; exact report versus unrelated file; two factual status states; question before work versus expensive work first; actual consumed key removal; no-op/regressing repair; bot merge denial; lost persisted session; hidden screenshot judging; real issue filed versus none on an expected pair; same failure on the same identity versus a new one; a stranger's matching issue; hostile stream text versus a clean body; a real scan block; and an issue's proof commands on a fixed commit versus an unfixed one. Unknown observability is could-not-run. No core logic, provider, GitHub record, or CLI is stubbed.
 
 T-RUN-010 is a process/history gate using accepted contribution SHAs and the authoritative sprint tracker; a workflow trigger is insufficient. Preserve the same test ID.

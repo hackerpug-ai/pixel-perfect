@@ -1,7 +1,7 @@
 ---
 stability: CONSTITUTION
-last_validated: 2026-10-14
-prd_version: 1.0.1
+last_validated: 2026-10-30
+prd_version: 2.0.0
 ---
 
 # External Dependencies
@@ -12,6 +12,8 @@ prd_version: 1.0.1
 | GitHub Actions security hardening and SHA pinning | harness-eval workflow, fix-agent job, heal pull-request job | https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions |
 | GitHub Actions environments harness-smoke, heal-agent, and heal-pr | smoke matrix, confirming run, fix-agent job, heal pull-request job | https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment |
 | GitHub commit statuses API | pinned-channel status job and release gate | https://docs.github.com/en/rest/commits/statuses |
+| GitHub issues and issue comments APIs | issue job | https://docs.github.com/en/rest/issues/issues |
+| change-request skill: issue template and secret scan, as byte copies with recorded digests | issue job | https://github.com/hackerpug-ai/brain/tree/main/skills/change-request |
 | GitHub Actions artifacts API | grade recorder and release gate | https://docs.github.com/en/rest/actions/artifacts |
 | Pinned Claude Code CLI, direct programmatic execution | fix-agent job; no GitHub/OIDC token in model process | https://code.claude.com/docs/en/headless |
 | GitHub branch rulesets: restrict updates and explicit bypass actors | human-only merge prerequisite | https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets#restrict-updates |

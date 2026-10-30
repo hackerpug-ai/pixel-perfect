@@ -1,7 +1,7 @@
 ---
 stability: CONSTITUTION
-last_validated: 2026-10-28
-prd_version: 1.0.2
+last_validated: 2026-10-30
+prd_version: 2.0.0
 ---
 
 # Data Schema
@@ -141,3 +141,7 @@ Later names: decline-change, scripted-answers, resume, one-full-layer, plain-lan
 ### DriftRecord
 
 Verdict clear|refused; rules checked: command list, adapters, question rules, manifests, 11 public skill names, runtime paths, question shape, contract wiring, package contents. Store moved rules and looks_at_pixels false. Attach to the result and harness-eval/drift. Repeat locally at publish; neither structural drift nor later reports replace required live grades.
+
+## Failure issues
+
+The finding classes, fingerprints, identity, expected list (`test/harness/issues/expected.json`), allowed text, and receipt (`harness-eval-issues/v1`) are in [Failure Issues](11-failure-issues.md). The receipt is its own artifact and never enters `harness-eval-result`, so issue state cannot reach anything the release gate reads.

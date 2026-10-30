@@ -16,5 +16,5 @@ Every scenario file under `.spec/scenarios/` carries a `negative_control.would_f
 ## Requirements
 
 1. Each `would_fail_if` entry names flow-specific observables (cells, artifacts, verdicts, actors, credentials) — not the template sentence.
-2. All 77 scenarios pass the validator, including the 9 remediation-added prose scenarios.
+2. All scenarios pass the validator, including the 9 remediation-added prose scenarios.
 3. A scenario whose negative control cannot be made concrete is marked `negative_control: not-yet-statable` with a one-line reason and an owning use case — never silently left as the template sentence.
