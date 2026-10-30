@@ -1,0 +1,74 @@
+{
+  "schema": "kb-plan-amendment/v1",
+  "sprint": "sprint-01-evaluator-evidence-spine",
+  "authorized_by": "repo owner (justinrich)",
+  "authorization": "Owner answered 'yes' on 2026-10-30 to 'take the smoke gap to evals-planner as a FIX task', after being shown hosted run 41086556471: 12 cells / 6 harnesses all could-not-run / smoke-not-implemented and 4 controls / 0 qualified, against a sprint Done statement that requires graded claude-code cells and four discriminating controls.",
+  "items": [
+    {
+      "kind": "add",
+      "target": "T13",
+      "change": "Add one task that makes the smoke matrix observe and export what it grades, so a dispatched harness-eval run yields graded claude-code cells and qualified negative controls instead of twelve could-not-run / smoke-not-implemented cells and four control-unobservable rows. Scope: each smoke job writes the evidence the graders read (command_list, status, verify, question_before_expensive_work, observed CLI version and plugin manifest digest, bound to files and event stream), the keyless-control observation is exported into HARNESS_EVAL_CONTROL_OBSERVATIONS for the controls producer, and the recorder keeps the existing fail-closed behaviour when a cell genuinely cannot run. Sequence: next. It is the prerequisite for T11's hosted acceptance, T12's review of graded output, and human-gate steps 5 onward."
+    }
+  ],
+  "evidence": {
+    "hosted_run": {
+      "run_id": 41086556471,
+      "candidate_sha": "0ff55750adc7cc5e042257fccc5070f94a595788",
+      "pins_sha256": "aed5c0c03c0ced2f879b67703163ed94191cff662cc07768b01d1833d3c9d411",
+      "cells": "12 cells / 6 harnesses, all verdict could-not-run, reason smoke-not-implemented",
+      "controls": "4 rows, 0 qualified, all verdict could-not-run, reason control-unobservable",
+      "local_copy": ".kb-run-sprint/sprint-01-evaluator-evidence-spine/hosted/run-41086556471/"
+    }
+  },
+  "decision": {
+    "item_id": "amendment:T13",
+    "wave_id": "T11-FIX2",
+    "source_kind": "amendment",
+    "index": 0,
+    "outcome": "add",
+    "answers": [
+      {
+        "question": 1,
+        "answer": true,
+        "reason": "Concrete: the gap names files and rules. `.github/workflows/harness-eval.yml` reads HARNESS_EVAL_CONTROL_OBSERVATIONS in the controls producer and no job sets it; every smoke job writes cell/cell.json with no graded evidence, so the recorder's graders emit smoke-not-implemented for all twelve cells.",
+        "evidence": [
+          {"path": ".github/workflows/harness-eval.yml", "sha256": "1a83520875a52e13e0529bad8fb3dc1f97b1b807fce2a133e6bd0a5e8e31bfa7"},
+          {"path": "test/harness/recorder/result.mjs", "sha256": "db5d6401c945aca01f8bc78807dd7db111c1902c640d64bd6d492a61d0e6dbae"}
+        ]
+      },
+      {
+        "question": 2,
+        "answer": false,
+        "reason": "Not a failed review. It is not a reviewer finding on any task: T11-FIX2's review approved the controls wiring, and T11's cycle-1 findings were about a missing producer and cell classification, both closed. This is observed product behaviour from a real dispatched run.",
+        "evidence": [
+          {"path": ".github/workflows/harness-eval.yml", "sha256": "1a83520875a52e13e0529bad8fb3dc1f97b1b807fce2a133e6bd0a5e8e31bfa7"}
+        ]
+      },
+      {
+        "question": 3,
+        "answer": true,
+        "reason": "Inside this sprint: T11's requirements name the GitHub Actions harness-eval workflow and real harness CLIs as their verification service, T12 reviews the graded output, and human-gate steps 5 onward assert graded claude-code cells and qualified controls. None can pass while every cell reports smoke-not-implemented.",
+        "evidence": [
+          {"path": "test/harness/recorder/result.mjs", "sha256": "db5d6401c945aca01f8bc78807dd7db111c1902c640d64bd6d492a61d0e6dbae"}
+        ]
+      },
+      {
+        "question": 4,
+        "answer": false,
+        "reason": "Not a human product decision: the required behaviour is already written in the sprint's Done statement (twelve cells bound to a pins_sha256 with claude-code graded from files-and-event-stream evidence, and four discriminating controls). No gate step, flow id or product behaviour changes; this only makes the existing promise observable.",
+        "evidence": [
+          {"path": ".github/workflows/harness-eval.yml", "sha256": "1a83520875a52e13e0529bad8fb3dc1f97b1b807fce2a133e6bd0a5e8e31bfa7"}
+        ]
+      },
+      {
+        "question": 5,
+        "answer": true,
+        "reason": "Real: hosted run 41086556471 on candidate 0ff5575 published a result artifact with 12 cells, all verdict could-not-run / reason smoke-not-implemented, and 4 controls, 0 qualified, all control-unobservable. No pending task owns this: T5, T8 and T9 are landed, and T11-FIX2 only made the controls array non-empty, required and classifiable.",
+        "evidence": [
+          {"path": ".github/workflows/harness-eval.yml", "sha256": "1a83520875a52e13e0529bad8fb3dc1f97b1b807fce2a133e6bd0a5e8e31bfa7"},
+          {"path": "test/harness/recorder/result.mjs", "sha256": "db5d6401c945aca01f8bc78807dd7db111c1902c640d64bd6d492a61d0e6dbae"}
+        ]
+      }
+    ]
+  }
+}
