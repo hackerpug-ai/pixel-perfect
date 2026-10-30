@@ -2,7 +2,9 @@
 
 > Task ID: T2
 > Sprint: [SPRINT.md](./SPRINT.md)
-> Status: Backlog
+> Status: ✅ Completed
+
+Commit: ead12559a15e323ad092378b3dfc37a7ecc5f0e9
 > Assignee: evals-implementer
 > Priority: P1
 > Points: 3
@@ -754,3 +756,86 @@ A shared file is not a dependency, and needing another task's output to test aga
 }
 -->
 
+
+## Handoff
+
+```json
+{
+  "task": "T2",
+  "commit_sha": "ead12559a15e323ad092378b3dfc37a7ecc5f0e9",
+  "done": "PROVISIONAL SUBSTITUTE-AUTHOR DRAFT ONLY; unapproved and not the original author's testimony. Recorded landing d49507dedc40264b2c93e68b6a64e494fa6b3dfe contains approved candidate ead12559a15e323ad092378b3dfc37a7ecc5f0e9 against base 0ac4d7aea735d8e9e03ffdcbf0b63f2219d30ad4: test/harness/pins.json, pins.mjs, validate.mjs, three JSON schemas, and the two sprint-01 identity-contract tests. The eight-file delta establishes six exact CLI pins, bytes-derived pins_sha256, a twelve-cell could-not-run builder, a per-resolver frozen newest-version lookup, package.json reconciliation, structural validation, pass-evidence presence checks and caller-supplied dispatch identity checks. The recorded cycle-2 reviewer approved the candidate and reported both local checks passing; AC-1/AC-2 and both hosted flows remained DEFERRED with live_artifact=absent. This draft does not record a handoff, complete T2, qualify any pin or establish hosted acceptance.",
+  "deviations": [
+    "The locked scenarios name tests/sprint-01/flow-runner.mjs, but that file is absent from the approved candidate. Negative controls instead run inside the two allowed test files. This describes the landed difference; no original-author reason or approved scenario amendment is established.",
+    "The required initial RED proof was not authenticated by the frozen review: it verified the missing-base-files premise structurally and later reviewed cycle-2 pre-fix/post-fix probes. Both required .tmp/sprint-01-verification/*.json.red files exist now and contain ERR_MODULE_NOT_FOUND pins.mjs TAP text, but lack commit/session bindings; their current presence does not prove original pre-manifest test execution.",
+    "The pass-evidence condition is implemented by validateResult/assertPassEvidence, not the cell schema alone. Schema-only consumers can accept present-but-empty evidence fields. The shipped validator supports a limited JSON-Schema keyword subset.",
+    "pins.json extends the example shape with authority/tracks/checks, package_name/model_kind/binding_env, fixer_harness and qualification fields. Cursor uses CURSOR_API_KEY as its credential name, consistent with task Notes despite the critical constraints listing only the five SMOKE_* names.",
+    "The manifest selects claude-code model alias opus and marks all pins/provider-model selections unqualified. The model identity ruling and resolved-model representation remain unresolved (F-T2-7/U-T2-2).",
+    "The newest-version test injects canned successful lookup strings and a simulated failure instead of exercising the production defaultExec registry/network path. This is stubbed external-dependency coverage and is a concrete blocker to fresh resolver-integration or completion claims under the no-stubbing rule."
+  ],
+  "concerns": [
+    "Original registered implementer session 435bc7f5-d46b-416 is historical/unreachable in this thread. No owner authorization for substitute authorship has been supplied. State records landed with handoff_delivery pending; the older T2/handoff.json is only an unrecorded substitute lead. No authenticated original final report is established by this preparation.",
+    "Hosted proof remains deferred: AC-1/FLOW-GRD-01-TWELVE-CELLS on T1/T10/T8; AC-2/FLOW-RUN-02-HAND on T1/T8. The historical local tests and approval establish neither real model grading nor a hosted dispatch artifact. No product tests, model calls, registry calls or hosted runs were executed for this documentation preparation.",
+    "F-T2-8 remains advisory and unresolved: nonempty evidence_paths arrays can contain blank or nonexistent paths. The validator checks array presence, invocation_id length, integer exit status and a check not marked could-not-run; it does not authenticate evidence bytes or the claimed invocation.",
+    "F-T2-9 remains advisory and unresolved: both live-artifact test branches fall back from HARNESS_EVAL_DISPATCH_SHA to artifact.head_sha. Matching fabricated candidate_sha/head_sha can satisfy that comparison; trusted dispatch identity must come from outside the artifact.",
+    "F-T2-7 remains advisory and unresolved: no shipped cell/installation schema field records the resolved model id for opus, and cellsFromPins copies requested_cli_version into resolved_cli_version without actual installation resolution. Its emitted verdicts remain could-not-run.",
+    "Cycle-2 summary and evidence report improvements for F-T2-4/F-T2-5/F-T2-6, but their structured rows still say ADVISORY with resolution null. Preserve this inconsistency; do not silently convert those rows into closed findings. F-T2-1/F-T2-2/F-T2-3 are explicitly FIXED.",
+    "The reviewer reports version-match pass mutants survived vacuously because local installed versions did not match pins. Unconditional pass mutants were caught. This does not prove every matching-version runtime path. The canned resolver callback separately leaves actual lookup integration unverified.",
+    "pins_sha256 is aed5c0c03c0ced2f879b67703163ed94191cff662cc07768b01d1833d3c9d411 for these exact bytes; whitespace edits change identity. validateResult requires the readable colocated manifest and an external dispatchSha for checkout records. Reconciliation skips harnesses without a package_name present in package.json; the named pi disagreement is 1.0.4 versus 0.84.4."
+  ],
+  "findings": [
+    "Recorded review evidence, source snapshots and exact candidate bytes agree on the three blocking repairs: reject missing pass evidence, bind result digests unconditionally to manifest bytes, and accept dispatch identity as an external comparison target. The substitute inspected those records and source; it did not rerun their tests.",
+    "The approved delta is exactly eight allowed files with 1564 inserted lines, and package.json bytes equal the reviewed base. Candidate ead1255 is a merge commit; its full task delta must be compared against reviewed base 0ac4d7a, not only its first-parent diff.",
+    "All four cycle-2 review-bundle references, all four delivery-bundle references and all 24 recorded evidence artifact hashes matched when read. The retained pins.json/pins.mjs/validate.mjs snapshots match exact candidate blobs. Hash agreement establishes retained-byte consistency, not fresh execution or original-author testimony.",
+    "Recovery source inspection exposes canned newest-version dependency responses at grd-01-twelve-cells.test.mjs:291-320 (and simulated failure immediately after). Production createVersionResolver defaults to defaultExec at pins.mjs:237 and executes commands through bash at pins.mjs:214-219. No real lookup verification was established from this frozen bundle.",
+    "Current .red-file presence contradicts the older substitute draft's blanket absence statement. Their contents and provenance limits are retained in T2.evidence.md; no replacement receipt or retrospective author statement was invented."
+  ],
+  "scope_impact": [
+    {
+      "target": "T3",
+      "found": "The pass validator checks evidence-field presence but accepts blank/nonexistent evidence paths (F-T2-8).",
+      "change": "Proposed follow-up only: define the run evidence root and evidence authenticity/path validation, populate real invocation evidence, and review the fix before relying on pass verdicts."
+    },
+    {
+      "target": "T5",
+      "found": "CLI/model selections are unqualified; opus lacks a resolved-model field; newest-version coverage uses a canned dependency callback.",
+      "change": "Proposed follow-up only: obtain the planner ruling for U-T2-2, record actual observed CLI/model identities, and verify the production resolver against real lookup endpoints before claiming qualification."
+    },
+    {
+      "target": "T8",
+      "found": "validateResult needs its manifest and an external trusted dispatchSha; schema-only validation omits pass-evidence and identity rules.",
+      "change": "Proposed follow-up only: make recorder validation call validateResult with independently obtained run identity and authentic invocation artifacts; verify it on a real hosted artifact."
+    },
+    {
+      "target": "T1",
+      "found": "Both tests' live branches trust artifact.head_sha as a fallback (F-T2-9), and no live artifact was present in the recorded review.",
+      "change": "Proposed follow-up only: remove artifact-derived trust, supply HARNESS_EVAL_RESULT and trusted HARNESS_EVAL_DISPATCH_SHA from run metadata, and run the hosted flow when dependencies permit."
+    },
+    {
+      "target": "T10",
+      "found": "Cursor credential_env is CURSOR_API_KEY; the task notes declare it absent on day one and the builder retains both cursor cells as could-not-run.",
+      "change": "Preserve the declared credential name and explicit cells; any credential/environment setup and hosted missing-key/available-key proof remain separate authorized work. This draft does not inspect or assert current secret availability."
+    },
+    {
+      "target": "T12",
+      "found": "Recorded advisory closure labels disagree with the summary; evidence presence and source-shaped resolver tests do not establish real integration.",
+      "change": "Proposed follow-up only: reconcile F-T2-4/5/6 dispositions, preserve F-T2-7/8/9 and U-T2-1/2, and audit recorder consumers plus real resolver proof without treating historical approval as final acceptance."
+    },
+    {
+      "target": "GATE:FLOW-GRD-01-TWELVE-CELLS",
+      "found": "The locked scenario invokes an absent flow-runner while shipped negatives are in-process tests; real hosted proof remains deferred.",
+      "change": "Planner/orchestrator must resolve the executable scenario mismatch through an authorized amendment or implementation and then obtain the required hosted proof; this draft grants neither."
+    },
+    {
+      "target": "ROADMAP",
+      "found": "Historical RED was structurally inferred, later probes predate the final candidate, present .red files lack authenticated provenance, and substitute authorship is not yet authorized.",
+      "change": "Keep these evidence limits and completion block visible. Seek owner authorization only for concrete substitute delivery, and obtain any required missing proof through the governed path; do not silently waive it."
+    }
+  ],
+  "feedback": [
+    "Separate historical landed-code reconstruction from original-author intent, current runtime verification and completion authority. This draft supplies only the reconstruction.",
+    "Retain structured finding statuses even when summary prose claims closure; request an explicit disposition rather than rewriting review history.",
+    "Keep the real-registry resolver proof distinct from parser/caching controls fed with canned responses. Passing those controls cannot satisfy the no-stubbing integration standard.",
+    "T2.evidence.md records exact candidate/base identities, source line references, consulted bundle hashes, historical command results, new read-only integrity checks and unresolved questions. Suggested scope changes here are not recorded decisions."
+  ]
+}
+```
