@@ -2,7 +2,9 @@
 
 > Task ID: T7
 > Sprint: [SPRINT.md](./SPRINT.md)
-> Status: Backlog
+> Status: ✅ Completed
+
+Commit: a0badf607c27ae323579e9b4a8b16d19875708ba
 > Assignee: evals-implementer
 > Priority: P1
 > Points: 8
@@ -1457,3 +1459,73 @@ A shared file is not a dependency, and needing another task's output to test aga
 }
 -->
 
+
+## Handoff
+
+```json
+{
+  "task": "T7",
+  "commit_sha": "a0badf607c27ae323579e9b4a8b16d19875708ba",
+  "done": "PROVISIONAL SUBSTITUTE-AUTHOR DRAFT — unapproved reconstruction of landed bytes, not original-author testimony or a completion claim. T7 landed deterministic four-check cell grading (command_list, status, verify, question_before_expensive_work), report writing/reading at case-declared paths, planted/clean invocation binding, capture file/hash/span resolution, refusal and aggregate reasons, and per-check grade persistence under test/harness/graders/ and test/harness/grade/. The candidate adds ten files/changes over frozen base 34f826229e8e7768f19869ca18cb691876efb58b, with five test files extended and flow-runner.mjs unchanged. Saved cycle-2 review APPROVED the candidate; merge e220cdfcc2fa1ae1c850389873f1e0a0aa731ccb is recorded. Handoff delivery remains pending for registered implementer session e9b680c3-a505-49e. This recovery prepared only this draft and T7.evidence.md; it performed no new runtime verification, implementation, receipt authorship, handoff recording, or task completion.",
+  "deviations": [
+    "Historical local checks do not enact all live acceptance observations. FLOW-GRD-02-FOUR-GRADES is DEFERRED on T9; FLOW-GRD-03-FILES-AND-STREAM is DEFERRED on T9/T11 in the frozen context/review. The named-path and clean-twin flow PASS records retain not-executed hosted artifact legs; the journey check passed local failure lanes while its real dispatch and model-produced pair remained unobserved.",
+    "The local VerifyReports are constructed by runVerifyCase from the shipped keyless verify-catalog oracle over structural-only text fixtures. This proves the local oracle/writer/grader path, not that a real harness invoked verification and produced those reports. Hash equality and an in-bounds span prove cited bytes exist; they do not independently authenticate a harness producer or the truth of a copied outcome.",
+    "Preserved test-only substitutes: grd-04 lines 155-177 inject canned oracle results for derivation controls; the journey defines modelGh test doubles; grd-02 authors a USER_CHOICE splice and earlier must-ask branch-conformance records; grd-03 includes authored denial/exit-0 controls. They are not real provider/hosted evidence and this draft grants no mock exception.",
+    "Cycle-2 reviewer recaptured missing gitignored RED proofs from base plus candidate tests; those base REDs fail ERR_MODULE_NOT_FOUND. Stronger overlaid-test REDs against prior candidate b2c89475f186634b88043887f5d9940385e3be42 demonstrate the grd-04/grd-05 repairs; the journey was NOT_RED against that prior candidate. These are historical reviewer captures, not original-author RED testimony."
+  ],
+  "concerns": [
+    "U-T7-1/U-T7-2/U-T7-3 remain OPEN in the frozen review: no qualified hosted four-pass cell, downloaded real verify-reports artifact, or end-to-end dispatched journey was established. Historical preconditions recorded absent SMOKE_CLAUDE_KEY and HARNESS_EVAL_RUN_ID, local Claude Code 2.1.312 versus pin 2.1.291, and remote workflow HTTP 404. Review E-28 says local main was 57 commits ahead of origin/main; this is historical, not a current remote-state claim.",
+    "F-T7-9 remains ADVISORY: gradeCell trusts caller-supplied evidence_roots; repo-wide roots can admit unrelated/sibling files, statSync follows symlinks, and relative citations are checked under the first matching root only. validate.mjs:assertPassEvidence remains a shape-only backstop; the frozen grd-01 test requires a nonexistent citation not to be flagged.",
+    "F-T7-10 remains ADVISORY: grd-05-clean-twin.test.mjs:319/321 declares failures twice, overwriting the derived array with []. Source inspection also finds the same duplicate at jrn-planted-and-twin.test.mjs:777/782 and literal awaiting rows at 778-780, contradicting review E-25/E-26 descriptions that the journey has one derived failures field and artifact-derived awaiting. This source-observed discrepancy has no new review disposition.",
+    "U-T7-4 remains OPEN: RED proofs vanished with the recreated worktree before historical reviewer recapture. Retained copies exist, but lifecycle ownership/durability is unresolved. The historical hosted-preconditions text prints HTTP 404 beside exit=0 and leaves pin_manifest_expected blank; treat the response and reviewed source as evidence, not that shell exit as successful dispatch.",
+    "No owner authorization for substitute authorship, native substitute envelope, original-session response, or completion authority is supplied by this draft. The registered original session is historical/unreachable here as stated in the recovery brief. Git author fields do not establish native-session authorship."
+  ],
+  "findings": [
+    "Frozen cycle 1 was NEEDS_FIXES at b2c89475f186634b88043887f5d9940385e3be42. Cycle 2 marks F-T7-1 and F-T7-2 FIXED, with byte resolution and pass-citation refusals; its summary reports repairs for F-T7-3 through F-T7-8, but those six structured rows still say ADVISORY with null resolution. Preserve that inconsistency; do not silently mark the rows closed. F-T7-3 shared-hash dead code and F-T7-6 artifact residues also retain limits.",
+    "Historical review E-01..E-05 records the exact five node --test commands and exit 0 (26, 8, 20, 16, 16 tests). The logs show command_list could-not-run, seeded status mismatch fail, local verify pass, archived ask-nothing pass, and an aggregate could-not-run. Test-suite pass is not the four-pass hosted cell.",
+    "Historical cycle-2 mutation battery records 14/14 mutants KILLED. Historical gate runner logs record PASS for named-path, clean-twin, and the local journey wrapper while explicitly retaining hosted not-executed diagnostics. This reconstruction rechecked hashes for all 30 artifacts referenced by the cycle-2 verdict, plus the landing-bound context/bundle; it did not rerun tests or infer real provider proof.",
+    "Detailed candidate/source line citations, exact historical invocation index, artifact hashes, known evidence contradictions, and provenance limits are in .kb-run-sprint/sprint-01-evaluator-evidence-spine/recovery/handoff-drafts/T7.evidence.md."
+  ],
+  "scope_impact": [
+    {
+      "target": "T7",
+      "found": "Landed candidate has pending original-author handoff and no approved substitute authority.",
+      "change": "Keep this reconstruction provisional; require the original native report or an explicit owner-authorized substitute path before any recording/completion. No task status is changed here."
+    },
+    {
+      "target": "GATE:FLOW-GRD-02-FOUR-GRADES",
+      "found": "Frozen flow DEFERRED on T9; no real pinned four-pass cell or genuine must-ask boundary stop was established.",
+      "change": "Retain the deferred boundary and require the existing integrated hosted obligation to produce qualified captures and all four observations."
+    },
+    {
+      "target": "GATE:FLOW-GRD-03-FILES-AND-STREAM",
+      "found": "Frozen flow DEFERRED on T9/T11; local controls and shape validation do not prove a hosted exit-0 denial or trustworthy production citations.",
+      "change": "Retain the deferred boundary, F-T7-9, and shape-backstop limitation for downstream integration/review; no new scope is implemented."
+    },
+    {
+      "target": "T11",
+      "found": "T7 historical reports preserve unexecuted hosted model invocations and live verify-report artifacts; invocation owners differ between old diagnostics and later artifact rows.",
+      "change": "Use existing T11 integration obligations to establish real provider-produced reports and captures; do not reinterpret local PASS or synthetic controls as that proof."
+    },
+    {
+      "target": "T12",
+      "found": "Historical APPROVED review retains F-T7-9/F-T7-10, stale advisory row dispositions, and newly observed journey artifact contradictions.",
+      "change": "Carry these exact source/evidence limits into the independent cross-task receipt audit without claiming current disposition or silently correcting the frozen review."
+    },
+    {
+      "target": "GATE:FLOW-GRD-04-NAMED-PATH",
+      "found": "Historical PASS covers real local filesystem/oracle operations; hosted artifact download remained not-executed.",
+      "change": "Preserve U-T7-2/U-T7-4 and require existing hosted evidence to establish same-run provenance and the exact two report paths before gate acceptance."
+    },
+    {
+      "target": "GATE:FLOW-GRD-05-CLEAN-TWIN",
+      "found": "Historical PASS retains the unexecuted hosted twin and duplicate failures key; journey has an additional duplicate not identified by the frozen finding.",
+      "change": "Preserve these as unresolved evidence limits; route any repair through its owning task/review rather than altering product or receipts in recovery."
+    }
+  ],
+  "feedback": [
+    "Keep local deterministic oracle proof, synthetic/mocked branch checks, frozen review approval, hosted qualification, original authorship, and completion as separate claims.",
+    "No runtime launches, test mutations, product/state edits, Git lifecycle actions, or native receipt/envelope fabrication occurred in this preparation. Only the two assigned recovery draft files were written."
+  ]
+}
+```
