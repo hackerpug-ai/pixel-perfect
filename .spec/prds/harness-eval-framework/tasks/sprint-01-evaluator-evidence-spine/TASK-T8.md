@@ -1,6 +1,8 @@
 # TASK-T8 — Implement the grade recorder job: schema validation, twelve-unique-cell enforcement, GitHub job-timestamp copy, attempt-qualified artifacts (overwrite disabled, 90-day retention), Actions summary, exit semantics
 
-> Status: Backlog
+> Status: ✅ Completed
+
+Commit: 356dafa858b6b51794c0366a1a7186eb576c2795
 > Assignee: github-platform-implementer
 > Priority: P1
 > Points: 5
@@ -38,7 +40,6 @@ UC-GRD-01's promise is that the maintainer reads pass/fail/could-not-run for all
 
 ```
 TASK_TYPE:  FEATURE
-STATUS:     Backlog
 PRIORITY:   P1
 POINTS:     5
 AGENT:      planner=github-agentic-workflow-planner | implementer=github-platform-implementer | reviewer=github-agentic-workflow-reviewer
@@ -652,3 +653,52 @@ NOTES
 }
 -->
 </details>
+
+## Handoff
+
+```json
+{
+  "task": "T8",
+  "commit_sha": "356dafa858b6b51794c0366a1a7186eb576c2795",
+  "done": "PROVISIONAL SUBSTITUTE-AUTHOR DRAFT, UNAPPROVED: reconstructed from landed code and retained cycle-3 evidence, not original-author testimony. Against base f5423e74d0c9b23e3d5c260b69b7ca257f1d81ec, the candidate adds the grade recorder and its validation/result/summary modules, the harness-eval grade job, and recorder assertions in two flow modules. It validates twelve unique cells over six harnesses, installation mode and schema/pins identity; assembles result identity and timestamps; bundles verify reports; writes result/summary with refusal cleanup; renders the twelve-cell table; and applies the pinned-failure/could-not-run/newest-warning exit rule. Workflow uploads use run/attempt-qualified names, overwrite=false and 90-day retention. Saved cycle 3 revision 0 is APPROVED and records landing cf84326a0cb85ebaf0eb9bfb8ddf2cb0ae5e6274; handoff delivery remains pending. This draft neither records a handoff nor completes T8 or its hosted acceptance.",
+  "deviations": [
+    "The original registered implementer session 9c426bb2-9fd0-4f8 is historical and unavailable to this reconstruction. No saved native final report was supplied here. This is preparation for explicit owner review of a substitute-author record; it carries no substitution authorization or native response receipt.",
+    "The retained local checks exercise real files, pins bytes, CLI version probes and workflow declarations, but also use fabricated cell records, fixed job payloads, synthetic GITHUB_* contexts and an injected canned pinnedFetch response in main() tests. These legs do not prove the Actions API integration or a real dispatched evaluator run.",
+    "Frozen review leaves AC-1 and FLOW-GRD-01-TWELVE-CELLS DEFERRED on T10. Historical AC-2/FLOW-RUN-02-HAND PASS includes local declaration/context proof and a retained governed replay, while both frozen checks reported live_artifact=absent."
+  ],
+  "concerns": [
+    "U-T8-1 remains OPEN: hosted behavior when actions/download-artifact@v4 pattern harness-eval-verify-* matches nothing was not established; a failed download can prevent the recorder step from running despite job-level always().",
+    "U-T8-2 remains OPEN: no retained proof establishes the hosted recorder execution, real smoke-matrix timestamp equality, attempt-qualified result download, run-page table, or no-input and published dispatch identities. Historical statements that no harness-eval run existed are historical observations, not a current remote inventory.",
+    "F-T8-5 remains unresolved ADVISORY: bare pinned cells set resolved_cli_version to requested_cli_version without resolution and observed_cli_version remains null; run context also defaults the repository when GITHUB_REPOSITORY is absent. These fields must not be promoted into observed installation/run provenance.",
+    "Artifact names and result fields do not independently establish origin. Production run/job lookup uses /actions/runs/{runId}/jobs with no attempt argument; local optional artifact validation falls back to artifact.head_sha when HARNESS_EVAL_DISPATCH_SHA is absent. This reconstruction establishes no independent hosted run/attempt/source binding.",
+    "Refusal cleanup is best effort if filesystem removal itself fails. The verify-reports upload retains if-no-files-found:error, and its extra failure on an early refusal remains possible.",
+    "The emitted not_executed smoke-job-timestamps reason still claims another run's live API job list proves the copy, although timestamps.source correctly identifies the fixed payload. C3-5's retained JSON internally names subject_sha 8cd6eecc474e5a8b35e1f8bc38ea30541f04046c despite the verdict's 356dafa attribution; the retained union-diff log reports identical tracked trees, but this draft does not rewrite provenance."
+  ],
+  "findings": [
+    "Saved cycle-3 statuses are preserved: F-T8-1 timestamp ambient-state dependency FIXED; F-T8-2 result survival after refusal FIXED; F-T8-3 unreachable bare-cell mode guard FIXED; F-T8-4/F-T8-5/F-T8-6 ADVISORY with null resolutions; F-T8-7 shared-lane modification premise REFUTED. U-T8-1/U-T8-2 OPEN; U-T8-3 RESOLVED.",
+    "The cycle-3 summary says F-T8-4's vacuous assertion was replaced by main()-driven refusal/late-throw legs and F-T8-6's missing refusal log was incidentally addressed by uploading recorder.log. Their retained formal ADVISORY statuses are not silently closed here.",
+    "Historical evidence C3-1/C3-2 reports 2/2 and 3/3 local tests passing with live_artifact=absent; C3-10..C3-14 reports five mutations turning the check red; C3-23/C3-24 records a governed FLOW-RUN-02-HAND replay at 356dafa. These commands were inspected, not rerun for this draft.",
+    "Read-only reconstruction confirmed the candidate worktree HEAD and hashed the cycle-3 bundle/context/verdict plus all 24 referenced artifact files; all referenced artifact digests match their retained verdict entries. Matching bytes preserve the historical evidence; they do not validate hosted semantics or supply original-author testimony."
+  ],
+  "scope_impact": [
+    {
+      "target": "GATE:FLOW-GRD-01-TWELVE-CELLS",
+      "found": "The frozen review explicitly defers AC-1/the twelve-cell flow and retains U-T8-1/U-T8-2; the contract requires a downloaded artifact bound to real Actions metadata.",
+      "change": "Keep the obligation unresolved until its governed integrated replay supplies actual run/attempt/source identity, twelve unique cells including cursor, real smoke timestamps, pins digest, graded evidence and the drop-cell refusal."
+    },
+    {
+      "target": "GATE:FLOW-RUN-02-HAND",
+      "found": "Historical PASS proves local declaration/context behavior and retained replay, while hosted no-input/published dispatch legs remain not executed.",
+      "change": "Keep hosted confirmation separate; retain both real run IDs, trusted GitHub head/event/mode metadata and matching downloaded artifact fields before claiming hosted acceptance."
+    },
+    {
+      "target": "T8",
+      "found": "Saved code landing exists, but original-author handoff delivery is pending and this reconstruction lacks substitute authorization.",
+      "change": "Leave delivery/completion state unchanged. Any later recording must follow the native original-session route or the contract's explicit owner-authorized substitute envelope and provenance requirements."
+    }
+  ],
+  "feedback": [
+    "Use T8.evidence.md beside this draft for exact source lines, frozen identities, historical evidence references and limits. Do not interpret this reconstruction as a new review, current live inventory, approval, implementation report or completion receipt."
+  ]
+}
+```
