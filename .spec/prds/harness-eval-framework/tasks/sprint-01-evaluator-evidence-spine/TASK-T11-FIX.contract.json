@@ -64,9 +64,9 @@
      "negative_control": {
       "would_fail_if": [
        "an empty controls array is accepted by assembleResult, or the schema leaves controls optional \u2014 the repro prints F-T11-1 ALIVE and exits 1",
-       "controls is required but the workflow still produces no controls.json, so the gate's jq prints zero rows while the artifact validates",
-       "the producer writes three or five rows \u2014 assertControlRows refuses a set that is not exactly the four controls",
-       "main() fills a missing controls.json with the unobserved default instead of refusing with controls-missing"
+       "controls is required but the workflow still produces no controls.json (a stub controls job), so the gate's jq prints zero rows while the artifact validates",
+       "a stub producer writes three or five rows \u2014 assertControlRows refuses a set that is not exactly the four controls",
+       "main() fills a missing controls.json with a hardcoded unobserved default instead of refusing with controls-missing"
       ]
      },
      "evidence": {
@@ -96,7 +96,7 @@
         "must_observe": [
          "exit 0",
          "F-T11-1 dead",
-         "controls_in_schema_required = true",
+         "controls_in_schema_required == true with the literal \"controls\" in the schema's required array",
          "controls_min_items = 4",
          "assemble_result_refusal.reason == \"controls-missing\""
         ],
@@ -123,7 +123,8 @@
         ],
         "must_not_observe": [
          "a written array that is not exactly the four control ids",
-         "a controls.json that does not read back row-for-row"
+         "a controls.json that does not read back row-for-row",
+         "an empty controls.json (0 rows) written by writeControls"
         ]
        }
       }
@@ -153,10 +154,10 @@
      "tier": "e2e-automated",
      "negative_control": {
       "would_fail_if": [
-       "every *.json under cells/ is still classified as a cell record \u2014 15 cells and a cell-track-unknown refusal, repro prints F-T11-2 ALIVE",
-       "the walk silently skips an unrecognised *.json, so a malformed cell becomes an omission instead of a named refusal",
-       "a per-cell keyless-control.json row is merged into the four controls and impersonates the controls artifact",
-       "the smoke upload keeps path: cell/, so a future run ships strays again"
+       "an unchanged walk still classifies every *.json as a cell record \u2014 15 cells and a cell-track-unknown refusal, repro prints F-T11-2 ALIVE",
+       "the walk silently omits an unrecognised *.json, so a malformed cell becomes an omission instead of a named refusal",
+       "a per-cell keyless-control.json row is merged into the four controls, so the real four-row artifact stays empty and is impersonated",
+       "the smoke upload path stays unchanged at cell/, so a future run ships strays again"
       ]
      },
      "evidence": {
@@ -187,12 +188,12 @@
          "exit 0",
          "F-T11-2 dead",
          "cells_classified = 12",
-         "recorder_refusal = null"
+         "cells_classified = 12 and recorder_refusal == null"
         ],
         "must_not_observe": [
          "F-T11-2 ALIVE",
          "a stray classified as a cell record",
-         "an unclassifiable record silently dropped"
+         "an unclassifiable record dropped with 0 named refusals"
         ]
        }
       },
@@ -207,11 +208,12 @@
        "end_state": {
         "must_observe": [
          "path: cell/cell.json",
-         "the controls rows travel in harness-eval-controls-<run>-<attempt>, fetched into cells/ by the download job"
+         "the controls rows travel in the artifact named \"harness-eval-controls-<run>-<attempt>\", fetched to cells/controls.json by the download job"
         ],
         "must_not_observe": [
          "path: cell/",
-         "a stray capture or binding shipped inside harness-eval-cell-*"
+         "a stray capture or binding shipped inside harness-eval-cell-*",
+         "an empty cells/ after download: 0 cell records and strays only"
         ]
        }
       }
@@ -240,9 +242,9 @@
      "tier": "e2e-automated",
      "negative_control": {
       "would_fail_if": [
-       "assembleResult keeps its = [] default, or controls stays optional in the schema",
+       "assembleResult keeps its = [] default (a static empty array), or controls stays optional in the schema",
        "the schema gains minItems but assembleResult still accepts an explicitly empty array",
-       "the refusal is raised only in main(), so the repro's direct assembleResult call still returns zero rows"
+       "the refusal is raised only in main(), so the repro's direct assembleResult call still returns an empty 0-row array"
       ]
      },
      "evidence": {
@@ -268,8 +270,8 @@
        },
        "end_state": {
         "must_observe": [
-         "RecorderRefusal with reason controls-missing",
-         "controls listed in the schema's required array",
+         "assembleResult throws RecorderRefusal with reason == \"controls-missing\"",
+         "the schema's required array contains the literal \"controls\" and validateResult returns ok: true for the 4-row record",
          "controls minItems 4 and maxItems 4"
         ],
         "must_not_observe": [
@@ -302,10 +304,10 @@
      "tier": "e2e-automated",
      "negative_control": {
       "would_fail_if": [
-       "the walk still classifies any *.json as a cell (15 cells, cell-track-unknown)",
-       "an unrecognised *.json is silently skipped instead of refused by name",
-       "a control-evidence row is merged into artifacts.controls and stands in for the four-run artifact",
-       "collectCells is relaxed to tolerate an unknown harness or track"
+       "an unchanged walk still classifies any *.json as a cell (15 cells, cell-track-unknown)",
+       "an unrecognised *.json is omitted silently instead of refused by name",
+       "a control-evidence row is merged into artifacts.controls so the real four-row artifact stays empty and is impersonated",
+       "a stub collectCells tolerates an unknown harness or track"
       ]
      },
      "evidence": {
@@ -334,12 +336,12 @@
        "end_state": {
         "must_observe": [
          "artifacts.cells.length === 12",
-         "collectCells returns without a refusal",
-         "binding.json, keyless-control.json and the capture land in controlEvidence"
+         "collectCells returns 12 cells with refusal == null",
+         "controlEvidence carries 3 entries: \"binding.json\", \"keyless-control.json\" and \"evidence/claude-code-verify.capture.json\""
         ],
         "must_not_observe": [
          "any stray record inside artifacts.cells",
-         "an unclassifiable record dropped without a named refusal"
+         "an unclassifiable record dropped with 0 named refusals"
         ]
        }
       }
@@ -367,10 +369,10 @@
      "tier": "e2e-automated",
      "negative_control": {
       "would_fail_if": [
-       "assembleResult throws for a caller that passes no controls argument \u2014 grd-01-twelve-cells and run-02-hand call it that way and are outside this task's write scope",
-       "the schema change makes a pre-existing test record unvalidatable",
-       "a change to the recorder walk alters what the two flow replays observe",
-       "the lane is made green by editing grd-01-twelve-cells.test.mjs or run-02-hand.test.mjs instead of assembleResult"
+       "assembleResult throws for a caller that passes no controls argument because the ?? default was removed \u2014 grd-01-twelve-cells and run-02-hand call it that way and are outside this task's write scope",
+       "a hardcoded minItems 4 makes a pre-existing 3-row test record unvalidatable",
+       "a recorder walk change disconnects the two flow replays from the 12-cell fixture they seed",
+       "the lane is made green by an assertion omitted from grd-01-twelve-cells.test.mjs or run-02-hand.test.mjs instead of by fixing assembleResult"
       ]
      },
      "evidence": {
@@ -400,13 +402,14 @@
        },
        "end_state": {
         "must_observe": [
-         "both flow replays print TAP ok",
+         "grd-03 TAP: 1 pass 0 fail; grd-06 TAP: 1 pass 0 fail",
          "the lane reports fail 0",
-         "git diff --name-only lists only WRITE-ALLOWED paths"
+         "git diff --name-only prints 0 paths outside the 9-entry write_allowed list"
         ],
         "must_not_observe": [
          "any touch of tests/sprint-01/grd-01-twelve-cells.test.mjs or tests/sprint-01/run-02-hand.test.mjs",
-         "a relaxed assertion used to buy green"
+         "a relaxed assertion used to buy green",
+         "a lane run that reports 0 tests executed"
         ]
        }
       }
