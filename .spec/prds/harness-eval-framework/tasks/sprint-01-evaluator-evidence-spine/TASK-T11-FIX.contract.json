@@ -33,7 +33,9 @@
     "test/harness/controls/**",
     "tests/sprint-01/grd-03-evidence.test.mjs",
     "tests/sprint-01/grd-06-missing-key.test.mjs",
-    "tests/sprint-01/flow-runner.mjs"
+    "tests/sprint-01/flow-runner.mjs",
+    ".spec/prds/harness-eval-framework/tasks/sprint-01-evaluator-evidence-spine/TASK-T11-FIX.md",
+    ".spec/prds/harness-eval-framework/tasks/sprint-01-evaluator-evidence-spine/TASK-T11-FIX.contract.json"
    ],
    "write_prohibited": [
     "plugins/pixel-perfect/**"
@@ -49,21 +51,21 @@
     "type": "acceptance_criterion",
     "primary": false,
     "flow_ref": null,
-    "title": "A run that publishes no controls row is a refused run — controls.json is produced, required, and exactly four rows",
+    "title": "A run that publishes no controls row is a refused run \u2014 controls.json is produced, required, and exactly four rows",
     "test_tier": "integration",
     "verification_service": "local repro + node --test (no dispatch)",
     "verify": "node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs",
     "test_file": null,
     "test_function": null,
-    "positive_example": "assembleResult({ ..., controls: [] }) throws RecorderRefusal(\"controls-missing\"); controls sits in the schema's required list with minItems 4 / maxItems 4; the controls job's writeControls read-back is ok with T11's four rows — the repro prints F-T11-1 dead with controls_in_schema_required = true and assemble_result_refusal = {\"reason\":\"controls-missing\"}, exit 0.",
+    "positive_example": "assembleResult({ ..., controls: [] }) throws RecorderRefusal(\"controls-missing\"); controls sits in the schema's required list with minItems 4 / maxItems 4; the controls job's writeControls read-back is ok with T11's four rows \u2014 the repro prints F-T11-1 dead with controls_in_schema_required = true and assemble_result_refusal = {\"reason\":\"controls-missing\"}, exit 0.",
     "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
     "scenario": {
      "tier": "e2e-automated",
      "negative_control": {
       "would_fail_if": [
-       "an empty controls array is accepted by assembleResult, or the schema leaves controls optional — the repro prints F-T11-1 ALIVE and exits 1",
+       "an empty controls array is accepted by assembleResult, or the schema leaves controls optional \u2014 the repro prints F-T11-1 ALIVE and exits 1",
        "controls is required but the workflow still produces no controls.json, so the gate's jq prints zero rows while the artifact validates",
-       "the producer writes three or five rows — assertControlRows refuses a set that is not exactly the four controls",
+       "the producer writes three or five rows \u2014 assertControlRows refuses a set that is not exactly the four controls",
        "main() fills a missing controls.json with the unobserved default instead of refusing with controls-missing"
       ]
      },
@@ -139,19 +141,19 @@
     "type": "acceptance_criterion",
     "primary": false,
     "flow_ref": null,
-    "title": "The cells dir carries only cell records — a stray artifact no longer kills the run",
+    "title": "The cells dir carries only cell records \u2014 a stray artifact no longer kills the run",
     "test_tier": "integration",
     "verification_service": "local repro + node --test (no dispatch)",
     "verify": "node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs",
     "test_file": null,
     "test_function": null,
-    "positive_example": "readCellArtifacts over the repro's real layout returns 12 cells with refusal === null — binding.json, keyless-control.json and evidence/*.capture.json land in controlEvidence and never enter collectCells — while a record that is neither a cell nor a named form raises cell-unclassified naming the file. The repro prints F-T11-2 dead with cells_classified = 12 and recorder_refusal = null, exit 0.",
+    "positive_example": "readCellArtifacts over the repro's real layout returns 12 cells with refusal === null \u2014 binding.json, keyless-control.json and evidence/*.capture.json land in controlEvidence and never enter collectCells \u2014 while a record that is neither a cell nor a named form raises cell-unclassified naming the file. The repro prints F-T11-2 dead with cells_classified = 12 and recorder_refusal = null, exit 0.",
     "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
     "scenario": {
      "tier": "e2e-automated",
      "negative_control": {
       "would_fail_if": [
-       "every *.json under cells/ is still classified as a cell record — 15 cells and a cell-track-unknown refusal, repro prints F-T11-2 ALIVE",
+       "every *.json under cells/ is still classified as a cell record \u2014 15 cells and a cell-track-unknown refusal, repro prints F-T11-2 ALIVE",
        "the walk silently skips an unrecognised *.json, so a malformed cell becomes an omission instead of a named refusal",
        "a per-cell keyless-control.json row is merged into the four controls and impersonates the controls artifact",
        "the smoke upload keeps path: cell/, so a future run ships strays again"
@@ -217,7 +219,7 @@
      "topology_note": "the smoke job uploads exactly cell/cell.json; readCellArtifacts classifies a *.json as a cell only when it carries string harness and track, routes controls.json into controls and the three named control-evidence forms into controlEvidence, and refuses anything else by name; collectCells is unchanged",
      "test_tier": "e2e"
     },
-    "red_input": "on base main readCellArtifacts classifies 15 records as cells — the 12 real cells plus binding.json, evidence/claude-code-verify.capture.json and keyless-control.json — and collectCells refuses with cell-track-unknown, so the grade job publishes no result artifact; the repro prints F-T11-2 ALIVE and exits 1",
+    "red_input": "on base main readCellArtifacts classifies 15 records as cells \u2014 the 12 real cells plus binding.json, evidence/claude-code-verify.capture.json and keyless-control.json \u2014 and collectCells refuses with cell-track-unknown, so the grade job publishes no result artifact; the repro prints F-T11-2 ALIVE and exits 1",
     "red_proof": ".tmp/sprint-01-verification/t11-controls-wiring.repro.log",
     "description": "GIVEN the base tree at 7e08e1a and the repro's buildDownloadedCells() mirroring what the download job assembles WHEN node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs THEN exit 0 with F-T11-2 dead; cells_classified === 12; expected_cells === 12; recorder_refusal === null; and an unclassifiable record still stops the run by name",
     "maps_to_ac": null
@@ -281,7 +283,7 @@
      "test_tier": "e2e"
     },
     "flow_ref": null,
-    "red_input": "assembleResult({ ..., controls: [] }) returns a record with zero controls rows and validateResult accepts it — the gate's jq then prints nothing",
+    "red_input": "assembleResult({ ..., controls: [] }) returns a record with zero controls rows and validateResult accepts it \u2014 the gate's jq then prints nothing",
     "positive_example": "assembleResult({ ..., controls: [] }) throws RecorderRefusal(\"controls-missing\") and the schema's required list plus minItems 4 makes an empty array unvalidatable"
    },
    {
@@ -353,7 +355,7 @@
     "id": "TC-3",
     "type": "test_criterion",
     "primary": false,
-    "description": "FLOW-GRD-03-FILES-AND-STREAM and FLOW-GRD-06-MISSING-KEY stay green, and the whole sprint-01 lane stays green — no out-of-scope caller of assembleResult broke",
+    "description": "FLOW-GRD-03-FILES-AND-STREAM and FLOW-GRD-06-MISSING-KEY stay green, and the whole sprint-01 lane stays green \u2014 no out-of-scope caller of assembleResult broke",
     "verify": "node --test tests/sprint-01/*.test.mjs",
     "maps_to_ac": "AC-1",
     "test_file": "tests/sprint-01/grd-03-evidence.test.mjs",
@@ -365,7 +367,7 @@
      "tier": "e2e-automated",
      "negative_control": {
       "would_fail_if": [
-       "assembleResult throws for a caller that passes no controls argument — grd-01-twelve-cells and run-02-hand call it that way and are outside this task's write scope",
+       "assembleResult throws for a caller that passes no controls argument \u2014 grd-01-twelve-cells and run-02-hand call it that way and are outside this task's write scope",
        "the schema change makes a pre-existing test record unvalidatable",
        "a change to the recorder walk alters what the two flow replays observe",
        "the lane is made green by editing grd-01-twelve-cells.test.mjs or run-02-hand.test.mjs instead of assembleResult"
@@ -413,7 +415,7 @@
      "test_tier": "e2e"
     },
     "flow_ref": "FLOW-GRD-03-FILES-AND-STREAM",
-    "red_input": "an assembleResult that throws whenever controls is absent fails grd-01-twelve-cells.test.mjs:640 and run-02-hand.test.mjs:526,552 — two files this task may not edit",
+    "red_input": "an assembleResult that throws whenever controls is absent fails grd-01-twelve-cells.test.mjs:640 and run-02-hand.test.mjs:526,552 \u2014 two files this task may not edit",
     "positive_example": "both flow replays and the whole lane stay green with no edit to grd-01-twelve-cells.test.mjs or run-02-hand.test.mjs, because a silent caller receives the four unobserved rows"
    }
   ],
@@ -453,21 +455,21 @@
     "type": "acceptance_criterion",
     "primary": false,
     "flow_ref": null,
-    "title": "A run that publishes no controls row is a refused run — controls.json is produced, required, and exactly four rows",
+    "title": "A run that publishes no controls row is a refused run \u2014 controls.json is produced, required, and exactly four rows",
     "test_tier": "integration",
     "verification_service": "local repro + node --test (no dispatch)",
     "verify": "node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs",
     "test_file": null,
     "test_function": null,
-    "positive_example": "assembleResult({ ..., controls: [] }) throws RecorderRefusal(\"controls-missing\"); controls sits in the schema's required list with minItems 4 / maxItems 4; the controls job's writeControls read-back is ok with T11's four rows — the repro prints F-T11-1 dead with controls_in_schema_required = true and assemble_result_refusal = {\"reason\":\"controls-missing\"}, exit 0.",
+    "positive_example": "assembleResult({ ..., controls: [] }) throws RecorderRefusal(\"controls-missing\"); controls sits in the schema's required list with minItems 4 / maxItems 4; the controls job's writeControls read-back is ok with T11's four rows \u2014 the repro prints F-T11-1 dead with controls_in_schema_required = true and assemble_result_refusal = {\"reason\":\"controls-missing\"}, exit 0.",
     "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
     "scenario": {
      "tier": "e2e-automated",
      "negative_control": {
       "would_fail_if": [
-       "an empty controls array is accepted by assembleResult, or the schema leaves controls optional — the repro prints F-T11-1 ALIVE and exits 1",
+       "an empty controls array is accepted by assembleResult, or the schema leaves controls optional \u2014 the repro prints F-T11-1 ALIVE and exits 1",
        "controls is required but the workflow still produces no controls.json, so the gate's jq prints zero rows while the artifact validates",
-       "the producer writes three or five rows — assertControlRows refuses a set that is not exactly the four controls",
+       "the producer writes three or five rows \u2014 assertControlRows refuses a set that is not exactly the four controls",
        "main() fills a missing controls.json with the unobserved default instead of refusing with controls-missing"
       ]
      },
@@ -543,19 +545,19 @@
     "type": "acceptance_criterion",
     "primary": false,
     "flow_ref": null,
-    "title": "The cells dir carries only cell records — a stray artifact no longer kills the run",
+    "title": "The cells dir carries only cell records \u2014 a stray artifact no longer kills the run",
     "test_tier": "integration",
     "verification_service": "local repro + node --test (no dispatch)",
     "verify": "node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs",
     "test_file": null,
     "test_function": null,
-    "positive_example": "readCellArtifacts over the repro's real layout returns 12 cells with refusal === null — binding.json, keyless-control.json and evidence/*.capture.json land in controlEvidence and never enter collectCells — while a record that is neither a cell nor a named form raises cell-unclassified naming the file. The repro prints F-T11-2 dead with cells_classified = 12 and recorder_refusal = null, exit 0.",
+    "positive_example": "readCellArtifacts over the repro's real layout returns 12 cells with refusal === null \u2014 binding.json, keyless-control.json and evidence/*.capture.json land in controlEvidence and never enter collectCells \u2014 while a record that is neither a cell nor a named form raises cell-unclassified naming the file. The repro prints F-T11-2 dead with cells_classified = 12 and recorder_refusal = null, exit 0.",
     "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
     "scenario": {
      "tier": "e2e-automated",
      "negative_control": {
       "would_fail_if": [
-       "every *.json under cells/ is still classified as a cell record — 15 cells and a cell-track-unknown refusal, repro prints F-T11-2 ALIVE",
+       "every *.json under cells/ is still classified as a cell record \u2014 15 cells and a cell-track-unknown refusal, repro prints F-T11-2 ALIVE",
        "the walk silently skips an unrecognised *.json, so a malformed cell becomes an omission instead of a named refusal",
        "a per-cell keyless-control.json row is merged into the four controls and impersonates the controls artifact",
        "the smoke upload keeps path: cell/, so a future run ships strays again"
@@ -621,7 +623,7 @@
      "topology_note": "the smoke job uploads exactly cell/cell.json; readCellArtifacts classifies a *.json as a cell only when it carries string harness and track, routes controls.json into controls and the three named control-evidence forms into controlEvidence, and refuses anything else by name; collectCells is unchanged",
      "test_tier": "e2e"
     },
-    "red_input": "on base main readCellArtifacts classifies 15 records as cells — the 12 real cells plus binding.json, evidence/claude-code-verify.capture.json and keyless-control.json — and collectCells refuses with cell-track-unknown, so the grade job publishes no result artifact; the repro prints F-T11-2 ALIVE and exits 1",
+    "red_input": "on base main readCellArtifacts classifies 15 records as cells \u2014 the 12 real cells plus binding.json, evidence/claude-code-verify.capture.json and keyless-control.json \u2014 and collectCells refuses with cell-track-unknown, so the grade job publishes no result artifact; the repro prints F-T11-2 ALIVE and exits 1",
     "red_proof": ".tmp/sprint-01-verification/t11-controls-wiring.repro.log",
     "description": "GIVEN the base tree at 7e08e1a and the repro's buildDownloadedCells() mirroring what the download job assembles WHEN node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs THEN exit 0 with F-T11-2 dead; cells_classified === 12; expected_cells === 12; recorder_refusal === null; and an unclassifiable record still stops the run by name",
     "maps_to_ac": null
