@@ -115,6 +115,7 @@ UC-REL-05 · AC-3,4,5 ↦ sprint-03 · AC-1,2,6 ↦ sprint-04 · closes at sprin
 | T10 | Wire fail-closed cells: cursor version-lookup + could-not-run missing-api-key on every check, and adapter-abse | evals-implementer | 3 | C | ⬜ Pending |
 | T11 | Qualify the negative controls on a real hosted run and record them in the result's controls array | evals-implementer | 5 | F | ⬜ Pending |
 | T12 | Review the evaluator workflow, capture layer, and grader contracts: secret placement, banned triggers, path co | github-agentic-workflow-reviewer | 3 | G | ⬜ Pending |
+| T13 | Make the smoke matrix observe and export what it grades: per-leg graded cells from files-and-event-stream evid | evals-implementer | 8 | H | ⬜ Pending |
 
 **Waves:** A(3) → B(3) → C(2) → D(1) → E(1) → F(1) → G(1) — 7 waves over 12 tasks (≈1.7 at once)
 
