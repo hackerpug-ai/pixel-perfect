@@ -66,9 +66,33 @@ function readJson(file) {
   }
 }
 
+const relativePath = (root, file) => relative(root, file).split(sep).join("/");
+
+/**
+ * The three control-evidence forms a cell leg may also ship. They are evidence ABOUT a control, not
+ * cell records and not the four controls: `binding.json` says which credential that harness binds,
+ * `keyless-control.json` is one cell's keyless row, and `*.capture.json` is one invocation's captured
+ * bytes. They are kept in their own bucket and never read as either.
+ */
+function controlEvidenceForm(record, file) {
+  if (record === null || typeof record !== "object" || Array.isArray(record)) return null;
+  if (typeof record.credential_env === "string" && typeof record.binding_env === "string") return "binding";
+  if (typeof record.control_id === "string" && "verdict" in record) return "control-row";
+  if (file.endsWith(".capture.json") && typeof record.check_id === "string" && "model_request_count" in record) return "capture";
+  return null;
+}
+
+const isCellRecord = (record) =>
+  record !== null && typeof record === "object" && typeof record.harness === "string" && typeof record.track === "string";
+
 /**
  * Reads the downloaded artifact layout: one record per cell artifact, plus any `controls.json` a
- * controls job attached. A missing directory is a refusal, not an empty cell set.
+ * controls step attached, plus the control-evidence forms kept separately. A missing directory is a
+ * refusal, not an empty cell set.
+ *
+ * Every `*.json` is classified by WHAT IT IS. A record that is neither a cell nor one of the named
+ * forms is refused by name — the walk is fail-closed, so a truncated or misnamed cell stops the run
+ * instead of quietly shrinking the grid.
  */
 export function readCellArtifacts(dir) {
   const root = resolve(dir);
@@ -82,6 +106,7 @@ export function readCellArtifacts(dir) {
   }
   const cells = [];
   const controls = [];
+  const controlEvidence = [];
   for (const file of jsonFiles) {
     const record = readJson(file);
     if (file.endsWith(`${sep}${VERIFY_INDEX}`)) continue;
@@ -90,9 +115,21 @@ export function readCellArtifacts(dir) {
       controls.push(...record);
       continue;
     }
-    cells.push(record);
+    if (isCellRecord(record)) {
+      cells.push(record);
+      continue;
+    }
+    const form = controlEvidenceForm(record, file);
+    if (form) {
+      controlEvidence.push({ form, file: relativePath(root, file), record });
+      continue;
+    }
+    throw new RecorderRefusal("cell-unclassified", {
+      file: relativePath(root, file),
+      why: "not a cell record (no string harness and track) and not one of the three named control-evidence forms",
+    });
   }
-  return { cells, controls, files: files.map((file) => relative(root, file)) };
+  return { cells, controls, controlEvidence, files: files.map((file) => relative(root, file)) };
 }
 
 /**
@@ -169,6 +206,15 @@ export async function main({ env = process.env, fetchImpl = globalThis.fetch } =
     const pins = loadPins();
     const artifacts = readCellArtifacts(env.HARNESS_EVAL_CELLS_DIR ?? "cells");
     const cells = collectCells(artifacts.cells, { pins, installMode: context.installMode });
+    // The cell defects above are named first, then this: every run executes the four controls, so a
+    // cells dir without them is a refused run, not a result whose `.controls[]` the gate prints as
+    // nothing forever.
+    if (artifacts.controls.length === 0) {
+      throw new RecorderRefusal("controls-missing", {
+        dir: env.HARNESS_EVAL_CELLS_DIR ?? "cells",
+        why: "every run executes the four negative controls; controls.json never arrived, so .controls[] would be empty and the gate would print nothing",
+      });
+    }
     const jobs = await fetchRunJobs({
       apiUrl: context.apiUrl,
       repository: context.repository,

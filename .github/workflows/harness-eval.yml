@@ -263,7 +263,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: harness-eval-cell-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.harness }}-${{ matrix.track }}
-          path: cell/
+          # Exactly the cell record. binding.json, the keyless row and the captures are control
+          # evidence, not cell records: the recorder classifies every *.json under cells/ by what it
+          # is and refuses what it cannot classify, so they must not ride in here.
+          path: cell/cell.json
           if-no-files-found: warn
           retention-days: 90
           overwrite: false
@@ -277,12 +280,69 @@ jobs:
     permissions:
       contents: read
     steps:
+      # The workspace is reset and cloned BEFORE the cells are written into it.
+      #
+      # `actions/checkout@v4` clears $GITHUB_WORKSPACE either way: it deletes the directory's
+      # contents when the directory is not a git repository (prepareExistingDirectory sets
+      # remove=true), and runs `git clean -ffdx` when it is. So a checkout placed AFTER a
+      # download-artifact step silently erases the artifact that step just fetched. That order is
+      # what this task used to ship, and it cost the whole run: the producer then wrote
+      # cells/controls.json into an emptied cells/ and the handoff below published a cells artifact
+      # holding controls.json alone, so the grade job's readCellArtifacts returned 0 cells with 4
+      # controls and collectCells refused cells-incomplete — no result, and the four rows never
+      # reached the gate those rows exist for. `clean: false` does not help; the non-repository
+      # branch still deletes the directory contents. The order is asserted by
+      # tests/sprint-01/t11-controls-wiring.test.mjs so it cannot be undone by a later edit.
+      - name: Check out the dispatch commit
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # The producer imports test/harness/controls/index.mjs out of this commit, so the tree has to
+      # be on disk before it runs.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # After the checkout, never before it: this is the step that writes cells/ into the workspace.
       - name: Fetch every cell from this attempt
         uses: actions/download-artifact@v4
         with:
           pattern: harness-eval-cell-${{ github.run_id }}-${{ github.run_attempt }}-*
           path: cells
           merge-multiple: false
+
+      # The four negative controls are produced here, beside the cells they belong to and BEFORE
+      # they are handed on, so no attempt can publish a result whose `.controls[]` is empty.
+      #
+      # Why a step in this job and not a job of its own: `tests/sprint-01/run-02-hand.test.mjs`
+      # (T1's locked FLOW-RUN-02-HAND) asserts the workflow's job list is exactly
+      # [download, drift, grade, smoke]. A fifth job fails that flow, and that file is outside this
+      # task's write scope — the task forbids buying green by editing it. The producer therefore
+      # rides the job that already moves this attempt's cells, which is also where the file has to
+      # end up.
+      #
+      # The module is T11's: assertControlRows refuses a set that is not exactly the four controls,
+      # so an empty or partial array never reaches disk. A run that observed nothing writes four
+      # could-not-run/control-unobservable rows — never a pass, never an omission. This step holds
+      # no secret: a missing observation is an unobservable control by name, not an error.
+      #
+      # `if: always()` for the same reason the cells handoff below carries it: the receipt is part
+      # of what a refused run reports, so a failed transfer must still leave the four rows (or the
+      # producer's own refusal) behind rather than vanish into a skipped step.
+      - name: Qualify the four negative controls
+        if: always()
+        run: |
+          set -eu
+          mkdir -p cells
+          node --input-type=module -e '
+          import { qualifyControls, assertControlRows, writeControls } from "./test/harness/controls/index.mjs";
+          const observations = JSON.parse(process.env.HARNESS_EVAL_CONTROL_OBSERVATIONS ?? "{}");
+          const rows = assertControlRows(qualifyControls({ observations }).rows);
+          const written = writeControls({ file: "cells/controls.json", rows });
+          if (!written.ok) { console.error("controls.json did not read back: " + JSON.stringify(written.mismatches)); process.exit(1); }
+          '
 
       - name: Hand the cells to the recorder
         if: always()
