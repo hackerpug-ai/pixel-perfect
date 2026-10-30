@@ -2,7 +2,9 @@
 
 > Task ID: T10
 > Sprint: [SPRINT.md](./SPRINT.md)
-> Status: Backlog
+> Status: ✅ Completed
+
+Commit: d0971632371f2069f4209e66ff38fbacd560bcd5
 > Assignee: evals-implementer
 > Priority: P1
 > Points: 3
@@ -887,3 +889,58 @@ A shared file is not a dependency, and needing another task's output to test aga
 }
 -->
 
+
+## Handoff
+
+```json
+{
+  "task": "T10",
+  "commit_sha": "d0971632371f2069f4209e66ff38fbacd560bcd5",
+  "done": "PROVISIONAL SUBSTITUTE-AUTHOR DRAFT — UNAPPROVED. Reconstructed from the landed candidate and frozen cycle-2 review, not original-author testimony. Candidate d0971632371f2069f4209e66ff38fbacd560bcd5, reviewed against base 51c0f4ee7594efc0fd26463fe52c611f895cee81 and recorded landed by merge 8a9c1ceacacd920cefb9212360cb67eab870c3e3, adds test/harness/adapters/absent.mjs and fail-closed cell planning in registry.mjs plus assertions in grd-01-twelve-cells.test.mjs and grd-06-missing-key.test.mjs. The registry checks credential presence before adapter absence and newest-version lookup; emits could-not-run cells with the guard, adapter, or lookup reason; preserves all twelve harness/track pairs including cursor; leaves unresolved identity fields null; and returns a null cell for loaded-adapter-owned grading rather than inventing a pass. Historical cycle-2 review was APPROVED at revision 0; it recorded AC-1, TC-1 through TC-4, both frozen checks and FLOW-GRD-01 as PASS, while AC-2 and FLOW-GRD-06 remained DEFERRED on T11 and T9. This draft neither records a handoff nor completes the task.",
+  "deviations": [
+    "This is an unapproved substitute reconstruction. State records original evals-implementer session 9e0ae644-e62e-43f and handoff_delivery pending. The recovery brief reports that historical session unreachable here; this session cannot attest to the maker’s intent, original authorship, native final report, or original-session continuation. No substitute authorization, native provenance envelope, recording, or completion is supplied.",
+    "The historical local proof did not execute the hosted scenarios literally. The tests report live_artifact=absent and use a synthetic smoke-shaped environment, injected/canned version-lookup responses, and a Node marker child for the key-present guard path. A counted model-request event in that marker test is not a provider request or authenticated model result.",
+    "The repaired RED files are run_flow driver captures of missing absent.mjs, not captures of an 11-cell downloaded-artifact mutation. F-T10-6 retains the mismatch: the locked grd-01 --mutate drop-cell runner command is unavailable at this candidate, and no RED file records the required mutated artifact hash."
+  ],
+  "concerns": [
+    "U-T10-1 remains OPEN in the frozen review: no candidate-bound hosted artifact proves twelve unique cells, six harnesses, claude-code’s four graded passes, cursor missing-api-key, the missing-key control and authenticated paired passes in one real run. Local checks and recorded approval do not establish those observations. AC-2/FLOW-GRD-06 stay deferred under their frozen T11/T9 bindings; no later satisfaction is inferred.",
+    "Credential presence in tests is synthetic or historical. No current credential binding, fallback-store state, provider authentication, harness installation qualification, or hosted outcome was inspected or inferred. Missing credentials and absent adapters must remain could-not-run, never pass; the four pending adapters and Cursor credentials were not delivered by T10.",
+    "F-T10-3 and U-T10-3 remain advisory/OPEN: pins.mjs cellsFromPins and registry.mjs planCells disagree about the same cell’s reason because they consult different credential-name layers; T12 must reconcile the authority and placement of planning relative to jobs that hold CLI bindings. This draft does not claim that later work resolved them.",
+    "U-T10-4 remains OPEN: registry.mjs writes resolved_cli_version null at the approved candidate, but the historical M9 mutant restoring the requested version survived both frozen checks. Historical null-field correctness is not regression protection.",
+    "No tests, runtime flows, provider calls, hosted workflows, installations, or credential probes were run during this documentation-only recovery. The retained local test logs include mock/synthetic boundaries and cannot satisfy real-service acceptance by themselves."
+  ],
+  "findings": [
+    "Historical cycle-2 evidence: both frozen checks exited 0 (3/3 and 1/1); two governed local replays recorded exit 0, fresh artifacts, surface_ok, coldboot_ok and red_proof_ok; the sprint lane recorded 52/52 tests; 14 of 15 mutants were killed, with M9 surviving. All are historical results at d097163, not fresh execution or hosted acceptance.",
+    "F-T10-1 is recorded FIXED for replacing hand-written RED narratives with driver captures. The separate missing 11-cell mutation-hash observation remains F-T10-6 ADVISORY. F-T10-5 is recorded REFUTED; cycle-2 scope evidence reports exactly four allowed changed files and preservation of T5’s registry exports.",
+    "Preserve stale review rows explicitly: F-T10-2 and F-T10-4 remain ADVISORY with old claim text and null resolutions, although the cycle-2 summary/source show resolved_cli_version null and per-harness reason-shape assertions, and the reviewer reports the corresponding reason mutants killed. Their record statuses are not silently rewritten or independently closed here; the null-field oracle gap remains U-T10-4.",
+    "U-T10-2 is recorded RESOLVED by cycle-2 surface and read-back attribution evidence, although its retained reason text still describes the earlier PRODUCT_TARGET_MISSING failure. The candidate adds report read-back assertions; this draft preserves the discrepancy rather than carrying the old description as a current failure.",
+    "Retained bundle, context and verdict hashes matched the landing references when inspected; all eighteen artifacts referenced by the cycle-2 verdict existed and matched their recorded hashes. Byte integrity does not establish semantic completeness, fresh runtime success, native author provenance, or owner approval."
+  ],
+  "scope_impact": [
+    {
+      "target": "T12",
+      "found": "Frozen F-T10-3 and U-T10-3 retain conflicting twelve-cell producers and unresolved credential-job placement.",
+      "change": "Carry the recorded reconciliation/wiring obligation forward; do not treat T10’s local plan as proof of the assembled hosted result or claim later resolution without evidence."
+    },
+    {
+      "target": "GATE:FLOW-GRD-01-TWELVE-CELLS",
+      "found": "The review records local PASS but U-T10-1 retains absent hosted proof and F-T10-6 retains the non-executable drop-cell command and missing mutated-artifact hash.",
+      "change": "Preserve both gaps for the existing integration/final gate and planner disposition; any runner repair or locked-case amendment requires its own authorized review, not this draft."
+    },
+    {
+      "target": "GATE:FLOW-GRD-06-MISSING-KEY",
+      "found": "AC-2 and this flow are DEFERRED on T11/T9, despite a green local check; no same-run authenticated provider grades are established.",
+      "change": "Retain the published post-integration obligation and require real candidate-bound keyless refusal and paired authenticated cells before acceptance; do not convert marker-child success into hosted proof."
+    },
+    {
+      "target": "T10",
+      "found": "Original author handoff remains pending, this draft is unapproved, and U-T10-4 retains a surviving null-field mutant.",
+      "change": "Keep landed status distinct from handoff delivery and completion. A valid original report or explicit owner-authorized substitute process is still required; do not close review findings through this reconstruction."
+    }
+  ],
+  "feedback": [
+    "Evidence and exact source-line references are in .kb-run-sprint/sprint-01-evaluator-evidence-spine/recovery/handoff-drafts/T10.evidence.md. Only that file and T10.draft.json were authored for this assignment.",
+    "This preparation grants no implementation, merge, runtime, remote-write, substitute-approval, handoff-recording, or completion authority. Preserve the frozen review and original evidence; the orchestrator must separately resolve provenance and acceptance requirements."
+  ]
+}
+```
