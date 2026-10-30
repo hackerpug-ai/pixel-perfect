@@ -28,6 +28,7 @@
     "evaluation_started_at",
     "evaluation_completed_at",
     "cells",
+    "controls",
     "later_checks",
     "drift",
     "release",
@@ -121,6 +122,9 @@
     },
     "controls": {
       "type": "array",
+      "description": "The four negative controls every run executes (04-uc-grd.md UC-GRD-06). A run that observed nothing writes four could-not-run/control-unobservable rows; it never writes an empty array.",
+      "minItems": 4,
+      "maxItems": 4,
       "items": {
         "type": "object",
         "required": ["control_id", "verdict", "reason"],

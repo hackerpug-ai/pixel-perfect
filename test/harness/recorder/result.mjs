@@ -5,6 +5,7 @@
 // the shipped schema and the pins bytes before it is returned, so a caller can never hold a record
 // this module would refuse to upload.
 import { identityEnvelope } from "../pins.mjs";
+import { assertControlRows, qualifyControls } from "../controls/index.mjs";
 import { validateResult } from "../validate.mjs";
 import { RecorderRefusal } from "./validate.mjs";
 
@@ -116,10 +117,22 @@ export function runContextFromEnv(env = process.env) {
 }
 
 /** Assemble the result record and validate it. A record that fails validation is never returned. */
-export function assembleResult({ cells, pins, context, timestamps, controls = [], laterChecks = [] }) {
+export function assembleResult({ cells, pins, context, timestamps, controls, laterChecks = [] }) {
   if (!pins?.pins_sha256) throw new RecorderRefusal("pins-digest-invalid", { pins_sha256: pins?.pins_sha256 ?? null });
   if (!timestamps?.evaluation_started_at || !timestamps?.evaluation_completed_at) {
     throw new RecorderRefusal("timestamps-missing", { timestamps: timestamps ?? null });
+  }
+  // A silent caller gets the honest unobserved set — the four controls this run could not observe,
+  // never an empty array — while a caller that states zero rows is refused. There is no third way:
+  // a result always says what the controls proved, or it is not a result.
+  const controlRows = controls ?? qualifyControls({}).rows;
+  if (!Array.isArray(controlRows) || controlRows.length === 0) {
+    throw new RecorderRefusal("controls-missing", { why: "a result with no controls array cannot say what the controls proved" });
+  }
+  try {
+    assertControlRows(controlRows);
+  } catch (cause) {
+    throw new RecorderRefusal("controls-invalid", { why: cause.message, rows: controlRows.length });
   }
   const result = {
     ...identityEnvelope({
@@ -139,7 +152,7 @@ export function assembleResult({ cells, pins, context, timestamps, controls = []
     source_branch: context.sourceBranch,
     evaluation_started_at: timestamps.evaluation_started_at,
     evaluation_completed_at: timestamps.evaluation_completed_at,
-    controls,
+    controls: controlRows,
     later_checks: laterChecks,
   };
   validateResult(result, { dispatchSha: context.dispatchSha, requiredPinsSha256: pins.pins_sha256 });
