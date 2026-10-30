@@ -1,6 +1,8 @@
 # TASK-T9 — Wire the `harness-smoke` environment and credential binding with least-exposure verification
 
-> Status: Backlog
+> Status: ✅ Completed
+
+Commit: 395b371ca36fdc688f6407458e4e10f0e44683bb
 > Assignee: devops-engineer
 > Priority: P1
 > Points: 2
@@ -39,7 +41,6 @@ UC-GRD-06's promise is that a missing credential cannot be read as a pass. That 
 
 ```
 TASK_TYPE:  FEATURE
-STATUS:     Backlog
 PRIORITY:   P1
 POINTS:     2
 AGENT:      planner=github-agentic-workflow-planner | implementer=devops-engineer | reviewer=github-agentic-workflow-reviewer
@@ -489,3 +490,58 @@ NOTES
 }
 -->
 </details>
+
+## Handoff
+
+```json
+{
+  "task": "T9",
+  "commit_sha": "395b371ca36fdc688f6407458e4e10f0e44683bb",
+  "done": "PROVISIONAL SUBSTITUTE-AUTHOR DRAFT, UNAPPROVED: reconstructed from landed candidate 395b371ca36fdc688f6407458e4e10f0e44683bb against saved review base f9ff7829a190deb2a341809d614da1db51e17358, cycle 2 revision 0 APPROVED, recorded merge 7e08e1a79d3e38725c045a1bd9c7dfd0650a0f95. This is not original-author testimony, substitution approval, a recorded handoff, completion, or fresh runtime proof. The candidate retains harness-smoke on the smoke matrix, adds five harness-gated step env mappings (SMOKE_CLAUDE_KEY to ANTHROPIC_API_KEY, SMOKE_CODEX_KEY to CODEX_API_KEY, SMOKE_GROK_KEY to XAI_API_KEY, SMOKE_OPENCODE_KEY to ANTHROPIC_API_KEY, SMOKE_PI_KEY to GEMINI_API_KEY), and adds a secret-free Cursor presence probe. These model-named steps write cell/binding.json with credential presence and bound/could-not-run status; they do not invoke authenticated models. Its keyless control asserts absence, executes the real runGuarded path with a marker-writing Node child command, persists capture evidence, and records could-not-run/missing-api-key, model_requests and child_ran. It adds test/harness/ENVIRONMENT.md, expands the shared credential test with placement, empty-string and real local step-body checks, adjusts flow-runner's model-step placement allowance, and retains a T9-specific historical RED artifact. Source and frozen historical evidence support these statements; details and limits are in recovery/handoff-drafts/T9.evidence.md.",
+  "deviations": [
+    "This reconstruction is prepared by a substitute session with no original authorship or substitution authority. Saved original implementer session e59186a6-ec6e-4f1 is historical and unreachable in this recovery context; saved handoff delivery remains pending. No native author response, substitute authorization envelope, receipt, state transition, recording or completion was created.",
+    "The candidate's workflow provides credential-presence probes, a keyless guard control and artifact files. Its install step remains a reserved slot and Record the cell still emits smoke-not-implemented in cell/cell.json. Full authenticated CLI execution and same-run authenticated grades are not demonstrated by T9's candidate.",
+    "The local test uses explicit synthetic noncredential bindings, a Node marker child, an always-refuse test double for a negative control, and in-memory registry inputs without loaded adapters. These exercise real filesystem/process/guard code but do not prove provider authentication, actual harness installation or model behavior. The optional hosted-artifact branch is absent in the retained run."
+  ],
+  "concerns": [
+    "FLOW-GRD-06-MISSING-KEY remains DEFERRED on T11 in the frozen review context. Historical diagnostics say live_artifact=absent and t9_hosted=not-executed; no same-run authenticated claude-code pass paired with the control row is established. No new hosted run or real-service qualification occurred during this preparation.",
+    "Historical environment=observed means the names-only GitHub environment query returned the five named bindings then. It establishes neither current secret availability nor valid credential values nor working provider authentication; no credential values were read or printed in this recovery.",
+    "Step-level credential isolation is supported by candidate declarations and historical local checks, not a newly observed installed harness or hosted execution. Install, upload, download, drift and recorder steps remain keyless in the candidate declaration; no new install or credential/environment changes were made.",
+    "U-T9-2 remains OPEN: candidate binding.json carries the guard reason, while the unchanged cell/cell.json carries smoke-not-implemented. T9 does not establish which file the downstream recorder consumes.",
+    "U-T9-3 remains OPEN: the workflow sources model_requests from the persisted capture, but replacing that expression with literal zero survives M17. Treat the mutation-pinned child_ran:false marker as the local no-spawn evidence; the count-source relationship remains source-traced."
+  ],
+  "findings": [
+    "Frozen cycle-2 review records F-T9-1 FIXED: absent and empty-string bindings are checked on the guard, the control body and the pi body; the previously surviving M9 empty-string-presence mutation now fails. This is retained historical reviewer evidence, not a new execution claim.",
+    "F-T9-2, F-T9-3 and F-T9-4 remain ADVISORY with null resolution in the saved review. Their older claim text is partly stale: cycle-2 evidence kills the secret-in-if mutation M11, the reverted shared-rule mutation M13 and permissive-rule mutation M15, and the spawn-before-refusal mutation M16. Preserve the recorded status and cite the later counterevidence rather than silently closing or repeating the old claims as current defects.",
+    "U-T9-1, U-T9-2 and U-T9-3 remain OPEN and nonblocking in the frozen approved review: hosted authenticated pairing, recorder file selection, and count-source mutation discrimination respectively. The approved local review does not close these uncertainties or establish final acceptance.",
+    "Historical cycle-2 mutation evidence records 19 probes, 15 killed, four survivors: M7 (inline step self-check removal is not distinguished locally), M17 (constant-zero count), and deliberate attribution probes M18/M19 (removing the if-scan). The frozen review summary's wording about survivor categories is inconsistent; retain the explicit IDs and evidence rows rather than infer extra kills."
+  ],
+  "scope_impact": [
+    {
+      "target": "T11",
+      "found": "Frozen T9 flow is deferred on T11 and lacks a real hosted run pairing authenticated claude-code grades with the missing-key control.",
+      "change": "Retain the existing hosted proof obligation and U-T9-1; this provisional draft neither supplies the missing run nor releases the obligation."
+    },
+    {
+      "target": "T8",
+      "found": "At the approved T9 candidate, binding.json and keyless-control.json coexist with cell/cell.json containing smoke-not-implemented, leaving U-T9-2 OPEN.",
+      "change": "Carry the recorder-consumption uncertainty into the existing integration review; do not assume the T9 binding row becomes the final graded Cursor cell. No new implementation is authorized by this draft."
+    },
+    {
+      "target": "T12",
+      "found": "Credential placement has frozen local source/process evidence, while advisories remain recorded and hosted/install/provider qualification is missing.",
+      "change": "Preserve the advisory statuses, later cycle-2 counterevidence, shared flow-runner dependency and real-artifact review requirement when auditing the existing cross-task contracts."
+    },
+    {
+      "target": "GATE:FLOW-GRD-06-MISSING-KEY",
+      "found": "Local checks and a recorded APPROVED review exist, but the frozen flow status is DEFERRED and U-T9-1 through U-T9-3 remain OPEN.",
+      "change": "Keep the gate unproven by this draft. Recording, substitute authorization and completion remain separate decisions through the governed recovery path."
+    }
+  ],
+  "feedback": [
+    "Historical evidence only: E-C2-01 records the declared grd-06 check passing 1/1; E-C2-12 through E-C2-15 record grd-01 3/3, grd-02 26/26, run-02 3/3 and workflow validation passing. No tests, workflow runs, provider calls or runtime verification were performed for this documentation preparation.",
+    "Read-only recovery checks verified the task worktree HEAD equals the approved candidate, inspected the base-to-candidate diff, and rehashed the saved cycle-1/cycle-2 bundle members and all 24 cycle-2 evidence artifacts against their recorded hashes. Hash agreement validates retained bytes, not native session reachability or current service behavior.",
+    "Use T9.evidence.md for source lines, frozen identities, historical commands and proof limits. Obtain original-session delivery or explicit owner-authorized substitute provenance through the documented contract before recording any handoff; this draft supplies neither authority."
+  ]
+}
+```
