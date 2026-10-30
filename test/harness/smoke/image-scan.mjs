@@ -36,7 +36,7 @@ function walk(root, out = []) {
  * @param {{ roots?: string[] }} [options]
  * @returns {{ verdict: "pass"|"fail", reason: string, files_scanned: number, tree_sha256: string,
  *   findings: Array<{file: string, offset: number, kind: string, excerpt: string}>, roots: string[] } | null}
- *   `null` means the tree could not be read, which is not a pass.
+ *   `null` means the tree could not be read, or held no file at all — neither is a pass.
  */
 export function scanTree({ roots = [] } = {}) {
   const resolvedRoots = (roots ?? []).filter((root) => typeof root === "string" && root.length > 0).map((root) => resolve(root));
@@ -51,6 +51,10 @@ export function scanTree({ roots = [] } = {}) {
   } catch {
     return null;
   }
+  // A tree with nothing in it inspects no bytes, so it can never certify the absence of anything:
+  // "no image was found" over zero files is the same evidence as "nobody looked". The control layer
+  // turns this null into could-not-run / control-unobservable, never a pass.
+  if (files.length === 0) return null;
 
   const findings = [];
   const digestLines = [];

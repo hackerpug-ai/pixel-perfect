@@ -20,6 +20,8 @@ export const UNOBSERVABLE_REASON = "control-unobservable";
 
 /** The field of the cell record the observations travel on. Additive: the schema does not forbid it. */
 export const CONTROL_OBSERVATIONS_FIELD = "control_observations";
+/** The paired observations travel beside them, so `recordControl` can COMPUTE discrimination. */
+export const CONTROL_PAIRS_FIELD = "control_pairs";
 
 const IDS = Object.freeze(["missing-key", "stale-cache", "exit0-denied-read", "hidden-image-judge"]);
 
@@ -48,6 +50,10 @@ export function observeMissingKey({ row } = {}) {
  * `stale-cache` — `approveIdentity` fed the checkout payload's digest as expected and a stale copy's
  * digest as observed. The refusal is the observation; a pair of matching digests approves, so nothing
  * was observed and the control is not this run's.
+ *
+ * `planted` is recorded in the evidence whenever the mismatch was produced by a deliberate one-byte
+ * drift (`cell.mjs`'s `staleCopy`) rather than found in the run's own payload, so no reader can
+ * mistake a constructed negative control for a run that really drifted.
  */
 export function observeStaleCache({
   checkoutRoot,
@@ -56,6 +62,7 @@ export function observeStaleCache({
   observedCliVersion = null,
   requestedCliVersion = null,
   pluginLoadEvidence = null,
+  planted = false,
 } = {}) {
   if (!checkoutRoot || !staleRoot) return null;
   const expected = manifestDigest(checkoutRoot);
@@ -64,9 +71,11 @@ export function observeStaleCache({
   const version = observedCliVersion ?? requestedCliVersion;
   let identity;
   try {
+    // The version is held equal on both sides so ONLY the digest rule can decide: this control is
+    // about a payload that moved, and a version disagreement would answer a different question.
     identity = installationIdentity({
-      requested_cli_version: requestedCliVersion,
-      resolved_cli_version: requestedCliVersion,
+      requested_cli_version: version,
+      resolved_cli_version: version,
       observed_cli_version: version,
       install_mode: "checkout",
       plugin_revision: null,
@@ -80,9 +89,11 @@ export function observeStaleCache({
   } catch {
     return null;
   }
-  const decision = approveIdentity(identity, { requested_cli_version: requestedCliVersion ?? version });
+  const decision = approveIdentity(identity, { requested_cli_version: version });
   if (decision.ok) return null;
   if (decision.reason !== "installation-identity-mismatch") return null;
+  // Only a DIGEST refusal belongs to this control; anything else is a different rule's answer.
+  if (decision.detail?.field !== "observed_plugin_manifest_sha256") return null;
   return observation("could-not-run", "installation-identity-mismatch", {
     field: decision.detail?.field ?? null,
     expected: decision.detail?.expected ?? expected,
@@ -90,6 +101,47 @@ export function observeStaleCache({
     mutated_file: mutatedFile,
     checkout_root: checkoutRoot,
     stale_root: staleRoot,
+    planted,
+  });
+}
+
+/**
+ * The paired half of `stale-cache`: the SAME identity rule on a matching digest, which must approve.
+ * A control whose pair came out the same way proves failure, not discrimination, so this is the
+ * observation that lets `recordControl` compute `discriminates` instead of leaving it false forever.
+ */
+export function observeStaleCachePair({
+  checkoutRoot,
+  observedCliVersion = null,
+  requestedCliVersion = null,
+  pluginLoadEvidence = null,
+} = {}) {
+  if (!checkoutRoot) return null;
+  const digest = manifestDigest(checkoutRoot);
+  if (digest === null) return null;
+  const version = observedCliVersion ?? requestedCliVersion;
+  let identity;
+  try {
+    identity = installationIdentity({
+      requested_cli_version: requestedCliVersion,
+      resolved_cli_version: requestedCliVersion,
+      observed_cli_version: version,
+      install_mode: "checkout",
+      plugin_revision: null,
+      expected_plugin_manifest_sha256: digest,
+      observed_plugin_manifest_sha256: digest,
+      loaded_plugin_root: checkoutRoot,
+      plugin_load_evidence: pluginLoadEvidence ?? `manifest digest measured once from ${checkoutRoot}`,
+    });
+  } catch {
+    return null;
+  }
+  const decision = approveIdentity(identity, { requested_cli_version: version });
+  if (!decision.ok) return null;
+  return observation("pass", "identity-approved", {
+    field: "observed_plugin_manifest_sha256",
+    digest,
+    checkout_root: checkoutRoot,
   });
 }
 
@@ -116,6 +168,9 @@ export function observeExit0DeniedRead({ record, check = null } = {}) {
     stream_end_offset: denial.stream_end_offset,
     raw_sha256: denial.raw_sha256,
     invocation_id: record.invocation_id ?? null,
+    // Which arguments the denial's tool actually carried, so a reader can see the observer did not
+    // depend on one blessed event shape.
+    denial_shape: denial.detail?.input_keys ?? [],
   });
 }
 
@@ -187,19 +242,26 @@ function walkJson(dir, out = []) {
  * the download job already fetched. Only a cell record carries them; anything else is ignored.
  */
 export function mergeObservationsFromCells(cellsDir) {
-  return mergeObservations(
-    ...walkJson(resolve(cellsDir)).map((file) => {
-      let record;
+  return mergeObservations(...cellRecords(cellsDir).map((record) => record[CONTROL_OBSERVATIONS_FIELD] ?? null));
+}
+
+/** The paired observations the same records carry, merged the same way. */
+export function mergePairsFromCells(cellsDir) {
+  return mergeObservations(...cellRecords(cellsDir).map((record) => record[CONTROL_PAIRS_FIELD] ?? null));
+}
+
+/** Every parsed cell record under a cells dir, in a deterministic order. */
+function cellRecords(cellsDir) {
+  return walkJson(resolve(cellsDir))
+    .map((file) => {
       try {
-        record = JSON.parse(readFileSync(file, "utf8"));
+        return JSON.parse(readFileSync(file, "utf8"));
       } catch {
         return null;
       }
-      if (!record || typeof record !== "object" || Array.isArray(record)) return null;
-      if (typeof record.harness !== "string" || typeof record.track !== "string") return null;
-      return record[CONTROL_OBSERVATIONS_FIELD] ?? null;
-    }),
-  );
+    })
+    .filter((record) => record && typeof record === "object" && !Array.isArray(record))
+    .filter((record) => typeof record.harness === "string" && typeof record.track === "string");
 }
 
 /** Attaches one observation to a cell record, in place of any earlier one for the same id. */
@@ -207,6 +269,13 @@ export function attachObservation(cell, id, value) {
   if (value == null) return cell;
   const existing = cell[CONTROL_OBSERVATIONS_FIELD] ?? {};
   return { ...cell, [CONTROL_OBSERVATIONS_FIELD]: { ...existing, [id]: value } };
+}
+
+/** Attaches the paired observation that makes a control discriminate rather than merely fire. */
+export function attachPair(cell, id, value) {
+  if (value == null) return cell;
+  const existing = cell[CONTROL_PAIRS_FIELD] ?? {};
+  return { ...cell, [CONTROL_PAIRS_FIELD]: { ...existing, [id]: value } };
 }
 
 /**
@@ -240,11 +309,18 @@ export function attachMissingKey({ row, cellFile, capturePath = null } = {}) {
 /** The control ids this module produces, in the controls module's order. */
 export const OBSERVED_CONTROL_IDS = IDS;
 
-/** The observations one graded claude-code leg produces, from what it measured. */
-export function observeLeg({ checkoutRoot, staleRoot, mutatedFile, verifyRecord, verifyCheck, verifyRoots, observedCliVersion, requestedCliVersion }) {
-  return mergeObservations({
-    "stale-cache": observeStaleCache({ checkoutRoot, staleRoot, mutatedFile, observedCliVersion, requestedCliVersion }),
+/**
+ * What one graded claude-code leg produced, from what it measured: the four control observations it
+ * could make, and the paired halves that let `recordControl` compute discrimination.
+ */
+export function observeLeg({ checkoutRoot, staleRoot, mutatedFile, planted = false, verifyRecord, verifyCheck, verifyRoots, observedCliVersion, requestedCliVersion }) {
+  const observations = mergeObservations({
+    "stale-cache": observeStaleCache({ checkoutRoot, staleRoot, mutatedFile, observedCliVersion, requestedCliVersion, planted }),
     "exit0-denied-read": observeExit0DeniedRead({ record: verifyRecord, check: verifyCheck }),
     "hidden-image-judge": observeHiddenImageJudge({ roots: verifyRoots ?? [] }),
   });
+  const pairs = mergeObservations({
+    "stale-cache": observeStaleCachePair({ checkoutRoot, observedCliVersion, requestedCliVersion }),
+  });
+  return { observations, pairs };
 }

@@ -21,7 +21,8 @@
 // A control the run cannot observe locally is reported as unobservable, never as a pass: that is
 // exactly the state this task exists to make legible instead of permanent.
 import assert from "node:assert/strict";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
@@ -32,12 +33,15 @@ import {
   HARNESS,
   PLUGIN_NAME,
   cellFor as adapterCellFor,
+  claudeAvailable,
   commandNames,
+  executeLoad,
   gradeCheck,
   installationIdentity,
   invocationTable,
   manifestDigest,
   mapCapturedLine,
+  observedCliVersion,
   prepareRunDirs,
 } from "../../test/harness/adapters/claude-code.mjs";
 import { REGISTERED } from "../../test/harness/adapters/registry.mjs";
@@ -51,6 +55,7 @@ import {
   attachMissingKey,
   mergeObservations,
   mergeObservationsFromCells,
+  mergePairsFromCells,
   observeExit0DeniedRead,
   observeHiddenImageJudge,
   observeMissingKey,
@@ -71,6 +76,23 @@ const IMAGE_LINE = {
   message: { content: [{ type: "image", source: { type: "base64", media_type: "image/png", data: "iVBORw0KGgoAAAANSUhEUg==" } }] },
 };
 
+/**
+ * `seed/denied-write-capture`: the real capture archived under
+ * `test/harness/smoke/fixtures/denied-write/` — one guarded `claude -p` under
+ * `--permission-mode dontAsk` whose instruction tried to write a file the policy denies. Read
+ * through the runtime's archive reader so the bytes are re-hashed against the record that cites them.
+ */
+function readDeniedCapture() {
+  const dir = join(HERE, "../../test/harness/smoke/fixtures/denied-write");
+  const recordPath = join(dir, "claude-code-denied-write.capture.json");
+  const record = JSON.parse(readFileSync(recordPath, "utf8"));
+  const stdoutPath = join(dir, "claude-code-denied-write.stdout.bin");
+  const bytes = readFileSync(stdoutPath);
+  if (sha256Hex(bytes) !== record.stdout.sha256) throw new Error(`the archived denial capture was modified: ${recordPath}`);
+  return { record: { ...record, evidence_root: dir, evidence_paths: [recordPath, stdoutPath] }, path: recordPath, bytes };
+}
+const DENIED_CAPTURE = readDeniedCapture();
+
 function sandbox(t, label = "t13-") {
   const dir = mkdtempSync(join(tmpdir(), label));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
@@ -85,20 +107,22 @@ function payloadCopy(t) {
 }
 
 /**
- * The identity the run installs. Both digests are measured from real payload bytes (the checkout
- * payload and a byte-identical copy), the load evidence is derived from the payload's own
- * `commands/` directory, and the version is the pin the install step installs exactly. A hosted run
- * additionally gets `observed_cli_version` from `claude --version` and `plugin_load_evidence` from
- * the graded invocation's `system/init` event; the local leg below proves those readers work.
+ * The identity the run installs, assembled the way the adapter assembles one.
+ *
+ * `observed_cli_version` is never a literal here: it is whatever the adapter's own CLI-report reader
+ * returns for a `claude --version` step (`observedCliVersion`, claude-code.mjs). The recorded step
+ * text is the shape the hosted runner prints after installing the pin; handing the reader a
+ * DIFFERENT version is what the negative case below does, and it must refuse.
  */
-function contractIdentity({ observedRoot, observedCliVersion = PINNED }) {
+function contractIdentity({ observedRoot, versionStepText = `${PINNED} (Claude Code)`, requestedCliVersion = PINNED }) {
   const expected = manifestDigest(PLUGIN_ROOT);
   const observed = manifestDigest(observedRoot);
   const names = commandNames({ pluginRoot: PLUGIN_ROOT });
+  const observedFromCliReport = observedCliVersion({ text: versionStepText, exit_code: 0 });
   return installationIdentity({
-    requested_cli_version: observedCliVersion,
-    resolved_cli_version: observedCliVersion,
-    observed_cli_version: observedCliVersion,
+    requested_cli_version: requestedCliVersion,
+    resolved_cli_version: requestedCliVersion,
+    observed_cli_version: observedFromCliReport,
     install_mode: "checkout",
     plugin_revision: null,
     expected_plugin_manifest_sha256: expected,
@@ -223,12 +247,82 @@ test("smoke-cell-graded: a leg writes four checks from captured bytes bound to a
   assert.ok(cell.checks.some((check) => check.verdict !== "pass"), "no check passed on a stream that never answered");
 
   // The leg's own observations ride on the cell: the stale-cache control is exercised by a planted
-  // one-byte drift measured against the real payload, and the image scan reads the real child tree.
+  // one-byte drift measured against the real payload, and the image scan reads what the invocation
+  // PRODUCED — the captured bytes — not only the kit tree it worked in.
   assert.ok(cell.control_observations?.["stale-cache"], "the leg observed the stale-cache control");
   assert.equal(cell.control_observations["stale-cache"].reason, "installation-identity-mismatch");
   assert.equal(cell.control_observations["stale-cache"].evidence.field, "observed_plugin_manifest_sha256");
+  assert.equal(cell.control_observations["stale-cache"].evidence.planted, true, "a constructed mismatch is labelled as planted");
+  assert.ok(cell.control_pairs?.["stale-cache"], "the matching-digest half travels beside it");
+  assert.equal(cell.control_pairs["stale-cache"].verdict, "pass");
+  assert.equal(cell.control_pairs["stale-cache"].reason, "identity-approved");
   assert.ok(cell.control_observations["hidden-image-judge"], "the leg scanned the verify child tree");
   assert.equal(cell.control_observations["hidden-image-judge"].verdict, "pass");
+  const scanned = cell.control_observations["hidden-image-judge"].evidence;
+  assert.ok(scanned.files_scanned > 0, "a pass over zero inspected bytes certifies nothing");
+  const captureDirs = cell.evidence_paths.map((path) => resolve(path).split("/").slice(0, -1).join("/"));
+  assert.ok(
+    scanned.roots.some((root) => captureDirs.includes(resolve(root))),
+    `the scan must read the invocation's captured bytes: roots=${JSON.stringify(scanned.roots)}`,
+  );
+  assert.ok(
+    scanned.roots.some((root) => /scanned-|captures|evidence/.test(root)) || scanned.files_scanned > 32,
+    "the scanned tree must include the persisted stream, not only the kit project",
+  );
+
+  // --- the identity is READ, not echoed: a different CLI report must refuse ------------------
+  // A leg that stubs the reader with the pin cannot pass this: the same code path, handed a
+  // version the pin does not match, has to refuse and name the field it refused on.
+  const otherVersion = contractIdentity({ observedRoot, versionStepText: "2.1.314 (Claude Code)" });
+  assert.equal(otherVersion.observed_cli_version, "2.1.314", "the reader returns what the step reported");
+  const otherDecision = adapterCellFor({
+    track: "pinned",
+    cells: [
+      {
+        harness: HARNESS,
+        track: "pinned",
+        installation: otherVersion,
+        invocation_id: "inv-other-version",
+        check_id: "status",
+        verdict: "pass",
+        reason: null,
+        source: "files-and-event-stream",
+        denied_tool_call: null,
+        process_exit_code: 0,
+        evidence_paths: [],
+        report_paths: [],
+        observed_verify_outcome: null,
+        checks: [{ check_id: "status", verdict: "pass", reason: null, source: "files-and-event-stream" }],
+      },
+    ],
+    installation: otherVersion,
+  });
+  assert.equal(otherDecision.verdict, "could-not-run", "a version the pin does not match cannot grade");
+  assert.equal(otherDecision.reason, "installation-identity-mismatch");
+  assert.equal(otherDecision.identity_decision.detail.field, "observed_cli_version");
+
+  // --- the real load measures through the same reader --------------------------------------
+  // When this host has a CLI, the adapter's own load leg must produce the version its own
+  // `--version` output states. The comparison parses that output HERE, independently, so a reader
+  // replaced by the pin constant would disagree with the text it claims to have read.
+  const cli = claudeAvailable();
+  if (cli) {
+    const config = mkdtempSync(join(tmpdir(), "t13-load-config-"));
+    t.after(() => rmSync(config, { recursive: true, force: true }));
+    const load = await executeLoad({ workspace: ROOT, configDir: config, env: { ...process.env } });
+    t.after(() => load.cleanup());
+    const reported = String(load.version_step?.text ?? "").match(/[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?/);
+    assert.ok(reported, `the CLI reported no version: ${JSON.stringify(load.version_step?.text)}`);
+    assert.equal(
+      load.identity.observed_cli_version,
+      reported[0],
+      "the identity version must be the one the CLI itself reported, not a pin echoed back",
+    );
+    assert.equal(load.identity.expected_plugin_manifest_sha256, manifestDigest(PLUGIN_ROOT), "the expected digest is the checkout payload's");
+    t.diagnostic(`local CLI reports ${reported[0]}; pin is ${PINNED}`);
+  } else {
+    t.diagnostic("no claude CLI on PATH: the live load leg is not executed, and claims nothing");
+  }
 
   // The recorder accepts it as one of the twelve cells.
   const rest = [];
@@ -329,6 +423,55 @@ function cellsDirWithObservations(t, { drop = null } = {}) {
   return root;
 }
 
+/**
+ * Executes the workflow's real controls-producer step body in a sandbox laid out the way the download
+ * job lays it out: the checkout's `test/harness/controls` reachable, a cells dir holding twelve
+ * records, and the job output either empty or absent. Returns its rows, so the assertion is about
+ * what CI runs rather than about the module it was supposed to call.
+ */
+function runProducerStep(t, { observations = {}, pairs = {}, nullIn = null, nullEnv = "" } = {}) {
+  const scratch = join(sandbox(t, "t13-producer-"), "run");
+  mkdirSync(join(scratch, "test/harness"), { recursive: true });
+  symlinkSync(join(ROOT, "test/harness/controls"), join(scratch, "test/harness/controls"), "dir");
+  let first = true;
+  for (const harness of HARNESSES) {
+    for (const track of TRACKS) {
+      const folder = join(scratch, "cells", `harness-eval-cell-1-1-${harness}-${track}`, "cell");
+      mkdirSync(folder, { recursive: true });
+      const carries = first;
+      first = false;
+      const record = {
+        harness,
+        track,
+        cell_state: "could-not-run",
+        reason: "missing-api-key",
+        install_mode: "checkout",
+        ...(carries ? { control_observations: { ...observations }, control_pairs: { ...pairs } } : {}),
+        // A record that observed nothing for an id still carries the id as NULL: a merge that used
+        // Object.assign would overwrite a real observation another record made with it.
+        ...(!carries && nullIn ? { control_observations: { [nullIn]: null } } : {}),
+      };
+      writeFileSync(join(folder, "cell.json"), `${JSON.stringify(record)}\n`, "utf8");
+    }
+  }
+  const step = readWorkflow().yaml.jobs.download.steps.find((candidate) => /qualifyControls/.test(String(candidate?.run ?? "")));
+  const result = (() => {
+    try {
+      execFileSync("/bin/sh", ["-c", String(step.run)], {
+        cwd: scratch,
+        stdio: "pipe",
+        env: { ...process.env, HARNESS_EVAL_CONTROL_OBSERVATIONS: nullEnv },
+      });
+      return { status: 0, stderr: "" };
+    } catch (error) {
+      return { status: error.status ?? 1, stderr: String(error.stderr ?? error.message) };
+    }
+  })();
+  const file = join(scratch, "cells", "controls.json");
+  const rows = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : [];
+  return { ...result, dir: scratch, rows, file };
+}
+
 test("smoke-control-observations: observed rows reach the producer, an unobserved control stays control-unobservable", (t) => {
   const work = sandbox(t);
 
@@ -370,6 +513,57 @@ test("smoke-control-observations: observed rows reach the producer, an unobserve
   assert.equal(partialRows.length, 4, "an unobserved control is a row, not an omission");
   assert.equal(partialRows.find((row) => row.control_id === "hidden-image-judge").matched, false);
 
+  // --- the PRODUCER the dispatch actually runs --------------------------------------------
+  // The step body in .github/workflows/harness-eval.yml is what turns the legs' observations into
+  // the four rows in CI. Running it here, over a populated cells dir, is the only way a local gate
+  // can tell whether that path still merges: its output must equal the module's, and a `null` in one
+  // record must not erase an observation another record really made.
+  const producerStep = readWorkflow().yaml.jobs.download.steps.find((step) => /qualifyControls/.test(String(step?.run ?? "")));
+  assert.ok(producerStep, "the download job no longer carries a controls producer");
+  const produced = runProducerStep(t, {
+    observations,
+    pairs: { "stale-cache": { verdict: "pass", reason: "identity-approved" } },
+    nullIn: "stale-cache",
+  });
+  assert.equal(produced.status, 0, `the producer step exited ${produced.status}: ${produced.stderr}`);
+  const producedRows = produced.rows;
+  assert.deepEqual(producedRows.map((row) => row.control_id), [...CONTROL_IDS], "the step wrote the four rows, in order");
+  assert.equal(producedRows.find((row) => row.control_id === "hidden-image-judge").verdict, "pass");
+  assert.equal(
+    producedRows.find((row) => row.control_id === "stale-cache").reason,
+    "installation-identity-mismatch",
+    "a NULL observation in a later record erased a real one",
+  );
+  assert.equal(
+    producedRows.find((row) => row.control_id === "stale-cache").discriminates,
+    true,
+    "the paired half the leg produced never reached qualifyControls",
+  );
+  // A NULL arriving through the job output must not erase an observation the cells really carry
+  // either: that merge happens last, so the order is fixed and this case is order-independent.
+  const withNullEnv = runProducerStep(t, {
+    observations,
+    pairs: { "stale-cache": { verdict: "pass", reason: "identity-approved" } },
+    nullEnv: JSON.stringify({ "missing-key": null, "exit0-denied-read": null }),
+  });
+  assert.equal(withNullEnv.status, 0, `the producer exited ${withNullEnv.status}: ${withNullEnv.stderr}`);
+  assert.equal(
+    withNullEnv.rows.find((row) => row.control_id === "missing-key").reason,
+    "missing-api-key",
+    "a null in HARNESS_EVAL_CONTROL_OBSERVATIONS erased a real observation",
+  );
+  assert.equal(withNullEnv.rows.find((row) => row.control_id === "exit0-denied-read").verdict, "fail");
+
+  // The step and the tested module must agree row for row, or the two copies have drifted.
+  const fromModule = assertControlRows(
+    qualifyControls({ observations: mergeObservationsFromCells(join(produced.dir, "cells")), pairs: mergePairsFromCells(join(produced.dir, "cells")) }).rows,
+  );
+  assert.deepEqual(
+    producedRows.map((row) => `${row.control_id} ${row.verdict} ${row.reason} ${row.discriminates}`),
+    fromModule.map((row) => `${row.control_id} ${row.verdict} ${row.reason} ${row.discriminates}`),
+    "the workflow step body and observations.mjs disagree",
+  );
+
   // --- the exactly-four rule and the empty job output ------------------------------------
   assert.throws(() => assertControlRows(rows.slice(0, 3)), /expected exactly/);
   assert.throws(() => assertControlRows([...rows, rows[0]]), /expected exactly/);
@@ -381,41 +575,102 @@ test("smoke-control-observations: observed rows reach the producer, an unobserve
   const merged = mergeObservations({ "missing-key": { verdict: "fail", reason: "wrong" } }, { "missing-key": null });
   assert.equal(merged["missing-key"].reason, "wrong", "a null observation does not erase a real one");
 
-  // --- the exit-0 denial: a clean exit beside a required denial is a FAIL -----------------
-  const denialDir = join(work, "denial");
-  mkdirSync(denialDir, { recursive: true });
-  const denialTarget = join(denialDir, DENIAL_TARGET_NAME);
-  const deniedRecord = replayRecord({
-    dir: denialDir,
-    key: "verify-button-drift",
-    check_id: "verify",
-    invocation_id: "inv-denied-write",
-    entry: { cwd: denialDir },
-    exit_code: 0,
-    extra: [
-      {
-        type: "result",
-        subtype: "success",
-        is_error: false,
-        permissionMode: "dontAsk",
-        permission_denials: [{ tool_name: "Write", input: { file_path: denialTarget } }],
-      },
-    ],
-  });
-  assert.equal(deniedRecord.process_status.exit_code, 0, "the process exited 0");
-  const denied = observeExit0DeniedRead({ record: deniedRecord, check: "verify" });
-  assert.ok(denied, "the denial was observed");
-  assert.equal(denied.verdict, "fail");
-  assert.equal(denied.reason, "denied_tool_call");
-  assert.equal(denied.evidence.process_exit_code, 0, "a pass beside exit 0 is what the control refuses");
-  assert.equal(denied.evidence.required_read, true);
-  assert.ok(Number.isInteger(denied.evidence.stream_offset), "the denial cites its own stream offset");
+  // --- the exit-0 denial: a REAL captured stream, exit 0 beside a required denial ----------
+  // `seed/denied-write-capture`: one guarded `claude -p` under --permission-mode dontAsk whose
+  // instruction attempted a write the policy denies. The bytes below are that run's own stdout, with
+  // its own exit 0 - nothing about the denial is written by this test.
+  const denied = DENIED_CAPTURE.record;
+  assert.equal(denied.process_status.exit_code, 0, "the real capture exited 0");
+  assert.equal(denied.termination_kind, "native");
+  assert.equal(denied.model_request_count, 1, "the model really was asked, so the denial is a real one");
+  const observedDenial = observeExit0DeniedRead({ record: denied, check: "verify" });
+  assert.ok(observedDenial, `the real denial was not observed: ${JSON.stringify(denied.observations?.filter((o) => o.kind === "permission_denied"))}`);
+  assert.equal(observedDenial.verdict, "fail");
+  assert.equal(observedDenial.reason, "denied_tool_call");
+  assert.equal(observedDenial.evidence.process_exit_code, 0, "a pass beside exit 0 is what the control refuses");
+  assert.equal(observedDenial.evidence.required_read, true);
+  assert.equal(observedDenial.evidence.operation, "Write", "the denied operation is named");
+  assert.ok(observedDenial.evidence.target.endsWith("keep.txt"), observedDenial.evidence.target);
+  assert.ok(Number.isInteger(observedDenial.evidence.stream_offset), "the denial cites its own stream offset");
+  assert.ok(
+    observedDenial.evidence.denial_shape.includes("file_path"),
+    `the reader must see the arguments the CLI really sent: ${JSON.stringify(observedDenial.evidence.denial_shape)}`,
+  );
+  // The archive is re-hashed here: a fixture edited to carry a denial the run never made is refused.
+  const deniedStdout = denied.evidence_paths.find((path) => path.endsWith(".stdout.bin"));
+  assert.equal(sha256Hex(readFileSync(deniedStdout)), denied.stdout.sha256, "the archived bytes hash to the hash the record cites");
 
-  // The paired observation: the same bytes without the denial produce no observation at all.
+  // A stream that carries NO denial must leave the control unobserved - not pass, not fail. This is
+  // the honest outcome on a hosted leg whose model never attempts a denied write.
   const cleanDir = join(work, "clean-denial");
   mkdirSync(cleanDir, { recursive: true });
   const cleanRecord = replayRecord({ dir: cleanDir, key: "clean", check_id: "verify", invocation_id: "inv-clean", entry: { cwd: cleanDir }, exit_code: 0 });
   assert.equal(observeExit0DeniedRead({ record: cleanRecord, check: "verify" }), null, "no denial, no observation");
+  assert.equal(
+    assertControlRows(qualifyControls({ observations: mergeObservations({ "exit0-denied-read": null }) }).rows).find((row) => row.control_id === "exit0-denied-read").reason,
+    "control-unobservable",
+    "a leg that never denied must read control-unobservable",
+  );
+
+  // A denial on a path the invocation does not need is NOT this control: the observer is not keyed
+  // to the word `permission_denials`, it is keyed to a required read.
+  const optional = replayRecord({
+    dir: join(work, "optional-denial"),
+    key: "optional",
+    check_id: "verify",
+    invocation_id: "inv-optional-denial",
+    entry: { cwd: join(work, "elsewhere") },
+    exit_code: 0,
+    extra: [
+      {
+        type: "result",
+        is_error: false,
+        permission_denials: [{ tool_name: "Write", tool_input: { file_path: join(work, DENIAL_TARGET_NAME) } }],
+      },
+    ],
+  });
+  assert.equal(observeExit0DeniedRead({ record: optional, check: "verify" }), null, "an optional denial is not the control");
+  // ...and the ADAPTER declares it optional rather than leaving it for a reader to assume. Asserted
+  // on the mapper directly, because the capture layer currently drops a declared `false` to `null`.
+  const optionalTarget = join(work, DENIAL_TARGET_NAME);
+  const mappedOptional = mapCapturedLine({
+    json: { type: "result", is_error: false, permission_denials: [{ tool_name: "Write", tool_input: { file_path: optionalTarget } }] },
+    text: "",
+    entry: { cwd: join(work, "elsewhere") },
+  });
+  assert.equal(mappedOptional.find((entry) => entry.kind === "permission_denied")?.required_read, false);
+  const mappedRequired = mapCapturedLine({
+    json: { type: "result", is_error: false, permission_denials: [{ tool_name: "Write", tool_input: { file_path: optionalTarget } }] },
+    text: "",
+    entry: { cwd: work },
+  });
+  assert.equal(mappedRequired.find((entry) => entry.kind === "permission_denied")?.required_read, true);
+
+  // --- parser unit test: the shape variants the CLI has used, and the one it uses today -----
+  // Kept separate from the captured evidence: this proves the reader accepts both spellings, it
+  // does not stand in for a real denial stream.
+  const legacyShape = replayRecord({
+    dir: join(work, "legacy-shape"),
+    key: "legacy",
+    check_id: "verify",
+    invocation_id: "inv-legacy-shape",
+    entry: { cwd: join(work, "legacy-shape") },
+    exit_code: 0,
+    extra: [
+      {
+        type: "result",
+        is_error: false,
+        permission_denials: [{ tool: "Write", input: { path: join(work, "legacy-shape", DENIAL_TARGET_NAME) } }],
+      },
+    ],
+  });
+  const legacy = observeExit0DeniedRead({ record: legacyShape, check: "verify" });
+  assert.ok(legacy, "the older `input.path` spelling is still read");
+  assert.equal(legacy.reason, "denied_tool_call");
+
+  // A non-zero exit never produces this row: the control exists for the clean exit.
+  const failedExit = replayRecord({ dir: join(work, "failed-exit"), key: "failed", check_id: "verify", invocation_id: "inv-failed", entry: { cwd: join(work, "failed-exit") }, exit_code: 1 });
+  assert.equal(observeExit0DeniedRead({ record: failedExit, check: "verify" }), null, "a non-zero exit is not the exit-0 control");
 
   // --- the missing-key producer reads the leg's own row ----------------------------------
   const legCell = join(work, "leg");
@@ -481,6 +736,12 @@ test("smoke-cell-fail-closed: three env shapes produce three named reasons and t
     assert.equal(record.reason, "missing-api-key");
   }
   assert.equal(keyless.some((cell) => cell.reason === "smoke-not-implemented"), false, "the constant bare record is gone");
+  // The registry decides the credential BEFORE adapter absence (`adapters/registry.mjs` step 1 before
+  // step 2), so under this GIVEN the four adapter-pending harnesses read the guard's reason too.
+  // That precedence is the contract, asserted here rather than left implicit: a per-harness label
+  // over a missing key would claim an adapter check that never ran.
+  const precedence = keyless.find((cell) => cell.harness === "codex");
+  assert.equal(precedence.reason, "missing-api-key", "the guard's refusal must outrank adapter absence");
   const collectedKeyless = collectCells(keyless, { pins: loadPins(), installMode: "checkout" });
   assert.equal(collectedKeyless.length, 12);
   assert.equal(recorderExit({ cells: collectedKeyless }).reason, "could-not-run");
@@ -615,6 +876,9 @@ test("smoke-workflow-wiring: four jobs, the record anchor, one cell upload, runC
   const producer = stepsOf(yaml.jobs.download).find((step) => /qualifyControls/.test(runOf(step)));
   assert.ok(producer, "the controls producer is missing");
   assert.match(runOf(producer), /control_observations/, "the producer never reads the cells' observations");
+  assert.match(runOf(producer), /control_pairs/, "the producer drops the paired observations, so no row can discriminate");
+  assert.match(runOf(producer), /qualifyControls\(\{ observations, pairs \}\)/, "the pairs never reach qualifyControls");
+  assert.match(runOf(producer), /if \(value != null\)/, "a null observation would overwrite a real one");
   assert.match(runOf(producer), /HARNESS_EVAL_CONTROL_OBSERVATIONS/, "the producer ignores the optional job output");
   assert.match(runOf(producer), /\.trim\(\)/, "the producer still JSON.parses an empty job output, which throws");
   assert.equal(/cell\/cell\.json/.test(runOf(producer)), false, "the producer must not become the recorder's first match");
@@ -624,7 +888,7 @@ test("smoke-workflow-wiring: four jobs, the record anchor, one cell upload, runC
 // TC-2 — the hidden-image-judge scan discriminates
 // ---------------------------------------------------------------------------
 
-test("smoke-image-scan: a planted image request fails the scan, a clean tree passes, an unreadable tree yields nothing", (t) => {
+test("smoke-image-scan: a planted image request fails the scan, a clean tree passes, an empty or unreadable tree yields nothing", (t) => {
   const work = sandbox(t);
 
   // --- the clean real tree: the archived capture and its stdout bytes --------------------
@@ -658,6 +922,24 @@ test("smoke-image-scan: a planted image request fails the scan, a clean tree pas
   assert.equal(scanTree({ roots: [join(work, "absent")] }), null, "a tree the scanner cannot open is not a pass");
   assert.equal(scanTree({ roots: [] }), null);
   assert.equal(observeHiddenImageJudge({ roots: [join(work, "absent")] }), null, "an unreadable tree leaves the control unobservable");
+
+  // --- an EXISTING but empty tree: also no observation -----------------------------------
+  // "No image was found" over zero inspected bytes is the same evidence as "nobody looked", so a
+  // readable-but-empty tree must never certify the absence of a screenshot judge.
+  const empty = join(work, "empty-tree");
+  mkdirSync(empty, { recursive: true });
+  assert.equal(scanTree({ roots: [empty] }), null, "an existing empty tree read as a pass with 0 files scanned");
+  assert.equal(observeHiddenImageJudge({ roots: [empty] }), null, "an empty tree leaves the control unobservable");
+  assert.equal(observeHiddenImageJudge({ roots: [empty, join(work, "absent")] }), null, "two empty roots are still zero bytes");
+
+  // --- one real file and no image: a pass that inspected something -----------------------
+  const reportOnly = join(work, "report-only");
+  mkdirSync(reportOnly, { recursive: true });
+  writeFileSync(join(reportOnly, "verify-report.json"), `${JSON.stringify({ observed_verify_outcome: "clean" })}\n`, "utf8");
+  const thin = scanTree({ roots: [reportOnly] });
+  assert.ok(thin, "a tree with one readable file is scanned");
+  assert.equal(thin.verdict, "pass");
+  assert.equal(thin.files_scanned, 1, "the count is what it inspected, not a constant");
 
   const observed = observeHiddenImageJudge({ roots: [CAPTURES] });
   assert.equal(observed.verdict, "pass");

@@ -22,7 +22,7 @@ import * as claudeCode from "../adapters/claude-code.mjs";
 import { REGISTERED, cellFor as registryCellFor } from "../adapters/registry.mjs";
 import { manifestOf } from "../runtime/index.mjs";
 import { validateAgainst } from "../validate.mjs";
-import { mergeObservations, observeLeg } from "./observations.mjs";
+import { attachObservation, attachPair, mergeObservations, observeLeg } from "./observations.mjs";
 
 export const SMOKE_CELL_DIR = "cell";
 export const SMOKE_CELL_FILE = "cell.json";
@@ -52,9 +52,9 @@ function staleCopy({ checkoutRoot, loadedRoot, scratch = null }) {
   try {
     if (loadedRoot) {
       const natural = firstDivergence(checkoutRoot, loadedRoot);
-      if (natural !== null) return { root: loadedRoot, mutatedFile: natural, cleanup: null };
+      if (natural !== null) return { root: loadedRoot, mutatedFile: natural, planted: false, cleanup: null };
     }
-    if (!checkoutRoot) return { root: null, mutatedFile: null, cleanup: null };
+    if (!checkoutRoot) return { root: null, mutatedFile: null, planted: false, cleanup: null };
     const base = scratch ?? mkdtempSync(join(tmpdir(), "pp-stale-payload-"));
     mkdirSync(base, { recursive: true });
     const root = join(base, "stale-payload");
@@ -62,15 +62,16 @@ function staleCopy({ checkoutRoot, loadedRoot, scratch = null }) {
     cpSync(checkoutRoot, root, { recursive: true });
     const target = firstDivergence(checkoutRoot, root) ?? "package.json";
     const victim = join(root, target);
-    if (!existsSync(victim)) return { root: null, mutatedFile: null, cleanup: null };
+    if (!existsSync(victim)) return { root: null, mutatedFile: null, planted: false, cleanup: null };
     writeFileSync(victim, `${readFileSync(victim, "utf8")} `, "utf8");
     return {
       root,
       mutatedFile: target,
+      planted: true,
       cleanup: scratch ? null : () => rmSync(base, { recursive: true, force: true }),
     };
   } catch {
-    return { root: null, mutatedFile: null, cleanup: null };
+    return { root: null, mutatedFile: null, planted: false, cleanup: null };
   }
 }
 
@@ -211,31 +212,38 @@ export async function runCell({
 
     const cell = claudeCode.cellFor({ track, cells: results.map((result) => result.cell), installation });
 
-    let observed = {};
+    let observed = { observations: {}, pairs: {} };
     if (controlObservations) {
-      const verify = results.find((result) => result.entry?.key === "verify-button-drift") ?? null;
       const loadedRoot = loaded?.installed?.installPath ?? null;
       // A negative control is a deliberate perturbation: the stale-cache control exists to prove
       // that the identity rule REFUSES a payload that moved, so when the run's own payload agrees
       // with the checkout (the healthy case) the leg plants the one-byte drift itself and measures
-      // the rule against real digests. Nothing about the refusal is copied from a definition.
+      // the rule against real digests. The observation carries `planted: true` so no reader mistakes
+      // it for a run that drifted on its own, and the matching-digest half travels as its pair.
       const stale = staleCopy({ checkoutRoot: pluginRoot, loadedRoot, scratch: evidenceDir });
+      // The roots are what the invocation PRODUCED, not what it could read: the captured stream —
+      // the only place an `image` content block can appear — is persisted beside the model's
+      // requests, in the evidence dir the adapter wrote. Scanning the kit-project working tree alone
+      // would clear a tree that never held the bytes.
       observed = observeLeg({
         checkoutRoot: pluginRoot,
         staleRoot: stale.root,
         mutatedFile: stale.mutatedFile,
-        verifyRecord: verify?.record ?? null,
+        planted: stale.planted === true,
+        verifyRecord: verifyRecordOf(results),
         verifyCheck: "verify",
-        verifyRoots: [ownedDirs.for("verify-button-drift")?.dir, ownedDirs.for("verify-clean")?.dir].filter(Boolean),
+        verifyRoots: verifyRootsOf(ownedDirs, results),
         observedCliVersion: installation.observed_cli_version ?? null,
         requestedCliVersion: installation.requested_cli_version ?? requestedCliVersion,
       });
       stale.cleanup?.();
     }
-    const withObservations = mergeObservations(observed);
-    return Object.keys(withObservations).length > 0
-      ? { ...cell, control_observations: withObservations }
-      : cell;
+    const observations = mergeObservations(observed.observations);
+    const pairs = mergeObservations(observed.pairs);
+    let withControls = cell;
+    for (const [id, value] of Object.entries(observations)) withControls = attachObservation(withControls, id, value);
+    for (const [id, value] of Object.entries(pairs)) withControls = attachPair(withControls, id, value);
+    return withControls;
   } catch (error) {
     return bareRecord({
       harness,
@@ -275,6 +283,25 @@ export function normalizeInstallMode(value) {
     process.stderr.write(`install mode ${JSON.stringify(String(value))} is not a substituted dispatch choice; using checkout\n`);
   }
   return "checkout";
+}
+
+/** The planted verify record: the invocation whose stream a denial or an image block would appear in. */
+function verifyRecordOf(results) {
+  const row = results.find((result) => result.entry?.key === "verify-button-drift") ?? results.find((result) => result.entry?.check_id === "verify") ?? null;
+  return row?.record ?? null;
+}
+
+/**
+ * What the verify invocations PRODUCED and what they could touch: the evidence dirs their captured
+ * streams were persisted into (resolved from the records' own citations, so a replay and a live run
+ * give the same answer) plus the run dirs the child worked in.
+ */
+function verifyRootsOf(dirs, results) {
+  const captureRoots = results
+    .filter((result) => result.entry?.check_id === "verify")
+    .flatMap((result) => (result.record?.evidence_paths ?? []).map((path) => dirname(resolve(path))));
+  const runRoots = ["verify-button-drift", "verify-clean"].map((key) => dirs.for(key)?.dir).filter(Boolean);
+  return [...new Set([...captureRoots, ...runRoots])];
 }
 
 /** `cell/cell.json` for a leg, or the fallback record when the leg produced nothing. */

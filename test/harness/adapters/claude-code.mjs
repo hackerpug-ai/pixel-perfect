@@ -730,14 +730,22 @@ export function mapCapturedLine({ json = null, text = "", entry = null }) {
     // The CLI's own denial record. A denial on a required path is a `fail`; anything else is
     // declared optional here rather than left for a later reader to assume.
     for (const denial of json.permission_denials ?? []) {
-      const target = denial?.input?.file_path ?? denial?.input?.path ?? denial?.target ?? null;
+      // The real event carries the tool's arguments under `tool_input` (with a `tool_use_id` beside
+      // it); older shapes used `input`. Both are read, and the keys are recorded so a reader can see
+      // which shape this denial really had.
+      const input = denial?.tool_input ?? denial?.input ?? null;
+      const target = input?.file_path ?? input?.path ?? denial?.target ?? null;
       const required = isRequiredPath(target, entry);
       out.push({
         kind: "permission_denied",
         operation: denial?.tool_name ?? denial?.tool ?? null,
         target,
         required_read: required,
-        detail: { mode: json.permissionMode ?? null },
+        detail: {
+          mode: json.permissionMode ?? null,
+          tool_use_id: denial?.tool_use_id ?? null,
+          input_keys: input && typeof input === "object" ? Object.keys(input).sort() : [],
+        },
       });
     }
   }

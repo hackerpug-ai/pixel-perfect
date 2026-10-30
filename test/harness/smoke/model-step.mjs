@@ -44,6 +44,7 @@ export async function modelStep({
   track,
   installMode: requestedInstallMode = "checkout",
   cellDir = SMOKE_CELL_DIR,
+  evidenceDir = null,
   env = process.env,
   manifest = null,
   resolver = null,
@@ -74,6 +75,7 @@ export async function modelStep({
       workspace: ROOT,
       configDir: readConfigDir(cellDir),
       requestedCliVersion,
+      evidenceDir: evidenceDir ?? join(cellDir, "evidence"),
       // Reuse the identity the install slot measured rather than performing a second load: the
       // load's evidence dir belongs to that step, and re-installing would measure something else.
       loadCell: load ? async () => ({ identity: load.identity, installed: load.installed }) : null,
@@ -113,6 +115,9 @@ if (isMain) {
     process.exitCode = 2;
   } else {
     const cellDir = flag("cell-dir") ?? SMOKE_CELL_DIR;
+  // The leg's captures land beside the cell it writes, so the cell can cite them and the image scan
+  // has the bytes the invocation actually produced.
+  const evidenceDir = flag("evidence-dir") ?? join(cellDir, "evidence");
     if (!isInstantiatedCell(track)) {
       // Not a real matrix cell: record the credential row and stop, so no cell record claims a
       // track that does not exist.
@@ -122,7 +127,7 @@ if (isMain) {
       process.stdout.write(`${JSON.stringify({ ...row, cell: null, why: "unsubstituted-matrix-track" })}\n`);
       process.exit(0);
     }
-    const outcome = await modelStep({ harness, track, installMode: flag("install-mode") ?? "checkout", cellDir });
+    const outcome = await modelStep({ harness, track, installMode: flag("install-mode") ?? "checkout", cellDir, evidenceDir });
     process.stdout.write(`${JSON.stringify({ harness, track, verdict: outcome.cell.verdict ?? null, cell_state: outcome.cell.cell_state ?? null, reason: outcome.cell.reason ?? null })}\n`);
     process.exitCode = outcome.written?.ok === false ? 1 : 0;
   }
