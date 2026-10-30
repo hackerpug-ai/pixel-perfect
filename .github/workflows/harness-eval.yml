@@ -280,22 +280,38 @@ jobs:
     permissions:
       contents: read
     steps:
+      # The workspace is reset and cloned BEFORE the cells are written into it.
+      #
+      # `actions/checkout@v4` clears $GITHUB_WORKSPACE either way: it deletes the directory's
+      # contents when the directory is not a git repository (prepareExistingDirectory sets
+      # remove=true), and runs `git clean -ffdx` when it is. So a checkout placed AFTER a
+      # download-artifact step silently erases the artifact that step just fetched. That order is
+      # what this task used to ship, and it cost the whole run: the producer then wrote
+      # cells/controls.json into an emptied cells/ and the handoff below published a cells artifact
+      # holding controls.json alone, so the grade job's readCellArtifacts returned 0 cells with 4
+      # controls and collectCells refused cells-incomplete — no result, and the four rows never
+      # reached the gate those rows exist for. `clean: false` does not help; the non-repository
+      # branch still deletes the directory contents. The order is asserted by
+      # tests/sprint-01/t11-controls-wiring.test.mjs so it cannot be undone by a later edit.
+      - name: Check out the dispatch commit
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # The producer imports test/harness/controls/index.mjs out of this commit, so the tree has to
+      # be on disk before it runs.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # After the checkout, never before it: this is the step that writes cells/ into the workspace.
       - name: Fetch every cell from this attempt
         uses: actions/download-artifact@v4
         with:
           pattern: harness-eval-cell-${{ github.run_id }}-${{ github.run_attempt }}-*
           path: cells
           merge-multiple: false
-
-      - name: Check out the dispatch commit
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
 
       # The four negative controls are produced here, beside the cells they belong to and BEFORE
       # they are handed on, so no attempt can publish a result whose `.controls[]` is empty.

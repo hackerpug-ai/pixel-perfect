@@ -168,9 +168,28 @@ test("controls-producer: a run produces its four control rows, the schema requir
   // the cells artifact is uploaded, so the grade job never receives a cells dir without them.
   const uploadIndex = steps.findIndex((candidate) => isUploadOf(candidate, CELLS_ARTIFACT));
   assert.ok(uploadIndex > index, `the producer (step ${index}) must run before the ${CELLS_ARTIFACT} upload (step ${uploadIndex}), so controls.json ships with the cells`);
+
+  // The cells must be FETCHED before the producer writes beside them...
+  const cellDownloadIndex = steps.findIndex((candidate) => /actions\/download-artifact/.test(String(candidate?.uses ?? "")));
+  assert.ok(cellDownloadIndex >= 0, "jobs.download never downloads this attempt's cells");
   assert.ok(
-    steps.slice(0, index).some((candidate) => /actions\/download-artifact/.test(String(candidate?.uses ?? ""))),
-    "the producer must run after this attempt's cells are downloaded into cells/",
+    cellDownloadIndex < index,
+    `the cells download (step ${cellDownloadIndex}) must run before the producer (step ${index}), or there is no cells dir to write into`,
+  );
+
+  // ...and, crucially, the checkout must come before the download, not after it.
+  // `actions/checkout@v4` clears $GITHUB_WORKSPACE: it deletes the directory's contents when the
+  // directory is not a git repository, and runs `git clean -ffdx` when it is. A checkout placed
+  // after the artifact download therefore ERASES the twelve cells that were just written into it;
+  // the producer then publishes a cells dir holding controls.json alone, the grade job reads
+  // 0 cells with 4 controls, collectCells refuses `cells-incomplete`, and no result is ever
+  // published — the receipt this whole task exists to produce. `clean: false` does not help.
+  // This ordering was the cycle-1 defect (F-T11-FIX2-1); it is pinned here so a reorder fails.
+  const checkoutIndex = steps.findIndex((candidate) => /actions\/checkout/.test(String(candidate?.uses ?? "")));
+  assert.ok(checkoutIndex >= 0, "jobs.download never checks out the dispatch commit, so the producer cannot import the controls module");
+  assert.ok(
+    checkoutIndex < cellDownloadIndex,
+    `the checkout (step ${checkoutIndex}) must run BEFORE the cells download (step ${cellDownloadIndex}): actions/checkout clears the workspace, so a later checkout would delete the cells the download just wrote`,
   );
   assert.ok(
     stepsOf(yaml.jobs.grade).some((candidate) => isUploadOf(candidate, "harness-eval-result-")),
@@ -191,7 +210,11 @@ test("controls-producer: a run produces its four control rows, the schema requir
     "a run that observed nothing says so, and never invents a pass",
   );
 
-  // --- the entry point: a cells dir with no controls.json is a refused run ---
+  // --- the entry point: main() ITSELF refuses a cells dir with no controls.json, by name ---
+  // The guard under test is main()'s own (`controls-missing` raised straight after collectCells),
+  // not assembleResult's downstream one: it is what stops a real run before it touches the Actions
+  // API or writes anything. So the two things asserted below are its identity and its position —
+  // the refusal names the cells dir only that guard reports, and the run metadata is never fetched.
   const { pins } = resultInputs();
   const env = {
     INSTALL_MODE: "checkout",
@@ -204,12 +227,39 @@ test("controls-producer: a run produces its four control rows, the schema requir
     GITHUB_REF_NAME: "main",
   };
   const jobs = await fetchStub();
+  let apiCalls = 0;
+  const countingFetch = async (...args) => {
+    apiCalls += 1;
+    return jobs(...args);
+  };
   const noControlsOut = join(scratch, "grade-no-controls");
+  const noControlsCells = writeCells(join(scratch, "cells-no-controls"));
+  const noControlsSummary = join(scratch, "summary-no-controls.md");
   const refused = await main({
-    env: { ...env, HARNESS_EVAL_CELLS_DIR: writeCells(join(scratch, "cells-no-controls")), HARNESS_EVAL_VERIFY_DIR: join(scratch, "none"), HARNESS_EVAL_OUT_DIR: noControlsOut },
-    fetchImpl: jobs,
+    env: {
+      ...env,
+      HARNESS_EVAL_CELLS_DIR: noControlsCells,
+      HARNESS_EVAL_VERIFY_DIR: join(scratch, "none"),
+      HARNESS_EVAL_OUT_DIR: noControlsOut,
+      GITHUB_STEP_SUMMARY: noControlsSummary,
+    },
+    fetchImpl: countingFetch,
   });
   assert.equal(refused, 1, "a run whose controls.json never arrived exits 1");
+  // The step summary is the only place main() names a refusal, so it is the receipt of WHICH guard
+  // fired. The guard's own details carry the cells dir it read; assembleResult's refusal does not.
+  const refusal = readFileSync(noControlsSummary, "utf8");
+  assert.match(refusal, /controls-missing/, "the refusal must name controls-missing, not any other reason");
+  assert.ok(
+    refusal.includes(noControlsCells),
+    `the refusal must name the cells dir it read (${noControlsCells}), which only main()'s controls guard reports`,
+  );
+  assert.match(
+    refusal,
+    /every run executes the four negative controls/,
+    "the refusal must be main()'s own controls guard, not assembleResult's downstream refusal of an empty array",
+  );
+  assert.equal(apiCalls, 0, "the controls guard must refuse BEFORE the run's job metadata is fetched, so a real run never reaches the Actions API");
   assert.equal(existsIn(noControlsOut, "harness-eval-result.json"), false, "a refused run leaves no result behind");
   assert.ok(pins.pins_sha256.length === 64);
 
