@@ -1,0 +1,30 @@
+{
+  "require_any": [
+    "gh\\s+(run|api|workflow)",
+    "harness-eval"
+  ],
+  "require_product_target_any": [
+    "harness-eval-result",
+    "harness-eval-verify-reports",
+    "harness-eval-evidence",
+    "verify-button-drift",
+    "verify-clean",
+    "control_observations",
+    "stream_mapping",
+    "cells\\[",
+    "controls\\["
+  ],
+  "banned_success_oracles": [
+    "body",
+    "html",
+    "main",
+    "document",
+    "*"
+  ],
+  "flows": {
+    "FLOW-GRD-01-TWELVE-CELLS": "A finished hand dispatch reads twelve cells. Each of the ten keyed cells carries four check verdicts with evidence paths, bound to the CLI version it ran and the plugin it loaded. Cursor stays present as could-not-run. The cell verdict words are read from the run, never expected in advance, and no screenshot score exists. Read-only against GitHub: resolves the newest completed harness-eval run whose head_sha equals git rev-parse HEAD and downloads its attempt-qualified result artifact. Writes only under .tmp/sprint-02-verification/ and a scratch download dir. Banned: any repo push or commit, workflow file mutation, a hardcoded run id, and secret material in the report.",
+    "FLOW-GRD-02-FOUR-GRADES": "Ten keyed cells each carry four evidence-citing check verdicts computed from real streams; a complete capture with no question is a fail; generic status text fails; an unmapped version is could-not-run with a stream-mapping reason. Read-only artifact replay of the newest completed run for HEAD, plus real captures committed with their hashes and source-run provenance under test/harness/fixtures/streams/ or test/harness/smoke/fixtures/. Hand-authored event JSON is banned, because it would validate the grader against fiction. A fail with evidence is a correct grade, so the flow asserts the vocabulary and the evidence, never a pass. Writes only the flow report under .tmp/sprint-02-verification/.",
+    "FLOW-GRD-03-FILES-AND-STREAM": "Grades come from files and the event stream: every cited path opens, exit 0 is not success, and a denied tool call fails the grade on a clean exit. Read-only: downloads the newest completed run's result and each pinned leg's harness-eval-evidence artifact into a scratch dir. A synthesized denial event is banned. The check must fail any verdict whose value equals its exit-code mapping. No secret value appears in the report, only names and booleans. Writes only the flow report.",
+    "FLOW-GRD-04-NAMED-PATH": "Both case-declared reports exist per keyed cell, bound to the producing invocation and to real evidence; a denied tool call on a clean exit is visible in a report; decoys and copied metadata cannot satisfy the contract. Read-only: downloads the newest completed run's harness-eval-verify-reports artifact and resolves each report by its exact declared name, with no glob fallback to another filename. Writes only the flow report."
+  }
+}

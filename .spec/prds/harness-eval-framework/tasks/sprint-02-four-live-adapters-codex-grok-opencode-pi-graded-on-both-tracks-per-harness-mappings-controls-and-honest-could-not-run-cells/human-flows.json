@@ -1,0 +1,122 @@
+{
+ "deferred_journeys": [
+  {
+   "covers_ucs": [
+    "UC-GRD-01",
+    "UC-GRD-02",
+    "UC-GRD-03",
+    "UC-REL-01",
+    "UC-RUN-01"
+   ],
+   "id": "FLOW-JRN-NIGHTLY-PINNED-BLOCK",
+   "outstanding_ucs": [
+    "UC-REL-01",
+    "UC-RUN-01"
+   ]
+  }
+ ],
+ "derived_from": {
+  "prior_scope": [
+   "UC-GRD-01",
+   "UC-GRD-02",
+   "UC-GRD-03",
+   "UC-GRD-04",
+   "UC-GRD-05",
+   "UC-GRD-06",
+   "UC-RUN-02"
+  ],
+  "scenarios": ".spec/scenarios",
+  "scope": [
+   "UC-GRD-01",
+   "UC-GRD-02",
+   "UC-GRD-03",
+   "UC-GRD-04"
+  ]
+ },
+ "flows": [
+  {
+   "artifact": ".tmp/sprint-02-verification/grd-01-twelve-cells.json",
+   "coldboot_policy": ".spec/e2e-policy/sprint-02/gh-auth-repo.json",
+   "desc": "A finished hand dispatch reads twelve cells. Each of the ten keyed cells carries four check verdicts with evidence paths, bound to the CLI version it ran and the plugin it loaded. Cursor stays present as could-not-run. The cell verdict words are read from the run, never expected in advance, and no screenshot score exists.",
+   "gate_steps": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "id": "FLOW-GRD-01-TWELVE-CELLS",
+   "manual_physical": false,
+   "red_proof": ".tmp/sprint-02-verification/grd-01-twelve-cells.json.red",
+   "run_cmd": "node --test --test-name-pattern 'FLOW-GRD-01-TWELVE-CELLS' tests/sprint-02/grd-01-twelve-cells.test.mjs",
+   "scope": "task",
+   "surface_policy": ".spec/e2e-policy/sprint-02/artifact-only-read.json",
+   "test": "tests/sprint-02/grd-01-twelve-cells.test.mjs",
+   "type": "core",
+   "uc_ref": "UC-GRD-01"
+  },
+  {
+   "artifact": ".tmp/sprint-02-verification/grd-02-four-grades.json",
+   "coldboot_policy": ".spec/e2e-policy/sprint-02/gh-auth-repo.json",
+   "desc": "Ten keyed cells each carry four evidence-citing check verdicts computed from real streams; a complete capture with no question is a fail; generic status text fails; an unmapped version is could-not-run with a stream-mapping reason.",
+   "gate_steps": [
+    5,
+    7,
+    13,
+    14,
+    15
+   ],
+   "id": "FLOW-GRD-02-FOUR-GRADES",
+   "manual_physical": false,
+   "red_proof": ".tmp/sprint-02-verification/grd-02-four-grades.json.red",
+   "run_cmd": "node --test --test-name-pattern 'FLOW-GRD-02-FOUR-GRADES' tests/sprint-02/grd-02-four-grades.test.mjs",
+   "scope": "task",
+   "surface_policy": ".spec/e2e-policy/sprint-02/artifact-only-read.json",
+   "test": "tests/sprint-02/grd-02-four-grades.test.mjs",
+   "type": "core",
+   "uc_ref": "UC-GRD-02",
+   "physical_justification": null
+  },
+  {
+   "artifact": ".tmp/sprint-02-verification/grd-03-files-and-stream.json",
+   "coldboot_policy": ".spec/e2e-policy/sprint-02/gh-auth-repo.json",
+   "desc": "Grades come from files and the event stream: every cited path opens, exit 0 is not success, and a denied tool call fails the grade on a clean exit.",
+   "gate_steps": [
+    10,
+    24,
+    25
+   ],
+   "id": "FLOW-GRD-03-FILES-AND-STREAM",
+   "manual_physical": false,
+   "red_proof": ".tmp/sprint-02-verification/grd-03-files-and-stream.json.red",
+   "run_cmd": "node --test --test-name-pattern 'FLOW-GRD-03-FILES-AND-STREAM' tests/sprint-02/grd-03-files-and-stream.test.mjs",
+   "scope": "task",
+   "surface_policy": ".spec/e2e-policy/sprint-02/artifact-only-read.json",
+   "test": "tests/sprint-02/grd-03-files-and-stream.test.mjs",
+   "type": "core",
+   "uc_ref": "UC-GRD-03",
+   "physical_justification": null
+  },
+  {
+   "artifact": ".tmp/sprint-02-verification/grd-04-named-path.json",
+   "coldboot_policy": ".spec/e2e-policy/sprint-02/gh-auth-repo.json",
+   "desc": "Both case-declared reports exist per keyed cell, bound to the producing invocation and to real evidence; a denied tool call on a clean exit is visible in a report; decoys and copied metadata cannot satisfy the contract.",
+   "gate_steps": [
+    16,
+    17
+   ],
+   "id": "FLOW-GRD-04-NAMED-PATH",
+   "manual_physical": false,
+   "red_proof": ".tmp/sprint-02-verification/grd-04-named-path.json.red",
+   "run_cmd": "node --test --test-name-pattern 'FLOW-GRD-04-NAMED-PATH' tests/sprint-02/grd-04-named-path.test.mjs",
+   "scope": "task",
+   "surface_policy": ".spec/e2e-policy/sprint-02/artifact-only-read.json",
+   "test": "tests/sprint-02/grd-04-named-path.test.mjs",
+   "type": "core",
+   "uc_ref": "UC-GRD-04",
+   "physical_justification": null
+  }
+ ]
+}
