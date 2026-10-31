@@ -473,8 +473,18 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
       assert.equal(missingKey.reason, "missing-api-key");
       const cursorCell = (live.cells ?? []).find((cell) => cell.harness === "cursor");
       if (cursorCell) assert.equal(cursorCell.reason, missingKey.reason, "the cursor cell reason is the control row's reason");
-      const authenticated = (live.cells ?? []).filter((cell) => cell.harness === "claude-code" && cell.verdict === "pass");
-      assert.ok(authenticated.length > 0, "the authenticated claude-code cells graded pass in the same run");
+      // AC-2's paired clause: the refusal must be paired with a real authenticated call on the
+      // same binding that PROCEEDED. It deliberately does not require the cell to grade "pass":
+      // a cell's verdict aggregates four checks, and three of them (status facts, the verify
+      // report, the first-question boundary) are owned outside this task, so a cell can be
+      // could-not-run while its bound invocation ran cleanly. The pair is the evidence that the
+      // guard fires on absence rather than unconditionally.
+      const pair = missingKey.pair;
+      assert.ok(pair && typeof pair === "object", "the hosted missing-key row carries its paired authenticated observation");
+      assert.equal(pair.verdict, "pass", "the paired authenticated invocation was accepted, not refused");
+      assert.equal(pair.process_exit_code, 0, "the paired authenticated invocation exited 0");
+      assert.ok(pair.model_request_count >= 1, "the paired authenticated invocation really called the model");
+      assert.equal(typeof pair.invocation_id, "string", "the pair names the invocation it came from");
       artifact.provenance = { live_artifact: { status: "present", path: LIVE_ARTIFACT, controls: controls.length } };
     } else {
       artifact.provenance = {
@@ -487,7 +497,7 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
       };
       artifact.awaiting.push(
         'controls row "missing-key could-not-run missing-api-key" from a hosted run',
-        "paired authenticated claude-code pass rows in the same run",
+        "a paired authenticated claude-code invocation that proceeded in the same run",
       );
     }
 
