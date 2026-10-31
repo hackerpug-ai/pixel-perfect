@@ -33,6 +33,9 @@ AGENT: planner=evals-planner | implementer=ai-tooling-implementer | reviewer=eva
 - MUST declare the status surface **derived from the case manifest** (`expected_facts` keys: platform, phase, `gates.<layer>`, `inventory.<layer>`), never from a case id, a layer list or a number typed into the adapter, so a new case needs no adapter edit.
 - MUST render the status surface as **field names, the workflow's own layer vocabulary and icon legend, and placeholder shapes** — never a value. The rendered text MUST NOT contain `approved`, `pending`, or any `<built>/<total>` pair.
 - MUST declare the verify surface from `caseManifest.report_relative_path`, the entry's `invocation_id` and `caseManifest.case_id`, plus the report body's key set and the vocabulary rule (`defect-detected` iff `verify-catalog.mjs --check --json` reports a drifted key, otherwise `clean`). It MUST NOT contain the case's `defect_key`, any 64-hex digest, or any byte offset.
+- MUST make the case-declared report path *writable* before asking for it. `gradedArgv` pins `--permission-mode dontAsk`, and that stance denies Write at the tool level; `isRequiredPath` then declares a cwd-relative write **required**, so an invocation that obeys the prompt is recorded as `fail denied_tool_call` rather than producing a report. The owner extended this task to `test/harness/runtime/stance.mjs` for exactly that: a **path-scoped allow-list** admitting writes to the case-declared report path (and nothing else — every other denial, Bash included, must still be denied and still grade as it does today).
+- MUST keep the allow-list path-scoped: a write outside it stays denied, and the existing `denied_tool_call` grading for a required denial is unchanged. The list is derived from the case manifest, never from a literal in the stance.
+
 - MUST leave the verify report's writer as the invocation. The adapter MUST NOT call `writeVerifyReport` (or any other writer) to produce the graded report; the file the grader reads must be the file the invocation wrote.
 - MUST NOT change `statusFacts`, `readVerifyReport`'s pass rule, or `bindReport`. The T5 body shape (a report with no capture evidence) still passes, because `tests/sprint-01/grd-02-four-grades.test.mjs:849-854` is a locked, write-prohibited test — a "strengthened" reader would break it and is not this task's trade.
 - MUST NOT add a fallback for a missing report (no glob, no "newest file in reports/", no `could-not-run` in place of `report-missing`). The only allowed change on the verify side is that a real report now exists.
@@ -181,6 +184,7 @@ WRITE-ALLOWED:
 - test/harness/adapters/claude-code.mjs
 - test/harness/smoke/fixtures/** (new recorded fixtures only; no leg module)
 - tests/sprint-01/t16-claude-code-grades.test.mjs
+- test/harness/runtime/stance.mjs (owner-extended: a path-scoped write allow-list, described below)
 
 The owner's brief also conditionally granted `test/harness/graders/**`, `test/harness/smoke/**` and `.github/workflows/harness-eval.yml`. This plan needs none of them: the parser already passes the product's documented shape (`tests/sprint-01/grd-02-four-grades.test.mjs:711-722`), and the report path and invocation id are already minted inside `prepareRunDirs`. An implementer who believes one is needed **stops and escalates** rather than editing it; a plan that quietly widens the grading rule to make a cell green is the defect this task exists to end.
 
@@ -285,7 +289,8 @@ A shared file is not a dependency: T16 appends to `promptFor` and to the module 
     "write_allowed": [
       "test/harness/adapters/claude-code.mjs",
       "test/harness/smoke/fixtures/**",
-      "tests/sprint-01/t16-claude-code-grades.test.mjs"
+      "tests/sprint-01/t16-claude-code-grades.test.mjs",
+      "test/harness/runtime/stance.mjs"
     ],
     "write_prohibited": [
       "plugins/pixel-perfect/**",
@@ -294,7 +299,9 @@ A shared file is not a dependency: T16 appends to `promptFor` and to the module 
       "test/harness/smoke/model-step.mjs",
       "test/harness/smoke/observations.mjs",
       "test/harness/smoke/image-scan.mjs",
-      "test/harness/runtime/**",
+      "test/harness/runtime/guard.mjs",
+      "test/harness/runtime/capture.mjs",
+      "test/harness/runtime/grade-writer.mjs",
       "test/harness/recorder/**",
       "test/harness/cases/**",
       ".github/workflows/harness-eval.yml",
