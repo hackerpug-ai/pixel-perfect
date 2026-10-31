@@ -123,6 +123,8 @@ public holdouts from the brief before [7.5] publish.
 | T11 | Qualify the negative controls on a real hosted run and record them in the result's controls array | evals-implementer | 5 | F | ⬜ Pending |
 | T12 | Review the evaluator workflow, capture layer, and grader contracts: secret placement, banned triggers, path confinement, aggregation order, exit-code independence, twelve-cell completeness, no root-level harness/ or branch-9624a4b gate wiring landing | github-agentic-workflow-reviewer | 3 | G | ⬜ Pending |
 | T13 | Make the smoke matrix observe and export what it grades: per-leg graded cells from files-and-event-stream evidence plus the four negative-control observations reaching HARNESS_EVAL_CONTROL_OBSERVATIONS | evals-implementer | 8 | H | ⬜ Pending |
+| T14 | Fix the capture layer so a mapper-declared `required_read: false` survives as `false` instead of collapsing to `null` (a declared optional denial stops grading as `requiredness-undeclared`) | ai-tooling-implementer | 3 | I | ⬜ Pending |
+| T15 | Give the four negative controls a real hosted producer: a graded denied-write probe so `exit0-denied-read` reads `fail denied_tool_call`, producer-side hosted/pair wiring so rows stop publishing `hosted: not-executed` / `qualified: false` / `pair: null`, and a gate that asserts the four exact verdict/reason pairs | ai-tooling-implementer | 5 | J | ⬜ Pending |
 
 **Waves:** A(3) → B(3) → C(2) → D(1) → E(1) → F(1) → G(1) — 7 waves over 12 tasks (≈1.7 at once)
 
