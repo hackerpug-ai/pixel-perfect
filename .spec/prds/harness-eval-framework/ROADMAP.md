@@ -49,7 +49,7 @@ UC-REL-05 · AC-3,4,5 ↦ sprint-03 · AC-1,2,6 ↦ sprint-04 · closes at sprin
 - **D-04** (2026-10-31): Each graded run publishes raw streams and reports as 90-day artifacts on this public repository, after a key scan that withholds any match (GAW-9).
 - **D-05** (2026-10-31): A newest cell with no exact table is graded through the pinned table only when that run's own captures re-prove every required fact, and it records that basis (E9).
 - **D-06** (2026-10-31): OpenCode's args channel is proven this sprint. The shipped OpenCode plugin returns nothing and kills headless runs on 1.18.34 and 1.19.5, so a one-point fix joins the sprint (GAW-10).
-- **D-07** (2026-10-31): Sprint 02 runs only after sprint 01's gate is verified, because that gate's step 9 needs these four harnesses to read could-not-run. Sprint 02 is 92 points against its 34-55 band, because the hosted path never used the sprint 01 grader.
+- **D-07** (2026-10-31, ordering OPEN): Sprint 02's adapters must land after sprint 01's gate is verified, because that gate's step 9 needs these four harnesses to read could-not-run. But that gate cannot pass yet: step 6 needs the question fix in E1, and step 8 needs the report writer in E2 and the export in GAW-9, and no sprint 01 task owns that work. Proposed order, not yet decided: land GAW-11, GAW-1, GAW-9, E1, E2 and E4 with adapters unregistered, verify sprint 01's gate, then land the rest. Sprint 02 is 92 points against its 34-55 band, because the hosted path never used the sprint 01 grader.
 
 ## Per-Sprint Details
 
