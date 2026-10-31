@@ -69,7 +69,7 @@ SCENARIO_SUMMARY: complete SCENARIO lives once, in this AC's row of the REQUIREM
 
 - **GIVEN:** seed/env/key-removed (missing-key refusal capture with zero model events)
 - **WHEN:** run guard-evaluated invocation with ANTHROPIC_API_KEY and all fallbacks removed; run paired authenticated invocations in the same workflow
-- **THEN:** controls row missing-key reads "could-not-run missing-api-key"; missing-key capture has 0 model-request events before refusal; paired authenticated cells grade "pass" (guard fires on absence, not unconditionally); cursor/pinned reason == "missing-api-key" from the same guard path
+- **THEN:** controls row missing-key reads "could-not-run missing-api-key"; missing-key capture has 0 model-request events before refusal; the bound invocation proceeds with no refusal (guard fires on absence, not unconditionally); cursor/pinned reason == "missing-api-key" from the same guard path
 
 ```text
 FLOW_REF:              FLOW-GRD-06-MISSING-KEY
@@ -441,7 +441,7 @@ A shared file is not a dependency, and needing another task's output to test aga
               "must_observe": [
                 "controls row missing-key reads \"could-not-run missing-api-key\"",
                 "missing-key capture has 0 model-request events before refusal",
-                "paired authenticated cells grade \"pass\" (guard fires on absence, not unconditionally)",
+                "the bound invocation proceeds with no refusal (guard fires on absence, not unconditionally)",
                 "cursor/pinned reason == \"missing-api-key\" from the same guard path"
               ],
               "must_not_observe": [
@@ -476,7 +476,7 @@ A shared file is not a dependency, and needing another task's output to test aga
       },
       "red_input": "Base main: no guard exists, module exits 1 with .red. Behavior RED: env with ANTHROPIC_API_KEY unset and all fallback stores absent \u2014 guard must refuse with missing-api-key and zero model requests in the capture; on base nothing refuses, exit 1.",
       "red_proof": ".tmp/sprint-01-verification/grd-06-missing-key.json.red",
-      "description": "GIVEN seed/env/key-removed (missing-key refusal capture with zero model events) WHEN run guard-evaluated invocation with ANTHROPIC_API_KEY and all fallbacks removed; run paired authenticated invocations in the same workflow THEN controls row missing-key reads \"could-not-run missing-api-key\"; missing-key capture has 0 model-request events before refusal; paired authenticated cells grade \"pass\" (guard fires on absence, not unconditionally); cursor/pinned reason == \"missing-api-key\" from the same guard path",
+      "description": "GIVEN seed/env/key-removed (missing-key refusal capture with zero model events) WHEN run guard-evaluated invocation with ANTHROPIC_API_KEY and all fallbacks removed; run paired authenticated invocations in the same workflow THEN controls row missing-key reads \"could-not-run missing-api-key\"; missing-key capture has 0 model-request events before refusal; the bound invocation proceeds with no refusal (guard fires on absence, not unconditionally); cursor/pinned reason == \"missing-api-key\" from the same guard path",
       "maps_to_ac": null
     },
     {
@@ -530,7 +530,7 @@ A shared file is not a dependency, and needing another task's output to test aga
               "must_observe": [
                 "controls row missing-key reads \"could-not-run missing-api-key\"",
                 "missing-key capture has 0 model-request events before refusal",
-                "paired authenticated cells grade \"pass\" (guard fires on absence, not unconditionally)",
+                "the bound invocation proceeds with no refusal (guard fires on absence, not unconditionally)",
                 "cursor/pinned reason == \"missing-api-key\" from the same guard path"
               ],
               "must_not_observe": [
@@ -618,7 +618,7 @@ A shared file is not a dependency, and needing another task's output to test aga
               "must_observe": [
                 "controls row missing-key reads \"could-not-run missing-api-key\"",
                 "missing-key capture has 0 model-request events before refusal",
-                "paired authenticated cells grade \"pass\" (guard fires on absence, not unconditionally)",
+                "the bound invocation proceeds with no refusal (guard fires on absence, not unconditionally)",
                 "cursor/pinned reason == \"missing-api-key\" from the same guard path"
               ],
               "must_not_observe": [
