@@ -2,7 +2,9 @@
 
 > Task ID: T16
 > Sprint: [SPRINT.md](./SPRINT.md)
-> Status: Backlog
+> Status: ✅ Completed
+
+Commit: 29473fbc5b446e0cfe1a6bd07f388aab5fa5cec1
 > Assignee: ai-tooling-implementer
 > Priority: P0
 > Points: 5
@@ -823,3 +825,70 @@ A shared file is not a dependency: T16 appends to `promptFor` and to the module 
   ]
 }
 -->
+
+## Handoff
+
+```json
+{
+  "task": "T16",
+  "commit_sha": "29473fbc5b446e0cfe1a6bd07f388aab5fa5cec1",
+  "done": "T16 landed in two commits. 8929614 declared both graded surfaces in test/harness/adapters/claude-code.mjs: STATUS_SURFACE plus statusSurfacePrompt derive the field list from the case manifest's own expected_facts keys (platform, phase, gates.<layer>, inventory.<layer>) and render placeholders only, so status-a and status-b — which declare different gate values — produce byte-identical text and no approved/pending/built-total pair reaches the prompt; VERIFY_REPORT_CONTRACT plus verifyReportPrompt state the case's own report_relative_path, the id prepareRunDirs mints, the case id and the ten-field body with the outcome rule keyed to verify-catalog.mjs --check --json, and state no defect key, digest or byte position. The same commit added the path-scoped allow-list to test/harness/runtime/stance.mjs (writeAllowRule/stanceArgv/recordStance(writes) emitting --allowedTools Edit(<declared path>), assertStance re-validating every recorded rule, wider forms refused) and made gradedArgv render the recorded stance's argv verbatim, so an invocation's flags cannot drift from the decision recorded for it. 02b9ade made AC-1 causal on the parser — the reply is re-derived from workflows/status.md at test time and the stripped variant must reproduce run 41157270388's exact seven missing facts — tightened the stance against '.', extension-less and comma-bearing paths, and tracked the 12-cell projection so the recorded artifact is reconciled rather than quoted blind. Evidence: the owned file reports 7/7, each of the seven named patterns 1/1, the six locked GRD/run-02 files 76/76 against the recorded baseline, the controls untouched at t11 5, t13 5, t14 3 and t15 6, and four mutants killed. AC-2's two report bodies are produced by the product's own catalog check in the materialized kit project and graded through the real readVerifyReport, with the id-borrowed copy refused as report-mismatched-invocation.",
+  "deviations": [
+    "Commit provenance: my own work is 8929614 on task/T16-trunk. The approved candidate is the merge of that work with the follow-up fix 02b9ade (AC-1 causal on the parser, stance refusing '.'/extension-less/comma paths, 12-cell projection tracked) and trunk 17cc29e; that merge is 29473fbc5b446e0cfe1a6bd07f388aab5fa5cec1, now merged into main at 6872fbd. The commit_sha above is the approved candidate, not my own commit.",
+    "The local fixtures are documented-output and lane-built rather than recorded_external, under the owner's amended evidence class for this host: the status stream is the product's own workflows/status.md Sample Output seeded to status-a's numbers inside the CLI's stream-json envelope, with provenance declaring recorded:false and seed_method documented_output, and the reply re-derived from the workflow file so any divergence fails loudly. The verify report bodies are produced at test time by the real verify-catalog.mjs run, because the adapter holds no writer and the lane plays the invocation's role.",
+    "The gradedArgv signature changed even though the plan's 'what does not change' table listed it as untouched: the allow-list can only reach the child through argv, so the permission frame is now rendered from the recorded stance. No flag was added or removed for an entry with no declared write, and grd-02's argv assertions and grd-06's four-element stance assertion both still pass.",
+    "The hosted dispatch remains the end-to-end proof. No harness-smoke binding exists on the host that produced this task's evidence, so no guarded claude -p ran here: this lane proves the mechanism (prompt, prompt-to-report binding, recorded stance, grade path), not a dispatched cell.",
+    "The stance emits Edit(<path>) rather than Write(<path>) because the CLI warns at startup for Write(path)/NotebookEdit(path)/Glob(path) rules and does not match them against file permission checks; a Write rule would have silently matched nothing and read as a product failure."
+  ],
+  "concerns": [
+    "U-T16-2 is OPEN and non-blocking: that --permission-mode dontAsk actually grants the allow-listed write, and denies a write outside the list, is only observable on a dispatched harness-eval run. Locally the negative direction is proven structurally (one exact path per case, wider forms refused, a replayed out-of-list denial still grading fail denied_tool_call with required_read true) but the positive direction is unproven.",
+    "Recorded finding blocking gate step 6: question_before_expensive_work still reads could-not-run required-fact-unobserved on the pinned cell because the init invocation produced no question event. That third mechanism is outside this amendment, and because could-not-run outranks fail it keeps the cell's aggregate reason from going green even after status and verify pass; it needs its own amendment.",
+    "Recorded finding blocking gate step 8: no smoke step uploads a per-cell harness-eval-verify-* artifact, so even with the report now written, the grade job's download finds nothing, the recorder writes 'no verify report artifact arrived for this attempt', and jq .expected_defect_key over the downloaded report still fails. That is recorder/upload wiring owned by T4/T7's hosted acceptance; T16 does not claim step 8.",
+    "The newest-track claude-code cell reads could-not-run installation-identity-mismatch (requested 2.1.291, observed 2.1.316) — the identity rule working as designed, not a grading defect.",
+    "The status prompt now depends on the case manifest twice over (keys for the prompt, values for the grade), so a case declaring facts the product never prints will ask for something unobtainable and grade fail status-facts-absent — correct, but the manifest is now load-bearing for the prompt too."
+  ],
+  "findings": [
+    "Mutant 1 — a surface rendered from the case's values instead of its keys: killed by the status-a/status-b identical-render assertion plus the no-approved/pending/built-total checks, so a prompt that hands the model the answer cannot survive.",
+    "Mutant 2 — a verify prompt that omits the path or the id: killed by requiring each entry's prompt to name its own declared report_relative_path and its own minted invocation_id, and by the clean entry carrying a different id and a different path.",
+    "Mutant 3 — a parser loosened to accept a reply that drops the gates: killed by the stripped and one-gate-flipped replays of the same archived bytes, which must read exactly the seven facts of run 41157270388 and exactly [gates.molecules] respectively.",
+    "Mutant 4 — the harness writing the report instead of the invocation: killed by the adapter-source assertions (no writeVerifyReport, no writeObservedReport, no reports/ literal or directory listing), by the absent-file grade still reading fail report-missing with no fallback, and by the borrowed-id body being refused as report-mismatched-invocation rather than graded as a detection.",
+    "The pinned 2.1.291 CLI result that shaped the stance: Write(path) permission rules are inert — the CLI prints a startup warning for Write(path), NotebookEdit(path) and Glob(path) and does not match them against file permission checks, while Edit(path) covers both the Edit and the Write tool call. Emitting Write(...) would have kept every verify check at fail denied_tool_call while the policy looked correct.",
+    "The base duplicated the stance flags: gradedArgv hard-coded --permission-mode dontAsk --add-dir while recordStance recorded the same list separately, so a stance change could not reach the child without an adapter edit. gradedArgv now renders the recorded stance's argv and the entry carries that same object, asserted rule for rule in t16-cell-shape-intact.",
+    "gradeCheck's block precedence is check-blocks-first: a verify record carrying both a required denial and a missing report reports report-missing at equal severity. Existing behaviour, left alone; the denial vocabulary is asserted on the status entry, whose check contributes no competing block."
+  ],
+  "scope_impact": [
+    {
+      "target": "T11",
+      "found": "Four sprint integration obligations cannot be discharged because the claude-code pinned cell grades nothing: status read fail status-facts-absent with seven missing facts and verify read fail report-missing twice, because neither invocation was told the surface its check grades.",
+      "change": "T16 gives status and verify a real, declared surface — the reply is asked for the facts it is graded on and the report is asked for at its declared path under its minted id — so T11 can re-review the four obligations once a dispatched run shows the cell grading; the control channel and its four-grade locks are untouched and still 5/5."
+    },
+    {
+      "target": "GATE:human-testing-gate-step-6",
+      "found": "Both claude-code cells read could-not-run; the pinned cell could not print four graded passing checks.",
+      "change": "Two of the three blockers are now addressed at the mechanism level; the remaining one is question_before_expensive_work's required-fact-unobserved, which needs its own amendment before step 6 can be discharged."
+    },
+    {
+      "target": "GATE:human-testing-gate-step-8",
+      "found": "No smoke step uploads a per-cell harness-eval-verify-* artifact, so the recorder reports no report arrived and the download step still finds nothing.",
+      "change": "Unchanged and unclaimed by T16 — recorder/upload wiring that needs its own amendment."
+    },
+    {
+      "target": "GATE:human-testing-gate-step-10",
+      "found": "The pinned cell's four files-and-event-stream checks could not be produced, so the step had nothing to read.",
+      "change": "status and verify are now gradeable from a real reply and a real report while the cell keeps four check ids and the files-and-event-stream source; the receipt remains a dispatched run's artifact."
+    },
+    {
+      "target": "T15",
+      "found": "controlProbeEntry built its argv with inline permission flags and recorded a stance beside it, so the decision and the flags were two independent lists.",
+      "change": "The probe records one stance and renders its argv from it, with no allow-list entry, so its two halves must still be denied; t15 stays 6/6 and t14 3/3."
+    }
+  ],
+  "feedback": [
+    "Extending the write scope to test/harness/runtime/stance.mjs was the load-bearing decision: without it the prompt would have asked for a file the policy forbade, and the honest outcome would have been a new fail denied_tool_call read as a product defect.",
+    "The 'what does not change' table cannot freeze gradedArgv while requiring the allow-list to reach the child; the stance now owns the whole permission frame, which is the shape the table should describe next time.",
+    "Replay-style ACs need the causal clause (the prompt names the surface/path/id) as well as the verdict, or they are green before any fix and prove nothing — worth stating explicitly in the task template.",
+    "A Write(path) permission rule looks right and matches nothing; future stance work should assert the rule form it emits against the CLI's own documentation instead of assuming the tool name.",
+    "On Node v24.14.0 --test-name-pattern only filters when it precedes the file positional; after the file it silently runs the whole file."
+  ]
+}
+```
