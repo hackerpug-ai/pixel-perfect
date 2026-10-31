@@ -271,6 +271,146 @@ export function prepareVerifyPair({ runId = "local", track = "pinned", pluginRoo
 }
 
 // ---------------------------------------------------------------------------
+// The denied-write control probe — a control, not a grade
+// ---------------------------------------------------------------------------
+
+/**
+ * The probe's DECLARED shape, so a reader can see what it asks for without inferring it from a
+ * prompt string. It is not a table row and contributes no check: `cellFor` aggregates every table
+ * entry into the cell's four checks, and a sixth row would give the cell a fifth check and break the
+ * four-grade locks. The probe runs beside the table, writes its own capture, and contributes exactly
+ * one observation and one pair to `exit0-denied-read`.
+ */
+export const DENIED_WRITE_PROBE = Object.freeze({
+  key: "denied-write-probe",
+  check_id: "verify",
+  contributes_checks: 0,
+  timeout_ms: 180_000,
+  roles: Object.freeze({
+    required: Object.freeze({
+      role: "required",
+      tool: "Write",
+      writes: "work/keep.txt",
+      resolves_under: "the invocation's own work dir",
+      expect: Object.freeze({ required_read: true, control: "exit0-denied-read" }),
+    }),
+    optional: Object.freeze({
+      role: "optional",
+      tool: "Write",
+      writes: "an absolute path outside the invocation's work dir and the plugin root",
+      resolves_under: "neither the plugin root nor the invocation's work dir",
+      expect: Object.freeze({ required_read: false, control: "not this control" }),
+    }),
+  }),
+});
+
+/**
+ * One probe invocation, shaped like a table entry so the same mapper, capture and guard apply.
+ *
+ * The required half asks for a RELATIVE `work/keep.txt`, which the CLI resolves into the invocation's
+ * own work dir — exactly the shape the archived capture recorded (`process_status.exit_code: 0`, one
+ * model request, a `Write` denial on `<cwd>/work/keep.txt`). The optional half asks for an absolute
+ * path outside that directory, so `isRequiredPath` declares the denial optional and the control must
+ * not fire on it.
+ */
+export function controlProbeEntry({ role, cwd, pluginRoot = PLUGIN_ROOT, track = "pinned" } = {}) {
+  const declared = DENIED_WRITE_PROBE.roles[role];
+  if (!declared) throw new Error(`unknown denied-write probe role ${String(role)}: expected required or optional`);
+  if (typeof cwd !== "string" || cwd.length === 0) throw new Error("controlProbeEntry needs the invocation's work dir");
+  const outside = join(tmpdir(), `pp-denied-write-probe-${randomUUID()}.txt`);
+  const prompt =
+    role === "required"
+      ? "Use the Write tool to create the file work/keep.txt, relative to your current working directory, containing the single word keep. Do not use Bash and do not ask a question."
+      : `Use the Write tool to create the file ${outside} containing the single word keep. Do not use Bash and do not ask a question.`;
+  return {
+    key: `${DENIED_WRITE_PROBE.key}-${role}`,
+    check_id: DENIED_WRITE_PROBE.check_id,
+    track,
+    role,
+    graded: false,
+    cwd,
+    invocation_id: `${HARNESS}-${DENIED_WRITE_PROBE.key}-${role}-${randomUUID()}`,
+    argv: gradedArgv({ prompt, pluginRoot }),
+    prompt,
+    stdin: "closed",
+    model_call: true,
+    timeout_ms: DENIED_WRITE_PROBE.timeout_ms,
+    declared_target: role === "required" ? "work/keep.txt" : outside,
+    stance: recordStance({ harness: HARNESS, plugin_root: pluginRoot }),
+  };
+}
+
+/**
+ * The denied-write probe: two guarded invocations, each in its own fresh directory, through the same
+ * runtime, stance and mapper every graded invocation uses.
+ *
+ *   required — a `claude -p` told to write `work/keep.txt` inside its own work dir. Under
+ *              `--permission-mode dontAsk` the CLI denies the write and still exits 0, which is the
+ *              shape the archived capture recorded: a clean exit beside a denial of a read the
+ *              invocation needed. That is `fail` / `denied_tool_call`, not a pass.
+ *   optional — the same instruction pointing at an absolute path outside that directory, so the
+ *              denial's target resolves under neither the plugin root nor the invocation's cwd and the
+ *              mapper declares `required_read: false`. The control must NOT fire; the record is the
+ *              pair, so `discriminates` is computed from a measurement rather than claimed.
+ *
+ * Both go through `runGuarded`, so a run without the binding records the guard's own refusal instead
+ * of skipping: a refused probe yields `null` for the observation AND the pair, which is the
+ * fail-closed rule the whole control layer rests on.
+ */
+export async function runControlProbe({
+  track = "pinned",
+  configDir = null,
+  env = process.env,
+  evidenceDir = null,
+  pluginRoot = PLUGIN_ROOT,
+  timeout_ms = DENIED_WRITE_PROBE.timeout_ms,
+} = {}) {
+  const dir = evidenceDir ?? mkdtempSync(join(tmpdir(), `pp-${HARNESS}-${DENIED_WRITE_PROBE.key}-`));
+  mkdirSync(dir, { recursive: true });
+
+  const half = async (role) => {
+    // A fresh work dir per invocation: nothing is reused, and requiredness is declared against it.
+    const cwd = mkdtempSync(join(tmpdir(), `pp-${HARNESS}-${DENIED_WRITE_PROBE.key}-${role}-`));
+    const entry = controlProbeEntry({ role, cwd, pluginRoot, track });
+    const capture = createCapture({
+      harness: HARNESS,
+      check_id: entry.check_id,
+      cwd,
+      timeout_ms,
+      argv: entry.argv,
+      invocation_id: entry.invocation_id,
+    });
+    const stepEnv = { ...env, ...AUTO_UPDATER_ENV };
+    if (configDir) stepEnv.CLAUDE_CONFIG_DIR = configDir;
+    const { decision } = await runGuarded({
+      harness: HARNESS,
+      stance: entry.stance,
+      env: stepEnv,
+      capture,
+      command: "claude",
+      args: entry.argv,
+      cwd,
+      timeout_ms,
+    });
+    capture.observe((json, line) => mapCapturedLine({ json, text: line.text, entry }), { required_read_paths: null });
+    const record = capture.persist(join(dir, role));
+    return { entry, decision, record };
+  };
+
+  const required = await half("required");
+  const optional = await half("optional");
+
+  // Loaded lazily: `observations.mjs` imports this module, so a static import here would be a cycle.
+  const { observeExit0DeniedRead, observeExit0DeniedReadPair } = await import("../smoke/observations.mjs");
+  return {
+    required,
+    optional,
+    observation: required.record.refusal ? null : observeExit0DeniedRead({ record: required.record, check: DENIED_WRITE_PROBE.check_id }),
+    pair: optional.record.refusal ? null : observeExit0DeniedReadPair({ record: optional.record }),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Install / load / command list: the declared steps
 // ---------------------------------------------------------------------------
 

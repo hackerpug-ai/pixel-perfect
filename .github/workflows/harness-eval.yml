@@ -121,6 +121,42 @@ jobs:
           set -eu
           mkdir -p cell
           node test/harness/smoke/model-step.mjs 'claude-code' '${{ matrix.track }}' --install-mode '${{ inputs.install_mode }}' --cell-dir cell
+          # --- T15: the denied-write control probe -------------------------------------------
+          # `exit0-denied-read` had no hosted producer: nothing made a graded invocation attempt a
+          # write the recorded stance denies, so the row could only ever read
+          # could-not-run / control-unobservable on a dispatched run. The probe is a CONTROL, not a
+          # grade: it is not a table row, contributes no check, and writes its own receipt. It runs
+          # here, on the pinned track only, because this is the one step that holds the binding —
+          # symmetric with the keyless control beside it.
+          #
+          # The cell-record path is composed at run time, never spelled: this step must not become the
+          # first match in the recorder lookup, which resolves the `Record the cell` step.
+          #
+          # A throw writes the receipt with a reason and the step still exits 0: the verdict reports,
+          # the shell does not.
+          if [ '${{ matrix.track }}' != 'pinned' ]; then exit 0; fi
+          node --input-type=module -e '
+          import { writeFileSync } from "node:fs";
+          import { join } from "node:path";
+          const cellFile = join("cell", "cell.json");
+          const receiptFile = join("cell", "denied-write-probe.json");
+          const report = (body) => {
+            writeFileSync(receiptFile, JSON.stringify(body) + "\n");
+            console.log(JSON.stringify(body));
+          };
+          try {
+            const { runControlProbe } = await import("./test/harness/adapters/claude-code.mjs");
+            const { attachDeniedWriteProbe } = await import("./test/harness/smoke/observations.mjs");
+            const { readConfigDir } = await import("./test/harness/smoke/install.mjs");
+            const probe = await runControlProbe({ configDir: readConfigDir("cell"), env: process.env, evidenceDir: join("cell", "evidence", "denied-write-probe") });
+            const attached = attachDeniedWriteProbe({ cellFile, probe });
+            report({ ok: attached.ok, reason: attached.reason ?? null, observation_reason: probe.observation?.reason ?? null, pair_reason: probe.pair?.reason ?? null, required_stdout_sha256: probe.required?.record?.stdout?.sha256 ?? null, optional_stdout_sha256: probe.optional?.record?.stdout?.sha256 ?? null });
+          } catch (error) {
+            const named = { ok: false, reason: error?.reason ?? "denied-write-probe-failed" };
+            report(named);
+            console.error(JSON.stringify(named));
+          }
+          '
 
       - name: Smoke model step codex ${{ matrix.track }}
         if: matrix.harness == 'codex'
@@ -331,7 +367,7 @@ jobs:
           node --input-type=module -e '
           import { readdirSync, readFileSync, statSync } from "node:fs";
           import { join } from "node:path";
-          import { qualifyControls, assertControlRows, writeControls } from "./test/harness/controls/index.mjs";
+          import { qualifyControls, assertControlRows, writeControls, hostedHalfFromEnv, controlVerdictGate } from "./test/harness/controls/index.mjs";
           const walk = (dir, out = []) => {
             if (!statSync(dir, { throwIfNoEntry: false })?.isDirectory()) return out;
             for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -343,8 +379,12 @@ jobs:
           };
           const observations = {};
           const pairs = {};
+          // T15: the hosted half is read ONCE from the identity of the runner executing this step.
+          // Outside Actions it is null, and a null never becomes a claim: the rows then read
+          // not-executed / qualified false, which is exactly what a machine-local replay may report.
+          const hosted = hostedHalfFromEnv(process.env);
           const merge = (into, from) => {
-            for (const [id, value] of Object.entries(from ?? {})) if (value != null) into[id] = value;
+            for (const [id, value] of Object.entries(from ?? {})) if (value != null) into[id] = hosted ? { ...value, hosted } : value;
           };
           for (const file of walk("cells")) {
             let record;
@@ -358,8 +398,17 @@ jobs:
           const qualified = qualifyControls({ observations, pairs });
           const rows = assertControlRows(qualified.rows);
           const written = writeControls({ file: "cells/controls.json", rows });
-          console.log(JSON.stringify({ observed: Object.keys(observations), pairs: Object.keys(pairs), rows: rows.map((row) => `${row.control_id} ${row.verdict} ${row.reason}`), discriminated: rows.filter((row) => row.discriminates).map((row) => row.control_id) }));
+          console.log(JSON.stringify({ observed: Object.keys(observations), pairs: Object.keys(pairs), hosted: hosted ? hosted.run_id : null, rows: rows.map((row) => `${row.control_id} ${row.verdict} ${row.reason}`), discriminated: rows.filter((row) => row.discriminates).map((row) => row.control_id), qualified: rows.filter((row) => row.qualified).map((row) => row.control_id) }));
           if (!written.ok) { console.error("controls.json did not read back: " + JSON.stringify(written.mismatches)); process.exit(1); }
+          // Defect (d): the four rows are compared with their OWN expect pairs and with the run id of
+          // the identity that stamped them. assertControlRows accepts four schema-valid rows whatever
+          // they say, which is how the dispatched run 41139161972 republished four unobserved controls
+          // as green. The gate reports on every run; a run that carries a runner identity fails the
+          // step when the rows do not hold — and the cells handoff below is `if: always()`, so the
+          // rows still ship either way.
+          const gate = controlVerdictGate(rows, { runId: hosted?.run_id ?? null });
+          for (const mismatch of gate.mismatches) console.error("::error::" + mismatch);
+          if (hosted && !gate.ok) process.exit(1);
           '
 
       - name: Hand the cells to the recorder
