@@ -1,0 +1,73 @@
+{
+  "schema": "dispatched-run-cells/v1",
+  "run_id": "41157270388",
+  "head_sha": "93530a0e1356a97595b6bb5fff184c07e4e7973e",
+  "result_schema": "harness-eval-result/v1",
+  "projection": "cells[].{harness,track,reason}, in artifact order — the twelve cells of this run",
+  "artifact": {
+    "path": ".kb-run-sprint/sprint-01-evaluator-evidence-spine/T11/evidence/reviewer-cycle-6-r0/hosted-run-41157270388-result.json",
+    "sha256": "a3d34e27616bc33bea559f5d239038947aa2822b8aabb509e46f23f339cf42dd"
+  },
+  "cells": [
+    {
+      "harness": "claude-code",
+      "track": "newest",
+      "reason": "installation-identity-mismatch"
+    },
+    {
+      "harness": "claude-code",
+      "track": "pinned",
+      "reason": "required-fact-unobserved"
+    },
+    {
+      "harness": "codex",
+      "track": "newest",
+      "reason": "codex-adapter-not-implemented"
+    },
+    {
+      "harness": "codex",
+      "track": "pinned",
+      "reason": "codex-adapter-not-implemented"
+    },
+    {
+      "harness": "cursor",
+      "track": "newest",
+      "reason": "missing-api-key"
+    },
+    {
+      "harness": "cursor",
+      "track": "pinned",
+      "reason": "missing-api-key"
+    },
+    {
+      "harness": "grok",
+      "track": "newest",
+      "reason": "grok-adapter-not-implemented"
+    },
+    {
+      "harness": "grok",
+      "track": "pinned",
+      "reason": "grok-adapter-not-implemented"
+    },
+    {
+      "harness": "opencode",
+      "track": "newest",
+      "reason": "opencode-adapter-not-implemented"
+    },
+    {
+      "harness": "opencode",
+      "track": "pinned",
+      "reason": "opencode-adapter-not-implemented"
+    },
+    {
+      "harness": "pi",
+      "track": "newest",
+      "reason": "pi-adapter-not-implemented"
+    },
+    {
+      "harness": "pi",
+      "track": "pinned",
+      "reason": "pi-adapter-not-implemented"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "schema": "harness-fixture-provenance/v1",
+  "fixture": "claude-code-status-a.documented-output",
+  "case_id": "status-a",
+  "recorded": false,
+  "seed_method": "documented_output",
+  "documented_source": "plugins/pixel-perfect/workflows/status.md#Sample Output",
+  "what_is_real": "the reply text is the product's own documented status Sample Output, seeded to the numbers case status-a declares (MOLECULES and COMPOSE print open, Atoms (3/3 built, 3 verified), Molecules (1/1 molecules verified), Screens (1/1 verified))",
+  "what_is_constructed": "the two stream-json envelope lines: one system/init listing pixel-perfect, and one result carrying that reply",
+  "why_not_recorded": "no harness-smoke binding exists on the host that produced this task's evidence, so a guarded `claude -p` cannot run there; the dispatched harness-eval run is the end-to-end proof and this fixture proves the mechanism",
+  "stdout_file": "claude-code-status-a.documented-output.stdout.bin",
+  "stdout_sha256": "f555b215a85f0af55b52e71dbf92369c71162f011639bc008e41f32550bf93ab",
+  "pinned_cli_version": "2.1.291"
+}

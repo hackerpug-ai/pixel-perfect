@@ -140,26 +140,140 @@ function caseArgs(caseManifest) {
   return caseManifest.platform_arg ? caseManifest.platform_arg.split(/\s+/).filter(Boolean) : [];
 }
 
+// ---------------------------------------------------------------------------
+// The declared surfaces — what each graded reply is graded on, never its value
+// ---------------------------------------------------------------------------
+
 /**
- * The prompt for one invocation: the plugin's slash command first, then the case's own arguments.
- * Nothing is inferred — a case with no platform argument contributes none.
+ * What a graded `status` reply must state, declared once so a reader can see it without inferring
+ * it from a prompt string. It is the product's own vocabulary (`workflows/status.md`): one
+ * `--- <platform> ---` section, a `Phases:` list printed with the icons `[x] [~] [ ] [!]` beside
+ * the layer names SCAFFOLD PLAN ATOMS MOLECULES COMPOSE, and one per-layer header per declared
+ * layer carrying that layer's built/verified counts.
+ *
+ * `statusFacts` reads this surface; the prompt now states that this surface is what gets graded.
+ * The declaration names fields. It never names a value, so a reply can satisfy it only by reading
+ * the project's own `design/manifest.json`.
  */
-export function promptFor({ command_name, caseManifest = null }) {
-  return [`/pixel-perfect:${command_name}`, ...caseArgs(caseManifest)].join(" ");
+export const STATUS_SURFACE = Object.freeze({
+  applies_to: "status",
+  fields: Object.freeze(["platform", "phase", "gates.<layer>", "inventory.<layer>"]),
+  icons: Object.freeze(["[x]", "[~]", "[ ]", "[!]"]),
+  layers: Object.freeze(["SCAFFOLD", "PLAN", "ATOMS", "MOLECULES", "COMPOSE"]),
+  header_shape: "<Layer> (<built>/<total> built, <verified> verified):",
+  phase_rule: "the furthest layer the Phases list marks with the product's own filled icon",
+  vocabulary: "the product's, from plugins/pixel-perfect/workflows/status.md",
+});
+
+/**
+ * The `status` surface for one case, rendered from the case manifest's OWN keys: `platform`,
+ * `phase`, one `gates.<layer>` per declared gate and one `inventory.<layer>` per declared inventory
+ * key. A case that declares a new layer is described without an adapter edit, and a case that
+ * declares nothing is told nothing.
+ *
+ * Every count is a placeholder and every icon is a legend entry, so the rendered text cannot state
+ * the answer the check measures: two cases that declare the same keys with different values render
+ * the same text.
+ */
+export function statusSurfacePrompt({ caseManifest = null } = {}) {
+  if (caseManifest?.kind !== STATUS_SURFACE.applies_to) return "";
+  const declared = caseManifest?.expected_facts ?? null;
+  if (!declared || typeof declared !== "object") return "";
+  const fields = [
+    declared.platform !== undefined ? "platform" : null,
+    declared.phase !== undefined ? "phase" : null,
+    ...Object.keys(declared.gates ?? {}).map((layer) => `gates.${layer}`),
+    ...Object.keys(declared.inventory ?? {}).map((layer) => `inventory.${layer}`),
+  ].filter(Boolean);
+  if (fields.length === 0) return "";
+  return [
+    `Graded status surface: this reply is graded on the facts ${fields.join(", ")},`,
+    `and each of them has to be readable in it, with the value the project's own design/manifest.json holds.`,
+    `State the platform id the project declares;`,
+    `state the current phase, which is ${STATUS_SURFACE.phase_rule};`,
+    `print the Phases list with the product's own icons ${STATUS_SURFACE.icons.join(" ")} beside the layer names ${STATUS_SURFACE.layers.join(" ")};`,
+    `print one per-layer header per declared layer, each in the product's own shape ${STATUS_SURFACE.header_shape};`,
+    `and print every count from that manifest rather than from your own summary.`,
+  ].join(" ");
 }
 
-function gradedArgv({ prompt, pluginRoot, max_turns = 0 }) {
-  const argv = [
-    "-p",
-    prompt,
-    "--output-format",
-    "stream-json",
-    "--verbose",
-    "--permission-mode",
-    "dontAsk",
-    "--add-dir",
-    pluginRoot,
-  ];
+/**
+ * The body a graded `verify` invocation must write, declared once. `readVerifyReport` reads exactly
+ * these fields, and the outcome rule is the product's own catalog check rather than the model's
+ * opinion: `observed_verify_outcome` is `defect-detected` iff `verify-catalog.mjs --check --json`
+ * reports at least one drifted key.
+ */
+export const VERIFY_REPORT_CONTRACT = Object.freeze({
+  schema: "verify-report/v1",
+  fields: Object.freeze([
+    "schema",
+    "harness",
+    "track",
+    "invocation_id",
+    "case_id",
+    "observed_verify_outcome",
+    "observed_defect_key",
+    "expected_defect_key",
+    "evidence.drifted_keys",
+    "clean_project_failed",
+  ]),
+  outcome_rule:
+    "defect-detected iff `node plugins/pixel-perfect/scripts/verify-catalog.mjs --check . --platform web-desktop --json` reports at least one drifted key; clean otherwise",
+});
+
+/**
+ * The `verify` surface for one case: the exact path the report goes to (the case manifest's own
+ * `report_relative_path`, relative to the invocation's working directory), the invocation id the
+ * adapter minted and the report must echo, the case id, and the body's key set with the outcome
+ * rule. It states no expected defect key, no digest and no byte position: the only way to fill the
+ * body correctly is to run the catalog check and read what it reports.
+ */
+export function verifyReportPrompt({ caseManifest = null, invocationId = null } = {}) {
+  if (caseManifest?.kind !== "verify") return "";
+  const reportPath = caseManifest?.report_relative_path;
+  if (typeof reportPath !== "string" || reportPath.length === 0) return "";
+  if (typeof invocationId !== "string" || invocationId.length === 0) return "";
+  return [
+    `Graded verify surface: after running the product's own verify, write one JSON file at ${reportPath},`,
+    `relative to your working directory, and give it exactly these keys: ${VERIFY_REPORT_CONTRACT.fields.join(", ")}.`,
+    `Set schema to ${VERIFY_REPORT_CONTRACT.schema}, harness to ${HARNESS}, track to ${caseManifest.track},`,
+    `set invocation_id to ${invocationId} exactly as given here, and set case_id to ${caseManifest.case_id}.`,
+    `Set observed_verify_outcome by this rule: ${VERIFY_REPORT_CONTRACT.outcome_rule}.`,
+    `Fill observed_defect_key and expected_defect_key from the key the catalog check itself reports drifted,`,
+    `and only from that key; put the drifted keys it reported in evidence.drifted_keys;`,
+    `and set clean_project_failed to whether that check reported any failure at all.`,
+    `Write no other file.`,
+  ].join(" ");
+}
+
+/** The one write a case declares: only a check that reads a report gets one. */
+function declaredWrites(caseManifest) {
+  if (caseManifest?.kind !== "verify") return [];
+  const reportPath = caseManifest?.report_relative_path;
+  return typeof reportPath === "string" && reportPath.length > 0 ? [reportPath] : [];
+}
+
+/**
+ * The prompt for one invocation: the plugin's slash command first, then the case's own arguments,
+ * then the surface its check grades. Nothing is inferred — a case with no platform argument
+ * contributes none, and a case whose check reads no declared surface contributes no text, so the
+ * must-ask probe's prompt stays exactly what the question boundary was measured on.
+ */
+export function promptFor({ command_name, caseManifest = null, invocationId = null }) {
+  const surface = [statusSurfacePrompt({ caseManifest }), verifyReportPrompt({ caseManifest, invocationId })]
+    .filter(Boolean)
+    .join(" ");
+  return [`/pixel-perfect:${command_name}`, ...caseArgs(caseManifest), ...(surface.length > 0 ? [surface] : [])].join(" ");
+}
+
+/**
+ * The argv one invocation runs. The permission flags are the recorded stance's own `argv`, used
+ * verbatim: an invocation's flags cannot drift from the stance recorded for it, and a stance that
+ * admits one declared write carries that allow-list with it.
+ */
+function gradedArgv({ prompt, pluginRoot, max_turns = 0, stance = null }) {
+  const recorded = stance ?? recordStance({ harness: HARNESS, plugin_root: pluginRoot });
+  const argv = ["-p", prompt, "--output-format", "stream-json", "--verbose", ...recorded.argv];
   if (max_turns > 0) argv.push("--max-turns", String(max_turns));
   return argv;
 }
@@ -190,8 +304,12 @@ export function invocationTable({ track = "pinned", dirs = null, pluginRoot = PL
         model_call: false,
       };
     }
-    const prompt = promptFor({ command_name: entry.command_name, caseManifest });
-    const argv = gradedArgv({ prompt, pluginRoot, max_turns });
+    const prompt = promptFor({ command_name: entry.command_name, caseManifest, invocationId: prepared.invocation_id });
+    // One stance per invocation, recorded before the first model call and rendered into its argv:
+    // a graded run carries the recorded mode and add-dir, and a case whose check reads a report
+    // carries the allow-list for exactly that one declared path.
+    const stance = recordStance({ harness: HARNESS, plugin_root: pluginRoot, writes: declaredWrites(caseManifest) });
+    const argv = gradedArgv({ prompt, pluginRoot, max_turns, stance });
     return {
       ...entry,
       track,
@@ -205,7 +323,7 @@ export function invocationTable({ track = "pinned", dirs = null, pluginRoot = PL
       stdin: "closed",
       model_call: true,
       max_turns_role: max_turns > 0 ? "backstop" : null,
-      stance: recordStance({ harness: HARNESS, plugin_root: pluginRoot }),
+      stance,
     };
   });
 }
@@ -322,6 +440,9 @@ export function controlProbeEntry({ role, cwd, pluginRoot = PLUGIN_ROOT, track =
     role === "required"
       ? "Use the Write tool to create the file work/keep.txt, relative to your current working directory, containing the single word keep. Do not use Bash and do not ask a question."
       : `Use the Write tool to create the file ${outside} containing the single word keep. Do not use Bash and do not ask a question.`;
+  // The probe declares no write, so its stance is the plain approved one and its argv carries no
+  // allow-list: both halves must still be denied by the CLI, which is what the probe measures.
+  const stance = recordStance({ harness: HARNESS, plugin_root: pluginRoot });
   return {
     key: `${DENIED_WRITE_PROBE.key}-${role}`,
     check_id: DENIED_WRITE_PROBE.check_id,
@@ -330,13 +451,13 @@ export function controlProbeEntry({ role, cwd, pluginRoot = PLUGIN_ROOT, track =
     graded: false,
     cwd,
     invocation_id: `${HARNESS}-${DENIED_WRITE_PROBE.key}-${role}-${randomUUID()}`,
-    argv: gradedArgv({ prompt, pluginRoot }),
+    argv: gradedArgv({ prompt, pluginRoot, stance }),
     prompt,
     stdin: "closed",
     model_call: true,
     timeout_ms: DENIED_WRITE_PROBE.timeout_ms,
     declared_target: role === "required" ? "work/keep.txt" : outside,
-    stance: recordStance({ harness: HARNESS, plugin_root: pluginRoot }),
+    stance,
   };
 }
 
