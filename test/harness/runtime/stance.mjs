@@ -18,9 +18,16 @@ export const APPROVED_MODES = ["dontAsk"];
 /**
  * The tool family a write allow-list entry is written against.
  *
- * `Write(path)` is NOT the form: the CLI prints a startup warning for `Write(path)`,
- * `NotebookEdit(path)` and `Glob(path)` rules and does not match them against file permission
- * checks — `Edit(path)` covers both the Edit and the Write tool call. A rule that silently matched
+ * `Write(path)` is NOT the form: `Edit(path)` covers both the Edit and the Write tool call, and the
+ * CLI refuses to match `Write(path)` against a file write. Verified on the pinned CLI (2.1.291) and
+ * on 2.1.316, headless with a dead `ANTHROPIC_BASE_URL` so no model call is made; the pinned CLI
+ * prints on stderr:
+ *
+ *   Permission allow rule (--allowed-tools): Write(reports/a.json) is not matched by file permission
+ *   checks — only Edit(path) rules are. Use Edit(reports/a.json) instead (Edit rules cover all
+ *   file-editing tools).
+ *
+ * The same probe with `Edit(reports/a.json)` prints no such line. A rule that silently matched
  * nothing would deny the write the prompt asks for and read as a product failure, so the stance
  * emits only the form that really matches.
  */
@@ -40,7 +47,11 @@ export class StanceError extends Error {
 /**
  * One path a stance may admit. A single file, relative to the invocation's own directory: an
  * absolute path would outlive the run, a glob or a trailing slash would admit more than the one
- * file the case declares, and `..` would leave the directory entirely.
+ * file the case declares, and `..` would leave the directory entirely. Three forms widen the rule
+ * without any of those markers and are refused too: `.` (the whole working directory), a leaf with
+ * no extension (a directory named like a file — `reports` reads as one rule and admits every file
+ * under it), and a comma (the CLI splits `--allowedTools` on commas, so one path would arrive as two
+ * rules, the second of them declared by nobody).
  */
 function assertWritePath(path) {
   if (typeof path !== "string" || path.length === 0) throw new StanceError("write-allow-path-missing", { path });
@@ -49,6 +60,9 @@ function assertWritePath(path) {
   if (/[*?[\]{}]/.test(path)) throw new StanceError("write-allow-path-not-exact", { path });
   if (path.endsWith("/")) throw new StanceError("write-allow-path-not-a-file", { path });
   if (path.includes("\\")) throw new StanceError("write-allow-path-separator", { path });
+  if (path === ".") throw new StanceError("write-allow-path-is-working-dir", { path });
+  if (path.includes(",")) throw new StanceError("write-allow-path-splits-rules", { path });
+  if (path.split("/").pop()?.includes(".") !== true) throw new StanceError("write-allow-path-no-extension", { path });
   return path;
 }
 

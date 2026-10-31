@@ -19,8 +19,9 @@
 //     the case's numbers by the same transform grd-02 applies,
 //   * the product's own `scripts/verify-catalog.mjs --check --json`, run for real in a materialized
 //     kit project, whose `drifted` list is what the report body is built from,
-//   * the recorded 12-cell artifact of run 41157270388 (read where it exists, else the triples it
-//     records, quoted with its sha256).
+//   * the recorded 12-cell artifact of run 41157270388 through its tracked cell projection under
+//     `test/harness/smoke/fixtures/dispatched-run/`, which records the artifact's sha256 — read
+//     unconditionally, so the shape assertions are alive in a clean checkout.
 //
 // What is NOT here, and is said plainly: no model call. No harness-smoke binding exists on this
 // host, so no guarded `claude -p` can run and no capture of a real status/verify invocation can be
@@ -30,7 +31,7 @@
 // byte. The four `pass` verdicts of a dispatched run are the sprint gate's receipt, not this file's.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
@@ -49,28 +50,46 @@ const FIXTURE_DIR = join(ROOT, "test/harness/smoke/fixtures/status-reply");
 const PINNED = loadPins().manifest.harnesses[adapter.HARNESS].pinned_cli_version;
 
 /**
- * The recorded 12-cell result artifact of the run this task repairs. The directory it lives in is
- * git-ignored, so the triples it records are quoted here with the file's sha256; where the file is
- * present the test reads it and requires the two to agree.
+ * The tracked projection of the 12-cell result artifact of the run this task repairs. The artifact
+ * itself lives under the git-ignored `.kb-run-sprint/`, so a copy of it is never in a clean
+ * checkout; the projection is committed and read unconditionally, with the artifact's sha256
+ * recorded in it. The cell assertions therefore run everywhere, and a re-recorded run whose cells
+ * changed fails here rather than being skipped.
  */
-const RECORDED_RUN = {
-  path: ".kb-run-sprint/sprint-01-evaluator-evidence-spine/T11/evidence/reviewer-cycle-6-r0/hosted-run-41157270388-result.json",
-  sha256: "a3d34e27616bc33bea559f5d239038947aa2822b8aabb509e46f23f339cf42dd",
-  cells: [
-    { harness: "claude-code", track: "newest", reason: "installation-identity-mismatch" },
-    { harness: "claude-code", track: "pinned", reason: "required-fact-unobserved" },
-    { harness: "codex", track: "newest", reason: "codex-adapter-not-implemented" },
-    { harness: "codex", track: "pinned", reason: "codex-adapter-not-implemented" },
-    { harness: "cursor", track: "newest", reason: "missing-api-key" },
-    { harness: "cursor", track: "pinned", reason: "missing-api-key" },
-    { harness: "grok", track: "newest", reason: "grok-adapter-not-implemented" },
-    { harness: "grok", track: "pinned", reason: "grok-adapter-not-implemented" },
-    { harness: "opencode", track: "newest", reason: "opencode-adapter-not-implemented" },
-    { harness: "opencode", track: "pinned", reason: "opencode-adapter-not-implemented" },
-    { harness: "pi", track: "newest", reason: "pi-adapter-not-implemented" },
-    { harness: "pi", track: "pinned", reason: "pi-adapter-not-implemented" },
-  ],
-};
+const RECORDED_CELLS_PATH = join(ROOT, "test/harness/smoke/fixtures/dispatched-run/run-41157270388.cells.json");
+
+function recordedRunProjection() {
+  const projection = JSON.parse(readFileSync(RECORDED_CELLS_PATH, "utf8"));
+  assert.equal(projection.schema, "dispatched-run-cells/v1", "the projection declares its own schema");
+  assert.equal(projection.result_schema, "harness-eval-result/v1", "it projects a harness-eval result artifact");
+  assert.match(projection.run_id, /^\d+$/, "it names the run it projects");
+  assert.match(projection.head_sha, /^[0-9a-f]{40}$/, "it names the head the run evaluated");
+  assert.match(projection.artifact.sha256, /^[0-9a-f]{64}$/, "it records the artifact's sha256");
+  assert.ok(
+    Array.isArray(projection.cells) && projection.cells.length > 0,
+    "the projection carries the run's cells, not an empty list a shape assertion could pass on",
+  );
+  return projection;
+}
+
+const cellsOf = (artifact) => artifact.cells.map((cell) => ({ harness: cell.harness, track: cell.track, reason: cell.reason ?? null }));
+
+/**
+ * The archived reply with the facts it declares removed: the `Phases:` block, the phase lines and
+ * the per-layer headers. What remains is the same reply text with nothing to read the graded facts
+ * from, so the only thing that can grade it `pass` is a parser that was loosened to pass anything.
+ */
+function stripDeclaredFacts(reply) {
+  return reply
+    .split("\n")
+    .filter(
+      (line) =>
+        !/^\s*Phases:\s*$/.test(line) &&
+        !/^\s*\[[x ~!]\]\s*(SCAFFOLD|PLAN|ATOMS|MOLECULES|COMPOSE)\b/.test(line) &&
+        !/^\s*(Atoms|Molecules|Screens)\s*\(/.test(line),
+    )
+    .join("\n");
+}
 
 /**
  * The product's own documented `status` reply, seeded to the numbers case `status-a` declares.
@@ -323,13 +342,29 @@ test("t16-verify-report-declared", (t) => {
   assert.deepEqual(planted.stance.allowed_writes, ["Edit(reports/verify-button-drift.json)"]);
   assert.deepEqual(clean.stance.allowed_writes, ["Edit(reports/verify-clean.json)"]);
   assert.equal(planted.argv.includes("--allowedTools"), true, "the invocation's own argv carries the rule");
-  assert.ok(planted.argv[planted.argv.indexOf("--allowedTools") + 1].includes("reports/verify-button-drift.json"));
-  for (const wider of ["reports/**", "/tmp/reports/verify-button-drift.json", "reports/", "reports/../escape.json", "reports/*.json"]) {
+  const allowedTools = planted.argv[planted.argv.indexOf("--allowedTools") + 1];
+  assert.ok(allowedTools.includes("reports/verify-button-drift.json"));
+  // `--allowedTools` splits its value on commas, so one path must stay one rule: a path carrying a
+  // comma would arrive as two, one of them a rule nobody declared.
+  assert.equal(allowedTools.split(",").length, 1, `one declared path is one rule: ${allowedTools}`);
+  assert.equal(allowedTools.split("Edit(").length - 1, 1, "and the value carries exactly one rule");
+  for (const wider of [
+    "reports/**",
+    "/tmp/reports/verify-button-drift.json",
+    "reports/",
+    "reports/../escape.json",
+    "reports/*.json",
+    // The three forms that widen without a wildcard, an absolute path or a `..`:
+    ".", // the invocation's whole working directory
+    "reports", // a directory, not a file: no extension, no leaf
+    "reports/verify-button-drift.json,reports/verify-clean.json", // two rules once `--allowedTools` splits
+  ]) {
     assert.throws(
       () => stance.recordStance({ harness: adapter.HARNESS, plugin_root: PLUGIN_ROOT, writes: [wider] }),
       /write-allow-path/,
       `the stance refuses to record ${JSON.stringify(wider)}`,
     );
+    assert.throws(() => stance.writeAllowRule(wider), /write-allow-path/, `no rule can be minted for ${JSON.stringify(wider)}`);
   }
   // A case that declares no report path gets no rule, so its argv is unchanged.
   const question = adapter.invocationTable().find((entry) => entry.case_id === "first-question-init");
@@ -382,6 +417,26 @@ test("t16-status-grades-real-reply", (t) => {
   assert.equal(graded.cell.block_reasons.length, 1);
   assert.equal(graded.cell.block_reasons[0].verdict, "pass");
   assert.equal(graded.cell.observed_verify_outcome, null);
+
+  // The pass above is only evidence if the same reader can refuse: the identical bytes with the
+  // declared facts removed are graded again, through the same entry, the same reader and the same
+  // reporter. A `statusFacts` that answered `missing: []` for every reply would still satisfy the
+  // pass assertions, so this half is what makes AC-1 causal on the parser rather than on the prompt.
+  const strippedReply = stripDeclaredFacts(reply);
+  assert.notEqual(strippedReply, reply, "the strip actually removed the stated facts");
+  assert.doesNotMatch(strippedReply, /^\s*Atoms\s*\(/m, "no per-layer header survives the strip");
+  const stripped = adapter.gradeCheck({
+    record: replayedRecord({ dir: join(sandbox(t, "t16-ac1-stripped-"), "captures"), bytes: resultStream({ reply: strippedReply }), entry }),
+    entry,
+    track: "pinned",
+    installation: identityForCell(),
+  });
+  assert.equal(stripped.cell.verdict, "fail", `the reply without its facts cannot pass: ${JSON.stringify(stripped.blocks)}`);
+  assert.equal(stripped.cell.reason, "status-facts-absent", "the refusal is the fact check's own reason");
+  for (const fact of ["phase", "gates.atoms", "gates.screens", "inventory.atoms", "inventory.screens"]) {
+    assert.ok(stripped.blocks[0].missing.includes(fact), `the refusal names ${fact}: ${JSON.stringify(stripped.blocks[0].missing)}`);
+  }
+  assert.notDeepEqual(stripped.blocks[0].missing, [], "a reply with no facts is never graded as stating them");
 });
 
 // ---------------------------------------------------------------------------
@@ -486,15 +541,7 @@ test("t16-status-check-has-teeth", (t) => {
   assert.equal(full.cell.verdict, "pass", `the untouched reply grades pass: ${JSON.stringify(full.blocks)}`);
 
   // Strip the Phases block, its lines and the per-layer headers: the gates and the inventory are gone.
-  const stripped = reply
-    .split("\n")
-    .filter(
-      (line) =>
-        !/^\s*Phases:\s*$/.test(line) &&
-        !/^\s*\[[x ~!]\]\s*(SCAFFOLD|PLAN|ATOMS|MOLECULES|COMPOSE)\b/.test(line) &&
-        !/^\s*(Atoms|Molecules|Screens)\s*\(/.test(line),
-    )
-    .join("\n");
+  const stripped = stripDeclaredFacts(reply);
   assert.notEqual(stripped, reply, "the strip actually removed content");
   const strippedGrade = grade("stripped", stripped);
   assert.equal(strippedGrade.cell.verdict, "fail", "a reply that drops the gates cannot pass");
@@ -600,8 +647,12 @@ test("t16-cell-shape-intact", (t) => {
     assert.deepEqual(entry.argv.slice(entry.argv.indexOf("--permission-mode")), entry.stance.argv);
   }
 
-  // The recorded artifact of the run this task repairs: twelve unique cells, ten named neighbours.
-  const recorded = RECORDED_RUN.cells;
+  // The recorded artifact's cells, read from the tracked projection — never from an in-file copy and
+  // never conditionally: the artifact itself is git-ignored, so a comparison that only ran where the
+  // artifact happened to be on disk would assert nothing in a clean checkout.
+  const projection = recordedRunProjection();
+  const recorded = projection.cells;
+  assert.equal(recorded.length, 12, "the recorded run holds twelve cells");
   assert.equal(new Set(recorded.map((cell) => `${cell.harness}/${cell.track}`)).size, 12, "twelve unique (harness, track) cells");
   const outside = recorded.filter((cell) => cell.harness !== adapter.HARNESS);
   assert.equal(outside.length, 10, "ten cells outside claude-code");
@@ -615,21 +666,15 @@ test("t16-cell-shape-intact", (t) => {
   ]);
   assert.equal(recorded.filter((cell) => cell.harness === adapter.HARNESS).length, 2);
 
-  // Where the recorded file is on disk, it must be the file those triples came from.
-  const recordedPath = join(ROOT, RECORDED_RUN.path);
-  let onDisk = null;
-  try {
-    onDisk = readFileSync(recordedPath);
-  } catch {
-    onDisk = null;
-  }
-  if (onDisk) {
-    assert.equal(sha256Hex(onDisk), RECORDED_RUN.sha256, "the recorded artifact is the one quoted");
+  // Where the artifact itself is on disk, it must be the file the projection describes: same sha256,
+  // same cells. A re-recorded run therefore fails here until the projection records it.
+  const artifactPath = join(ROOT, projection.artifact.path);
+  if (existsSync(artifactPath)) {
+    const onDisk = readFileSync(artifactPath);
+    assert.equal(sha256Hex(onDisk), projection.artifact.sha256, "the artifact on disk is the run the projection records");
     const artifact = JSON.parse(onDisk.toString("utf8"));
-    assert.deepEqual(
-      artifact.cells.map((cell) => ({ harness: cell.harness, track: cell.track, reason: cell.reason })),
-      recorded,
-      "the quoted cells are the artifact's cells",
-    );
+    assert.equal(String(artifact.run_id), projection.run_id, "the artifact is the run the projection names");
+    assert.equal(artifact.head_sha, projection.head_sha, "the artifact is the head the projection names");
+    assert.deepEqual(cellsOf(artifact), recorded, "the projection's cells are the artifact's cells");
   }
 });
