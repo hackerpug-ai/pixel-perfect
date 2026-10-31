@@ -13,7 +13,7 @@ pr_sequencing: false
 ## Overview
 
 **Sprints:** 6  (2 committed · 4 provisional)
-**Total Tasks:** 36  (committed sprints only; provisional sprints carry a size band)
+**Total Tasks:** 37  (committed sprints only; provisional sprints carry a size band)
 **Current Sprint:** 1 - Evidence spine and evaluator core
 
 Fused from both planning specialists (github-agentic-workflow-planner + evals-planner) with an evals integrity review; holdouts on for every sprint.
@@ -23,7 +23,7 @@ Fused from both planning specialists (github-agentic-workflow-planner + evals-pl
 | # | Milestone | Sprint | Gate | Tasks | Dependencies | Status | Forecast |
 |---|-----------|--------|------|-------|--------------|--------|----------|
 | 1 | — | [Sprint 01: Evidence spine and evaluator core: dispatchable harness-eval run, one real harness graded end to end on a real runner, twelve fail-closed cells](#sprint-01-evidence-spine-and-evaluator-core-dispatchable-harness-eval-run-one-real-harness-graded-end-to-end-on-a-real-runner-twelve-fail-closed-cells) | Twelve evidence-graded cells from one dispatched run; claude-code live, cursor fail-closed | 12 | — | Planned | ~3.5 d / over ×1.2 (owner-approved — see Open Owner Decisions D-01) |
-| 2 | — | [Sprint 02: Four live adapters: Codex, Grok, OpenCode, Pi graded on both tracks; per-harness mappings, controls, and honest could-not-run cells](#sprint-02-four-live-adapters-codex-grok-opencode-pi-graded-on-both-tracks-per-harness-mappings-controls-and-honest-could-not-run-cells) | Codex, Grok, OpenCode, Pi graded on both tracks; denial controls despite exit 0 | 20 | Sprint 01 | Planned | ~0.75 d / fits |
+| 2 | — | [Sprint 02: Four live adapters: Codex, Grok, OpenCode, Pi graded on both tracks; per-harness mappings, controls, and honest could-not-run cells](#sprint-02-four-live-adapters-codex-grok-opencode-pi-graded-on-both-tracks-per-harness-mappings-controls-and-honest-could-not-run-cells) | Codex, Grok, OpenCode, Pi graded on both tracks; denial controls despite exit 0 | 21 | Sprint 01 | In Progress | ~1 d / fits |
 | 3 | — | [Sprint 03: Triggers and release-adjacent records: nightly cron, push path filter, drift-proof job, harness-eval/pinned and harness-eval/drift statuses, published-mode resolution](#sprint-03-triggers-and-release-adjacent-records-nightly-cron-push-path-filter-drift-proof-job-harness-eval-pinned-and-harness-eval-drift-statuses-published-mode-resolution) | Push starts an exact-checkout run writing harness-eval/pinned; PR starts nothing; nightly deployed | — | Sprint 01 | Planned | band 21–34 pts |
 | 4 | — | [Sprint 04: Release gate resolver: release.mjs verify/publish and tag-release.yml refuse without fresh trusted checkout evidence; adapter publish governed; full truth table](#sprint-04-release-gate-resolver-release-mjs-verify-publish-and-tag-release-yml-refuse-without-fresh-trusted-checkout-evidence-adapter-publish-governed-full-truth-table) | release.mjs verify + tag-release.yml + adapter publish refuse without fresh trusted checkout evidence | — | Sprints 01, 02, 03 | Planned | band 34–55 pts |
 | 5 | — | [Sprint 05: Newest-only fix pipeline: reproduce, repair with the pinned Claude CLI, allowlisted patch, confirming run, app-opened PR a person merges](#sprint-05-newest-only-fix-pipeline-reproduce-repair-with-the-pinned-claude-cli-allowlisted-patch-confirming-run-app-opened-pr-a-person-merges) | Newest-only failure yields one allowlisted, app-opened PR a person merges; negative controls open nothing | — | Sprints 02, 03, 04 | Planned | band 34–55 pts |
@@ -44,12 +44,12 @@ UC-REL-05 · AC-3,4,5 ↦ sprint-03 · AC-1,2,6 ↦ sprint-04 · closes at sprin
 ## Open Owner Decisions
 
 - **D-01** (2026-10-28): Sprint 01 forecast is OVER ×1.2 (~3.5 d vs the 3-day check-in horizon). Owner approved the rationale: the sprint is the irreducible evidence spine — its gate is the first honest twelve-cell read, and narrowing the verdict or peeling foundation would break the gate's own could-not-run semantics.
-- **D-02** (2026-10-31): The evaluator writes the verify report, per PRD 03-data-schema. Sprint 01's T16 must be amended to drop its verify prompt and its one-path write allow-list; its status half stays. Owner: the sprint 01 run.
-- **D-03** (2026-10-31): Graded runs may execute the plugin's own node scripts on every gated harness, and nothing wider. Pi's no-gate row is approved. T16 must add this rule on Claude Code. Owner: the sprint 01 run.
+- **D-02** (2026-10-31): The evaluator writes the verify report, per PRD 03-data-schema. Sprint 01's T16 landed at 6872fbd with its verify prompt and one-path write allow-list still in, after this decision; run 41249460968 still reads verify fail report-missing with them. Sprint 02's GAW-11 removes both; T16's status half stays, and it works.
+- **D-03** (2026-10-31): Graded runs may execute node on every gated harness, and nothing wider. Pi's no-gate row is approved. GAW-11 adds the rule on Claude Code; T16 landed without it. Ceiling: Bash(node *) also admits node -e, and fixture hashes are what catch a stray write.
 - **D-04** (2026-10-31): Each graded run publishes raw streams and reports as 90-day artifacts on this public repository, after a key scan that withholds any match (GAW-9).
 - **D-05** (2026-10-31): A newest cell with no exact table is graded through the pinned table only when that run's own captures re-prove every required fact, and it records that basis (E9).
 - **D-06** (2026-10-31): OpenCode's args channel is proven this sprint. The shipped OpenCode plugin returns nothing and kills headless runs on 1.18.34 and 1.19.5, so a one-point fix joins the sprint (GAW-10).
-- **D-07** (2026-10-31): Sprint 02 runs only after sprint 01's gate is verified, because that gate's step 9 needs these four harnesses to read could-not-run. Sprint 02 is 89 points against its 34-55 band, because the hosted path never used the sprint 01 grader.
+- **D-07** (2026-10-31): Sprint 02 runs only after sprint 01's gate is verified, because that gate's step 9 needs these four harnesses to read could-not-run. Sprint 02 is 92 points against its 34-55 band, because the hosted path never used the sprint 01 grader.
 
 ## Per-Sprint Details
 
@@ -146,7 +146,7 @@ UC-REL-05 · AC-3,4,5 ↦ sprint-03 · AC-1,2,6 ↦ sprint-04 · closes at sprin
 
 **Sequence:** 2
 **Timeline:** Phase 2
-**Status:** Planned
+**Status:** In Progress
 **Fidelity:** committed
 **Proposed by:** github-agentic-workflow-planner + evals-planner
 **Milestone:** —
@@ -156,12 +156,12 @@ UC-REL-05 · AC-3,4,5 ↦ sprint-03 · AC-1,2,6 ↦ sprint-04 · closes at sprin
 **Gate:** Done means one hand dispatch grades command_list, status, planted-defect verify, and question_before_expensive_work from real event streams for Claude Code, Codex, Grok, OpenCode, and Pi on pinned and newest — Cursor remaining could-not-run by design — with every unqualified mapping reported as could-not-run with a stream-mapping reason instead of an omission, proven by jq over the result artifact showing four check verdicts with evidence paths in all ten keyed cells plus a per-harness missing-key control and an exit0-denied-read control that yields fail on a cell whose process_exit_code is 0.
 **Entrypoint:** gh workflow run harness-eval --repo hackerpug-ai/pixel-perfect, read via the run's harness-eval-result artifact (surfaces 1 and 2)
 **Shape:** product
-**Before:** Observed today on run 41235273928 at HEAD c5c9272 (workflow_dispatch, conclusion failure). Both claude-code cells read command_list:pass, status:fail/status-facts-absent, verify:fail/report-missing, question_before_expensive_work:could-not-run/required-fact-unobserved, and claude-code newest also reads could-not-run/installation-identity-mismatch with requested 2.1.291 against observed 2.1.316. Codex, Grok, OpenCode and Pi read could-not-run/<harness>-adapter-not-implemented on all four rows on both tracks; Cursor reads could-not-run/missing-api-key. `0` check rows carry evidence_paths, cited cell paths exist only on the dead runner, and harness-eval-verify-reports holds INDEX.json with `reports: []`. test/harness/stream/tables holds claude-code@2.1.291.json alone, with qualified false. The four .controls rows read qualified true, measured on claude-code only.
+**Before:** Run 41249460968 on hackerpug-ai/pixel-perfect at 36e864a (workflow_dispatch, conclusion failure) records twelve cells, and all twelve read could-not-run. codex, grok, opencode and pi read `<harness>-adapter-not-implemented` on all 32 of their check rows. Both cursor cells read `missing-api-key`. claude-code pinned at 2.1.291 reads command_list pass, status pass, verify fail report-missing and question_before_expensive_work could-not-run required-fact-unobserved; claude-code newest observes 2.1.316 with the same four rows and cell reason installation-identity-mismatch. 0 of the 40 keyed check rows carry evidence_paths, harness-eval-verify-reports holds INDEX.json with `reports: []`, and only the two claude-code cells carry control_observations.
 **Demonstrates:** UC-GRD-01, UC-GRD-02, UC-GRD-03, UC-GRD-04
 **Proves (ACs):** UC-GRD-01: AC-2, AC-6; UC-GRD-02: AC-1, AC-2, AC-3; UC-GRD-03: AC-1, AC-2, AC-3; UC-GRD-04: AC-6
-**Forecast:** 3 waves × 0.25 d/wave = ~0.75 d · horizon 3 d · fits
+**Forecast:** 4 waves × 0.25 d/wave = ~1 d · horizon 3 d · fits
 
-**First integrated demonstration:** a landed commit on main with GAW-1 to GAW-9 and GAW-I1 → gh workflow run harness-eval --repo hackerpug-ai/pixel-perfect → grade/harness-eval-result.json in the run's artifact, read with the gate's jq steps, plus the harness-eval-evidence artifacts the later steps open; requires harness-smoke keys, the owner's stance approvals; proof/repair owner: github-platform-implementer.
+**First integrated demonstration:** a landed commit on main with GAW-1 to GAW-11 and GAW-I1 → gh workflow run harness-eval --repo hackerpug-ai/pixel-perfect → grade/harness-eval-result.json in the run's artifact, read with the gate's jq steps, plus the harness-eval-evidence artifacts the later steps open; requires harness-smoke keys and the owner's recorded stance rows; proof/repair owner: github-platform-implementer.
 
 **Owner questions (answer before the sprint starts):**
 - Approve the Grok permission stance rule given that --trust may appear only in a keyless install step (this Mac's approve-everything Grok config must not be copied to the runner), and confirm the Codex pinned version plus hosted-runner sandbox support (unprivileged user namespaces) as a runner requirement for the --sandbox read-only and workspace-write steps? (needed by: sprint-02 grok + codex qualification) — answered: approved both (owner, 2026-10-31).
@@ -183,10 +183,10 @@ UC-REL-05 · AC-3,4,5 ↦ sprint-03 · AC-1,2,6 ↦ sprint-04 · closes at sprin
 11. Run `jq -r '.cells[] | select(.harness != "cursor" and .track == "pinned") | .harness + " " + .stream_mapping.table + " " + .stream_mapping.state' /tmp/he2/grade/harness-eval-result.json | sort` — exactly `claude-code claude-code@2.1.291 qualified`, `codex codex@0.160.1 qualified`, `grok grok@1.0.46 qualified`, `opencode opencode@1.18.34 qualified`, `pi pi@1.0.4 qualified`. `qualified` means a table for that exact version, backed by committed captures from that version. A pinned cell never reads `reproved`, `unqualified` or `absent`. Today `.stream_mapping` does not exist.   `exercises: E4, E5, E6, E7, E8, GAW-3, GAW-4, GAW-5, GAW-6, E1`
 12. Run `jq '[.cells[] | select(.harness != "cursor" and .track == "pinned") | .checks[] | select((.reason // "") | startswith("stream-mapping-"))] | length' /tmp/he2/grade/harness-eval-result.json` — prints `0`: every pinned row was read through a qualified table. Then run `jq '[.cells[] | select(.harness != "cursor" and .track == "newest" and (.stream_mapping.state == "qualified" or .stream_mapping.state == "reproved")) | .checks[] | select((.reason // "") | startswith("stream-mapping-"))] | length' /tmp/he2/grade/harness-eval-result.json` — prints `0`: a newest cell whose mapping held carries no stream-mapping reason. A non-zero count on either command fails this step and names the mapping.   `exercises: E4, E5, E6, E7, E8, GAW-3, GAW-4, GAW-5, GAW-6, E1, E9`
 13. Run `jq -r '.cells[] | select(.harness != "cursor" and .track == "newest") | [.harness, .installation.observed_cli_version, .stream_mapping.state, .stream_mapping.table, (.stream_mapping.basis.captures // [] | length), ([.checks[] | select(.verdict == "could-not-run") | .reason] | unique | join(","))] | @tsv' /tmp/he2/grade/harness-eval-result.json | sort` — exactly five rows, one per keyed harness. Column 3 is the state. `reproved` is the expected word while a harness's newest version differs from its pin: the pinned table named in column 4 graded this version because this run's own captures, counted in column 5 and at least 1, showed every required fact through it. `qualified` means a table exists for that exact version. Either way column 6 lists no `stream-mapping-` reason. `unqualified` is an honest finding: this run's captures did not show every required fact, for example after a renamed event, so column 6 lists `stream-mapping-unqualified` and `.stream_mapping.missing_facts` names the facts. Column 6 may also list a named refusal from checks that never ran, such as `opencode-args-channel-unknown` if the hosted capture proves that channel fails. An empty column 3 is allowed only beside a named install failure in column 6. `absent`, or any other reason on a check that did run, fails the step, because every keyed harness now has a pinned table. No row is omitted, and no row is graded with a table its own captures did not re-prove.   `exercises: E1, E4, E5, E6, E7, E8, GAW-1, GAW-3, GAW-4, GAW-5, GAW-6, E9`
-14. Run `jq -r '.cells[] | select(.harness != "cursor" and .track == "pinned") | .harness + " " + ([.checks[] | .check_id + "=" + .verdict] | join(" "))' /tmp/he2/grade/harness-eval-result.json | sort` — five lines, each naming `command_list=`, `status=`, `verify=` and `question_before_expensive_work=` with a word from pass, fail, could-not-run. `pass` is the target; a `fail` is a real finding this gate surfaces, not a setup error. Then run `jq '[.cells[] | select(.harness != "cursor") | .checks[] | select(.verdict != "pass" and ((.reason // "") | length == 0))] | length' /tmp/he2/grade/harness-eval-result.json` — prints `0`.   `exercises: E1, E2, E4, E5, E6, E7, E8, GAW-1, GAW-3, GAW-4, GAW-5, GAW-6`
+14. Run `jq -r '.cells[] | select(.harness != "cursor" and .track == "pinned") | .harness + " " + ([.checks[] | .check_id + "=" + .verdict] | join(" "))' /tmp/he2/grade/harness-eval-result.json | sort` — five lines, each naming `command_list=`, `status=`, `verify=` and `question_before_expensive_work=` with a word from pass, fail, could-not-run. `pass` is the target; a `fail` is a real finding this gate surfaces, not a setup error. Then run `jq '[.cells[] | select(.harness != "cursor") | .checks[] | select(.verdict != "pass" and ((.reason // "") | length == 0))] | length' /tmp/he2/grade/harness-eval-result.json` — prints `0`.   `exercises: E1, E2, E4, E5, E6, E7, E8, GAW-1, GAW-3, GAW-4, GAW-5, GAW-6, GAW-11`
 15. Run `jq -r '.cells[] | select(.harness != "cursor" and .track == "pinned") | .harness + " " + ([.checks[] | select(.check_id == "question_before_expensive_work") | (.question_count | tostring) + " " + (.answers_delivered | tostring) + " " + (.reason // "-")] | join(""))' /tmp/he2/grade/harness-eval-result.json | sort` — five lines; the target line is `<harness> 1 0 -`, and `<harness> 0 0 no-question-asked` is a real finding. No line reads `required-fact-unobserved`, which is what run 41235273928 prints on claude-code even though its capture was complete. The second number is `0` on every line: no answer was sent.   `exercises: E1, E4, E5, E6, E7, E8, GAW-2, GAW-3, GAW-4, GAW-5, GAW-6`
-16. Run `rm -rf /tmp/he2v && gh run download $RUN_ID --repo hackerpug-ai/pixel-perfect -n harness-eval-verify-reports-$RUN_ID-1 -D /tmp/he2v && find /tmp/he2v -name verify-button-drift.json | wc -l && find /tmp/he2v -name verify-clean.json | wc -l && find /tmp/he2v -name verify-button-drift.json -exec jq -r '.harness + " " + .track + " " + .expected_defect_key + " " + (.observed_defect_key // "none") + " " + .observed_verify_outcome' {} + | sort` — `10`, then `10`, then ten lines, each naming its own harness and track. The target line ends `atoms/Button/default atoms/Button/default defect-detected`. A line ending `none missed-defect` is a real finding. A line ending `none unavailable` carries a `could_not_run_reason`. Run 41235273928 prints `0` and `0`, because its INDEX.json reads `reports: []`.   `exercises: E2, E4, E5, E6, E7, E8, GAW-3, GAW-4, GAW-5, GAW-6, GAW-9, E1`
-17. Run `find /tmp/he2v -name verify-clean.json -exec jq -r '.harness + " " + (.clean_project_failed | tostring)' {} + | sort -u` — one line per keyed harness ending `false`, or naming a real false positive as `true`. Then run `find /tmp/he2v -name denied-write-probe.json -exec jq -r '.harness + " exit=" + (.process_exit_code | tostring) + " " + .denied_tool_call.operation + " " + .evaluation_verdict' {} + | sort` — includes `claude-code exit=0 Write fail`: the report itself shows the denied tool call on a clean exit.   `exercises: E2, E3, GAW-3, GAW-4, GAW-5, GAW-6, GAW-9`
+16. Run `rm -rf /tmp/he2v && gh run download $RUN_ID --repo hackerpug-ai/pixel-perfect -n harness-eval-verify-reports-$RUN_ID-1 -D /tmp/he2v && find /tmp/he2v -name verify-button-drift.json | wc -l && find /tmp/he2v -name verify-clean.json | wc -l && find /tmp/he2v -name verify-button-drift.json -exec jq -r '.harness + " " + .track + " " + .expected_defect_key + " " + (.observed_defect_key // "none") + " " + .observed_verify_outcome' {} + | sort` — `10`, then `10`, then ten lines, each naming its own harness and track. The target line ends `atoms/Button/default atoms/Button/default defect-detected`. A line ending `none missed-defect` is a real finding. A line ending `none unavailable` carries a `could_not_run_reason`. Run 41235273928 prints `0` and `0`, because its INDEX.json reads `reports: []`.   `exercises: E2, E4, E5, E6, E7, E8, GAW-3, GAW-4, GAW-5, GAW-6, GAW-9, E1, GAW-11`
+17. Run `find /tmp/he2v -name verify-clean.json -exec jq -r '.harness + " " + (.clean_project_failed | tostring)' {} + | sort -u` — one line per keyed harness ending `false`, or naming a real false positive as `true`. Then run `find /tmp/he2v -name denied-write-probe.json -exec jq -r '.harness + " exit=" + (.process_exit_code | tostring) + " " + .denied_tool_call.operation + " " + .evaluation_verdict' {} + | sort` — includes `claude-code exit=0 Write fail`: the report itself shows the denied tool call on a clean exit.   `exercises: E2, E3, GAW-3, GAW-4, GAW-5, GAW-6, GAW-9, GAW-11`
 18. Run `rm -rf /tmp/he2-codex && gh run download "$RUN_ID" --repo hackerpug-ai/pixel-perfect -n "harness-eval-evidence-$RUN_ID-1-codex-pinned" -D /tmp/he2-codex && find /tmp/he2-codex -name '*.capture.json' -not -path '*denied-write-probe*' -exec jq -r 'select(.check_id == "status" or .check_id == "verify") | .check_id + " " + (.argv as $a | $a[($a | index("--sandbox")) + 1])' {} + | sort` — exactly `status read-only`, `verify workspace-write`, `verify workspace-write`.   `exercises: GAW-3, GAW-I1, GAW-9`
 19. Run `rm -rf /tmp/he2-grok && gh run download "$RUN_ID" --repo hackerpug-ai/pixel-perfect -n "harness-eval-evidence-$RUN_ID-1-grok-pinned" -D /tmp/he2-grok && find /tmp/he2-grok -name '*.capture.json' -exec jq -r 'select((.argv // []) | index("--trust")) | .check_id' {} + | sort -u` — exactly one line, `plugin-install`. No graded invocation carries `--trust`.   `exercises: GAW-4, GAW-9`
 20. Run `find /tmp/he2-grok -name '*.capture.json' -exec jq -r 'select(.check_id == "question_before_expensive_work") | .termination_kind + " " + (.boundary_event_offset | tostring)' {} +` — one line, `boundary-stop` followed by an integer: the probe stopped at its first question and sent no answer. `native null` means the first turn asked nothing, which is a real finding about Grok.   `exercises: GAW-2, GAW-4, GAW-9, E1, E6`
@@ -224,7 +224,33 @@ UC-REL-05 · AC-3,4,5 ↦ sprint-03 · AC-1,2,6 ↦ sprint-04 · closes at sprin
 | E8 | Map and qualify the Pi stream at its pinned version | evals-implementer | 5 | C | ⬜ Pending |
 | E9 | Grade a newest cell with the pinned table only when that run's own captures re-prove every required fact | evals-implementer | 3 | C | ⬜ Pending |
 
-**Waves:** A(4) → B(9) → C(7) — 3 waves over 20 tasks (≈6.7 at once)
+**Waves:** A(4) → B(1) → C(9) → D(7) — 4 waves over 21 tasks (≈5.2 at once)
+
+#### Next Sprint Tasks
+
+Generated by /kb-sprint-tasks-plan on 2026-10-31
+
+- TASK-E1.md
+- TASK-E2.md
+- TASK-E3.md
+- TASK-E4.md
+- TASK-E5.md
+- TASK-E6.md
+- TASK-E7.md
+- TASK-E8.md
+- TASK-E9.md
+- TASK-GAW-1.md
+- TASK-GAW-10.md
+- TASK-GAW-11.md
+- TASK-GAW-2.md
+- TASK-GAW-3.md
+- TASK-GAW-4.md
+- TASK-GAW-5.md
+- TASK-GAW-6.md
+- TASK-GAW-7.md
+- TASK-GAW-8.md
+- TASK-GAW-9.md
+- TASK-GAW-I1.md
 
 #### Dependencies
 
