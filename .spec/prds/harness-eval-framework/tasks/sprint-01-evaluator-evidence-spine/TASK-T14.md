@@ -11,7 +11,7 @@
 > Reviewer: evals-reviewer
 > Proposed By: evals-reviewer
 > Wave: 1
-> Depends On: T3 (the capture layer), T6 (the harness mapper), T13 (landed: the graded cell path)
+> Depends On: T3, T6, T13
 > TDD_MODE: red_first · RED_GREEN_REQUIRED: true
 
 AGENT: planner=evals-planner | implementer=ai-tooling-implementer | reviewer=evals-reviewer
