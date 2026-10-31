@@ -242,7 +242,9 @@ Verdict: APPROVED or NEEDS_FIXES, with file and line for each finding.
 
 ## Dependencies
 
-- **Depends on:** T14 — a mapper-declared `required_read: false` must survive `capture.observe` before a denial's requiredness means anything. Without it the probe's optional half is recorded as `null` (requiredness undeclared), the pair cannot be read as optional, and `gradeFromEvidence` refuses any record that carries an optional denial. T15 starts only after T14 lands.
+- **Depends on:** T14
+
+Why T14: a mapper-declared `required_read: false` must survive `capture.observe` before a denial's requiredness means anything. Without it the probe's optional half is recorded as `null` (requiredness undeclared), the pair cannot be read as optional, and `gradeFromEvidence` refuses any record that carries an optional denial. T15 starts only after T14 lands.
 - **Blocks:** T11 (its AC-1 and AC-2 name the four exact pairs in a downloaded artifact), T12 (reviews the graded output), human-testing-gate step 11.
 
 A shared file is not a dependency: T15 edits the same workflow T1 scaffolded and the same modules T13 and T11 wrote, and each of those tasks' pins are enforced by the regression list above rather than by an edge. T11 and T12 are deliberately **not** edges — T15 must be dispatchable without them, and their acceptance is what T15 unblocks.

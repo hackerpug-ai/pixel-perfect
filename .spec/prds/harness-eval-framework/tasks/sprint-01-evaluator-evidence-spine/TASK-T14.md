@@ -16,7 +16,9 @@
 
 AGENT: planner=evals-planner | implementer=ai-tooling-implementer | reviewer=evals-reviewer
 
-**Depends on:** T3 (`test/harness/runtime/capture.mjs` — `createCapture`, `observe`, `denials`, `undeclaredDenials`, `observedFacts`), T6 (`test/harness/adapters/claude-code.mjs` — `mapCapturedLine`, the mapper that declares requiredness per denial), T13 (the graded cell path and the archived exit-0 denied-write capture this task replays)
+**Depends on:** T3, T6, T13
+
+Why each: T3 owns `test/harness/runtime/capture.mjs` (`createCapture`, `observe`, `denials`, `undeclaredDenials`, `observedFacts`); T6 owns `test/harness/adapters/claude-code.mjs` (`mapCapturedLine`, the mapper that declares requiredness per denial); T13 landed the graded cell path and the archived exit-0 denied-write capture this task replays.
 **Blocks:** T15 (its hosted producer cannot deliver a required denial while a declared `false` collapses to `null`), gate steps 6, 7 and 10, and the sprint's done statement
 
 ## Background
@@ -494,7 +496,9 @@ Verdict: APPROVED or NEEDS_FIXES, with file and line for each finding.
 
 ## Dependencies
 
-- **Depends on:** T3 (capture layer, landed), T6 (the mapper, landed), T13 (the archived exit-0 capture and the graded cell path, landed `45142ee`).
+- **Depends on:** T3, T6, T13
+
+Why each: T3 is the capture layer, T6 is the mapper, and T13 (landed `45142ee`) is the archived exit-0 capture plus the graded cell path.
 - **Blocks:** T15 (the hosted producer path cannot produce a required denial while the declaration is erased at capture), gate steps 6, 7, 10.
 
 A shared file is not a dependency, and needing another task's output to test against is that flow's integration obligation, not an edge. `test/harness/adapters/claude-code.mjs` and `test/harness/smoke/observations.mjs` are **read** by this task and written by T15; the archive is read-only input.
