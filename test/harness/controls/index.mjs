@@ -17,7 +17,8 @@
 // The fail-closed rule is the point of this module: a control the run could not observe is
 // `could-not-run` / `control-unobservable`. There is no default pass and no default fail.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname } from "node:path";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 export const CONTROLS_FORMAT = "controls@v1";
 export const CONTROL_VERDICTS = Object.freeze(["pass", "fail", "could-not-run"]);
@@ -92,6 +93,26 @@ function hostHalf(hosted) {
 }
 
 /**
+ * The hosted half, read from the runner that is executing this code. `GITHUB_ACTIONS=true` is set by
+ * the Actions runner and by nothing else; the run id and attempt must be positive integers so they
+ * compare with the artifact's own numeric fields, and an event name must be present. Anything short
+ * of all four is no identity at all, so a machine-local replay gets `null` and can never claim the
+ * hosted half — a constant would make every artifact self-certifying.
+ */
+export function hostedHalfFromEnv(env = process.env) {
+  const source = env ?? {};
+  if (source.GITHUB_ACTIONS !== "true") return null;
+  const positive = (value) => (typeof value === "string" && /^[0-9]+$/.test(value) ? Number(value) : null);
+  const runId = positive(source.GITHUB_RUN_ID);
+  const runAttempt = positive(source.GITHUB_RUN_ATTEMPT);
+  const event = typeof source.GITHUB_EVENT_NAME === "string" ? source.GITHUB_EVENT_NAME.trim() : "";
+  if (runId === null || runId <= 0) return null;
+  if (runAttempt === null || runAttempt <= 0) return null;
+  if (event === "") return null;
+  return { status: "observed", run_id: runId, run_attempt: runAttempt, event, workflow: "harness-eval" };
+}
+
+/**
  * One control row. `observed` is `{ verdict, reason, evidence }` from a real observation, or null
  * when the run could not observe the control — which is `could-not-run` / control-unobservable and
  * never anything else. A row whose observation disagrees with the definition keeps what was
@@ -146,6 +167,11 @@ export function recordControl({ control_id, observed = null, pair = null, hosted
 /**
  * The four rows, in definition order. `observations` is keyed by control id; a missing key is an
  * unobservable control, not an omission.
+ *
+ * Each row's hosted half resolves in one order: an explicit `hosted[id]` argument, then the hosted
+ * record the producer stamped onto that control's OBSERVATION, then the definition's `awaiting`
+ * record (which is not an execution). The observation carries it so the producer's call text stays
+ * `qualifyControls({ observations, pairs })` — one call, one implementation, one fail-closed rule.
  */
 export function qualifyControls({ observations = {}, pairs = {}, hosted = {} } = {}) {
   const rows = CONTROLS.map((definition) =>
@@ -153,7 +179,10 @@ export function qualifyControls({ observations = {}, pairs = {}, hosted = {} } =
       control_id: definition.control_id,
       observed: observations[definition.control_id] ?? null,
       pair: pairs[definition.control_id] ?? null,
-      hosted: hosted[definition.control_id] ?? definition.hosted,
+      hosted:
+        hosted[definition.control_id] ??
+        observations[definition.control_id]?.hosted ??
+        definition.hosted,
     }),
   );
   const failures = rows
@@ -208,4 +237,84 @@ export function writeControls({ file, rows }) {
     });
   }
   return { ok: mismatches.length === 0 && existsSync(file), path: file, rows: readBack, mismatches };
+}
+
+/**
+ * The gate that READS THE PAIRS. `assertControlRows` accepts four schema-valid rows whatever they
+ * say, which is how a run that observed nothing republished as green (recorded run 41139161972:
+ * four rows, three of them `could-not-run` / `control-unobservable`, every one `not-executed`).
+ *
+ * This compares each row with its OWN `expect` pair, requires the row to be qualified and to carry a
+ * hosted half read from a runner's identity, and — when the artifact's own run id is known — requires
+ * that half to belong to that run. A claim stamped from a constant would be self-certifying, so the
+ * run id is compared, not merely present.
+ *
+ * `assertControlRows` runs first: a three-row, five-row or duplicated array is refused there rather
+ * than reported as a mismatch list. One implementation serves both the producer (in-run) and the
+ * documented command (`--gate`, over a downloaded artifact).
+ */
+export function controlVerdictGate(rows, { runId = null } = {}) {
+  assertControlRows(rows);
+  const expected = Object.fromEntries(CONTROLS.map((definition) => [definition.control_id, { ...definition.expect }]));
+  const mismatches = [];
+  const seen = new Set();
+  const projection = [];
+  for (const row of rows) {
+    const id = row?.control_id;
+    if (seen.has(id)) {
+      mismatches.push(`${id}: appears twice in the controls array`);
+      continue;
+    }
+    seen.add(id);
+    const definition = BY_ID.get(id);
+    if (!definition) {
+      mismatches.push(`${id}: unknown control id, expected one of ${CONTROL_IDS.join(", ")}`);
+      continue;
+    }
+    projection.push({ control_id: id, verdict: row.verdict, reason: row.reason });
+    if (!(row.verdict === definition.expect.verdict && row.reason === definition.expect.reason)) {
+      mismatches.push(
+        `${id}: expected ${definition.expect.verdict}/${definition.expect.reason}, observed ${String(row.verdict)}/${String(row.reason)}`,
+      );
+    }
+    if (row.qualified !== true) mismatches.push(`${id}: qualified is ${JSON.stringify(row.qualified)}, expected true`);
+    const status = row.hosted?.status ?? null;
+    if (status !== "observed") mismatches.push(`${id}: hosted.status is ${String(status)}, expected observed`);
+    if (runId !== null && row.hosted?.run_id !== runId) {
+      mismatches.push(`${id}: hosted.run_id is ${String(row.hosted?.run_id)}, expected ${String(runId)}`);
+    }
+  }
+  for (const definition of CONTROLS) {
+    if (!seen.has(definition.control_id)) mismatches.push(`${definition.control_id}: missing from the controls array`);
+  }
+  return { ok: mismatches.length === 0, expected, rows: projection, mismatches };
+}
+
+// ---------------------------------------------------------------------------
+// CLI — the documented gate command, over a downloaded artifact
+// ---------------------------------------------------------------------------
+
+const isMain = process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url));
+
+if (isMain) {
+  const [verb, file] = process.argv.slice(2);
+  if (verb !== "--gate" || !file) {
+    process.stderr.write("usage: controls/index.mjs --gate <harness-eval-result.json>\n");
+    process.exitCode = 2;
+  } else {
+    let printed;
+    try {
+      const artifact = JSON.parse(readFileSync(file, "utf8"));
+      const rows = Array.isArray(artifact?.controls) ? artifact.controls : [];
+      const gate = controlVerdictGate(rows, { runId: Number.isInteger(artifact?.run_id) ? artifact.run_id : null });
+      printed = { ok: gate.ok, run_id: artifact?.run_id ?? null, mismatches: gate.mismatches, rows: gate.rows };
+      process.exitCode = gate.ok ? 0 : 1;
+    } catch (error) {
+      // A refused shape (three rows, five rows, a duplicated id) is a refusal, not a crash: the
+      // command still prints a verdict and still exits non-zero.
+      printed = { ok: false, run_id: null, mismatches: [String(error?.message ?? error)], rows: [] };
+      process.exitCode = 1;
+    }
+    process.stdout.write(`${JSON.stringify(printed)}\n`);
+  }
 }
