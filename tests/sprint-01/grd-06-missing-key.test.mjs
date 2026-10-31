@@ -747,15 +747,27 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
       for (const variable of BOUND_VARIABLES) assert.ok(runbook.includes(variable), `the runbook never names the fallback ${variable}`);
       assert.equal(/secrets\.[A-Za-z0-9_]+\s*=\s*\S/.test(runbook), false, "the runbook shows a secret value");
 
-      // --- TC-3's paired half: authenticated cells grading beside the control row -------
+      // --- TC-3's paired half: the bound invocation that proceeded beside the control row ---
+      // Under AC-2's restated third THEN clause this reads the row's pair, not a cell verdict: a
+      // cell aggregates four checks and three of them are owned outside T11, so a cell can be
+      // could-not-run while the bound invocation beside the refusal ran cleanly.
       if (existsSync(LIVE_ARTIFACT)) {
         const live = JSON.parse(readFileSync(LIVE_ARTIFACT, "utf8"));
         const hosted = (live.controls ?? []).find((row) => row.control_id === "missing-key");
         assert.ok(hosted, "the hosted artifact carries no missing-key control row");
         assert.equal(hosted.reason, controlRow.reason, "the hosted control row disagrees with the wired control");
-        const authenticatedLive = (live.cells ?? []).filter((cell) => cell.harness === "claude-code" && cell.verdict === "pass");
-        assert.ok(authenticatedLive.length > 0, "no authenticated claude-code cell graded in the same run");
-        artifact.t9.provenance.hosted = { status: "observed", path: LIVE_ARTIFACT, authenticated_cells: authenticatedLive.length };
+        const paired = hosted.pair;
+        assert.ok(paired && typeof paired === "object", "the hosted missing-key row carries no paired authenticated observation");
+        assert.equal(paired.verdict, "pass", "the bound invocation beside the refusal was not accepted");
+        assert.equal(paired.process_exit_code, 0, "the bound invocation beside the refusal did not exit 0");
+        assert.ok(paired.model_request_count >= 1, "the bound invocation beside the refusal never called the model");
+        assert.equal(typeof paired.invocation_id, "string", "the pair names no invocation");
+        artifact.t9.provenance.hosted = {
+          status: "observed",
+          path: LIVE_ARTIFACT,
+          paired_invocation: paired.invocation_id,
+          pair_verdict: paired.verdict,
+        };
       } else {
         artifact.t9.provenance.hosted = {
           status: "not-executed",
