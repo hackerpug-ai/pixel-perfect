@@ -545,3 +545,409 @@ Placeholder — the reviewer writes the verdict here.
   "notes": "Placeholder. The reviewer replaces this block with APPROVED or NEEDS_FIXES and one entry per finding, each carrying file, line and basis (reproduced | reasoned | suspected)."
 }
 ```
+
+<!-- REQUIREMENT-CONTRACT v1 -->
+<!--
+{
+  "version": "1",
+  "task_id": "T14",
+  "task_type": "BUG",
+  "tdd_mode": "red_first",
+  "verification_policy": {
+    "requires_red_evidence": true,
+    "requires_seeded_evidence": true,
+    "requires_tests": true
+  },
+  "guardrails": {
+    "write_allowed": [
+      "test/harness/runtime/capture.mjs",
+      "test/harness/runtime/capture-observe.test.mjs",
+      "tests/sprint-01/t14-capture-requiredness.test.mjs",
+      ".spec/prds/harness-eval-framework/tasks/sprint-01-evaluator-evidence-spine/TASK-T14.md"
+    ],
+    "write_prohibited": [
+      "plugins/pixel-perfect/**"
+    ]
+  },
+  "fixtures": {
+    "seed/declaration-stripped-capture": {
+      "description": "the same real stream with the optional denial declared neither way, so the layer must read silence as undeclared and refuse rather than pass",
+      "entrypoint": "the same archived bytes replayed through createCapture().append, with only the target-less Bash denial's `required_read` key removed from mapCapturedLine's output before observe() sees it (no byte is edited and no capture method is replaced)",
+      "seed_method": "migration_fixture"
+    },
+    "seed/denied-write-capture": {
+      "description": "the archived exit-0 run whose real mapper declares the Write denial required and the target-less Bash denial optional; replayed through createCapture it is the one stream that carries a declared true and a declared false side by side",
+      "entrypoint": "test/harness/smoke/fixtures/denied-write/claude-code-denied-write.capture.json plus claude-code-denied-write.stdout.bin: one real guarded `claude -p` under --permission-mode dontAsk that exited 0, whose result event carries two permission denials (a Write on <cwd>/work/keep.txt, and a Bash denial whose tool_input holds no file path)",
+      "seed_method": "recorded_external"
+    },
+    "seed/empty-path-declaration": {
+      "description": "a caller declaration with no entries: a denial whose target is null must still read undeclared rather than be inferred optional from an empty list",
+      "entrypoint": "the same archived bytes observed with { required_read_paths: [] } and the same stripped mapper, so the caller declared a required-path list that names nothing",
+      "seed_method": "migration_fixture"
+    },
+    "seed/hosted-run-41139161972": {
+      "description": "the dispatched receipt at head 09547bc663f2c8326cc9d02a858b596969cb8bb7: both claude-code cells carry command_list pass, then status and verify at could-not-run / requiredness-undeclared",
+      "entrypoint": ".kb-run-sprint/sprint-01-evaluator-evidence-spine/T11/evidence/reviewer-cycle-3-r0/hosted-run-41139161972-result.json (gh run download 41139161972 -n harness-eval-result-41139161972-1)",
+      "seed_method": "recorded_external"
+    }
+  },
+  "requirements": [
+    {
+      "description": "GIVEN seed/denied-write-capture WHEN declared-optional-survives-capture runs THEN the declared-optional Bash denial records false, the declared-required Write denial records true, undeclaredDenials is empty, and the cell grades fail/denied_tool_call beside exit 0",
+      "flow_ref": null,
+      "id": "AC-1",
+      "maps_to_ac": null,
+      "positive_example": "the archived exit-0 stream grades fail / denied_tool_call: the target-less Bash denial records required_read false, the Write denial records true, undeclaredDenials(record).length is 0, denials(record).length is 1, and the same declaration still wins when the caller passes a required_read_paths list that names no denial target.",
+      "primary": true,
+      "red_input": "on base main observe() starts `required = null` and honours only `required_read === true`, so with required_read_paths null the mapper's declared false for the target-less Bash denial is stored as null, undeclaredDenials(record).length is 1, and the cell reads could-not-run / requiredness-undeclared - the exact verdict both claude-code cells carry in hosted run 41139161972",
+      "red_proof": ".tmp/sprint-01-verification/t14-capture-requiredness.red.log",
+      "scenario": {
+        "cases": [
+          {
+            "action": {
+              "actor": "runner",
+              "steps": [
+                "replay the archived stdout bytes through createCapture().append -> observe(mapCapturedLine, { required_read_paths: null }) -> finish({ exit_code: 0 }) -> persist(dir)",
+                "node --test tests/sprint-01/t14-capture-requiredness.test.mjs --test-name-pattern declared-optional-survives-capture"
+              ]
+            },
+            "end_state": {
+              "must_not_observe": [
+                "`requiredness-undeclared` in the cell's `reason` or in any `blocks[]` entry",
+                "the target-less `Bash` denial recorded as `null`",
+                "an empty `observations[]` array or a record with 0 denials"
+              ],
+              "must_observe": [
+                "the target-less `Bash` denial records `required_read` `false`",
+                "the `Write` denial on `<cwd>/work/keep.txt` records `required_read` `true`",
+                "`undeclaredDenials(record).length` is 0",
+                "`denials(record).length` is 1",
+                "the graded cell reads `fail` with reason `denied_tool_call`",
+                "`process_status.exit_code` is 0 beside that `fail` verdict"
+              ]
+            },
+            "start_ref": "seed/denied-write-capture"
+          },
+          {
+            "action": {
+              "actor": "runner",
+              "steps": [
+                "observe the same bytes with { required_read_paths: [\"/nonexistent/required.txt\"] }, a caller declaration that names no denial target"
+              ]
+            },
+            "end_state": {
+              "must_not_observe": [
+                "the mapper's `true` on the `Write` denial demoted to `false` by the paths list",
+                "`required_read` `null` for a denial the mapper declared",
+                "an empty `denials` set while a required write was denied"
+              ],
+              "must_observe": [
+                "the target-less `Bash` denial still records `required_read` `false`",
+                "the `Write` denial still records `required_read` `true`",
+                "`undeclaredDenials(record).length` is 0"
+              ]
+            },
+            "start_ref": "seed/denied-write-capture"
+          }
+        ],
+        "evidence": {
+          "forms": [
+            "the persisted InvocationCapture record's observations[].required_read for both denials",
+            "the graded cell's verdict, reason and blocks[] assembled by gradeFromEvidence"
+          ]
+        },
+        "id": "SC-T14-AC1",
+        "negative_control": {
+          "would_fail_if": [
+            "observe() keeps honouring only `required_read === true`, so the mapper's declared `false` is stored as `null`, undeclaredDenials counts it, and any check on a stream with a target-less denial grades `could-not-run` / `requiredness-undeclared` exactly as hosted run 41139161972 did",
+            "the fix infers requiredness from process_status.exit_code or from a retry instead of preserving the mapper's own declaration, so a denial is graded `fail` without any observation declaring it required",
+            "the fix hardcodes `false` for every denial, so the required Write denial stops counting and a cell whose required write was denied grades `pass`"
+          ]
+        },
+        "test_tier": "e2e",
+        "tier": "e2e-automated",
+        "tier_note": "the replay uses the real capture module, the real mapper and the real grader over the archived stdout bytes; only the child process is not re-spawned, because the bytes it produced are archived",
+        "topology_note": "one CaptureSession replay of real archived bytes; mapCapturedLine (T6, the real harness mapper) declares requiredness per denial, observe() stores it, and gradeFromEvidence (T7) turns undeclaredDenials into a could-not-run requiredness-undeclared block before any verdict is read; the cell is the same object T13's smoke leg writes"
+      },
+      "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+      "test_file": "tests/sprint-01/t14-capture-requiredness.test.mjs",
+      "test_function": "declared-optional-survives-capture",
+      "test_tier": "integration",
+      "title": "A mapper-declared required_read: false survives capture, and its denial is not graded as undeclared",
+      "type": "acceptance_criterion",
+      "verify": "node --test tests/sprint-01/t14-capture-requiredness.test.mjs --test-name-pattern declared-optional-survives-capture"
+    },
+    {
+      "description": "GIVEN seed/declaration-stripped-capture and seed/empty-path-declaration WHEN undeclared-denial-still-closed runs THEN the undeclared denial reads null, undeclaredDenials counts it, and the cell reads could-not-run / requiredness-undeclared",
+      "flow_ref": null,
+      "id": "AC-2",
+      "maps_to_ac": null,
+      "positive_example": "a stream whose target-less Bash denial was never declared reads required_read null, undeclaredDenials(record).length is 1 beside a properly declared Write denial, and the cell reads could-not-run / requiredness-undeclared - even when the caller passes required_read_paths: [] and the denial target is null.",
+      "primary": false,
+      "red_input": "on base main the undeclared case already reads null, so this AC is not red for the fix - it is the guard that the fix does not buy AC-1 with permission: it goes red the moment observe() infers false (or a caller's empty list infers false), and its RED proof is the same base run recorded for AC-1",
+      "red_proof": ".tmp/sprint-01-verification/t14-capture-requiredness.red.log",
+      "scenario": {
+        "cases": [
+          {
+            "action": {
+              "actor": "runner",
+              "steps": [
+                "replay the archived bytes with a mapper that returns mapCapturedLine's observations minus the `required_read` key on the target-less `Bash` denial only",
+                "grade the persisted record through gradeFromEvidence",
+                "node --test tests/sprint-01/t14-capture-requiredness.test.mjs --test-name-pattern undeclared-denial-still-closed"
+              ]
+            },
+            "end_state": {
+              "must_not_observe": [
+                "the undeclared denial recorded as `false`",
+                "a `pass` verdict beside an undeclared denial",
+                "an empty `blocks[]` array"
+              ],
+              "must_observe": [
+                "the `Bash` denial records `required_read` `null`",
+                "`undeclaredDenials(record).length` is 1",
+                "`denials(record).length` is 1 for the declared `Write` denial",
+                "the cell reads `could-not-run` with reason `requiredness-undeclared`"
+              ]
+            },
+            "start_ref": "seed/declaration-stripped-capture"
+          },
+          {
+            "action": {
+              "actor": "runner",
+              "steps": [
+                "observe the same bytes with { required_read_paths: [] } and the same stripped mapper, so a declaration exists but names nothing and the denied target is null"
+              ]
+            },
+            "end_state": {
+              "must_not_observe": [
+                "`required_read` `false` inferred from an empty paths list and a `null` target",
+                "a `pass` verdict",
+                "an empty `undeclaredDenials` set with 0 entries while the denial was never declared"
+              ],
+              "must_observe": [
+                "the `Bash` denial still records `required_read` `null`",
+                "the cell reads `could-not-run` with reason `requiredness-undeclared`",
+                "`undeclaredDenials(record).length` is 1"
+              ]
+            },
+            "start_ref": "seed/empty-path-declaration"
+          }
+        ],
+        "evidence": {
+          "forms": [
+            "the persisted record's observations[].required_read for a denial nobody declared",
+            "the graded cell's could-not-run / requiredness-undeclared block"
+          ]
+        },
+        "id": "SC-T14-AC2",
+        "negative_control": {
+          "would_fail_if": [
+            "the fix defaults an undeclared denial to `false`, so silence is read as permission and a stream nobody declared grades `pass` instead of refusing",
+            "the fix removes the `requiredness-undeclared` block from gradeFromEvidence, so a capture that never declared requiredness still grades from its remaining observations",
+            "the fix infers optional requiredness from an empty `required_read_paths` list while `target` is `null`"
+          ]
+        },
+        "test_tier": "e2e",
+        "tier": "e2e-automated",
+        "tier_note": "the undeclared shape is produced by the real mapper minus its declaration, over the same archived bytes; no capture method, no grader and no byte is replaced",
+        "topology_note": "same replay path as AC-1, with the declaration removed instead of changed; undeclaredDenials -> gradeFromEvidence's requiredness-undeclared block is the whole fail-closed chain, so a fix that relaxes any link shows up as a pass here"
+      },
+      "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+      "test_file": "tests/sprint-01/t14-capture-requiredness.test.mjs",
+      "test_function": "undeclared-denial-still-closed",
+      "test_tier": "integration",
+      "title": "An undeclared denial still reads null and still fails closed, so the fix never turns silence into permission",
+      "type": "acceptance_criterion",
+      "verify": "node --test tests/sprint-01/t14-capture-requiredness.test.mjs --test-name-pattern undeclared-denial-still-closed"
+    },
+    {
+      "description": "The capture module's own unit test pins the three-valued precedence: a mapper-declared boolean wins, a paths list decides only where the mapper declared nothing, and neither leaves null",
+      "flow_ref": null,
+      "id": "TC-1",
+      "maps_to_ac": "AC-1",
+      "positive_example": "observe() over one line stores `false` for a declared false, `true` for a declared true, and `null` when the mapper omitted the field beside a paths list that names a different target - asserted as three separate observations of the same real bytes.",
+      "primary": false,
+      "red_input": "on base main the false and null rows collapse to the same stored value, so the test fails on the very assertion it was written for; the file does not exist yet, so it fails at import",
+      "red_proof": ".tmp/sprint-01-verification/t14-capture-requiredness.red.log",
+      "scenario": {
+        "cases": [
+          {
+            "action": {
+              "actor": "runner",
+              "steps": [
+                "node --test test/harness/runtime/capture-observe.test.mjs --test-name-pattern observe-three-valued-contract",
+                "observe the archived bytes three ways: mapper declares `false`, mapper declares `true`, mapper declares nothing beside a paths list naming another target"
+              ]
+            },
+            "end_state": {
+              "must_not_observe": [
+                "a declared `false` stored as `null`",
+                "a declared `true` demoted by a paths list that omits its target",
+                "an empty result set with 0 observations from the mapper"
+              ],
+              "must_observe": [
+                "a mapper-declared `false` is stored as `false`",
+                "a mapper-declared `true` is stored as `true`",
+                "an undeclared denial beside `required_read_paths: [\"/x\"]` is stored as `null`",
+                "`tests 1` with `pass 1` and `fail 0` from node --test"
+              ]
+            },
+            "start_ref": "seed/denied-write-capture"
+          }
+        ],
+        "evidence": {
+          "forms": [
+            "the observations observe() returns for three declarations over the same captured line",
+            "the node --test summary line counts"
+          ]
+        },
+        "id": "SC-T14-TC1",
+        "negative_control": {
+          "would_fail_if": [
+            "observe() keeps overwriting a declared `false` with `null`, so the precedence is not implemented and every optional denial becomes a refusal",
+            "observe() lets `required_read_paths` override a mapper declaration, so a declared `true` is demoted whenever the caller's list omits the target",
+            "observe() hardcodes the declaration away and returns `false` for everything the mapper left `null`"
+          ]
+        },
+        "primary": false,
+        "test_tier": "unit",
+        "tier": "e2e-automated",
+        "tier_note": "unit: the module under test is observe() itself over one real captured stream, with no child process and no grader",
+        "topology_note": "the unit test drives the real CaptureSession over the archived bytes with a three-line table of declarations; nothing is mocked between the mapper and the stored observation"
+      },
+      "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+      "test_file": "test/harness/runtime/capture-observe.test.mjs",
+      "test_function": "observe-three-valued-contract",
+      "test_tier": "unit",
+      "type": "test_criterion",
+      "verify": "node --test test/harness/runtime/capture-observe.test.mjs --test-name-pattern observe-three-valued-contract"
+    },
+    {
+      "description": "The paths fallback that FLOW-GRD-03 depends on is unchanged: a mapper that declares nothing is decided by required_read_paths, and null only when there is no list at all",
+      "flow_ref": null,
+      "id": "TC-2",
+      "maps_to_ac": "AC-2",
+      "positive_example": "with no paths list the undeclared denial records null; with the denied Write target declared required the same denial records true; with a list that omits it the denial records false - the three outcomes the locked flow asserts.",
+      "primary": false,
+      "red_input": "on base main this branch already behaves, so the test passes before the fix; it exists to pin the branch the fix touches most, and it fails if the fix replaces the fallback with a blanket default",
+      "red_proof": ".tmp/sprint-01-verification/t14-capture-requiredness.red.log",
+      "scenario": {
+        "cases": [
+          {
+            "action": {
+              "actor": "runner",
+              "steps": [
+                "node --test test/harness/runtime/capture-observe.test.mjs --test-name-pattern observe-undeclared-stays-null",
+                "observe the archived bytes with a mapper that omits required_read, once with no paths list, once naming the archived Write target, once naming a different target"
+              ]
+            },
+            "end_state": {
+              "must_not_observe": [
+                "`null` where a paths list naming the target exists",
+                "`false` where no declaration and no list exist",
+                "an empty capture with 0 observations passing these assertions"
+              ],
+              "must_observe": [
+                "with no paths list the denial records `required_read` `null`",
+                "with the `Write` target declared required the same denial records `true`",
+                "with a list that omits the target it records `false`",
+                "`tests 1` with `pass 1` and `fail 0` from node --test"
+              ]
+            },
+            "start_ref": "seed/denied-write-capture"
+          }
+        ],
+        "evidence": {
+          "forms": [
+            "the observations observe() returns for the three declaration shapes",
+            "the node --test summary line counts"
+          ]
+        },
+        "id": "SC-T14-TC2",
+        "negative_control": {
+          "would_fail_if": [
+            "observe() ignores `required_read_paths` once the declaration path is added, so the caller's list is omitted and an undeclared mapper is never decided",
+            "observe() returns `null` where a paths list naming the target exists, so a declared-required read is counted as undeclared",
+            "observe() returns `false` where no declaration and no list exist, so the locked FLOW-GRD-03 assertion that an undeclared read is undeclared breaks"
+          ]
+        },
+        "primary": false,
+        "test_tier": "unit",
+        "tier": "e2e-automated",
+        "tier_note": "unit: no child process, no grader; the only input is the archived stream and the caller's required_read_paths",
+        "topology_note": "the unit test drives observe() over the same archived bytes three times with different caller declarations, which is exactly the axis FLOW-GRD-03's readAttemptMapper relies on"
+      },
+      "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+      "test_file": "test/harness/runtime/capture-observe.test.mjs",
+      "test_function": "observe-undeclared-stays-null",
+      "test_tier": "unit",
+      "type": "test_criterion",
+      "verify": "node --test test/harness/runtime/capture-observe.test.mjs --test-name-pattern observe-undeclared-stays-null"
+    },
+    {
+      "description": "The owned lane file pins that a preserved false neither invents a required fact nor weakens the required denial beside it",
+      "flow_ref": null,
+      "id": "TC-3",
+      "maps_to_ac": "AC-1",
+      "positive_example": "observedFacts(record) holds exactly plugin-loaded and result-event - no entry for the optional Bash denial - and the same record graded with both required facts satisfied still reads fail / denied_tool_call.",
+      "primary": false,
+      "red_input": "on base main the optional Bash denial is stored as null, so observedFacts and the grade are read from a record whose requiredness was destroyed; the import of the owned file fails before any assertion runs",
+      "red_proof": ".tmp/sprint-01-verification/t14-capture-requiredness.red.log",
+      "scenario": {
+        "cases": [
+          {
+            "action": {
+              "actor": "runner",
+              "steps": [
+                "node --test tests/sprint-01/t14-capture-requiredness.test.mjs",
+                "read observedFacts(record) and grade the same record twice: once with no required facts and once with plugin-loaded and result-event declared required"
+              ]
+            },
+            "end_state": {
+              "must_not_observe": [
+                "an `observedFacts` entry for the optional `Bash` denial",
+                "a `pass` verdict where a declared-required write was denied",
+                "an empty test file with 0 tests reporting `pass 3`"
+              ],
+              "must_observe": [
+                "`tests 3` with `pass 3` and `fail 0`",
+                "`observedFacts(record)` holds exactly 2 entries: `plugin-loaded` and `result-event`",
+                "the record graded with both required facts satisfied still reads `fail` with reason `denied_tool_call`"
+              ]
+            },
+            "start_ref": "seed/denied-write-capture"
+          }
+        ],
+        "evidence": {
+          "forms": [
+            "observedFacts(record) keys from the persisted record",
+            "the graded cell's verdict and reason",
+            "the node --test summary line counts"
+          ]
+        },
+        "id": "SC-T14-TC3",
+        "negative_control": {
+          "would_fail_if": [
+            "the preserved `false` is treated as a required fact, so a denied optional read inflates observedFacts and a cell passes on a fact nobody required",
+            "the fix stops counting the declared-required Write denial, so a cell whose required write was denied loses the `fail` and the optional denial is all that is left",
+            "the owned file adds tests without assertions, so `pass 3` is reported by an empty suite"
+          ]
+        },
+        "test_tier": "integration",
+        "tier": "e2e-automated",
+        "tier_note": "integration: real capture module, real mapper, real grade writer, archived bytes; no child process",
+        "topology_note": "the owned file's third case runs the same real replay and reads two derived views of one record - the fact map and the grade - so a change in either direction (false counted as a fact, or the required denial dropped) fails it"
+      },
+      "surface_policy": ".spec/e2e-policy/sprint-01/artifact-only-read.json",
+      "test_file": "tests/sprint-01/t14-capture-requiredness.test.mjs",
+      "test_function": "optional-denial-is-not-a-fact",
+      "test_tier": "integration",
+      "type": "test_criterion",
+      "verify": "node --test tests/sprint-01/t14-capture-requiredness.test.mjs"
+    }
+  ],
+  "integration_obligations": [],
+  "verification_gates": []
+}
+-->
