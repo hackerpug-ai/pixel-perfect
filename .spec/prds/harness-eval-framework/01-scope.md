@@ -1,7 +1,7 @@
 ---
 stability: FEATURE_SPEC
-last_validated: 2026-10-28
-prd_version: 1.0.2
+last_validated: 2026-10-30
+prd_version: 2.0.0
 scope_posture: full
 ---
 
@@ -13,7 +13,7 @@ Full feature.
 
 ## Objective
 
-Each night, when the owner starts a run by hand, and after accepted plugin changes land, GitHub Actions installs pixel-perfect into Claude Code, Codex, Grok, OpenCode, Pi, and Cursor and grades command lists, status, verify on a planted defect, and whether the first turn reaches a question before expensive work. A failure on a pinned harness version blocks the next release, and a graded failure on the newest version warns and opens a fix pull request that a person merges. Grades use files and the event stream, exit code 0 is not success, later checks in this same initiative report rather than block, and a model judging screenshots stays out.
+Each night, when the owner starts a run by hand, and after accepted plugin changes land, GitHub Actions installs pixel-perfect into Claude Code, Codex, Grok, OpenCode, Pi, and Cursor and grades command lists, status, verify on a planted defect, and whether the first turn reaches a question before expensive work. A failure on a pinned harness version blocks the next release, and a graded failure on the newest version warns and opens a fix pull request that a person merges. An unexpected failed or ungradable result files an issue on this repository that names the eval to re-run to prove the fix, and filing changes nothing else. Grades use files and the event stream, exit code 0 is not success, later checks in this same initiative report rather than block, and a model judging screenshots stays out.
 
 ## Deliverables
 
@@ -23,6 +23,7 @@ Each night, when the owner starts a run by hand, and after accepted plugin chang
 - A warning and a fix pull request when only the newest version fails a grade
 - A drift refusal, separate from any live harness result, when commands, adapters, or question rules have drifted
 - Reported results for the later checks that do not hold a release
+- An issue on this repository for each distinct unexpected failure, naming the eval to re-run to prove the fix
 
 ## In Scope
 
@@ -52,6 +53,14 @@ Each night, when the owner starts a run by hand, and after accepted plugin chang
 
 - Maintainer reads decline-a-change, scripted-answer, resume, one-full-layer, and plain-language command results without those results holding a release
 - System carries a later answer on a shared resume path
+### Failure issues (objective statement)
+
+- System files an issue for an unexpected failure in a finished run
+- Fixer reads, in the issue, what failed and where the evidence is
+- Fixer reads, in the issue, the eval to re-run to prove the fix
+- System keeps one issue per distinct failure across runs
+- System files nothing for a result the plan already expects
+- System leaves code, releases, and other issues untouched when it files
 
 ## Out of Scope
 
@@ -64,6 +73,12 @@ Each night, when the owner starts a run by hand, and after accepted plugin chang
 - A fix pull request for a could-not-run result. Could-not-run is not a graded product defect. It blocks the release and does not open a fix.
 - Scripted answers on the first grades. List, status, and verify ask nothing; the independent must-ask probe stops at its first question and receives no answer. The shared resume path is only for later answers.
 - Clearing a pinned release block by merging a newest-only fix. That merge does not clear a pinned block, and an open fix is not a cleared release.
+- A model writing, choosing, or triaging a failure issue. The issue is assembled from recorded facts, so nothing a model wrote can steer it.
+- Copying model output into an issue. The repository is public, and the reader may be an agent that takes text as instructions. The issue points to the evidence instead.
+- A run closing, reopening, or editing an issue, or noting that a later run passed. The person or agent who closes an issue runs the proof and cites it.
+- A repair started by an issue. The newest-only fix stays the only automated repair, and it does not read issues.
+- Issues for later checks. They report and do not hold a release.
+- Issues on another repository. A problem in a shared tool goes through the change-request skill in a session.
 
 ## Constraints
 
@@ -73,11 +88,5 @@ Each night, when the owner starts a run by hand, and after accepted plugin chang
 - Day-one releases refuse on Cursor could-not-run until a key and a qualified runner trial exist; that refusal is the framework working, not a framework failure.
 - Permission is not approve-everything. Choosing the exact flags is outside this product scope.
 - A fix stays inside the current change allowlist until that limit is explicitly re-checked.
-
-## Accepted remediation decisions (2026-10-14)
-
-Nightly runs evaluate only the published plugin, resolved once per run. Plugin pushes evaluate the exact checkout. Manual runs select a mode and default to checkout. Each run retains twelve cells. Candidate release authorization requires the latest trusted complete checkout evaluation for that commit, at most 36 hours old; a newer pending, failed, or cancelled attempt invalidates the older pass. A blocking published observation requires a subsequent qualifying checkout evaluation to clear it. The detailed transition rules are in [API Design](09-technical-requirements/04-api-design.md).
-
-Correct planted-defect detection is an evaluation pass if the clean twin passes and evidence is valid. List, status, and verify ask nothing. The separate initialization question probe stops at its first valid question without an answer. Later scripted-answer checks remain report-only. Structural-only live verification must prove that no image judging occurred, including in child calls.
-
-The existing fix patterns are relative to plugins/pixel-perfect. Resolving that root does not widen the allowlist. A newest failure must reproduce on the recorded main repair base and its exact patch must pass confirmation before a human-reviewable PR exists. Repository enforcement must deny the heal app merge authority. These are specification requirements, not claims of deployed controls.
+- This repository is public, so everything in an issue is public.
+- The owner authorized unattended filing for this one kind of issue. Anything else filed on this repository still takes a person's yes.

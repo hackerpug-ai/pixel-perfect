@@ -2,7 +2,9 @@
 
 > Task ID: T4
 > Sprint: [SPRINT.md](./SPRINT.md)
-> Status: Backlog
+> Status: ✅ Completed
+
+Commit: 164bd3a5ac20c1dd01357d02e75a7972364d6360
 > Assignee: evals-implementer
 > Priority: P1
 > Points: 5
@@ -975,3 +977,49 @@ A shared file is not a dependency, and needing another task's output to test aga
 }
 -->
 
+
+## Handoff
+
+```json
+{
+  "task": "T4",
+  "commit_sha": "164bd3a5ac20c1dd01357d02e75a7972364d6360",
+  "done": "PROVISIONAL SUBSTITUTE-AUTHOR DRAFT, UNAPPROVED AND UNRECORDED. The saved T4 landing at merge 0903c9d7b697c5f5568841e6419df8c39e07464a contains a structural fixture kit, five case manifests, confined case-declared report paths, a real keyless verify-catalog precheck, planted/clean pair validation, status/empty-first-question fixture checks, and local/download journey checks. This reconstructs the approved candidate from exact Git blobs and retained cycle-4 evidence; it is not original-author testimony, new execution proof, or a task-completion claim.",
+  "deviations": [
+    "The cycle-4 review records AC-3 as narrowed to its locally provable legs; its live-dispatch leg records not-executed with owner T7 and obligation obl-FLOW-JRN-PLANTED-AND-TWIN when the workflow is absent. The frozen context leaves AC-3 undeferred, while AC-1, AC-2 and both GRD flows explicitly defer on T7. This draft preserves that distinction instead of treating the command exit as live success.",
+    "The kit uses structural-only .txt story captures and composition expansion, not a browser render or real model/harness execution. Its locally written VerifyReport-shaped data omits evaluation_verdict, run/attempt and installation identity; cycle-4 U-T4-3 assigns those fields to T7."
+  ],
+  "concerns": [
+    "No owner-authorized substitute envelope or native handoff response is established by this draft. Registered original implementer session 03385b9e-5dd9-42d is historical and unreachable in this recovery session; handoff_delivery remains pending in the inspected saved state. Recording and completion remain unauthorised here.",
+    "U-T4-4 remains OPEN and nonblocking in the landing review: T7 must demonstrate the downloaded named-path reports and planted/clean cell aggregation at gate step 8. AC-1/AC-2 and FLOW-GRD-04-NAMED-PATH/FLOW-GRD-05-CLEAN-TWIN remain DEFERRED; no successful hosted dispatch or real harness/model run is established for the saved landing.",
+    "The approved tests contain an explicit stubbed oracle derivation control, injected canned gh/hasWorkflow responses, and synthetic replay/provenance files. These support limited control-path assertions only. They do not meet real-service proof for those paths, and no human exception to the no-stubbing rule was established in this reconstruction.",
+    "Cycle-4 E4-11 says the .tmp green evidence artifacts were stamped at a41494b5107a93b rather than 164bd3a and are not evidence for the approved candidate. Later cycles additionally found hand-authored red proof and missing declared evidence files; those later discoveries qualify evidence completeness and cannot be erased by the original approval.",
+    "The saved landing freezes cycle 4 at 164bd3a, but review.current and the later integration_authorization reference cycle 11 at 6cccc3d9ca10138429450df2db9da16ff2bc2014. The T4 worktree is at that later candidate. Later code widens pre-dispatch refusals and adds other runtime integration; none is silently attributed to the saved original landing.",
+    "Later cycle 11 retains ADVISORY F-T4-9 and F-T4-11 with null resolutions, plus OPEN U-T4-4/U-T4-5/U-T4-7/U-T4-8/U-T4-9. Its governed replay still FAILS both GRD flows with artifact_fresh=false and surface_ok=false despite red_proof_ok=true. Four declared evidence paths remain absent in that later record. These are later amendment/evidence concerns, not fresh observations at 164bd3a."
+  ],
+  "findings": [
+    "Historical cycle-4 APPROVED review records F-T4-1 through F-T4-8 and F-T4-10 FIXED, with retained evidence for overlay mutation rejection, observation-derived outcomes, fixture-kind/key refusal, containment, artifact download failure and environment-isolated dispatch controls. F-T4-9 remains ADVISORY with resolution null even though E4-9 records refusal of its residual fixture.files shape; this draft does not close it.",
+    "Retained cycle-4 evidence reports required commands exiting 0 with 9/9, 7/7 and 6/6 tests, the lane 24/24, negative mutation/control checks, and real GitHub HTTP 404 refusal checks. All 14 referenced cycle-4 artifact hashes matched retained files during this read-only reconstruction. Those are historical records, not newly executed tests or proof that live legs ran."
+  ],
+  "scope_impact": [
+    {
+      "target": "T7",
+      "found": "Original cycle-4 U-T4-3 assigns full report identity fields to T7; U-T4-4 and the AC-3 obligation retain live workflow/report proof there.",
+      "change": "Retain the T7 requirement to produce actual run/attempt-qualified report pairs, full report identity and successful live journey evidence. This draft makes no contract, implementation or state change."
+    },
+    {
+      "target": "GATE:FLOW-GRD-04-NAMED-PATH",
+      "found": "The saved flow is deferred on T7 at gate step 8; later cycle-11 governed playback still fails artifact freshness and surface entry.",
+      "change": "Keep the flow deferred and require fresh hosted named-path report evidence through the authorised gate; do not reuse this reconstruction or later red-proof installation as flow acceptance."
+    },
+    {
+      "target": "GATE:FLOW-GRD-05-CLEAN-TWIN",
+      "found": "The saved flow is deferred on T7 at gate step 8; local clean-twin validation is narrower than hosted cell aggregation.",
+      "change": "Keep the flow deferred and require actual distinct live invocation reports and cell aggregation at the authorised gate; no completion or acceptance is granted by this draft."
+    }
+  ],
+  "feedback": [
+    "Source support, frozen bundle hashes, historical proof boundaries and later amendments are documented in T4.evidence.md beside this draft. No product files, task worktree, sprint state, native receipts or Git history were changed; no tests, runtime or handoff recording were launched."
+  ]
+}
+```

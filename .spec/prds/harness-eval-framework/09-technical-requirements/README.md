@@ -1,6 +1,6 @@
 # Technical Requirements
 
-Routing: N/A — no navigable UI. Readers use the Actions summary, the verify report file, and the fix pull request. See `07-ui-infrastructure.md`.
+Routing: N/A — no navigable UI. Readers use the Actions summary, the verify report file, the fix pull request, and the failure issue. See `07-ui-infrastructure.md`.
 
 ## Section Index
 
@@ -16,6 +16,7 @@ Routing: N/A — no navigable UI. Readers use the Actions summary, the verify re
 | 08 | [08-technical-risks.md](08-technical-risks.md) | Technical risks | CONSTITUTION |
 | 09 | [09-capability-chains.md](09-capability-chains.md) | Capability chains | CONSTITUTION |
 | 10 | [10-e2e-testing.md](10-e2e-testing.md) | E2E harness constitution | CONSTITUTION |
+| 11 | [11-failure-issues.md](11-failure-issues.md) | Failure issues: format, boundaries, rerun proof | CONSTITUTION |
 
 ## Cross-references
 
@@ -28,6 +29,7 @@ Routing: N/A — no navigable UI. Readers use the Actions summary, the verify re
 
 | Version | Date | Notes |
 |---------|------|-------|
+| 2.0.0 | 2026-10-30 | Failure issues: new 11-failure-issues.md; issue job in 02; pointer in 03; hold-scope disposition and truth-table row in 04; diagram, dependencies, UI surfaces, risks, CAP-EVAL-05, and e2e landmines updated. |
 | 1.1.0 | 2026-10-28 | Review round 2 corrections: 02-system-components (OpenCode, Cursor), 03-data-schema (pins authority, branch sequencing), 04-api-design (adapter publish gate, pages.yml disposition), 08-technical-risks (checkout install known). |
 | 1.0.0 | 2026-10-13 | Initial folder. |
 

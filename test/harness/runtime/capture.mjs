@@ -187,8 +187,12 @@ export function createCapture({
           if (observation.raw_sha256 && observation.raw_sha256 !== sha256(span)) {
             throw new CaptureError("span-digest-mismatch", { offset: line.offset, cited: observation.raw_sha256 });
           }
+          // The mapper's own declaration outranks the caller's fallback: it classified this event,
+          // and `required_read_paths` is only the caller's answer for what the mapper could not say.
+          // A declared `false` is a declaration - storing it as `null` would turn an optional denial
+          // into a hole in the evidence and make its cell could-not-run.
           let required = null;
-          if (observation.required_read === true) required = true;
+          if (typeof observation.required_read === "boolean") required = observation.required_read;
           else if (required_read_paths !== null && observation.target != null) {
             required = required_read_paths.includes(observation.target);
           }

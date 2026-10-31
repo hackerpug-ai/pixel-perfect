@@ -2,7 +2,9 @@
 
 > Task ID: T6
 > Sprint: [SPRINT.md](./SPRINT.md)
-> Status: Backlog
+> Status: ✅ Completed
+
+Commit: 9b3afad88d6777867c526222825231bad1941b7a
 > Assignee: evals-implementer
 > Priority: P1
 > Points: 8
@@ -783,3 +785,57 @@ A shared file is not a dependency, and needing another task's output to test aga
 }
 -->
 
+
+## Handoff
+
+```json
+{
+  "task": "T6",
+  "commit_sha": "9b3afad88d6777867c526222825231bad1941b7a",
+  "done": "PROVISIONAL SUBSTITUTE-AUTHOR DRAFT, unapproved: reconstructed from the exact landed candidate and frozen cycle-3 review, not original-author testimony. T6 added the claude-code CanonicalEvent normalizer, exact-version mapping table and validator, capture archive reader/archiver, stream-derived grading, and ask-nothing/must-ask boundary evaluation under test/harness/stream/, with controls in tests/sprint-01/grd-02-four-grades.test.mjs and grd-03-evidence.test.mjs. The source preserves raw lines and offsets, requires declared facts, checks capture integrity and citations, and retains exit status as a diagnostic. Recorded landing cbfbc4c1595ee1fbf0c2b7a18ec40d3313094d27 binds approved candidate 9b3afad88d6777867c526222825231bad1941b7a to base 8a9c1ceacacd920cefb9212360cb67eab870c3e3. Historical local review approval does not establish hosted harness/provider integration or task completion.",
+  "deviations": [
+    "The retained real capture is a keyless local CLI 2.1.312 run, not the pinned 2.1.291 capture. Its 6,233 stdout bytes hash to 47298ec50ca80cde9ef86eabce7c3de0da7a591f1722da4263730eb4bef100ab; it records exit 1, zero model requests and no child credentials. The shipped 2.1.291 table declares qualified=false and the validator refuses this capture.",
+    "The must-ask pass uses an authored question splice and authored boundary-stop metadata. These legs are published as branch_conformance with evidence:false; no recorder-produced boundary-stop capture or four-pass answering-model cell was established by this candidate.",
+    "Cycle 3 supplied retained RED proofs without changing the candidate: a throwaway base tree holding candidate tests failed on the missing stream module. The reviewer also relied on historical behavioral mutation results; an import failure alone does not establish assertion strength."
+  ],
+  "concerns": [
+    "U-T6-1 remains OPEN and non-blocking in the frozen review: pinned-version capture, recorder-produced must-ask boundary stop, four graded checks on a real answering model, and hosted result artifact remain unobserved here. AC-1 is DEFERRED on T7/T9 and AC-2 on T11/T7/T9. Later task landings do not by themselves resolve these observations.",
+    "F-T6-10 remains ADVISORY: the persisted splice record inherits archived evidence_root/evidence_relative_paths and has no authored-splice marker of its own. The report labels it evidence:false, but the record alone is ambiguous and relocation fails closed with evidence-unresolvable.",
+    "The grade-stream entry point does not invoke validateMapping or independently enforce pinned-version qualification; callers must preserve that separate qualification gate. Mapping table coverage and authored pass-branch controls are not real capture qualification.",
+    "Only historical local results were inspected: cycle 3 records check-AC-1 and check-AC-2 exit 0 and both local flow replays PASS, while AC-1/AC-2 remain DEFERRED. No tests, runtime launches, model calls, hosted downloads, native receipt capture, recording or completion ran during this draft preparation.",
+    "Original implementer session 5f2a2c82-b795-44a is historical and unavailable to this preparer. This draft grants no substitute-author approval, original authorship, recording authority or completion authority; handoff_delivery remains pending in inspected state."
+  ],
+  "findings": [
+    "Frozen cycle 3/revision 0 records APPROVED at the exact candidate/base. F-T6-1 through F-T6-9 and F-T6-11 are recorded FIXED; F-T6-10 remains ADVISORY and U-T6-1 remains OPEN. These are retained reviewer dispositions, not fresh adjudication.",
+    "The source refuses undeclared expected facts, unattributable denial requiredness, event streams that fail tiling/losslessness, mismatched capture citations and unqualified table-only validation. Three declared question shapes map to question events. Missing or opaque facts do not prove absence.",
+    "The recorded aggregate decision is could-not-run over fail over pass. A denied read remains a fail/denied_tool_call block with its offset even when model-never-answered controls the headline; the answering exit-0 denied-read control was historically reported fail.",
+    "Retained mutation results show six valid mutants killed (C2-M2 through C2-M7). C2-M1 is recorded SURVIVED but was explicitly excluded by the reviewer as invalid because its mutation left the mandatory-facts throw intact. No new mutation run was performed."
+  ],
+  "scope_impact": [
+    {
+      "target": "T6",
+      "found": "F-T6-10 remains an advisory on the authored splice record at the approved candidate.",
+      "change": "Carry its unresolved provenance and portability limitation forward; this recovery draft makes no source repair or finding disposition."
+    },
+    {
+      "target": "T11",
+      "found": "The candidate lacks a qualified 2.1.291 capture and a recorder-produced boundary-stop must-ask capture.",
+      "change": "Retain the existing capture-qualification and boundary-stop proof obligations; authored streams and the 2.1.312 keyless archive do not satisfy them."
+    },
+    {
+      "target": "GATE:FLOW-GRD-02-FOUR-GRADES",
+      "found": "Historical local flow PASS coexists with AC-1 DEFERRED on T7/T9 and unobserved hosted-four-pass-cell proof.",
+      "change": "Keep the real five-invocation/four-grade observation pending until exact hosted artifacts establish the pinned cell, status facts and one question with zero answer deliveries."
+    },
+    {
+      "target": "GATE:FLOW-GRD-03-FILES-AND-STREAM",
+      "found": "Historical local controls and flow PASS do not establish AC-2 hosted evidence; the frozen context defers it on T11/T7/T9 and candidate tests also await a T8/T11 result artifact.",
+      "change": "Retain the existing hosted artifact and real exit-0 denied-read proof obligations; preserve file/offset/hash citations and diagnostic exit codes without promoting local authored controls to service evidence."
+    }
+  ],
+  "feedback": [
+    "Evidence and line-level support are in .kb-run-sprint/sprint-01-evaluator-evidence-spine/recovery/handoff-drafts/T6.evidence.md. The draft is preparation only; no product files, sprint state, approvals, native envelopes or Git lifecycle were changed.",
+    "Any future accepted substitute handoff requires the explicit owner-authorized envelope and provenance checks in Brain tools/sprint-handoff/CONTRACT.md. This document is not that authorization and cannot be used to claim original-session testimony."
+  ]
+}
+```

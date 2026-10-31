@@ -9,14 +9,24 @@
 // leaves the smoke job (the upload ships that one path and nothing else). `cells/controls.json`
 // remains the ONLY thing the recorder routes into `.controls[]`, so a per-cell observation can
 // never impersonate one of the four rows.
-import { existsSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { basename, join, resolve } from "node:path";
 
 import { approveIdentity, installationIdentity, manifestDigest } from "../adapters/claude-code.mjs";
+import { resolveEvidencePath } from "../runtime/capture.mjs";
 import { scanTree } from "./image-scan.mjs";
 
 /** The reason an unobserved control carries. The controls module owns the vocabulary; this names it once. */
 export const UNOBSERVABLE_REASON = "control-unobservable";
+
+/** The one image block the planted twin appends: a screenshot reaching a model request. */
+const IMAGE_BLOCK_LINE = Object.freeze({
+  type: "assistant",
+  message: {
+    content: [{ type: "image", source: { type: "base64", media_type: "image/png", data: "iVBORw0KGgoAAAANSUhEUg==" } }],
+  },
+});
 
 /** The field of the cell record the observations travel on. Additive: the schema does not forbid it. */
 export const CONTROL_OBSERVATIONS_FIELD = "control_observations";
@@ -175,6 +185,130 @@ export function observeExit0DeniedRead({ record, check = null } = {}) {
 }
 
 /**
+ * The paired half of `exit0-denied-read`: the SAME guarded invocation shape with the denial on a
+ * path the invocation does not need, so `required_read` is declared `false` and the control must not
+ * fire. It is a measurement, not a claim: every denial on the record must be explicitly optional,
+ * the process must have exited 0, and the citation comes from the record's own span.
+ *
+ * A record that carries a required denial, a non-zero exit, or no denial at all yields `null` — the
+ * pair only exists where the other answer really came out.
+ */
+export function observeExit0DeniedReadPair({ record } = {}) {
+  if (!record) return null;
+  const exitCode = record.process_status?.exit_code;
+  if (exitCode !== 0) return null;
+  const denials = (record.observations ?? []).filter((entry) => entry.kind === "permission_denied");
+  if (denials.length === 0) return null;
+  // One required denial anywhere on the record and this is not the optional half: the pair would
+  // then be measuring the same answer as the control.
+  if (denials.some((entry) => entry.required_read !== false)) return null;
+  const denial = denials.find((entry) => entry.target != null) ?? denials[0];
+  return observation("pass", "optional-denial-not-a-failure", {
+    process_exit_code: exitCode,
+    operation: denial.operation ?? null,
+    target: denial.target ?? null,
+    required_read: false,
+    stream_offset: denial.stream_offset,
+    stream_end_offset: denial.stream_end_offset,
+    raw_sha256: denial.raw_sha256,
+    invocation_id: record.invocation_id ?? null,
+    stdout_sha256: record.stdout?.sha256 ?? null,
+  });
+}
+
+/**
+ * The paired half of `missing-key`: the same guard, on the same code path, with the binding present.
+ * The keyless control proves that absence refuses; this proves that presence is not refused — a
+ * guard that refuses unconditionally would produce the control's verdict for free.
+ *
+ * Read off the authenticated graded leg's own verify record: a refusal there is not an admission, a
+ * zero request count means nothing was admitted, and a capture the record cannot cite is no evidence.
+ */
+export function observeMissingKeyPair({ record } = {}) {
+  if (!record) return null;
+  if (record.refusal) return null;
+  if (!Number.isInteger(record.model_request_count) || record.model_request_count < 1) return null;
+  const capturePath = (record.evidence_paths ?? []).find((path) => path.endsWith(".capture.json"));
+  if (!capturePath) return null;
+  if (!existsSync(resolveEvidencePath(record, capturePath))) return null;
+  return observation("pass", "binding-accepted", {
+    model_request_count: record.model_request_count,
+    invocation_id: record.invocation_id ?? null,
+    process_exit_code: record.process_status?.exit_code ?? null,
+    stdout_sha256: record.stdout?.sha256 ?? null,
+    capture_path: capturePath,
+  });
+}
+
+/**
+ * The paired half of `hidden-image-judge`: a scratch copy of the run's OWN captured bytes with one
+ * image content block appended, scanned by the same `scanTree`. The control claims an absence, and an
+ * absence is only worth something when the scanner could have found the opposite in the same bytes.
+ *
+ * The twin is built from the roots' files, never from a fixture of its own, and it is labelled
+ * `planted: true` with the file name and byte offset the scan reported so no reader can mistake it
+ * for a run that really judged an image. A tree that cannot be read, holds no file, or ALREADY fails
+ * the scan yields `null`: there is no other-way measurement to make.
+ */
+export function observeHiddenImageJudgePair({ roots = [] } = {}) {
+  const sources = (roots ?? []).filter((root) => typeof root === "string" && root.length > 0);
+  if (sources.length === 0) return null;
+  const base = scanTree({ roots: sources });
+  if (base === null || base.verdict !== "pass") return null;
+  const files = sortedFiles(sources);
+  // The twin is a copy of the run's OWN captured stream plus one image block; without a captured
+  // stream there is nothing to append to and nothing to prove.
+  const stream = files.find((file) => file.path.endsWith(".stdout.bin")) ?? null;
+  if (stream === null) return null;
+  const scratch = mkdtempSync(join(tmpdir(), "pp-hidden-image-twin-"));
+  try {
+    const plantedName = `twin-${basename(stream.path)}`;
+    for (const [index, file] of files.entries()) {
+      const name = file === stream ? plantedName : `${String(index).padStart(3, "0")}-${basename(file.path)}`;
+      const bytes = readFileSync(file.path);
+      // Exactly one image content block, appended to the stream the run really produced: the scanner
+      // matches raw bytes, so this is the shape a screenshot-judging child would emit.
+      writeFileSync(join(scratch, name), file === stream ? Buffer.concat([bytes, Buffer.from(`\n${JSON.stringify(IMAGE_BLOCK_LINE)}\n`)]) : bytes);
+    }
+    const scan = scanTree({ roots: [scratch] });
+    if (scan === null || scan.verdict !== "fail") return null;
+    const finding = scan.findings.find((entry) => basename(entry.file) === plantedName) ?? null;
+    if (!finding) return null;
+    return observation("fail", "image-judge-in-child-tree", {
+      planted: true,
+      planted_file: plantedName,
+      offset: finding.offset,
+      kind: finding.kind,
+      files_scanned: scan.files_scanned,
+      tree_sha256: scan.tree_sha256,
+      base_tree_sha256: base.tree_sha256,
+      roots: base.roots,
+    });
+  } catch {
+    return null;
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
+  }
+}
+
+/** Every file under the given roots, in a deterministic order. */
+function sortedFiles(roots) {
+  const out = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : 1))) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.isFile()) out.push({ path: full });
+    }
+  };
+  for (const root of roots) {
+    if (!existsSync(root) || !statSync(root).isDirectory()) continue;
+    walk(root);
+  }
+  return out;
+}
+
+/**
  * `hidden-image-judge` — the scanner over the verify child tree(s). A tree it could not read yields
  * no observation, so the control stays unobservable rather than passing on an empty scan.
  */
@@ -282,6 +416,11 @@ export function attachPair(cell, id, value) {
  * The keyless control step's merge: the row it just observed is attached to the cell record the leg
  * already wrote, because that record is the only thing that leaves this job. A leg that wrote no
  * record has nothing to carry, and says so instead of inventing one.
+ *
+ * The PAIR already on that record is kept, never overwritten: it is the authenticated admission the
+ * leg measured, and this step holds no credential, so anything it could write here would be a claim.
+ * `pair` in the receipt says whether the leg's pair survived, so a hosted run can tell a control that
+ * discriminates from one that only refuses.
  */
 export function attachMissingKey({ row, cellFile, capturePath = null } = {}) {
   const value = observeMissingKey({ row: { ...row, capture_path: capturePath ?? row?.capture_path ?? null } });
@@ -293,6 +432,7 @@ export function attachMissingKey({ row, cellFile, capturePath = null } = {}) {
   } catch {
     return { ok: false, reason: "cell-record-unreadable", cell_file: cellFile };
   }
+  const carried = cell[CONTROL_PAIRS_FIELD]?.["missing-key"] ?? null;
   const next = attachObservation(cell, "missing-key", value);
   const partial = `${cellFile}.partial`;
   writeFileSync(partial, `${JSON.stringify(next, null, 2)}\n`, "utf8");
@@ -303,6 +443,39 @@ export function attachMissingKey({ row, cellFile, capturePath = null } = {}) {
     reason: null,
     cell_file: cellFile,
     observation: value,
+    pair: back[CONTROL_PAIRS_FIELD]?.["missing-key"] != null,
+    pair_carried: carried !== null,
+  };
+}
+
+/**
+ * The denied-write probe's own merge: `exit0-denied-read`'s observation and its pair land on the cell
+ * record together, atomically, so a reader can never see one half without the other. The probe is the
+ * only producer of that pair — the graded leg cannot make a denied write happen — so when it produced
+ * nothing there is nothing to attach, and the row stays unobservable instead of paired to a claim.
+ */
+export function attachDeniedWriteProbe({ cellFile, probe } = {}) {
+  const value = probe?.observation ?? null;
+  const pair = probe?.pair ?? null;
+  if (value == null && pair == null) return { ok: false, reason: "not-observed", cell_file: cellFile ?? null };
+  if (!cellFile || !existsSync(cellFile)) return { ok: false, reason: "no-cell-record", cell_file: cellFile ?? null };
+  let cell;
+  try {
+    cell = JSON.parse(readFileSync(cellFile, "utf8"));
+  } catch {
+    return { ok: false, reason: "cell-record-unreadable", cell_file: cellFile };
+  }
+  const next = attachPair(attachObservation(cell, "exit0-denied-read", value), "exit0-denied-read", pair);
+  const partial = `${cellFile}.partial`;
+  writeFileSync(partial, `${JSON.stringify(next, null, 2)}\n`, "utf8");
+  renameSync(partial, cellFile);
+  const back = JSON.parse(readFileSync(cellFile, "utf8"));
+  const observationOk = value == null || back[CONTROL_OBSERVATIONS_FIELD]?.["exit0-denied-read"]?.reason === value.reason;
+  const pairOk = pair == null || back[CONTROL_PAIRS_FIELD]?.["exit0-denied-read"]?.reason === pair.reason;
+  return {
+    ok: observationOk && pairOk,
+    reason: observationOk && pairOk ? null : "cell-record-write-unverified",
+    cell_file: cellFile,
   };
 }
 
@@ -312,6 +485,12 @@ export const OBSERVED_CONTROL_IDS = IDS;
 /**
  * What one graded claude-code leg produced, from what it measured: the four control observations it
  * could make, and the paired halves that let `recordControl` compute discrimination.
+ *
+ * Every pair is a measurement that had to come out the other way, taken from what this leg already
+ * has in its hands: the matching digest for `stale-cache`, the authenticated admission for
+ * `missing-key` (the same guard, the same code path, with the binding present), and an image line
+ * planted in a scratch copy of the run's own captured bytes for `hidden-image-judge`.
+ * `exit0-denied-read`'s pair arrives with its observation, through the denied-write probe.
  */
 export function observeLeg({ checkoutRoot, staleRoot, mutatedFile, planted = false, verifyRecord, verifyCheck, verifyRoots, observedCliVersion, requestedCliVersion }) {
   const observations = mergeObservations({
@@ -321,6 +500,8 @@ export function observeLeg({ checkoutRoot, staleRoot, mutatedFile, planted = fal
   });
   const pairs = mergeObservations({
     "stale-cache": observeStaleCachePair({ checkoutRoot, observedCliVersion, requestedCliVersion }),
+    "missing-key": observeMissingKeyPair({ record: verifyRecord }),
+    "hidden-image-judge": observeHiddenImageJudgePair({ roots: verifyRoots ?? [] }),
   });
   return { observations, pairs };
 }

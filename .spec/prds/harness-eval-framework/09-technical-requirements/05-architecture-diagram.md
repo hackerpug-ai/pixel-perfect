@@ -1,7 +1,7 @@
 ---
 stability: CONSTITUTION
-last_validated: 2026-10-14
-prd_version: 1.0.1
+last_validated: 2026-10-30
+prd_version: 2.0.0
 ---
 
 # Architecture Diagram
@@ -19,6 +19,8 @@ Maintainer
     v
 [grade recorder] --> artifact harness-eval-result
     |
+    |-- [issue job: no model, issues write only] --> one issue per unexpected failure
+    |         (read by a fixer; never read by the release gate)
     v
 [pinned-channel status] --> harness-eval/pinned
     |

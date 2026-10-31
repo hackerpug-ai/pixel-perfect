@@ -1,6 +1,8 @@
 # TASK-T5 — Implement the claude-code adapter: pinned/newest install with `DISABLE_AUTOUPDATER=1`, marketplace add + plugin install, plugin-details list (no model), headless `-p` graded runs, `system/init` plugin gate, InstallationIdentity digest verification
 
-> Status: Backlog
+> Status: ✅ Completed
+
+Commit: 5465703879e58a5fb53ba4947f5492ccc9226c5e
 > Assignee: ai-tooling-implementer
 > Priority: P1
 > Points: 8
@@ -40,7 +42,6 @@ UC-GRD-02's reader must see the command list, status, verify on a planted defect
 
 ```
 TASK_TYPE:  FEATURE
-STATUS:     Backlog
 PRIORITY:   P1
 POINTS:     8
 AGENT:      planner=github-agentic-workflow-planner | implementer=ai-tooling-implementer | reviewer=ai-tooling-reviewer
@@ -618,3 +619,63 @@ NOTES
 }
 -->
 </details>
+
+## Handoff
+
+```json
+{
+  "task": "T5",
+  "commit_sha": "5465703879e58a5fb53ba4947f5492ccc9226c5e",
+  "done": "PROVISIONAL SUBSTITUTE-AUTHOR DRAFT — unapproved reconstruction, not original-author testimony or a completion claim. Saved landing records candidate 5465703879e58a5fb53ba4947f5492ccc9226c5e merged as 51c0f4ee7594efc0fd26463fe52c611f895cee81 after cycle 3/revision 0 review against frozen base cf84326a0cb85ebaf0eb9bfb8ddf2cb0ae5e6274. The landed four-file change adds the Claude Code adapter and registry plus adapter checks: exact-version install plans with auto-update disabled; keyless checkout marketplace/plugin loading and command inventory; guarded headless invocations with capture and identity checks; status fact comparison using platform sections and COMPOSE-to-screens mapping; question grading; and verify-report path/invocation validation. These are source-inspected mechanisms and retained review observations. Real hosted four-grade and provider-produced planted/clean journey acceptance remain unproven.",
+  "deviations": [
+    "This draft was reconstructed by a substitute from the exact candidate and retained evidence. Registered original implementer session 11347c19-c47d-4d1 is historical/unreachable in this recovery context. No substitute-author authorization, original final report, native response receipt, record-handoff operation or completion authority is supplied by this draft.",
+    "The frozen review defers AC-1 and FLOW-GRD-02-FOUR-GRADES on T6/T7/T9. It records AC-2 and both command checks PASS while retaining OPEN U-T5-3 and logs that explicitly report the live journey and harness verify bodies not-executed. Preserve those historical rows without promoting them to hosted acceptance.",
+    "The question boundary uses closed stdin rather than a stream-driven first-question stop; answers_delivered=0 and answers_possible=false are assigned by the adapter. No keyed must-ask capture or actual stop-at-first-question observation is established by the inspected candidate.",
+    "Persistent RED copies remain in T5/evidence/c2-red-artifacts. The review records absent declared .tmp RED paths, drifting source line references and no fresh cycle-3 .red capture; retained mutation results are historical supporting evidence, not a replacement RED execution by this reconstruction."
+  ],
+  "concerns": [
+    "BLOCKER — real integration acceptance: no exact-candidate hosted run reviewed here demonstrates four passing graded checks, the real question splice, or both provider-produced verify reports. Retained logs show a local CLI/pin mismatch, missing-key refusals and a historically unregistered remote workflow. Those environment observations are historical and have not been refreshed.",
+    "BLOCKER — synthetic core proof remains: grd-02 constructs observed CLI identity, plugin-load text, a repeated-f revision, hand-authored event streams, model_request_count=1, exit 0 and verify report bodies, then obtains positive grades from them. The journey module also contains canned modelGh responses and uses local runId 4242 for the T5 pair. Real filesystem writes/hashes do not turn those synthetic inputs into real provider or GitHub evidence. These controls cannot satisfy the task's integration/e2e contract or the no-stub completion rule.",
+    "BLOCKER — report producer seam: readVerifyReport requires the case-declared path and a report invocation_id equal to a random adapter id. At this candidate promptFor sends only the slash command and platform argument; materialize copies the fixture/overlay, and runCheck passes no adapter report path or invocation id to the CLI. The inspected product verify workflow supplies no matching report-envelope instruction. A real producer path and bound pair are therefore unestablished; hand-written test report bodies bypass this seam.",
+    "Provider/session qualification gap: describe reports the pin's anthropic/opus selection, but gradedArgv has no model selection and runCheck does not apply that pin to the child command. The runtime's generated session_id is capture metadata and is not passed as a native CLI session argument. runCheck inherits the supplied environment and isolates CLAUDE_CONFIG_DIR only when its caller supplies one; it does not itself establish isolated HOME or provider-login state. No native session/provider-selection proof is claimed.",
+    "Authorship blocker: this unapproved substitute draft cannot be recorded or used to complete T5 without the separate owner-authorized substitute envelope and native response provenance required by Brain's handoff contract. Saved T5 status remains landed with handoff delivery pending."
+  ],
+  "findings": [
+    "Historical cycle-3 APPROVED disposition: F-T5-1/2/3/4/8 are FIXED. Retained review describes status gate/inventory comparisons, question detection, report binding, retained RED evidence and product-vocabulary/platform parsing; this reconstruction did not rerun those checks or independently approve the implementation.",
+    "Preserve F-T5-5/6/7/9/10 as ADVISORY in the saved review. F-T5-5's untested-refusal wording is stale relative to the new negative control and review C11 kill; F-T5-6 describes an older redundant digest branch absent from the inspected comparison; F-T5-9 remains ADVISORY despite summary/E-06 reporting its phase bug fixed. F-T5-7's assembled rejected permission token remains a negative-control visibility concern. F-T5-10's four incorrect scripts/gate.mjs citations remain; the table is actually plugins/pixel-perfect/scripts/gate.mjs:43.",
+    "Preserve OPEN U-T5-1/2/3/4/5/6: hosted grades; real question-splice ownership; live report bodies; RED line drift; the shared journey file byte-identity checklist conflict; and persistent RED/cycle-3 RED provenance. U-T5-3's prose still says PARTIAL even though the AC-2 row is PASS. These inconsistencies require disposition, not silent cleanup in a substitute draft.",
+    "Current read-only checks matched the landing's bundle/context digests, all referenced bundle members, all 20 cycle-3 evidence artifact digests and nine inspected source files to the approved candidate. Historical records report 17/17 and 11/11 checks, 28/28 two-module tests, 51/51 sprint-lane tests, plugin validation and 15/15 mutation kills. Those results were inspected, not executed by this reconstruction, and do not prove the missing hosted behaviors."
+  ],
+  "scope_impact": [
+    {
+      "target": "T5",
+      "found": "Landed adapter mechanisms coexist with synthetic positive proof, an unestablished report producer path, unapplied model selection and unqualified native-session isolation; original handoff remains pending.",
+      "change": "Keep this draft provisional and preserve the recorded landing. Route the concrete source/proof gaps for governed review and bounded repair or qualification; recording/completion additionally requires owner substitution authorization and native provenance. This draft grants neither."
+    },
+    {
+      "target": "T7",
+      "found": "The live planted/clean journey and provider-generated report bodies were explicitly not-executed in the retained logs, despite historical green command/AC-2 rows.",
+      "change": "Require an exact-candidate hosted run with both case-declared report paths, distinct matching invocation ids, planted atoms/Button/default detection, a passing clean twin and retained artifact linkage before claiming integrated journey acceptance."
+    },
+    {
+      "target": "T11",
+      "found": "Question shapes and a must-ask positive grade are hand-authored local controls; the retained real-byte question-in-ask-nothing splice is not produced.",
+      "change": "Retain U-T5-2 and require the qualified keyed must-ask capture, real-byte splice provenance and observed unanswered first-question behavior. Do not treat the synthetic detector control as that proof."
+    },
+    {
+      "target": "GATE:FLOW-GRD-02-FOUR-GRADES",
+      "found": "Frozen cycle 3 explicitly deferred the flow and AC-1 on T6/T7/T9; command exit 0 includes not-executed core legs.",
+      "change": "Keep the integrated acceptance obligation unresolved until its actual current proof is supplied through the governed path. Later dependency landings alone do not establish the missing observations."
+    },
+    {
+      "target": "ROADMAP",
+      "found": "The saved review retains advisory/status inconsistencies and U-T5-5's byte-identity checklist conflict; substitute authorship has not been approved.",
+      "change": "Have the orchestrator disposition these items without changing historical evidence or inferring sprint completion. This recovery writes only the draft and evidence notes."
+    }
+  ],
+  "feedback": [
+    "Use T5.evidence.md beside this file for candidate/base/bundle identities, source line support, historical-result boundaries and reconstruction checks. No tests, workflow dispatch, provider calls, runtime launches, product edits, Git lifecycle, receipts or sprint-state writes were performed for this draft.",
+    "Source inspection qualifies the retained E-16 claim 'No stub of any kind': synthetic identity/capture/report positives and canned GitHub seams remain visible in the actual tests. Preserve that discrepancy as a blocker to real-service acceptance rather than rewriting the historical review or claiming the feature complete."
+  ]
+}
+```
