@@ -204,6 +204,7 @@ WRITE-ALLOWED:
 - test/harness/smoke/fixtures/question-boundary/** (new fixture dir and its provenance file only)
 - test/harness/stream/tables/claude-code@2.1.291.json (one rule, data only)
 - tests/sprint-01/t18-question-boundary.test.mjs
+- tests/sprint-01/t16-claude-code-grades.test.mjs and tests/sprint-01/t17-verify-report-writer.test.mjs — owner-extended for exactly three assertions that pin the must-ask prompt to `/pixel-perfect:init`: restate them as `startsWith` the command AND `!==` the bare command. Nothing else in those files may change, and their ask-nothing byte-identity assertions stay untouched.
 
 `test/harness/smoke/cell.mjs` is **not** opened, and the reason is in the record: the replay path it owns already calls `gradeCheck` per record (`cell.mjs:186-198`) and `runCell` already walks the same `invocationTable`, so the must-ask entry is graded by the same code in a dispatch as in the lane. `test/harness/stream/*.mjs` is **not** opened either: `ruleMatches` already supports `match.text_match` (`table.mjs:201-205`), so the stream-layer half is data. An implementer who believes either must change stops and escalates rather than widening scope to make a cell green.
 
@@ -321,7 +322,9 @@ A shared file is not a dependency: T18 appends one clause to a predicate and one
       "test/harness/adapters/claude-code.mjs",
       "test/harness/smoke/fixtures/question-boundary/**",
       "test/harness/stream/tables/claude-code@2.1.291.json",
-      "tests/sprint-01/t18-question-boundary.test.mjs"
+      "tests/sprint-01/t18-question-boundary.test.mjs",
+      "tests/sprint-01/t16-claude-code-grades.test.mjs",
+      "tests/sprint-01/t17-verify-report-writer.test.mjs"
     ],
     "write_prohibited": [
       "plugins/pixel-perfect/**",
