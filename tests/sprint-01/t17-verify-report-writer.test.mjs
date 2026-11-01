@@ -347,11 +347,12 @@ test("t17-prompt-carries-path-and-id", (t) => {
   // Every field name, argument pairs and no value: a model reading it still has to run the check.
   // Nothing covers a case that declares no report path.
   assert.equal(adapter.verifyReportPrompt({ caseManifest: loadCase("status-a"), invocationId: "x" }), "");
-  assert.equal(
-    adapter.promptFor({ command_name: "init", caseManifest: loadCase("first-question-init") }),
-    "/pixel-perfect:init",
-    "the question probe's prompt is byte-identical to the command alone, as the boundary was measured on it",
-  );
+  // T18 deliberately opens the promise this pair used to pin: the question probe's prompt is now the
+  // command PLUS the one declared question surface, so it still begins with the command and is no
+  // longer the bare command alone.
+  const questionPrompt = adapter.promptFor({ command_name: "init", caseManifest: loadCase("first-question-init") });
+  assert.ok(questionPrompt.startsWith("/pixel-perfect:init"), "the question probe's prompt still begins with the command");
+  assert.notEqual(questionPrompt, "/pixel-perfect:init", "the question probe's prompt is no longer the bare command alone");
 
   // The harness composes arguments and holds no writer.
   const source = readFileSync(ADAPTER_SOURCE, "utf8");

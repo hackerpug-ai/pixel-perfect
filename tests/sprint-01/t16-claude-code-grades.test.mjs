@@ -285,11 +285,12 @@ test("t16-status-surface-declared", () => {
   // A case that declares no facts is told nothing, and the must-ask case's prompt is untouched.
   assert.equal(adapter.statusSurfacePrompt({ caseManifest: { ...statusA, expected_facts: null } }), "");
   assert.equal(adapter.statusSurfacePrompt({ caseManifest: loadCase("first-question-init") }), "");
-  assert.equal(
-    adapter.promptFor({ command_name: "init", caseManifest: loadCase("first-question-init") }),
-    "/pixel-perfect:init",
-    "the question probe's prompt is byte-identical to the command and its arguments",
-  );
+  // T18 deliberately opens the promise this pair used to pin: the question probe's prompt is now the
+  // command PLUS the one declared question surface, so it still begins with the command and is no
+  // longer the bare 22-character command the boundary was first measured on.
+  const questionPrompt = adapter.promptFor({ command_name: "init", caseManifest: loadCase("first-question-init") });
+  assert.ok(questionPrompt.startsWith("/pixel-perfect:init"), "the question probe's prompt still begins with the command");
+  assert.notEqual(questionPrompt, "/pixel-perfect:init", "the question probe's prompt is no longer the bare command alone");
 });
 
 // ---------------------------------------------------------------------------
