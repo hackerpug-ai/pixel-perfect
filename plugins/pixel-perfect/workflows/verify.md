@@ -20,6 +20,37 @@ pixel-perfect:verify --refresh <run-id>
 - `--component <name>`: Verify a specific component only
 - `--screen <name>`: Verify a specific screen only
 - `--fix`: Attempt to fix failures automatically before reporting. This includes sending a component that fails its judgment back to a builder (see Judging)
+- `--report <path>`: Write a machine-readable verify report at `<path>`, relative to the project directory. The path is an output, not a suggestion: a report that lands elsewhere is not read.
+- `--invocation-id <id>`: The id to echo into that report. Required with `--report`, and echoed exactly as given.
+
+## Machine-readable verify report
+
+When `--report <path>` is given, the run ENDS by producing that report, and a report that is missing, or written without the given `--invocation-id`, is invalid. Run the product's own report step:
+
+```
+node {plugin}/scripts/verify-report.mjs --out <path> --invocation-id <id> --case-id <id> --harness <h> --track <pinned|newest> --platform <name>
+```
+
+`--out` is the same input the `--report` option names (`--report` is accepted as a synonym), so the option can be passed through as given.
+
+The step runs `scripts/verify-catalog.mjs --check` itself and writes the body from what that check reported. Treat a detected defect as a successful report: the step exits `0` when it wrote a report, whatever the outcome. Write no other file.
+
+The body carries exactly these ten keys:
+
+| Key | Value |
+|---|---|
+| `schema` | `verify-report/v1` |
+| `harness` | the harness that ran the invocation |
+| `track` | `pinned` or `newest` |
+| `invocation_id` | the id passed as `--invocation-id`, character for character |
+| `case_id` | the case the report belongs to |
+| `observed_verify_outcome` | `defect-detected` iff the catalog check reported at least one drifted key, `clean` otherwise |
+| `observed_defect_key` | the first key the check reported drifted, or `null` |
+| `expected_defect_key` | the key the check reported, or `null` |
+| `evidence.drifted_keys` | every key the check reported drifted |
+| `clean_project_failed` | `true` when the check reported any failure at all |
+
+The step refuses rather than guesses: an absent, empty or blank id, a path that is absolute or contains `..`, a leaf that is not `.json`, and a relative publish directory are all refused with one JSON line, exit `3`, and no file created. With `--publish-dir <dir>` (or `PIXEL_PERFECT_VERIFY_PUBLISH_DIR`) it also writes a byte-identical copy under that directory and prints both receipts, so a job can ship the report while the graded copy stays inside the invocation's directory.
 
 ## Gate Check
 

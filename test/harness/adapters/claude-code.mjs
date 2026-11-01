@@ -246,6 +246,22 @@ export function verifyReportPrompt({ caseManifest = null, invocationId = null } 
   ].join(" ");
 }
 
+/**
+ * The arguments that reach the product as `$ARGUMENTS` the plugin PARSES: the case's own declared
+ * report path and the id the run minted for this invocation. Prose is not an argument — the CLI
+ * delivers everything after a slash command as one argument string, so a path that appears only in
+ * the declared prose surface is a path no product step consumes. These two are the inputs the
+ * product's `verify` workflow documents, and they are composed from the case manifest and the run's
+ * own identity, never spelled here.
+ */
+export function verifyReportArgs({ caseManifest = null, invocationId = null } = {}) {
+  if (caseManifest?.kind !== "verify") return [];
+  const reportPath = caseManifest?.report_relative_path;
+  if (typeof reportPath !== "string" || reportPath.length === 0) return [];
+  if (typeof invocationId !== "string" || invocationId.length === 0) return [];
+  return ["--report", reportPath, "--invocation-id", invocationId];
+}
+
 /** The one write a case declares: only a check that reads a report gets one. */
 function declaredWrites(caseManifest) {
   if (caseManifest?.kind !== "verify") return [];
@@ -255,15 +271,22 @@ function declaredWrites(caseManifest) {
 
 /**
  * The prompt for one invocation: the plugin's slash command first, then the case's own arguments,
- * then the surface its check grades. Nothing is inferred — a case with no platform argument
- * contributes none, and a case whose check reads no declared surface contributes no text, so the
- * must-ask probe's prompt stays exactly what the question boundary was measured on.
+ * then the arguments the product PARSES (the report path and the invocation id), then the surface its
+ * check grades. Nothing is inferred — a case with no platform argument contributes none, a case that
+ * declares no report path contributes no report arguments, and a case whose check reads no declared
+ * surface contributes no text, so the must-ask probe's prompt stays exactly what the question
+ * boundary was measured on.
  */
 export function promptFor({ command_name, caseManifest = null, invocationId = null }) {
   const surface = [statusSurfacePrompt({ caseManifest }), verifyReportPrompt({ caseManifest, invocationId })]
     .filter(Boolean)
     .join(" ");
-  return [`/pixel-perfect:${command_name}`, ...caseArgs(caseManifest), ...(surface.length > 0 ? [surface] : [])].join(" ");
+  return [
+    `/pixel-perfect:${command_name}`,
+    ...caseArgs(caseManifest),
+    ...verifyReportArgs({ caseManifest, invocationId }),
+    ...(surface.length > 0 ? [surface] : []),
+  ].join(" ");
 }
 
 /**
