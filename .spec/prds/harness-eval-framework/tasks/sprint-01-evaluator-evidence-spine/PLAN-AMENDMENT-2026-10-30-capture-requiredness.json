@@ -1,0 +1,67 @@
+{
+  "schema": "kb-plan-amendment/v1",
+  "sprint": "sprint-01-evaluator-evidence-spine",
+  "authorized_by": "repo owner (justinrich)",
+  "authorization": "Owner answered 'go' on 2026-10-30 to 'take the capture.mjs FIX through the add path', after T13 landed and its reviewer recorded U-T13-2: test/harness/runtime/capture.mjs collapses a mapper-declared required_read: false to null when required_read_paths is null, so any optional denial in a real stream grades could-not-run requiredness-undeclared and a hosted claude-code cell cannot grade.",
+  "items": [
+    {
+      "kind": "add",
+      "target": "T14",
+      "change": "Add one task that makes a denial's requiredness survive the capture path, so a real stream carrying both a required and an optional denial grades from the required one instead of refusing as requiredness-undeclared. Scope: test/harness/runtime/capture.mjs (preserve a mapper-declared required_read: false rather than nulling it), grade-writer.mjs where it turns undeclaredDenials into a block, the smoke leg's runCheck call site if the fix belongs there instead, and one new sprint test that pins a one-required-plus-one-optional stream to fail denied_tool_call with an empty undeclaredDenials. Sequence: next. Prerequisite for T11's hosted acceptance and for any hosted run whose model attempts a tool call it does not need."
+    }
+  ],
+  "evidence": {
+    "finding": "T13 review cycle 2, uncertainty U-T13-2, reproduced (evidence E-19) and exhibited by the archived denied-write capture (E-18)."
+  },
+  "decision": {
+    "item_id": "amendment:T14",
+    "wave_id": "T13",
+    "source_kind": "amendment",
+    "index": 0,
+    "outcome": "add",
+    "answers": [
+      {
+        "question": 1,
+        "answer": true,
+        "reason": "Concrete: test/harness/runtime/capture.mjs's observe() preserves a requiredness only when the mapper said true or when required_read_paths is a non-null array, and runCheck passes null; grade-writer.mjs turns the resulting null into the block requiredness-undeclared. The archived denied-write capture already carries an optional Bash denial with target null and required_read null.",
+        "evidence": [
+          {"path": "test/harness/runtime/capture.mjs", "sha256": "484673b386b9544fb27eb9bddbe933775f19d8fc7c2cf0404a85c6d54f2d7e13"},
+          {"path": "test/harness/runtime/grade-writer.mjs", "sha256": "f110641ca8e5a7e744435e85ee9c53763be5a5e062248d3ac24f4fb5bb0b8e31"}
+        ]
+      },
+      {
+        "question": 2,
+        "answer": false,
+        "reason": "Not a failed review: T13's cycle-2 review returned APPROVED with all four cycle-1 findings FIXED. This is a recorded uncertainty (U-T13-2) that the reviewer reproduced and explicitly routed to the capture-layer owner because capture.mjs is outside T13's write_allowed list.",
+        "evidence": [
+          {"path": "test/harness/runtime/capture.mjs", "sha256": "484673b386b9544fb27eb9bddbe933775f19d8fc7c2cf0404a85c6d54f2d7e13"}
+        ]
+      },
+      {
+        "question": 3,
+        "answer": true,
+        "reason": "Inside this sprint: T11's requirements grade claude-code checks from the captured stream, and a hosted harness-eval run with SMOKE_CLAUDE_KEY is the sprint gate. A capture path that refuses any stream containing an optional denial blocks that gate for reasons unrelated to the product.",
+        "evidence": [
+          {"path": "test/harness/runtime/grade-writer.mjs", "sha256": "f110641ca8e5a7e744435e85ee9c53763be5a5e062248d3ac24f4fb5bb0b8e31"}
+        ]
+      },
+      {
+        "question": 4,
+        "answer": false,
+        "reason": "Not a human product decision: the sprint's Done statement does not say whether an optional denial is blocking, but the grade vocabulary already distinguishes a required denial (denied_tool_call) from an undeclared one, and preserving a mapper's explicit false is the narrower reading. No gate step, flow id or expected output changes.",
+        "evidence": [
+          {"path": "test/harness/runtime/capture.mjs", "sha256": "484673b386b9544fb27eb9bddbe933775f19d8fc7c2cf0404a85c6d54f2d7e13"}
+        ]
+      },
+      {
+        "question": 5,
+        "answer": true,
+        "reason": "Real and reproduced: through the real createCapture/observe path with required_read_paths: null, a mapper-declared required_read: false is stored as null and lands in undeclaredDenials, which grades could-not-run requiredness-undeclared. No pending task owns it: T5, T6, T7 and T13 are landed, and T13's contract could not reach capture.mjs.",
+        "evidence": [
+          {"path": "test/harness/runtime/capture.mjs", "sha256": "484673b386b9544fb27eb9bddbe933775f19d8fc7c2cf0404a85c6d54f2d7e13"},
+          {"path": "test/harness/smoke/cell.mjs", "sha256": "472b3e8d90cdf39ae715ebd3d5adec144e4e80173e0868981026a170f62d7bb8"}
+        ]
+      }
+    ]
+  }
+}

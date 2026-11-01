@@ -120,7 +120,15 @@ jobs:
         run: |
           set -eu
           mkdir -p cell
-          node test/harness/smoke/model-step.mjs 'claude-code' '${{ matrix.track }}' --install-mode '${{ inputs.install_mode }}' --cell-dir cell
+          # --- T17: where the product publishes its verify report -----------------------------
+          # The graded copy stays inside the invocation's own directory, which the adapter removes
+          # before anything can be uploaded. The product writes a byte-identical copy here as well,
+          # and the attach step below carries those bytes on the only file this job may ship. The
+          # variable is an ordinary inherited environment value, not a credential, so the guard
+          # passes it through to the child untouched. It is set inline rather than in `env:` because
+          # the keyed step's binding is exactly one variable and must stay that way.
+          PIXEL_PERFECT_VERIFY_PUBLISH_DIR="${{ github.workspace }}/cell/verify-upload" \
+            node test/harness/smoke/model-step.mjs 'claude-code' '${{ matrix.track }}' --install-mode '${{ inputs.install_mode }}' --cell-dir cell
           # --- T15: the denied-write control probe -------------------------------------------
           # `exit0-denied-read` had no hosted producer: nothing made a graded invocation attempt a
           # write the recorded stance denies, so the row could only ever read
@@ -277,6 +285,53 @@ jobs:
             > cell/cell.json
           cat cell/cell.json
 
+      # --- T17: carry this cell's verify reports -----------------------------------------------
+      # The smoke job may ship exactly one file — the cell record — so a per-cell report artifact is
+      # not available to this task. The product wrote the report and published a byte-identical copy
+      # under cell/verify-upload; this step attaches those bytes, their relative path and their
+      # sha256 to the record the job already ships, and the grade job stages them back into the
+      # layout the recorder and gate step 8 already read. The harness CARRIES bytes here: it authors
+      # none, computes no outcome and reads no report body as a claim. A leg that published nothing
+      # is left exactly as it was written, so `no report` stays an absence the recorder names.
+      #
+      # The cell-record path is composed at run time, never spelled: this step must not become the
+      # first match in the recorder lookup, which resolves the `Record the cell` step.
+      - name: Attach this cell's verify reports
+        if: always() && matrix.harness == 'claude-code'
+        run: |
+          set -eu
+          node --input-type=module -e '
+          import { createHash } from "node:crypto";
+          import { readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+          import { join, relative, sep } from "node:path";
+          const cellFile = join("cell", "cell.json");
+          const uploadDir = join("cell", "verify-upload");
+          const walk = (dir, out = []) => {
+            if (!statSync(dir, { throwIfNoEntry: false })?.isDirectory()) return out;
+            for (const entry of readdirSync(dir, { withFileTypes: true })) {
+              const full = join(dir, entry.name);
+              if (entry.isDirectory()) walk(full, out);
+              else if (entry.isFile()) out.push(full);
+            }
+            return out;
+          };
+          const reports = [];
+          for (const file of walk(uploadDir).sort()) {
+            const rel = relative(uploadDir, file).split(sep).join("/");
+            if (!rel.startsWith("reports/") || !rel.endsWith(".json")) continue;
+            const body = readFileSync(file, "utf8");
+            reports.push({ path: rel, bytes: Buffer.byteLength(body, "utf8"), sha256: createHash("sha256").update(body).digest("hex"), body });
+          }
+          if (reports.length === 0) {
+            console.log(JSON.stringify({ attached: 0, reason: "this leg published no verify report" }));
+          } else {
+            const record = JSON.parse(readFileSync(cellFile, "utf8"));
+            record.verify_reports = reports;
+            writeFileSync(cellFile, JSON.stringify(record) + "\n");
+            console.log(JSON.stringify({ attached: reports.length, reports: reports.map((report) => `${report.path} ${report.sha256} ${report.bytes}`) }));
+          }
+          '
+
       - name: Upload this cell even when the smoke step failed
         if: always()
         uses: actions/upload-artifact@v4
@@ -284,7 +339,8 @@ jobs:
           name: harness-eval-cell-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.harness }}-${{ matrix.track }}
           # Exactly the cell record. binding.json, the keyless row and the captures are control
           # evidence, not cell records: the recorder classifies every *.json under cells/ by what it
-          # is and refuses what it cannot classify, so they must not ride in here.
+          # is and refuses what it cannot classify, so they must not ride in here. The verify reports
+          # travel inside this record (T17), which is why they do not arrive as a second artifact.
           path: cell/cell.json
           if-no-files-found: warn
           retention-days: 90
@@ -454,13 +510,90 @@ jobs:
           path: cells
 
       # T7 uploads the verify reports per cell. They are bundled below under invocation-specific
-      # paths, so two invocations can never collide.
+      # paths, so two invocations can never collide. The match is allowed to be empty: a run whose
+      # cells produced no report must still reach the recorder, which names the absence instead of
+      # letting a failed download hide it (T17 moved the reports inside the cell records, and a
+      # per-cell artifact is still the shape this download expects if one ever arrives).
       - name: Fetch the verify reports this attempt produced
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           pattern: harness-eval-verify-*
           path: verify-reports
           merge-multiple: false
+
+      # --- T17: stage the reports the cells carried --------------------------------------------
+      # No smoke step may upload a second artifact (the smoke upload ships exactly the cell record),
+      # so the product's report arrives inside `verify_reports` on that record. This step writes
+      # those bytes back to the layout the recorder already bundles and gate step 8 already
+      # downloads: `reports/<name>` for the pinned claude-code cell, and `<harness>-<track>/reports/
+      # <name>` for any other, so no two cells can overwrite each other. Each digest is recomputed
+      # against the one the cell carried, so a corrupted copy is NAMED here instead of being graded
+      # as a product failure; a report whose digest does not match is removed, never left to be
+      # bundled. A previous attempt's bundle lands inside this same download — it is removed, never
+      # re-bundled as this attempt's report.
+      - name: Stage the verify reports
+        if: always()
+        run: |
+          set -eu
+          node --input-type=module -e '
+          import { createHash } from "node:crypto";
+          import { mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+          import { dirname, join, sep } from "node:path";
+          const cellsDir = "cells";
+          const verifyDir = "verify-reports";
+          const PINNED_REGION = "claude-code/pinned";
+          const walk = (dir, out = []) => {
+            if (!statSync(dir, { throwIfNoEntry: false })?.isDirectory()) return out;
+            for (const entry of readdirSync(dir, { withFileTypes: true })) {
+              const full = join(dir, entry.name);
+              if (entry.isDirectory()) walk(full, out);
+              else if (entry.isFile()) out.push(full);
+            }
+            return out;
+          };
+          mkdirSync(verifyDir, { recursive: true });
+          const ignored = [];
+          for (const entry of readdirSync(verifyDir, { withFileTypes: true })) {
+            if (entry.isDirectory() && entry.name.startsWith("harness-eval-verify-reports-")) {
+              rmSync(join(verifyDir, entry.name), { recursive: true, force: true });
+              ignored.push(entry.name);
+            }
+          }
+          const staged = [];
+          const refused = [];
+          for (const file of walk(cellsDir).sort()) {
+            if (!file.endsWith(".json")) continue;
+            let record;
+            try { record = JSON.parse(readFileSync(file, "utf8")); } catch { continue; }
+            const reports = record?.verify_reports;
+            if (!Array.isArray(reports) || reports.length === 0) continue;
+            const region = `${record.harness}/${record.track}` === PINNED_REGION ? "" : `${record.harness}-${record.track}/`;
+            for (const report of reports) {
+              const rel = String(report?.path ?? "");
+              const parts = rel.split("/").filter(Boolean);
+              if (!rel.endsWith(".json") || parts.length === 0 || parts.includes("..") || rel.startsWith("/")) {
+                refused.push(`${rel || "(empty path)"}: not a report path this step will write`);
+                continue;
+              }
+              const destination = join(verifyDir, region, ...parts);
+              mkdirSync(dirname(destination), { recursive: true });
+              writeFileSync(destination, String(report.body ?? ""));
+              const digest = createHash("sha256").update(readFileSync(destination)).digest("hex");
+              if (digest !== report.sha256) {
+                rmSync(destination, { force: true });
+                refused.push(`${rel.replace(/\/+$/, "")}: the cell carried sha256 ${String(report.sha256)}, the staged copy is ${digest}`);
+                continue;
+              }
+              staged.push(destination.split(sep).join("/"));
+            }
+          }
+          console.log(JSON.stringify({ staged, refused, ignored }));
+          if (refused.length > 0) {
+            for (const refusal of refused) console.error("::error::verify report is not the bytes the cell carried: " + refusal);
+            process.exit(1);
+          }
+          '
 
       # Validates every record, enforces the twelve unique cells, copies the real smoke-job
       # timestamps from the Actions API, writes the result atomically, renders the summary and

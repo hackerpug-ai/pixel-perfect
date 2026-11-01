@@ -1,0 +1,7 @@
+{
+  "forbidden_seed_patterns": [
+    "--run\\s+\\d",
+    "RUN_ID\\s*=\\s*['\"]?\\d"
+  ],
+  "coldboot": "Every sprint-02 flow boots cold: fresh clone at the sprint-02 revision, Node >= 22.19 (CI pins 24), gh authenticated to hackerpug-ai/pixel-perfect with repo scope, network reachability to api.github.com and the artifact CDN, and an empty .tmp/sprint-02-verification/ with no prior artifact cache. No flow dispatches: the run under test is the gate's own hand dispatch, resolved by head_sha, and run ids are re-fetched every cold boot and never reused across boots."
+}

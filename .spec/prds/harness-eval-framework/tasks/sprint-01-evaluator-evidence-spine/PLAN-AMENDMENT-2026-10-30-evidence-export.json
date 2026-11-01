@@ -1,0 +1,89 @@
+{
+  "schema": "kb-plan-amendment/v1",
+  "sprint": "sprint-01-evaluator-evidence-spine",
+  "authorized_by": "repo owner (justinrich)",
+  "authorization": "Owner, 2026-10-30, in /kb-prd-plan --update, asking what the issues need: 'what context and information would be useful to include in gh issues created from a failing eval?' The drafter found that real run 41140522995 exports no evidence a fixer could open. The owner has not separately approved this task: committing this file is that approval.",
+  "items": [
+    {
+      "kind": "add",
+      "target": "T16",
+      "change": "Add one task that makes the evidence a cell grades from outlive the runner. Scope: (a) each smoke leg uploads harness-eval-evidence-<run_id>-<run_attempt>-<harness>-<track> holding its captures and reports, even when the process exits non-zero, for 90 days with overwrite disabled; (b) the verify reports reach harness-eval-verify-reports-<run_id>-<run_attempt>, reconciling the per-artifact bundling pinned by tests/sprint-01/grd-01-twelve-cells.test.mjs:771-777 with the gate's path, as TASK-T13.md line 211 says this needs; (c) paths in a cell record are relative to its artifact, because report_paths are absolute /tmp paths today; (d) before upload the model step compares captured bytes to the value of the key it holds and withholds a capture that contains it, recording evidence-withheld, because artifacts on a public repository can be downloaded. Write scope adds the one upload-path assertion at tests/sprint-01/t11-controls-wiring.test.mjs:296-302 and the bundling assertion named above, changed only to admit the new artifact: the cell artifact stays exactly cell/cell.json. Also correct the gate text in SPRINT.md and ROADMAP.md: the six steps reading harness-eval-result.json at the artifact root read grade/harness-eval-result.json, where the file really lands. Sequence: next. Prerequisite for gate step 8 and for T17. Planner github-agentic-workflow-planner, implementer github-platform-implementer, reviewer github-agentic-workflow-reviewer. Contract: .spec/prds/harness-eval-framework/09-technical-requirements/11-failure-issues.md section Evidence must outlive the runner; criterion T-ISS-010."
+    }
+  ],
+  "evidence": {
+    "hosted_run": {
+      "run_id": 41140522995,
+      "head_sha": "09547bc663f2c8326cc9d02a858b596969cb8bb7",
+      "artifacts": "each harness-eval-cell artifact holds cell.json alone; harness-eval-verify-reports holds INDEX.json with reports []",
+      "report_paths": "absolute under /tmp on a runner that no longer exists"
+    }
+  },
+  "decision": {
+    "item_id": "amendment:T16",
+    "wave_id": "T13",
+    "source_kind": "amendment",
+    "index": 0,
+    "outcome": "add",
+    "answers": [
+      {
+        "question": 1,
+        "answer": true,
+        "reason": "Concrete: harness-eval.yml uploads exactly cell/cell.json from each smoke leg, and the grade job's harness-eval-verify-* download matches nothing.",
+        "evidence": [
+          {
+            "path": ".github/workflows/harness-eval.yml",
+            "sha256": "e626a861191f694cd4405d1018c41ea02b9b641a947cf5265f540f8707d2b6fd"
+          }
+        ]
+      },
+      {
+        "question": 2,
+        "answer": false,
+        "reason": "Not a failed review. TASK-T13.md records it as out of scope and says it needs its own task.",
+        "evidence": [
+          {
+            "path": ".spec/prds/harness-eval-framework/tasks/sprint-01-evaluator-evidence-spine/TASK-T13.md",
+            "sha256": "04f219fc079cdace1d55d47076b9621d094f40c2c5b03d97c65aded90fa87168"
+          }
+        ]
+      },
+      {
+        "question": 3,
+        "answer": true,
+        "reason": "Inside this sprint: gate step 8 reads the verify report at the case-declared path and cannot pass while no report travels.",
+        "evidence": [
+          {
+            "path": ".spec/prds/harness-eval-framework/tasks/sprint-01-evaluator-evidence-spine/SPRINT.md",
+            "sha256": "e3c45654fa69802324e3b48d6b9562e15139bd09e46c693c9815a07e920d0975"
+          }
+        ]
+      },
+      {
+        "question": 4,
+        "answer": false,
+        "reason": "The Done statement already requires the verify report at its case-declared path, and System Components already says the smoke job uploads the event stream and verify report. The gate's path correction fixes a path that does not exist and changes nothing the gate proves.",
+        "evidence": [
+          {
+            "path": ".spec/prds/harness-eval-framework/tasks/sprint-01-evaluator-evidence-spine/SPRINT.md",
+            "sha256": "e3c45654fa69802324e3b48d6b9562e15139bd09e46c693c9815a07e920d0975"
+          }
+        ]
+      },
+      {
+        "question": 5,
+        "answer": true,
+        "reason": "Real: run 41140522995 has only cell.json in each cell artifact, 10 evidence paths per graded cell that cannot be opened, and a verify-reports index reading no report arrived. No pending task owns it: T11 and T12 do not, T13 excluded it, and the T14 and T15 drafts cover capture requiredness and the controls.",
+        "evidence": [
+          {
+            "path": ".spec/prds/harness-eval-framework/tasks/sprint-01-evaluator-evidence-spine/TASK-T13.md",
+            "sha256": "04f219fc079cdace1d55d47076b9621d094f40c2c5b03d97c65aded90fa87168"
+          },
+          {
+            "path": ".github/workflows/harness-eval.yml",
+            "sha256": "e626a861191f694cd4405d1018c41ea02b9b641a947cf5265f540f8707d2b6fd"
+          }
+        ]
+      }
+    ]
+  }
+}
