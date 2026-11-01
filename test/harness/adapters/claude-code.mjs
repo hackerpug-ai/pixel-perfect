@@ -18,10 +18,11 @@
 // capture/guard (`runGuarded`, `spawnCaptured`), and every verdict goes through `gradeFromEvidence`
 // + `writeGrade`.
 //
-// shortcut: the question-event shapes are matched by declared markers (QUESTION_TOOL_NAMES) because
-// no real must-ask capture exists yet — that capture is T11's qualification. The detector cannot
-// silently pass: the must-ask probe FAILS when it sees no question, so a stale marker set fails the
-// probe loudly instead of certifying it. Upgrade when the first real must-ask capture lands.
+// shortcut: the question-event shapes are matched by declared markers (QUESTION_TOOL_NAMES, plus the
+// product's own text marker) because no real must-ask capture exists yet — that capture is T11's
+// qualification. The detector cannot silently pass: the must-ask probe FAILS when it sees no
+// question, so a stale marker set fails the probe loudly instead of certifying it. Upgrade when the
+// first real must-ask capture lands.
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
@@ -270,15 +271,94 @@ function declaredWrites(caseManifest) {
 }
 
 /**
+ * The one literal question marker a headless turn can carry, and the one `RegExp` BOTH readers use —
+ * this predicate and the stream table's `text_match`, so the two cannot diverge on what a question is.
+ *
+ * `AskUserQuestion` cannot be the answer here, and that is measured rather than assumed: the repo's
+ * own real captures list 23 tools at CLI 2.1.312 and 130 at 2.1.314 and omit it from both. The
+ * product supplies the fallback for exactly this harness — "a numbered plain-text batch as the last
+ * thing in the turn" (`plugins/pixel-perfect/workflows/RUNTIME-CONTRACT.md:125`) — and its own
+ * notation for that batch is `USER_CHOICE(batch)` (`RUNTIME-CONTRACT.md:15`). The harness therefore
+ * declares the product's marker instead of inventing a vocabulary.
+ *
+ * The shape is literal and narrow: `USER_CHOICE(` + one batch id + `)`. Not a `?`, not a numbered
+ * list, not "any assistant text" — an ordinary reply that discusses asking must still count zero.
+ */
+export const QUESTION_MARKER_PATTERN = /USER_CHOICE\([A-Za-z0-9][A-Za-z0-9_-]*\)/;
+
+/**
+ * The batch id the product's own `How this workflow asks` table opens with, read out of the workflow
+ * file at load time: a renumbered or renamed batch reaches the prompt with no adapter edit, and the
+ * lane re-derives it from the same table to prove the two agree. Never a literal typed here.
+ *
+ * An unreadable table falls back to the placeholder shape `USER_CHOICE(<batch-id>)`, which the marker
+ * pattern cannot match: a model copying it produces no recorded question, so the check fails honestly
+ * rather than passing on a marker nobody wrote.
+ */
+function productFirstBatchId() {
+  try {
+    const workflow = readFileSync(join(PLUGIN_ROOT, "workflows", "init.md"), "utf8");
+    const section = workflow.split("## How this workflow asks")[1] ?? "";
+    return section.match(/^\|\s*(B[0-9]+)\s*\|/m)?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export const QUESTION_BATCH_ID = productFirstBatchId();
+
+/**
+ * What one graded `first-question` turn is told it is graded on, declared once so a reader can see it
+ * without inferring it from a prompt string. It names the marker shape, the exactly-one rule and the
+ * ask-before-work rule, and it names no value the check measures: no platform id, no option label, no
+ * goal sentence. A reply can satisfy it only by actually asking the question the case declares.
+ */
+export const QUESTION_SURFACE = Object.freeze({
+  applies_to: "first-question",
+  ask_policy: "must-ask",
+  marker: "USER_CHOICE(<batch-id>)",
+  marker_pattern: QUESTION_MARKER_PATTERN.source,
+  batch_rule: "exactly one",
+  order_rule: "before any tool call other than reading the local fixture and the installed plugin instructions",
+  answer_rule: "send no answer and do not answer your own question",
+  where: "as the last thing in the turn, on its own line",
+});
+
+/**
+ * The question surface for one case, rendered from the case manifest's OWN declaration: its kind, its
+ * `ask_policy` and the question it expects. A case that declares no question is told nothing, and no
+ * other kind of case is told anything — so the four ask-nothing prompts keep the bytes they were
+ * graded on.
+ */
+export function questionSurfacePrompt({ caseManifest = null } = {}) {
+  if (caseManifest?.kind !== QUESTION_SURFACE.applies_to) return "";
+  if (caseManifest?.ask_policy !== QUESTION_SURFACE.ask_policy) return "";
+  const question = caseManifest?.expected_question;
+  if (typeof question !== "string" || question.trim().length === 0) return "";
+  const marker = QUESTION_BATCH_ID ? `USER_CHOICE(${QUESTION_BATCH_ID})` : QUESTION_SURFACE.marker;
+  return [
+    `Graded question surface: this turn is graded on ${QUESTION_SURFACE.batch_rule} question, asked ${QUESTION_SURFACE.order_rule}.`,
+    `Ask the decision this case declares: ${question.trim()}.`,
+    `State it ${QUESTION_SURFACE.where}, beginning ${marker}, followed by the question and its numbered options.`,
+    `Ask exactly one batch and then stop.`,
+    `On this turn, ${QUESTION_SURFACE.answer_rule}.`,
+  ].join(" ");
+}
+
+/**
  * The prompt for one invocation: the plugin's slash command first, then the case's own arguments,
  * then the arguments the product PARSES (the report path and the invocation id), then the surface its
  * check grades. Nothing is inferred — a case with no platform argument contributes none, a case that
  * declares no report path contributes no report arguments, and a case whose check reads no declared
- * surface contributes no text, so the must-ask probe's prompt stays exactly what the question
- * boundary was measured on.
+ * surface contributes no text, so the four ask-nothing probes' prompts stay exactly the bytes they
+ * were measured on.
  */
 export function promptFor({ command_name, caseManifest = null, invocationId = null }) {
-  const surface = [statusSurfacePrompt({ caseManifest }), verifyReportPrompt({ caseManifest, invocationId })]
+  const surface = [
+    statusSurfacePrompt({ caseManifest }),
+    verifyReportPrompt({ caseManifest, invocationId }),
+    questionSurfacePrompt({ caseManifest }),
+  ]
     .filter(Boolean)
     .join(" ");
   return [
@@ -953,13 +1033,24 @@ export function modelAnswer(record) {
   return { answered: true, reason: null, reply: result.json.result, stream_offset: result.offset };
 }
 
-/** A question is a tool start on a question tool, or an explicit question marker in the stream. */
+/**
+ * A question is a tool start on a question tool, an explicit question marker, or — the one shape a
+ * headless turn can carry — the product's own text marker in assistant text.
+ *
+ * The text clause reads `assistant` lines only, on purpose: the declaration lives in the prompt, so a
+ * reader that also scanned `user` lines (or the raw bytes) could count the harness's own instruction
+ * as the model's question and pass with nothing asked.
+ */
 function isQuestionEvent(json) {
   if (!json) return false;
   if (json.type === "user_choice" || json.subtype === "ask_user_question") return true;
   const content = json.message?.content;
   if (!Array.isArray(content)) return false;
-  return content.some((block) => block?.type === "tool_use" && QUESTION_TOOL_NAMES.includes(block?.name));
+  if (content.some((block) => block?.type === "tool_use" && QUESTION_TOOL_NAMES.includes(block?.name))) return true;
+  return (
+    json.type === "assistant" &&
+    content.some((block) => block?.type === "text" && typeof block?.text === "string" && QUESTION_MARKER_PATTERN.test(block.text))
+  );
 }
 
 /**
