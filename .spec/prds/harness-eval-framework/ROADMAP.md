@@ -125,6 +125,8 @@ UC-REL-05 · AC-3,4,5 ↦ sprint-03 · AC-1,2,6 ↦ sprint-04 · closes at sprin
 | T14 | Fix the capture layer so a mapper-declared `required_read: false` survives instead of collapsing to `null` | ai-tooling-implementer | 3 | I | ⬜ Pending |
 | T15 | Give the four negative controls a real hosted producer, hosted/pair wiring, and a four-pair gate | ai-tooling-implementer | 5 | J | ⬜ Pending |
 | T16 | Make a hosted claude-code cell grade: status surface + verify report path/id declared to the invocation | ai-tooling-implementer | 5 | K | ⬜ Pending |
+| T17 | Verify report writer inside the product, shipped to the recorder | ai-tooling-implementer | 5 | L | ⬜ Pending |
+| T18 | Must-ask invocation asks; question boundary grades | ai-tooling-implementer | 3 | M | ⬜ Pending |
 
 **Waves:** A(3) → B(3) → C(2) → D(1) → E(1) → F(1) → G(1) — 7 waves over 12 tasks (≈1.7 at once)
 

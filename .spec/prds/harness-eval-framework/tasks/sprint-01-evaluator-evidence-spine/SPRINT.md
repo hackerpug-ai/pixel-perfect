@@ -126,6 +126,8 @@ public holdouts from the brief before [7.5] publish.
 | T14 | Fix the capture layer so a mapper-declared `required_read: false` survives as `false` instead of collapsing to `null` (a declared optional denial stops grading as `requiredness-undeclared`) | ai-tooling-implementer | 3 | I | ⬜ Pending |
 | T15 | Give the four negative controls a real hosted producer: a graded denied-write probe so `exit0-denied-read` reads `fail denied_tool_call`, producer-side hosted/pair wiring so rows stop publishing `hosted: not-executed` / `qualified: false` / `pair: null`, and a gate that asserts the four exact verdict/reason pairs | ai-tooling-implementer | 5 | J | ⬜ Pending |
 | T16 | Make a hosted claude-code cell grade: declare the status surface the grader parses to the status invocation, and the report path plus invocation id to the verify invocation | ai-tooling-implementer | 5 | K | ⬜ Pending |
+| T17 | Give the verify report a writer that can produce it — the product's own verify path writes it at the case-declared path with the given invocation id — and ship it to the recorder | ai-tooling-implementer | 5 | L | ⬜ Pending |
+| T18 | Make the must-ask invocation actually ask, so question_before_expensive_work grades on a dispatched run | ai-tooling-implementer | 3 | M | ⬜ Pending |
 
 **Waves:** A(3) → B(3) → C(2) → D(1) → E(1) → F(1) → G(1) — 7 waves over 12 tasks (≈1.7 at once)
 
