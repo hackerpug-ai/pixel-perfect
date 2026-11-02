@@ -1,0 +1,87 @@
+{
+  "schema": "kb-plan-amendment/v1",
+  "sprint": "sprint-01-evaluator-evidence-spine",
+  "authorized_by": "repo owner (justinrich)",
+  "authorization": "Owner set the goal 'complete all 10 steps' on 2026-10-30. T11's cycle-3 review recorded two blocking findings (F-T11-6, F-T11-7) whose fixes both live outside T11's write_allowed, and hosted run 41139161972 confirms them on a real artifact: exit0-denied-read reads could-not-run/control-unobservable and every controls row carries hosted 'not-executed' with qualified false. This amendment is the required authorization to add the task that fixes them.",
+  "items": [
+    {
+      "kind": "add",
+      "target": "T15",
+      "change": "Add one task that gives the controls array a hostile producer and an honest qualification. Scope: (a) make one graded claude-code invocation attempt a write the recorded stance denies on a path the invocation needs, so a real captured stream carries permission_denied with required_read true beside exit 0 and exit0-denied-read can read fail/denied_tool_call on a hosted run; (b) have the controls producer mark the rows it produced as the hosted half and attach the paired authenticated outcome for missing-key and hidden-image-judge so discriminates is computed from a real pair instead of pair null; (c) require the four exact verdict/reason pairs, not merely four rows, so a run that observed nothing fails loudly. Sequence: next. Prerequisite for T11's hosted acceptance, T12, and human-gate step 11."
+    }
+  ],
+  "evidence": {
+    "hosted_run": {
+      "run_id": 41139161972,
+      "head_sha": "09547bc663f2c8326cc9d02a858b596969cb8bb7",
+      "cells": "12 cells, all could-not-run; reasons include requiredness-undeclared (2), installation-identity-mismatch (1), adapter-not-implemented (6), missing-api-key (2), required-fact-unobserved (1)",
+      "controls": "missing-key could-not-run missing-api-key; stale-cache could-not-run installation-identity-mismatch; exit0-denied-read could-not-run control-unobservable; hidden-image-judge pass no-image-judge-in-child-tree; all four qualified=false and hosted=not-executed",
+      "claude_code_checks": "both cells carry command_list pass; status and verify read could-not-run/requiredness-undeclared; question_before_expensive_work reads required-fact-unobserved"
+    },
+    "review": "T11 cycle 3, findings F-T11-6 and F-T11-7, both basis reproduced."
+  },
+  "decision": {
+    "item_id": "amendment:T15",
+    "wave_id": "T13",
+    "source_kind": "amendment",
+    "index": 0,
+    "outcome": "add",
+    "answers": [
+      {
+        "question": 1,
+        "answer": true,
+        "reason": "Concrete: the producer step calls qualifyControls({ observations, pairs }) with no hosted argument and recordControl's hostHalf accepts only { status: 'observed' }, so qualified is unreachable; observeLeg returns a pair for stale-cache only, so missing-key and hidden-image-judge publish pair null; and the verify invocation never attempts a denied write, so exit0-denied-read stays control-unobservable. Hosted run 41139161972 shows all four rows in exactly that state.",
+        "evidence": [
+          {
+            "path": ".github/workflows/harness-eval.yml",
+            "sha256": "e626a861191f694cd4405d1018c41ea02b9b641a947cf5265f540f8707d2b6fd"
+          }
+        ]
+      },
+      {
+        "question": 2,
+        "answer": false,
+        "reason": "Not a failed review of T11's own work: T11's cycle-3 review marked both findings OPEN but attributed them to code outside T11's write_allowed, and its six test criteria PASS with six killed mutants. This is a missing capability in the workflow and smoke modules, not a T11 defect.",
+        "evidence": [
+          {
+            "path": "test/harness/controls/index.mjs",
+            "sha256": "f1010d3ff4a3ea0c5c56c36f6e52b4ea6aaa2451016b5b338d9a17594e9e83b6"
+          }
+        ]
+      },
+      {
+        "question": 3,
+        "answer": true,
+        "reason": "Inside this sprint: T11's AC-1 and AC-2 name the four control rows in a downloaded artifact, T12 reviews the graded output, and human-gate step 11 prints the controls. None can pass while every row reads hosted not-executed and exit0-denied-read reads control-unobservable.",
+        "evidence": [
+          {
+            "path": "test/harness/smoke/observations.mjs",
+            "sha256": "b8cde1877e28335c05cc1e8abeb4de5e46a9f82f990a6f618f5a037148b4dd25"
+          }
+        ]
+      },
+      {
+        "question": 4,
+        "answer": false,
+        "reason": "Not a human product decision: the sprint's Done statement already names the four exact verdict/reason pairs, and the grade vocabulary already distinguishes a required denial from an undeclared one. No gate step, flow id or expected output changes.",
+        "evidence": [
+          {
+            "path": "test/harness/adapters/claude-code.mjs",
+            "sha256": "1a3b980036ea81435f7f6bd846e79f1dfcca6983841b5575fd6b94545c4cf896"
+          }
+        ]
+      },
+      {
+        "question": 5,
+        "answer": true,
+        "reason": "Real: hosted run 41139161972's artifact carries the four rows in the blocked state, and both the local producer-chain replay and the hosted artifact agree. No pending task owns it: T9, T11-FIX2, T13 and T14's scope (capture requiredness) are separate, and T14 in particular fixes a different defect (a declared false collapsing to null) than the missing hosted producer.",
+        "evidence": [
+          {
+            "path": ".spec/prds/harness-eval-framework/tasks/sprint-01-evaluator-evidence-spine/SPRINT.md",
+            "sha256": "e3c45654fa69802324e3b48d6b9562e15139bd09e46c693c9815a07e920d0975"
+          }
+        ]
+      }
+    ]
+  }
+}

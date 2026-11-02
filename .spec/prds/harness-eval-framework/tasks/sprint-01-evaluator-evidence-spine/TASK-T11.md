@@ -2,7 +2,9 @@
 
 > Task ID: T11
 > Sprint: [SPRINT.md](./SPRINT.md)
-> Status: Backlog
+> Status: ✅ Completed
+
+Commit: 387355869b62069b699d46195202632b5086ad2f
 > Assignee: evals-implementer
 > Priority: P1
 > Points: 5
@@ -827,3 +829,42 @@ A shared file is not a dependency, and needing another task's output to test aga
 }
 -->
 
+
+## Handoff
+
+```json
+{
+  "task": "T11",
+  "commit_sha": "387355869b62069b699d46195202632b5086ad2f",
+  "done": "Verified the approved T11 implementation still holds at the merged candidate 3873558 (T11 code unchanged by the merge; siblings T13-T17 touched test/harness/adapters/claude-code.mjs, test/harness/runtime/stance.mjs and plugins/pixel-perfect/{scripts/verify-report.mjs,workflows/verify.md}, which T11 consumes). Both task verifies exit 0 and were re-captured at this HEAD into implementer-cycle-7/green/, one log per requirement id: FLOW-GRD-03-FILES-AND-STREAM (9/9 assertions) proves exit0-denied-read -> fail/denied_tool_call beside a raw process_exit_code of 0 with mapping=pass, four graded checks citing files-and-event-stream, and hidden-image-judge -> pass/no-image-judge-in-child-tree over a real 25-file child tree with 0 model requests, paired with a planted image judge the scan catches and an unreadable tree reading could-not-run; FLOW-GRD-06-MISSING-KEY (2/2 assertions) proves missing-key -> could-not-run/missing-api-key with 0 model requests paired=true, stale-cache -> could-not-run/installation-identity-mismatch with both digests (expected=20c96a9506fc observed=05f5a04a4452), and the key-present-misfire rejection of a static always-refusing guard. `pnpm validate` exits 0. No product code change was needed, so no new commit: commit_sha is the current HEAD. The hosted half remains genuinely unexecuted (t11_fully_qualified=false in both logs), which is the correct honest output, not a hidden failure.",
+  "deviations": [
+    "Report status is completed on a passing local tier while the hosted tier is unexecuted, departing from TASK-T11.md:214 ('If the hosted run is unavailable the controls are could-not-run and the task is not done') because the orchestrator brief states that t11_fully_qualified=false is the correct output for this host and that its answer shape governs; the disagreement is recorded here rather than silently resolved.",
+    "Evidence for this cycle captures the same verify command per requirement id (six runs of two commands) rather than one run shared across ids, so every proof row has its own receipt file at the cost of duplicated execution."
+  ],
+  "concerns": [
+    "The `fully_qualified` claim rests entirely on the GITHUB_ACTIONS environment variable (test/harness/controls/index.mjs:102-113); anything that exports GITHUB_ACTIONS=true with plausible numeric ids could make a non-Actions process claim the hosted half, and no test in this cycle proves that boundary against a spoofed environment.",
+    "test/harness/controls/index.mjs and both T11 test files consume test/harness/adapters/claude-code.mjs and test/harness/runtime/stance.mjs, which T16 rewrote after the last approval; they pass now, but T11 has no pin on those modules' behaviour, so a future sibling edit can move T11's semantics without touching a T11 file.",
+    "grd-06 is not hermetic: its `environment=observed` branch shells out to `gh api repos/hackerpug-ai/pixel-perfect/environments/harness-smoke/secrets` (grd-06-missing-key.test.mjs:139-141), so its assertions depend on live token scope and network; it degrades to could-not-run rather than passing falsely, but the receipt's shape varies by machine.",
+    "The hosted pipeline is not merely unexercised but currently red for reasons outside T11: hosted run 41363740087 on main (8011672cff6b) passed all twelve smoke cells and failed at `grade recorder`, so the controls array may still not reach a result artifact even once a candidate branch is dispatched."
+  ],
+  "findings": [
+    "The brief's premise that 'this host holds no harness-smoke repository secret' is imprecise: `gh api repos/hackerpug-ai/pixel-perfect/environments/harness-smoke/secrets --jq '[.secrets[].name]|sort'` returns SMOKE_CLAUDE_KEY, SMOKE_CODEX_KEY, SMOKE_GROK_KEY, SMOKE_OPENCODE_KEY and SMOKE_PI_KEY. What this host lacks is the secret values (unreadable through gh by design), so a guarded model call still cannot be made locally; the environment itself is configured.",
+    "T5's handoff records the remote harness-eval workflow as unregistered with HTTP 404, which is now stale: .github/workflows/harness-eval.yml is registered and active (id 401976082), and hosted workflow_dispatch runs exist, the latest being 41363740087 on main at 2026-11-01T23:46:36Z.",
+    "The real hosted blocker is therefore not credentials or registration but (a) this implementer may not push, so no attempt-qualified run can be bound to candidate 3873558, and (b) the hosted pipeline's `grade recorder` job currently fails, so a dispatched run would not yet emit the four-row controls artifact.",
+    "The merge of main into this branch left tests/sprint-01/grd-03-evidence.test.mjs, grd-06-missing-key.test.mjs, flow-runner.mjs and test/harness/controls/** byte-identical to the approved 01175d6, so the sibling landings caused no regression in T11's own surface — verified by `git diff --name-only 01175d6 HEAD` not listing any T11 path.",
+    "`pnpm test` runs `node --test test/*.test.mjs`, which excludes tests/sprint-01/**; T11's verifies are therefore outside the project's default test command and are invisible to `pnpm test`/`pnpm ci`, so a regression in T11 would only be caught by the task-level verify command."
+  ],
+  "scope_impact": [
+    {
+      "target": "T11",
+      "found": "The task's four control rows are not all produced by one flow: grd-03 produces exit0-denied-read fail/denied_tool_call and hidden-image-judge pass/no-image-judge-in-child-tree while reporting missing-key and stale-cache as could-not-run/control-unobservable; grd-06 produces missing-key and stale-cache while reporting the other two as control-unobservable.",
+      "change": "No change made, by design. test/harness/controls/index.mjs:156 only qualifies a row when matched && discriminates && hosted.status === \"observed\", and hostedHalfFromEnv (index.mjs:102-113) refuses to claim hosted identity without GITHUB_ACTIONS=true plus positive run id and attempt, so the union of four rows can only be completed inside a real hosted run."
+    }
+  ],
+  "feedback": [
+    "TASK-T11.md:214 and the orchestrator brief disagree about whether an unexecuted hosted half blocks completion; the task file should state the accepted tier (local controls proof vs hosted qualification) so implementers do not have to choose between a passing report and the Note.",
+    "The task's Test Criteria table (TASK-T11.md:95-96) is empty although six requirement ids (AC-1, AC-2, TC-1..TC-4) are defined, forcing each TC's verify to be inferred from its REQUIREMENT-CONTRACT row rather than read from the table.",
+    "AC-1 and TC-3/TC-4 share one verify command and AC-2 and TC-1/TC-2 share another, so the proof list cannot distinguish AC from TC outcomes except by separate re-runs of the same command; distinct per-criterion test names would make each receipt self-identifying."
+  ]
+}
+```

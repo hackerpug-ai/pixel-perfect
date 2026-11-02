@@ -1,0 +1,107 @@
+{
+  "schema": "kb-plan-amendment/v1",
+  "sprint": "sprint-01-evaluator-evidence-spine",
+  "authorized_by": "repo owner (justinrich)",
+  "authorization": "Owner, 2026-10-30, in /kb-prd-plan --update: 'update our sprint such that when evals produce failing runs (as we did in our dev run) we create issues on this repo.' Then: 'note change-request is a skill we have to file issues on a repo ... we should update the plan to use it against its own repo'. Then: 'there should be a reference in the issue to the eval that should be re-ran to prove the fix worked'. Asked how a failed run should become an issue, given that /change-request requires a yes in the session and lives in the private brain repo, the owner answered 'Run files it itself (Recommended)'.",
+  "items": [
+    {
+      "kind": "add",
+      "target": "T17",
+      "change": "Add one task that files one GitHub issue on this repository for each distinct unexpected failure in a finished harness-eval run, and names in every issue the eval to re-run to prove the fix. Contract: .spec/prds/harness-eval-framework/09-technical-requirements/11-failure-issues.md, use cases 12-uc-iss.md, criteria T-ISS-001 to T-ISS-034, scenarios .spec/scenarios/UC-ISS-*. Scope: (a) a fifth job `issues` in harness-eval.yml, needs grade, skipped on cancel, only for this repository on refs/heads/main, with contents read, actions read and issues write, no environment, no model key, no App token; (b) test/harness/issues/ holding the filer, expected.json with the five exact pairs, byte copies of the change-request issue-body.md and check-issue-body.sh with UPSTREAM.json digests; (c) the recorder writes grade/refusal.json with only its closed reason, uploaded beside recorder.log; (d) finding classes, grouping, identity, the five-per-attempt cap and roll-up, and author-only dedupe exactly as the contract states, reading each cell's own reason as well as every check row; (e) the body holds validated fields and fixed text only, and passes the scan before filing; (f) the receipt artifact harness-eval-issues-<run_id>-<run_attempt> and a summary section; (g) create the harness-eval label once as a recorded setup step, the filer itself never creates a label. Write scope adds exactly one line of the locked FLOW-RUN-02-HAND: the job list at tests/sprint-01/run-02-hand.test.mjs:169 gains `issues`. Nothing else in that flow changes. Gate additions before the First Contact step, which stays last: (1) after a dispatched run, `gh issue list --repo hackerpug-ai/pixel-perfect --label harness-eval --state open --json title --jq '.[].title'` prints one line per unexpected reason in that run and no line for cursor or an adapter-pending harness; (2) a second dispatch of the same commit prints the same lines and the receipt lists them unchanged; (3) after a real fix lands, a person copies the commands from a filed issue's `## Prove the fix` and they print its expected lines, and the same commands on the unfixed commit print something else. `requiredness-undeclared` from T14 is the natural first case. New flows go through the publisher with human-flows.json. Report honestly: UC-ISS-01 AC-1 stays DEFERRED until a real graded failure exists, because no run has produced one; never run it against a hand-written result. UC-ISS-01 AC-5 waits on Sprint 03 and UC-ISS-05 AC-4 on Sprint 06. Sequence: next, after T16. Planner github-agentic-workflow-planner, implementer github-platform-implementer, reviewer github-agentic-workflow-reviewer."
+    }
+  ],
+  "evidence": {
+    "hosted_run": {
+      "run_id": 41140522995,
+      "head_sha": "09547bc663f2c8326cc9d02a858b596969cb8bb7",
+      "would_file": [
+        "could-not-run/requiredness-undeclared",
+        "could-not-run/required-fact-unobserved",
+        "could-not-run/installation-identity-mismatch",
+        "control/control-unobservable"
+      ],
+      "would_not_file": "the ten cells on the expected list and the three controls with matched true"
+    },
+    "refused_runs": {
+      "reason": "timestamps-missing",
+      "run_ids": [
+        41111463326,
+        41111691215,
+        41122584757,
+        41122997333
+      ]
+    }
+  },
+  "decision": {
+    "item_id": "amendment:T17",
+    "wave_id": "T13",
+    "source_kind": "amendment",
+    "index": 0,
+    "outcome": "add",
+    "answers": [
+      {
+        "question": 1,
+        "answer": true,
+        "reason": "Concrete: it names a new job in harness-eval.yml, a new directory test/harness/issues/, the recorder's refusal record, and criteria T-ISS-001 to T-ISS-034.",
+        "evidence": [
+          {
+            "path": ".github/workflows/harness-eval.yml",
+            "sha256": "e626a861191f694cd4405d1018c41ea02b9b641a947cf5265f540f8707d2b6fd"
+          },
+          {
+            "path": "test/harness/recorder.mjs",
+            "sha256": "83a8e4d35292458264489bfeb3e763abc5e5aa38634cef8f060616312d121c03"
+          }
+        ]
+      },
+      {
+        "question": 2,
+        "answer": false,
+        "reason": "Not a failed review. It is a new product behaviour the owner asked for.",
+        "evidence": [
+          {
+            "path": ".github/workflows/harness-eval.yml",
+            "sha256": "e626a861191f694cd4405d1018c41ea02b9b641a947cf5265f540f8707d2b6fd"
+          }
+        ]
+      },
+      {
+        "question": 3,
+        "answer": true,
+        "reason": "Inside this sprint: the owner named sprint-01, and the gate additions in this item depend on it.",
+        "evidence": [
+          {
+            "path": ".spec/prds/harness-eval-framework/tasks/sprint-01-evaluator-evidence-spine/SPRINT.md",
+            "sha256": "e3c45654fa69802324e3b48d6b9562e15139bd09e46c693c9815a07e920d0975"
+          }
+        ]
+      },
+      {
+        "question": 4,
+        "answer": false,
+        "reason": "This is the owner's call and the owner made it in this session, including the exception to /change-request's per-issue yes, as quoted. Nothing is left open: the PRD at version 2.0.0 records the behaviour.",
+        "evidence": [
+          {
+            "path": ".spec/prds/harness-eval-framework/tasks/sprint-01-evaluator-evidence-spine/SPRINT.md",
+            "sha256": "e3c45654fa69802324e3b48d6b9562e15139bd09e46c693c9815a07e920d0975"
+          }
+        ]
+      },
+      {
+        "question": 5,
+        "answer": true,
+        "reason": "Real and unowned: no pending task or draft amendment files an issue. Grep of TASK-T11.md, TASK-T12.md and both draft amendments finds no issue filing. Real run 41140522995 would file four issues under this contract.",
+        "evidence": [
+          {
+            "path": ".github/workflows/harness-eval.yml",
+            "sha256": "e626a861191f694cd4405d1018c41ea02b9b641a947cf5265f540f8707d2b6fd"
+          },
+          {
+            "path": "tests/sprint-01/run-02-hand.test.mjs",
+            "sha256": "8606d42c3e88cb14e69336247e35f83fa89ff63364b3ed4ef63210fdca47f71c"
+          }
+        ]
+      }
+    ]
+  }
+}
