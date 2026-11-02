@@ -1,6 +1,8 @@
 # TASK-T12 — Review the evaluator workflow, capture layer, and grader contracts: secret placement, banned triggers, path confinement, aggregation order, exit-code independence, twelve-cell completeness, no root-level `harness/` or branch-9624a4b gate wiring landing
 
-> Status: Backlog
+> Status: ✅ Completed
+
+Commit: 670286bc8bb5013f1015cecae98bb02a458e7a2f
 > Assignee: github-agentic-workflow-reviewer
 > Priority: P2
 > Points: 3
@@ -40,7 +42,6 @@ Read-only apart from one assertion file. `write_allowed`: `tests/sprint-01/t12-r
 
 ```
 TASK_TYPE:  INFRA
-STATUS:     Backlog
 PRIORITY:   P2
 POINTS:     3
 AGENT:      planner=github-agentic-workflow-planner | implementer=github-agentic-workflow-reviewer | reviewer=code-reviewer
@@ -412,3 +413,72 @@ NOTES
 - **Source:** `.kb-run-sprint/sprint-01-evaluator-evidence-spine/owner-answers/a36f35b458795e360623f6cad969fba57f334799a1177bb0cf78d19c7309e643.json` · sha256 `e8f82cd7d789cd541982bcd27efacbd2082820f59449aa4bc1d079480ccb1dc3` · answer `push, widen T12, authorize the fix` (owner).
 - **What changed:** `write_allowed` gained exactly one path, `tests/sprint-01/t12-review-record.test.mjs`; all four requirements are bound to that file — AC-1 → `t12-review-record-complete`, TC-1 → `t12-edge1-secret-placement`, TC-2 → `t12-edge2-banned-triggers`, TC-3 → `t12-edge8-no-forbidden-salvage` — with `verify` = `node --test tests/sprint-01/t12-review-record.test.mjs --test-name-pattern <case>`; the header became `TDD_MODE: red_first` / `RED_GREEN_REQUIRED: true` and `verification_policy.requires_tests` became `true`; a `## Deliverables` section states what must exist; the DELIVERABLE line, the first critical constraint, the `VERIFY_NO_WRITES` step, evidence gate 5 and the review criteria's no-write clause now name that one path instead of claiming a clean tree; the AC-1 NOTE and the TEST CRITERIA lead-in no longer call the verifies `null` by design.
 - **What did not change:** every checklist edge, every expected observation, every human-testing gate step (SPRINT.md steps 1–13), AC-1's GIVEN/WHEN/THEN, the three TC statements and their receipt commands, the reading list, the review flow, the remaining critical constraints, and the forbidden-path list — which now reads its `tests/sprint-01/**` entry as "everything except that one file".
+
+## Handoff
+
+```json
+{
+  "task": "T12",
+  "commit_sha": "670286bc8bb5013f1015cecae98bb02a458e7a2f",
+  "done": "Re-reviewed the sprint-01 evaluator surface on a widened contract and produced both deliverables: the refreshed ten-edge record at .kb-run-sprint/sprint-01-evaluator-evidence-spine/T12/evidence/t12-review-record.md (delivered as the message of empty commit 670286b, test file committed at a8fc35e) and tests/sprint-01/t12-review-record.test.mjs with exactly four cases. All ten edges pass with receipts re-run this cycle against the current worktree: five `secrets.` hits, each inside a cell model-step `env:` gated to its own harness (and the `harness-smoke` environment admits deployments from `main` only, a platform bound I verified via the API); zero banned triggers; 49/49 path-confinement/aggregation/named-path tests; `AGGREGATE_ORDER` plus a live `recorderExit` of `code 1 / could-not-run`; 14 `process_exit_code` hits, none a verdict branch, with `exitCodeVerdict` appearing only as trap assertions in tests; twelve cells across six harnesses accepted by the production `enforceTwelveCells` and a live `cells-incomplete {expected:12,got:0}` refusal on run 41396331824; cursor present on both tracks as `could-not-run / missing-api-key`; no root-level `harness/`, no `harness-matrix.yml`, no salvage wiring; `permissions: {}` with `actions: read` only on the recorder. Final verdict stays NEEDS_FIXES because two BLOCKERs remain unresolved outside the ten edges: F-T12-1 (owner T17/T16) — on both hosted runs at head 8011672 the verify-reports artifact is a 254-byte INDEX.json with `reports: []`, no cell carries `verify_reports`, and both claude-code cells grade `verify fail report-missing` plus `question_before_expensive_work could-not-run` (missing `question-start`), so gate steps 6 and 8 cannot pass; and the new F-T12-2 (owner T3, correction sited in locked SPRINT.md step 10) — step 10's second jq reads `.checks[0].process_exit_code`, which the shipped cell schema and 03-data-schema.md:42 do not declare, so it prints `null` where the step promises an integer (the exit code is stored at cell level and reads `0`). The test reads the record from the workspace resolved through `git rev-parse --path-format=absolute --git-common-dir`, parses all ten edges for verdict/severity/owner/receipt, asserts the final verdict, and re-executes the TC-1/TC-2/TC-3 receipt commands against the real workflow and repo bytes, asserting the record cites each with the matching count.",
+  "deviations": [
+    "The task's `verify` commands place `--test-name-pattern` after the positional test file; Node 24.14 ignores the flag in that order, so each verify runs all four cases (exit 0 only when all four pass). I kept the commands exactly as the task specifies — the behaviour is strictly stronger, not weaker — and documented it in the record. With the flag before the file it does isolate, if the harness ever wants that.",
+    "The record's edge-2 assertion was tightened after a surviving mutant: the first version accepted the word 'zero' from surrounding prose, so a record saying '1 match' still passed. It now parses the recorded number and compares it to the re-run count; the mutant dies. Recorded in the record rather than quietly fixed.",
+    "I moved the review record aside once to prove all four cases fail when it is absent, then restored it and re-checked its sha256 byte-identical (implementer-cycle-2/record-absent-proof.log). Four mutations of the record were likewise applied-then-restored, each scored on which case failed (mutation-proof.log, mutation-proof-round2.log).",
+    "The empty commit was amended once (20ef0c1 → 670286b) after making two probe-table commands literally runnable instead of using a comma-shorthand; all four verifies were re-run and stayed green against the edited record."
+  ],
+  "concerns": [
+    "F-T12-1 is the sprint's real risk: a report that treats the 254-byte INDEX.json as evidence that gate step 8 passed would be the 'green run that wrote nothing' failure this role exists to catch. The artifact is honest — it says reports: [].",
+    "F-T12-2 invites the wrong fix. Adding process_exit_code to a check row would contradict 03-data-schema.md:42 and the shipped cell schema; the exit code already exists where the PRD requires it, on the cell.",
+    "The newest dispatch (41396331824) produced zero cells because the harness-smoke environment refuses deployments from any branch but main. That is correct secret posture, but it means a hosted grade can only be produced by dispatching from main — a reviewer or gate runner working from a sprint branch will see twelve failed jobs and a cells-incomplete refusal, which is the framework refusing, not a broken workflow.",
+    "test/harness/controls/child-tree.mjs is test-only (imported at tests/sprint-01/grd-03-evidence.test.mjs:1297, no production importer) and duplicates the scan that test/harness/smoke/image-scan.mjs:84 already performs; two implementations of one reason can drift. Outside the ten edges, flagged for T11's later cycles.",
+    "The workflow declares only workflow_dispatch; PRD 02-system-components.md:15 also names schedule and push-to-main, which the file documents as a later sprint (.github/workflows/harness-eval.yml:3-8). Correct for locked scope, but UC-RUN-01 and UC-RUN-03 are not evidenced here."
+  ],
+  "findings": [
+    "edge 1 | pass | none | T9 | `grep -n 'secrets\\.' .github/workflows/harness-eval.yml` → 5 hits (119, 172, 182, 193, 202), each in a cell model-step env: gated to its own harness; harness-smoke branch policy = main only",
+    "edge 2 | pass | none | T1 | `grep -Ec '^  (pull_request|pull_request_target|workflow_run):' .github/workflows/harness-eval.yml` → `0`, exit 1 (zero matches is the pass); indentation-agnostic scan also finds none",
+    "edge 3 | pass | none | T4 | `node --test tests/sprint-01/grd-01-twelve-cells.test.mjs tests/sprint-01/grd-02-four-grades.test.mjs tests/sprint-01/grd-04-named-path.test.mjs` → 49 tests, 49 pass, 0 fail, exit 0; `✔ absolute, .., and symlinked-ancestor paths are refused before any write`",
+    "edge 4 | pass | none | T7 | `grep -n 'export const AGGREGATE_ORDER' -A1 test/harness/lib/verdict.mjs` → `9:export const AGGREGATE_ORDER = [\"could-not-run\", \"fail\", \"pass\"];`; `✔ the aggregate is could-not-run before fail before pass, and every constituent survives`",
+    "edge 5 | pass | none | T3 | `grep -rn 'process_exit_code' test/harness --include='*.mjs'` → 14 hits, none a verdict branch; `exitCodeVerdict` only in trap assertions; artifact claude-code/newest = could-not-run with process_exit_code 0",
+    "edge 6 | pass | none | T8 | `enforceTwelveCells(<hosted cells>)` → {\"cells\":12,\"harnesses\":6,\"pairs\":12}; live refusal on run 41396331824: `cells-incomplete: {\"expected\":12,\"got\":0,...}`",
+    "edge 7 | pass | none | T10 | artifact cursor cells: 2 → newest and pinned both could-not-run/missing-api-key/invocation-guard; six harnesses present",
+    "edge 8 | pass | none | T1 | `test ! -d harness && test ! -f .github/workflows/harness-matrix.yml && grep -c 'harness-matrix' scripts/release.mjs` → `0`, exit 1",
+    "edge 9 | pass | none | T1 | `grep -nE '^\\s*permissions:' -A3 .github/workflows/harness-eval.yml` → `23:permissions: {}`, four `contents: read`, `actions: read` only at :492; `grep -nE ':\\s*(write|write-all)\\s*$'` → no matches",
+    "edge 10 | pass | none | T7 | `tests/sprint-01/grd-04-named-path.test.mjs:241` → `assert.equal(path.basename(written.path), \"verify-button-drift.json\", \"no timestamp, pid or suffix in the filename\")`; artifact report_paths name only case-declared leaves",
+    "F-T12-1 | blocked | BLOCKER | T17/T16 | both head-8011672 runs: harness-eval-verify-reports-<run>-1 = 254 bytes, INDEX.json `{\"reports\":[],\"reason\":\"no verify report artifact arrived...\"}`; no cell carries verify_reports; both claude-code cells `verify fail report-missing` — gate steps 6 and 8 red",
+    "F-T12-2 | blocked | BLOCKER | T3 | `jq -r '.cells[] | select(.harness==\"claude-code\" and .track==\"pinned\") | .checks[0].process_exit_code'` → `null` (check rows carry only check_id/reason/source/verdict; schema and 03-data-schema.md:42 agree); cell-level `.process_exit_code` → `0` — gate step 10 red as written"
+  ],
+  "scope_impact": [
+    {
+      "target": "T17",
+      "found": "The verify report never reaches the recorder: on both hosted runs at head 8011672 no cell carries `verify_reports`, `later_checks.verify_reports` is null, and harness-eval-verify-reports-<run>-1 is a 254-byte INDEX.json with reports: []. Both claude-code cells grade `verify fail report-missing` (both verify-button-drift and verify-clean) and `question_before_expensive_work could-not-run` with missing [\"question-start\"].",
+      "change": "None by me (read-only). T17 must make the hosted claude-code verify invocation write the report at the case-declared path under cell/verify-upload/reports/, then re-dispatch and re-review F-T12-1 with the new report bytes as the receipt."
+    },
+    {
+      "target": "T16",
+      "found": "Secondary owner of F-T12-1: the report path plus invocation id the verify invocation declares never arrive, so no report can be bound.",
+      "change": "None by me. Re-review needed after T17's fix lands."
+    },
+    {
+      "target": "T3",
+      "found": "Gate step 10's second jq path `.checks[0].process_exit_code` reads a field that no artifact carries and that test/harness/schemas/harness-cell.v1.schema.json and 03-data-schema.md:42 do not declare; it prints `null` on both runs. The exit code IS stored at cell level (`process_exit_code: 0`), which is what the PRD requires.",
+      "change": "None by me. The correction is a one-word path change in SPRINT.md step 10 (`.process_exit_code`), or an owner decision to keep the step; adding the field to a check row on the other hand would contradict 03-data-schema.md:42 and must be refused."
+    },
+    {
+      "target": "GATE:FLOW-GRD-03-FILES-AND-STREAM",
+      "found": "Gate steps 6 and 8 are red on both hosted runs: `verify pass` reads `fail / report-missing`, and the step-8 download has no reports/verify-button-drift.json or reports/verify-clean.json to read.",
+      "change": "None by me. The gate cannot go green until F-T12-1 is fixed and a fresh dispatch produces the reports."
+    },
+    {
+      "target": "GATE:FLOW-GRD-04-NAMED-PATH",
+      "found": "Gate step 10 prints `4` then `null` where it promises an integer exit code (F-T12-2); the path authority the edge protects itself holds, with all four report_paths confined to their own mkdtemp invocation directories and named only by case-declared leaves.",
+      "change": "None by me; the gate step's jq path needs correcting by its owner."
+    }
+  ],
+  "feedback": [
+    "For code-reviewer (reviewing the review): every receipt above is re-runnable from the worktree; the log for each is named in the record and lives under implementer-cycle-2/. The two BLOCKERs are the only non-green signals and neither is downgraded.",
+    "For the sprint owner: F-T12-1 needs a dispatch, not a code review of the recorder — the recorder is correct and says so honestly. F-T12-2 needs one word changed in a locked file; if the lock is expensive to move, the step could be rewritten to read the cell, which is the same evidence.",
+    "For whoever runs the human gate: dispatch from main. Any other branch fails all twelve smoke jobs at environment deployment and produces no artifact to read."
+  ]
+}
+```
