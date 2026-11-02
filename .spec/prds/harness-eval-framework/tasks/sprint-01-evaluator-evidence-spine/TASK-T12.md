@@ -7,8 +7,8 @@
 > Type: INFRA
 > Planner: github-agentic-workflow-planner
 > Proposed By: github-agentic-workflow-planner + evals-planner
-> TDD_MODE: skipped
-> RED_GREEN_REQUIRED: false
+> TDD_MODE: red_first
+> RED_GREEN_REQUIRED: true
 
 planner=github-agentic-workflow-planner | implementer=github-agentic-workflow-reviewer | reviewer=code-reviewer
 
@@ -33,7 +33,7 @@ Every other task in this sprint asserts its own behaviour. None of them can see 
 
 ## Scope
 
-Read-only. `write_allowed`: review comments only (no repo files). `write_prohibited`: everything.
+Read-only apart from one assertion file. `write_allowed`: `tests/sprint-01/t12-review-record.test.mjs`; review comments only — the review record itself, delivered in the commit message and under the run's evidence root, writes no other repository path. `write_prohibited`: everything else — `.github/workflows/**`, `test/harness/**`, `tests/sprint-01/**` other than `tests/sprint-01/t12-review-record.test.mjs`, `scripts/release.mjs`, `plugins/pixel-perfect/**`, `SPRINT.md`, `human-flows.json`, `.spec/e2e-policy/**`.
 
 <details>
 <summary>▸ Full agent specification (TASK-TEMPLATE v5.2 — required reading for implementer + reviewer)</summary>
@@ -62,7 +62,7 @@ Every checklist edge is answered with a receipt (file:line or command output), a
 🚫 CRITICAL CONSTRAINTS (Never tier — read before acting)
 --------------------------------------------------------------------------------
 
-- NEVER write, edit, or "tidy" product or test files. This task is read-only; a reviewer edit removes the independent check the sprint relies on.
+- NEVER write, edit, or "tidy" product files, or any test file other than `tests/sprint-01/t12-review-record.test.mjs`. The review is read-only; a reviewer edit removes the independent check the sprint relies on, and this task's one owned file exists only to assert the record's shape and its receipts.
 - NEVER accept "tests pass" as a receipt. Each item needs the file:line, the command output, or the artifact field that proves it.
 - NEVER downgrade a BLOCKER to a nit to keep a green sprint. An unproven non-negotiable is reported as blocked.
 - NEVER review from the task descriptions alone — read the landed bytes on `main` (the workflow YAML, `test/harness/**`, `tests/sprint-01/**`) and, where a claim is about behaviour, the real run's artifact.
@@ -122,26 +122,26 @@ AC-1: Every checklist edge answered with a receipt; every BLOCKER resolved or na
   WHEN:  the reviewer works the ten-edge checklist against the landed bytes and the artifact
   THEN:  each edge carries pass/finding/blocked with a file:line or command-output receipt, and each BLOCKER is fixed-and-re-reviewed or reported unresolved
 
-  TEST_TIER:             unit (justification: read-only observation of already-executed artifacts; no new behavioural assertion is introduced by this task)
+  TEST_TIER:             unit (justification: the assertion reads the landed workflow bytes and the review record; it introduces no product behaviour of its own)
   VERIFICATION_SERVICE:  review checklist
   SURFACE_POLICY:        read-only
-  TDD_STATE:             none
-  TEST_FILE:             null
-  TEST_FUNCTION:         null
-  VERIFY:                null (manual observation through human-testing gate steps 6–11)
+  TDD_STATE:             red_first
+  TEST_FILE:             tests/sprint-01/t12-review-record.test.mjs
+  TEST_FUNCTION:         t12-review-record-complete
+  VERIFY:                node --test tests/sprint-01/t12-review-record.test.mjs --test-name-pattern t12-review-record-complete
 
-  RED_INPUT:    On base `main` every edge is unanswerable: there is no workflow, no `test/harness/**`, no artifact — the checklist cannot produce a single receipt, which is the review's RED state today (gate step 1's before state).
+  RED_INPUT:    On base `main` every edge is unanswerable: there is no workflow, no `test/harness/**`, no artifact — the checklist cannot produce a single receipt, which is the review's RED state today (gate step 1's before state). The case fails on the same bytes for the same reason: it reads the review record and the workflow, and neither exists.
   POSITIVE_EXAMPLE: The same ten edges answered on the landed sprint with a receipt each, zero unaddressed BLOCKERs — the review record reads clean with receipts.
 
   OBSERVATION_PATH: The landed sprint on `main` → the ten-edge checklist worked against real bytes and one real artifact → ten verdicts, each with a file:line or captured-command receipt, no unchecked edge, no fabricated-file path accepted.
 
-  NOTE: this AC deliberately carries **no `scenario` key**. It is an observation-only AC — `verify: null`, no test file, no flow — so there is no seeded start state, no surface action and no machine-observed end state to model, and writing one would describe a check that does not exist. Its proof shape is `observation_gates` plus the three receipt commands in TEST CRITERIA, and the evidence is the reviewer's captured output. This keeps the fakeability gate honest: `validate_scenario` refuses a scenario it cannot falsify, and the fix is to stop claiming one, not to dress a review up as a behavioral check.
+  NOTE: this AC carries **no `scenario` key**. Its subject is a record of the repo's own bytes — ten verdicts, their receipts and the final word — not a seeded start state with a surface action and a machine-observed end state, so a scenario would model a check that does not exist and `validate_scenario` would rightly refuse it. `verify` selects the case in `tests/sprint-01/t12-review-record.test.mjs` that asserts the record's shape and each edge's receipt; the record's receipts, not the test, remain the proof of the ten edges.
 
 --------------------------------------------------------------------------------
 TEST CRITERIA (Boolean Verification)
 --------------------------------------------------------------------------------
 
-Not applicable — INFRA task (denominator 100, threshold 70). Observation gates below stand in for TC rows; the contract still carries three TCs because the machine contract requires at least one. Each TC's `verify` is `null` by design — this task writes no files, so no owned test path exists to select — and its receipt command is named in the statement for the reviewer to run and capture:
+Not applicable as a product-behaviour suite — INFRA task (denominator 100, threshold 70). Observation gates below stand in for TC rows; the contract still carries three TCs because the machine contract requires at least one. Each TC's `verify` selects one case in `tests/sprint-01/t12-review-record.test.mjs`, which re-executes the receipt command in the statement against the landed bytes and then asserts the review record cites that command and its result, so the row is TRUE only when the repo and the record agree. The receipt-command column stays the human-runnable form:
 
 | # | Boolean Statement | Maps To AC | Receipt command | Status |
 |---|-------------------|------------|-----------------|--------|
@@ -149,15 +149,18 @@ Not applicable — INFRA task (denominator 100, threshold 70). Observation gates
 | 2 | The workflow declares none of the banned `pull_request`-family triggers | AC-1 | `grep -Ec '^  (pull_request\|pull_request_target\|workflow_run):' .github/workflows/harness-eval.yml` | [ ] TRUE [ ] FALSE |
 | 3 | No root-level `harness/`, no `harness-matrix.yml`, no branch-9624a4b gate wiring | AC-1 | `test ! -d harness && test ! -f .github/workflows/harness-matrix.yml && grep -c 'harness-matrix' scripts/release.mjs` | [ ] TRUE [ ] FALSE |
 
+Each row runs as a named case in `tests/sprint-01/t12-review-record.test.mjs`: TC-1 → `t12-edge1-secret-placement`, TC-2 → `t12-edge2-banned-triggers`, TC-3 → `t12-edge8-no-forbidden-salvage`.
+
 --------------------------------------------------------------------------------
 SCOPE / GUARDRAILS (WRITE-ALLOWED / WRITE-PROHIBITED)
 --------------------------------------------------------------------------------
 
 writeAllowed:
-- review comments only (no repository path is written by this task)
+- tests/sprint-01/t12-review-record.test.mjs
+- review comments only — the review record itself, delivered in the commit message and under the run's evidence root, writes no other repository path
 
 writeProhibited:
-- everything — `plugins/pixel-perfect/**`, `.github/workflows/**`, `test/harness/**`, `tests/sprint-01/**`, `scripts/release.mjs`, `SPRINT.md`, `human-flows.json`, `.spec/e2e-policy/**`
+- everything else — `plugins/pixel-perfect/**`, `.github/workflows/**`, `test/harness/**`, `tests/sprint-01/**` except `tests/sprint-01/t12-review-record.test.mjs`, `scripts/release.mjs`, `SPRINT.md`, `human-flows.json`, `.spec/e2e-policy/**`
 
 --------------------------------------------------------------------------------
 BOUNDARIES (✅ Always / ⚠️ Ask First)
@@ -177,7 +180,8 @@ BOUNDARIES (✅ Always / ⚠️ Ask First)
 DELIVERABLE
 --------------------------------------------------------------------------------
 
-- A review record: ten edges × (verdict, receipt, severity, owner task) plus an explicit unresolved-blocker list. Delivered as review comments on this task; no file changes.
+- A review record: ten edges × (verdict, receipt, severity, owner task) plus an explicit unresolved-blocker list — at `.kb-run-sprint/sprint-01-evaluator-evidence-spine/T12/evidence/t12-review-record.md`, and in the message of an empty commit.
+- `tests/sprint-01/t12-review-record.test.mjs`: the one repository file this task writes. It asserts the record's shape and re-executes each cited receipt; it reads the record and the workflow from the repo and fails when the record is absent.
 
 --------------------------------------------------------------------------------
 CODE PATTERN
@@ -220,7 +224,7 @@ ORCHESTRATOR VERIFICATION PROTOCOL
 1. VERIFY_RECEIPTS: every one of the ten edges has a non-empty receipt (file:line or captured output).
 2. VERIFY_SEVERITY: BLOCKERs are listed with an owner task id.
 3. VERIFY_CLOSURE: a BLOCKER marked fixed has a re-review receipt dated after the fix.
-4. VERIFY_NO_WRITES: `git diff --name-only` is empty for this task.
+4. VERIFY_NO_WRITES: `git diff --name-only` names no path but `tests/sprint-01/t12-review-record.test.mjs`.
 5. VERIFY_INDEPENDENCE: the review cites landed bytes, not task descriptions.
 
 --------------------------------------------------------------------------------
@@ -231,7 +235,7 @@ Gate 1: Ten verdicts present (no blanks).
 Gate 2: Ten receipts present and each names a file:line or a command.
 Gate 3: Secret-placement and banned-trigger greps run and captured verbatim.
 Gate 4: One real artifact downloaded; the twelve-cell and cursor-present edges cite artifact fields.
-Gate 5: Zero `git diff` from this task.
+Gate 5: `git diff --name-only` names no path but `tests/sprint-01/t12-review-record.test.mjs`; no product file, no other test, no policy file.
 Gate 6: Final verdict is `APPROVED` or `NEEDS_FIXES`; nothing in between.
 
 --------------------------------------------------------------------------------
@@ -266,7 +270,7 @@ Must pass (≤5, evidence-gate-backed):
 - Ten edges, ten verdicts, ten receipts.
 - Each receipt is checkable by a third party (a command they can re-run, or a file:line they can open).
 - Every BLOCKER names an owning task and a resolution state.
-- No repository file changed by this task.
+- No repository file changed by this task except `tests/sprint-01/t12-review-record.test.mjs`.
 - The final verdict is one of the two allowed words.
 
 Should verify (≤5, judgment):
@@ -298,9 +302,9 @@ NOTES
   "version": "1",
   "task_id": "T12",
   "task_type": "INFRA",
-  "tdd_mode": "skipped",
+  "tdd_mode": "red_first",
   "verification_policy": {
-    "requires_tests": false,
+    "requires_tests": true,
     "requires_red_evidence": false,
     "requires_seeded_evidence": false
   },
@@ -324,10 +328,11 @@ NOTES
   "why_required": "protects FLOW-GRD-01-TWELVE-CELLS, FLOW-GRD-02-FOUR-GRADES and FLOW-GRD-03-FILES-AND-STREAM: the twelve-cell recorder, the four-grade adapter, and the evidence-not-exit-code capture are exactly the contracts this review reads; exercised only indirectly through human-testing gate steps 6-11",
   "guardrails": {
     "write_allowed": [
-      "review comments only"
+      "tests/sprint-01/t12-review-record.test.mjs",
+      "review comments only \u2014 the review record itself, delivered in the commit message and under the run's evidence root, writes no other repository path"
     ],
     "write_prohibited": [
-      "everything \u2014 review task writes no files"
+      "everything else \u2014 `plugins/pixel-perfect/**`, `.github/workflows/**`, `test/harness/**`, `tests/sprint-01/**` except `tests/sprint-01/t12-review-record.test.mjs`, `scripts/release.mjs`, `SPRINT.md`, `human-flows.json`, `.spec/e2e-policy/**`"
     ]
   },
   "requirements": [
@@ -340,9 +345,9 @@ NOTES
       "description": "GIVEN the eleven implementation tasks of sprint 01 landed on main plus one real dispatched run and its artifact WHEN the reviewer works the ten-edge checklist against the landed bytes and the artifact THEN each edge carries pass/finding/blocked with a file:line or command-output receipt and each BLOCKER is fixed-and-re-reviewed or reported unresolved",
       "test_tier": "unit",
       "verification_service": "review checklist",
-      "verify": null,
-      "test_file": null,
-      "test_function": null,
+      "verify": "node --test tests/sprint-01/t12-review-record.test.mjs --test-name-pattern t12-review-record-complete",
+      "test_file": "tests/sprint-01/t12-review-record.test.mjs",
+      "test_function": "t12-review-record-complete",
       "positive_example": "checklist clean with receipts",
       "surface_policy": "read-only",
       "maps_to_ac": null,
@@ -357,24 +362,53 @@ NOTES
       "id": "TC-1",
       "type": "test_criterion",
       "description": "No secrets. reference in the workflow sits outside a cell model-step env block (receipt command: grep -n 'secrets\\.' .github/workflows/harness-eval.yml)",
-      "verify": null,
+      "test_file": "tests/sprint-01/t12-review-record.test.mjs",
+      "test_function": "t12-edge1-secret-placement",
+      "verify": "node --test tests/sprint-01/t12-review-record.test.mjs --test-name-pattern t12-edge1-secret-placement",
       "maps_to_ac": "AC-1"
     },
     {
       "id": "TC-2",
       "type": "test_criterion",
       "description": "The workflow declares none of the banned triggers pull_request, pull_request_target or workflow_run (receipt command: grep -Ec '^  (pull_request|pull_request_target|workflow_run):' .github/workflows/harness-eval.yml)",
-      "verify": null,
+      "test_file": "tests/sprint-01/t12-review-record.test.mjs",
+      "test_function": "t12-edge2-banned-triggers",
+      "verify": "node --test tests/sprint-01/t12-review-record.test.mjs --test-name-pattern t12-edge2-banned-triggers",
       "maps_to_ac": "AC-1"
     },
     {
       "id": "TC-3",
       "type": "test_criterion",
       "description": "No root-level harness directory, no harness-matrix workflow and no branch-9624a4b gate wiring exist on main (receipt command: test ! -d harness && grep -c 'harness-matrix' scripts/release.mjs)",
-      "verify": null,
+      "test_file": "tests/sprint-01/t12-review-record.test.mjs",
+      "test_function": "t12-edge8-no-forbidden-salvage",
+      "verify": "node --test tests/sprint-01/t12-review-record.test.mjs --test-name-pattern t12-edge8-no-forbidden-salvage",
       "maps_to_ac": "AC-1"
     }
   ]
 }
 -->
 </details>
+
+## Deliverables
+
+1. **The review record** at `.kb-run-sprint/sprint-01-evaluator-evidence-spine/T12/evidence/t12-review-record.md` — ten edges, each carrying `verdict` (`pass` | `finding` | `blocked`), `severity`, `owner_task` and `receipt` (the command run and its output line, or a `file:line`), plus an `## Unresolved blockers` section.
+2. **`tests/sprint-01/t12-review-record.test.mjs`** — the one repository file this task writes. It asserts the record's shape and re-executes each cited receipt:
+   - `t12-review-record-complete` (AC-1): all ten edges exist, each with a `verdict` and a non-empty `receipt`, and the record ends in `APPROVED` or `NEEDS_FIXES`.
+   - `t12-edge1-secret-placement` (TC-1): the secret-placement edge cites a `secrets.` grep over `.github/workflows/harness-eval.yml`, and every hit it cites falls inside a cell model-step `env:` block.
+   - `t12-edge2-banned-triggers` (TC-2): the banned-trigger edge cites the `grep -Ec` over the same file and reads zero.
+   - `t12-edge8-no-forbidden-salvage` (TC-3): the salvage edge cites the full three-part `test ! -d harness && test ! -f .github/workflows/harness-matrix.yml && grep -c 'harness-matrix' scripts/release.mjs`.
+3. **The record as a commit message** — `git commit --allow-empty -F <record>`, because the task changes no product file.
+4. **No fabricated receipts.** The test reads the record file and the workflow file from the repo and fails when the record is absent; it never writes, invents or repairs a receipt, and never stubs the workflow.
+
+## Amendments
+
+### 2026-11-01 — the four `verify` fields filled (superseded by the entry below)
+- **Source:** `.kb-run-sprint/sprint-01-evaluator-evidence-spine/T12/cycle-1.blocked.json` · sha256 `1a935c241633a09d0a3f2a56e560b76b3a32737fd6838035a4aa54d9c8bf6121` — the reviewer's blocked report, whose blockers name `TASK-T12.md:343,360,367,374` as the `"verify": null` fields.
+- **What changed then:** every `"verify": null` became the receipt command the task already declared — `grep -n 'secrets\.' .github/workflows/harness-eval.yml` for TC-1, `grep -Ec '^  (pull_request|pull_request_target|workflow_run):' .github/workflows/harness-eval.yml` for TC-2, the full three-part `test ! -d harness && test ! -f .github/workflows/harness-matrix.yml && grep -c 'harness-matrix' scripts/release.mjs` for TC-3, and the checklist command set for AC-1.
+- **Why it was replaced:** `publish-plan` refused that shape with `BROAD_PROOF_COMMAND: T12/AC-1 verify command must select its bound test path`, and the same for TC-1, TC-2 and TC-3. A verify that observes is not a verify that selects, and a read-only task owned no test path for it to select. The fix is the entry below, not a softer command.
+
+### 2026-11-01 — write scope widened by exactly one test file
+- **Source:** `.kb-run-sprint/sprint-01-evaluator-evidence-spine/owner-answers/a36f35b458795e360623f6cad969fba57f334799a1177bb0cf78d19c7309e643.json` · sha256 `e8f82cd7d789cd541982bcd27efacbd2082820f59449aa4bc1d079480ccb1dc3` · answer `push, widen T12, authorize the fix` (owner).
+- **What changed:** `write_allowed` gained exactly one path, `tests/sprint-01/t12-review-record.test.mjs`; all four requirements are bound to that file — AC-1 → `t12-review-record-complete`, TC-1 → `t12-edge1-secret-placement`, TC-2 → `t12-edge2-banned-triggers`, TC-3 → `t12-edge8-no-forbidden-salvage` — with `verify` = `node --test tests/sprint-01/t12-review-record.test.mjs --test-name-pattern <case>`; the header became `TDD_MODE: red_first` / `RED_GREEN_REQUIRED: true` and `verification_policy.requires_tests` became `true`; a `## Deliverables` section states what must exist; the DELIVERABLE line, the first critical constraint, the `VERIFY_NO_WRITES` step, evidence gate 5 and the review criteria's no-write clause now name that one path instead of claiming a clean tree; the AC-1 NOTE and the TEST CRITERIA lead-in no longer call the verifies `null` by design.
+- **What did not change:** every checklist edge, every expected observation, every human-testing gate step (SPRINT.md steps 1–13), AC-1's GIVEN/WHEN/THEN, the three TC statements and their receipt commands, the reading list, the review flow, the remaining critical constraints, and the forbidden-path list — which now reads its `tests/sprint-01/**` entry as "everything except that one file".
