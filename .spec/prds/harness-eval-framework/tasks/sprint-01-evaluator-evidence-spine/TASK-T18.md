@@ -15,7 +15,7 @@
 
 AGENT: planner=evals-planner | implementer=ai-tooling-implementer | reviewer=evals-reviewer
 
-**Depends on:** T5 (`gradeCheck`, `promptFor`, `mapCapturedLine`, `questionBoundary` and the five-entry `INVOCATIONS` table this task extends), T6 (the stream layer: `table.mjs`'s `ruleMatches` with its `text_match` predicate, `normalise.mjs`, `question-boundary.mjs`'s `questions()`, and the `claude-code@2.1.291` table this task gains one rule in), T16 (`promptFor`'s surface-composition idiom, the must-ask prompt it left byte-identical, and the recorded pre-fix artifact of run 41249460968 this task measures itself against).
+**Depends on:** T5 (`gradeCheck`, `promptFor`, `mapCapturedLine`, `questionBoundary` and the five-entry `INVOCATIONS` table this task extends), T6 (the stream layer: `table.mjs`'s `ruleMatches` with its `text_match` predicate, `normalise.mjs`, `question-boundary.mjs`'s `questions`, and the `claude-code@2.1.291` table this task gains one rule in), T16 (`promptFor`'s surface-composition idiom, the must-ask prompt it left byte-identical, and the recorded pre-fix artifact of run 41249460968 this task measures itself against)
 **Blocks:** human-testing-gate step 6 (both claude-code cells carry four graded checks), step 10 (four `files-and-event-stream` checks on the pinned cell), T11's four integration obligations, T12's review of the graded output.
 
 ## Background
@@ -275,7 +275,7 @@ Verdict: APPROVED or NEEDS_FIXES, with file and line for each finding.
 
 ## Dependencies
 
-- **Depends on:** T5, T6, T16.
+- **Depends on:** T5, T6, T16
 
 Why T5: it owns `gradeCheck`, `promptFor`, `mapCapturedLine`, `questionBoundary` and the `INVOCATIONS` entry this task extends — the defect lives in that module and nothing can be graded before it exists. Why T6: its `ruleMatches` already carries `match.text_match`, which is the only reason the stream-layer half is one table rule instead of a normaliser change, and its `questions()` is the reader the graders use. Why T16: it established `promptFor`'s surface-composition shape this task copies, it promised the must-ask prompt stayed byte-identical (so this task is the one that opens it, deliberately, once), and its recorded artifact of run 41249460968 is this task's RED reading.
 

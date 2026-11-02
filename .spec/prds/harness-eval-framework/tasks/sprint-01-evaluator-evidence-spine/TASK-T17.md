@@ -17,7 +17,7 @@ Commit: 3e05f29416304f09be047470cddbd03e9934b3af
 
 AGENT: planner=evals-planner | implementer=ai-tooling-implementer | reviewer=evals-reviewer
 
-**Depends on:** T5 (`gradeCheck`, `readVerifyReport`, `bindReport`, `promptFor`, `INVOCATIONS`), T7 (`prepareRunDirs`/`bindReportPath`, the minted `invocation_id` and the case-declared bound path), T16 (the declared verify surface in `verifyReportPrompt`, `VERIFY_REPORT_CONTRACT`, and the path-scoped stance this task must not widen).
+**Depends on:** T5 (`gradeCheck`, `readVerifyReport`, `bindReport`, `promptFor`, `INVOCATIONS`), T7 (`prepareRunDirs`/`bindReportPath`, the minted `invocation_id` and the case-declared bound path), T16 (the declared verify surface in `verifyReportPrompt`, `VERIFY_REPORT_CONTRACT`, and the path-scoped stance this task must not widen)
 **Blocks:** human-testing-gate step 6 (four graded checks on the pinned cell), step 8 (the downloaded report at the case-declared path), T11's four integration obligations, T12's review of the graded output.
 
 ## Background
@@ -282,7 +282,7 @@ Verdict: APPROVED or NEEDS_FIXES, with file and line for each finding.
 
 ## Dependencies
 
-- **Depends on:** T5, T7, T16.
+- **Depends on:** T5, T7, T16
 
 Why T5: `readVerifyReport`/`bindReport` are the pass rule the report must satisfy, and `INVOCATIONS` is the table whose entries carry the id and bound path. Why T7: the invocation id and the bound path are minted there, and the writer echoes them rather than inventing its own. Why T16: its declared surface stays in the prompt, its `VERIFY_REPORT_CONTRACT` is the body the writer fills, and its path-scoped stance is the policy this task must work *within* rather than widen.
 

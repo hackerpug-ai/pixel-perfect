@@ -18,7 +18,7 @@ Commit: 34654ddfda046d5c0d7814f617de2cbb0d852b75
 
 AGENT: planner=evals-planner | implementer=ai-tooling-implementer | reviewer=evals-reviewer
 
-**Depends on:** T3, T6, T13
+**Depends on:** T3 (`createCapture`, `observe`, `denials`, `undeclaredDenials`, `observedFacts` in `test/harness/runtime/capture.mjs`), T6 (`mapCapturedLine` in `test/harness/adapters/claude-code.mjs`, the mapper that declares requiredness per denial), T13 (the graded cell path and the archived exit-0 denied-write capture this task replays)
 
 Why each: T3 owns `test/harness/runtime/capture.mjs` (`createCapture`, `observe`, `denials`, `undeclaredDenials`, `observedFacts`); T6 owns `test/harness/adapters/claude-code.mjs` (`mapCapturedLine`, the mapper that declares requiredness per denial); T13 landed the graded cell path and the archived exit-0 denied-write capture this task replays.
 **Blocks:** T15 (its hosted producer cannot deliver a required denial while a declared `false` collapses to `null`), gate steps 6, 7 and 10, and the sprint's done statement
