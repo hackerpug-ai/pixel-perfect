@@ -17,7 +17,7 @@ Commit: 29473fbc5b446e0cfe1a6bd07f388aab5fa5cec1
 
 AGENT: planner=evals-planner | implementer=ai-tooling-implementer | reviewer=evals-reviewer
 
-**Depends on:** T5 (`gradeCheck`, `promptFor`, `readVerifyReport`, `bindReport` and the five-entry `INVOCATIONS` table this task composes onto), T7 (`prepareRunDirs` and `bindReportPath`, which mint each invocation's `invocation_id` and bind its case-declared report path), T13 (`runCell`'s replay path, the recorder-facing cell record and the `gradeCheck` call it makes per entry), T15 (the `DENIED_WRITE_PROBE` declaration idiom this task mirrors, and the `control_observations`/`control_pairs` channels whose four-grade locks this task must not disturb).
+**Depends on:** T5 (`gradeCheck`, `promptFor`, `readVerifyReport`, `bindReport` and the five-entry `INVOCATIONS` table this task composes onto), T7 (`prepareRunDirs` and `bindReportPath`, which mint each invocation's `invocation_id` and bind its case-declared report path), T13 (`runCell`'s replay path, the recorder-facing cell record and the `gradeCheck` call it makes per entry), T15 (the `DENIED_WRITE_PROBE` declaration idiom this task mirrors, and the `control_observations`/`control_pairs` channels whose four-grade locks this task must not disturb)
 **Blocks:** human-testing-gate step 6 (both claude-code cells carry four graded checks), step 10 (four `files-and-event-stream` checks on the pinned cell), T12's review of the graded output.
 
 ## Background
@@ -246,7 +246,7 @@ Verdict: APPROVED or NEEDS_FIXES, with file and line for each finding.
 
 ## Dependencies
 
-- **Depends on:** T5, T7, T13, T15.
+- **Depends on:** T5, T7, T13, T15
 
 Why T5: the grade path it defines is the one that must start returning `pass`. Why T7: the invocation identity and the bound report path are what the prompt now echoes, and they must already be minted before an invocation can be told them. Why T13: the replay path (`runCell` → `gradeCheck`) is how the lane grades a recorded reply without a dispatch. Why T15: its declaration-constant idiom and its four-grade locks are the pattern and the boundary this task copies.
 
