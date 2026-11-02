@@ -1,0 +1,13 @@
+@@REPRO t11-controls-wiring at=2026-10-29T23:04:46Z head=433e655@@
++ node .tmp/sprint-01-verification/t11-controls-wiring.repro.mjs
+F-T11-1 ALIVE: an empty controls array is accepted and validates, so the gate's `jq -r '.controls[]'` prints nothing while the artifact reads as a result
+  controls_in_schema_required = false
+  controls_min_items = null
+  empty_controls_accepted_rows = 0
+  assemble_result_refusal = null
+F-T11-2 ALIVE: 3 non-cell files were classified as cell records and the recorder refused the run
+  cells_classified = 15
+  expected_cells = 12
+  strays_classified_as_cells = ["harness-eval-cell-1234567890-1-claude-code-pinned/binding.json","harness-eval-cell-1234567890-1-claude-code-pinned/evidence/claude-code-verify.capture.json","harness-eval-cell-1234567890-1-claude-code-pinned/keyless-control.json"]
+  recorder_refusal = {"reason":"cell-track-unknown","details":{"track":null}}
+@@EXIT=1@@

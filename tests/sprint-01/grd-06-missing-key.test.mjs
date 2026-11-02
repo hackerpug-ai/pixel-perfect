@@ -473,8 +473,18 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
       assert.equal(missingKey.reason, "missing-api-key");
       const cursorCell = (live.cells ?? []).find((cell) => cell.harness === "cursor");
       if (cursorCell) assert.equal(cursorCell.reason, missingKey.reason, "the cursor cell reason is the control row's reason");
-      const authenticated = (live.cells ?? []).filter((cell) => cell.harness === "claude-code" && cell.verdict === "pass");
-      assert.ok(authenticated.length > 0, "the authenticated claude-code cells graded pass in the same run");
+      // AC-2's paired clause: the refusal must be paired with a real authenticated call on the
+      // same binding that PROCEEDED. It deliberately does not require the cell to grade "pass":
+      // a cell's verdict aggregates four checks, and three of them (status facts, the verify
+      // report, the first-question boundary) are owned outside this task, so a cell can be
+      // could-not-run while its bound invocation ran cleanly. The pair is the evidence that the
+      // guard fires on absence rather than unconditionally.
+      const pair = missingKey.pair;
+      assert.ok(pair && typeof pair === "object", "the hosted missing-key row carries its paired authenticated observation");
+      assert.equal(pair.verdict, "pass", "the paired authenticated invocation was accepted, not refused");
+      assert.equal(pair.process_exit_code, 0, "the paired authenticated invocation exited 0");
+      assert.ok(pair.model_request_count >= 1, "the paired authenticated invocation really called the model");
+      assert.equal(typeof pair.invocation_id, "string", "the pair names the invocation it came from");
       artifact.provenance = { live_artifact: { status: "present", path: LIVE_ARTIFACT, controls: controls.length } };
     } else {
       artifact.provenance = {
@@ -487,7 +497,7 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
       };
       artifact.awaiting.push(
         'controls row "missing-key could-not-run missing-api-key" from a hosted run',
-        "paired authenticated claude-code pass rows in the same run",
+        "a paired authenticated claude-code invocation that proceeded in the same run",
       );
     }
 
@@ -737,15 +747,27 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
       for (const variable of BOUND_VARIABLES) assert.ok(runbook.includes(variable), `the runbook never names the fallback ${variable}`);
       assert.equal(/secrets\.[A-Za-z0-9_]+\s*=\s*\S/.test(runbook), false, "the runbook shows a secret value");
 
-      // --- TC-3's paired half: authenticated cells grading beside the control row -------
+      // --- TC-3's paired half: the bound invocation that proceeded beside the control row ---
+      // Under AC-2's restated third THEN clause this reads the row's pair, not a cell verdict: a
+      // cell aggregates four checks and three of them are owned outside T11, so a cell can be
+      // could-not-run while the bound invocation beside the refusal ran cleanly.
       if (existsSync(LIVE_ARTIFACT)) {
         const live = JSON.parse(readFileSync(LIVE_ARTIFACT, "utf8"));
         const hosted = (live.controls ?? []).find((row) => row.control_id === "missing-key");
         assert.ok(hosted, "the hosted artifact carries no missing-key control row");
         assert.equal(hosted.reason, controlRow.reason, "the hosted control row disagrees with the wired control");
-        const authenticatedLive = (live.cells ?? []).filter((cell) => cell.harness === "claude-code" && cell.verdict === "pass");
-        assert.ok(authenticatedLive.length > 0, "no authenticated claude-code cell graded in the same run");
-        artifact.t9.provenance.hosted = { status: "observed", path: LIVE_ARTIFACT, authenticated_cells: authenticatedLive.length };
+        const paired = hosted.pair;
+        assert.ok(paired && typeof paired === "object", "the hosted missing-key row carries no paired authenticated observation");
+        assert.equal(paired.verdict, "pass", "the bound invocation beside the refusal was not accepted");
+        assert.equal(paired.process_exit_code, 0, "the bound invocation beside the refusal did not exit 0");
+        assert.ok(paired.model_request_count >= 1, "the bound invocation beside the refusal never called the model");
+        assert.equal(typeof paired.invocation_id, "string", "the pair names no invocation");
+        artifact.t9.provenance.hosted = {
+          status: "observed",
+          path: LIVE_ARTIFACT,
+          paired_invocation: paired.invocation_id,
+          pair_verdict: paired.verdict,
+        };
       } else {
         artifact.t9.provenance.hosted = {
           status: "not-executed",
@@ -797,4 +819,277 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
   t.diagnostic(`environment=${artifact.t9.provenance.environment.status}`);
   t.diagnostic(`t9_hosted=${artifact.t9.provenance.hosted.status}`);
   assert.equal(artifact.failures.length, 0, artifact.failures.join("; "));
+});
+
+// ===========================================================================================
+// T11 — the negative controls this flow owns, qualified rather than merely observed.
+//
+// missing-key: the real guard, a child environment with the consumed key AND every permitted
+// fallback removed (asserted absent in-step, before the refusal is asserted), a marker file that
+// exists only if the guard really ran the child. The refusal is worth nothing on its own — a guard
+// that always refuses produces it — so the row is written beside the SAME guard proceeding on the
+// same code path with the binding present, and the qualification is shown rejecting the
+// key-present-misfire twin (an always-refusing guard).
+//
+// stale-cache: the identity rule T5's adapter already ships. A cached payload whose rebuilt digest
+// no longer equals the payload that should have loaded is `could-not-run` / `installation-identity-
+// mismatch` with both digests recorded — never a candidate-attributed failure. Its paired
+// observation is the same rule approving a matching digest, so a checker that refuses everything
+// cannot satisfy it.
+//
+// The other two controls are this run's to observe only from the stream and the verify child tree
+// (grd-03's flow). Here they are recorded as `control-unobservable`, which is the whole point of
+// the fail-closed rule: an unobserved control reads could-not-run, never pass.
+// ===========================================================================================
+test("FLOW-GRD-06-MISSING-KEY", async (t) => {
+  const controlsModule = await import("../../test/harness/controls/index.mjs");
+  const { approveIdentity, installationIdentity, manifestDigest } = await import("../../test/harness/adapters/claude-code.mjs");
+
+  const projectDir = mkdtempSync(join(tmpdir(), "pp-t11-grd-06-"));
+  const evidenceDir = mkdtempSync(join(tmpdir(), "pp-t11-grd-06-evidence-"));
+  const payloadDir = mkdtempSync(join(tmpdir(), "pp-t11-stale-payload-"));
+  const markerPath = join(projectDir, "t11-child-ran.marker");
+  const stance = recordStance({ harness: "claude-code", plugin_root: PLUGIN_ROOT });
+  const t11 = {
+    task: "T11",
+    flow: "FLOW-GRD-06-MISSING-KEY",
+    candidate_sha: execFileSync("git", ["rev-parse", "HEAD"], { cwd: ROOT, encoding: "utf8" }).trim(),
+    observed: [],
+    assertions: [],
+    awaiting: [],
+  };
+
+  try {
+    // ---- missing-key: env absence asserted BEFORE the refusal is asserted ---------------
+    const keylessEnv = withoutSecrets(process.env);
+    const survivingNames = Object.keys(keylessEnv).filter((name) => SECRET_NAMES.test(name));
+    assert.deepEqual(survivingNames, [], "the keyless child env still carries a credential name, so absence would prove nothing");
+    const keylessCapture = createCapture({ harness: "claude-code", check_id: "verify", cwd: projectDir, timeout_ms: 20_000 });
+    const keyless = await runGuarded({
+      harness: "claude-code",
+      stance,
+      env: keylessEnv,
+      capture: keylessCapture,
+      command: process.execPath,
+      args: ["-e", MARKER_CHILD, markerPath],
+      cwd: projectDir,
+      timeout_ms: 20_000,
+    });
+    const keylessRecord = keylessCapture.persist(evidenceDir);
+    assert.equal(keyless.decision.allowed, false, "the keyless invocation was not refused");
+    assert.equal(keyless.decision.refusal.reason, "missing-api-key");
+    assert.equal(keylessRecord.model_request_count, 0, "a model request was recorded before the refusal");
+    assert.deepEqual(keylessRecord.model_requests, []);
+    assert.equal(existsSync(markerPath), false, "the child ran, so its zero requests prove nothing");
+
+    // The paired observation the refusal is worth nothing without: same guard, binding present.
+    const keyedEnv = { ...keylessEnv, ANTHROPIC_API_KEY: ["present", "binding", "not", "a", "model", "call"].join("-") };
+    const keyedCapture = createCapture({ harness: "claude-code", check_id: "verify", cwd: projectDir, timeout_ms: 20_000 });
+    const keyed = await runGuarded({
+      harness: "claude-code",
+      stance,
+      env: keyedEnv,
+      capture: keyedCapture,
+      command: process.execPath,
+      args: ["-e", MARKER_CHILD, markerPath],
+      cwd: projectDir,
+      timeout_ms: 20_000,
+    });
+    const keyedRecord = keyedCapture.persist(evidenceDir);
+    assert.equal(keyed.decision.allowed, true, "the guard refuses even when the binding is present");
+    assert.equal(existsSync(markerPath), true, "the bound path did not spawn the child, so the pair proves nothing");
+    assert.equal(keyedRecord.model_request_count, 1);
+    assert.equal(JSON.stringify({ keylessRecord, keyedRecord }).includes(keyedEnv.ANTHROPIC_API_KEY), false, "a credential value reached a capture");
+
+    // key-present-misfire: the twin a static always-refusing guard produces, rejected by hand.
+    assert.equal(bothWays({ keylessDecision: keyless.decision, keyedDecision: alwaysRefuse() }).ok, false);
+
+    // ---- stale-cache: real digests, both recorded, refusal never attributed ------------
+    // A real payload under a temp root: the plugin root itself is write-prohibited, and the digest
+    // rule is about bytes on disk, not about which tree they are in.
+    mkdirSync(join(payloadDir, "commands"), { recursive: true });
+    writeFileSync(join(payloadDir, "commands", "verify.md"), "verify the catalog\n", "utf8");
+    writeFileSync(join(payloadDir, "plugin.json"), '{"name":"pixel-perfect"}\n', "utf8");
+    const expectedDigest = manifestDigest(payloadDir);
+    assert.match(expectedDigest, /^[0-9a-f]{64}$/, "the expected digest is not a real digest");
+    // The stale cache: the same root, one payload file behind the one that should have loaded.
+    writeFileSync(join(payloadDir, "commands", "verify.md"), "verify the catalog (older payload)\n", "utf8");
+    const observedDigest = manifestDigest(payloadDir);
+    assert.match(observedDigest, /^[0-9a-f]{64}$/);
+    assert.notEqual(observedDigest, expectedDigest, "the stale payload rebuilt the expected digest, so the fixture is not stale");
+    assert.match(manifestDigest(PLUGIN_ROOT), /^[0-9a-f]{64}$/, "the real plugin payload has no digest, so the rule is unwired from it");
+
+    const staleIdentity = installationIdentity({
+      requested_cli_version: "2.1.291",
+      resolved_cli_version: "2.1.291",
+      observed_cli_version: "2.1.291",
+      install_mode: "published",
+      expected_plugin_manifest_sha256: expectedDigest,
+      observed_plugin_manifest_sha256: observedDigest,
+      loaded_plugin_root: payloadDir,
+      plugin_load_evidence: "system/init plugins: [pixel-perfect]",
+    });
+    const staleRefusal = approveIdentity(staleIdentity, { requested_cli_version: "2.1.291" });
+    assert.equal(staleRefusal.ok, false);
+    assert.equal(staleRefusal.verdict, "could-not-run", "a stale cache graded as a candidate verdict");
+    assert.equal(staleRefusal.reason, "installation-identity-mismatch");
+    assert.equal(staleRefusal.detail.field, "observed_plugin_manifest_sha256", "the refusal does not name the digest that disagreed");
+    assert.equal(staleRefusal.detail.observed, observedDigest, "the observed digest is not recorded");
+    assert.equal(staleRefusal.detail.expected, expectedDigest, "the expected digest is not recorded");
+    assert.notEqual(staleRefusal.verdict, "fail", "an unattributable run was attributed to the candidate");
+
+    // The paired observation: the same rule on a matching digest must approve.
+    const freshApproval = approveIdentity(
+      { ...staleIdentity, observed_plugin_manifest_sha256: expectedDigest },
+      { requested_cli_version: "2.1.291" },
+    );
+    assert.equal(freshApproval.ok, true, `the identity rule refuses a matching digest too: ${JSON.stringify(freshApproval)}`);
+    assert.equal(freshApproval.verdict, null);
+    t11.assertions.push(
+      "stale-cache: the same identity rule approves a matching digest, so it is not a checker that refuses everything",
+    );
+
+    // ---- the four rows: two observed here, two fail closed ----------------------------
+    const qualification = controlsModule.qualifyControls({
+      observations: {
+        "missing-key": {
+          verdict: keyless.decision.refusal.verdict,
+          reason: keyless.decision.refusal.reason,
+          evidence: {
+            checked_names: keyless.decision.credential.checked,
+            env_secret_names: survivingNames,
+            model_request_count: keylessRecord.model_request_count,
+            child_ran: existsSync(markerPath),
+            capture_sha256: keylessRecord.stdout.sha256,
+          },
+        },
+        "stale-cache": {
+          verdict: staleRefusal.verdict,
+          reason: staleRefusal.reason,
+          evidence: {
+            field: staleRefusal.detail.field,
+            expected_digest: staleRefusal.detail.expected,
+            observed_digest: staleRefusal.detail.observed,
+            install_mode: staleIdentity.install_mode,
+            attributed_to_candidate: false,
+          },
+        },
+      },
+      pairs: {
+        "missing-key": {
+          control_id: "key-present",
+          verdict: "proceeded",
+          discriminates: keyed.decision.allowed === true && keyed.decision.refusal == null,
+          evidence: { model_request_count: keyedRecord.model_request_count, child_ran: true },
+        },
+        "stale-cache": {
+          control_id: "matching-digest",
+          verdict: freshApproval.ok ? "approved" : "refused",
+          discriminates: freshApproval.ok === true,
+          evidence: { field: null, expected_digest: expectedDigest, observed_digest: expectedDigest },
+        },
+      },
+    });
+
+    assert.equal(qualification.rows.length, 4, "the controls array is not four rows");
+    assert.deepEqual(
+      qualification.rows.map((row) => row.control_id),
+      ["missing-key", "stale-cache", "exit0-denied-read", "hidden-image-judge"],
+      "the rows are not in definition order",
+    );
+    const missingKeyRow = qualification.rows.find((row) => row.control_id === "missing-key");
+    assert.equal(missingKeyRow.verdict, "could-not-run");
+    assert.equal(missingKeyRow.reason, "missing-api-key");
+    assert.equal(missingKeyRow.matched, true, missingKeyRow.qualified_why);
+    assert.equal(missingKeyRow.discriminates, true, "the missing-key row was not paired with a proceeding invocation");
+    assert.equal(missingKeyRow.pair_claimed_discrimination, true, "the caller's pairing claim disagrees with the qualifier's computation");
+    assert.equal(missingKeyRow.hosted.status, "not-executed", "a machine-local tree cannot produce the hosted half");
+    assert.ok(missingKeyRow.hosted.awaiting && missingKeyRow.hosted.owner, "the hosted half is not named");
+    assert.equal(missingKeyRow.qualified, false, "the row claims a hosted qualification it does not have");
+
+    const staleRow = qualification.rows.find((row) => row.control_id === "stale-cache");
+    assert.equal(staleRow.verdict, "could-not-run");
+    assert.equal(staleRow.reason, "installation-identity-mismatch");
+    assert.equal(staleRow.matched, true, staleRow.qualified_why);
+    assert.equal(staleRow.discriminates, true);
+    assert.equal(staleRow.pair_claimed_discrimination, true);
+    assert.notEqual(staleRow.verdict, "fail", "a stale cache is never a candidate failure");
+
+    // The fail-closed rule, on the two controls this flow cannot observe.
+    for (const control_id of ["exit0-denied-read", "hidden-image-judge"]) {
+      const row = qualification.rows.find((candidate) => candidate.control_id === control_id);
+      assert.equal(row.verdict, "could-not-run", `${control_id} defaulted to something other than could-not-run`);
+      assert.equal(row.reason, controlsModule.UNOBSERVABLE_REASON);
+      assert.equal(row.matched, false, `${control_id} claims a verdict it did not observe`);
+      assert.equal(row.local.status, "unobservable");
+      assert.notEqual(row.verdict, "pass", `${control_id} read pass without being observed`);
+    }
+    assert.equal(qualification.fully_qualified, false, "no row can be fully qualified without the hosted half");
+
+    // key-present-misfire: the real static always-refusing guard (`alwaysRefuse()`, the same one the
+    // both-ways control above catches) returns the SAME could-not-run/missing-api-key on the
+    // key-present environment as the keyless control observed, while still claiming its twin
+    // discriminates. The qualifier must COMPUTE that from the two outcomes; copying the claim
+    // would accept it, and the misfire would stop being pinned.
+    const misfireDecision = alwaysRefuse();
+    const misfire = controlsModule.qualifyControls({
+      observations: {
+        "missing-key": {
+          verdict: keyless.decision.refusal.verdict,
+          reason: keyless.decision.refusal.reason,
+          evidence: { env_secret_names: survivingNames },
+        },
+      },
+      pairs: {
+        "missing-key": {
+          control_id: "key-present",
+          verdict: misfireDecision.refusal.verdict,
+          reason: misfireDecision.refusal.reason,
+          discriminates: true,
+        },
+      },
+    });
+    const misfireRow = misfire.rows.find((row) => row.control_id === "missing-key");
+    assert.equal(misfireRow.matched, true, "the refusal itself still matched");
+    assert.equal(misfireRow.pair_claimed_discrimination, true, "the misfire fixture lost the claim under test");
+    assert.equal(misfireRow.discriminates, false, "an always-refusing guard was accepted as discrimination");
+    assert.equal(misfireRow.pair.reason, misfireDecision.refusal.reason, "the pair's own outcome was not recorded");
+    assert.equal(misfire.local_ok, false, "the qualification accepted a control whose pair came out the same way");
+    assert.ok(misfire.failures.some((failure) => failure.startsWith("missing-key:")), `no failure names the misfire: ${JSON.stringify(misfire.failures)}`);
+
+    // ---- the recorder's file, and the gate's own projection ---------------------------
+    const written = controlsModule.writeControls({ file: join(REPORT_DIR, "controls-grd-06.json"), rows: qualification.rows });
+    assert.equal(written.ok, true, `controls-grd-06.json did not read back: ${JSON.stringify(written.mismatches)}`);
+    assert.equal(written.rows.length, 4);
+    assert.equal(written.rows.filter((row) => row.hosted.status === "not-executed").length, 4, "a row claims a hosted observation");
+    assert.equal(JSON.stringify(written.rows).includes(keyedEnv.ANTHROPIC_API_KEY), false, "a credential value reached controls.json");
+    const projection = controlsModule.controlRowsLine(qualification.rows).split("\n");
+    assert.equal(projection.length, 4);
+    assert.ok(projection.includes("missing-key could-not-run missing-api-key"), `projection: ${JSON.stringify(projection)}`);
+    assert.ok(projection.includes("stale-cache could-not-run installation-identity-mismatch"));
+    t11.controls_path = written.path;
+    t11.controls = qualification.rows;
+    t11.projection = projection;
+    t11.observed.push(
+      "missing-key: real keyless child env -> could-not-run/missing-api-key, 0 model requests, paired with the same guard proceeding",
+      "stale-cache: real stale payload digest -> could-not-run/installation-identity-mismatch with both digests, paired with a matching digest approving",
+      "exit0-denied-read and hidden-image-judge: unobservable in this flow -> could-not-run/control-unobservable, never pass",
+    );
+    t11.awaiting.push(...qualification.rows.map((row) => `${row.control_id}: ${row.hosted.awaiting} [owner: ${row.hosted.owner}]`));
+
+    // ---- the published report carries the section that was checked -------------------
+    const published = JSON.parse(readFileSync(ARTIFACT, "utf8"));
+    writeFileSync(ARTIFACT, `${JSON.stringify({ ...published, t11 }, null, 2)}\n`, "utf8");
+    const readBack = JSON.parse(readFileSync(ARTIFACT, "utf8"));
+    assert.equal(readBack.t11.controls.length, 4, "the published report does not carry the four rows");
+    assert.equal(readBack.t11.controls.find((row) => row.control_id === "missing-key").reason, "missing-api-key");
+    assert.equal(readBack.t11.controls.find((row) => row.control_id === "stale-cache").reason, "installation-identity-mismatch");
+
+    t.diagnostic(`t11_missing_key=${missingKeyRow.verdict}/${missingKeyRow.reason} requests=${keylessRecord.model_request_count} paired=${missingKeyRow.discriminates}`);
+    t.diagnostic(`t11_stale_cache=${staleRow.verdict}/${staleRow.reason} expected=${expectedDigest.slice(0, 12)} observed=${observedDigest.slice(0, 12)}`);
+    t.diagnostic(`t11_controls=${projection.join(" | ")}`);
+    t.diagnostic(`t11_fully_qualified=${qualification.fully_qualified} unqualified=${qualification.unqualified.join(",")}`);
+  } finally {
+    for (const dir of [projectDir, evidenceDir, payloadDir]) rmSync(dir, { recursive: true, force: true });
+  }
 });
