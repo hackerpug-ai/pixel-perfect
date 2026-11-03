@@ -13,7 +13,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import test from "node:test";
 
-import { ROOT, runFlow } from "./flow-runner.mjs";
+import { ROOT, dispatchDeferral, runFlow } from "./flow-runner.mjs";
 
 const FLOW = "FLOW-RUN-02-HAND";
 
@@ -245,6 +245,81 @@ test("run02Hand reports a rejected dispatch, records the local head as the dispa
     dispatch_commit: head,
   });
   assert.equal(artifact.identity.candidate_sha, null);
+});
+
+// --- the runner-cannot-dispatch deferral (owner-approved, red-hat F-001, 2026-11-03) --------
+//
+// A runner that cannot authenticate to gh can never start a hosted dispatch, so the gate
+// hard-failing on the probe error grades the environment instead of the product. The owner
+// approved one named carve-out: the deferral is recorded honestly on the live_dispatch leg
+// (reason: runner-cannot-dispatch) and the DECLARATION tier is graded. Anything else —
+// network, missing binary, an unclassifiable probe error — keeps today's fail path.
+
+const DEFERRAL_PROBE = () => ({
+  available: false,
+  error: "gh is not authenticated",
+  deferral: "runner-cannot-dispatch",
+});
+
+test("dispatchDeferral classifies unauthenticated gh stderr as runner-cannot-dispatch and everything else as null", () => {
+  // Real gh stderr shapes that mean THIS RUNNER cannot dispatch at all.
+  assert.equal(dispatchDeferral("gh: not authenticated"), "runner-cannot-dispatch");
+  assert.equal(dispatchDeferral("gh: Bad credentials (HTTP 401)"), "runner-cannot-dispatch");
+  assert.equal(dispatchDeferral("gh: forbidden (HTTP 403)"), "runner-cannot-dispatch");
+  // Everything else keeps the fail path: registered-elsewhere, network, missing binary, silent.
+  assert.equal(dispatchDeferral(UNREGISTERED_PROBE_DETAIL), null);
+  assert.equal(dispatchDeferral("dial tcp 140.82.112.17:443: connect: connection refused"), null);
+  assert.equal(dispatchDeferral("spawnSync gh ENOENT"), null);
+  assert.equal(dispatchDeferral("gh api exited 1"), null);
+  assert.equal(dispatchDeferral(""), null);
+  assert.equal(dispatchDeferral(null), null);
+  assert.equal(dispatchDeferral(undefined), null);
+});
+
+test("run02Hand honors the runner-cannot-dispatch deferral: the declaration tier stands with the reason recorded", async () => {
+  const artifact = await runFlow(FLOW, {
+    probe: DEFERRAL_PROBE,
+    out: ".tmp/sprint-01-verification/run-02-hand.characterization.deferral.json",
+  });
+
+  // Observed: the auth error never reaches failures, so the repo's clean declaration grades
+  // the declaration tier and the artifact names why no live dispatch was possible.
+  assert.equal(artifact.ok, true);
+  assert.equal(artifact.proof_tier, "workflow-declaration");
+  assert.equal(artifact.ac1_satisfied, false);
+  assert.deepEqual(artifact.failures, []);
+
+  assert.deepEqual(artifact.live_dispatch, {
+    attempted: false,
+    available: false,
+    probe: undefined,
+    reason: "runner-cannot-dispatch",
+    mode: "none",
+  });
+  assert.ok(artifact.awaiting_hosted_run.length >= 3, "the artifact must still name the hosted-run gap");
+  assert.equal(artifact.identity.candidate_sha, null);
+});
+
+test("run02Hand still fails on the same probe error when it carries no deferral flag", async () => {
+  // The narrow carve-out: identical error text without the named deferral keeps today's
+  // fail path exactly — a broken environment is never an honest proof.
+  const artifact = await runFlow(FLOW, {
+    probe: () => ({ available: false, error: "gh is not authenticated" }),
+    out: ".tmp/sprint-01-verification/run-02-hand.characterization.deferral-unguarded.json",
+  });
+
+  assert.equal(artifact.ok, false);
+  assert.equal(artifact.proof_tier, "workflow-declaration");
+  assert.equal(artifact.ac1_satisfied, false);
+  assert.deepEqual(artifact.failures, ["gh is not authenticated"]);
+
+  assert.deepEqual(artifact.live_dispatch, {
+    attempted: false,
+    available: false,
+    probe: undefined,
+    reason: DISPATCH_REASON,
+    mode: "none",
+  });
 });
 
 test("run02Hand reports an accepted auto dispatch that produced no readable run as a failure", async () => {
