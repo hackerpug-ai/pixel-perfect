@@ -946,6 +946,22 @@ export function approveIdentity(identity, { requested_cli_version = identity?.re
 const block = (verdict, reason, detail = {}) => ({ verdict, reason, ...detail });
 
 /**
+ * The keyless command-list entry's blocks. That entry makes no model call, so its evidence is the
+ * captured inventory itself, graded as the parsed names against the plugin's own commands directory.
+ */
+function commandListBlocks(entry, record) {
+  const parsed = parseCommandList(capturedLines(record).map((line) => line.text).join("\n"));
+  const expected = commandNames({ pluginRoot: PLUGIN_ROOT });
+  const present = expected.filter((name) => parsed.deduped.includes(name));
+  const blocks = [];
+  if (parsed.deduped.length === 0) blocks.push(block("could-not-run", "command-list-unreadable"));
+  else if (present.length !== expected.length) {
+    blocks.push(block("fail", "command-list-incomplete", { missing: expected.filter((name) => !present.includes(name)) }));
+  }
+  return blocks;
+}
+
+/**
  * The plugin-gate block. `-p` can enter bare mode and load nothing; a graded run that made model
  * requests without the plugin loaded is not attributable to the plugin, so it is could-not-run.
  */
@@ -1010,15 +1026,9 @@ export function gradeCheck({ record, entry, track = entry?.track ?? "pinned", in
   blocks.push(...askPolicyBlocks(entry, boundary, answer));
 
   let observed_verify_outcome = null;
+  let checkBlocks = [];
   if (entry.graded === false) {
-    // The command list makes no model call, so its evidence is the captured inventory itself.
-    const parsed = parseCommandList(capturedLines(record).map((line) => line.text).join("\n"));
-    const expected = commandNames({ pluginRoot: PLUGIN_ROOT });
-    const present = expected.filter((name) => parsed.deduped.includes(name));
-    if (parsed.deduped.length === 0) blocks.push(block("could-not-run", "command-list-unreadable"));
-    else if (present.length !== expected.length) {
-      blocks.push(block("fail", "command-list-incomplete", { missing: expected.filter((name) => !present.includes(name)) }));
-    }
+    checkBlocks = commandListBlocks(entry, record);
   } else if (answer.answered) {
     if (entry.check_id === "status") {
       const expectedFacts = entry.caseManifest?.expected_facts ?? null;
@@ -1031,6 +1041,7 @@ export function gradeCheck({ record, entry, track = entry?.track ?? "pinned", in
       if (!outcome.ok) blocks.push(block(outcome.verdict, outcome.reason, outcome.detail ?? {}));
     }
   }
+  blocks.push(...checkBlocks);
 
   const verdict = worstVerdict([base.verdict, ...blocks.map((entryBlock) => entryBlock.verdict)]);
   const fromCheck = blocks.find((entryBlock) => entryBlock.verdict === verdict) ?? null;
