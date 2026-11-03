@@ -82,6 +82,25 @@ function terminationBlocks(record) {
 }
 
 /**
+ * Denials grade twice: an undeclared required-read denial is could-not-run (absence of a
+ * requiredness declaration is not permission), a declared one is fail. `denied` comes back too —
+ * the first denial names the cell's denied_tool_call.
+ */
+function denialBlocks(record) {
+  const blocks = [];
+  const undeclared = undeclaredDenials(record);
+  if (undeclared.length > 0) {
+    blocks.push(block("could-not-run", "requiredness-undeclared", { denials: undeclared.length }));
+  }
+
+  const denied = denials(record);
+  if (denied.length > 0) {
+    blocks.push(block("fail", "denied_tool_call", { denials: denied.length }));
+  }
+  return { blocks, denied };
+}
+
+/**
  * Builds the graded cell from a capture record. The verdict comes from what the record observed —
  * termination kind, resolvable citations, required facts, required-read denials — and from nothing
  * else. A pass needs at least one observed required fact: absence of a denial is not a pass.
@@ -117,16 +136,8 @@ export function gradeFromEvidence({
 
   blocks.push(...requiredFactBlocks(record, required_facts));
 
-  // Absence of a requiredness declaration is not permission: an undeclared denial is not a pass.
-  const undeclared = undeclaredDenials(record);
-  if (undeclared.length > 0) {
-    blocks.push(block("could-not-run", "requiredness-undeclared", { denials: undeclared.length }));
-  }
-
-  const denied = denials(record);
-  if (denied.length > 0) {
-    blocks.push(block("fail", "denied_tool_call", { denials: denied.length }));
-  }
+  const { blocks: denialBlockList, denied } = denialBlocks(record);
+  blocks.push(...denialBlockList);
 
   if (blocks.length === 0) {
     // Reaching here means nothing was refused, but a required fact is what makes a pass a pass.
