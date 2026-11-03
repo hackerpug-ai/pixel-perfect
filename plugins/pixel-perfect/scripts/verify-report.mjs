@@ -210,6 +210,44 @@ export function reportBody({ harness, track, invocationId, caseId, exit, drifted
   return body;
 }
 
+/**
+ * The directory a byte-identical copy of the report is also published into, or null: the flag wins
+ * over the environment, and a blank value means absent. Part of the refuse-before-writing stage — a
+ * relative directory is refused outright, and one that cannot be created is refused with the reason.
+ */
+function resolvePublishDir(options, env) {
+  const publishDir = options.publish_dir ?? env[PUBLISH_ENV] ?? null;
+  if (publishDir !== null && String(publishDir).trim() !== "") {
+    if (!isAbsolute(publishDir)) {
+      throw new Refusal("publish-dir-not-absolute", { publish_dir: publishDir });
+    }
+    try {
+      mkdirSync(publishDir, { recursive: true });
+    } catch (error) {
+      throw new Refusal("publish-dir-unwritable", { publish_dir: publishDir, why: error.code ?? error.message });
+    }
+  }
+  return publishDir;
+}
+
+/**
+ * Publishes a byte-identical copy of the report when asked, so a job can ship it while the graded
+ * copy stays inside the invocation's directory. The copy is written from the same bytes and then
+ * read back, so its digest is measured rather than assumed; a copy that reads differently throws.
+ * Returns the receipt's publish entry, or null when no publish directory was given.
+ */
+function publishCopy(publishDir, options, bytes) {
+  if (publishDir === null || String(publishDir).trim() === "") return null;
+  const destination = join(publishDir, options.out);
+  writeAtomic(destination, bytes);
+  const published = sha256(readFileSync(destination));
+  const expected = sha256(bytes);
+  if (published !== expected) {
+    throw new Error(`the published copy ${destination} reads sha256 ${published}, but the graded report is ${expected}`);
+  }
+  return { path: destination, bytes: bytes.length, sha256: published };
+}
+
 export function main(argv = process.argv.slice(2), { cwd = process.cwd(), env = process.env } = {}) {
   let options;
   try {
@@ -239,17 +277,7 @@ export function main(argv = process.argv.slice(2), { cwd = process.cwd(), env = 
     }
     const target = assertConfinedOut(options.out, cwd);
 
-    const publishDir = options.publish_dir ?? env[PUBLISH_ENV] ?? null;
-    if (publishDir !== null && String(publishDir).trim() !== "" && !isAbsolute(publishDir)) {
-      throw new Refusal("publish-dir-not-absolute", { publish_dir: publishDir });
-    }
-    if (publishDir !== null && String(publishDir).trim() !== "") {
-      try {
-        mkdirSync(publishDir, { recursive: true });
-      } catch (error) {
-        throw new Refusal("publish-dir-unwritable", { publish_dir: publishDir, why: error.code ?? error.message });
-      }
-    }
+    const publishDir = resolvePublishDir(options, env);
 
     // 2. The product's own check decides the outcome.
     const project = options.project ?? ".";
@@ -268,19 +296,9 @@ export function main(argv = process.argv.slice(2), { cwd = process.cwd(), env = 
     writeAtomic(target, bytes);
     const out = { path: target, bytes: bytes.length, sha256: sha256(bytes) };
 
-    // 4. Publish a byte-identical copy when asked, so a job can ship it while the graded copy stays
-    //    inside the invocation's directory. The copy is written from the same bytes and then read
-    //    back, so its digest is measured rather than assumed.
-    let publish = null;
-    if (publishDir !== null && String(publishDir).trim() !== "") {
-      const destination = join(publishDir, options.out);
-      writeAtomic(destination, bytes);
-      const published = sha256(readFileSync(destination));
-      if (published !== out.sha256) {
-        throw new Error(`the published copy ${destination} reads sha256 ${published}, but the graded report is ${out.sha256}`);
-      }
-      publish = { path: destination, bytes: bytes.length, sha256: published };
-    }
+    // 4. Publish a byte-identical copy when asked; the graded copy stays inside the invocation's
+    //    directory, and the copy's digest is measured by reading it back.
+    const publish = publishCopy(publishDir, options, bytes);
 
     const receipt = { ok: true, out, publish, outcome: body.observed_verify_outcome, drifted_keys: body.evidence.drifted_keys, sha256: out.sha256 };
     process.stdout.write(`${JSON.stringify(receipt)}\n`);
