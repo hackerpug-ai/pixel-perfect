@@ -567,6 +567,33 @@ function runRecordFindings(run, { dispatch = false, dispatchCommit = null } = {}
   return failures;
 }
 
+/**
+ * Tier A without a replay: start the hosted dispatch and read back the run it produced.
+ * Records what happened onto `liveDispatch` (mode, local head, acceptance, message, and —
+ * for a --dispatch run — the dispatch commit) and returns the run (null when none was
+ * readable) plus the failures to add to the artifact. The dispatcher and run lister are
+ * injected so a test can replay this leg without touching gh.
+ */
+function dispatchAndFindRun({ repo, inputs, dispatch, liveDispatch, dispatchWorkflow, latestRun }) {
+  liveDispatch.mode = dispatch ? "dispatch" : "auto";
+  const head = runCommand("git", ["rev-parse", "HEAD"]);
+  const localHead = head.ok ? head.stdout.trim() : null;
+  const attempt = dispatchWorkflow({ repo, inputs });
+  liveDispatch.local_head = localHead;
+  liveDispatch.accepted = attempt.ok;
+  liveDispatch.message = attempt.ok ? attempt.stdout.trim() : attempt.stderr || `gh exited ${attempt.status}`;
+  let run = null;
+  const failures = [];
+  if (!attempt.ok) failures.push(`dispatch rejected: ${liveDispatch.message}`);
+  else {
+    const latest = latestRun({ repo });
+    if (!latest.ok) failures.push(`dispatch produced no readable run: ${latest.reason}`);
+    else run = latest.run;
+  }
+  if (dispatch) liveDispatch.dispatch_commit = localHead;
+  return { run, failures };
+}
+
 async function run02Hand(options = {}) {
   const repo = options.repo ?? "hackerpug-ai/pixel-perfect";
   // The probe is injected only by the negative control that proves the deferral expires;
@@ -634,22 +661,16 @@ async function run02Hand(options = {}) {
     } else {
       // `--dispatch` demands that the graded commit is this checkout; without it the flow still
       // starts the grade (UC-RUN-02) but grades whatever the default branch holds.
-      artifact.live_dispatch.mode = options.dispatch ? "dispatch" : "auto";
-      const head = runCommand("git", ["rev-parse", "HEAD"]);
-      const localHead = head.ok ? head.stdout.trim() : null;
-      const dispatch = gh.dispatchWorkflow({ repo, inputs: options.inputs ?? {} });
-      artifact.live_dispatch.local_head = localHead;
-      artifact.live_dispatch.accepted = dispatch.ok;
-      artifact.live_dispatch.message = dispatch.ok
-        ? dispatch.stdout.trim()
-        : dispatch.stderr || `gh exited ${dispatch.status}`;
-      if (!dispatch.ok) artifact.failures.push(`dispatch rejected: ${artifact.live_dispatch.message}`);
-      else {
-        const latest = gh.latestRun({ repo });
-        if (!latest.ok) artifact.failures.push(`dispatch produced no readable run: ${latest.reason}`);
-        else run = latest.run;
-      }
-      if (options.dispatch) artifact.live_dispatch.dispatch_commit = localHead;
+      const found = dispatchAndFindRun({
+        repo,
+        inputs: options.inputs ?? {},
+        dispatch: Boolean(options.dispatch),
+        liveDispatch: artifact.live_dispatch,
+        dispatchWorkflow: gh.dispatchWorkflow,
+        latestRun: gh.latestRun,
+      });
+      artifact.failures.push(...found.failures);
+      run = found.run;
     }
     if (run) {
       artifact.live_dispatch.run = run;
