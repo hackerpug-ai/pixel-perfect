@@ -185,34 +185,16 @@ export async function runCell({
 
     const cell = claudeCode.cellFor({ track, cells: results.map((result) => result.cell), installation });
 
-    let observed = { observations: {}, pairs: {} };
-    if (controlObservations) {
-      const loadedRoot = loaded?.installed?.installPath ?? null;
-      // A negative control is a deliberate perturbation: the stale-cache control exists to prove
-      // that the identity rule REFUSES a payload that moved, so when the run's own payload agrees
-      // with the checkout (the healthy case) the leg plants the one-byte drift itself and measures
-      // the rule against real digests. The observation carries `planted: true` so no reader mistakes
-      // it for a run that drifted on its own, and the matching-digest half travels as its pair.
-      const stale = staleCopy({ checkoutRoot: pluginRoot, loadedRoot, scratch: evidenceDir });
-      // The roots are what the invocation PRODUCED, not what it could read: the captured stream —
-      // the only place an `image` content block can appear — is persisted beside the model's
-      // requests, in the evidence dir the adapter wrote. Scanning the kit-project working tree alone
-      // would clear a tree that never held the bytes.
-      observed = observeLeg({
-        checkoutRoot: pluginRoot,
-        staleRoot: stale.root,
-        mutatedFile: stale.mutatedFile,
-        planted: stale.planted === true,
-        verifyRecord: verifyRecordOf(results),
-        verifyCheck: "verify",
-        verifyRoots: verifyRootsOf(ownedDirs, results),
-        observedCliVersion: installation.observed_cli_version ?? null,
-        requestedCliVersion: installation.requested_cli_version ?? requestedCliVersion,
-      });
-      stale.cleanup?.();
-    }
-    const observations = mergeObservations(observed.observations);
-    const pairs = mergeObservations(observed.pairs);
+    const { observations, pairs } = controlObservationsFor({
+      loaded,
+      installation,
+      results,
+      ownedDirs,
+      pluginRoot,
+      requestedCliVersion,
+      evidenceDir,
+      controlObservations,
+    });
     let withControls = cell;
     for (const [id, value] of Object.entries(observations)) withControls = attachObservation(withControls, id, value);
     for (const [id, value] of Object.entries(pairs)) withControls = attachPair(withControls, id, value);
@@ -311,6 +293,39 @@ async function runTableEntries(table, { records, track, installation, ownedConfi
     );
   }
   return results;
+}
+
+/**
+ * What this leg measured for the four controls: the leg-level observations and the paired halves
+ * that let a reader compute discrimination, merged per control id. With `controlObservations`
+ * false the leg asserts nothing and both maps come back empty.
+ */
+function controlObservationsFor({ loaded, installation, results, ownedDirs, pluginRoot, requestedCliVersion, evidenceDir, controlObservations }) {
+  if (!controlObservations) return { observations: {}, pairs: {} };
+  const loadedRoot = loaded?.installed?.installPath ?? null;
+  // A negative control is a deliberate perturbation: the stale-cache control exists to prove
+  // that the identity rule REFUSES a payload that moved, so when the run's own payload agrees
+  // with the checkout (the healthy case) the leg plants the one-byte drift itself and measures
+  // the rule against real digests. The observation carries `planted: true` so no reader mistakes
+  // it for a run that drifted on its own, and the matching-digest half travels as its pair.
+  const stale = staleCopy({ checkoutRoot: pluginRoot, loadedRoot, scratch: evidenceDir });
+  // The roots are what the invocation PRODUCED, not what it could read: the captured stream —
+  // the only place an `image` content block can appear — is persisted beside the model's
+  // requests, in the evidence dir the adapter wrote. Scanning the kit-project working tree alone
+  // would clear a tree that never held the bytes.
+  const observed = observeLeg({
+    checkoutRoot: pluginRoot,
+    staleRoot: stale.root,
+    mutatedFile: stale.mutatedFile,
+    planted: stale.planted === true,
+    verifyRecord: verifyRecordOf(results),
+    verifyCheck: "verify",
+    verifyRoots: verifyRootsOf(ownedDirs, results),
+    observedCliVersion: installation.observed_cli_version ?? null,
+    requestedCliVersion: installation.requested_cli_version ?? requestedCliVersion,
+  });
+  stale.cleanup?.();
+  return { observations: mergeObservations(observed.observations), pairs: mergeObservations(observed.pairs) };
 }
 
 /** `cell/cell.json` for a leg, or the fallback record when the leg produced nothing. */
