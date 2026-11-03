@@ -323,6 +323,32 @@ export function completeCheckSet(parts = []) {
 }
 
 /**
+ * One completed check passes through gradeCell only as it stands: a pass must cite evidence that
+ * resolves inside `evidence_roots` (otherwise it is downgraded could-not-run), and a non-pass must
+ * carry a reason. The downgrades keep every block the check already carried.
+ */
+function enforceCheckEvidence(entry, evidence_roots) {
+  if (entry.verdict === "pass") {
+    const cited = entry.evidence_paths ?? [];
+    const unresolvable = cited.length === 0 ? [{ why: "none" }] : unresolvableCitations(cited, evidence_roots);
+    if (unresolvable.length > 0) {
+      const reason = cited.length === 0 ? "check-unevidenced" : "evidence-unresolvable";
+      return {
+        ...entry,
+        verdict: "could-not-run",
+        reason,
+        blocks: [...(entry.blocks ?? []), block("could-not-run", reason, { citations: unresolvable })],
+      };
+    }
+    return entry;
+  }
+  if (typeof entry.reason !== "string" || entry.reason.trim().length === 0) {
+    return { ...entry, verdict: "could-not-run", reason: "check-reason-absent", blocks: [...(entry.blocks ?? []), block("could-not-run", "check-reason-absent")] };
+  }
+  return entry;
+}
+
+/**
  * Assembles one HarnessCell from its four parts.
  *
  * - aggregate: could-not-run before fail before pass, over the four parts
@@ -344,26 +370,7 @@ export function gradeCell({
   evidence_roots = [],
 } = {}) {
   const completed = completeCheckSet(parts);
-  const checks = completed.checks.map((entry) => {
-    if (entry.verdict === "pass") {
-      const cited = entry.evidence_paths ?? [];
-      const unresolvable = cited.length === 0 ? [{ why: "none" }] : unresolvableCitations(cited, evidence_roots);
-      if (unresolvable.length > 0) {
-        const reason = cited.length === 0 ? "check-unevidenced" : "evidence-unresolvable";
-        return {
-          ...entry,
-          verdict: "could-not-run",
-          reason,
-          blocks: [...(entry.blocks ?? []), block("could-not-run", reason, { citations: unresolvable })],
-        };
-      }
-      return entry;
-    }
-    if (typeof entry.reason !== "string" || entry.reason.trim().length === 0) {
-      return { ...entry, verdict: "could-not-run", reason: "check-reason-absent", blocks: [...(entry.blocks ?? []), block("could-not-run", "check-reason-absent")] };
-    }
-    return entry;
-  });
+  const checks = completed.checks.map((entry) => enforceCheckEvidence(entry, evidence_roots));
 
   const verdict = worstVerdict([...checks.map((entry) => entry.verdict), ...completed.problems.map((entry) => entry.verdict)]);
   const winner = checks.find((entry) => entry.verdict === verdict) ?? completed.problems[0] ?? {};
