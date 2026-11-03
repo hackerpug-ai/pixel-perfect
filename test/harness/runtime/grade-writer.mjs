@@ -57,6 +57,20 @@ function requiredFactBlocks(record, required_facts) {
   return missingFacts.length === 0 ? [] : [block("could-not-run", "required-fact-unobserved", { missing: missingFacts })];
 }
 
+/** An observation whose citation cannot be resolved off the record's evidence root is could-not-run. */
+function observationBlocks(record, evidence_root) {
+  const observations = record?.observations ?? [];
+  const unresolved = [];
+  for (const observation of observations) {
+    try {
+      resolveObservation(record, observation, { root: evidence_root });
+    } catch (error) {
+      unresolved.push({ sequence: observation.sequence ?? null, reason: error.reason ?? String(error.message ?? error) });
+    }
+  }
+  return unresolved.length === 0 ? [] : [block("could-not-run", "evidence-unresolvable", { unresolved })];
+}
+
 /**
  * Builds the graded cell from a capture record. The verdict comes from what the record observed —
  * termination kind, resolvable citations, required facts, required-read denials — and from nothing
@@ -91,16 +105,7 @@ export function gradeFromEvidence({
   if (kind === "unexpected" && !record?.refusal) blocks.push(block("could-not-run", "termination-unexpected", { process_status: record.process_status ?? null }));
   if (record?.prefix_complete === false) blocks.push(block("could-not-run", "capture-prefix-incomplete", { boundary_event_offset: record.boundary_event_offset ?? null }));
 
-  const observations = record?.observations ?? [];
-  const unresolved = [];
-  for (const observation of observations) {
-    try {
-      resolveObservation(record, observation, { root: evidence_root });
-    } catch (error) {
-      unresolved.push({ sequence: observation.sequence ?? null, reason: error.reason ?? String(error.message ?? error) });
-    }
-  }
-  if (unresolved.length > 0) blocks.push(block("could-not-run", "evidence-unresolvable", { unresolved }));
+  blocks.push(...observationBlocks(record, evidence_root));
 
   blocks.push(...requiredFactBlocks(record, required_facts));
 
