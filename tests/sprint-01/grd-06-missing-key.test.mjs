@@ -30,14 +30,15 @@ const ARTIFACT = join(REPORT_DIR, "grd-06-missing-key.json");
 const PLUGIN_ROOT = join(ROOT, "plugins/pixel-perfect");
 
 // § CommandTranslation / CredentialBinding: the five bindings harness-smoke supplies, mapped onto
-// the CLI variables the guard checks. Cursor's own name is the one harness-smoke does not have.
-const SMOKE_BINDINGS = {
-  "claude-code": "ANTHROPIC_API_KEY",
-  codex: "CODEX_API_KEY",
-  grok: "XAI_API_KEY",
-  opencode: "ANTHROPIC_API_KEY",
-  pi: "GEMINI_API_KEY",
-};
+// the CLI variables the guard checks — read from the pins manifest, the same authority grd-02
+// consumes, so the workflow table and this map cannot drift from the pins alone. Cursor's own
+// name is the one harness-smoke does not have: its credential_env is already its CLI variable,
+// so it has no distinct SMOKE_ secret to map.
+const SMOKE_BINDINGS = Object.fromEntries(
+  Object.entries(loadPins().manifest.harnesses)
+    .filter(([, pin]) => pin.credential_env !== pin.binding_env)
+    .map(([harness, pin]) => [harness, pin.binding_env]),
+);
 
 /** The runner's environment with every model credential removed — the keyless child env. */
 function withoutSecrets(env) {
