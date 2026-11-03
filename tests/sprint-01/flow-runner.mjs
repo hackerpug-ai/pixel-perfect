@@ -519,6 +519,24 @@ export function chooseProofTier({ dispatch = false, run = null, available = fals
   return dispatch || run || available ? "live-dispatch" : "workflow-declaration";
 }
 
+/**
+ * The identity the declaration alone can state: its event and install-mode default, the cell
+ * grid, and a null candidate_sha — a branch cannot know the dispatch commit. A live run
+ * record overwrites the event and the candidate fields (the mutations in run02Hand's tier A).
+ */
+function identityFromDeclaration(declaration) {
+  return {
+    event: declaration.event,
+    install_mode: declaration.install_mode,
+    install_mode_source: declaration.install_mode_source,
+    candidate_sha: null,
+    candidate_sha_source: "awaiting a hosted dispatch: the dispatch commit is not knowable from this branch",
+    harnesses: [...declaration.harnesses].sort(),
+    cell_count: declaration.cells.length,
+    cells: declaration.cells,
+  };
+}
+
 async function run02Hand(options = {}) {
   const repo = options.repo ?? "hackerpug-ai/pixel-perfect";
   // The probe is injected only by the negative control that proves the deferral expires;
@@ -567,15 +585,7 @@ async function run02Hand(options = {}) {
   // fails instead of grading the declaration - a broken environment is never an honest proof.
   if (live.error) artifact.failures.push(live.error);
 
-  const identity = {
-    event: declaration.event,
-    install_mode: declaration.install_mode,
-    install_mode_source: declaration.install_mode_source,
-    candidate_sha: null,
-    candidate_sha_source: "awaiting a hosted dispatch: the dispatch commit is not knowable from this branch",
-    harnesses: [...declaration.harnesses].sort(),
-    cell_count: declaration.cells.length,
-  };
+  const identity = identityFromDeclaration(declaration);
 
   // Tier A — live: the flow performs the hand start itself (or replays one). This is the only
   // tier that can report AC-1 met, and it is the tier that takes over automatically as soon as
@@ -635,7 +645,6 @@ async function run02Hand(options = {}) {
     ];
   }
 
-  identity.cells = declaration.cells;
   artifact.identity = identity;
   if (declaration.event !== "workflow_dispatch") artifact.failures.push(`event is ${String(declaration.event)}, expected workflow_dispatch`);
   if (declaration.install_mode !== "checkout") artifact.failures.push(`install_mode default is ${String(declaration.install_mode)}, expected checkout`);
