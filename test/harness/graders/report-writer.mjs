@@ -5,9 +5,9 @@
 // a symlinked ancestor before a single byte is written; a refusal here is `could-not-run
 // invalid-case-path`, never a report at a different location.
 //
-// The write is temp file in the report's own directory -> fsync -> rename -> read back. Three
-// outcomes are kept strictly apart, because collapsing them is how a storage problem becomes a
-// product defect (or worse, a pass):
+// The write is temp file in the report's own directory -> fsync -> rename (the canon lives in
+// ../lib/write-durable.mjs) -> read back. Three outcomes are kept strictly apart, because
+// collapsing them is how a storage problem becomes a product defect (or worse, a pass):
 //
 //   fail            `report-missing`     — the file the case declared is not there. The run was
 //                                          otherwise evaluable, so the plugin failed to produce it.
@@ -16,11 +16,12 @@
 //   could-not-run   `report-unavailable` — the store could not be written or read (EACCES, ENOSPC,
 //                                          EROFS). Artifact storage is not the plugin under test.
 //   could-not-run   `invalid-case-path`  — the declared path would leave the invocation directory.
-import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, statSync, writeSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { createHash } from "node:crypto";
 import path from "node:path";
 
 import { CasePathRefused, assertConfined, bindReportPath } from "../kit/case-loader.mjs";
+import { writeDurable } from "../lib/write-durable.mjs";
 
 export const REPORT_SCHEMA = "verify-report/v1";
 
@@ -81,21 +82,17 @@ export function writeVerifyReport({ caseManifest, invocation, body }) {
 
   const target = bound.path;
   const text = `${JSON.stringify(body, null, 2)}\n`;
-  let tempPath = null;
+  const written = Buffer.from(text);
+  // writeDurable is the durable-write canon: a unique temp in the target's directory, fsync, rename.
+  // Its `now` is pinned to one stamp so this wrapper knows the temp's exact name and the cleanup
+  // below can keep the rule that a failed write leaves no temp file behind.
+  const stamp = Date.now();
+  const tempPath = `${target}.tmp-${process.pid}-${stamp}`;
   try {
     mkdirSync(path.dirname(target), { recursive: true });
-    tempPath = `${target}.tmp-${process.pid}-${Date.now()}`;
-    const fd = openSync(tempPath, "w");
-    try {
-      writeSync(fd, text);
-      fsyncSync(fd);
-    } finally {
-      closeSync(fd);
-    }
-    renameSync(tempPath, target);
-    tempPath = null;
+    writeDurable(target, written, { now: () => stamp });
   } catch (error) {
-    if (tempPath) rmSync(tempPath, { force: true });
+    rmSync(tempPath, { force: true });
     if (!isStorageError(error)) throw error;
     return { ok: false, verdict: "could-not-run", reason: REPORT_REASONS.unavailable, path: target, code: error.code, wrote: 0 };
   }
@@ -109,7 +106,6 @@ export function writeVerifyReport({ caseManifest, invocation, body }) {
     if (!isStorageError(error)) throw error;
     return { ok: false, verdict: "could-not-run", reason: REPORT_REASONS.unavailable, path: target, code: error.code, wrote: 1 };
   }
-  const written = Buffer.from(text);
   const digest = sha256(readBack);
   if (readBack.length !== written.length || digest !== sha256(written)) {
     return {
