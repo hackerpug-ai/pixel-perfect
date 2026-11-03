@@ -946,6 +946,17 @@ export function approveIdentity(identity, { requested_cli_version = identity?.re
 const block = (verdict, reason, detail = {}) => ({ verdict, reason, ...detail });
 
 /**
+ * The status check's blocks: the reply must state every fact the case declares on its status surface.
+ */
+function statusCheckBlocks(entry, answer) {
+  const expectedFacts = entry.caseManifest?.expected_facts ?? null;
+  const facts = statusFacts(answer.reply, expectedFacts);
+  if (!expectedFacts) return [block("could-not-run", "no-status-facts-declared")];
+  if ((facts.missing ?? []).length > 0) return [block("fail", "status-facts-absent", { missing: facts.missing })];
+  return [];
+}
+
+/**
  * The keyless command-list entry's blocks. That entry makes no model call, so its evidence is the
  * captured inventory itself, graded as the parsed names against the plugin's own commands directory.
  */
@@ -1031,10 +1042,7 @@ export function gradeCheck({ record, entry, track = entry?.track ?? "pinned", in
     checkBlocks = commandListBlocks(entry, record);
   } else if (answer.answered) {
     if (entry.check_id === "status") {
-      const expectedFacts = entry.caseManifest?.expected_facts ?? null;
-      const facts = statusFacts(answer.reply, expectedFacts);
-      if (!expectedFacts) blocks.push(block("could-not-run", "no-status-facts-declared"));
-      else if ((facts.missing ?? []).length > 0) blocks.push(block("fail", "status-facts-absent", { missing: facts.missing }));
+      checkBlocks = statusCheckBlocks(entry, answer);
     } else if (entry.check_id === "verify") {
       const outcome = readVerifyReport({ entry });
       observed_verify_outcome = outcome.observed_verify_outcome;
