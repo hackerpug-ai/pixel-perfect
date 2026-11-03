@@ -181,65 +181,20 @@ export async function runCell({
     disposeDirs = dirs === null;
     const table = claudeCode.invocationTable({ track, dirs: ownedDirs, pluginRoot });
 
-    const results = [];
-    for (const entry of table) {
-      if (records && records[entry.key]) {
-        // A replay: the record is real captured bytes; the grading below is the adapter's own.
-        results.push({
-          entry,
-          record: records[entry.key],
-          ...claudeCode.gradeCheck({
-            record: records[entry.key],
-            entry,
-            track,
-            installation,
-          }),
-        });
-        continue;
-      }
-      results.push(
-        await claudeCode.runCheck({
-          entry,
-          track,
-          configDir: ownedConfig ?? configDir,
-          env,
-          installation,
-          installMode,
-          evidenceDir: evidenceDir ? join(evidenceDir, entry.key) : null,
-        }),
-      );
-    }
+    const results = await runTableEntries(table, { records, track, installation, ownedConfig, configDir, env, installMode, evidenceDir });
 
     const cell = claudeCode.cellFor({ track, cells: results.map((result) => result.cell), installation });
 
-    let observed = { observations: {}, pairs: {} };
-    if (controlObservations) {
-      const loadedRoot = loaded?.installed?.installPath ?? null;
-      // A negative control is a deliberate perturbation: the stale-cache control exists to prove
-      // that the identity rule REFUSES a payload that moved, so when the run's own payload agrees
-      // with the checkout (the healthy case) the leg plants the one-byte drift itself and measures
-      // the rule against real digests. The observation carries `planted: true` so no reader mistakes
-      // it for a run that drifted on its own, and the matching-digest half travels as its pair.
-      const stale = staleCopy({ checkoutRoot: pluginRoot, loadedRoot, scratch: evidenceDir });
-      // The roots are what the invocation PRODUCED, not what it could read: the captured stream —
-      // the only place an `image` content block can appear — is persisted beside the model's
-      // requests, in the evidence dir the adapter wrote. Scanning the kit-project working tree alone
-      // would clear a tree that never held the bytes.
-      observed = observeLeg({
-        checkoutRoot: pluginRoot,
-        staleRoot: stale.root,
-        mutatedFile: stale.mutatedFile,
-        planted: stale.planted === true,
-        verifyRecord: verifyRecordOf(results),
-        verifyCheck: "verify",
-        verifyRoots: verifyRootsOf(ownedDirs, results),
-        observedCliVersion: installation.observed_cli_version ?? null,
-        requestedCliVersion: installation.requested_cli_version ?? requestedCliVersion,
-      });
-      stale.cleanup?.();
-    }
-    const observations = mergeObservations(observed.observations);
-    const pairs = mergeObservations(observed.pairs);
+    const { observations, pairs } = controlObservationsFor({
+      loaded,
+      installation,
+      results,
+      ownedDirs,
+      pluginRoot,
+      requestedCliVersion,
+      evidenceDir,
+      controlObservations,
+    });
     let withControls = cell;
     for (const [id, value] of Object.entries(observations)) withControls = attachObservation(withControls, id, value);
     for (const [id, value] of Object.entries(pairs)) withControls = attachPair(withControls, id, value);
@@ -302,6 +257,75 @@ function verifyRootsOf(dirs, results) {
     .flatMap((result) => (result.record?.evidence_paths ?? []).map((path) => dirname(resolve(path))));
   const runRoots = ["verify-button-drift", "verify-clean"].map((key) => dirs.for(key)?.dir).filter(Boolean);
   return [...new Set([...captureRoots, ...runRoots])];
+}
+
+/**
+ * The invocation loop: one result per table entry. A replayed entry grades the captured record —
+ * real bytes, the adapter's own grading; a live entry runs the check against the real installation.
+ */
+async function runTableEntries(table, { records, track, installation, ownedConfig, configDir, env, installMode, evidenceDir }) {
+  const results = [];
+  for (const entry of table) {
+    if (records && records[entry.key]) {
+      // A replay: the record is real captured bytes; the grading below is the adapter's own.
+      results.push({
+        entry,
+        record: records[entry.key],
+        ...claudeCode.gradeCheck({
+          record: records[entry.key],
+          entry,
+          track,
+          installation,
+        }),
+      });
+      continue;
+    }
+    results.push(
+      await claudeCode.runCheck({
+        entry,
+        track,
+        configDir: ownedConfig ?? configDir,
+        env,
+        installation,
+        installMode,
+        evidenceDir: evidenceDir ? join(evidenceDir, entry.key) : null,
+      }),
+    );
+  }
+  return results;
+}
+
+/**
+ * What this leg measured for the four controls: the leg-level observations and the paired halves
+ * that let a reader compute discrimination, merged per control id. With `controlObservations`
+ * false the leg asserts nothing and both maps come back empty.
+ */
+function controlObservationsFor({ loaded, installation, results, ownedDirs, pluginRoot, requestedCliVersion, evidenceDir, controlObservations }) {
+  if (!controlObservations) return { observations: {}, pairs: {} };
+  const loadedRoot = loaded?.installed?.installPath ?? null;
+  // A negative control is a deliberate perturbation: the stale-cache control exists to prove
+  // that the identity rule REFUSES a payload that moved, so when the run's own payload agrees
+  // with the checkout (the healthy case) the leg plants the one-byte drift itself and measures
+  // the rule against real digests. The observation carries `planted: true` so no reader mistakes
+  // it for a run that drifted on its own, and the matching-digest half travels as its pair.
+  const stale = staleCopy({ checkoutRoot: pluginRoot, loadedRoot, scratch: evidenceDir });
+  // The roots are what the invocation PRODUCED, not what it could read: the captured stream —
+  // the only place an `image` content block can appear — is persisted beside the model's
+  // requests, in the evidence dir the adapter wrote. Scanning the kit-project working tree alone
+  // would clear a tree that never held the bytes.
+  const observed = observeLeg({
+    checkoutRoot: pluginRoot,
+    staleRoot: stale.root,
+    mutatedFile: stale.mutatedFile,
+    planted: stale.planted === true,
+    verifyRecord: verifyRecordOf(results),
+    verifyCheck: "verify",
+    verifyRoots: verifyRootsOf(ownedDirs, results),
+    observedCliVersion: installation.observed_cli_version ?? null,
+    requestedCliVersion: installation.requested_cli_version ?? requestedCliVersion,
+  });
+  stale.cleanup?.();
+  return { observations: mergeObservations(observed.observations), pairs: mergeObservations(observed.pairs) };
 }
 
 /** `cell/cell.json` for a leg, or the fallback record when the leg produced nothing. */
