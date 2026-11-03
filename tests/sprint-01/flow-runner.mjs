@@ -188,6 +188,21 @@ function checkTriggersAndDispatchInput(yaml, jobs) {
   return { triggers, installModeDefault: input?.default ?? null, installModeOptions: options, failures };
 }
 
+// The workflow-level permissions block (must exist and be empty) and the concurrency group.
+// Hands `permissions` back because the return assembly reports it.
+function checkWorkflowPermissionsAndConcurrency(yaml, jobs) {
+  const failures = [];
+  const permissions = yaml?.permissions;
+  if (permissions === null || permissions === undefined) failures.push("workflow-level permissions block is missing");
+  else if (typeof permissions !== "object" || Object.keys(permissions).length > 0) {
+    failures.push(`workflow-level permissions is not empty: ${JSON.stringify(permissions)}`);
+  }
+
+  if (yaml?.concurrency?.group !== WORKFLOW_NAME) failures.push(`concurrency group is ${String(yaml?.concurrency?.group)}, expected ${WORKFLOW_NAME}`);
+  if (yaml?.concurrency?.["cancel-in-progress"] !== false) failures.push("concurrency cancel-in-progress must be false");
+  return { permissions, failures };
+}
+
 // The smoke job's own shape, and then every job's permission block: each job opts in
 // explicitly and no job ever holds a write scope. A scope named `actions` is allowed at read
 // level only (T8 needs it to read the run's job metadata).
@@ -378,14 +393,9 @@ export function inspectWorkflowDeclaration(yaml) {
   failures.push(...declaredTriggers.failures);
   const triggers = declaredTriggers.triggers;
 
-  const permissions = yaml?.permissions;
-  if (permissions === null || permissions === undefined) fail("workflow-level permissions block is missing");
-  else if (typeof permissions !== "object" || Object.keys(permissions).length > 0) {
-    fail(`workflow-level permissions is not empty: ${JSON.stringify(permissions)}`);
-  }
-
-  if (yaml?.concurrency?.group !== WORKFLOW_NAME) fail(`concurrency group is ${String(yaml?.concurrency?.group)}, expected ${WORKFLOW_NAME}`);
-  if (yaml?.concurrency?.["cancel-in-progress"] !== false) fail("concurrency cancel-in-progress must be false");
+  const declaredLimits = checkWorkflowPermissionsAndConcurrency(yaml, jobs);
+  failures.push(...declaredLimits.failures);
+  const permissions = declaredLimits.permissions;
 
   const smoke = jobs.smoke;
   failures.push(...checkJobPermissions(yaml, jobs));
