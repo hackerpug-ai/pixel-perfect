@@ -13,7 +13,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import test from "node:test";
 
-import { ROOT, dispatchDeferral, runFlow } from "./flow-runner.mjs";
+import { ROOT, dispatchDeferral, readProbeOutcome, runFlow } from "./flow-runner.mjs";
 
 const FLOW = "FLOW-RUN-02-HAND";
 
@@ -261,16 +261,49 @@ const DEFERRAL_PROBE = () => ({
   deferral: "runner-cannot-dispatch",
 });
 
-test("dispatchDeferral classifies unauthenticated gh stderr as runner-cannot-dispatch and everything else as null", () => {
-  // Real gh stderr shapes that mean THIS RUNNER cannot dispatch at all.
-  assert.equal(dispatchDeferral("gh: not authenticated"), "runner-cannot-dispatch");
+// REAL gh stderr, captured from gh 2.96.0 on 2026-11-03 (empty GH_CONFIG_DIR for the
+// unauthenticated case, a bogus GH_TOKEN for bad credentials): unauthenticated is a
+// TWO-LINE message on exit 4, a revoked token is a single "Bad credentials" line, and a
+// token without the workflow scope gets a 403 body. No pin below asserts a string gh
+// never emits.
+const REAL_UNAUTHENTICATED_STDERR =
+  "To get started with GitHub CLI, please run:  gh auth login\n" +
+  "Alternatively, populate the GH_TOKEN environment variable with a GitHub API authentication token.";
+const REAL_UNAUTH_LAST_LINE =
+  "Alternatively, populate the GH_TOKEN environment variable with a GitHub API authentication token.";
+
+test("readProbeOutcome surfaces the joined stderr, and dispatchDeferral classifies the real two-line unauthenticated message end-to-end", () => {
+  // F-1: gh's unauthenticated output is TWO lines and the last-line rule alone hides the
+  // auth hint, so the probe outcome must carry the full stderr for the classifier.
+  const verdict = readProbeOutcome({ ok: false, stderr: REAL_UNAUTHENTICATED_STDERR });
+  assert.equal(verdict.available, false);
+  assert.ok(verdict.error, "a probe that failed for a reason other than not-registered still carries its error");
+  assert.equal(verdict.detail, REAL_UNAUTH_LAST_LINE, "detail stays the last stderr line");
+  assert.equal(verdict.stderr, REAL_UNAUTHENTICATED_STDERR, "the joined stderr must be surfaced");
+  assert.equal(
+    dispatchDeferral(verdict.stderr),
+    "runner-cannot-dispatch",
+    "the probe path classifies the FULL stderr, end-to-end through readProbeOutcome + dispatchDeferral",
+  );
+});
+
+test("dispatchDeferral classifies gh's real auth/permission stderr shapes and everything else as null", () => {
+  // Real shapes (gh 2.96.0): either line of the two-line login hint, a revoked token, and
+  // a 403 body from a token without the workflow scope.
+  assert.equal(dispatchDeferral(REAL_UNAUTHENTICATED_STDERR), "runner-cannot-dispatch");
+  assert.equal(dispatchDeferral("To get started with GitHub CLI, please run:  gh auth login"), "runner-cannot-dispatch");
+  assert.equal(dispatchDeferral(REAL_UNAUTH_LAST_LINE), "runner-cannot-dispatch");
   assert.equal(dispatchDeferral("gh: Bad credentials (HTTP 401)"), "runner-cannot-dispatch");
-  assert.equal(dispatchDeferral("gh: forbidden (HTTP 403)"), "runner-cannot-dispatch");
-  // Everything else keeps the fail path: registered-elsewhere, network, missing binary, silent.
+  assert.equal(dispatchDeferral("Resource not accessible by integration (HTTP 403)"), "runner-cannot-dispatch");
+  // Everything else keeps the fail path: registered-elsewhere, network, missing binary,
+  // silent, a 5xx — and a dispatch-start failure outside the permission class, because
+  // jrn-planted-and-twin resolves its dispatch-start failures through this same classifier.
   assert.equal(dispatchDeferral(UNREGISTERED_PROBE_DETAIL), null);
   assert.equal(dispatchDeferral("dial tcp 140.82.112.17:443: connect: connection refused"), null);
   assert.equal(dispatchDeferral("spawnSync gh ENOENT"), null);
   assert.equal(dispatchDeferral("gh api exited 1"), null);
+  assert.equal(dispatchDeferral("could not find any workflows named harness-eval"), null);
+  assert.equal(dispatchDeferral("gh: Server Error (HTTP 500)"), null);
   assert.equal(dispatchDeferral(""), null);
   assert.equal(dispatchDeferral(null), null);
   assert.equal(dispatchDeferral(undefined), null);

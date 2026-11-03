@@ -231,11 +231,15 @@ export function downloadVerifyReports(runId, attempt, { runGh = gh } = {}) {
  * A `gh` TEST DOUBLE — never the thing under test. It models only the calls the live leg makes,
  * and exactly the three registration-probe outcomes a `gh api .../workflows/harness-eval.yml`
  * can answer with: `registered` (200), `unregistered` (404 — the file is not on main yet), and
- * `unreadable` (502 — an error that is NOT a refusal). Each shape is posed by name instead of
- * by hand-rolled ternaries, and any gh call it does not model throws, so a new call cannot
- * silently pass through it. `calls` is the probe log the controls assert on.
+ * `unreadable` (502 — an error that is NOT a refusal). A dispatch-start failure's stderr is
+ * posed by name (`dispatchStderr`, default: the unregistered-workflow answer) so the real
+ * permission-class shapes — "Resource not accessible by integration (HTTP 403)" on a
+ * read-only token, "gh: Bad credentials (HTTP 401)" — can be replayed against the
+ * runner-cannot-dispatch classifier without inventing a network. Each shape is posed by name
+ * instead of by hand-rolled ternaries, and any gh call it does not model throws, so a new call
+ * cannot silently pass through it. `calls` is the probe log the controls assert on.
  */
-export function modelGh({ auth = 0, registration = "registered", dispatch = 0, listStatus = 0, runList = "[]", download = 0 } = {}) {
+export function modelGh({ auth = 0, registration = "registered", dispatch = 0, dispatchStderr = "could not find any workflows named harness-eval", listStatus = 0, runList = "[]", download = 0 } = {}) {
   const outcomes = {
     registered: { status: 0, stdout: '{"id":1}', stderr: "" },
     unregistered: { status: 1, stdout: "", stderr: "gh: Not Found (HTTP 404)" },
@@ -248,7 +252,7 @@ export function modelGh({ auth = 0, registration = "registered", dispatch = 0, l
     if (args[0] === "auth") return { status: auth, stdout: "", stderr: auth === 0 ? "" : "gh: not logged in" };
     if (args[0] === "api") return outcomes[registration];
     if (args[0] === "workflow" && args[1] === "run") {
-      return { status: dispatch, stdout: "", stderr: dispatch === 0 ? "" : "could not find any workflows named harness-eval" };
+      return { status: dispatch, stdout: "", stderr: dispatch === 0 ? "" : dispatchStderr };
     }
     if (args[0] === "run" && args[1] === "list") {
       return listStatus === 0 ? { status: 0, stdout: runList, stderr: "" } : { status: listStatus, stdout: "", stderr: "gh: run list failed" };
@@ -523,6 +527,46 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
 
     // 7. A deferral with no reason cannot hide behind the marker.
     assert.throws(() => gradeLiveRun({ ok: false, deferral: true, reason: "" }, () => {}), /always carries its reason/);
+  });
+
+  await t.test("a dispatch GitHub refuses to START for permission reasons defers as runner-cannot-dispatch", () => {
+    // The CI push-to-main shape: the workflow is registered, the ref may dispatch, the token
+    // is valid but read-only — `gh workflow run` exits 403 before any run exists. That is an
+    // environment that cannot dispatch at all (owner-approved deferral, red-hat F-001,
+    // 2026-11-03), so the leg records not-executed under the SAME named deferral as the
+    // probe instead of failing the gate on CI infrastructure it does not own.
+    const forbidden = modelGh({ dispatch: 1, dispatchStderr: "Resource not accessible by integration (HTTP 403)" });
+    const run = resolveLiveRun({ env: {}, ref: "main", hasWorkflow: () => true, gh: forbidden });
+    assert.equal(run.ok, false);
+    assert.equal(run.deferral, true, "a permission-class refusal to START the dispatch is the named deferral");
+    assert.equal(run.cause, "runner-cannot-dispatch");
+    assert.match(
+      run.reason,
+      /^runner-cannot-dispatch: gh workflow run harness-eval failed: Resource not accessible by integration \(HTTP 403\)$/,
+    );
+    assert.ok(forbidden.calls.includes(DISPATCH_CALL), "the dispatch really was attempted before the deferral");
+    const emitted = [];
+    gradeLiveRun(run, (m) => emitted.push(m));
+    assert.equal(emitted.length, 1);
+    assert.match(
+      emitted[0],
+      /^not-executed leg=live-dispatched-run owner=T7 obligation=obl-FLOW-JRN-PLANTED-AND-TWIN reason=runner-cannot-dispatch/,
+    );
+
+    // A revoked token fails the start the same way and classifies the same.
+    const revoked = resolveLiveRun({ env: {}, ref: "main", hasWorkflow: () => true, gh: modelGh({ dispatch: 1, dispatchStderr: "gh: Bad credentials (HTTP 401)" }) });
+    assert.equal(revoked.deferral, true);
+    assert.equal(revoked.cause, "runner-cannot-dispatch");
+
+    // Negative control: a start failure OUTSIDE the permission class keeps today's red — a
+    // 500 is a broken GitHub, not an environment that cannot dispatch.
+    const serverError = resolveLiveRun({ env: {}, ref: "main", hasWorkflow: () => true, gh: modelGh({ dispatch: 1, dispatchStderr: "gh: Server Error (HTTP 500)" }) });
+    assert.equal(serverError.ok, false);
+    assert.equal(serverError.deferral, undefined, "a 500 dispatch failure is never a deferral");
+    assert.throws(
+      () => gradeLiveRun(serverError, () => {}),
+      /live-dispatched-run could not execute: gh workflow run harness-eval failed: gh: Server Error \(HTTP 500\)/,
+    );
   });
 
   await t.test("one live dispatched run: oracle precheck, both reports, distinct invocation_ids", (tt) => {
