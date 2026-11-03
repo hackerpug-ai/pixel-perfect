@@ -15,6 +15,7 @@
 import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 
+import { splitLines } from "../lib/lines.mjs";
 import { StreamError, classifyTool, contentBlocks, extractValue, rulesFor } from "./table.mjs";
 
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
@@ -24,25 +25,7 @@ const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
  * spans abut exactly; a final line with no terminator ends the stream.
  */
 export function measureLines(bytes) {
-  const out = [];
-  let start = 0;
-  while (start < bytes.length) {
-    const newline = bytes.indexOf(0x0a, start);
-    const end = newline === -1 ? bytes.length : newline + 1;
-    const rawSpan = bytes.subarray(start, end);
-    const rawText = rawSpan.toString("utf8");
-    const terminator = rawText.endsWith("\n") ? "\n" : "";
-    const text = terminator ? rawText.slice(0, -1) : rawText;
-    let json = null;
-    try {
-      json = text.length > 0 ? JSON.parse(text) : null;
-    } catch {
-      json = null;
-    }
-    out.push({ offset: start, end_offset: end, text, terminator, json, raw_sha256: sha256(rawSpan) });
-    start = end;
-  }
-  return out;
+  return splitLines(bytes, { keepTerminator: true, digest: "span" });
 }
 
 /**

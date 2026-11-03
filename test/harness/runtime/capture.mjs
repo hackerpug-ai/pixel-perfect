@@ -17,6 +17,8 @@ import { createHash, randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
+import { splitLines } from "../lib/lines.mjs";
+
 export const TERMINATION_KINDS = ["native", "boundary-stop", "timeout", "unexpected"];
 export const CAPTURE_SCHEMA = "invocation-capture/v1";
 const SKIP_DIRS = new Set(["node_modules", ".git", ".tmp"]);
@@ -107,26 +109,7 @@ export function createCapture({
 
   /** Lines of stdout with the byte span each one occupies. Offsets are measured, never inferred. */
   function lines() {
-    const out = [];
-    let start = 0;
-    while (start < stdout.length) {
-      const newline = stdout.indexOf(0x0a, start);
-      const end = newline === -1 ? stdout.length : newline + 1;
-      const raw = stdout.subarray(start, end);
-      const text = raw.toString("utf8").replace(/\r?\n$/, "");
-      if (text.length > 0) {
-        let json = null;
-        try {
-          json = JSON.parse(text);
-        } catch {
-          json = null;
-        }
-        const byteLength = Buffer.byteLength(text);
-        out.push({ text, json, offset: start, end_offset: start + byteLength, sha256: sha256(raw.subarray(0, byteLength)) });
-      }
-      start = end;
-    }
-    return out;
+    return splitLines(stdout, { digest: "text" });
   }
 
   /** Reads a cited span back out of the captured bytes; refuses a span that is not really there. */
