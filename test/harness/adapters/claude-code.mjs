@@ -295,7 +295,7 @@ function declaredWrites(caseManifest) {
 
 /**
  * The batch id the product's own `How this workflow asks` table opens with, read out of the workflow
- * file at load time: a renumbered or renamed batch reaches the prompt with no adapter edit, and the
+ * file on first use: a renumbered or renamed batch reaches the prompt with no adapter edit, and the
  * lane re-derives it from the same table to prove the two agree. Never a literal typed here.
  *
  * An unreadable table falls back to the placeholder shape `USER_CHOICE(<batch-id>)`, which the marker
@@ -312,7 +312,17 @@ function productFirstBatchId() {
   }
 }
 
-export const QUESTION_BATCH_ID = productFirstBatchId();
+let questionBatchIdMemo;
+let questionBatchIdRead = false;
+
+/** `productFirstBatchId()`, read once on first use instead of at module load. */
+function questionBatchId() {
+  if (!questionBatchIdRead) {
+    questionBatchIdMemo = productFirstBatchId();
+    questionBatchIdRead = true;
+  }
+  return questionBatchIdMemo;
+}
 
 /**
  * What one graded `first-question` turn is told it is graded on, declared once so a reader can see it
@@ -342,7 +352,7 @@ export function questionSurfacePrompt({ caseManifest = null } = {}) {
   if (caseManifest?.ask_policy !== QUESTION_SURFACE.ask_policy) return "";
   const question = caseManifest?.expected_question;
   if (typeof question !== "string" || question.trim().length === 0) return "";
-  const marker = QUESTION_BATCH_ID ? `USER_CHOICE(${QUESTION_BATCH_ID})` : QUESTION_SURFACE.marker;
+  const marker = questionBatchId() ? `USER_CHOICE(${questionBatchId()})` : QUESTION_SURFACE.marker;
   return [
     `Graded question surface: this turn is graded on ${QUESTION_SURFACE.batch_rule} question, asked ${QUESTION_SURFACE.order_rule}.`,
     `Ask the decision this case declares: ${question.trim()}.`,
