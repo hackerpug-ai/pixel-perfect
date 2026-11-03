@@ -151,6 +151,17 @@ export function captureIntegrity(events = [], record = null) {
 }
 
 /**
+ * The check's declared expectations: the caller's `required_facts`, else the mapping table's fact
+ * ids. Null when neither supplies a list — a check may never take its expectations from the events
+ * it grades (the stream would supply both sides), so null is the caller's error to refuse.
+ */
+function declaredRequiredFacts(table, required_facts) {
+  if (required_facts !== null && required_facts !== undefined) return required_facts;
+  if (!table) return null;
+  return (table.required_facts ?? []).map((fact) => fact.fact_id);
+}
+
+/**
  * Grades one check from a stream and its capture record.
  *
  * @param {object} options
@@ -181,11 +192,10 @@ export function gradeStreamCheck({
   if (!record) throw new Error("gradeStreamCheck needs a capture record");
   if (!Array.isArray(events)) throw new Error("gradeStreamCheck needs normalised events");
 
-  const declared = required_facts ?? (table ? (table.required_facts ?? []).map((fact) => fact.fact_id) : null);
-  if (!Array.isArray(declared)) {
+  const facts = declaredRequiredFacts(table, required_facts);
+  if (!Array.isArray(facts)) {
     throw new Error("gradeStreamCheck needs required_facts (or a mapping table): a check may not take its expectations from the events it grades");
   }
-  const facts = declared;
   const streamRecord = { ...record, observations: observationsFromEvents(events) };
   const base = gradeFromEvidence({
     record: streamRecord,
