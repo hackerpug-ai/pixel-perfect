@@ -262,6 +262,27 @@ function checkNeedsChain(yaml, jobs) {
   return failures;
 }
 
+// The declared matrix: its cells, and the uniqueness/completeness rules over them. Hands the
+// shape back because the return assembly reports it.
+function checkMatrix(yaml, jobs) {
+  const failures = [];
+  const smoke = jobs.smoke;
+  const matrix = smoke?.strategy?.matrix ?? {};
+  const harnesses = Array.isArray(matrix.harness) ? matrix.harness : [];
+  const tracks = Array.isArray(matrix.track) ? matrix.track : [];
+  const cells = harnesses.flatMap((harness) => tracks.map((track) => ({ harness, track })));
+  if (cells.length !== 12) failures.push(`matrix declares ${cells.length} cells, expected 12`);
+  if (new Set(cells.map((cell) => `${cell.harness}/${cell.track}`)).size !== cells.length) failures.push("matrix cells are not unique");
+  for (const harness of HARNESSES) {
+    if (!harnesses.includes(harness)) failures.push(`matrix is missing harness ${harness}`);
+  }
+  if (!harnesses.includes("cursor")) failures.push("matrix is missing cursor");
+  for (const track of TRACKS) {
+    if (!tracks.includes(track)) failures.push(`matrix is missing track ${track}`);
+  }
+  return { harnesses, tracks, cells, failures };
+}
+
 function checkSmokeSteps(yaml, jobs) {
   const failures = [];
   const smoke = jobs.smoke;
@@ -364,19 +385,11 @@ export function inspectWorkflowDeclaration(yaml) {
 
   failures.push(...checkNeedsChain(yaml, jobs));
 
-  const matrix = smoke?.strategy?.matrix ?? {};
-  const harnesses = Array.isArray(matrix.harness) ? matrix.harness : [];
-  const tracks = Array.isArray(matrix.track) ? matrix.track : [];
-  const cells = harnesses.flatMap((harness) => tracks.map((track) => ({ harness, track })));
-  if (cells.length !== 12) fail(`matrix declares ${cells.length} cells, expected 12`);
-  if (new Set(cells.map((cell) => `${cell.harness}/${cell.track}`)).size !== cells.length) fail("matrix cells are not unique");
-  for (const harness of HARNESSES) {
-    if (!harnesses.includes(harness)) fail(`matrix is missing harness ${harness}`);
-  }
-  if (!harnesses.includes("cursor")) fail("matrix is missing cursor");
-  for (const track of TRACKS) {
-    if (!tracks.includes(track)) fail(`matrix is missing track ${track}`);
-  }
+  const declared = checkMatrix(yaml, jobs);
+  failures.push(...declared.failures);
+  const harnesses = declared.harnesses;
+  const tracks = declared.tracks;
+  const cells = declared.cells;
 
   failures.push(...checkSmokeSteps(yaml, jobs));
   failures.push(...checkSkeletonFetch(yaml, jobs));
