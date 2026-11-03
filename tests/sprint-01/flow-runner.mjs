@@ -428,13 +428,6 @@ export function latestRun({ repo }) {
   return { ok: true, run: runs[0] };
 }
 
-/** Downloads one attempt-qualified artifact. */
-export function downloadArtifact({ repo, runId, name, dir }) {
-  rmSync(dir, { recursive: true, force: true });
-  mkdirSync(dir, { recursive: true });
-  return runCommand("gh", ["run", "download", String(runId), "--repo", repo, "-n", name, "-D", dir]);
-}
-
 /**
  * Which tier can prove this flow? A live dispatch wins whenever one is possible — once
  * `harness-eval.yml` is registered on the default branch the declaration is no longer evidence,
