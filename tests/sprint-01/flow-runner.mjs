@@ -212,6 +212,40 @@ function checkRecorderInterpolation(yaml, jobs) {
   return failures;
 }
 
+// A harness key may only ever sit in the cell's own recording step `env:` block (T9). Any
+// other surface — a `run:` body, a `with:` input, a step name — is a leak, whatever the step
+// is called, no non-smoke job may hold one, and no *other* smoke step may either (the install
+// slot sits in the same job). An `env:` map above step level is checked too: it binds the key
+// into every step that inherits it without any step declaring it, so the step scan is blind
+// to exactly the leak this rule exists to prevent.
+function checkSecretSurfaces(yaml, jobs) {
+  const failures = [];
+  const recorder = recorderStepOf(jobs);
+  for (const [surface, env] of [
+    ["workflow", yaml?.env],
+    ...Object.entries(jobs).map(([name, job]) => [`jobs.${name}`, job?.env]),
+  ]) {
+    if (SECRET_REF.test(JSON.stringify(env ?? {}))) {
+      failures.push(`the ${surface} env binds a secret, so every step below it inherits the key`);
+    }
+  }
+  for (const [name, job] of Object.entries(jobs)) {
+    for (const step of stepsOf(job)) {
+      const label = `${name}/${String(step?.name ?? "unnamed step")}`;
+      if (SECRET_REF.test(stepText(step))) failures.push(`step ${label} references a secret outside its env block`);
+      const envSecrets = SECRET_REF.test(JSON.stringify(step?.env ?? {}));
+      // [T9] A cell's own smoke model step is where that harness's key is bound; T9's own panel in
+      // grd-06 proves exactly one key per cell and none on any install, record, upload or drift
+      // step. Everything else keeps the rule above: the key lives on the cell's own step, nowhere
+      // else.
+      const isModelStep = /^Smoke model step\b/.test(String(step?.name ?? ""));
+      if (envSecrets && name !== "smoke") failures.push(`step ${label} binds a secret in a non-smoke job`);
+      else if (envSecrets && step !== recorder?.step && !isModelStep) failures.push(`step ${label} binds a secret outside the cell's own recording step`);
+    }
+  }
+  return failures;
+}
+
 /**
  * Reads what the workflow DECLARES: its triggers, the dispatch input default, permissions,
  * the matrix shape and the skeleton jobs. Pure: takes the parsed workflow, returns the
@@ -256,39 +290,8 @@ export function inspectWorkflowDeclaration(yaml) {
   const smoke = jobs.smoke;
   failures.push(...checkJobPermissions(yaml, jobs));
 
-  // The dispatch input must reach the record, not a literal that happens to look like it.
-  const recorder = recorderStepOf(jobs);
-
-  // A harness key may only ever sit in the cell's own recording step `env:` block (T9). Any
-  // other surface — a `run:` body, a `with:` input, a step name — is a leak, whatever the step
-  // is called, no non-smoke job may hold one, and no *other* smoke step may either (the install
-  // slot sits in the same job). An `env:` map above step level is checked too: it binds the key
-  // into every step that inherits it without any step declaring it, so the step scan is blind
-  // to exactly the leak this rule exists to prevent.
-  for (const [surface, env] of [
-    ["workflow", yaml?.env],
-    ...Object.entries(jobs).map(([name, job]) => [`jobs.${name}`, job?.env]),
-  ]) {
-    if (SECRET_REF.test(JSON.stringify(env ?? {}))) {
-      fail(`the ${surface} env binds a secret, so every step below it inherits the key`);
-    }
-  }
-  for (const [name, job] of Object.entries(jobs)) {
-    for (const step of stepsOf(job)) {
-      const label = `${name}/${String(step?.name ?? "unnamed step")}`;
-      if (SECRET_REF.test(stepText(step))) fail(`step ${label} references a secret outside its env block`);
-      const envSecrets = SECRET_REF.test(JSON.stringify(step?.env ?? {}));
-      // [T9] A cell's own smoke model step is where that harness's key is bound; T9's own panel in
-      // grd-06 proves exactly one key per cell and none on any install, record, upload or drift
-      // step. Everything else keeps the rule above: the key lives on the cell's own step, nowhere
-      // else.
-      const isModelStep = /^Smoke model step\b/.test(String(step?.name ?? ""));
-      if (envSecrets && name !== "smoke") fail(`step ${label} binds a secret in a non-smoke job`);
-      else if (envSecrets && step !== recorder?.step && !isModelStep) fail(`step ${label} binds a secret outside the cell's own recording step`);
-    }
-  }
-
   failures.push(...checkNoOpSteps(yaml, jobs));
+  failures.push(...checkSecretSurfaces(yaml, jobs));
   failures.push(...checkRecorderInterpolation(yaml, jobs));
 
   // The skeleton chain has to be wired: cells in, cells through, receipt out.
