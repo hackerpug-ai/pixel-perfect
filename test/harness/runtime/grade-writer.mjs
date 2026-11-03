@@ -4,11 +4,12 @@
 // a temp file in the grade directory, fsyncs it, renames it in the same directory, then reads it back
 // from disk and compares the five identity fields. A mismatch, a partial file, or a citation that no
 // longer resolves is could-not-run — a grade that cannot be read back is not a pass.
-import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, statSync, writeSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 import { assertPassEvidence, validateAgainst } from "../validate.mjs";
 import { worstVerdict } from "../lib/verdict.mjs";
+import { ReadBackMismatch, writeDurable } from "../lib/write-durable.mjs";
 import { denials, observedFacts, resolveEvidencePath, resolveObservation, undeclaredDenials } from "./capture.mjs";
 
 export const GRADE_SCHEMA = "harness-cell/v1";
@@ -42,6 +43,63 @@ function evidenceBlocks(evidencePaths, { record = null, root = null } = {}) {
   return blocks;
 }
 
+/** The block that fires when no earlier rule blocked: a pass only if a required fact was declared. */
+function nothingGradedBlock(required_facts) {
+  return required_facts.length === 0
+    ? block("could-not-run", "nothing-graded", { why: "no required fact was declared, so nothing was graded" })
+    : block("pass", null);
+}
+
+/** A required fact the record never observed is could-not-run: absence of evidence is not evidence. */
+function requiredFactBlocks(record, required_facts) {
+  const seen = observedFacts(record);
+  const missingFacts = required_facts.filter((fact) => !seen.has(fact.fact_id)).map((fact) => fact.fact_id);
+  return missingFacts.length === 0 ? [] : [block("could-not-run", "required-fact-unobserved", { missing: missingFacts })];
+}
+
+/** An observation whose citation cannot be resolved off the record's evidence root is could-not-run. */
+function observationBlocks(record, evidence_root) {
+  const observations = record?.observations ?? [];
+  const unresolved = [];
+  for (const observation of observations) {
+    try {
+      resolveObservation(record, observation, { root: evidence_root });
+    } catch (error) {
+      unresolved.push({ sequence: observation.sequence ?? null, reason: error.reason ?? String(error.message ?? error) });
+    }
+  }
+  return unresolved.length === 0 ? [] : [block("could-not-run", "evidence-unresolvable", { unresolved })];
+}
+
+/** A timeout, an unexpected termination, or a truncated capture prefix blocks the grade on its own reason. */
+function terminationBlocks(record) {
+  const blocks = [];
+  const kind = record?.termination_kind;
+  if (kind === "timeout") blocks.push(block("could-not-run", "termination-timeout", { timeout_ms: record.timeout_ms ?? null }));
+  if (kind === "unexpected" && !record?.refusal) blocks.push(block("could-not-run", "termination-unexpected", { process_status: record.process_status ?? null }));
+  if (record?.prefix_complete === false) blocks.push(block("could-not-run", "capture-prefix-incomplete", { boundary_event_offset: record.boundary_event_offset ?? null }));
+  return blocks;
+}
+
+/**
+ * Denials grade twice: an undeclared required-read denial is could-not-run (absence of a
+ * requiredness declaration is not permission), a declared one is fail. `denied` comes back too —
+ * the first denial names the cell's denied_tool_call.
+ */
+function denialBlocks(record) {
+  const blocks = [];
+  const undeclared = undeclaredDenials(record);
+  if (undeclared.length > 0) {
+    blocks.push(block("could-not-run", "requiredness-undeclared", { denials: undeclared.length }));
+  }
+
+  const denied = denials(record);
+  if (denied.length > 0) {
+    blocks.push(block("fail", "denied_tool_call", { denials: denied.length }));
+  }
+  return { blocks, denied };
+}
+
 /**
  * Builds the graded cell from a capture record. The verdict comes from what the record observed —
  * termination kind, resolvable citations, required facts, required-read denials — and from nothing
@@ -71,44 +129,19 @@ export function gradeFromEvidence({
       }),
     );
   }
-  const kind = record?.termination_kind;
-  if (kind === "timeout") blocks.push(block("could-not-run", "termination-timeout", { timeout_ms: record.timeout_ms ?? null }));
-  if (kind === "unexpected" && !record?.refusal) blocks.push(block("could-not-run", "termination-unexpected", { process_status: record.process_status ?? null }));
-  if (record?.prefix_complete === false) blocks.push(block("could-not-run", "capture-prefix-incomplete", { boundary_event_offset: record.boundary_event_offset ?? null }));
 
-  const observations = record?.observations ?? [];
-  const unresolved = [];
-  for (const observation of observations) {
-    try {
-      resolveObservation(record, observation, { root: evidence_root });
-    } catch (error) {
-      unresolved.push({ sequence: observation.sequence ?? null, reason: error.reason ?? String(error.message ?? error) });
-    }
-  }
-  if (unresolved.length > 0) blocks.push(block("could-not-run", "evidence-unresolvable", { unresolved }));
+  blocks.push(...terminationBlocks(record));
 
-  const seen = observedFacts(record);
-  const missingFacts = required_facts.filter((fact) => !seen.has(fact.fact_id)).map((fact) => fact.fact_id);
-  if (missingFacts.length > 0) blocks.push(block("could-not-run", "required-fact-unobserved", { missing: missingFacts }));
+  blocks.push(...observationBlocks(record, evidence_root));
 
-  // Absence of a requiredness declaration is not permission: an undeclared denial is not a pass.
-  const undeclared = undeclaredDenials(record);
-  if (undeclared.length > 0) {
-    blocks.push(block("could-not-run", "requiredness-undeclared", { denials: undeclared.length }));
-  }
+  blocks.push(...requiredFactBlocks(record, required_facts));
 
-  const denied = denials(record);
-  if (denied.length > 0) {
-    blocks.push(block("fail", "denied_tool_call", { denials: denied.length }));
-  }
+  const { blocks: denialBlockList, denied } = denialBlocks(record);
+  blocks.push(...denialBlockList);
 
   if (blocks.length === 0) {
     // Reaching here means nothing was refused, but a required fact is what makes a pass a pass.
-    blocks.push(
-      required_facts.length === 0
-        ? block("could-not-run", "nothing-graded", { why: "no required fact was declared, so nothing was graded" })
-        : block("pass", null),
-    );
+    blocks.push(nothingGradedBlock(required_facts));
   }
 
   const verdict = worstVerdict(blocks.map((entry) => entry.verdict));
@@ -167,25 +200,30 @@ export function gradeFileName(cell) {
 export function writeGrade({ dir, cell, now = () => Date.now() }) {
   mkdirSync(dir, { recursive: true });
   const path = join(dir, gradeFileName(cell));
-  const tempPath = `${path}.tmp-${process.pid}-${now()}`;
   const text = `${JSON.stringify(cell, null, 2)}\n`;
-
-  const fd = openSync(tempPath, "w");
   try {
-    writeSync(fd, text);
-    fsyncSync(fd);
-  } finally {
-    closeSync(fd);
+    const written = writeDurable(path, text, {
+      now,
+      compare: (file) => {
+        const readBack = readGrade(file);
+        return { ...verifyReadBack(cell, readBack), read_back: readBack };
+      },
+    });
+    const identity = written.result;
+    return { ok: true, path, temp_path: written.temp_path, verdict: identity.verdict, reason: identity.reason, read_back: identity.read_back };
+  } catch (error) {
+    if (!(error instanceof ReadBackMismatch)) throw error;
+    const identity = error.result;
+    return {
+      ok: false,
+      path,
+      temp_path: error.temp_path,
+      verdict: identity.verdict,
+      reason: identity.reason,
+      mismatches: identity.mismatches,
+      read_back: identity.read_back,
+    };
   }
-  renameSync(tempPath, path);
-
-  const readBack = readGrade(path);
-  const identity = verifyReadBack(cell, readBack);
-  if (!identity.ok) {
-    rmSync(path, { force: true });
-    return { ok: false, path, temp_path: tempPath, verdict: identity.verdict, reason: identity.reason, mismatches: identity.mismatches, read_back: readBack };
-  }
-  return { ok: true, path, temp_path: tempPath, verdict: identity.verdict, reason: identity.reason, read_back: readBack };
 }
 
 /** Reads a grade file from disk. A missing or unparseable file is could-not-run, never a grade. */

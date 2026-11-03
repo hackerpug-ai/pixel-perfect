@@ -24,7 +24,7 @@ export const REFUSAL_REASONS = Object.freeze({
 // absence. The list is data here so a future sanctioned fallback is a visible change, not a code path.
 export const CREDENTIAL_FALLBACKS = Object.freeze({});
 
-const SECRET_NAME = /^(SMOKE_[A-Z0-9_]+|ANTHROPIC_API_KEY|CODEX_API_KEY|XAI_API_KEY|GEMINI_API_KEY|CURSOR_API_KEY)$/;
+export const SECRET_NAME = /^(SMOKE_[A-Z0-9_]+|ANTHROPIC_API_KEY|CODEX_API_KEY|XAI_API_KEY|GEMINI_API_KEY|CURSOR_API_KEY)$/;
 
 function pinFor(harness, manifest) {
   const pins = manifest ?? loadPins().manifest;
