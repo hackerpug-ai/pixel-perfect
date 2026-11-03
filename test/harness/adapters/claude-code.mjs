@@ -1391,14 +1391,12 @@ export async function executeLoad({ workspace = ROOT, configDir, env = process.e
  * only here: an unattributable run is could-not-run installation-identity-mismatch before any
  * check verdict is read.
  */
-export function cellFor({ track, cells, installation, harness = HARNESS }) {
-  const perCheck = cells ?? [];
-  if (perCheck.length === 0) throw new Error("cellFor needs at least one graded check");
-  const identity = approveIdentity(installation, {
-    requested_cli_version: installation?.resolved_cli_version ?? installation?.requested_cli_version ?? null,
-  });
-  // Four check verdicts, not one per invocation: `verify` is graded from two invocations (planted
-  // and clean) and the check's verdict is the worse of them.
+/**
+ * Four check verdicts, not one per invocation: `verify` is graded from two invocations (planted and
+ * clean) and the check's verdict is the worse of them. The merged rows keep the adapter's own check
+ * order and drop any check id the four-check table does not declare.
+ */
+function mergedChecks(perCheck) {
   const byCheck = new Map();
   for (const cell of perCheck) {
     for (const check of cell.checks ?? []) {
@@ -1411,7 +1409,32 @@ export function cellFor({ track, cells, installation, harness = HARNESS }) {
       if (verdict !== seen.verdict) byCheck.set(check.check_id, { check_id: check.check_id, verdict, reason: check.reason ?? null, source: check.source });
     }
   }
-  const checks = [...CHECKS.filter((checkId) => byCheck.has(checkId)).map((checkId) => byCheck.get(checkId))];
+  return [...CHECKS.filter((checkId) => byCheck.has(checkId)).map((checkId) => byCheck.get(checkId))];
+}
+
+/**
+ * The per-check record the aggregate's evidence identity comes from: the one carrying the
+ * aggregate's own verdict (with a named invocation), else any record with a named invocation, else
+ * the first. A pass needs a named invocation and its raw exit status, and a could-not-run cell
+ * still cites the run that produced the bytes it could not grade. Without this, `invocation_id`
+ * stays null and `assertPassEvidence` makes a graded pass unrepresentable.
+ */
+function evidenceCellFor(perCheck, verdict) {
+  return (
+    perCheck.find((cell) => cell.verdict === verdict && typeof cell.invocation_id === "string" && cell.invocation_id.length > 0) ??
+    perCheck.find((cell) => typeof cell.invocation_id === "string" && cell.invocation_id.length > 0) ??
+    perCheck[0] ??
+    null
+  );
+}
+
+export function cellFor({ track, cells, installation, harness = HARNESS }) {
+  const perCheck = cells ?? [];
+  if (perCheck.length === 0) throw new Error("cellFor needs at least one graded check");
+  const identity = approveIdentity(installation, {
+    requested_cli_version: installation?.resolved_cli_version ?? installation?.requested_cli_version ?? null,
+  });
+  const checks = mergedChecks(perCheck);
   const verdicts = [...perCheck.map((cell) => cell.verdict), ...(identity.ok ? [] : ["could-not-run"])];
   const verdict = worstVerdict(verdicts);
   const winner = identity.ok
@@ -1419,16 +1442,7 @@ export function cellFor({ track, cells, installation, harness = HARNESS }) {
     : { reason: identity.reason, field: identity.detail?.field ?? null };
   const observed =
     perCheck.map((cell) => cell.observed_verify_outcome).find((outcome) => outcome != null) ?? null;
-
-  // The aggregate's evidence identity comes from the per-check record that carries the aggregate's
-  // own verdict: a pass needs a named invocation and its raw exit status, and a could-not-run cell
-  // still cites the run that produced the bytes it could not grade. Without this, `invocation_id`
-  // stays null and `assertPassEvidence` makes a graded pass unrepresentable.
-  const evidenceCell =
-    perCheck.find((cell) => cell.verdict === verdict && typeof cell.invocation_id === "string" && cell.invocation_id.length > 0) ??
-    perCheck.find((cell) => typeof cell.invocation_id === "string" && cell.invocation_id.length > 0) ??
-    perCheck[0] ??
-    null;
+  const evidenceCell = evidenceCellFor(perCheck, verdict);
   const exitCode = Number.isInteger(evidenceCell?.process_exit_code)
     ? evidenceCell.process_exit_code
     : (perCheck.map((entry) => entry.process_exit_code).find((code) => Number.isInteger(code)) ?? null);
