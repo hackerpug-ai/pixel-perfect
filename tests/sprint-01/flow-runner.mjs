@@ -537,6 +537,20 @@ function identityFromDeclaration(declaration) {
   };
 }
 
+/**
+ * Tier B never claims AC-1, so the artifact must name exactly what a hosted run still has to
+ * prove before the declaration deferral can expire. Fresh array per call: the artifact owns
+ * its copy.
+ */
+function awaitingHostedRun() {
+  return [
+    "run.event == workflow_dispatch",
+    "the run's artifact records install_mode == checkout for a no-input dispatch",
+    "run.headSha == the dispatch commit (candidate_sha)",
+    "twelve cells run on a hosted runner",
+  ];
+}
+
 async function run02Hand(options = {}) {
   const repo = options.repo ?? "hackerpug-ai/pixel-perfect";
   // The probe is injected only by the negative control that proves the deferral expires;
@@ -637,12 +651,7 @@ async function run02Hand(options = {}) {
     // claims AC-1: ac1_satisfied stays false until a hosted run supplies candidate_sha.
     artifact.proof_tier = tier;
     artifact.live_dispatch.mode = "none";
-    artifact.awaiting_hosted_run = [
-      "run.event == workflow_dispatch",
-      "the run's artifact records install_mode == checkout for a no-input dispatch",
-      "run.headSha == the dispatch commit (candidate_sha)",
-      "twelve cells run on a hosted runner",
-    ];
+    artifact.awaiting_hosted_run = awaitingHostedRun();
   }
 
   artifact.identity = identity;
