@@ -167,29 +167,12 @@ function denialTarget(denial) {
 }
 
 /**
- * Normalises a capture into CanonicalEvents.
- *
- * @param {object} options
- * @param {Buffer} options.bytes raw captured stdout
- * @param {object} options.table a table from loadTable()
- * @param {string} [options.invocation_id]
- * @param {string[]|null} [options.required_read_paths] the check's own declaration
+ * The emission pass: one walk over the measured lines, one event per (line, rule) pair in line
+ * order, so `sequence` follows the capture. A line no rule maps becomes `harness_specific` with
+ * its bytes kept (invariant 1); a denial rule expands the denials array instead of emitting one
+ * event, so zero denials yields zero events.
  */
-export function normalise({ bytes, table, invocation_id = null, required_read_paths = null } = {}) {
-  if (!Buffer.isBuffer(bytes)) throw new StreamError("capture-bytes-missing", { type: typeof bytes });
-  if (!table) throw new StreamError("mapping-table-missing");
-  const lines = measureLines(bytes);
-  const sessionOf = (() => {
-    let cached;
-    return () => {
-      if (cached !== undefined) return cached;
-      const init = lines.find((line) => line.json?.type === "system" && line.json?.subtype === "init");
-      const id = init?.json?.session_id ?? null;
-      cached = typeof id === "string" && id.length > 0 ? `${table.harness}:${id}` : null;
-      return cached;
-    };
-  })();
-
+function eventsFromLines(lines, table, { invocation_id, required_read_paths, sessionOf }) {
   const events = [];
   for (const line of lines) {
     const rules = rulesFor(table, line);
@@ -227,6 +210,34 @@ export function normalise({ bytes, table, invocation_id = null, required_read_pa
       events.push(eventFor({ table, rule, line, invocationId: invocation_id, sequence: events.length, namespacedSession: sessionOf }));
     }
   }
+  return events;
+}
+
+/**
+ * Normalises a capture into CanonicalEvents.
+ *
+ * @param {object} options
+ * @param {Buffer} options.bytes raw captured stdout
+ * @param {object} options.table a table from loadTable()
+ * @param {string} [options.invocation_id]
+ * @param {string[]|null} [options.required_read_paths] the check's own declaration
+ */
+export function normalise({ bytes, table, invocation_id = null, required_read_paths = null } = {}) {
+  if (!Buffer.isBuffer(bytes)) throw new StreamError("capture-bytes-missing", { type: typeof bytes });
+  if (!table) throw new StreamError("mapping-table-missing");
+  const lines = measureLines(bytes);
+  const sessionOf = (() => {
+    let cached;
+    return () => {
+      if (cached !== undefined) return cached;
+      const init = lines.find((line) => line.json?.type === "system" && line.json?.subtype === "init");
+      const id = init?.json?.session_id ?? null;
+      cached = typeof id === "string" && id.length > 0 ? `${table.harness}:${id}` : null;
+      return cached;
+    };
+  })();
+
+  const events = eventsFromLines(lines, table, { invocation_id, required_read_paths, sessionOf });
 
   const tiling = tilingReport(lines, bytes.length);
   const factIds = new Set(events.flatMap((event) => event.fact_ids));
