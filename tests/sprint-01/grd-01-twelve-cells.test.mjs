@@ -43,7 +43,7 @@ import { runVerifyCase } from "./flow-runner.mjs";
 import { renderSummary } from "../../test/harness/recorder/summary.mjs";
 import { ADAPTER_PENDING, ABSENT_REASONS, absentReason } from "../../test/harness/adapters/absent.mjs";
 import { CELL_SOURCES, LOOKUP_FAILED_REASON, planCells } from "../../test/harness/adapters/registry.mjs";
-import { guardInvocation } from "../../test/harness/runtime/guard.mjs";
+import { SECRET_NAME, guardInvocation } from "../../test/harness/runtime/guard.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const ADAPTERS_DIR = join(ROOT, "test/harness/adapters");
@@ -51,9 +51,7 @@ const REPORT_DIR = join(ROOT, ".tmp", "sprint-01-verification");
 
 // Command listing / version probes must not see a key (no key on install or listing steps).
 const SCRUBBED_ENV = Object.fromEntries(
-  Object.entries(process.env).filter(
-    ([name]) => !/^(SMOKE_[A-Z_]+|ANTHROPIC_API_KEY|CODEX_API_KEY|XAI_API_KEY|GEMINI_API_KEY|CURSOR_API_KEY)$/.test(name),
-  ),
+  Object.entries(process.env).filter(([name]) => !SECRET_NAME.test(name)),
 );
 
 const BINARIES = {

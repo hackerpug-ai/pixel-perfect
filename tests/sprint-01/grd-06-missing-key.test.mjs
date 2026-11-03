@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 
 import { createCapture } from "../../test/harness/runtime/capture.mjs";
 import { gradeFromEvidence, readGrade, writeGrade } from "../../test/harness/runtime/grade-writer.mjs";
-import { guardInvocation, resolveCredential, runGuarded, sessionId } from "../../test/harness/runtime/guard.mjs";
+import { SECRET_NAME, guardInvocation, resolveCredential, runGuarded, sessionId } from "../../test/harness/runtime/guard.mjs";
 import { APPROVED_MODES, assertStance, recordStance, serializeStance } from "../../test/harness/runtime/stance.mjs";
 import { loadPins } from "../../test/harness/pins.mjs";
 import { ADAPTER_PENDING, ABSENT_REASONS, absentReason } from "../../test/harness/adapters/absent.mjs";
@@ -29,8 +29,6 @@ const REPORT_DIR = join(ROOT, ".tmp", "sprint-01-verification");
 const ARTIFACT = join(REPORT_DIR, "grd-06-missing-key.json");
 const PLUGIN_ROOT = join(ROOT, "plugins/pixel-perfect");
 
-// Every credential name the eval knows about. Built here, never spelled into the runtime.
-const SECRET_NAMES = /^(SMOKE_[A-Z0-9_]+|ANTHROPIC_API_KEY|CODEX_API_KEY|XAI_API_KEY|GEMINI_API_KEY|CURSOR_API_KEY)$/;
 // § CommandTranslation / CredentialBinding: the five bindings harness-smoke supplies, mapped onto
 // the CLI variables the guard checks. Cursor's own name is the one harness-smoke does not have.
 const SMOKE_BINDINGS = {
@@ -43,14 +41,16 @@ const SMOKE_BINDINGS = {
 
 /** The runner's environment with every model credential removed — the keyless child env. */
 function withoutSecrets(env) {
-  return Object.fromEntries(Object.entries(env).filter(([name]) => !SECRET_NAMES.test(name)));
+  return Object.fromEntries(Object.entries(env).filter(([name]) => !SECRET_NAME.test(name)));
 }
 
 // Writes a marker only if it really ran, and reports which credential names reached its env.
+// The child script cannot import the guard, so its name pattern is built from the guard's own
+// source string — one definition, spelled nowhere twice.
 const MARKER_CHILD = `
 const { writeFileSync } = require("node:fs");
 writeFileSync(process.argv[1], "ran");
-const names = Object.keys(process.env).filter((name) => new RegExp("^(SMOKE_[A-Z0-9_]+|ANTHROPIC_API_KEY|CODEX_API_KEY|XAI_API_KEY|GEMINI_API_KEY|CURSOR_API_KEY)$").test(name)).sort();
+const names = Object.keys(process.env).filter((name) => new RegExp(${JSON.stringify(SECRET_NAME.source)}).test(name)).sort();
 process.stdout.write(JSON.stringify({ type: "child_env", secret_names: names }) + "\\n");
 `;
 
@@ -843,7 +843,7 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
   try {
     // ---- missing-key: env absence asserted BEFORE the refusal is asserted ---------------
     const keylessEnv = withoutSecrets(process.env);
-    const survivingNames = Object.keys(keylessEnv).filter((name) => SECRET_NAMES.test(name));
+    const survivingNames = Object.keys(keylessEnv).filter((name) => SECRET_NAME.test(name));
     assert.deepEqual(survivingNames, [], "the keyless child env still carries a credential name, so absence would prove nothing");
     const keylessCapture = createCapture({ harness: "claude-code", check_id: "verify", cwd: projectDir, timeout_ms: 20_000 });
     const keyless = await runGuarded({
