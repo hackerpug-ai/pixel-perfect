@@ -1,0 +1,26 @@
+{
+  "schema": "stream-fixture-provenance/v1",
+  "fixture": "claude-code-first-question.documented-output.stdout.bin",
+  "recorded": false,
+  "seed_method": "documented_output",
+  "why_not_recorded": "no harness-smoke binding exists on the host that produced this task's evidence, so a guarded `claude -p /pixel-perfect:init` cannot be recorded here; the model's own behaviour is proven only by the dispatched run (AC-3)",
+  "derives_from": {
+    "path": "plugins/pixel-perfect/workflows/init.md",
+    "section": "### The B1 batch",
+    "block": "```user_choice block beginning \"batch: B1 — \"",
+    "marker": "USER_CHOICE(B1)",
+    "note": "the assistant text is the ack line plus that block verbatim; the lane re-derives the block from this file at test time and fails if the two differ"
+  },
+  "envelope": {
+    "lines": [
+      "system/init (plugin listed, no AskUserQuestion in tools)",
+      "assistant text (the B1 batch)",
+      "result"
+    ],
+    "cli_version": "2.1.291",
+    "session_id": "9d1c4a52-3f0e-4f8a-8f0d-5f5f4b0e0f18"
+  },
+  "marker_offset": 420,
+  "stdout_sha256": "46f10748c38ac2ab03284c6e44b38af33c27222aa68f2b96afda15f509bc3c59",
+  "stdout_byte_length": 4469
+}

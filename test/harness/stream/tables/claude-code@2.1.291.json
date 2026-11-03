@@ -154,6 +154,16 @@
       "match": { "text_match": "Component inventory" },
       "extract": null,
       "source_event_path": "stdout text (claude plugin details)"
+    },
+    {
+      "rule_id": "question-text-marker",
+      "canonical_type": "tool_call",
+      "fact_id": "question-tool-start",
+      "also_fact_id": "question-start",
+      "classification": "question",
+      "match": { "type": "assistant", "text_match": "USER_CHOICE\\([A-Za-z0-9][A-Za-z0-9_-]*\\)" },
+      "extract": null,
+      "source_event_path": "assistant.message.content[].type=text"
     }
   ],
   "required_facts": [
