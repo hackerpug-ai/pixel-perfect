@@ -147,6 +147,28 @@ function needsOf(job) {
   return needs === undefined || needs === null ? [] : [String(needs)];
 }
 
+// The one step that writes cell/cell.json — the cell's own recording step (T9's anchor).
+function recorderStepOf(jobs) {
+  return Object.entries(jobs).flatMap(([name, job]) =>
+    stepsOf(job).map((step) => ({ job: name, step })),
+  ).find(({ step }) => /cell\/cell\.json/.test(String(step?.run ?? "")));
+}
+
+// The dispatch input must reach the record, not a literal that happens to look like it.
+function checkRecorderInterpolation(yaml, jobs) {
+  const recorder = recorderStepOf(jobs);
+  if (!recorder) return ["no step writes cell/cell.json, so nothing records the cell"];
+  const failures = [];
+  const run = String(recorder.step.run);
+  if (!run.includes("${{ inputs.install_mode }}")) {
+    failures.push(`step ${recorder.job}/${recorder.step.name} does not interpolate the install_mode input into the record`);
+  }
+  if (/"install_mode"\s*:\s*"(?:checkout|published)"/.test(run)) {
+    failures.push(`step ${recorder.job}/${recorder.step.name} writes a hardcoded install_mode`);
+  }
+  return failures;
+}
+
 /**
  * Reads what the workflow DECLARES: its triggers, the dispatch input default, permissions,
  * the matrix shape and the skeleton jobs. Pure: takes the parsed workflow, returns the
@@ -223,9 +245,7 @@ export function inspectWorkflowDeclaration(yaml) {
   }
 
   // The dispatch input must reach the record, not a literal that happens to look like it.
-  const recorder = Object.entries(jobs).flatMap(([name, job]) =>
-    stepsOf(job).map((step) => ({ job: name, step })),
-  ).find(({ step }) => /cell\/cell\.json/.test(String(step?.run ?? "")));
+  const recorder = recorderStepOf(jobs);
 
   // A harness key may only ever sit in the cell's own recording step `env:` block (T9). Any
   // other surface — a `run:` body, a `with:` input, a step name — is a leak, whatever the step
@@ -256,16 +276,7 @@ export function inspectWorkflowDeclaration(yaml) {
     }
   }
 
-  if (!recorder) fail("no step writes cell/cell.json, so nothing records the cell");
-  else {
-    const run = String(recorder.step.run);
-    if (!run.includes("${{ inputs.install_mode }}")) {
-      fail(`step ${recorder.job}/${recorder.step.name} does not interpolate the install_mode input into the record`);
-    }
-    if (/"install_mode"\s*:\s*"(?:checkout|published)"/.test(run)) {
-      fail(`step ${recorder.job}/${recorder.step.name} writes a hardcoded install_mode`);
-    }
-  }
+  failures.push(...checkRecorderInterpolation(yaml, jobs));
 
   // The skeleton chain has to be wired: cells in, cells through, receipt out.
   const needs = {
