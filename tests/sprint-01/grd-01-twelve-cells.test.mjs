@@ -25,7 +25,7 @@ import {
   loadPins,
 } from "../../test/harness/pins.mjs";
 import { validateAgainst, validateResult } from "../../test/harness/validate.mjs";
-import { inspectWorkflowDeclaration, LIVE_ARTIFACT, parseYaml, readWorkflow } from "./flow-runner.mjs";
+import { inspectWorkflowDeclaration, LIVE_ARTIFACT, parseYaml, readWorkflow, writeCellArtifacts } from "./flow-runner.mjs";
 import {
   RESULT_FILENAME,
   assembleResult,
@@ -482,16 +482,6 @@ const RECORDER = "test/harness/recorder.mjs";
 
 function gitHead() {
   return execFileSync("git", ["rev-parse", "HEAD"], { cwd: ROOT, encoding: "utf8" }).trim();
-}
-
-/** Mirrors the artifact layout the smoke matrix uploads: <artifact-name>/cell/cell.json. */
-function writeCellArtifacts(dir, records, { prefix = "harness-eval-cell-9000000001-1" } = {}) {
-  for (const record of records) {
-    const folder = join(dir, `${prefix}-${record.harness}-${record.track}`, "cell");
-    mkdirSync(folder, { recursive: true });
-    writeFileSync(join(folder, "cell.json"), `${JSON.stringify(record, null, 2)}\n`, "utf8");
-  }
-  return dir;
 }
 
 /** The bare smoke-cell record T1's matrix writes today: identity plus an honest named reason. */

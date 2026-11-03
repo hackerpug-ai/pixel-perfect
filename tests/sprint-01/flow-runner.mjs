@@ -140,6 +140,16 @@ export const LIVE_ARTIFACT =
 // repository. The adapter must never emit it — its stance comes from the allow-list.
 export const REJECTED_MODE = ["bypass", "Permissions"].join("");
 
+/** Mirrors the artifact layout the smoke matrix uploads: <artifact-name>/cell/cell.json. */
+export function writeCellArtifacts(dir, records, { prefix = "harness-eval-cell-9000000001-1" } = {}) {
+  for (const record of records) {
+    const folder = path.join(dir, `${prefix}-${record.harness}-${record.track}`, "cell");
+    mkdirSync(folder, { recursive: true });
+    writeFileSync(path.join(folder, "cell.json"), `${JSON.stringify(record, null, 2)}\n`, "utf8");
+  }
+  return dir;
+}
+
 // ---------------------------------------------------------------------------
 // [shared] reading the harness-eval workflow
 // ---------------------------------------------------------------------------
