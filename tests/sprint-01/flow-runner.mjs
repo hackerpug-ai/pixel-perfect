@@ -499,14 +499,37 @@ export function dispatchWorkflow({ repo, inputs = {}, ref } = {}) {
  * about the repository, so it may never be graded as an honest declaration.
  */
 export function readProbeOutcome({ ok, stderr } = {}) {
-  const detail = String(stderr ?? "").trim().split("\n").at(-1);
-  if (ok) return { available: true, detail };
-  if (/HTTP 404\b/.test(detail)) return { available: false, detail };
+  // The JOINED stderr, not just its last line: gh's unauthenticated hint is a TWO-LINE
+  // message, and a classifier reading only the last line would miss the auth hint on line
+  // one. `detail` stays the last line for messages; `stderr` carries the whole output for
+  // classification.
+  const stderrJoined = String(stderr ?? "").trim();
+  const detail = stderrJoined.split("\n").at(-1);
+  if (ok) return { available: true, detail, stderr: stderrJoined };
+  if (/HTTP 404\b/.test(detail)) return { available: false, detail, stderr: stderrJoined };
   return {
     available: false,
     detail,
+    stderr: stderrJoined,
     error: `the live-dispatch probe failed for a reason other than "not registered": ${detail || "gh api said nothing"}`,
   };
+}
+
+/**
+ * The one owner-approved probe deferral (red-hat F-001, 2026-11-03): gh stderr that says THIS
+ * RUNNER cannot dispatch at all — unauthenticated, bad credentials, forbidden. The real shapes
+ * (gh 2.96.0, captured 2026-11-03): the two-line login hint ("gh auth login" on line one, the
+ * GH_TOKEN hint on line two), "gh: Bad credentials (HTTP 401)", and a 403 body such as
+ * "Resource not accessible by integration (HTTP 403)". "not authenticated" stays as a
+ * defensive superset for other gh surfaces. Everything else — network, not-registered, a
+ * missing binary, a 5xx — returns null and keeps the fail path.
+ */
+export function dispatchDeferral(detail) {
+  return /not authenticated|bad credentials|forbidden|\b403\b|gh auth login|GH_TOKEN environment variable/i.test(
+    String(detail ?? ""),
+  )
+    ? "runner-cannot-dispatch"
+    : null;
 }
 
 /**
@@ -517,9 +540,13 @@ export function readProbeOutcome({ ok, stderr } = {}) {
 export function probeLiveDispatch({ repo } = {}) {
   const result = runCommand("gh", ["api", `repos/${repo}/actions/workflows/${WORKFLOW_NAME}.yml`, "--silent"]);
   const verdict = readProbeOutcome({ ok: result.ok, stderr: result.stderr || `gh api exited ${result.status}` });
-  return verdict.available
-    ? { available: true, detail: `${WORKFLOW_NAME}.yml is registered on the default branch of ${repo}` }
-    : verdict;
+  if (verdict.available) {
+    return { available: true, detail: `${WORKFLOW_NAME}.yml is registered on the default branch of ${repo}` };
+  }
+  // The classifier sees the JOINED stderr: gh's login hint is a two-line message and the
+  // last-line rule is what hid the auth hint from it (red-hat F-1).
+  const deferral = dispatchDeferral(verdict.stderr || verdict.detail);
+  return deferral ? { ...verdict, deferral } : verdict;
 }
 
 /** One run record, read from GitHub rather than from a log. */
@@ -687,7 +714,12 @@ async function run02Hand(options = {}) {
   artifact.live_dispatch.probe = live.detail;
   // A probe that failed for any reason other than "not registered" proves nothing, so the flow
   // fails instead of grading the declaration - a broken environment is never an honest proof.
-  if (live.error) artifact.failures.push(live.error);
+  // Deferral (owner-approved, red-hat F-001, 2026-11-03): "runner-cannot-dispatch" — a runner
+  // that cannot authenticate grades the declaration tier and names the reason instead of failing.
+  if (live.error) {
+    if (live.deferral === "runner-cannot-dispatch") artifact.live_dispatch.reason = live.deferral;
+    else artifact.failures.push(live.error);
+  }
 
   const identity = identityFromDeclaration(declaration);
 
