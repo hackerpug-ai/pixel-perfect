@@ -71,6 +71,16 @@ function observationBlocks(record, evidence_root) {
   return unresolved.length === 0 ? [] : [block("could-not-run", "evidence-unresolvable", { unresolved })];
 }
 
+/** A timeout, an unexpected termination, or a truncated capture prefix blocks the grade on its own reason. */
+function terminationBlocks(record) {
+  const blocks = [];
+  const kind = record?.termination_kind;
+  if (kind === "timeout") blocks.push(block("could-not-run", "termination-timeout", { timeout_ms: record.timeout_ms ?? null }));
+  if (kind === "unexpected" && !record?.refusal) blocks.push(block("could-not-run", "termination-unexpected", { process_status: record.process_status ?? null }));
+  if (record?.prefix_complete === false) blocks.push(block("could-not-run", "capture-prefix-incomplete", { boundary_event_offset: record.boundary_event_offset ?? null }));
+  return blocks;
+}
+
 /**
  * Builds the graded cell from a capture record. The verdict comes from what the record observed —
  * termination kind, resolvable citations, required facts, required-read denials — and from nothing
@@ -100,10 +110,8 @@ export function gradeFromEvidence({
       }),
     );
   }
-  const kind = record?.termination_kind;
-  if (kind === "timeout") blocks.push(block("could-not-run", "termination-timeout", { timeout_ms: record.timeout_ms ?? null }));
-  if (kind === "unexpected" && !record?.refusal) blocks.push(block("could-not-run", "termination-unexpected", { process_status: record.process_status ?? null }));
-  if (record?.prefix_complete === false) blocks.push(block("could-not-run", "capture-prefix-incomplete", { boundary_event_offset: record.boundary_event_offset ?? null }));
+
+  blocks.push(...terminationBlocks(record));
 
   blocks.push(...observationBlocks(record, evidence_root));
 
