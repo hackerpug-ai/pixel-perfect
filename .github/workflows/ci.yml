@@ -16,6 +16,12 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    # The locked-gate suite probes GitHub with `gh` (the run-02-hand proof-tier probe and its
+    # replay reads), so this job asks for its own read-only scopes. Job-level is deliberate:
+    # tighter than the workflow-level block above.
+    permissions:
+      contents: read
+      actions: read
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -38,6 +44,10 @@ jobs:
       # The locked flow-gate suite (SN-1): every pinned sprint-01 harness behavior.
       # test:locked:ci is the full suite minus tests/sprint-01/t18-question-boundary.test.mjs,
       # whose own header declares its dispatched-pass leg owned by the hosted harness-eval gate.
+      # The run-02-hand proof-tier probe and replay reads authenticate via the job's read-only
+      # token (contents+actions read) wired below, and cannot dispatch.
       - name: Run the locked flow-gate suite (hosted-gated t18 excluded)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: pnpm run test:locked:ci
         timeout-minutes: 15
