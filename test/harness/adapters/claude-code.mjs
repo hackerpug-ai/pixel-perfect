@@ -31,10 +31,10 @@ import { fileURLToPath } from "node:url";
 
 import { bindReportPath, loadCase, materialize } from "../kit/case-loader.mjs";
 import { worstVerdict } from "../lib/verdict.mjs";
-import { loadPins, sha256Hex } from "../pins.mjs";
+import { CHECKS, loadPins, sha256Hex } from "../pins.mjs";
 import { CaptureError, createCapture, manifestOf, resolveEvidencePath, spawnCaptured } from "../runtime/index.mjs";
-import { gradeFromEvidence, writeGrade } from "../runtime/grade-writer.mjs";
-import { runGuarded } from "../runtime/guard.mjs";
+import { SOURCE, gradeFromEvidence, writeGrade } from "../runtime/grade-writer.mjs";
+import { SECRET_NAME, runGuarded } from "../runtime/guard.mjs";
 import { recordStance } from "../runtime/stance.mjs";
 import {
   PLUGIN_NAME,
@@ -70,13 +70,14 @@ export const HARNESS = "claude-code";
 export const PLUGIN_MARKETPLACE = "pixel-perfect";
 export const PLUGIN_SELECTOR = `${PLUGIN_NAME}@${PLUGIN_MARKETPLACE}`;
 export const CLI_PACKAGE = "@anthropic-ai/claude-code";
-export const CHECKS = ["command_list", "status", "verify", "question_before_expensive_work"];
+// One authority for the four check ids: pins.mjs owns the list (and validates the manifest against
+// it); this module re-exports it under the same name.
+export { CHECKS };
 export const DESCRIPTION_SCHEMA = "claude-code-adapter/v1";
 
 /** Auto-update off, on every step: a self-updating CLI could pass at a version nobody pinned. */
 export const AUTO_UPDATER_ENV = Object.freeze({ DISABLE_AUTOUPDATER: "1" });
 
-const SECRET_NAME = /^(SMOKE_[A-Z0-9_]+|ANTHROPIC_API_KEY|CODEX_API_KEY|XAI_API_KEY|GEMINI_API_KEY|CURSOR_API_KEY)$/;
 const DIGEST_SKIP = new Set(["node_modules", ".git", ".tmp", ".DS_Store"]);
 const ROOT = resolve(fileURLToPath(new URL("../../..", import.meta.url)));
 const PLUGIN_ROOT = join(ROOT, PLUGIN_ROOT_REL);
@@ -1465,7 +1466,7 @@ export function cellFor({ track, cells, installation, harness = HARNESS }) {
     check_id: evidenceCell?.check_id ?? null,
     verdict,
     reason: winner.reason ?? null,
-    source: "files-and-event-stream",
+    source: SOURCE,
     denied_tool_call: perCheck.map((entry) => entry.denied_tool_call).find((denial) => denial != null) ?? null,
     process_exit_code: exitCode,
     evidence_paths: perCheck.flatMap((entry) => entry.evidence_paths ?? []),
