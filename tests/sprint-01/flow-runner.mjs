@@ -551,6 +551,22 @@ function awaitingHostedRun() {
   ];
 }
 
+/**
+ * What a GitHub run record must satisfy before it can carry AC-1's identity: a
+ * workflow_dispatch event, a commit-shaped headSha, and — for a --dispatch run — the same
+ * headSha as the commit this checkout dispatched. Pure: takes the record, returns failure
+ * strings.
+ */
+function runRecordFindings(run, { dispatch = false, dispatchCommit = null } = {}) {
+  const failures = [];
+  if (run.event !== "workflow_dispatch") failures.push(`run event is ${run.event}, expected workflow_dispatch`);
+  if (!/^[0-9a-f]{40}$/.test(String(run.headSha ?? ""))) failures.push(`run headSha ${String(run.headSha)} is not a commit sha`);
+  if (dispatch && dispatchCommit && run.headSha !== dispatchCommit) {
+    failures.push(`run headSha ${run.headSha} does not equal the dispatch commit ${dispatchCommit}`);
+  }
+  return failures;
+}
+
 async function run02Hand(options = {}) {
   const repo = options.repo ?? "hackerpug-ai/pixel-perfect";
   // The probe is injected only by the negative control that proves the deferral expires;
@@ -640,11 +656,10 @@ async function run02Hand(options = {}) {
       identity.event = run.event;
       identity.candidate_sha = run.headSha;
       identity.candidate_sha_source = `GitHub run record ${run.databaseId} headSha`;
-      if (run.event !== "workflow_dispatch") artifact.failures.push(`run event is ${run.event}, expected workflow_dispatch`);
-      if (!/^[0-9a-f]{40}$/.test(String(run.headSha ?? ""))) artifact.failures.push(`run headSha ${String(run.headSha)} is not a commit sha`);
-      if (options.dispatch && artifact.live_dispatch.dispatch_commit && run.headSha !== artifact.live_dispatch.dispatch_commit) {
-        artifact.failures.push(`run headSha ${run.headSha} does not equal the dispatch commit ${artifact.live_dispatch.dispatch_commit}`);
-      }
+      artifact.failures.push(...runRecordFindings(run, {
+        dispatch: Boolean(options.dispatch),
+        dispatchCommit: artifact.live_dispatch.dispatch_commit ?? null,
+      }));
     }
   } else {
     // Tier B — the declaration, honest only while a live dispatch is impossible, and it never
