@@ -104,6 +104,24 @@ export function writeArtifact(file, artifact) {
 // graded on. A failing run keeps its own record at `<artifact>.failed.json` instead.
 
 // ---------------------------------------------------------------------------
+// [shared] test fixtures — the scratch dirs and shapes the flow tests share
+// ---------------------------------------------------------------------------
+
+/**
+ * A fresh scratch directory under the OS temp dir, removed when the test that asked for it ends.
+ * The label is the full mkdtemp prefix, so each flow test keeps its own directory naming while
+ * sharing the one create-and-clean-up convention.
+ *
+ * @param {import("node:test").TestContext} t
+ * @param {string} label
+ */
+export function sandbox(t, label) {
+  const dir = mkdtempSync(path.join(tmpdir(), label));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  return dir;
+}
+
+// ---------------------------------------------------------------------------
 // [shared] reading the harness-eval workflow
 // ---------------------------------------------------------------------------
 

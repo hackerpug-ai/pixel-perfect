@@ -20,13 +20,13 @@
 // No capture method, no grader and no byte is replaced.
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { mapCapturedLine } from "../../test/harness/adapters/claude-code.mjs";
+import { sandbox } from "./flow-runner.mjs";
 import { createCapture, denials, observedFacts, undeclaredDenials } from "../../test/harness/runtime/capture.mjs";
 import { gradeFromEvidence } from "../../test/harness/runtime/grade-writer.mjs";
 
@@ -102,18 +102,12 @@ function replay({ dir, invocation_id, mapper, required_read_paths = null }) {
   return { record, grade };
 }
 
-function sandbox(t, label) {
-  const dir = mkdtempSync(join(tmpdir(), `pp-${label}-`));
-  t.after(() => rmSync(dir, { recursive: true, force: true }));
-  return dir;
-}
-
 // ---------------------------------------------------------------------------
 // AC-1 - a declared required_read: false survives capture and is not graded as undeclared
 // ---------------------------------------------------------------------------
 
 test("declared-optional-survives-capture", (t) => {
-  const dir = sandbox(t, "t14-ac1");
+  const dir = sandbox(t, "pp-t14-ac1-");
 
   // The input is the real archive, re-hashed: a fixture edited to carry a declaration the run never
   // made is refused here, before any claim about the layer is read.
@@ -169,7 +163,7 @@ test("declared-optional-survives-capture", (t) => {
 // ---------------------------------------------------------------------------
 
 test("undeclared-denial-still-closed", (t) => {
-  const dir = sandbox(t, "t14-ac2");
+  const dir = sandbox(t, "pp-t14-ac2-");
 
   // seed/declaration-stripped-capture: nobody declared the target-less Bash denial.
   const stripped = replay({
@@ -233,7 +227,7 @@ test("undeclared-denial-still-closed", (t) => {
 // ---------------------------------------------------------------------------
 
 test("optional-denial-is-not-a-fact", (t) => {
-  const dir = sandbox(t, "t14-tc3");
+  const dir = sandbox(t, "pp-t14-tc3-");
   const { record, grade } = replay({
     dir: join(dir, "facts"),
     invocation_id: "t14-observed-facts",

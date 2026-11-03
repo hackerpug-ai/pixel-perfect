@@ -33,7 +33,7 @@
 //     is absent without it.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
@@ -74,7 +74,7 @@ import {
   observeExit0DeniedRead,
   observeExit0DeniedReadPair,
 } from "../../test/harness/smoke/observations.mjs";
-import { inspectWorkflowDeclaration, parseYaml, readWorkflow } from "./flow-runner.mjs";
+import { inspectWorkflowDeclaration, parseYaml, readWorkflow, sandbox } from "./flow-runner.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "../..");
@@ -87,12 +87,6 @@ const RUN_ID = 41139161972;
 const OTHER_RUN_ID = 41086556471;
 const CREDENTIAL_NAMES = ["ANTHROPIC_API_KEY", "CODEX_API_KEY", "XAI_API_KEY", "GEMINI_API_KEY", "CURSOR_API_KEY"];
 const CELLS_PREFIX = `harness-eval-cell-${RUN_ID}-1`;
-
-function sandbox(t, label = "t15-") {
-  const dir = mkdtempSync(join(tmpdir(), label));
-  t.after(() => rmSync(dir, { recursive: true, force: true }));
-  return dir;
-}
 
 /**
  * `seed/denied-write-capture`: the real guarded `claude -p` archived under

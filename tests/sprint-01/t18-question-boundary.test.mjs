@@ -37,12 +37,10 @@
 // for byte. The dispatched `pass` is AC-3's artifact, not this file's.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-
 import * as adapter from "../../test/harness/adapters/claude-code.mjs";
 import { loadCase } from "../../test/harness/kit/case-loader.mjs";
 import { loadPins, sha256Hex } from "../../test/harness/pins.mjs";
@@ -50,6 +48,7 @@ import { createCapture, observedFacts } from "../../test/harness/runtime/capture
 import { normalise } from "../../test/harness/stream/normalise.mjs";
 import { questions } from "../../test/harness/stream/question-boundary.mjs";
 import { loadTable } from "../../test/harness/stream/table.mjs";
+import { sandbox } from "./flow-runner.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "../..");
@@ -164,12 +163,6 @@ function realCaptureBytes() {
 // ---------------------------------------------------------------------------
 // The grading path: real capture reader, real mapper, real graders
 // ---------------------------------------------------------------------------
-
-function sandbox(t, label = "t18-") {
-  const dir = mkdtempSync(join(tmpdir(), label));
-  t.after(() => rmSync(dir, { recursive: true, force: true }));
-  return dir;
-}
 
 /** The identity a graded cell carries. Digests are measured over the payload on disk. */
 function identityForCell() {

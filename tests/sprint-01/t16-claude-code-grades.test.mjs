@@ -31,8 +31,7 @@
 // byte. The four `pass` verdicts of a dispatched run are the sprint gate's receipt, not this file's.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -42,6 +41,7 @@ import { loadCase } from "../../test/harness/kit/case-loader.mjs";
 import { loadPins, sha256Hex } from "../../test/harness/pins.mjs";
 import { createCapture } from "../../test/harness/runtime/capture.mjs";
 import * as stance from "../../test/harness/runtime/stance.mjs";
+import { sandbox } from "./flow-runner.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "../..");
@@ -115,12 +115,6 @@ function statusFixture() {
   );
   assert.equal(sha256Hex(bytes), provenance.stdout_sha256, "the archived status bytes are the bytes the provenance cites");
   return { bytes, provenance };
-}
-
-function sandbox(t, label = "t16-") {
-  const dir = mkdtempSync(join(tmpdir(), label));
-  t.after(() => rmSync(dir, { recursive: true, force: true }));
-  return dir;
 }
 
 /** The identity a graded cell carries. Digests are measured over the payload on disk. */

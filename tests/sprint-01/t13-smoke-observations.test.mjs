@@ -62,7 +62,7 @@ import {
   observeStaleCache,
   parseObservations,
 } from "../../test/harness/smoke/observations.mjs";
-import { inspectWorkflowDeclaration, parseYaml, readWorkflow } from "./flow-runner.mjs";
+import { inspectWorkflowDeclaration, parseYaml, readWorkflow, sandbox } from "./flow-runner.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "../..");
@@ -92,12 +92,6 @@ function readDeniedCapture() {
   return { record: { ...record, evidence_root: dir, evidence_paths: [recordPath, stdoutPath] }, path: recordPath, bytes };
 }
 const DENIED_CAPTURE = readDeniedCapture();
-
-function sandbox(t, label = "t13-") {
-  const dir = mkdtempSync(join(tmpdir(), label));
-  t.after(() => rmSync(dir, { recursive: true, force: true }));
-  return dir;
-}
 
 /** A copy of the real plugin payload: the second payload a digest is measured over. */
 function payloadCopy(t) {
@@ -198,7 +192,7 @@ async function twelveCells({ env, loadCell, records, evidenceRoot, resolver = { 
 // ---------------------------------------------------------------------------
 
 test("smoke-cell-graded: a leg writes four checks from captured bytes bound to a measured identity", async (t) => {
-  const work = sandbox(t);
+  const work = sandbox(t, "t13-");
   const observedRoot = payloadCopy(t);
   const identity = contractIdentity({ observedRoot });
 
@@ -473,7 +467,7 @@ function runProducerStep(t, { observations = {}, pairs = {}, nullIn = null, null
 }
 
 test("smoke-control-observations: observed rows reach the producer, an unobserved control stays control-unobservable", (t) => {
-  const work = sandbox(t);
+  const work = sandbox(t, "t13-");
 
   // --- the complete dir: all four observed ------------------------------------------------
   const complete = cellsDirWithObservations(t);
@@ -708,7 +702,7 @@ test("smoke-control-observations: observed rows reach the producer, an unobserve
 // ---------------------------------------------------------------------------
 
 test("smoke-cell-fail-closed: three env shapes produce three named reasons and twelve cells", async (t) => {
-  const work = sandbox(t);
+  const work = sandbox(t, "t13-");
   const observedRoot = payloadCopy(t);
   const identity = contractIdentity({ observedRoot });
 
@@ -889,7 +883,7 @@ test("smoke-workflow-wiring: four jobs, the record anchor, one cell upload, runC
 // ---------------------------------------------------------------------------
 
 test("smoke-image-scan: a planted image request fails the scan, a clean tree passes, an empty or unreadable tree yields nothing", (t) => {
-  const work = sandbox(t);
+  const work = sandbox(t, "t13-");
 
   // --- the clean real tree: the archived capture and its stdout bytes --------------------
   const clean = scanTree({ roots: [CAPTURES] });

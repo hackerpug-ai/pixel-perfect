@@ -25,20 +25,13 @@ import { HARNESSES, TRACKS, loadPins } from "../../test/harness/pins.mjs";
 import { RecorderRefusal, collectCells, main, readCellArtifacts } from "../../test/harness/recorder.mjs";
 import { assembleResult } from "../../test/harness/recorder/result.mjs";
 import { validateAgainst, validateResult } from "../../test/harness/validate.mjs";
-import { readWorkflow } from "./flow-runner.mjs";
+import { readWorkflow, sandbox } from "./flow-runner.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const SCHEMA_FILE = join(ROOT, "test/harness/schemas/harness-eval-result.v1.schema.json");
 const RUN = "1234567890";
 const ATTEMPT = "1";
 const PREFIX = `harness-eval-cell-${RUN}-${ATTEMPT}`;
-
-/** A scratch dir, removed when the test ends. */
-function sandbox(t) {
-  const dir = mkdtempSync(join(tmpdir(), "t11-fix-"));
-  t.after(() => rmSync(dir, { recursive: true, force: true }));
-  return dir;
-}
 
 /** The bare smoke record the matrix really writes: identity plus an honest named reason. */
 function bareRecord(harness, track) {
@@ -197,7 +190,7 @@ test("controls-producer: a run produces its four control rows, the schema requir
   );
 
   // --- the producer really produces: run the workflow's own step body against the real module ---
-  const scratch = sandbox(t);
+  const scratch = sandbox(t, "t11-fix-");
   mkdirSync(join(scratch, "test/harness"), { recursive: true });
   symlinkSync(join(ROOT, "test/harness/controls"), join(scratch, "test/harness/controls"), "dir");
   execFileSync("/bin/sh", ["-c", String(step.run)], { cwd: scratch, stdio: "pipe", env: { ...process.env } });

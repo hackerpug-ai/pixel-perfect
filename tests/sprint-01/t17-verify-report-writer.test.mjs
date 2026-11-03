@@ -27,8 +27,7 @@
 // sprint gate's, not this file's.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -37,7 +36,7 @@ import * as adapter from "../../test/harness/adapters/claude-code.mjs";
 import { loadCase } from "../../test/harness/kit/case-loader.mjs";
 import { sha256Hex } from "../../test/harness/pins.mjs";
 import { uploadPlan, writeVerifyReceipt } from "../../test/harness/recorder.mjs";
-import { readWorkflow } from "./flow-runner.mjs";
+import { readWorkflow, sandbox } from "./flow-runner.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "../..");
@@ -66,12 +65,6 @@ const SIX_LOCKED = [
   "tests/sprint-01/run-02-hand.test.mjs",
 ];
 const T16_OWNED = ["tests/sprint-01/t16-claude-code-grades.test.mjs"];
-
-function sandbox(t, label = "t17-") {
-  const dir = mkdtempSync(join(tmpdir(), label));
-  t.after(() => rmSync(dir, { recursive: true, force: true }));
-  return dir;
-}
 
 /**
  * The arguments the harness supplies, and nothing else: the case's own declared path, the id the
