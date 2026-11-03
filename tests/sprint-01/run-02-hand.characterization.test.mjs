@@ -10,9 +10,10 @@
 // network, and a unit test that talks to GitHub would not be one.
 
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import test from "node:test";
 
-import { ARTIFACT_DIR, runFlow } from "./flow-runner.mjs";
+import { ROOT, runFlow } from "./flow-runner.mjs";
 
 const FLOW = "FLOW-RUN-02-HAND";
 
@@ -105,4 +106,173 @@ test("run02Hand grades the real workflow declaration with zero failures when the
     cells: DECLARED_CELLS,
     failures: [],
   });
+});
+
+// --- the live-dispatch tier, replayed through the injected run readers ----------------------
+
+const REPLAY_SHA = "3f7a1c9e2b8d4f6a0c5e7b9d1f3a5c7e9b2d4f6a";
+const REPLAY_RUN = {
+  databaseId: 424242,
+  event: "workflow_dispatch",
+  headSha: REPLAY_SHA,
+  status: "completed",
+  conclusion: "success",
+  attempt: 1,
+};
+
+test("run02Hand carries a replayed workflow_dispatch run record as candidate identity and reports AC-1 met", async () => {
+  const readRunCalls = [];
+  const artifact = await runFlow(FLOW, {
+    probe: unregisteredProbe,
+    run: "424242",
+    readRun: (args) => {
+      readRunCalls.push(args);
+      return { ok: true, run: REPLAY_RUN };
+    },
+    out: ".tmp/sprint-01-verification/run-02-hand.characterization.replay.json",
+  });
+
+  // Observed: the reader got exactly the repo and run id the flow was given.
+  assert.deepEqual(readRunCalls, [{ repo: "hackerpug-ai/pixel-perfect", runId: "424242" }]);
+
+  assert.equal(artifact.ok, true);
+  assert.equal(artifact.proof_tier, "live-dispatch");
+  assert.equal(artifact.ac1_satisfied, true);
+  assert.deepEqual(artifact.failures, []);
+  assert.deepEqual(artifact.awaiting_hosted_run, []);
+
+  assert.deepEqual(artifact.live_dispatch, {
+    attempted: true,
+    available: false,
+    probe: UNREGISTERED_PROBE_DETAIL,
+    reason: DISPATCH_REASON,
+    mode: "replay",
+    run: REPLAY_RUN,
+  });
+
+  assert.deepEqual(artifact.identity, {
+    event: "workflow_dispatch",
+    install_mode: "checkout",
+    install_mode_source: "declared default of on.workflow_dispatch.inputs.install_mode",
+    candidate_sha: REPLAY_SHA,
+    candidate_sha_source: "GitHub run record 424242 headSha",
+    harnesses: ["claude-code", "codex", "cursor", "grok", "opencode", "pi"],
+    cell_count: 12,
+    cells: DECLARED_CELLS,
+  });
+});
+
+test("run02Hand reports an unreadable replayed run as a failure and never claims AC-1", async () => {
+  const artifact = await runFlow(FLOW, {
+    probe: unregisteredProbe,
+    run: "424242",
+    readRun: () => ({ ok: false, reason: "gh run view exited 1: no run found" }),
+    out: ".tmp/sprint-01-verification/run-02-hand.characterization.replay-unreadable.json",
+  });
+
+  assert.equal(artifact.ok, false);
+  assert.equal(artifact.proof_tier, "live-dispatch");
+  assert.equal(artifact.ac1_satisfied, false);
+  assert.deepEqual(artifact.failures, ["run 424242 is unreadable: gh run view exited 1: no run found"]);
+
+  // Observed: with no readable record, no run lands in live_dispatch and the identity keeps
+  // its declaration-tier shape (null candidate_sha).
+  assert.deepEqual(artifact.live_dispatch, {
+    attempted: true,
+    available: false,
+    probe: UNREGISTERED_PROBE_DETAIL,
+    reason: DISPATCH_REASON,
+    mode: "replay",
+  });
+  assert.equal(artifact.identity.candidate_sha, null);
+  assert.equal(artifact.identity.event, "workflow_dispatch");
+});
+
+test("run02Hand fails a replayed record whose event is not workflow_dispatch or whose headSha is not a commit sha", async () => {
+  const artifact = await runFlow(FLOW, {
+    probe: unregisteredProbe,
+    run: "77",
+    readRun: () => ({
+      ok: true,
+      run: { databaseId: 77, event: "schedule", headSha: "not-a-sha", status: "completed", conclusion: "failure", attempt: 2 },
+    }),
+    out: ".tmp/sprint-01-verification/run-02-hand.characterization.replay-bad-record.json",
+  });
+
+  // Observed: both run-record rules fire, in this order, and the record still supplies the
+  // identity it carries — but AC-1 stays unclaimed because failures exist.
+  assert.deepEqual(artifact.failures, [
+    "run event is schedule, expected workflow_dispatch",
+    "run headSha not-a-sha is not a commit sha",
+  ]);
+  assert.equal(artifact.ok, false);
+  assert.equal(artifact.ac1_satisfied, false);
+  assert.equal(artifact.identity.event, "schedule");
+  assert.equal(artifact.identity.candidate_sha, "not-a-sha");
+  assert.equal(artifact.identity.candidate_sha_source, "GitHub run record 77 headSha");
+});
+
+test("run02Hand reports a rejected dispatch, records the local head as the dispatch commit, and claims no AC-1", async () => {
+  const dispatchCalls = [];
+  const artifact = await runFlow(FLOW, {
+    probe: unregisteredProbe,
+    dispatch: true,
+    dispatchWorkflow: (args) => {
+      dispatchCalls.push(args);
+      return { ok: false, status: 1, stdout: "", stderr: "gh: could not dispatch; workflow not registered" };
+    },
+    out: ".tmp/sprint-01-verification/run-02-hand.characterization.dispatch-rejected.json",
+  });
+
+  // Observed: the flow dispatches with no inputs and no ref.
+  assert.deepEqual(dispatchCalls, [{ repo: "hackerpug-ai/pixel-perfect", inputs: {} }]);
+
+  // Observed: local_head is this checkout's real HEAD.
+  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: ROOT, encoding: "utf8" }).trim();
+  assert.equal(artifact.ok, false);
+  assert.equal(artifact.proof_tier, "live-dispatch");
+  assert.equal(artifact.ac1_satisfied, false);
+  assert.deepEqual(artifact.failures, ["dispatch rejected: gh: could not dispatch; workflow not registered"]);
+  assert.deepEqual(artifact.live_dispatch, {
+    attempted: true,
+    available: false,
+    probe: UNREGISTERED_PROBE_DETAIL,
+    reason: DISPATCH_REASON,
+    mode: "dispatch",
+    local_head: head,
+    accepted: false,
+    message: "gh: could not dispatch; workflow not registered",
+    dispatch_commit: head,
+  });
+  assert.equal(artifact.identity.candidate_sha, null);
+});
+
+test("run02Hand reports an accepted auto dispatch that produced no readable run as a failure", async () => {
+  const artifact = await runFlow(FLOW, {
+    // Observed: without --dispatch or --run, only an available probe puts the flow in the
+    // live tier's auto leg, so the probe here reports the workflow registered.
+    probe: () => ({ available: true, detail: "harness-eval.yml is registered on the default branch of owner/repo" }),
+    dispatchWorkflow: () => ({ ok: true, status: 0, stdout: '✓ Created workflow_dispatch event for "harness-eval" at main\n', stderr: "" }),
+    latestRun: () => ({ ok: false, reason: "no run of harness-eval exists in owner/repo" }),
+    out: ".tmp/sprint-01-verification/run-02-hand.characterization.dispatch-no-run.json",
+  });
+
+  // Observed: the auto leg accepts the dispatch, and when the run list comes back empty the
+  // flow fails instead of claiming an identity.
+  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: ROOT, encoding: "utf8" }).trim();
+  assert.equal(artifact.ok, false);
+  assert.equal(artifact.proof_tier, "live-dispatch");
+  assert.equal(artifact.ac1_satisfied, false);
+  assert.deepEqual(artifact.failures, ["dispatch produced no readable run: no run of harness-eval exists in owner/repo"]);
+  assert.deepEqual(artifact.live_dispatch, {
+    attempted: true,
+    available: true,
+    probe: "harness-eval.yml is registered on the default branch of owner/repo",
+    reason: DISPATCH_REASON,
+    mode: "auto",
+    local_head: head,
+    accepted: true,
+    message: '✓ Created workflow_dispatch event for "harness-eval" at main',
+  });
+  assert.equal(artifact.identity.candidate_sha, null);
 });
