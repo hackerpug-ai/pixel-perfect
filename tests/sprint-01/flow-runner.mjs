@@ -510,6 +510,17 @@ export function readProbeOutcome({ ok, stderr } = {}) {
 }
 
 /**
+ * The one owner-approved probe deferral (red-hat F-001, 2026-11-03): gh stderr that says THIS
+ * RUNNER cannot dispatch at all — unauthenticated, bad credentials, forbidden. Everything else
+ * (network, not-registered, a missing binary) returns null and keeps the fail path.
+ */
+export function dispatchDeferral(detail) {
+  return /not authenticated|bad credentials|forbidden|403/i.test(String(detail ?? ""))
+    ? "runner-cannot-dispatch"
+    : null;
+}
+
+/**
  * Can a live dispatch happen at all? `gh workflow run` only resolves a workflow registered on
  * the repo's default branch, so this is the honest test of whether the declaration tier is
  * still the best proof available.
@@ -517,9 +528,11 @@ export function readProbeOutcome({ ok, stderr } = {}) {
 export function probeLiveDispatch({ repo } = {}) {
   const result = runCommand("gh", ["api", `repos/${repo}/actions/workflows/${WORKFLOW_NAME}.yml`, "--silent"]);
   const verdict = readProbeOutcome({ ok: result.ok, stderr: result.stderr || `gh api exited ${result.status}` });
-  return verdict.available
-    ? { available: true, detail: `${WORKFLOW_NAME}.yml is registered on the default branch of ${repo}` }
-    : verdict;
+  if (verdict.available) {
+    return { available: true, detail: `${WORKFLOW_NAME}.yml is registered on the default branch of ${repo}` };
+  }
+  const deferral = dispatchDeferral(verdict.detail);
+  return deferral ? { ...verdict, deferral } : verdict;
 }
 
 /** One run record, read from GitHub rather than from a log. */
@@ -687,7 +700,12 @@ async function run02Hand(options = {}) {
   artifact.live_dispatch.probe = live.detail;
   // A probe that failed for any reason other than "not registered" proves nothing, so the flow
   // fails instead of grading the declaration - a broken environment is never an honest proof.
-  if (live.error) artifact.failures.push(live.error);
+  // Deferral (owner-approved, red-hat F-001, 2026-11-03): "runner-cannot-dispatch" — a runner
+  // that cannot authenticate grades the declaration tier and names the reason instead of failing.
+  if (live.error) {
+    if (live.deferral === "runner-cannot-dispatch") artifact.live_dispatch.reason = live.deferral;
+    else artifact.failures.push(live.error);
+  }
 
   const identity = identityFromDeclaration(declaration);
 
