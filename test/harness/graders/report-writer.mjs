@@ -5,9 +5,9 @@
 // a symlinked ancestor before a single byte is written; a refusal here is `could-not-run
 // invalid-case-path`, never a report at a different location.
 //
-// The write is temp file in the report's own directory -> fsync -> rename -> read back. Three
-// outcomes are kept strictly apart, because collapsing them is how a storage problem becomes a
-// product defect (or worse, a pass):
+// The write is temp file in the report's own directory -> fsync -> rename (the canon lives in
+// ../lib/write-durable.mjs) -> read back. Three outcomes are kept strictly apart, because
+// collapsing them is how a storage problem becomes a product defect (or worse, a pass):
 //
 //   fail            `report-missing`     — the file the case declared is not there. The run was
 //                                          otherwise evaluable, so the plugin failed to produce it.
@@ -16,11 +16,12 @@
 //   could-not-run   `report-unavailable` — the store could not be written or read (EACCES, ENOSPC,
 //                                          EROFS). Artifact storage is not the plugin under test.
 //   could-not-run   `invalid-case-path`  — the declared path would leave the invocation directory.
-import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, statSync, writeSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { createHash } from "node:crypto";
 import path from "node:path";
 
 import { CasePathRefused, assertConfined, bindReportPath } from "../kit/case-loader.mjs";
+import { writeDurable } from "../lib/write-durable.mjs";
 
 export const REPORT_SCHEMA = "verify-report/v1";
 
@@ -81,21 +82,17 @@ export function writeVerifyReport({ caseManifest, invocation, body }) {
 
   const target = bound.path;
   const text = `${JSON.stringify(body, null, 2)}\n`;
-  let tempPath = null;
+  const written = Buffer.from(text);
+  // writeDurable is the durable-write canon: a unique temp in the target's directory, fsync, rename.
+  // Its `now` is pinned to one stamp so this wrapper knows the temp's exact name and the cleanup
+  // below can keep the rule that a failed write leaves no temp file behind.
+  const stamp = Date.now();
+  const tempPath = `${target}.tmp-${process.pid}-${stamp}`;
   try {
     mkdirSync(path.dirname(target), { recursive: true });
-    tempPath = `${target}.tmp-${process.pid}-${Date.now()}`;
-    const fd = openSync(tempPath, "w");
-    try {
-      writeSync(fd, text);
-      fsyncSync(fd);
-    } finally {
-      closeSync(fd);
-    }
-    renameSync(tempPath, target);
-    tempPath = null;
+    writeDurable(target, written, { now: () => stamp });
   } catch (error) {
-    if (tempPath) rmSync(tempPath, { force: true });
+    rmSync(tempPath, { force: true });
     if (!isStorageError(error)) throw error;
     return { ok: false, verdict: "could-not-run", reason: REPORT_REASONS.unavailable, path: target, code: error.code, wrote: 0 };
   }
@@ -109,7 +106,6 @@ export function writeVerifyReport({ caseManifest, invocation, body }) {
     if (!isStorageError(error)) throw error;
     return { ok: false, verdict: "could-not-run", reason: REPORT_REASONS.unavailable, path: target, code: error.code, wrote: 1 };
   }
-  const written = Buffer.from(text);
   const digest = sha256(readBack);
   if (readBack.length !== written.length || digest !== sha256(written)) {
     return {
@@ -162,30 +158,56 @@ export function resolveCaptureEvidence(invocation, evidence = {}) {
 }
 
 /**
- * Reads the report at the case-declared path. Only an absent file is `fail report-missing`; a store
- * this process may not read is `could-not-run report-unavailable`.
+ * The raw report read every report reader shares: bind the case-declared path, read the bytes,
+ * parse them, and compare the body with the invocation/case binding. No verdicts and no reason
+ * strings live here — a refusal comes back as `why`, one of:
+ *
+ *   invalid-path   the declared path was refused (the raw bind refusal travels as `refusal`)
+ *   missing        no file at the bound path
+ *   storage        the store could not be read (`code` carries the errno)
+ *   unreadable     the bytes are not JSON
+ *   unbound        the body belongs to another invocation or case (`binding` carries the compare)
+ *
+ * A success carries the bytes, the parsed report and the bound path; hashing and the verdict
+ * mapping are the caller's business.
  */
-export function readVerifyReportAt({ caseManifest, invocation }) {
+function readReportCore({ caseManifest, invocation }) {
   const bound = classifyReportPath(caseManifest, invocation?.dir);
-  if (!bound.ok) return bound;
+  if (!bound.ok) return { ok: false, why: "invalid-path", refusal: bound };
   const target = bound.path;
   if (!existsSync(target) || !statSync(target).isFile()) {
-    return { ok: false, verdict: "fail", reason: REPORT_REASONS.missing, path: target };
+    return { ok: false, why: "missing", path: target };
   }
   let bytes;
   try {
     bytes = readFileSync(target);
   } catch (error) {
     if (!isStorageError(error)) throw error;
-    return { ok: false, verdict: "could-not-run", reason: REPORT_REASONS.unavailable, path: target, code: error.code };
+    return { ok: false, why: "storage", path: target, code: error.code };
   }
   let report;
   try {
     report = JSON.parse(bytes.toString("utf8"));
   } catch {
-    return { ok: false, verdict: "fail", reason: REPORT_REASONS.unreadable, path: target, byte_length: bytes.length };
+    return { ok: false, why: "unreadable", path: target, byte_length: bytes.length };
   }
   const binding = assertBound(caseManifest, invocation, report);
-  if (!binding.ok) return { ...binding, path: target };
-  return { ok: true, path: target, sha256: sha256(bytes), byte_length: bytes.length, report };
+  if (!binding.ok) return { ok: false, why: "unbound", binding, path: target };
+  return { ok: true, path: target, bytes, report };
+}
+
+/**
+ * Reads the report at the case-declared path. Only an absent file is `fail report-missing`; a store
+ * this process may not read is `could-not-run report-unavailable`.
+ */
+export function readVerifyReportAt({ caseManifest, invocation }) {
+  const raw = readReportCore({ caseManifest, invocation });
+  if (!raw.ok) {
+    if (raw.why === "invalid-path") return raw.refusal;
+    if (raw.why === "missing") return { ok: false, verdict: "fail", reason: REPORT_REASONS.missing, path: raw.path };
+    if (raw.why === "storage") return { ok: false, verdict: "could-not-run", reason: REPORT_REASONS.unavailable, path: raw.path, code: raw.code };
+    if (raw.why === "unreadable") return { ok: false, verdict: "fail", reason: REPORT_REASONS.unreadable, path: raw.path, byte_length: raw.byte_length };
+    return { ...raw.binding, path: raw.path };
+  }
+  return { ok: true, path: raw.path, sha256: sha256(raw.bytes), byte_length: raw.bytes.length, report: raw.report };
 }

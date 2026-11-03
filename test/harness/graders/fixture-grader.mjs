@@ -17,12 +17,14 @@ import { worstVerdict, VERDICTS } from "../lib/verdict.mjs";
 import { assertPassEvidence, validateAgainst } from "../validate.mjs";
 import { commandNames, parseCommandList, statusFacts } from "../adapters/claude-code.mjs";
 import { gradeQuestionPolicy, mustAskFacts } from "../stream/question-boundary.mjs";
+import { CHECKS } from "../pins.mjs";
+import { SOURCE } from "../runtime/grade-writer.mjs";
 
 import { REPORT_REASONS, readVerifyReportAt, resolveCaptureEvidence } from "./report-writer.mjs";
 
-export const SOURCE = "files-and-event-stream";
-/** The four checks one graded cell carries, in the order the cell reports them. */
-export const CHECK_IDS = Object.freeze(["command_list", "status", "verify", "question_before_expensive_work"]);
+export { SOURCE };
+/** The four checks one graded cell carries, in the order the cell reports them. pins.mjs owns the list. */
+export const CHECK_IDS = Object.freeze([...CHECKS]);
 
 const block = (verdict, reason, detail = {}) => ({ verdict, reason, ...detail });
 
@@ -81,6 +83,66 @@ export function notExecutedPart({ check_id, reason, owner, invocation_id = null,
 }
 
 /**
+ * The planted half's detection rules, run against the report the planted case declares. Every rule
+ * keeps its side tag so the aggregate can say which half refused.
+ */
+function plantedDetectionBlocks(planted, plantedReport) {
+  const blocks = [];
+  if (plantedReport.observed_verify_outcome !== "defect-detected") {
+    blocks.push(block("fail", `verify-${plantedReport.observed_verify_outcome ?? "unknown"}`, { side: "planted", expected: "defect-detected" }));
+  }
+  const plantedKey = planted.caseManifest?.defect_key ?? null;
+  const named = plantedReport.observed_defect_key ?? null;
+  const claimed = plantedReport.expected_defect_key ?? null;
+  const drifted = (plantedReport.evidence?.drifted_keys ?? []).includes(plantedKey);
+  // The report's own claims are compared with the case it says it verifies: a body that names a
+  // different expected key, or an observed key that contradicts the one the case plants, is not a
+  // detection of this case no matter how clean its outcome line reads.
+  if (plantedKey && claimed !== plantedKey) {
+    blocks.push(block("fail", "verify-defect-key-mismatch", { side: "planted", field: "expected_defect_key", expected: plantedKey, named: claimed }));
+  }
+  if (plantedKey && named !== null && named !== plantedKey) {
+    blocks.push(block("fail", "verify-defect-key-mismatch", { side: "planted", field: "observed_defect_key", expected: plantedKey, named }));
+  } else if (plantedKey && named === null && !drifted) {
+    blocks.push(block("fail", "verify-defect-key-mismatch", { side: "planted", field: "observed_defect_key", expected: plantedKey, named, drifted }));
+  }
+  // Detection is a citation, not a word: the capture the report names must exist inside the
+  // invocation that wrote it, hash to the digest the report claims, and hold the cited span.
+  const evidence = plantedReport.evidence ?? {};
+  const unevidenced = [];
+  const capture = resolveCaptureEvidence(planted.invocation, evidence);
+  if (!capture.ok) unevidenced.push(capture.why);
+  if (unevidenced.length > 0) {
+    blocks.push(block("fail", REPORT_REASONS.unboundEvidence, { side: "planted", missing: unevidenced, capture }));
+  }
+  return blocks;
+}
+
+/** The clean twin's rules: the twin must not detect the planted defect, and must report clean. */
+function cleanSideBlocks(cleanReport) {
+  const blocks = [];
+  if (cleanReport.clean_project_failed === true) {
+    blocks.push(block("fail", "clean-false-positive", { side: "clean" }));
+  }
+  if (cleanReport.observed_verify_outcome !== "clean") {
+    blocks.push(block("fail", `clean-${cleanReport.observed_verify_outcome ?? "unknown"}`, { side: "clean", expected: "clean" }));
+  }
+  return blocks;
+}
+
+/** The two halves must be independent runs: distinct invocation ids and distinct report bodies. */
+function twinBindingBlocks(byside) {
+  const blocks = [];
+  if (byside.planted.report.invocation_id === byside.clean.report.invocation_id) {
+    blocks.push(block("fail", REPORT_REASONS.unbound, { binding: "twin", why: "both reports share one invocation_id" }));
+  }
+  if (byside.planted.sha256 && byside.planted.sha256 === byside.clean.sha256) {
+    blocks.push(block("fail", REPORT_REASONS.unbound, { binding: "twin", why: "both report bodies hash the same" }));
+  }
+  return blocks;
+}
+
+/**
  * The verify check, graded from the pair of reports at their case-declared paths.
  *
  * Pass requires BOTH halves: the planted report names the planted defect with the capture hash and
@@ -106,50 +168,9 @@ export function gradeVerifyCheck({ planted, clean }) {
   const invocation_id = planted?.invocation?.invocationId ?? null;
 
   if (planted && clean && byside.planted.ok && byside.clean.ok) {
-    const plantedReport = byside.planted.report;
-    const cleanReport = byside.clean.report;
-
-    if (plantedReport.observed_verify_outcome !== "defect-detected") {
-      blocks.push(block("fail", `verify-${plantedReport.observed_verify_outcome ?? "unknown"}`, { side: "planted", expected: "defect-detected" }));
-    }
-    const plantedKey = planted.caseManifest?.defect_key ?? null;
-    const named = plantedReport.observed_defect_key ?? null;
-    const claimed = plantedReport.expected_defect_key ?? null;
-    const drifted = (plantedReport.evidence?.drifted_keys ?? []).includes(plantedKey);
-    // The report's own claims are compared with the case it says it verifies: a body that names a
-    // different expected key, or an observed key that contradicts the one the case plants, is not a
-    // detection of this case no matter how clean its outcome line reads.
-    if (plantedKey && claimed !== plantedKey) {
-      blocks.push(block("fail", "verify-defect-key-mismatch", { side: "planted", field: "expected_defect_key", expected: plantedKey, named: claimed }));
-    }
-    if (plantedKey && named !== null && named !== plantedKey) {
-      blocks.push(block("fail", "verify-defect-key-mismatch", { side: "planted", field: "observed_defect_key", expected: plantedKey, named }));
-    } else if (plantedKey && named === null && !drifted) {
-      blocks.push(block("fail", "verify-defect-key-mismatch", { side: "planted", field: "observed_defect_key", expected: plantedKey, named, drifted }));
-    }
-    // Detection is a citation, not a word: the capture the report names must exist inside the
-    // invocation that wrote it, hash to the digest the report claims, and hold the cited span.
-    const evidence = plantedReport.evidence ?? {};
-    const unevidenced = [];
-    const capture = resolveCaptureEvidence(planted.invocation, evidence);
-    if (!capture.ok) unevidenced.push(capture.why);
-    if (unevidenced.length > 0) {
-      blocks.push(block("fail", REPORT_REASONS.unboundEvidence, { side: "planted", missing: unevidenced, capture }));
-    }
-
-    if (cleanReport.clean_project_failed === true) {
-      blocks.push(block("fail", "clean-false-positive", { side: "clean" }));
-    }
-    if (cleanReport.observed_verify_outcome !== "clean") {
-      blocks.push(block("fail", `clean-${cleanReport.observed_verify_outcome ?? "unknown"}`, { side: "clean", expected: "clean" }));
-    }
-
-    if (plantedReport.invocation_id === cleanReport.invocation_id) {
-      blocks.push(block("fail", REPORT_REASONS.unbound, { binding: "twin", why: "both reports share one invocation_id" }));
-    }
-    if (byside.planted.sha256 && byside.planted.sha256 === byside.clean.sha256) {
-      blocks.push(block("fail", REPORT_REASONS.unbound, { binding: "twin", why: "both report bodies hash the same" }));
-    }
+    blocks.push(...plantedDetectionBlocks(planted, byside.planted.report));
+    blocks.push(...cleanSideBlocks(byside.clean.report));
+    blocks.push(...twinBindingBlocks(byside));
   }
 
   if (blocks.length === 0) blocks.push(block("pass", null));
@@ -304,6 +325,32 @@ export function completeCheckSet(parts = []) {
 }
 
 /**
+ * One completed check passes through gradeCell only as it stands: a pass must cite evidence that
+ * resolves inside `evidence_roots` (otherwise it is downgraded could-not-run), and a non-pass must
+ * carry a reason. The downgrades keep every block the check already carried.
+ */
+function enforceCheckEvidence(entry, evidence_roots) {
+  if (entry.verdict === "pass") {
+    const cited = entry.evidence_paths ?? [];
+    const unresolvable = cited.length === 0 ? [{ why: "none" }] : unresolvableCitations(cited, evidence_roots);
+    if (unresolvable.length > 0) {
+      const reason = cited.length === 0 ? "check-unevidenced" : "evidence-unresolvable";
+      return {
+        ...entry,
+        verdict: "could-not-run",
+        reason,
+        blocks: [...(entry.blocks ?? []), block("could-not-run", reason, { citations: unresolvable })],
+      };
+    }
+    return entry;
+  }
+  if (typeof entry.reason !== "string" || entry.reason.trim().length === 0) {
+    return { ...entry, verdict: "could-not-run", reason: "check-reason-absent", blocks: [...(entry.blocks ?? []), block("could-not-run", "check-reason-absent")] };
+  }
+  return entry;
+}
+
+/**
  * Assembles one HarnessCell from its four parts.
  *
  * - aggregate: could-not-run before fail before pass, over the four parts
@@ -325,26 +372,7 @@ export function gradeCell({
   evidence_roots = [],
 } = {}) {
   const completed = completeCheckSet(parts);
-  const checks = completed.checks.map((entry) => {
-    if (entry.verdict === "pass") {
-      const cited = entry.evidence_paths ?? [];
-      const unresolvable = cited.length === 0 ? [{ why: "none" }] : unresolvableCitations(cited, evidence_roots);
-      if (unresolvable.length > 0) {
-        const reason = cited.length === 0 ? "check-unevidenced" : "evidence-unresolvable";
-        return {
-          ...entry,
-          verdict: "could-not-run",
-          reason,
-          blocks: [...(entry.blocks ?? []), block("could-not-run", reason, { citations: unresolvable })],
-        };
-      }
-      return entry;
-    }
-    if (typeof entry.reason !== "string" || entry.reason.trim().length === 0) {
-      return { ...entry, verdict: "could-not-run", reason: "check-reason-absent", blocks: [...(entry.blocks ?? []), block("could-not-run", "check-reason-absent")] };
-    }
-    return entry;
-  });
+  const checks = completed.checks.map((entry) => enforceCheckEvidence(entry, evidence_roots));
 
   const verdict = worstVerdict([...checks.map((entry) => entry.verdict), ...completed.problems.map((entry) => entry.verdict)]);
   const winner = checks.find((entry) => entry.verdict === verdict) ?? completed.problems[0] ?? {};
