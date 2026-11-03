@@ -147,6 +147,22 @@ function needsOf(job) {
   return needs === undefined || needs === null ? [] : [String(needs)];
 }
 
+// Every step must do something: `run: "true"` is not an install, a record or a transfer.
+function checkNoOpSteps(yaml, jobs) {
+  const failures = [];
+  for (const [name, job] of Object.entries(jobs)) {
+    const steps = stepsOf(job);
+    if (steps.length === 0) failures.push(`jobs.${name} has no steps`);
+    for (const step of steps) {
+      const label = `${name}/${String(step?.name ?? step?.uses ?? "unnamed step")}`;
+      if (step?.uses) continue;
+      const body = String(step?.run ?? "").trim();
+      if (body === "" || NOOP_BODY.test(body)) failures.push(`step ${label} runs no real command (${JSON.stringify(body)})`);
+    }
+  }
+  return failures;
+}
+
 // The one step that writes cell/cell.json — the cell's own recording step (T9's anchor).
 function recorderStepOf(jobs) {
   return Object.entries(jobs).flatMap(([name, job]) =>
@@ -232,18 +248,6 @@ export function inspectWorkflowDeclaration(yaml) {
     fail(`jobs.smoke permissions is ${JSON.stringify(smoke?.permissions)}, expected only contents: read`);
   }
 
-  // Every step must do something: `run: "true"` is not an install, a record or a transfer.
-  for (const [name, job] of Object.entries(jobs)) {
-    const steps = stepsOf(job);
-    if (steps.length === 0) fail(`jobs.${name} has no steps`);
-    for (const step of steps) {
-      const label = `${name}/${String(step?.name ?? step?.uses ?? "unnamed step")}`;
-      if (step?.uses) continue;
-      const body = String(step?.run ?? "").trim();
-      if (body === "" || NOOP_BODY.test(body)) fail(`step ${label} runs no real command (${JSON.stringify(body)})`);
-    }
-  }
-
   // The dispatch input must reach the record, not a literal that happens to look like it.
   const recorder = recorderStepOf(jobs);
 
@@ -276,6 +280,7 @@ export function inspectWorkflowDeclaration(yaml) {
     }
   }
 
+  failures.push(...checkNoOpSteps(yaml, jobs));
   failures.push(...checkRecorderInterpolation(yaml, jobs));
 
   // The skeleton chain has to be wired: cells in, cells through, receipt out.
