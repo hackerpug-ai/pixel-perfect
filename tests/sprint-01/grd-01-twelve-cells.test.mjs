@@ -25,7 +25,7 @@ import {
   loadPins,
 } from "../../test/harness/pins.mjs";
 import { validateAgainst, validateResult } from "../../test/harness/validate.mjs";
-import { inspectWorkflowDeclaration, parseYaml, readWorkflow } from "./flow-runner.mjs";
+import { inspectWorkflowDeclaration, LIVE_ARTIFACT, readWorkflow, writeCellArtifacts } from "./flow-runner.mjs";
 import {
   RESULT_FILENAME,
   assembleResult,
@@ -43,20 +43,15 @@ import { runVerifyCase } from "./flow-runner.mjs";
 import { renderSummary } from "../../test/harness/recorder/summary.mjs";
 import { ADAPTER_PENDING, ABSENT_REASONS, absentReason } from "../../test/harness/adapters/absent.mjs";
 import { CELL_SOURCES, LOOKUP_FAILED_REASON, planCells } from "../../test/harness/adapters/registry.mjs";
-import { guardInvocation } from "../../test/harness/runtime/guard.mjs";
+import { SECRET_NAME, guardInvocation } from "../../test/harness/runtime/guard.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const ADAPTERS_DIR = join(ROOT, "test/harness/adapters");
 const REPORT_DIR = join(ROOT, ".tmp", "sprint-01-verification");
-// A downloaded attempt-qualified artifact, when one exists. No hosted run exists in this worktree.
-const LIVE_ARTIFACT =
-  process.env.HARNESS_EVAL_RESULT ?? join(ROOT, ".tmp", "sprint-01-artifacts", "he1", "harness-eval-result.json");
 
 // Command listing / version probes must not see a key (no key on install or listing steps).
 const SCRUBBED_ENV = Object.fromEntries(
-  Object.entries(process.env).filter(
-    ([name]) => !/^(SMOKE_[A-Z_]+|ANTHROPIC_API_KEY|CODEX_API_KEY|XAI_API_KEY|GEMINI_API_KEY|CURSOR_API_KEY)$/.test(name),
-  ),
+  Object.entries(process.env).filter(([name]) => !SECRET_NAME.test(name)),
 );
 
 const BINARIES = {
@@ -485,16 +480,6 @@ const RECORDER = "test/harness/recorder.mjs";
 
 function gitHead() {
   return execFileSync("git", ["rev-parse", "HEAD"], { cwd: ROOT, encoding: "utf8" }).trim();
-}
-
-/** Mirrors the artifact layout the smoke matrix uploads: <artifact-name>/cell/cell.json. */
-function writeCellArtifacts(dir, records, { prefix = "harness-eval-cell-9000000001-1" } = {}) {
-  for (const record of records) {
-    const folder = join(dir, `${prefix}-${record.harness}-${record.track}`, "cell");
-    mkdirSync(folder, { recursive: true });
-    writeFileSync(join(folder, "cell.json"), `${JSON.stringify(record, null, 2)}\n`, "utf8");
-  }
-  return dir;
 }
 
 /** The bare smoke-cell record T1's matrix writes today: identity plus an honest named reason. */

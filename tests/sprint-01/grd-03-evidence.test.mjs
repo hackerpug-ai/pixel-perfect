@@ -21,14 +21,13 @@ import { fileURLToPath } from "node:url";
 import { createCapture, denials, spawnCaptured } from "../../test/harness/runtime/capture.mjs";
 import { gradeFromEvidence, readGrade, verifyReadBack, writeGrade } from "../../test/harness/runtime/grade-writer.mjs";
 import { exitCodeVerdict } from "../../test/harness/lib/verdict.mjs";
+import { fixtureInstallation as installation, LIVE_ARTIFACT } from "./flow-runner.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const REPORT_DIR = join(ROOT, ".tmp", "sprint-01-verification");
 const ARTIFACT = join(REPORT_DIR, "grd-03-evidence.json");
 // The real capture T5/T11 records on a hosted run; absent until then.
 const ARCHIVED_CAPTURE_DIR = join(ROOT, "test/harness/fixtures/streams");
-const LIVE_ARTIFACT =
-  process.env.HARNESS_EVAL_RESULT ?? join(ROOT, ".tmp", "sprint-01-artifacts", "he1", "harness-eval-result.json");
 
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
@@ -128,20 +127,6 @@ function passMapper() {
   return (line) => {
     if (line.type !== "read_attempt" || line.ok !== true) return [];
     return [{ kind: "required_read_ok", operation: "read", target: line.path, fact_id: "required_read_ok" }];
-  };
-}
-
-function installation() {
-  return {
-    requested_cli_version: "2.1.291",
-    resolved_cli_version: "2.1.291",
-    observed_cli_version: null,
-    install_mode: "checkout",
-    plugin_revision: null,
-    expected_plugin_manifest_sha256: null,
-    observed_plugin_manifest_sha256: null,
-    loaded_plugin_root: null,
-    plugin_load_evidence: null,
   };
 }
 

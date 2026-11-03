@@ -64,18 +64,15 @@ import { REGISTERED, adapterFor, describeRegistry } from "../../test/harness/ada
 import { bindReportPath, loadCase } from "../../test/harness/kit/case-loader.mjs";
 import { loadPins, sha256Hex } from "../../test/harness/pins.mjs";
 import { APPROVED_MODES, recordStance } from "../../test/harness/runtime/stance.mjs";
+import { SECRET_NAME } from "../../test/harness/runtime/guard.mjs";
 import { COMMIT_PATTERN, SHA256_PATTERN, validateAgainst } from "../../test/harness/validate.mjs";
+import { REJECTED_MODE } from "./flow-runner.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "../..");
 const REPORT_DIR = join(ROOT, ".tmp", "sprint-01-verification");
 const ARTIFACT = join(REPORT_DIR, "grd-02-four-grades.json");
 const PLUGIN_ROOT = join(ROOT, "plugins", PLUGIN_NAME);
-
-// The owner-rejected permission mode, assembled at run time so the spelling never reaches the
-// repository. The adapter must never emit it — its stance comes from the allow-list.
-const REJECTED_MODE = ["bypass", "Permissions"].join("");
-const SECRET_NAME = /^(SMOKE_[A-Z0-9_]+|ANTHROPIC_API_KEY|CODEX_API_KEY|XAI_API_KEY|GEMINI_API_KEY|CURSOR_API_KEY)$/;
 
 /**
  * `claude plugin details pixel-perfect`'s component inventory, transcribed from a real 2.1.312 run
@@ -922,6 +919,7 @@ test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
 test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
   const stream = await import("../../test/harness/stream/index.mjs");
   const { exitCodeVerdict } = await import("../../test/harness/lib/verdict.mjs");
+  const { fixtureInstallation } = await import("./flow-runner.mjs");
   const ARCHIVE = join(ROOT, "test/harness/stream/captures/claude-code-stream-probe.capture.json");
   const report = { flow: "FLOW-GRD-02-FOUR-GRADES", generated_at: new Date().toISOString(), legs: [], branch_conformance: [], not_executed: [], evidence: {} };
 
@@ -962,17 +960,7 @@ test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
   assert.equal(real.tiling.ok, true, `the real capture tiles exactly once: ${JSON.stringify(real.tiling)}`);
   assert.equal(real.missing.length, 3, "exactly the three facts the keyless turn could not reach");
 
-  const installation = {
-    requested_cli_version: "2.1.291",
-    resolved_cli_version: "2.1.291",
-    observed_cli_version: null,
-    install_mode: "checkout",
-    plugin_revision: null,
-    expected_plugin_manifest_sha256: null,
-    observed_plugin_manifest_sha256: null,
-    loaded_plugin_root: null,
-    plugin_load_evidence: null,
-  };
+  const installation = fixtureInstallation();
   const cells = ["command_list", "status", "verify", "question_before_expensive_work"].map((check_id) => {
     const ask_policy = check_id === "question_before_expensive_work" ? "must-ask" : "ask-nothing";
     return stream.gradeStreamCheck({

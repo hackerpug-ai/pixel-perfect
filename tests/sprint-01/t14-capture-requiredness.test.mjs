@@ -20,13 +20,13 @@
 // No capture method, no grader and no byte is replaced.
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { mapCapturedLine } from "../../test/harness/adapters/claude-code.mjs";
+import { fixtureInstallation, sandbox } from "./flow-runner.mjs";
 import { createCapture, denials, observedFacts, undeclaredDenials } from "../../test/harness/runtime/capture.mjs";
 import { gradeFromEvidence } from "../../test/harness/runtime/grade-writer.mjs";
 
@@ -39,18 +39,6 @@ const FIXTURE_BYTES = readFileSync(join(FIXTURE_DIR, "claude-code-denied-write.s
 /** The invocation root the archived run really worked in: the denied write is under it. */
 const ENTRY = { cwd: FIXTURE_RECORD.cwd };
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
-
-const installation = () => ({
-  requested_cli_version: "2.1.291",
-  resolved_cli_version: "2.1.291",
-  observed_cli_version: null,
-  install_mode: "checkout",
-  plugin_revision: null,
-  expected_plugin_manifest_sha256: null,
-  observed_plugin_manifest_sha256: null,
-  loaded_plugin_root: null,
-  plugin_load_evidence: null,
-});
 
 /** T6's production mapper, declaring requiredness per denial from the target and the invocation root. */
 function declaredMapper(json, line) {
@@ -91,7 +79,7 @@ function replay({ dir, invocation_id, mapper, required_read_paths = null }) {
   const grade = (required_facts = []) =>
     gradeFromEvidence({
       record,
-      installation: installation(),
+      installation: fixtureInstallation(),
       harness: "claude-code",
       track: "pinned",
       check_id: "verify",
@@ -102,18 +90,12 @@ function replay({ dir, invocation_id, mapper, required_read_paths = null }) {
   return { record, grade };
 }
 
-function sandbox(t, label) {
-  const dir = mkdtempSync(join(tmpdir(), `pp-${label}-`));
-  t.after(() => rmSync(dir, { recursive: true, force: true }));
-  return dir;
-}
-
 // ---------------------------------------------------------------------------
 // AC-1 - a declared required_read: false survives capture and is not graded as undeclared
 // ---------------------------------------------------------------------------
 
 test("declared-optional-survives-capture", (t) => {
-  const dir = sandbox(t, "t14-ac1");
+  const dir = sandbox(t, "pp-t14-ac1-");
 
   // The input is the real archive, re-hashed: a fixture edited to carry a declaration the run never
   // made is refused here, before any claim about the layer is read.
@@ -169,7 +151,7 @@ test("declared-optional-survives-capture", (t) => {
 // ---------------------------------------------------------------------------
 
 test("undeclared-denial-still-closed", (t) => {
-  const dir = sandbox(t, "t14-ac2");
+  const dir = sandbox(t, "pp-t14-ac2-");
 
   // seed/declaration-stripped-capture: nobody declared the target-less Bash denial.
   const stripped = replay({
@@ -233,7 +215,7 @@ test("undeclared-denial-still-closed", (t) => {
 // ---------------------------------------------------------------------------
 
 test("optional-denial-is-not-a-fact", (t) => {
-  const dir = sandbox(t, "t14-tc3");
+  const dir = sandbox(t, "pp-t14-tc3-");
   const { record, grade } = replay({
     dir: join(dir, "facts"),
     invocation_id: "t14-observed-facts",

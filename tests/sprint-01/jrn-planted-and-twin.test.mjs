@@ -43,7 +43,7 @@ import { fileURLToPath } from "node:url";
 import { bindReport, prepareVerifyPair, runCheck } from "../../test/harness/adapters/claude-code.mjs";
 import { loadCase, sha256File } from "../../test/harness/kit/case-loader.mjs";
 import { validateDispatchIdentity } from "../../test/harness/validate.mjs";
-import { missingPlantedReport, runVerifyCase } from "./flow-runner.mjs";
+import { fixtureInstallation, missingPlantedReport, runVerifyCase } from "./flow-runner.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, "../..");
@@ -735,7 +735,7 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
   });
 
   await t.test("neither lane can be laundered into a pass by the cell aggregate", () => {
-    const installation = { requested_cli_version: "2.1.291", resolved_cli_version: "2.1.291", observed_cli_version: null, install_mode: "checkout", plugin_revision: null, expected_plugin_manifest_sha256: null, observed_plugin_manifest_sha256: null, loaded_plugin_root: null, plugin_load_evidence: null };
+    const installation = fixtureInstallation();
     // The three passing lanes cite a real file inside the run's own evidence root, so the only thing
     // that can fail this cell is the verify lane. A cell that could pass on an unresolvable citation
     // would make this assertion meaningless.

@@ -16,62 +16,44 @@ import { fileURLToPath } from "node:url";
 
 import { createCapture } from "../../test/harness/runtime/capture.mjs";
 import { gradeFromEvidence, readGrade, writeGrade } from "../../test/harness/runtime/grade-writer.mjs";
-import { guardInvocation, resolveCredential, runGuarded, sessionId } from "../../test/harness/runtime/guard.mjs";
+import { SECRET_NAME, guardInvocation, resolveCredential, runGuarded, sessionId } from "../../test/harness/runtime/guard.mjs";
 import { APPROVED_MODES, assertStance, recordStance, serializeStance } from "../../test/harness/runtime/stance.mjs";
 import { loadPins } from "../../test/harness/pins.mjs";
 import { ADAPTER_PENDING, ABSENT_REASONS, absentReason } from "../../test/harness/adapters/absent.mjs";
 import { CELL_SOURCES, cellFor, planCells } from "../../test/harness/adapters/registry.mjs";
-import { inspectWorkflowDeclaration, readWorkflow } from "./flow-runner.mjs";
+import { fixtureInstallation, inspectWorkflowDeclaration, LIVE_ARTIFACT, REJECTED_MODE, readWorkflow } from "./flow-runner.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const RUNTIME_DIR = join(ROOT, "test/harness/runtime");
 const REPORT_DIR = join(ROOT, ".tmp", "sprint-01-verification");
 const ARTIFACT = join(REPORT_DIR, "grd-06-missing-key.json");
-const LIVE_ARTIFACT =
-  process.env.HARNESS_EVAL_RESULT ?? join(ROOT, ".tmp", "sprint-01-artifacts", "he1", "harness-eval-result.json");
 const PLUGIN_ROOT = join(ROOT, "plugins/pixel-perfect");
 
-// Every credential name the eval knows about. Built here, never spelled into the runtime.
-const SECRET_NAMES = /^(SMOKE_[A-Z0-9_]+|ANTHROPIC_API_KEY|CODEX_API_KEY|XAI_API_KEY|GEMINI_API_KEY|CURSOR_API_KEY)$/;
 // § CommandTranslation / CredentialBinding: the five bindings harness-smoke supplies, mapped onto
-// the CLI variables the guard checks. Cursor's own name is the one harness-smoke does not have.
-const SMOKE_BINDINGS = {
-  "claude-code": "ANTHROPIC_API_KEY",
-  codex: "CODEX_API_KEY",
-  grok: "XAI_API_KEY",
-  opencode: "ANTHROPIC_API_KEY",
-  pi: "GEMINI_API_KEY",
-};
-
-// The stance the owner rejected; assembled at run time so it is not spelled into the repo.
-const REJECTED_MODE = ["bypass", "Permissions"].join("");
+// the CLI variables the guard checks — read from the pins manifest, the same authority grd-02
+// consumes, so the workflow table and this map cannot drift from the pins alone. Cursor's own
+// name is the one harness-smoke does not have: its credential_env is already its CLI variable,
+// so it has no distinct SMOKE_ secret to map.
+const SMOKE_BINDINGS = Object.fromEntries(
+  Object.entries(loadPins().manifest.harnesses)
+    .filter(([, pin]) => pin.credential_env !== pin.binding_env)
+    .map(([harness, pin]) => [harness, pin.binding_env]),
+);
 
 /** The runner's environment with every model credential removed — the keyless child env. */
 function withoutSecrets(env) {
-  return Object.fromEntries(Object.entries(env).filter(([name]) => !SECRET_NAMES.test(name)));
+  return Object.fromEntries(Object.entries(env).filter(([name]) => !SECRET_NAME.test(name)));
 }
 
 // Writes a marker only if it really ran, and reports which credential names reached its env.
+// The child script cannot import the guard, so its name pattern is built from the guard's own
+// source string — one definition, spelled nowhere twice.
 const MARKER_CHILD = `
 const { writeFileSync } = require("node:fs");
 writeFileSync(process.argv[1], "ran");
-const names = Object.keys(process.env).filter((name) => new RegExp("^(SMOKE_[A-Z0-9_]+|ANTHROPIC_API_KEY|CODEX_API_KEY|XAI_API_KEY|GEMINI_API_KEY|CURSOR_API_KEY)$").test(name)).sort();
+const names = Object.keys(process.env).filter((name) => new RegExp(${JSON.stringify(SECRET_NAME.source)}).test(name)).sort();
 process.stdout.write(JSON.stringify({ type: "child_env", secret_names: names }) + "\\n");
 `;
-
-function installation() {
-  return {
-    requested_cli_version: "2.1.291",
-    resolved_cli_version: "2.1.291",
-    observed_cli_version: null,
-    install_mode: "checkout",
-    plugin_revision: null,
-    expected_plugin_manifest_sha256: null,
-    observed_plugin_manifest_sha256: null,
-    loaded_plugin_root: null,
-    plugin_load_evidence: null,
-  };
-}
 
 /** The both-ways assertion an always-refusing guard must fail. */
 function bothWays({ keylessDecision, keyedDecision }) {
@@ -211,7 +193,7 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
     // and must not dress a never-started invocation up as a crash or a truncated capture.
     const keylessCell = gradeFromEvidence({
       record: keylessRecord,
-      installation: installation(),
+      installation: fixtureInstallation(),
       harness: "claude-code",
       track: "pinned",
       check_id: "verify",
@@ -862,7 +844,7 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
   try {
     // ---- missing-key: env absence asserted BEFORE the refusal is asserted ---------------
     const keylessEnv = withoutSecrets(process.env);
-    const survivingNames = Object.keys(keylessEnv).filter((name) => SECRET_NAMES.test(name));
+    const survivingNames = Object.keys(keylessEnv).filter((name) => SECRET_NAME.test(name));
     assert.deepEqual(survivingNames, [], "the keyless child env still carries a credential name, so absence would prove nothing");
     const keylessCapture = createCapture({ harness: "claude-code", check_id: "verify", cwd: projectDir, timeout_ms: 20_000 });
     const keyless = await runGuarded({

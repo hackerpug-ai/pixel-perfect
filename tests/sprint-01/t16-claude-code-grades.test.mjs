@@ -31,8 +31,7 @@
 // byte. The four `pass` verdicts of a dispatched run are the sprint gate's receipt, not this file's.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -42,6 +41,7 @@ import { loadCase } from "../../test/harness/kit/case-loader.mjs";
 import { loadPins, sha256Hex } from "../../test/harness/pins.mjs";
 import { createCapture } from "../../test/harness/runtime/capture.mjs";
 import * as stance from "../../test/harness/runtime/stance.mjs";
+import { sandbox } from "./flow-runner.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "../..");
@@ -115,12 +115,6 @@ function statusFixture() {
   );
   assert.equal(sha256Hex(bytes), provenance.stdout_sha256, "the archived status bytes are the bytes the provenance cites");
   return { bytes, provenance };
-}
-
-function sandbox(t, label = "t16-") {
-  const dir = mkdtempSync(join(tmpdir(), label));
-  t.after(() => rmSync(dir, { recursive: true, force: true }));
-  return dir;
 }
 
 /** The identity a graded cell carries. Digests are measured over the payload on disk. */
@@ -282,12 +276,12 @@ test("t16-status-surface-declared", () => {
   assert.equal(rendered.includes("gates.atoms"), false, "a key the case does not declare is not rendered");
   assert.doesNotMatch(rendered, /\b7\b/, "the declared count is not rendered");
 
-  // A case that declares no facts is told nothing, and the must-ask case's prompt is untouched.
+  // A case that declares no facts is told nothing.
   assert.equal(adapter.statusSurfacePrompt({ caseManifest: { ...statusA, expected_facts: null } }), "");
   assert.equal(adapter.statusSurfacePrompt({ caseManifest: loadCase("first-question-init") }), "");
   // T18 deliberately opens the promise this pair used to pin: the question probe's prompt is now the
   // command PLUS the one declared question surface, so it still begins with the command and is no
-  // longer the bare 22-character command the boundary was first measured on.
+  // longer the bare 19-character command the boundary was first measured on.
   const questionPrompt = adapter.promptFor({ command_name: "init", caseManifest: loadCase("first-question-init") });
   assert.ok(questionPrompt.startsWith("/pixel-perfect:init"), "the question probe's prompt still begins with the command");
   assert.notEqual(questionPrompt, "/pixel-perfect:init", "the question probe's prompt is no longer the bare command alone");

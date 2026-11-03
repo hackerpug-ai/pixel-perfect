@@ -27,8 +27,7 @@
 // sprint gate's, not this file's.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -37,7 +36,7 @@ import * as adapter from "../../test/harness/adapters/claude-code.mjs";
 import { loadCase } from "../../test/harness/kit/case-loader.mjs";
 import { sha256Hex } from "../../test/harness/pins.mjs";
 import { uploadPlan, writeVerifyReceipt } from "../../test/harness/recorder.mjs";
-import { readWorkflow } from "./flow-runner.mjs";
+import { readWorkflow, sandbox } from "./flow-runner.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "../..");
@@ -66,12 +65,6 @@ const SIX_LOCKED = [
   "tests/sprint-01/run-02-hand.test.mjs",
 ];
 const T16_OWNED = ["tests/sprint-01/t16-claude-code-grades.test.mjs"];
-
-function sandbox(t, label = "t17-") {
-  const dir = mkdtempSync(join(tmpdir(), label));
-  t.after(() => rmSync(dir, { recursive: true, force: true }));
-  return dir;
-}
 
 /**
  * The arguments the harness supplies, and nothing else: the case's own declared path, the id the
@@ -713,9 +706,11 @@ test("t17-cell-shape-and-neighbours", (t) => {
     assert.equal(status?.verdict, "pass", `the pinned cell's status reads ${status?.verdict}`);
   }
 
-  // Every locked neighbour, measured as a real subprocess rather than restated.
+  // Every locked neighbour, measured as a real subprocess rather than restated. 77 = the six
+  // files' real test count in a clean checkout: grd-06 and grd-01 legitimately grew on main
+  // after T17 landed, so the count this guard pins is the measured one, not a frozen memory.
   const six = runLockedTests(SIX_LOCKED);
-  assert.equal(six.pass, 76, `the six locked files report pass ${six.pass}, fail ${six.fail}: ${six.output.slice(-2000)}`);
+  assert.equal(six.pass, 77, `the six locked files report pass ${six.pass}, fail ${six.fail}: ${six.output.slice(-2000)}`);
   assert.equal(six.fail, 0, `the six locked files report fail ${six.fail}`);
   const t16 = runLockedTests(T16_OWNED);
   assert.equal(t16.pass, 7, `T16's owned file reports pass ${t16.pass}, fail ${t16.fail}: ${t16.output.slice(-2000)}`);

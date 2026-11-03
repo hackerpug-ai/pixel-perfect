@@ -44,6 +44,7 @@ import {
   validatePair,
   writeObservedReport,
 } from "../../test/harness/kit/case-loader.mjs";
+import { installationIdentity } from "../../test/harness/adapters/claude-code.mjs";
 import { observedEvidence, runOraclePrecheck } from "../../test/harness/kit/oracle-precheck.mjs";
 // The YAML subset reader lives with the other shared harness libraries; re-exported here so
 // the flow tests keep importing parseYaml from this module.
@@ -102,6 +103,52 @@ export function writeArtifact(file, artifact) {
 // No `.red` writer lives here on purpose: a RED proof is only evidence when the gate runner
 // captured it (`run_flow.py --expect red`), so this module never authors the file it would be
 // graded on. A failing run keeps its own record at `<artifact>.failed.json` instead.
+
+// ---------------------------------------------------------------------------
+// [shared] test fixtures — the scratch dirs and shapes the flow tests share
+// ---------------------------------------------------------------------------
+
+/**
+ * A fresh scratch directory under the OS temp dir, removed when the test that asked for it ends.
+ * The label is the full mkdtemp prefix, so each flow test keeps its own directory naming while
+ * sharing the one create-and-clean-up convention.
+ *
+ * @param {import("node:test").TestContext} t
+ * @param {string} label
+ */
+export function sandbox(t, label) {
+  const dir = mkdtempSync(path.join(tmpdir(), label));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  return dir;
+}
+
+/**
+ * The fixture installation the flow tests grade against: the pinned CLI requested and resolved,
+ * and nothing observed yet. Built by the adapter's own factory so the nine-field shape cannot
+ * drift from the schema the runtime validates.
+ */
+export function fixtureInstallation() {
+  return installationIdentity({ requested_cli_version: "2.1.291", resolved_cli_version: "2.1.291" });
+}
+
+// A downloaded hosted-run artifact, when one exists; HARNESS_EVAL_RESULT overrides the default
+// path. Absent in a clean worktree — the flows record what they are still awaiting, not a pass.
+export const LIVE_ARTIFACT =
+  process.env.HARNESS_EVAL_RESULT ?? path.join(ROOT, ".tmp", "sprint-01-artifacts", "he1", "harness-eval-result.json");
+
+// The stance the owner rejected; assembled at run time so the spelling never reaches the
+// repository. The adapter must never emit it — its stance comes from the allow-list.
+export const REJECTED_MODE = ["bypass", "Permissions"].join("");
+
+/** Mirrors the artifact layout the smoke matrix uploads: <artifact-name>/cell/cell.json. */
+export function writeCellArtifacts(dir, records, { prefix = "harness-eval-cell-9000000001-1" } = {}) {
+  for (const record of records) {
+    const folder = path.join(dir, `${prefix}-${record.harness}-${record.track}`, "cell");
+    mkdirSync(folder, { recursive: true });
+    writeFileSync(path.join(folder, "cell.json"), `${JSON.stringify(record, null, 2)}\n`, "utf8");
+  }
+  return dir;
+}
 
 // ---------------------------------------------------------------------------
 // [shared] reading the harness-eval workflow

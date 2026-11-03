@@ -1,7 +1,7 @@
 // T18 — the must-ask invocation asks, and the boundary records it.
 //
 // One defect, two halves, and both are measured here:
-//   (a) the PROMPT half. `promptFor` rendered `/pixel-perfect:init` and nothing else (22 characters),
+//   (a) the PROMPT half. `promptFor` rendered `/pixel-perfect:init` and nothing else (19 characters),
 //       because `statusSurfacePrompt` and `verifyReportPrompt` both return "" for `kind:
 //       "first-question"`. The invocation was never told that this turn is graded on asking, or in
 //       what shape a headless turn can ask.
@@ -37,12 +37,10 @@
 // for byte. The dispatched `pass` is AC-3's artifact, not this file's.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-
 import * as adapter from "../../test/harness/adapters/claude-code.mjs";
 import { loadCase } from "../../test/harness/kit/case-loader.mjs";
 import { loadPins, sha256Hex } from "../../test/harness/pins.mjs";
@@ -50,6 +48,7 @@ import { createCapture, observedFacts } from "../../test/harness/runtime/capture
 import { normalise } from "../../test/harness/stream/normalise.mjs";
 import { questions } from "../../test/harness/stream/question-boundary.mjs";
 import { loadTable } from "../../test/harness/stream/table.mjs";
+import { sandbox } from "./flow-runner.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "../..");
@@ -165,12 +164,6 @@ function realCaptureBytes() {
 // The grading path: real capture reader, real mapper, real graders
 // ---------------------------------------------------------------------------
 
-function sandbox(t, label = "t18-") {
-  const dir = mkdtempSync(join(tmpdir(), label));
-  t.after(() => rmSync(dir, { recursive: true, force: true }));
-  return dir;
-}
-
 /** The identity a graded cell carries. Digests are measured over the payload on disk. */
 function identityForCell() {
   const digest = adapter.manifestDigest(PLUGIN_ROOT);
@@ -275,7 +268,7 @@ test("t18-must-ask-prompt-declares-one-question", () => {
   // The command stays first — the declaration is appended to it, never before it.
   assert.ok(prompt.startsWith("/pixel-perfect:init"), `the invocation is still the product's command: ${prompt.slice(0, 80)}`);
   assert.notEqual(prompt, "/pixel-perfect:init", "the must-ask prompt is no longer the bare command of run 41249460968");
-  assert.ok(prompt.length > 22, `the prompt is longer than the 22-character base prompt (was ${prompt.length})`);
+  assert.ok(prompt.length > 22, `the prompt is longer than the 19-character base prompt (was ${prompt.length})`);
 
   // Exactly one marker occurrence: the surface names the shape once and never echoes a second one.
   assert.equal((prompt.match(/USER_CHOICE\(/g) ?? []).length, 1, "the prompt carries exactly one USER_CHOICE( occurrence");
