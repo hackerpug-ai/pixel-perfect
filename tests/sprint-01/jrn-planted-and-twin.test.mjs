@@ -21,17 +21,18 @@
 //           nothing to dispatch (probe: gh api .../actions/workflows/harness-eval.yml → 404);
 //        c. the flow's surface policy does not permit a dispatch from this ref at all (it
 //           bans a non-main ref, so a task branch may never dispatch).
-//      One carve-out, owner-approved (red-hat F-001, 2026-11-03): a dispatch GitHub refuses to
-//      START for a permission reason — 403 on a read-only token, bad credentials, not
-//      authenticated — is an environment that cannot dispatch at all, so resolveLiveRun
-//      returns the SAME named deferral as the probe (cause: runner-cannot-dispatch, classified
-//      by the shared dispatchDeferral in flow-runner.mjs) and the leg records not-executed
-//      with it. Every other way the live leg can fail — gh unauthenticated at `gh auth
-//      status`, a start failure outside the permission class (network, 422, a 5xx, an
-//      unregistered workflow name), the run list unreadable, no run appearing, a registered
-//      workflow whose probe cannot be read, a foreign commit — is a failure to execute the
-//      leg and goes RED. A catch-all deferral would let T7's gate step stay green while the
-//      journey's THEN was never observed.
+//      Two carve-outs, owner-approved (red-hat F-001, 2026-11-03, extended in round 3): a
+//      permission-class environment — 403 on a read-only token, bad credentials, not
+//      authenticated — cannot dispatch at all, so it records the SAME named deferral as the
+//      probe (runner-cannot-dispatch, classified by the shared dispatchDeferral in
+//      flow-runner.mjs) wherever it surfaces: at the dispatch START resolveLiveRun returns
+//      it, and at the run-GRADE leg (gh auth status, a run read, a run list) gradeLiveRun
+//      classifies the failure reason itself. Every other way the live leg can fail — a start
+//      failure outside the permission class (network, 422, a 5xx, an unregistered workflow
+//      name), the run list unreadable, no run appearing, a registered workflow whose probe
+//      cannot be read, a foreign commit, a download that fails under working auth — is a
+//      failure to execute the leg and goes RED. A catch-all deferral would let T7's gate
+//      step stay green while the journey's THEN was never observed.
 //
 // The seven shapes are reproducible as process exit codes (0 = the leg honestly records
 // not-executed, 1 = it goes red): `node tests/sprint-01/jrn-planted-and-twin.test.mjs
@@ -220,16 +221,26 @@ export function resolveLiveRun({
 }
 
 /**
- * Grade the live leg's resolution. Only `deferral: true` — one of `preDispatchRefusal`'s three
- * probed causes, or a dispatch-start failure inside the permission class (the shared
- * runner-cannot-dispatch deferral) — may record not-executed; any other failure to start the
- * leg fails the check.
+ * Grade the live leg's resolution. `deferral: true` — one of `preDispatchRefusal`'s three probed
+ * causes, or a dispatch-start failure inside the permission class (the shared
+ * runner-cannot-dispatch deferral) — records not-executed directly. A plain failure whose REASON
+ * is itself inside the permission class (the same environment that cannot dispatch cannot read:
+ * gh unauthenticated, bad credentials, a 403) is classified through the shared dispatchDeferral
+ * at grade time and records the SAME named not-executed — round 3's third gh consumer, the
+ * run-grade leg on a tokenless checkout of main. Any other failure to start the leg — a 500, a
+ * network error, a bad run id, a download that fails under working auth — fails the check.
  */
 export function gradeLiveRun(run, emitDiagnostic) {
   if (run.ok) return;
   if (run.deferral) {
     assert.ok(run.reason && run.reason.length > 0, "a deferred live leg always carries its reason");
     emitDiagnostic(`not-executed leg=live-dispatched-run owner=T7 obligation=obl-FLOW-JRN-PLANTED-AND-TWIN reason=${run.reason}`);
+    return;
+  }
+  const deferral = dispatchDeferral(run.reason);
+  if (deferral) {
+    assert.ok(run.reason && run.reason.length > 0, "a classified live leg always carries its reason");
+    emitDiagnostic(`not-executed leg=live-dispatched-run owner=T7 obligation=obl-FLOW-JRN-PLANTED-AND-TWIN reason=${deferral}: ${run.reason}`);
     return;
   }
   assert.fail(`live-dispatched-run could not execute: ${run.reason}`);
@@ -512,30 +523,27 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
     );
     assert.deepEqual(emitted, [], "a failed dispatch emits no not-executed diagnostic");
 
-    // 2. gh unauthenticated.
-    assert.throws(
-      () => gradeLiveRun(resolveLiveRun({ env: {}, ref: "main", hasWorkflow: () => true, gh: modelGh({ auth: 1 }) }), () => {}),
-      /gh is not authenticated/,
-    );
+    // (The auth-status failure moved to the run-grade classification test below: it is inside
+    // the permission class, so it defers rather than goes red — owner-approved, round 3.)
 
-    // 3. The run list unreadable.
+    // 2. The run list unreadable.
     const listError = resolveLiveRun({ env: {}, ref: "main", hasWorkflow: () => true, gh: modelGh({ listStatus: 1 }) });
     assert.equal(listError.deferral, undefined);
     assert.throws(() => gradeLiveRun(listError, () => {}), /live-dispatched-run could not execute: gh run list failed/);
 
-    // 4. No run appeared after the dispatch.
+    // 3. No run appeared after the dispatch.
     assert.throws(
       () => gradeLiveRun(resolveLiveRun({ env: {}, ref: "main", hasWorkflow: () => true, gh: modelGh({ runList: "[]" }) }), () => {}),
       /no harness-eval run appeared after dispatch/,
     );
 
-    // 5. A registration probe that fails some other way (a 502, a permissions error) is not a
+    // 4. A registration probe that fails some other way (a 502, a permissions error) is not a
     // 404: it is an unreadable probe, so the leg attempts the dispatch and stays red.
     const unreadable = resolveLiveRun({ env: {}, ref: "main", hasWorkflow: () => true, gh: modelGh({ registration: "unreadable", dispatch: 1 }) });
     assert.equal(unreadable.deferral, undefined, "only a 404 means not-registered; any other probe error is not a refusal");
     assert.throws(() => gradeLiveRun(unreadable, () => {}), /live-dispatched-run could not execute/);
 
-    // 6. A foreign commit. No deferral marker reaches it: the identity guard throws against the
+    // 5. A foreign commit. No deferral marker reaches it: the identity guard throws against the
     // trusted dispatch sha, and refuses a record that offers no comparable sha at all.
     const head = (spawnSync("git", ["rev-parse", "HEAD"], { encoding: "utf8", cwd: REPO_ROOT }).stdout || "").trim();
     assert.equal(head.length, 40);
@@ -549,7 +557,7 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
       (error) => error.reason === "dispatch-sha-unknown",
     );
 
-    // 7. A deferral with no reason cannot hide behind the marker.
+    // 6. A deferral with no reason cannot hide behind the marker.
     assert.throws(() => gradeLiveRun({ ok: false, deferral: true, reason: "" }, () => {}), /always carries its reason/);
   });
 
@@ -593,14 +601,83 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
     );
   });
 
+  await t.test("the run-grade failure reason itself is classified: the permission class defers, everything else stays red", () => {
+    // Round 3 (third gh consumer): the run-grade leg can fail INSIDE the permission class
+    // after a deferred dispatch — `gh auth status`, a run read, a run list, a download — and
+    // gradeLiveRun classifies that reason through the SAME shared dispatchDeferral, so the
+    // environment that cannot dispatch cannot start the leg either. The raw failure carries
+    // no deferral marker; the classification is gradeLiveRun's job, and it records the SAME
+    // named not-executed instead of failing the gate (owner-approved, red-hat F-001).
+    const emitted = [];
+    const unauthenticated = resolveLiveRun({ env: {}, ref: "main", hasWorkflow: () => true, gh: modelGh({ auth: 1 }) });
+    assert.equal(unauthenticated.ok, false);
+    assert.equal(unauthenticated.deferral, undefined, "the raw failure carries no deferral marker — grading classifies it");
+    gradeLiveRun(unauthenticated, (m) => emitted.push(m));
+    assert.deepEqual(emitted, [
+      "not-executed leg=live-dispatched-run owner=T7 obligation=obl-FLOW-JRN-PLANTED-AND-TWIN reason=runner-cannot-dispatch: gh is not authenticated",
+    ]);
+
+    // Every real permission shape grades deferred wherever it surfaces as the leg's failure
+    // reason — posed by name, the captured gh shapes, the two-line login hint INCLUDED.
+    const deferredShapes = [
+      "gh is not authenticated",
+      "To get started with GitHub CLI, please run:  gh auth login\nAlternatively, populate the GH_TOKEN environment variable with a GitHub API authentication token.",
+      "gh: Bad credentials (HTTP 401)",
+      "gh: Resource not accessible by integration (HTTP 403)",
+    ];
+    for (const reason of deferredShapes) {
+      const lines = [];
+      gradeLiveRun({ ok: false, reason }, (m) => lines.push(m));
+      assert.deepEqual(
+        lines,
+        [`not-executed leg=live-dispatched-run owner=T7 obligation=obl-FLOW-JRN-PLANTED-AND-TWIN reason=runner-cannot-dispatch: ${reason}`],
+        `a permission-class reason grades deferred, never red: ${reason.split("\n")[0]}`,
+      );
+    }
+
+    // Negative controls: a reason OUTSIDE the permission class keeps today's red. A 500 or a
+    // network failure is a broken GitHub (fix it, retry it) — not an environment that cannot
+    // act — and a bad run id or a missing artifact under a working auth is the leg's own
+    // failure. None of these may launder into not-executed.
+    const redShapes = [
+      "gh workflow run harness-eval failed: gh: Server Error (HTTP 500)",
+      "gh run list failed: dial tcp 140.82.112.4:443: connect: connection refused",
+      "gh: run not found (HTTP 404)",
+    ];
+    for (const reason of redShapes) {
+      assert.throws(
+        () => gradeLiveRun({ ok: false, reason }, () => {}),
+        new RegExp(`live-dispatched-run could not execute: ${reason.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`),
+        `a non-permission reason must stay red: ${reason}`,
+      );
+    }
+  });
+
   await t.test("one live dispatched run: oracle precheck, both reports, distinct invocation_ids", (tt) => {
     const run = resolveLiveRun();
     if (!run.ok) {
-      // Red unless a pre-dispatch refusal above applies: the workflow is absent (T7 owns
-      // it), or the surface policy forbids dispatching from this ref. Either way the leg
-      // records not-executed with its owner and obligation. This task's own failures still
-      // fail the check.
-      gradeLiveRun(run, (m) => tt.diagnostic(m));
+      // Deferred mode, named — never a silent skip. The leg records exactly one not-executed
+      // diagnostic and its cause must be one of: the three PROBED pre-dispatch refusals
+      // (workflow absent / remote unregistered / policy refused), or the owner-approved
+      // permission-class deferral (red-hat F-001) classified from the failure reason itself —
+      // e.g. `gh is not authenticated` on a tokenless checkout of main, where no refusal
+      // applies and the leg still cannot start. This leg's own failures still throw.
+      const emitted = [];
+      gradeLiveRun(run, (m) => emitted.push(m));
+      assert.equal(emitted.length, 1, "a deferred live leg emits exactly one not-executed diagnostic");
+      assert.match(
+        emitted[0],
+        /^not-executed leg=live-dispatched-run owner=T7 obligation=obl-FLOW-JRN-PLANTED-AND-TWIN reason=(runner-cannot-dispatch|no \.github\/workflows\/harness-eval\.yml to dispatch|the remote has not registered|the FLOW-RUN-02-HAND surface policy)/,
+        `the deferred leg must carry a NAMED cause: ${emitted[0]}`,
+      );
+      if (/reason=runner-cannot-dispatch/.test(emitted[0])) {
+        assert.match(
+          emitted[0],
+          /reason=runner-cannot-dispatch: \S/,
+          "the classified deferral carries the underlying gh failure after the named cause",
+        );
+      }
+      tt.diagnostic(emitted[0]);
       return;
     }
     const download = downloadVerifyReports(run.runId, run.attempt);
