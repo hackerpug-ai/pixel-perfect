@@ -21,14 +21,12 @@ import { APPROVED_MODES, assertStance, recordStance, serializeStance } from "../
 import { loadPins } from "../../test/harness/pins.mjs";
 import { ADAPTER_PENDING, ABSENT_REASONS, absentReason } from "../../test/harness/adapters/absent.mjs";
 import { CELL_SOURCES, cellFor, planCells } from "../../test/harness/adapters/registry.mjs";
-import { fixtureInstallation, inspectWorkflowDeclaration, readWorkflow } from "./flow-runner.mjs";
+import { fixtureInstallation, inspectWorkflowDeclaration, LIVE_ARTIFACT, readWorkflow } from "./flow-runner.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const RUNTIME_DIR = join(ROOT, "test/harness/runtime");
 const REPORT_DIR = join(ROOT, ".tmp", "sprint-01-verification");
 const ARTIFACT = join(REPORT_DIR, "grd-06-missing-key.json");
-const LIVE_ARTIFACT =
-  process.env.HARNESS_EVAL_RESULT ?? join(ROOT, ".tmp", "sprint-01-artifacts", "he1", "harness-eval-result.json");
 const PLUGIN_ROOT = join(ROOT, "plugins/pixel-perfect");
 
 // Every credential name the eval knows about. Built here, never spelled into the runtime.

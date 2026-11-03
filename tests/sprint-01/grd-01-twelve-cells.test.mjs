@@ -25,7 +25,7 @@ import {
   loadPins,
 } from "../../test/harness/pins.mjs";
 import { validateAgainst, validateResult } from "../../test/harness/validate.mjs";
-import { inspectWorkflowDeclaration, parseYaml, readWorkflow } from "./flow-runner.mjs";
+import { inspectWorkflowDeclaration, LIVE_ARTIFACT, parseYaml, readWorkflow } from "./flow-runner.mjs";
 import {
   RESULT_FILENAME,
   assembleResult,
@@ -48,9 +48,6 @@ import { guardInvocation } from "../../test/harness/runtime/guard.mjs";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const ADAPTERS_DIR = join(ROOT, "test/harness/adapters");
 const REPORT_DIR = join(ROOT, ".tmp", "sprint-01-verification");
-// A downloaded attempt-qualified artifact, when one exists. No hosted run exists in this worktree.
-const LIVE_ARTIFACT =
-  process.env.HARNESS_EVAL_RESULT ?? join(ROOT, ".tmp", "sprint-01-artifacts", "he1", "harness-eval-result.json");
 
 // Command listing / version probes must not see a key (no key on install or listing steps).
 const SCRUBBED_ENV = Object.fromEntries(

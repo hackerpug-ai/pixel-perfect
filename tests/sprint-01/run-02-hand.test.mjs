@@ -30,6 +30,7 @@ import {
   ARTIFACT_DIR,
   BANNED_TRIGGERS,
   HARNESSES,
+  LIVE_ARTIFACT,
   chooseProofTier,
   readProbeOutcome,
   ROOT,
@@ -63,8 +64,6 @@ const ARTIFACT = path.join(ARTIFACT_DIR, "run-02-hand.json");
 // path would let either half's next run erase the other half's evidence.
 const REPORT_DIR = path.join(ROOT, ".tmp", "sprint-01-verification");
 const PINS_REPORT = path.join(REPORT_DIR, "run-02-hand-pins.json");
-const LIVE_ARTIFACT =
-  process.env.HARNESS_EVAL_RESULT ?? path.join(ROOT, ".tmp", "sprint-01-artifacts", "he1", "harness-eval-result.json");
 
 function fileFingerprint(target) {
   return {

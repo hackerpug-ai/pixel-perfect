@@ -131,6 +131,11 @@ export function fixtureInstallation() {
   return installationIdentity({ requested_cli_version: "2.1.291", resolved_cli_version: "2.1.291" });
 }
 
+// A downloaded hosted-run artifact, when one exists; HARNESS_EVAL_RESULT overrides the default
+// path. Absent in a clean worktree — the flows record what they are still awaiting, not a pass.
+export const LIVE_ARTIFACT =
+  process.env.HARNESS_EVAL_RESULT ?? path.join(ROOT, ".tmp", "sprint-01-artifacts", "he1", "harness-eval-result.json");
+
 // ---------------------------------------------------------------------------
 // [shared] reading the harness-eval workflow
 // ---------------------------------------------------------------------------
