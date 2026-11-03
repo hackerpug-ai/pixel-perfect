@@ -946,6 +946,18 @@ export function approveIdentity(identity, { requested_cli_version = identity?.re
 const block = (verdict, reason, detail = {}) => ({ verdict, reason, ...detail });
 
 /**
+ * The verify check's blocks, with the outcome the report observed: the written report is the
+ * check's own artefact, and its `observed_verify_outcome` rides out beside the blocks.
+ */
+function verifyCheckBlocks(entry) {
+  const outcome = readVerifyReport({ entry });
+  return {
+    blocks: outcome.ok ? [] : [block(outcome.verdict, outcome.reason, outcome.detail ?? {})],
+    observed_verify_outcome: outcome.observed_verify_outcome,
+  };
+}
+
+/**
  * The status check's blocks: the reply must state every fact the case declares on its status surface.
  */
 function statusCheckBlocks(entry, answer) {
@@ -1044,9 +1056,7 @@ export function gradeCheck({ record, entry, track = entry?.track ?? "pinned", in
     if (entry.check_id === "status") {
       checkBlocks = statusCheckBlocks(entry, answer);
     } else if (entry.check_id === "verify") {
-      const outcome = readVerifyReport({ entry });
-      observed_verify_outcome = outcome.observed_verify_outcome;
-      if (!outcome.ok) blocks.push(block(outcome.verdict, outcome.reason, outcome.detail ?? {}));
+      ({ blocks: checkBlocks, observed_verify_outcome } = verifyCheckBlocks(entry));
     }
   }
   blocks.push(...checkBlocks);
