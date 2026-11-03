@@ -499,23 +499,35 @@ export function dispatchWorkflow({ repo, inputs = {}, ref } = {}) {
  * about the repository, so it may never be graded as an honest declaration.
  */
 export function readProbeOutcome({ ok, stderr } = {}) {
-  const detail = String(stderr ?? "").trim().split("\n").at(-1);
-  if (ok) return { available: true, detail };
-  if (/HTTP 404\b/.test(detail)) return { available: false, detail };
+  // The JOINED stderr, not just its last line: gh's unauthenticated hint is a TWO-LINE
+  // message, and a classifier reading only the last line would miss the auth hint on line
+  // one. `detail` stays the last line for messages; `stderr` carries the whole output for
+  // classification.
+  const stderrJoined = String(stderr ?? "").trim();
+  const detail = stderrJoined.split("\n").at(-1);
+  if (ok) return { available: true, detail, stderr: stderrJoined };
+  if (/HTTP 404\b/.test(detail)) return { available: false, detail, stderr: stderrJoined };
   return {
     available: false,
     detail,
+    stderr: stderrJoined,
     error: `the live-dispatch probe failed for a reason other than "not registered": ${detail || "gh api said nothing"}`,
   };
 }
 
 /**
  * The one owner-approved probe deferral (red-hat F-001, 2026-11-03): gh stderr that says THIS
- * RUNNER cannot dispatch at all — unauthenticated, bad credentials, forbidden. Everything else
- * (network, not-registered, a missing binary) returns null and keeps the fail path.
+ * RUNNER cannot dispatch at all — unauthenticated, bad credentials, forbidden. The real shapes
+ * (gh 2.96.0, captured 2026-11-03): the two-line login hint ("gh auth login" on line one, the
+ * GH_TOKEN hint on line two), "gh: Bad credentials (HTTP 401)", and a 403 body such as
+ * "Resource not accessible by integration (HTTP 403)". "not authenticated" stays as a
+ * defensive superset for other gh surfaces. Everything else — network, not-registered, a
+ * missing binary, a 5xx — returns null and keeps the fail path.
  */
 export function dispatchDeferral(detail) {
-  return /not authenticated|bad credentials|forbidden|403/i.test(String(detail ?? ""))
+  return /not authenticated|bad credentials|forbidden|\b403\b|gh auth login|GH_TOKEN environment variable/i.test(
+    String(detail ?? ""),
+  )
     ? "runner-cannot-dispatch"
     : null;
 }
@@ -531,7 +543,9 @@ export function probeLiveDispatch({ repo } = {}) {
   if (verdict.available) {
     return { available: true, detail: `${WORKFLOW_NAME}.yml is registered on the default branch of ${repo}` };
   }
-  const deferral = dispatchDeferral(verdict.detail);
+  // The classifier sees the JOINED stderr: gh's login hint is a two-line message and the
+  // last-line rule is what hid the auth hint from it (red-hat F-1).
+  const deferral = dispatchDeferral(verdict.stderr || verdict.detail);
   return deferral ? { ...verdict, deferral } : verdict;
 }
 
