@@ -281,7 +281,7 @@ test("t16-status-surface-declared", () => {
   assert.equal(adapter.statusSurfacePrompt({ caseManifest: loadCase("first-question-init") }), "");
   // T18 deliberately opens the promise this pair used to pin: the question probe's prompt is now the
   // command PLUS the one declared question surface, so it still begins with the command and is no
-  // longer the bare 22-character command the boundary was first measured on.
+  // longer the bare 19-character command the boundary was first measured on.
   const questionPrompt = adapter.promptFor({ command_name: "init", caseManifest: loadCase("first-question-init") });
   assert.ok(questionPrompt.startsWith("/pixel-perfect:init"), "the question probe's prompt still begins with the command");
   assert.notEqual(questionPrompt, "/pixel-perfect:init", "the question probe's prompt is no longer the bare command alone");

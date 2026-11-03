@@ -1,7 +1,7 @@
 // T18 — the must-ask invocation asks, and the boundary records it.
 //
 // One defect, two halves, and both are measured here:
-//   (a) the PROMPT half. `promptFor` rendered `/pixel-perfect:init` and nothing else (22 characters),
+//   (a) the PROMPT half. `promptFor` rendered `/pixel-perfect:init` and nothing else (19 characters),
 //       because `statusSurfacePrompt` and `verifyReportPrompt` both return "" for `kind:
 //       "first-question"`. The invocation was never told that this turn is graded on asking, or in
 //       what shape a headless turn can ask.
@@ -268,7 +268,7 @@ test("t18-must-ask-prompt-declares-one-question", () => {
   // The command stays first — the declaration is appended to it, never before it.
   assert.ok(prompt.startsWith("/pixel-perfect:init"), `the invocation is still the product's command: ${prompt.slice(0, 80)}`);
   assert.notEqual(prompt, "/pixel-perfect:init", "the must-ask prompt is no longer the bare command of run 41249460968");
-  assert.ok(prompt.length > 22, `the prompt is longer than the 22-character base prompt (was ${prompt.length})`);
+  assert.ok(prompt.length > 22, `the prompt is longer than the 19-character base prompt (was ${prompt.length})`);
 
   // Exactly one marker occurrence: the surface names the shape once and never echoes a second one.
   assert.equal((prompt.match(/USER_CHOICE\(/g) ?? []).length, 1, "the prompt carries exactly one USER_CHOICE( occurrence");
