@@ -34,3 +34,10 @@ jobs:
 
       - name: Verify release, package, skills, paths, and tests
         run: pnpm run ci
+
+      # The locked flow-gate suite (SN-1): every pinned sprint-01 harness behavior.
+      # test:locked:ci is the full suite minus tests/sprint-01/t18-question-boundary.test.mjs,
+      # whose own header declares its dispatched-pass leg owned by the hosted harness-eval gate.
+      - name: Run the locked flow-gate suite (hosted-gated t18 excluded)
+        run: pnpm run test:locked:ci
+        timeout-minutes: 15
