@@ -230,6 +230,24 @@ function resolvePublishDir(options, env) {
   return publishDir;
 }
 
+/**
+ * Publishes a byte-identical copy of the report when asked, so a job can ship it while the graded
+ * copy stays inside the invocation's directory. The copy is written from the same bytes and then
+ * read back, so its digest is measured rather than assumed; a copy that reads differently throws.
+ * Returns the receipt's publish entry, or null when no publish directory was given.
+ */
+function publishCopy(publishDir, options, bytes) {
+  if (publishDir === null || String(publishDir).trim() === "") return null;
+  const destination = join(publishDir, options.out);
+  writeAtomic(destination, bytes);
+  const published = sha256(readFileSync(destination));
+  const expected = sha256(bytes);
+  if (published !== expected) {
+    throw new Error(`the published copy ${destination} reads sha256 ${published}, but the graded report is ${expected}`);
+  }
+  return { path: destination, bytes: bytes.length, sha256: published };
+}
+
 export function main(argv = process.argv.slice(2), { cwd = process.cwd(), env = process.env } = {}) {
   let options;
   try {
@@ -278,19 +296,9 @@ export function main(argv = process.argv.slice(2), { cwd = process.cwd(), env = 
     writeAtomic(target, bytes);
     const out = { path: target, bytes: bytes.length, sha256: sha256(bytes) };
 
-    // 4. Publish a byte-identical copy when asked, so a job can ship it while the graded copy stays
-    //    inside the invocation's directory. The copy is written from the same bytes and then read
-    //    back, so its digest is measured rather than assumed.
-    let publish = null;
-    if (publishDir !== null && String(publishDir).trim() !== "") {
-      const destination = join(publishDir, options.out);
-      writeAtomic(destination, bytes);
-      const published = sha256(readFileSync(destination));
-      if (published !== out.sha256) {
-        throw new Error(`the published copy ${destination} reads sha256 ${published}, but the graded report is ${out.sha256}`);
-      }
-      publish = { path: destination, bytes: bytes.length, sha256: published };
-    }
+    // 4. Publish a byte-identical copy when asked; the graded copy stays inside the invocation's
+    //    directory, and the copy's digest is measured by reading it back.
+    const publish = publishCopy(publishDir, options, bytes);
 
     const receipt = { ok: true, out, publish, outcome: body.observed_verify_outcome, drifted_keys: body.evidence.drifted_keys, sha256: out.sha256 };
     process.stdout.write(`${JSON.stringify(receipt)}\n`);
