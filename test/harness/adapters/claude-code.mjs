@@ -946,6 +946,29 @@ export function approveIdentity(identity, { requested_cli_version = identity?.re
 const block = (verdict, reason, detail = {}) => ({ verdict, reason, ...detail });
 
 /**
+ * The ask-policy blocks: what the invocation's declared ask policy and the question boundary say
+ * about the questions a turn asked, plus the one block for a graded turn the model never answered.
+ * The `must-ask` checks have teeth in both directions — no question fails, and more than one fails.
+ */
+function askPolicyBlocks(entry, boundary, answer) {
+  const blocks = [];
+  if (entry.ask_policy === "ask-nothing" && boundary.count > 0) {
+    blocks.push(block("fail", "question-in-ask-nothing", { count: boundary.count, offsets: boundary.offsets }));
+  }
+  if (entry.ask_policy === "must-ask") {
+    if (boundary.count === 0) blocks.push(block("fail", "no-question-asked"));
+    else if (boundary.count > 1) blocks.push(block("fail", "more-than-one-question", { count: boundary.count }));
+    if (boundary.answers_delivered > 0) blocks.push(block("fail", "answer-delivered", { delivered: boundary.answers_delivered }));
+  }
+
+  const questionSatisfied = entry.ask_policy === "must-ask" && boundary.count > 0;
+  if (entry.graded !== false && !questionSatisfied && !answer.answered) {
+    blocks.push(block("could-not-run", answer.reason, answer.detail ?? {}));
+  }
+  return blocks;
+}
+
+/**
  * Grades one invocation. The record-level rules (termination, resolvable citations, required facts,
  * required-read denials) come from `gradeFromEvidence`; this function adds only what the check
  * itself knows — the plugin gate, the question boundary, whether the model answered, and the
@@ -977,19 +1000,7 @@ export function gradeCheck({ record, entry, track = entry?.track ?? "pinned", in
     blocks.push(block("could-not-run", "plugin-not-loaded", { evidence: gate.evidence }));
   }
 
-  if (entry.ask_policy === "ask-nothing" && boundary.count > 0) {
-    blocks.push(block("fail", "question-in-ask-nothing", { count: boundary.count, offsets: boundary.offsets }));
-  }
-  if (entry.ask_policy === "must-ask") {
-    if (boundary.count === 0) blocks.push(block("fail", "no-question-asked"));
-    else if (boundary.count > 1) blocks.push(block("fail", "more-than-one-question", { count: boundary.count }));
-    if (boundary.answers_delivered > 0) blocks.push(block("fail", "answer-delivered", { delivered: boundary.answers_delivered }));
-  }
-
-  const questionSatisfied = entry.ask_policy === "must-ask" && boundary.count > 0;
-  if (entry.graded !== false && !questionSatisfied && !answer.answered) {
-    blocks.push(block("could-not-run", answer.reason, answer.detail ?? {}));
-  }
+  blocks.push(...askPolicyBlocks(entry, boundary, answer));
 
   let observed_verify_outcome = null;
   if (entry.graded === false) {
