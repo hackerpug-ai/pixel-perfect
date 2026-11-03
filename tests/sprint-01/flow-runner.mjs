@@ -246,6 +246,26 @@ function checkSecretSurfaces(yaml, jobs) {
   return failures;
 }
 
+function checkSmokeSteps(yaml, jobs) {
+  const failures = [];
+  const smoke = jobs.smoke;
+  const smokeSteps = stepsOf(smoke);
+  const cacheSteps = smokeSteps.filter((step) => /actions\/cache/.test(step?.uses ?? "") || "cache" in (step?.with ?? {}));
+  if (cacheSteps.length > 0) failures.push(`jobs.smoke has a cache step: ${cacheSteps.map((step) => step.name).join(", ")}`);
+  if (!smokeSteps.some((step) => /actions\/upload-artifact/.test(step?.uses ?? ""))) failures.push("jobs.smoke uploads no artifact");
+
+  // The install slot must speak for the cell it runs in, not for one hardcoded harness.
+  const installSlot = smokeSteps.find((step) => step?.run && /matrix\.harness/.test(String(step.run)));
+  if (!installSlot) failures.push("jobs.smoke has no step whose command names ${{ matrix.harness }}");
+
+  // A checkout dispatch evaluates the dispatch commit, so the cell must not pin another ref.
+  const checkout = smokeSteps.find((step) => /actions\/checkout/.test(step?.uses ?? ""));
+  if (!checkout) failures.push("jobs.smoke has no actions/checkout step");
+  if (checkout && "ref" in (checkout.with ?? {})) failures.push("jobs.smoke checkout pins a ref, so candidate_sha would not be the dispatch commit");
+  if (checkout && checkout.with?.["persist-credentials"] !== false) failures.push("jobs.smoke checkout must set persist-credentials: false");
+  return failures;
+}
+
 function checkSkeletonFetch(yaml, jobs) {
   const failures = [];
   for (const skeleton of ["download", "grade"]) {
@@ -352,21 +372,7 @@ export function inspectWorkflowDeclaration(yaml) {
     if (!tracks.includes(track)) fail(`matrix is missing track ${track}`);
   }
 
-  const smokeSteps = stepsOf(smoke);
-  const cacheSteps = smokeSteps.filter((step) => /actions\/cache/.test(step?.uses ?? "") || "cache" in (step?.with ?? {}));
-  if (cacheSteps.length > 0) fail(`jobs.smoke has a cache step: ${cacheSteps.map((step) => step.name).join(", ")}`);
-  if (!smokeSteps.some((step) => /actions\/upload-artifact/.test(step?.uses ?? ""))) fail("jobs.smoke uploads no artifact");
-
-  // The install slot must speak for the cell it runs in, not for one hardcoded harness.
-  const installSlot = smokeSteps.find((step) => step?.run && /matrix\.harness/.test(String(step.run)));
-  if (!installSlot) fail("jobs.smoke has no step whose command names ${{ matrix.harness }}");
-
-  // A checkout dispatch evaluates the dispatch commit, so the cell must not pin another ref.
-  const checkout = smokeSteps.find((step) => /actions\/checkout/.test(step?.uses ?? ""));
-  if (!checkout) fail("jobs.smoke has no actions/checkout step");
-  if (checkout && "ref" in (checkout.with ?? {})) fail("jobs.smoke checkout pins a ref, so candidate_sha would not be the dispatch commit");
-  if (checkout && checkout.with?.["persist-credentials"] !== false) fail("jobs.smoke checkout must set persist-credentials: false");
-
+  failures.push(...checkSmokeSteps(yaml, jobs));
   failures.push(...checkSkeletonFetch(yaml, jobs));
 
   // Every upload must run on failure and carry this attempt in its physical name.
