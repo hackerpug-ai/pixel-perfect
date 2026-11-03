@@ -8,9 +8,13 @@
 //      run downgrades to fail `report-missing`, and a static replay with no live-run
 //      provenance grades `not-executed` — never pass;
 //   2. the live dispatch: resolve a run (HARNESS_EVAL_RUN_ID / HARNESS_EVAL_RUN_ATTEMPT,
-//      or dispatch `harness-eval` ourselves), download the attempt-qualified
-//      verify-reports artifact, and require its oracle transcript and both reports
-//      to agree with the case manifests;
+//      or dispatch `harness-eval` ourselves), WAIT for that run to finish, download the
+//      attempt-qualified verify-reports artifact, and require its oracle transcript and
+//      both reports to agree with the case manifests. The wait is not optional: a run is
+//      resolved seconds after it starts, still `in_progress`, while its artifact is published
+//      when it ends — run 41715244415 failed exactly there. `waitForRunCompletion` polls
+//      `gh run view` until GitHub reports `completed`; a run that outlives the deadline is a
+//      `dispatch-timeout` failure of the leg, never a not-executed record and never a download;
 //   3. honest not-executed for exactly THREE kinds of cause, all probed BEFORE any dispatch
 //      but only when NO run id is supplied,
 //      is attempted and all carried with their reason (one helper, `preDispatchRefusal`):
@@ -177,6 +181,10 @@ export function resolveLiveRun({
   env = process.env,
   ref = currentRef(),
   policyPath = path.join(REPO_ROOT, POLICY_PATH),
+  sleep = defaultSleep,
+  timeoutMs = DISPATCH_TIMEOUT_MS,
+  pollMs = DISPATCH_POLL_MS,
+  now = Date.now,
 } = {}) {
   // A pinned run wins over everything, including the three pre-dispatch refusals: the leg
   // already has the run it was told to grade, so no refusal is a reason to discard it. That
@@ -217,7 +225,15 @@ export function resolveLiveRun({
   if (list.status !== 0) return { ok: false, reason: `gh run list failed: ${(list.stderr || "").trim()}` };
   const [latest] = JSON.parse(list.stdout || "[]");
   if (!latest) return { ok: false, reason: "no harness-eval run appeared after dispatch" };
-  return { ok: true, runId: String(latest.databaseId), attempt: String(latest.attempt || 1), dispatched: true, status: latest.status };
+  const runId = String(latest.databaseId);
+  const attempt = String(latest.attempt || 1);
+  // The run list answers with the run as it is THIS second: for a run this leg just started,
+  // still `in_progress`. Its verify-reports artifact is published when it finishes, so resolve
+  // only what has finished — otherwise the caller downloads an artifact that does not exist
+  // (run 41715244415). A run that never finishes fails the leg; it is never returned as earned.
+  const awaited = waitForRunCompletion(runId, attempt, { runGh, sleep, timeoutMs, pollMs, now });
+  if (!awaited.ok) return { ok: false, reason: awaited.reason };
+  return { ok: true, runId, attempt, dispatched: true, status: awaited.status, conclusion: awaited.conclusion };
 }
 
 /**
@@ -244,6 +260,85 @@ export function gradeLiveRun(run, emitDiagnostic) {
     return;
   }
   assert.fail(`live-dispatched-run could not execute: ${run.reason}`);
+}
+
+/**
+ * How long the live leg waits for a run it dispatched (or was pinned), and how often it looks.
+ * One hour at ten seconds: a harness-eval run is minutes, and the deadline exists so a wedged
+ * run fails the leg instead of hanging the suite forever.
+ */
+export const DISPATCH_TIMEOUT_MS = 60 * 60 * 1000;
+export const DISPATCH_POLL_MS = 10 * 1000;
+
+/** A real sleep — the poll's only cost. Every test injects its own; nothing here waits on wall time. */
+function defaultSleep(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+/**
+ * Wait for one run to finish, so that the attempt-qualified artifact exists by the time the leg
+ * asks for it. This is the step the live leg never had: `gh run list` answers with the run as it
+ * is THIS second, which for a fresh dispatch is `in_progress`, and an artifact published at the
+ * end of a run cannot be downloaded at its start (run 41715244415).
+ *
+ * `gh run view <id> --repo <REPO> --json status,conclusion` is polled until GitHub reports
+ * `completed`. Everything else is a failure to execute the leg, never a not-executed record —
+ * the leg dispatched, so it must earn the run it grades:
+ *
+ *   gh run view failed: <stderr>                                     an unreadable run, not retried
+ *   gh run view returned unparseable JSON / no status: <body>         a body that is not a run view
+ *   dispatch-timeout: run <id> did not complete within <ms>ms        a run that outlives the deadline
+ *
+ * Returns `{ ok: true, runId, attempt, status: "completed", conclusion, polls }`. The attempt is
+ * echoed so the caller names the artifact of the attempt it waited for.
+ */
+export function waitForRunCompletion(
+  runId,
+  attempt,
+  { runGh = gh, sleep = defaultSleep, timeoutMs = DISPATCH_TIMEOUT_MS, pollMs = DISPATCH_POLL_MS, now = Date.now } = {},
+) {
+  const id = String(runId);
+  const startedAt = now();
+  let polls = 0;
+  for (;;) {
+    polls += 1;
+    const view = runGh(["run", "view", id, "--repo", REPO, "--json", "status,conclusion"]);
+    if (view.status !== 0) return { ok: false, reason: `gh run view failed: ${(view.stderr || "").trim()}` };
+    let body;
+    try {
+      body = JSON.parse(view.stdout || "{}");
+    } catch (err) {
+      return { ok: false, reason: `gh run view returned unparseable JSON: ${err.message}` };
+    }
+    if (body === null || typeof body !== "object" || typeof body.status !== "string" || body.status === "") {
+      return { ok: false, reason: `gh run view returned no status: ${(view.stdout || "").trim()}` };
+    }
+    if (body.status === "completed") {
+      // gh prints both null and "" for a conclusion that does not exist; an unfinished run
+      // never reaches this branch, so a completed one reports its real conclusion.
+      const conclusion = body.conclusion === undefined || body.conclusion === "" ? null : body.conclusion;
+      return { ok: true, runId: id, attempt: String(attempt), status: body.status, conclusion, polls };
+    }
+    if (now() - startedAt >= timeoutMs) {
+      return { ok: false, reason: `dispatch-timeout: run ${id} did not complete within ${timeoutMs}ms` };
+    }
+    sleep(pollMs);
+  }
+}
+
+/**
+ * The live leg's last two steps, in the only order that works: wait for the run to finish, then
+ * fetch its attempt-qualified artifact. A pinned run needs this as much as a dispatched one —
+ * `resolveLiveRun` returns a pinned run the moment it is named, which says nothing about whether
+ * it has finished yet.
+ */
+export function awaitRunThenDownload(
+  run,
+  { runGh = gh, sleep = defaultSleep, timeoutMs = DISPATCH_TIMEOUT_MS, pollMs = DISPATCH_POLL_MS, now = Date.now } = {},
+) {
+  const awaited = waitForRunCompletion(run.runId, run.attempt, { runGh, sleep, timeoutMs, pollMs, now });
+  if (!awaited.ok) assert.fail(`live-dispatched-run could not read run ${run.runId}: ${awaited.reason}`);
+  return downloadVerifyReports(run.runId, run.attempt, { runGh });
 }
 
 /**
@@ -877,7 +972,7 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
       tt.diagnostic(emitted[0]);
       return;
     }
-    const download = downloadVerifyReports(run.runId, run.attempt);
+    const download = awaitRunThenDownload(run);
     tt.after(() => rmSync(download.dir, { recursive: true, force: true }));
 
     // Oracle transcript: planted exit 1 with the canonical drifted key, clean exit 0.
