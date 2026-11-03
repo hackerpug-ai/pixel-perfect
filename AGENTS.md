@@ -57,3 +57,5 @@ harness-eval framework, whose workflow/platform/devops work has no same-suffix p
 | Capture-layer runtime and harness adapters inside the evaluator workflow | `github-agentic-workflow-planner` | `ai-tooling-implementer` | `ai-tooling-reviewer` |
 | Evaluator grading, fixtures, and negative controls | `evals-planner` | `evals-implementer` | `evals-reviewer` |
 | Review of the review itself (receipt audit) | `github-agentic-workflow-planner` | `github-agentic-workflow-reviewer` | `code-reviewer` |
+
+Code-quality plan: [docs/code-quality/profile.md](docs/code-quality/profile.md) (organization plan) and [docs/code-quality/roadmap.md](docs/code-quality/roadmap.md) (cleaning plan); known problems in [docs/code-quality/known-problems.md](docs/code-quality/known-problems.md).
