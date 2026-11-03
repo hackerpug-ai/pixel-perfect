@@ -21,7 +21,7 @@ import { APPROVED_MODES, assertStance, recordStance, serializeStance } from "../
 import { loadPins } from "../../test/harness/pins.mjs";
 import { ADAPTER_PENDING, ABSENT_REASONS, absentReason } from "../../test/harness/adapters/absent.mjs";
 import { CELL_SOURCES, cellFor, planCells } from "../../test/harness/adapters/registry.mjs";
-import { fixtureInstallation, inspectWorkflowDeclaration, LIVE_ARTIFACT, readWorkflow } from "./flow-runner.mjs";
+import { fixtureInstallation, inspectWorkflowDeclaration, LIVE_ARTIFACT, REJECTED_MODE, readWorkflow } from "./flow-runner.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const RUNTIME_DIR = join(ROOT, "test/harness/runtime");
@@ -40,9 +40,6 @@ const SMOKE_BINDINGS = {
   opencode: "ANTHROPIC_API_KEY",
   pi: "GEMINI_API_KEY",
 };
-
-// The stance the owner rejected; assembled at run time so it is not spelled into the repo.
-const REJECTED_MODE = ["bypass", "Permissions"].join("");
 
 /** The runner's environment with every model credential removed — the keyless child env. */
 function withoutSecrets(env) {

@@ -136,6 +136,10 @@ export function fixtureInstallation() {
 export const LIVE_ARTIFACT =
   process.env.HARNESS_EVAL_RESULT ?? path.join(ROOT, ".tmp", "sprint-01-artifacts", "he1", "harness-eval-result.json");
 
+// The stance the owner rejected; assembled at run time so the spelling never reaches the
+// repository. The adapter must never emit it — its stance comes from the allow-list.
+export const REJECTED_MODE = ["bypass", "Permissions"].join("");
+
 // ---------------------------------------------------------------------------
 // [shared] reading the harness-eval workflow
 // ---------------------------------------------------------------------------

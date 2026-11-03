@@ -65,6 +65,7 @@ import { bindReportPath, loadCase } from "../../test/harness/kit/case-loader.mjs
 import { loadPins, sha256Hex } from "../../test/harness/pins.mjs";
 import { APPROVED_MODES, recordStance } from "../../test/harness/runtime/stance.mjs";
 import { COMMIT_PATTERN, SHA256_PATTERN, validateAgainst } from "../../test/harness/validate.mjs";
+import { REJECTED_MODE } from "./flow-runner.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "../..");
@@ -72,9 +73,6 @@ const REPORT_DIR = join(ROOT, ".tmp", "sprint-01-verification");
 const ARTIFACT = join(REPORT_DIR, "grd-02-four-grades.json");
 const PLUGIN_ROOT = join(ROOT, "plugins", PLUGIN_NAME);
 
-// The owner-rejected permission mode, assembled at run time so the spelling never reaches the
-// repository. The adapter must never emit it — its stance comes from the allow-list.
-const REJECTED_MODE = ["bypass", "Permissions"].join("");
 const SECRET_NAME = /^(SMOKE_[A-Z0-9_]+|ANTHROPIC_API_KEY|CODEX_API_KEY|XAI_API_KEY|GEMINI_API_KEY|CURSOR_API_KEY)$/;
 
 /**
