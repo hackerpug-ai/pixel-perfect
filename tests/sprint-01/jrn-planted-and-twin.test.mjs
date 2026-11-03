@@ -21,17 +21,18 @@
 //           nothing to dispatch (probe: gh api .../actions/workflows/harness-eval.yml → 404);
 //        c. the flow's surface policy does not permit a dispatch from this ref at all (it
 //           bans a non-main ref, so a task branch may never dispatch).
-//      One carve-out, owner-approved (red-hat F-001, 2026-11-03): a dispatch GitHub refuses to
-//      START for a permission reason — 403 on a read-only token, bad credentials, not
-//      authenticated — is an environment that cannot dispatch at all, so resolveLiveRun
-//      returns the SAME named deferral as the probe (cause: runner-cannot-dispatch, classified
-//      by the shared dispatchDeferral in flow-runner.mjs) and the leg records not-executed
-//      with it. Every other way the live leg can fail — gh unauthenticated at `gh auth
-//      status`, a start failure outside the permission class (network, 422, a 5xx, an
-//      unregistered workflow name), the run list unreadable, no run appearing, a registered
-//      workflow whose probe cannot be read, a foreign commit — is a failure to execute the
-//      leg and goes RED. A catch-all deferral would let T7's gate step stay green while the
-//      journey's THEN was never observed.
+//      Two carve-outs, owner-approved (red-hat F-001, 2026-11-03, extended in round 3): a
+//      permission-class environment — 403 on a read-only token, bad credentials, not
+//      authenticated — cannot dispatch at all, so it records the SAME named deferral as the
+//      probe (runner-cannot-dispatch, classified by the shared dispatchDeferral in
+//      flow-runner.mjs) wherever it surfaces: at the dispatch START resolveLiveRun returns
+//      it, and at the run-GRADE leg (gh auth status, a run read, a run list) gradeLiveRun
+//      classifies the failure reason itself. Every other way the live leg can fail — a start
+//      failure outside the permission class (network, 422, a 5xx, an unregistered workflow
+//      name), the run list unreadable, no run appearing, a registered workflow whose probe
+//      cannot be read, a foreign commit, a download that fails under working auth — is a
+//      failure to execute the leg and goes RED. A catch-all deferral would let T7's gate
+//      step stay green while the journey's THEN was never observed.
 //
 // The seven shapes are reproducible as process exit codes (0 = the leg honestly records
 // not-executed, 1 = it goes red): `node tests/sprint-01/jrn-planted-and-twin.test.mjs
@@ -220,16 +221,26 @@ export function resolveLiveRun({
 }
 
 /**
- * Grade the live leg's resolution. Only `deferral: true` — one of `preDispatchRefusal`'s three
- * probed causes, or a dispatch-start failure inside the permission class (the shared
- * runner-cannot-dispatch deferral) — may record not-executed; any other failure to start the
- * leg fails the check.
+ * Grade the live leg's resolution. `deferral: true` — one of `preDispatchRefusal`'s three probed
+ * causes, or a dispatch-start failure inside the permission class (the shared
+ * runner-cannot-dispatch deferral) — records not-executed directly. A plain failure whose REASON
+ * is itself inside the permission class (the same environment that cannot dispatch cannot read:
+ * gh unauthenticated, bad credentials, a 403) is classified through the shared dispatchDeferral
+ * at grade time and records the SAME named not-executed — round 3's third gh consumer, the
+ * run-grade leg on a tokenless checkout of main. Any other failure to start the leg — a 500, a
+ * network error, a bad run id, a download that fails under working auth — fails the check.
  */
 export function gradeLiveRun(run, emitDiagnostic) {
   if (run.ok) return;
   if (run.deferral) {
     assert.ok(run.reason && run.reason.length > 0, "a deferred live leg always carries its reason");
     emitDiagnostic(`not-executed leg=live-dispatched-run owner=T7 obligation=obl-FLOW-JRN-PLANTED-AND-TWIN reason=${run.reason}`);
+    return;
+  }
+  const deferral = dispatchDeferral(run.reason);
+  if (deferral) {
+    assert.ok(run.reason && run.reason.length > 0, "a classified live leg always carries its reason");
+    emitDiagnostic(`not-executed leg=live-dispatched-run owner=T7 obligation=obl-FLOW-JRN-PLANTED-AND-TWIN reason=${deferral}: ${run.reason}`);
     return;
   }
   assert.fail(`live-dispatched-run could not execute: ${run.reason}`);
