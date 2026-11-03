@@ -386,7 +386,6 @@ function checkUploadQualification(yaml, jobs) {
  */
 export function inspectWorkflowDeclaration(yaml) {
   const failures = [];
-  const fail = (message) => failures.push(message);
   const jobs = yaml?.jobs ?? {};
 
   const declaredTriggers = checkTriggersAndDispatchInput(yaml, jobs);
@@ -397,7 +396,6 @@ export function inspectWorkflowDeclaration(yaml) {
   failures.push(...declaredLimits.failures);
   const permissions = declaredLimits.permissions;
 
-  const smoke = jobs.smoke;
   failures.push(...checkJobPermissions(yaml, jobs));
 
   failures.push(...checkNoOpSteps(yaml, jobs));
@@ -414,8 +412,6 @@ export function inspectWorkflowDeclaration(yaml) {
 
   failures.push(...checkSmokeSteps(yaml, jobs));
   failures.push(...checkSkeletonFetch(yaml, jobs));
-
-  // Every upload must run on failure and carry this attempt in its physical name.
   failures.push(...checkUploadQualification(yaml, jobs));
 
   return {
