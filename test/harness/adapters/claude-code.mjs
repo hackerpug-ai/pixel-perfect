@@ -1019,6 +1019,26 @@ function askPolicyBlocks(entry, boundary, answer) {
 }
 
 /**
+ * The cell one check's blocks produce: the worse of the record-level verdict and every check block
+ * wins, the winning block names the reason, and the check's own observed verify outcome rides
+ * through when the record carried none. The winnerContext carries what the winner needs: the table
+ * entry (its check_id) and the verify outcome the check observed.
+ */
+function cellFromBlocks(base, blocks, { entry, observed_verify_outcome = null }) {
+  const verdict = worstVerdict([base.verdict, ...blocks.map((candidate) => candidate.verdict)]);
+  const fromCheck = blocks.find((candidate) => candidate.verdict === verdict) ?? null;
+  const winner = fromCheck ?? base.block_reasons.find((candidate) => candidate.verdict === verdict) ?? {};
+  return {
+    ...base,
+    verdict,
+    reason: winner.reason ?? base.reason,
+    observed_verify_outcome: observed_verify_outcome ?? base.observed_verify_outcome,
+    block_reasons: [...blocks, ...base.block_reasons],
+    checks: [{ check_id: entry.check_id, verdict, reason: winner.reason ?? base.reason, source: base.source }],
+  };
+}
+
+/**
  * Grades one invocation. The record-level rules (termination, resolvable citations, required facts,
  * required-read denials) come from `gradeFromEvidence`; this function adds only what the check
  * itself knows — the plugin gate, the question boundary, whether the model answered, and the
@@ -1061,21 +1081,11 @@ export function gradeCheck({ record, entry, track = entry?.track ?? "pinned", in
   }
   blocks.push(...checkBlocks);
 
-  const verdict = worstVerdict([base.verdict, ...blocks.map((entryBlock) => entryBlock.verdict)]);
-  const fromCheck = blocks.find((entryBlock) => entryBlock.verdict === verdict) ?? null;
-  const winner = fromCheck ?? base.block_reasons.find((entryBlock) => entryBlock.verdict === verdict) ?? {};
-  const cell = {
-    ...base,
-    verdict,
-    reason: winner.reason ?? base.reason,
-    observed_verify_outcome: observed_verify_outcome ?? base.observed_verify_outcome,
-    block_reasons: [...blocks, ...base.block_reasons],
-    checks: [{ check_id: entry.check_id, verdict, reason: winner.reason ?? base.reason, source: base.source }],
-  };
+  const cell = cellFromBlocks(base, blocks, { entry, observed_verify_outcome });
 
   // A check may only make the record-level verdict worse; a check that "improved" it is a bug.
-  if (worstVerdict([base.verdict, verdict]) !== verdict) {
-    throw new Error(`check ${entry.check_id} improved the record verdict ${base.verdict} -> ${verdict}`);
+  if (worstVerdict([base.verdict, cell.verdict]) !== cell.verdict) {
+    throw new Error(`check ${entry.check_id} improved the record verdict ${base.verdict} -> ${cell.verdict}`);
   }
   validateAgainst("harness-cell.v1.schema.json", cell);
   assertPassEvidence(cell);
