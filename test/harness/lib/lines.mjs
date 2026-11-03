@@ -14,9 +14,7 @@
 //   measureLines   (stream/normalise.mjs)         splitLines(bytes, { keepTerminator: true, digest: "span" })
 //   capture lines() (runtime/capture.mjs)         splitLines(bytes, { digest: "text" })
 //   capturedLines  (stream/claude-code-facts.mjs) splitLines(bytes)
-import { createHash } from "node:crypto";
-
-const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
+import { sha256Hex } from "../pins.mjs";
 
 /**
  * Splits `bytes` into line records in stream order, each carrying measured byte offsets.
@@ -56,8 +54,8 @@ export function splitLines(bytes, { keepTerminator = false, digest = null } = {}
     const line = keepTerminator
       ? { offset: start, end_offset: end, text, terminator, json }
       : { text, json, offset: start, end_offset: start + Buffer.byteLength(text) };
-    if (digest === "span") line.raw_sha256 = sha256(raw);
-    else if (digest === "text") line.sha256 = sha256(raw.subarray(0, Buffer.byteLength(text)));
+    if (digest === "span") line.raw_sha256 = sha256Hex(raw);
+    else if (digest === "text") line.sha256 = sha256Hex(raw.subarray(0, Buffer.byteLength(text)));
     out.push(line);
     start = end;
   }
