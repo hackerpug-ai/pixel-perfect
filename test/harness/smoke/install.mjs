@@ -87,8 +87,17 @@ export async function installStep({
   const installed = status.exit_code === 0;
   write({ installed, exit_code: status.exit_code ?? null, reason: installed ? null : (status.spawn_error ?? "install-failed"), argv: step.argv });
 
-  // The keyless load: marketplace add + plugin install + `plugin details`, in a config dir that
-  // belongs to this run only. Its identity is what the graded invocations are attributed to.
+  const identity = await loadLeg({ workspace, cellDir, env, installMode, harness, track });
+  return { ...record, installed, exit_code: status.exit_code ?? null, reason: null, identity };
+}
+
+/**
+ * The keyless load: marketplace add + plugin install + `plugin details`, in a config dir that
+ * belongs to this run only. Its identity is what the graded invocations are attributed to. The
+ * config dir and what the load produced are recorded beside the install record; the identity is
+ * returned to installStep, which owns the install record.
+ */
+async function loadLeg({ workspace, cellDir, env, installMode, harness, track }) {
   const configDir = join(resolve(cellDir), "claude-config");
   mkdirSync(configDir, { recursive: true });
   writeFileSync(join(cellDir, CONFIG_FILE), `${JSON.stringify({ harness, track, config_dir: configDir }, null, 2)}\n`, "utf8");
@@ -108,7 +117,7 @@ export async function installStep({
     )}\n`,
     "utf8",
   );
-  return { ...record, installed, exit_code: status.exit_code ?? null, reason: null, identity: load.identity };
+  return load.identity;
 }
 
 /** The load record a model step reuses, or null when the install slot left none. */
