@@ -2,7 +2,7 @@
 
 ## Last run
 
-none yet (initialization 2026-11-03, by clean-code-plan `--go` at the END of sprint-01; nobody confirmed the drafts).
+2026-11-03 clean-code-plan sprint sprint-01-evaluator-evidence-spine --go (END-of-sprint cleanup): 12 units + 1 closing-review repair merged, start 8bc293e → end HEAD; nobody confirmed the plan. See the Log.
 
 ## Decisions
 
@@ -19,8 +19,10 @@ none yet (initialization 2026-11-03, by clean-code-plan `--go` at the END of spr
 
 ## Next up
 
-Run 1: items 1–3 (sprint-01's own landed code), then 4–6 as later runs.
+Item 1 is done (claude-code.mjs 1774 → ~1560 lines; stream-facts half now test/harness/stream/claude-code-facts.mjs). Item 3 is done (sprint-01 helpers unified). Next: item 2 (graders/gradeInvocation dedupe — sprint-02 owns the wiring; do the dedupe when the second caller lands), then items 4–6.
 
 ## Log
 
 - 2026-11-03 initialization (--go): profile.md + roadmap.md + known-problems.md written from survey batch (4 surveyors + trajectory reader); nobody confirmed.
+
+- 2026-11-03 run 1 (--go): 12 units, 4 waves, all merged (U1 flow-runner yaml out + rule families + run02Hand pins; U2 write-durable + gradeFromEvidence rules; U3 smoke extracts + carry split; U4 verify-report extracts; U5 adapter stream-facts out + gradeCheck/cellFor + authorities; U6 graders batteries + report-read core; U7 stream extracts; U8 smoke writers onto write-durable; U9 sprint-test helpers unified + count-guard 76→77 measured; U10 one splitLines; U11 new pins t19 + grd-03b; U12 locked suite wired into CI). Closing review: 1 BLOCK (7th sha256 copy in lib/lines.mjs) fixed as U10-repair; 7 recorded findings into known-problems; 1 placement needs_human (lib/ row in the profile table). Baseline and every wave: validate exit 0, unit suite 589/589. Known deltas recorded in plan.json: U8 aligns cell-record read-back-mismatch to write-durable's destroy canon (fail-closed; receipts identical); U5 lazy questionBatchId (no external importers); U5 PROBE_ENV_NAME left eager (grd-02 imports it); U12 CI list excludes t18 (hosted-gated by its own header).
