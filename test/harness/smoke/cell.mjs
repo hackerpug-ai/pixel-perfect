@@ -181,34 +181,7 @@ export async function runCell({
     disposeDirs = dirs === null;
     const table = claudeCode.invocationTable({ track, dirs: ownedDirs, pluginRoot });
 
-    const results = [];
-    for (const entry of table) {
-      if (records && records[entry.key]) {
-        // A replay: the record is real captured bytes; the grading below is the adapter's own.
-        results.push({
-          entry,
-          record: records[entry.key],
-          ...claudeCode.gradeCheck({
-            record: records[entry.key],
-            entry,
-            track,
-            installation,
-          }),
-        });
-        continue;
-      }
-      results.push(
-        await claudeCode.runCheck({
-          entry,
-          track,
-          configDir: ownedConfig ?? configDir,
-          env,
-          installation,
-          installMode,
-          evidenceDir: evidenceDir ? join(evidenceDir, entry.key) : null,
-        }),
-      );
-    }
+    const results = await runTableEntries(table, { records, track, installation, ownedConfig, configDir, env, installMode, evidenceDir });
 
     const cell = claudeCode.cellFor({ track, cells: results.map((result) => result.cell), installation });
 
@@ -302,6 +275,42 @@ function verifyRootsOf(dirs, results) {
     .flatMap((result) => (result.record?.evidence_paths ?? []).map((path) => dirname(resolve(path))));
   const runRoots = ["verify-button-drift", "verify-clean"].map((key) => dirs.for(key)?.dir).filter(Boolean);
   return [...new Set([...captureRoots, ...runRoots])];
+}
+
+/**
+ * The invocation loop: one result per table entry. A replayed entry grades the captured record —
+ * real bytes, the adapter's own grading; a live entry runs the check against the real installation.
+ */
+async function runTableEntries(table, { records, track, installation, ownedConfig, configDir, env, installMode, evidenceDir }) {
+  const results = [];
+  for (const entry of table) {
+    if (records && records[entry.key]) {
+      // A replay: the record is real captured bytes; the grading below is the adapter's own.
+      results.push({
+        entry,
+        record: records[entry.key],
+        ...claudeCode.gradeCheck({
+          record: records[entry.key],
+          entry,
+          track,
+          installation,
+        }),
+      });
+      continue;
+    }
+    results.push(
+      await claudeCode.runCheck({
+        entry,
+        track,
+        configDir: ownedConfig ?? configDir,
+        env,
+        installation,
+        installMode,
+        evidenceDir: evidenceDir ? join(evidenceDir, entry.key) : null,
+      }),
+    );
+  }
+  return results;
 }
 
 /** `cell/cell.json` for a leg, or the fallback record when the leg produced nothing. */
