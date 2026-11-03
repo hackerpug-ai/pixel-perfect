@@ -246,6 +246,23 @@ function checkSecretSurfaces(yaml, jobs) {
   return failures;
 }
 
+// Every upload must run on failure and carry this attempt in its physical name.
+function checkUploadQualification(yaml, jobs) {
+  const failures = [];
+  const uploads = ["smoke", "download", "grade"]
+    .flatMap((name) => stepsOf(jobs[name]).map((step) => ({ job: name, step })))
+    .filter(({ step }) => /actions\/upload-artifact/.test(step?.uses ?? ""));
+  if (uploads.length === 0) failures.push("no upload-artifact step anywhere");
+  for (const { job, step } of uploads) {
+    if (!/always\(\)/.test(String(step.if ?? ""))) failures.push(`${job} upload "${step.name}" does not use if: always()`);
+    const name = String(step.with?.name ?? "");
+    if (!name.includes("github.run_id") || !name.includes("github.run_attempt")) {
+      failures.push(`${job} upload "${step.name}" is not attempt-qualified: ${name}`);
+    }
+  }
+  return failures;
+}
+
 /**
  * Reads what the workflow DECLARES: its triggers, the dispatch input default, permissions,
  * the matrix shape and the skeleton jobs. Pure: takes the parsed workflow, returns the
@@ -347,17 +364,7 @@ export function inspectWorkflowDeclaration(yaml) {
   }
 
   // Every upload must run on failure and carry this attempt in its physical name.
-  const uploads = ["smoke", "download", "grade"]
-    .flatMap((name) => stepsOf(jobs[name]).map((step) => ({ job: name, step })))
-    .filter(({ step }) => /actions\/upload-artifact/.test(step?.uses ?? ""));
-  if (uploads.length === 0) fail("no upload-artifact step anywhere");
-  for (const { job, step } of uploads) {
-    if (!/always\(\)/.test(String(step.if ?? ""))) fail(`${job} upload "${step.name}" does not use if: always()`);
-    const name = String(step.with?.name ?? "");
-    if (!name.includes("github.run_id") || !name.includes("github.run_attempt")) {
-      fail(`${job} upload "${step.name}" is not attempt-qualified: ${name}`);
-    }
-  }
+  failures.push(...checkUploadQualification(yaml, jobs));
 
   return {
     triggers,
