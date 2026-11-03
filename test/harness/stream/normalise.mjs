@@ -214,6 +214,34 @@ function eventsFromLines(lines, table, { invocation_id, required_read_paths, ses
 }
 
 /**
+ * The coverage verdict over the emitted events: which of the table's required facts an event proved
+ * (and at which offsets), which are missing, what the stream observed, and whether the capture may
+ * pass at all. Pure over (events, table, tiling) — a required fact with no mapped event fails
+ * closed (invariant 3).
+ */
+function coverageReport(events, table, tiling) {
+  const factIds = new Set(events.flatMap((event) => event.fact_ids));
+  const facts = (table.required_facts ?? []).map((fact) => ({
+    fact_id: fact.fact_id,
+    canonical_type: fact.canonical_type,
+    source_event_path: fact.source_event_path,
+    observed: factIds.has(fact.fact_id),
+    offsets: events.filter((event) => event.fact_ids.includes(fact.fact_id)).map((event) => event.stream_offset),
+  }));
+  const missing = facts.filter((fact) => !fact.observed).map((fact) => fact.fact_id);
+  const cli_version = events.find((event) => event.rule_id === "session-init")?.cli_version ?? null;
+  return {
+    facts,
+    missing,
+    cli_version,
+    coverage: {
+      verdict: tiling.ok && missing.length === 0 ? "pass" : "could-not-run",
+      reason: !tiling.ok ? "capture-not-tiled" : missing.length > 0 ? "required-fact-unmapped" : null,
+    },
+  };
+}
+
+/**
  * Normalises a capture into CanonicalEvents.
  *
  * @param {object} options
@@ -240,17 +268,7 @@ export function normalise({ bytes, table, invocation_id = null, required_read_pa
   const events = eventsFromLines(lines, table, { invocation_id, required_read_paths, sessionOf });
 
   const tiling = tilingReport(lines, bytes.length);
-  const factIds = new Set(events.flatMap((event) => event.fact_ids));
-  const facts = (table.required_facts ?? []).map((fact) => ({
-    fact_id: fact.fact_id,
-    canonical_type: fact.canonical_type,
-    source_event_path: fact.source_event_path,
-    observed: factIds.has(fact.fact_id),
-    offsets: events.filter((event) => event.fact_ids.includes(fact.fact_id)).map((event) => event.stream_offset),
-  }));
-  const missing = facts.filter((fact) => !fact.observed).map((fact) => fact.fact_id);
-  const observed_version =
-    events.find((event) => event.rule_id === "session-init")?.cli_version ?? null;
+  const { facts, missing, cli_version, coverage } = coverageReport(events, table, tiling);
 
   return {
     events,
@@ -260,13 +278,10 @@ export function normalise({ bytes, table, invocation_id = null, required_read_pa
     missing,
     unknown_lines: events.filter((event) => event.type === "harness_specific").length,
     observed: {
-      cli_version: observed_version,
+      cli_version,
       session_id: sessionOf(),
     },
-    coverage: {
-      verdict: tiling.ok && missing.length === 0 ? "pass" : "could-not-run",
-      reason: !tiling.ok ? "capture-not-tiled" : missing.length > 0 ? "required-fact-unmapped" : null,
-    },
+    coverage,
   };
 }
 
