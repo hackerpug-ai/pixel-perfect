@@ -706,9 +706,11 @@ test("t17-cell-shape-and-neighbours", (t) => {
     assert.equal(status?.verdict, "pass", `the pinned cell's status reads ${status?.verdict}`);
   }
 
-  // Every locked neighbour, measured as a real subprocess rather than restated.
+  // Every locked neighbour, measured as a real subprocess rather than restated. 77 = the six
+  // files' real test count in a clean checkout: grd-06 and grd-01 legitimately grew on main
+  // after T17 landed, so the count this guard pins is the measured one, not a frozen memory.
   const six = runLockedTests(SIX_LOCKED);
-  assert.equal(six.pass, 76, `the six locked files report pass ${six.pass}, fail ${six.fail}: ${six.output.slice(-2000)}`);
+  assert.equal(six.pass, 77, `the six locked files report pass ${six.pass}, fail ${six.fail}: ${six.output.slice(-2000)}`);
   assert.equal(six.fail, 0, `the six locked files report fail ${six.fail}`);
   const t16 = runLockedTests(T16_OWNED);
   assert.equal(t16.pass, 7, `T16's owned file reports pass ${t16.pass}, fail ${t16.fail}: ${t16.output.slice(-2000)}`);
