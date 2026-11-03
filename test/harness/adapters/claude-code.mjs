@@ -946,6 +946,17 @@ export function approveIdentity(identity, { requested_cli_version = identity?.re
 const block = (verdict, reason, detail = {}) => ({ verdict, reason, ...detail });
 
 /**
+ * The plugin-gate block. `-p` can enter bare mode and load nothing; a graded run that made model
+ * requests without the plugin loaded is not attributable to the plugin, so it is could-not-run.
+ */
+function pluginGateBlocks(entry, record, gate) {
+  if (entry.graded && record.model_request_count > 0 && !gate.loaded) {
+    return [block("could-not-run", "plugin-not-loaded", { evidence: gate.evidence })];
+  }
+  return [];
+}
+
+/**
  * The ask-policy blocks: what the invocation's declared ask policy and the question boundary say
  * about the questions a turn asked, plus the one block for a graded turn the model never answered.
  * The `must-ask` checks have teeth in both directions — no question fails, and more than one fails.
@@ -994,11 +1005,7 @@ export function gradeCheck({ record, entry, track = entry?.track ?? "pinned", in
   const gate = pluginGate(record);
   const boundary = questionBoundary(record);
   const answer = modelAnswer(record);
-  const blocks = [];
-
-  if (entry.graded && record.model_request_count > 0 && !gate.loaded) {
-    blocks.push(block("could-not-run", "plugin-not-loaded", { evidence: gate.evidence }));
-  }
+  const blocks = [...pluginGateBlocks(entry, record, gate)];
 
   blocks.push(...askPolicyBlocks(entry, boundary, answer));
 
