@@ -17,12 +17,14 @@ import { worstVerdict, VERDICTS } from "../lib/verdict.mjs";
 import { assertPassEvidence, validateAgainst } from "../validate.mjs";
 import { commandNames, parseCommandList, statusFacts } from "../adapters/claude-code.mjs";
 import { gradeQuestionPolicy, mustAskFacts } from "../stream/question-boundary.mjs";
+import { CHECKS } from "../pins.mjs";
+import { SOURCE } from "../runtime/grade-writer.mjs";
 
 import { REPORT_REASONS, readVerifyReportAt, resolveCaptureEvidence } from "./report-writer.mjs";
 
-export const SOURCE = "files-and-event-stream";
-/** The four checks one graded cell carries, in the order the cell reports them. */
-export const CHECK_IDS = Object.freeze(["command_list", "status", "verify", "question_before_expensive_work"]);
+export { SOURCE };
+/** The four checks one graded cell carries, in the order the cell reports them. pins.mjs owns the list. */
+export const CHECK_IDS = Object.freeze([...CHECKS]);
 
 const block = (verdict, reason, detail = {}) => ({ verdict, reason, ...detail });
 
