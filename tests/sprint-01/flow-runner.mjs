@@ -163,6 +163,31 @@ function checkNoOpSteps(yaml, jobs) {
   return failures;
 }
 
+// The workflow's name, its triggers and the dispatch input the flows grade: `gh workflow
+// list` and `gh workflow run harness-eval` both resolve the name; the banned triggers may
+// never appear and workflow_dispatch must. Hands the declared shape back because the return
+// assembly reports it.
+function checkTriggersAndDispatchInput(yaml, jobs) {
+  const failures = [];
+  if (yaml?.name !== WORKFLOW_NAME) failures.push(`workflow name is ${String(yaml?.name)}, expected ${WORKFLOW_NAME}`);
+
+  const triggers = yaml?.on && typeof yaml.on === "object" ? Object.keys(yaml.on) : [];
+  for (const banned of BANNED_TRIGGERS) {
+    if (triggers.includes(banned)) failures.push(`banned trigger declared: ${banned}`);
+  }
+  if (!triggers.includes("workflow_dispatch")) failures.push(`no workflow_dispatch trigger (declared: ${triggers.join(", ") || "none"})`);
+
+  const input = yaml?.on?.workflow_dispatch?.inputs?.install_mode;
+  if (!input) failures.push("on.workflow_dispatch.inputs.install_mode is missing");
+  if (input && input.type !== "choice") failures.push(`install_mode type is ${input.type}, expected choice`);
+  if (input && input.default !== "checkout") failures.push(`install_mode default is ${String(input.default)}, expected checkout`);
+  const options = Array.isArray(input?.options) ? input.options : [];
+  for (const required of ["checkout", "published"]) {
+    if (!options.includes(required)) failures.push(`install_mode options missing ${required}`);
+  }
+  return { triggers, installModeDefault: input?.default ?? null, installModeOptions: options, failures };
+}
+
 // The smoke job's own shape, and then every job's permission block: each job opts in
 // explicitly and no job ever holds a write scope. A scope named `actions` is allowed at read
 // level only (T8 needs it to read the run's job metadata).
@@ -347,24 +372,11 @@ function checkUploadQualification(yaml, jobs) {
 export function inspectWorkflowDeclaration(yaml) {
   const failures = [];
   const fail = (message) => failures.push(message);
+  const jobs = yaml?.jobs ?? {};
 
-  // `gh workflow list` and `gh workflow run harness-eval` both resolve this name.
-  if (yaml?.name !== WORKFLOW_NAME) fail(`workflow name is ${String(yaml?.name)}, expected ${WORKFLOW_NAME}`);
-
-  const triggers = yaml?.on && typeof yaml.on === "object" ? Object.keys(yaml.on) : [];
-  for (const banned of BANNED_TRIGGERS) {
-    if (triggers.includes(banned)) fail(`banned trigger declared: ${banned}`);
-  }
-  if (!triggers.includes("workflow_dispatch")) fail(`no workflow_dispatch trigger (declared: ${triggers.join(", ") || "none"})`);
-
-  const input = yaml?.on?.workflow_dispatch?.inputs?.install_mode;
-  if (!input) fail("on.workflow_dispatch.inputs.install_mode is missing");
-  if (input && input.type !== "choice") fail(`install_mode type is ${input.type}, expected choice`);
-  if (input && input.default !== "checkout") fail(`install_mode default is ${String(input.default)}, expected checkout`);
-  const options = Array.isArray(input?.options) ? input.options : [];
-  for (const required of ["checkout", "published"]) {
-    if (!options.includes(required)) fail(`install_mode options missing ${required}`);
-  }
+  const declaredTriggers = checkTriggersAndDispatchInput(yaml, jobs);
+  failures.push(...declaredTriggers.failures);
+  const triggers = declaredTriggers.triggers;
 
   const permissions = yaml?.permissions;
   if (permissions === null || permissions === undefined) fail("workflow-level permissions block is missing");
@@ -375,7 +387,6 @@ export function inspectWorkflowDeclaration(yaml) {
   if (yaml?.concurrency?.group !== WORKFLOW_NAME) fail(`concurrency group is ${String(yaml?.concurrency?.group)}, expected ${WORKFLOW_NAME}`);
   if (yaml?.concurrency?.["cancel-in-progress"] !== false) fail("concurrency cancel-in-progress must be false");
 
-  const jobs = yaml?.jobs ?? {};
   const smoke = jobs.smoke;
   failures.push(...checkJobPermissions(yaml, jobs));
 
@@ -400,8 +411,8 @@ export function inspectWorkflowDeclaration(yaml) {
   return {
     triggers,
     event: triggers.includes("workflow_dispatch") && triggers.length === 1 ? "workflow_dispatch" : null,
-    install_mode: input?.default ?? null,
-    install_mode_options: options,
+    install_mode: declaredTriggers.installModeDefault,
+    install_mode_options: declaredTriggers.installModeOptions,
     install_mode_source: "declared default of on.workflow_dispatch.inputs.install_mode",
     permissions,
     concurrency: yaml?.concurrency ?? null,
