@@ -263,6 +263,16 @@ export function downloadVerifyReports(runId, attempt, { runGh = gh } = {}) {
 }
 
 /**
+ * The JSON `gh run view <id> --repo <REPO> --json status,conclusion` really prints, one string
+ * per state. Pinned as bytes so a poll is checked against the CLI's own output, not against a
+ * shape this test invented: an unfinished run prints a null (or empty) conclusion, and only a
+ * completed run carries one.
+ */
+export const VIEW_IN_PROGRESS = '{"status":"in_progress","conclusion":null}';
+export const VIEW_QUEUED = '{"status":"queued","conclusion":""}';
+export const VIEW_COMPLETED = '{"status":"completed","conclusion":"success"}';
+
+/**
  * A `gh` TEST DOUBLE — never the thing under test. It models only the calls the live leg makes,
  * and exactly the three registration-probe outcomes a `gh api .../workflows/harness-eval.yml`
  * can answer with: `registered` (200), `unregistered` (404 — the file is not on main yet), and
@@ -273,14 +283,20 @@ export function downloadVerifyReports(runId, attempt, { runGh = gh } = {}) {
  * runner-cannot-dispatch classifier without inventing a network. Each shape is posed by name
  * instead of by hand-rolled ternaries, and any gh call it does not model throws, so a new call
  * cannot silently pass through it. `calls` is the probe log the controls assert on.
+ *
+ * `view` models `gh run view <id> --repo <REPO> --json status,conclusion`: one body printed
+ * forever, or an array of bodies consumed in order with the last one repeating. The bodies are
+ * the real gh JSON shapes (VIEW_* below) rather than objects, so a poll is pinned to the bytes
+ * the CLI actually prints. `viewStatus`/`viewStderr` pose an unreadable run instead.
  */
-export function modelGh({ auth = 0, registration = "registered", dispatch = 0, dispatchStderr = "could not find any workflows named harness-eval", listStatus = 0, runList = "[]", download = 0 } = {}) {
+export function modelGh({ auth = 0, registration = "registered", dispatch = 0, dispatchStderr = "could not find any workflows named harness-eval", listStatus = 0, runList = "[]", download = 0, view = VIEW_COMPLETED, viewStatus = 0, viewStderr = "gh: run not found (HTTP 404)" } = {}) {
   const outcomes = {
     registered: { status: 0, stdout: '{"id":1}', stderr: "" },
     unregistered: { status: 1, stdout: "", stderr: "gh: Not Found (HTTP 404)" },
     unreadable: { status: 1, stdout: "", stderr: "gh: Server Error (HTTP 502)" },
   };
   if (!outcomes[registration]) throw new Error(`modelGh: unknown registration outcome ${registration}`);
+  const views = Array.isArray(view) ? [...view] : [view];
   const calls = [];
   const double = (args) => {
     calls.push(args.join(" "));
@@ -295,6 +311,11 @@ export function modelGh({ auth = 0, registration = "registered", dispatch = 0, d
     if (args[0] === "run" && args[1] === "download") {
       return { status: download, stdout: "", stderr: download === 0 ? "" : "gh: run not found (HTTP 404)" };
     }
+    if (args[0] === "run" && args[1] === "view") {
+      if (viewStatus !== 0) return { status: viewStatus, stdout: "", stderr: viewStderr };
+      const body = views.length > 1 ? views.shift() : views[0];
+      return { status: 0, stdout: body, stderr: "" };
+    }
     throw new Error(`modelGh: does not model gh ${args.join(" ")}`);
   };
   double.calls = calls;
@@ -302,6 +323,25 @@ export function modelGh({ auth = 0, registration = "registered", dispatch = 0, d
 }
 
 const DISPATCH_CALL = `workflow run ${WORKFLOW_SLUG} --repo ${REPO}`;
+
+/**
+ * A clock whose only advance is the poll's injected sleep. A one-hour dispatch deadline is
+ * therefore provable in microseconds, the poll's cadence is the sleep log itself, and nothing
+ * here waits on wall time — no 10-second sleeps in the suite, no dependence on a machine's
+ * load to decide whether a deadline was reached.
+ */
+function fakeClock() {
+  const sleeps = [];
+  let t = 0;
+  return {
+    sleeps,
+    now: () => t,
+    sleep: (ms) => {
+      sleeps.push(ms);
+      t += ms;
+    },
+  };
+}
 
 /** Write a throwaway surface policy; `undefined` body means "no policy file at all". */
 function writePolicy(dir, name, body) {
@@ -651,6 +691,163 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
         `a non-permission reason must stay red: ${reason}`,
       );
     }
+  });
+
+  // ---- D-1: a dispatched run must be WAITED FOR, not merely found ---------------------
+  // Measured on run 41715244415: resolveLiveRun dispatched harness-eval, took the newest run
+  // from `gh run list`, and returned it while it was still `in_progress`. The live leg asked
+  // for the attempt-qualified verify-reports artifact seconds later — an artifact that only
+  // exists once the run completes — so the leg could never pass in self-dispatch mode. The
+  // contract these pins hold: a run is resolved only once `gh run view` reports `completed`,
+  // and a run that never completes fails the leg with `dispatch-timeout` instead of being
+  // downloaded as if it had finished.
+  await t.test("a dispatched run is resolved only once gh reports it completed", () => {
+    const clock = fakeClock();
+    const ghDouble = modelGh({
+      runList: JSON.stringify([{ databaseId: 41715244415, attempt: 1, status: "in_progress" }]),
+      view: [VIEW_IN_PROGRESS, VIEW_QUEUED, VIEW_COMPLETED],
+    });
+    const run = resolveLiveRun({ env: {}, ref: "main", hasWorkflow: () => true, gh: ghDouble, sleep: clock.sleep, now: clock.now });
+
+    assert.equal(run.ok, true, `the leg earns its run: ${run.reason}`);
+    assert.equal(run.status, "completed", "a run still in progress when it is resolved is the 41715244415 bug");
+    assert.equal(run.conclusion, "success", "the completed run carries the conclusion gh reported");
+    assert.equal(run.dispatched, true, "the run was earned by dispatching, not supplied");
+    assert.deepEqual(clock.sleeps, [10_000, 10_000], "the poll waits between observations, and stops once the run completes");
+
+    const views = ghDouble.calls.filter((call) => call.startsWith("run view "));
+    assert.equal(views.length, 3, `one observation per scripted state: ${views.join(" | ")}`);
+    assert.ok(
+      ghDouble.calls.indexOf(views[0]) > ghDouble.calls.indexOf(DISPATCH_CALL),
+      "the observed run is observed only after the dispatch — it is ours, not a run that was already there",
+    );
+    assert.equal(
+      views[0],
+      `run view 41715244415 --repo ${REPO} --json status,conclusion`,
+      "the observation reads the status and conclusion of that run",
+    );
+  });
+
+  await t.test("waitForRunCompletion polls a scripted run to completion and names it", () => {
+    const clock = fakeClock();
+    const ghDouble = modelGh({ view: [VIEW_IN_PROGRESS, VIEW_QUEUED, VIEW_COMPLETED] });
+    const awaited = waitForRunCompletion("41715244415", "1", {
+      runGh: ghDouble,
+      sleep: clock.sleep,
+      now: clock.now,
+      pollMs: 10_000,
+      timeoutMs: 3_600_000,
+    });
+
+    assert.deepEqual(awaited, {
+      ok: true,
+      runId: "41715244415",
+      attempt: "1",
+      status: "completed",
+      conclusion: "success",
+      polls: 3,
+    });
+    assert.deepEqual(clock.sleeps, [10_000, 10_000], "one sleep between each pair of observations, none after completion");
+    assert.deepEqual(
+      ghDouble.calls,
+      Array.from({ length: 3 }, () => `run view 41715244415 --repo ${REPO} --json status,conclusion`),
+      "every observation is a status read of the same run",
+    );
+  });
+
+  await t.test("waitForRunCompletion fails on an unreadable run view and does not retry", () => {
+    const clock = fakeClock();
+    const ghDouble = modelGh({ viewStatus: 1, viewStderr: "gh: run 42 not found (HTTP 404)" });
+    const awaited = waitForRunCompletion("42", "2", { runGh: ghDouble, sleep: clock.sleep, now: clock.now });
+
+    assert.deepEqual(awaited, { ok: false, reason: "gh run view failed: gh: run 42 not found (HTTP 404)" });
+    assert.equal(ghDouble.calls.length, 1, "an unreadable run is not polled again");
+    assert.deepEqual(clock.sleeps, [], "and nothing sleeps on a run that cannot be read");
+
+    // A view that cannot be read AS A RUN is the same failure, never an hour of polling on a
+    // body nobody can interpret.
+    const noSleep = () => assert.fail("a body that is not a run view is never polled again");
+    const garbage = waitForRunCompletion("42", "2", { runGh: () => ({ status: 0, stdout: "not json", stderr: "" }), sleep: noSleep, now: clock.now });
+    assert.equal(garbage.ok, false);
+    assert.match(garbage.reason, /^gh run view returned unparseable JSON: /);
+    const empty = waitForRunCompletion("42", "2", { runGh: () => ({ status: 0, stdout: "{}", stderr: "" }), sleep: noSleep, now: clock.now });
+    assert.deepEqual(empty, { ok: false, reason: "gh run view returned no status: {}" });
+  });
+
+  await t.test("waitForRunCompletion times out with dispatch-timeout and stops polling", () => {
+    const clock = fakeClock();
+    const ghDouble = modelGh({ view: VIEW_IN_PROGRESS });
+    const awaited = waitForRunCompletion("42", "1", {
+      runGh: ghDouble,
+      sleep: clock.sleep,
+      now: clock.now,
+      pollMs: 10_000,
+      timeoutMs: 60_000,
+    });
+
+    assert.deepEqual(awaited, { ok: false, reason: "dispatch-timeout: run 42 did not complete within 60000ms" });
+    assert.equal(
+      ghDouble.calls.length,
+      7,
+      "bounded: one observation at t=0, then one per poll interval until the deadline (60s / 10s + 1) — and no more",
+    );
+    assert.equal(clock.sleeps.length, 6, "it stopped polling: no interval is left outstanding when the deadline passes");
+  });
+
+  await t.test("waitForRunCompletion returns an already-completed run without sleeping", () => {
+    const clock = fakeClock();
+    const ghDouble = modelGh({ view: VIEW_COMPLETED });
+    const awaited = waitForRunCompletion("4242", "2", {
+      runGh: ghDouble,
+      sleep: () => assert.fail("a completed run is returned on the first observation, never after a sleep"),
+      now: clock.now,
+    });
+
+    assert.deepEqual(awaited, { ok: true, runId: "4242", attempt: "2", status: "completed", conclusion: "success", polls: 1 });
+    assert.equal(ghDouble.calls.length, 1, "one observation is enough — the replay case costs one call, not one poll interval");
+  });
+
+  await t.test("the live leg downloads only after its run reports completed, and never for one that does not", () => {
+    // A pinned run has the same race: resolveLiveRun returns it the moment it is named, so an
+    // in-progress pin reaches the download a second later, before its artifact exists.
+    const clock = fakeClock();
+    const ghDouble = modelGh({ view: [VIEW_IN_PROGRESS, VIEW_COMPLETED] });
+    const pinned = { ok: true, runId: "41715244415", attempt: "1", dispatched: false, status: "in_progress" };
+    const download = awaitRunThenDownload(pinned, { runGh: ghDouble, sleep: clock.sleep, now: clock.now });
+    try {
+      assert.equal(download.name, "harness-eval-verify-reports-41715244415-1", "the artifact is the one the attempt names");
+    } finally {
+      rmSync(download.dir, { recursive: true, force: true });
+    }
+
+    const views = ghDouble.calls.filter((call) => call.startsWith("run view "));
+    assert.equal(views.length, 2, "the leg observed the run until it completed before fetching anything");
+    assert.equal(
+      ghDouble.calls.findIndex((call) => call.startsWith("run download ")),
+      2,
+      "the download is the last thing the leg does, after both observations",
+    );
+    assert.match(
+      ghDouble.calls[2],
+      /^run download 41715244415 --repo .* -n harness-eval-verify-reports-41715244415-1 -D /,
+      `the attempt-qualified artifact is what gets fetched: ${ghDouble.calls[2]}`,
+    );
+    assert.deepEqual(clock.sleeps, [10_000], "one poll interval elapsed while the artifact did not exist yet");
+
+    // The failure direction the bug lived on: a run that never completes is never downloaded.
+    const stuck = modelGh({ view: VIEW_IN_PROGRESS });
+    const never = fakeClock();
+    assert.throws(
+      () =>
+        awaitRunThenDownload(pinned, { runGh: stuck, sleep: never.sleep, now: never.now, pollMs: 10_000, timeoutMs: 30_000 }),
+      /dispatch-timeout: run 41715244415 did not complete within 30000ms/,
+      "a run that never completes fails the leg — it is never downloaded as though it had finished",
+    );
+    assert.equal(
+      stuck.calls.filter((call) => call.startsWith("run download ")).length,
+      0,
+      "nothing is downloaded for a run that did not complete",
+    );
   });
 
   await t.test("one live dispatched run: oracle precheck, both reports, distinct invocation_ids", (tt) => {
