@@ -151,6 +151,46 @@ export function captureIntegrity(events = [], record = null) {
 }
 
 /**
+ * The check's declared expectations: the caller's `required_facts`, else the mapping table's fact
+ * ids. Null when neither supplies a list — a check may never take its expectations from the events
+ * it grades (the stream would supply both sides), so null is the caller's error to refuse.
+ */
+function declaredRequiredFacts(table, required_facts) {
+  if (required_facts !== null && required_facts !== undefined) return required_facts;
+  if (!table) return null;
+  return (table.required_facts ?? []).map((fact) => fact.fact_id);
+}
+
+/**
+ * The stream-side block reasons, in the order they are reported (the order is observable in
+ * `block_reasons`): a capture that cannot be tiled or rebuilt, a plugin the harness never loaded,
+ * the ask-policy's own blocks, and a check graded as run that the model never answered. Also
+ * returns the question policy's `stop`, which the caller reports beside the verdict.
+ */
+function streamRuleBlocks({ record, events, graded, ask_policy, answer, integrity, pluginEvent }) {
+  const blocks = [];
+  const pluginLoaded = pluginEvent?.rule_id === "plugin-loaded";
+
+  if (!integrity.ok) {
+    blocks.push(block("could-not-run", integrity.reason, { tiling: integrity.tiling, lossless: integrity.lossless }));
+  }
+
+  if (graded && (record.model_request_count ?? 0) > 0 && pluginEvent && !pluginLoaded) {
+    blocks.push(block("could-not-run", "plugin-not-loaded", { plugins: pluginEvent.plugin_names ?? [] }));
+  }
+
+  const policy = gradeQuestionPolicy({ events, ask_policy, record, question_mapped: true });
+  for (const entry of policy.blocks) if (entry.verdict !== "pass") blocks.push(entry);
+
+  const questionSatisfied = ask_policy === "must-ask" && policy.boundary.count > 0;
+  if (graded && !questionSatisfied && !answer.answered) {
+    blocks.push(block("could-not-run", answer.reason, answer.detail ?? {}));
+  }
+
+  return { blocks, stop: policy.stop };
+}
+
+/**
  * Grades one check from a stream and its capture record.
  *
  * @param {object} options
@@ -181,11 +221,10 @@ export function gradeStreamCheck({
   if (!record) throw new Error("gradeStreamCheck needs a capture record");
   if (!Array.isArray(events)) throw new Error("gradeStreamCheck needs normalised events");
 
-  const declared = required_facts ?? (table ? (table.required_facts ?? []).map((fact) => fact.fact_id) : null);
-  if (!Array.isArray(declared)) {
+  const facts = declaredRequiredFacts(table, required_facts);
+  if (!Array.isArray(facts)) {
     throw new Error("gradeStreamCheck needs required_facts (or a mapping table): a check may not take its expectations from the events it grades");
   }
-  const facts = declared;
   const streamRecord = { ...record, observations: observationsFromEvents(events) };
   const base = gradeFromEvidence({
     record: streamRecord,
@@ -202,27 +241,10 @@ export function gradeStreamCheck({
     return { cell: base, blocks: base.block_reasons, answer: null, questions: questionBoundary(events), stop: null };
   }
 
-  const blocks = [];
   const answer = streamAnswer(events);
   const integrity = captureIntegrity(events, record);
   const pluginEvent = events.find((event) => event.rule_id === "plugin-loaded" || event.rule_id === "plugin-absent") ?? null;
-  const pluginLoaded = pluginEvent?.rule_id === "plugin-loaded";
-
-  if (!integrity.ok) {
-    blocks.push(block("could-not-run", integrity.reason, { tiling: integrity.tiling, lossless: integrity.lossless }));
-  }
-
-  if (graded && (record.model_request_count ?? 0) > 0 && pluginEvent && !pluginLoaded) {
-    blocks.push(block("could-not-run", "plugin-not-loaded", { plugins: pluginEvent.plugin_names ?? [] }));
-  }
-
-  const policy = gradeQuestionPolicy({ events, ask_policy, record, question_mapped: true });
-  for (const entry of policy.blocks) if (entry.verdict !== "pass") blocks.push(entry);
-
-  const questionSatisfied = ask_policy === "must-ask" && policy.boundary.count > 0;
-  if (graded && !questionSatisfied && !answer.answered) {
-    blocks.push(block("could-not-run", answer.reason, answer.detail ?? {}));
-  }
+  const { blocks, stop } = streamRuleBlocks({ record, events, graded, ask_policy, answer, integrity, pluginEvent });
 
   const verdict = worstVerdict([base.verdict, ...blocks.map((entry) => entry.verdict)]);
   const winner =
@@ -248,7 +270,7 @@ export function gradeStreamCheck({
           }
         : null,
       questions: questionBoundary(events),
-      boundary_stop: policy.stop,
+      boundary_stop: stop,
       capture_integrity: integrity,
     },
   };
@@ -259,5 +281,5 @@ export function gradeStreamCheck({
   // the contract is re-checked on the object that will actually travel.
   validateAgainst("harness-cell.v1.schema.json", cell);
   assertPassEvidence(cell);
-  return { cell, blocks, answer, questions: cell.stream_evidence.questions, stop: policy.stop };
+  return { cell, blocks, answer, questions: cell.stream_evidence.questions, stop };
 }
