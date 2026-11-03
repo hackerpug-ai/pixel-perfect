@@ -276,7 +276,7 @@ test("t16-status-surface-declared", () => {
   assert.equal(rendered.includes("gates.atoms"), false, "a key the case does not declare is not rendered");
   assert.doesNotMatch(rendered, /\b7\b/, "the declared count is not rendered");
 
-  // A case that declares no facts is told nothing, and the must-ask case's prompt is untouched.
+  // A case that declares no facts is told nothing.
   assert.equal(adapter.statusSurfacePrompt({ caseManifest: { ...statusA, expected_facts: null } }), "");
   assert.equal(adapter.statusSurfacePrompt({ caseManifest: loadCase("first-question-init") }), "");
   // T18 deliberately opens the promise this pair used to pin: the question probe's prompt is now the
