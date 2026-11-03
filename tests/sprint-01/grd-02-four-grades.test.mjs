@@ -922,6 +922,7 @@ test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
 test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
   const stream = await import("../../test/harness/stream/index.mjs");
   const { exitCodeVerdict } = await import("../../test/harness/lib/verdict.mjs");
+  const { fixtureInstallation } = await import("./flow-runner.mjs");
   const ARCHIVE = join(ROOT, "test/harness/stream/captures/claude-code-stream-probe.capture.json");
   const report = { flow: "FLOW-GRD-02-FOUR-GRADES", generated_at: new Date().toISOString(), legs: [], branch_conformance: [], not_executed: [], evidence: {} };
 
@@ -962,17 +963,7 @@ test("FLOW-GRD-02-FOUR-GRADES", async (t) => {
   assert.equal(real.tiling.ok, true, `the real capture tiles exactly once: ${JSON.stringify(real.tiling)}`);
   assert.equal(real.missing.length, 3, "exactly the three facts the keyless turn could not reach");
 
-  const installation = {
-    requested_cli_version: "2.1.291",
-    resolved_cli_version: "2.1.291",
-    observed_cli_version: null,
-    install_mode: "checkout",
-    plugin_revision: null,
-    expected_plugin_manifest_sha256: null,
-    observed_plugin_manifest_sha256: null,
-    loaded_plugin_root: null,
-    plugin_load_evidence: null,
-  };
+  const installation = fixtureInstallation();
   const cells = ["command_list", "status", "verify", "question_before_expensive_work"].map((check_id) => {
     const ask_policy = check_id === "question_before_expensive_work" ? "must-ask" : "ask-nothing";
     return stream.gradeStreamCheck({

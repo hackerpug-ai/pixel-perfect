@@ -21,7 +21,7 @@ import { APPROVED_MODES, assertStance, recordStance, serializeStance } from "../
 import { loadPins } from "../../test/harness/pins.mjs";
 import { ADAPTER_PENDING, ABSENT_REASONS, absentReason } from "../../test/harness/adapters/absent.mjs";
 import { CELL_SOURCES, cellFor, planCells } from "../../test/harness/adapters/registry.mjs";
-import { inspectWorkflowDeclaration, readWorkflow } from "./flow-runner.mjs";
+import { fixtureInstallation, inspectWorkflowDeclaration, readWorkflow } from "./flow-runner.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const RUNTIME_DIR = join(ROOT, "test/harness/runtime");
@@ -58,20 +58,6 @@ writeFileSync(process.argv[1], "ran");
 const names = Object.keys(process.env).filter((name) => new RegExp("^(SMOKE_[A-Z0-9_]+|ANTHROPIC_API_KEY|CODEX_API_KEY|XAI_API_KEY|GEMINI_API_KEY|CURSOR_API_KEY)$").test(name)).sort();
 process.stdout.write(JSON.stringify({ type: "child_env", secret_names: names }) + "\\n");
 `;
-
-function installation() {
-  return {
-    requested_cli_version: "2.1.291",
-    resolved_cli_version: "2.1.291",
-    observed_cli_version: null,
-    install_mode: "checkout",
-    plugin_revision: null,
-    expected_plugin_manifest_sha256: null,
-    observed_plugin_manifest_sha256: null,
-    loaded_plugin_root: null,
-    plugin_load_evidence: null,
-  };
-}
 
 /** The both-ways assertion an always-refusing guard must fail. */
 function bothWays({ keylessDecision, keyedDecision }) {
@@ -211,7 +197,7 @@ test("FLOW-GRD-06-MISSING-KEY", async (t) => {
     // and must not dress a never-started invocation up as a crash or a truncated capture.
     const keylessCell = gradeFromEvidence({
       record: keylessRecord,
-      installation: installation(),
+      installation: fixtureInstallation(),
       harness: "claude-code",
       track: "pinned",
       check_id: "verify",

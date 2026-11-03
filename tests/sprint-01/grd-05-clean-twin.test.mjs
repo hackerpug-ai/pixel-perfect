@@ -20,6 +20,7 @@ import {
   cleanTwinCase,
   diffFacts,
   falsePositiveClean,
+  fixtureInstallation,
   runFirstQuestionCase,
   runStatusCase,
   swappedTwin,
@@ -274,7 +275,7 @@ test("FLOW-GRD-05-CLEAN-TWIN", async (t) => {
       graders.part({ check_id: "question_before_expensive_work", verdict: "pass", evidence_paths: [cited] }),
     ];
     const evidence_roots = [run.planted.dir, run.clean.dir];
-    const installation = { requested_cli_version: "2.1.291", resolved_cli_version: "2.1.291", observed_cli_version: null, install_mode: "checkout", plugin_revision: null, expected_plugin_manifest_sha256: null, observed_plugin_manifest_sha256: null, loaded_plugin_root: null, plugin_load_evidence: null };
+    const installation = fixtureInstallation();
     const cell = graders.gradeCell({ harness: "claude-code", track: "pinned", installation, invocation_id: run.planted.invocation.invocationId, process_exit_code: 1, parts: [...others, passing], evidence_roots });
     assert.equal(cell.verdict, "pass", `four passing checks aggregate to pass: ${JSON.stringify(cell.block_reasons)}`);
     assert.equal(cell.observed_verify_outcome, "defect-detected");

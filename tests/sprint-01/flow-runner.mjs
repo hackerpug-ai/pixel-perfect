@@ -44,6 +44,7 @@ import {
   validatePair,
   writeObservedReport,
 } from "../../test/harness/kit/case-loader.mjs";
+import { installationIdentity } from "../../test/harness/adapters/claude-code.mjs";
 import { observedEvidence, runOraclePrecheck } from "../../test/harness/kit/oracle-precheck.mjs";
 // The YAML subset reader lives with the other shared harness libraries; re-exported here so
 // the flow tests keep importing parseYaml from this module.
@@ -119,6 +120,15 @@ export function sandbox(t, label) {
   const dir = mkdtempSync(path.join(tmpdir(), label));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   return dir;
+}
+
+/**
+ * The fixture installation the flow tests grade against: the pinned CLI requested and resolved,
+ * and nothing observed yet. Built by the adapter's own factory so the nine-field shape cannot
+ * drift from the schema the runtime validates.
+ */
+export function fixtureInstallation() {
+  return installationIdentity({ requested_cli_version: "2.1.291", resolved_cli_version: "2.1.291" });
 }
 
 // ---------------------------------------------------------------------------

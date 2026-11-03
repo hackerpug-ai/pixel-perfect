@@ -21,6 +21,7 @@ import { fileURLToPath } from "node:url";
 import { createCapture, denials, spawnCaptured } from "../../test/harness/runtime/capture.mjs";
 import { gradeFromEvidence, readGrade, verifyReadBack, writeGrade } from "../../test/harness/runtime/grade-writer.mjs";
 import { exitCodeVerdict } from "../../test/harness/lib/verdict.mjs";
+import { fixtureInstallation as installation } from "./flow-runner.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const REPORT_DIR = join(ROOT, ".tmp", "sprint-01-verification");
@@ -128,20 +129,6 @@ function passMapper() {
   return (line) => {
     if (line.type !== "read_attempt" || line.ok !== true) return [];
     return [{ kind: "required_read_ok", operation: "read", target: line.path, fact_id: "required_read_ok" }];
-  };
-}
-
-function installation() {
-  return {
-    requested_cli_version: "2.1.291",
-    resolved_cli_version: "2.1.291",
-    observed_cli_version: null,
-    install_mode: "checkout",
-    plugin_revision: null,
-    expected_plugin_manifest_sha256: null,
-    observed_plugin_manifest_sha256: null,
-    loaded_plugin_root: null,
-    plugin_load_evidence: null,
   };
 }
 

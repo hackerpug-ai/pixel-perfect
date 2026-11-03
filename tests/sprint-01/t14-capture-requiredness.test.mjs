@@ -26,7 +26,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { mapCapturedLine } from "../../test/harness/adapters/claude-code.mjs";
-import { sandbox } from "./flow-runner.mjs";
+import { fixtureInstallation, sandbox } from "./flow-runner.mjs";
 import { createCapture, denials, observedFacts, undeclaredDenials } from "../../test/harness/runtime/capture.mjs";
 import { gradeFromEvidence } from "../../test/harness/runtime/grade-writer.mjs";
 
@@ -39,18 +39,6 @@ const FIXTURE_BYTES = readFileSync(join(FIXTURE_DIR, "claude-code-denied-write.s
 /** The invocation root the archived run really worked in: the denied write is under it. */
 const ENTRY = { cwd: FIXTURE_RECORD.cwd };
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
-
-const installation = () => ({
-  requested_cli_version: "2.1.291",
-  resolved_cli_version: "2.1.291",
-  observed_cli_version: null,
-  install_mode: "checkout",
-  plugin_revision: null,
-  expected_plugin_manifest_sha256: null,
-  observed_plugin_manifest_sha256: null,
-  loaded_plugin_root: null,
-  plugin_load_evidence: null,
-});
 
 /** T6's production mapper, declaring requiredness per denial from the target and the invocation root. */
 function declaredMapper(json, line) {
@@ -91,7 +79,7 @@ function replay({ dir, invocation_id, mapper, required_read_paths = null }) {
   const grade = (required_facts = []) =>
     gradeFromEvidence({
       record,
-      installation: installation(),
+      installation: fixtureInstallation(),
       harness: "claude-code",
       track: "pinned",
       check_id: "verify",
