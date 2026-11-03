@@ -13,13 +13,14 @@
 //      step's exit code never carries a verdict.
 //
 // The verdict reports; the exit code does not.
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import * as claudeCode from "../adapters/claude-code.mjs";
 import { REGISTERED, cellFor as registryCellFor } from "../adapters/registry.mjs";
+import { ReadBackMismatch, writeDurable } from "../lib/write-durable.mjs";
 import { manifestOf } from "../runtime/index.mjs";
 import { validateAgainst } from "../validate.mjs";
 import { attachObservation, attachPair, mergeObservations, observeLeg } from "./observations.mjs";
@@ -76,11 +77,14 @@ function staleCopy({ checkoutRoot, loadedRoot, scratch = null }) {
 }
 
 /**
- * Writes one cell record atomically and reads it back.
+ * Writes one cell record durably and reads it back.
  *
  * A graded record is validated against the shipped HarnessCell schema; a bare could-not-run record
- * has no grade to validate, so it is checked for the three fields a reader needs instead. A write
- * that does not read back is a refusal, not a file.
+ * has no grade to validate, so it is checked for the three fields a reader needs instead. The
+ * durable write reads the record back off disk and compares the fields a reader keys on; a write
+ * that does not read back is a refusal, not a file — the receipt reports `ok: false` with the
+ * diverging fields, and the unreadable record is destroyed rather than left where the upload could
+ * ship it.
  */
 export function writeCell({ file, cell }) {
   if (!cell || typeof cell !== "object") throw new TypeError("writeCell needs a cell record");
@@ -91,14 +95,23 @@ export function writeCell({ file, cell }) {
     if (missing.length > 0) throw new TypeError(`a bare cell record must state ${missing.join(", ")}`);
   }
   mkdirSync(dirname(file), { recursive: true });
-  const partial = `${file}.partial`;
-  writeFileSync(partial, `${JSON.stringify(cell, null, 2)}\n`, "utf8");
-  renameSync(partial, file);
-  const back = JSON.parse(readFileSync(file, "utf8"));
-  const mismatches = ["harness", "track", "verdict"].filter(
-    (field) => JSON.stringify(back[field] ?? null) !== JSON.stringify(cell[field] ?? null),
-  );
-  return { ok: mismatches.length === 0 && existsSync(file), path: file, cell: back, mismatches };
+  // The read-back a durable write is counted by: what a reader later parses must carry the same
+  // harness, track, and verdict this leg assembled.
+  const compare = (path) => {
+    const back = JSON.parse(readFileSync(path, "utf8"));
+    const mismatches = ["harness", "track", "verdict"].filter(
+      (field) => JSON.stringify(back[field] ?? null) !== JSON.stringify(cell[field] ?? null),
+    );
+    return { ok: mismatches.length === 0 && existsSync(path), cell: back, mismatches };
+  };
+  let outcome;
+  try {
+    outcome = writeDurable(file, `${JSON.stringify(cell, null, 2)}\n`, { compare }).result;
+  } catch (error) {
+    if (!(error instanceof ReadBackMismatch)) throw error;
+    outcome = error.result;
+  }
+  return { ok: outcome.ok, path: file, cell: outcome.cell, mismatches: outcome.mismatches };
 }
 
 /** The bare record a leg writes when nothing could be graded. It always names a reason. */
