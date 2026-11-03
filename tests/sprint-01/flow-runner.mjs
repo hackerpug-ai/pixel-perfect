@@ -246,6 +246,22 @@ function checkSecretSurfaces(yaml, jobs) {
   return failures;
 }
 
+// The skeleton chain has to be wired: cells in, cells through, receipt out.
+function checkNeedsChain(yaml, jobs) {
+  const failures = [];
+  const needs = {
+    download: needsOf(jobs.download),
+    grade: needsOf(jobs.grade),
+  };
+  if (jobs.download && !needs.download.includes("smoke")) failures.push(`jobs.download needs ${JSON.stringify(needs.download)}, expected smoke`);
+  if (jobs.grade && !needs.grade.includes("download")) failures.push(`jobs.grade needs ${JSON.stringify(needs.grade)}, expected download`);
+  for (const [name, required] of [["download", "download-artifact"], ["grade", "download-artifact"], ["grade", "upload-artifact"]]) {
+    const used = stepsOf(jobs[name]).some((step) => new RegExp(`actions/${required}`).test(String(step?.uses ?? "")));
+    if (!used) failures.push(`jobs.${name} never uses actions/${required}`);
+  }
+  return failures;
+}
+
 function checkSmokeSteps(yaml, jobs) {
   const failures = [];
   const smoke = jobs.smoke;
@@ -346,17 +362,7 @@ export function inspectWorkflowDeclaration(yaml) {
   failures.push(...checkSecretSurfaces(yaml, jobs));
   failures.push(...checkRecorderInterpolation(yaml, jobs));
 
-  // The skeleton chain has to be wired: cells in, cells through, receipt out.
-  const needs = {
-    download: needsOf(jobs.download),
-    grade: needsOf(jobs.grade),
-  };
-  if (jobs.download && !needs.download.includes("smoke")) fail(`jobs.download needs ${JSON.stringify(needs.download)}, expected smoke`);
-  if (jobs.grade && !needs.grade.includes("download")) fail(`jobs.grade needs ${JSON.stringify(needs.grade)}, expected download`);
-  for (const [name, required] of [["download", "download-artifact"], ["grade", "download-artifact"], ["grade", "upload-artifact"]]) {
-    const used = stepsOf(jobs[name]).some((step) => new RegExp(`actions/${required}`).test(String(step?.uses ?? "")));
-    if (!used) fail(`jobs.${name} never uses actions/${required}`);
-  }
+  failures.push(...checkNeedsChain(yaml, jobs));
 
   const matrix = smoke?.strategy?.matrix ?? {};
   const harnesses = Array.isArray(matrix.harness) ? matrix.harness : [];
