@@ -25,7 +25,7 @@ import {
   loadPins,
 } from "../../test/harness/pins.mjs";
 import { validateAgainst, validateResult } from "../../test/harness/validate.mjs";
-import { inspectWorkflowDeclaration, LIVE_ARTIFACT, parseYaml, readWorkflow, writeCellArtifacts } from "./flow-runner.mjs";
+import { inspectWorkflowDeclaration, LIVE_ARTIFACT, readWorkflow, writeCellArtifacts } from "./flow-runner.mjs";
 import {
   RESULT_FILENAME,
   assembleResult,

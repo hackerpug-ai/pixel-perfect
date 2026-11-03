@@ -10,11 +10,11 @@
 // to this VERIFY command.
 
 import assert from "node:assert/strict";
-import { existsSync, readFileSync, rmSync } from "node:fs";
+import { readFileSync, rmSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { CASES_DIR, PROJECT_DIR, loadCase } from "../../test/harness/kit/case-loader.mjs";
+import { PROJECT_DIR, loadCase } from "../../test/harness/kit/case-loader.mjs";
 import {
   assertEmptyDirFixture,
   cleanTwinCase,
