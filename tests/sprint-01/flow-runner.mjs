@@ -246,6 +246,21 @@ function checkSecretSurfaces(yaml, jobs) {
   return failures;
 }
 
+function checkSkeletonFetch(yaml, jobs) {
+  const failures = [];
+  for (const skeleton of ["download", "grade"]) {
+    const job = jobs[skeleton];
+    if (!job) {
+      failures.push(`jobs.${skeleton} skeleton job is missing`);
+      continue;
+    }
+    if (!stepsOf(job).some((step) => /actions\/download-artifact/.test(step?.uses ?? ""))) {
+      failures.push(`jobs.${skeleton} does not fetch artifacts`);
+    }
+  }
+  return failures;
+}
+
 // Every upload must run on failure and carry this attempt in its physical name.
 function checkUploadQualification(yaml, jobs) {
   const failures = [];
@@ -352,16 +367,7 @@ export function inspectWorkflowDeclaration(yaml) {
   if (checkout && "ref" in (checkout.with ?? {})) fail("jobs.smoke checkout pins a ref, so candidate_sha would not be the dispatch commit");
   if (checkout && checkout.with?.["persist-credentials"] !== false) fail("jobs.smoke checkout must set persist-credentials: false");
 
-  for (const skeleton of ["download", "grade"]) {
-    const job = jobs[skeleton];
-    if (!job) {
-      fail(`jobs.${skeleton} skeleton job is missing`);
-      continue;
-    }
-    if (!stepsOf(job).some((step) => /actions\/download-artifact/.test(step?.uses ?? ""))) {
-      fail(`jobs.${skeleton} does not fetch artifacts`);
-    }
-  }
+  failures.push(...checkSkeletonFetch(yaml, jobs));
 
   // Every upload must run on failure and carry this attempt in its physical name.
   failures.push(...checkUploadQualification(yaml, jobs));
