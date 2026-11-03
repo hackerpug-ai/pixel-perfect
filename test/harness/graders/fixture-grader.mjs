@@ -81,6 +81,66 @@ export function notExecutedPart({ check_id, reason, owner, invocation_id = null,
 }
 
 /**
+ * The planted half's detection rules, run against the report the planted case declares. Every rule
+ * keeps its side tag so the aggregate can say which half refused.
+ */
+function plantedDetectionBlocks(planted, plantedReport) {
+  const blocks = [];
+  if (plantedReport.observed_verify_outcome !== "defect-detected") {
+    blocks.push(block("fail", `verify-${plantedReport.observed_verify_outcome ?? "unknown"}`, { side: "planted", expected: "defect-detected" }));
+  }
+  const plantedKey = planted.caseManifest?.defect_key ?? null;
+  const named = plantedReport.observed_defect_key ?? null;
+  const claimed = plantedReport.expected_defect_key ?? null;
+  const drifted = (plantedReport.evidence?.drifted_keys ?? []).includes(plantedKey);
+  // The report's own claims are compared with the case it says it verifies: a body that names a
+  // different expected key, or an observed key that contradicts the one the case plants, is not a
+  // detection of this case no matter how clean its outcome line reads.
+  if (plantedKey && claimed !== plantedKey) {
+    blocks.push(block("fail", "verify-defect-key-mismatch", { side: "planted", field: "expected_defect_key", expected: plantedKey, named: claimed }));
+  }
+  if (plantedKey && named !== null && named !== plantedKey) {
+    blocks.push(block("fail", "verify-defect-key-mismatch", { side: "planted", field: "observed_defect_key", expected: plantedKey, named }));
+  } else if (plantedKey && named === null && !drifted) {
+    blocks.push(block("fail", "verify-defect-key-mismatch", { side: "planted", field: "observed_defect_key", expected: plantedKey, named, drifted }));
+  }
+  // Detection is a citation, not a word: the capture the report names must exist inside the
+  // invocation that wrote it, hash to the digest the report claims, and hold the cited span.
+  const evidence = plantedReport.evidence ?? {};
+  const unevidenced = [];
+  const capture = resolveCaptureEvidence(planted.invocation, evidence);
+  if (!capture.ok) unevidenced.push(capture.why);
+  if (unevidenced.length > 0) {
+    blocks.push(block("fail", REPORT_REASONS.unboundEvidence, { side: "planted", missing: unevidenced, capture }));
+  }
+  return blocks;
+}
+
+/** The clean twin's rules: the twin must not detect the planted defect, and must report clean. */
+function cleanSideBlocks(cleanReport) {
+  const blocks = [];
+  if (cleanReport.clean_project_failed === true) {
+    blocks.push(block("fail", "clean-false-positive", { side: "clean" }));
+  }
+  if (cleanReport.observed_verify_outcome !== "clean") {
+    blocks.push(block("fail", `clean-${cleanReport.observed_verify_outcome ?? "unknown"}`, { side: "clean", expected: "clean" }));
+  }
+  return blocks;
+}
+
+/** The two halves must be independent runs: distinct invocation ids and distinct report bodies. */
+function twinBindingBlocks(byside) {
+  const blocks = [];
+  if (byside.planted.report.invocation_id === byside.clean.report.invocation_id) {
+    blocks.push(block("fail", REPORT_REASONS.unbound, { binding: "twin", why: "both reports share one invocation_id" }));
+  }
+  if (byside.planted.sha256 && byside.planted.sha256 === byside.clean.sha256) {
+    blocks.push(block("fail", REPORT_REASONS.unbound, { binding: "twin", why: "both report bodies hash the same" }));
+  }
+  return blocks;
+}
+
+/**
  * The verify check, graded from the pair of reports at their case-declared paths.
  *
  * Pass requires BOTH halves: the planted report names the planted defect with the capture hash and
@@ -106,50 +166,9 @@ export function gradeVerifyCheck({ planted, clean }) {
   const invocation_id = planted?.invocation?.invocationId ?? null;
 
   if (planted && clean && byside.planted.ok && byside.clean.ok) {
-    const plantedReport = byside.planted.report;
-    const cleanReport = byside.clean.report;
-
-    if (plantedReport.observed_verify_outcome !== "defect-detected") {
-      blocks.push(block("fail", `verify-${plantedReport.observed_verify_outcome ?? "unknown"}`, { side: "planted", expected: "defect-detected" }));
-    }
-    const plantedKey = planted.caseManifest?.defect_key ?? null;
-    const named = plantedReport.observed_defect_key ?? null;
-    const claimed = plantedReport.expected_defect_key ?? null;
-    const drifted = (plantedReport.evidence?.drifted_keys ?? []).includes(plantedKey);
-    // The report's own claims are compared with the case it says it verifies: a body that names a
-    // different expected key, or an observed key that contradicts the one the case plants, is not a
-    // detection of this case no matter how clean its outcome line reads.
-    if (plantedKey && claimed !== plantedKey) {
-      blocks.push(block("fail", "verify-defect-key-mismatch", { side: "planted", field: "expected_defect_key", expected: plantedKey, named: claimed }));
-    }
-    if (plantedKey && named !== null && named !== plantedKey) {
-      blocks.push(block("fail", "verify-defect-key-mismatch", { side: "planted", field: "observed_defect_key", expected: plantedKey, named }));
-    } else if (plantedKey && named === null && !drifted) {
-      blocks.push(block("fail", "verify-defect-key-mismatch", { side: "planted", field: "observed_defect_key", expected: plantedKey, named, drifted }));
-    }
-    // Detection is a citation, not a word: the capture the report names must exist inside the
-    // invocation that wrote it, hash to the digest the report claims, and hold the cited span.
-    const evidence = plantedReport.evidence ?? {};
-    const unevidenced = [];
-    const capture = resolveCaptureEvidence(planted.invocation, evidence);
-    if (!capture.ok) unevidenced.push(capture.why);
-    if (unevidenced.length > 0) {
-      blocks.push(block("fail", REPORT_REASONS.unboundEvidence, { side: "planted", missing: unevidenced, capture }));
-    }
-
-    if (cleanReport.clean_project_failed === true) {
-      blocks.push(block("fail", "clean-false-positive", { side: "clean" }));
-    }
-    if (cleanReport.observed_verify_outcome !== "clean") {
-      blocks.push(block("fail", `clean-${cleanReport.observed_verify_outcome ?? "unknown"}`, { side: "clean", expected: "clean" }));
-    }
-
-    if (plantedReport.invocation_id === cleanReport.invocation_id) {
-      blocks.push(block("fail", REPORT_REASONS.unbound, { binding: "twin", why: "both reports share one invocation_id" }));
-    }
-    if (byside.planted.sha256 && byside.planted.sha256 === byside.clean.sha256) {
-      blocks.push(block("fail", REPORT_REASONS.unbound, { binding: "twin", why: "both report bodies hash the same" }));
-    }
+    blocks.push(...plantedDetectionBlocks(planted, byside.planted.report));
+    blocks.push(...cleanSideBlocks(byside.clean.report));
+    blocks.push(...twinBindingBlocks(byside));
   }
 
   if (blocks.length === 0) blocks.push(block("pass", null));
