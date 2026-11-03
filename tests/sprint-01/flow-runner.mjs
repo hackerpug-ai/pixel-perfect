@@ -45,6 +45,11 @@ import {
   writeObservedReport,
 } from "../../test/harness/kit/case-loader.mjs";
 import { observedEvidence, runOraclePrecheck } from "../../test/harness/kit/oracle-precheck.mjs";
+// The YAML subset reader lives with the other shared harness libraries; re-exported here so
+// the flow tests keep importing parseYaml from this module.
+import { parseYaml } from "../../test/harness/lib/yaml.mjs";
+
+export { parseYaml };
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 export const ARTIFACT_DIR = path.join(ROOT, ".tmp/sprint-01-verification");
@@ -99,227 +104,6 @@ export function writeArtifact(file, artifact) {
 // graded on. A failing run keeps its own record at `<artifact>.failed.json` instead.
 
 // ---------------------------------------------------------------------------
-// [shared] YAML subset reader
-// ---------------------------------------------------------------------------
-
-// GitHub Actions workflows use block mappings, block sequences, empty flow collections,
-// flow sequences of scalars, quoted scalars and block scalars. That subset is read here so
-// the flows can assert the real bytes of a workflow file with no third-party dependency and
-// no network call. Anything outside the subset is left as the literal string it parsed as.
-
-function stripComment(text) {
-  let quote = null;
-  for (let index = 0; index < text.length; index += 1) {
-    const char = text[index];
-    if (quote) {
-      if (char === quote) quote = null;
-      continue;
-    }
-    if (char === '"' || char === "'") {
-      quote = char;
-      continue;
-    }
-    if (char === "#" && (index === 0 || /\s/.test(text[index - 1]))) return text.slice(0, index);
-  }
-  return text;
-}
-
-function unquote(text) {
-  const trimmed = text.trim();
-  if (trimmed.length >= 2 && ((trimmed[0] === '"' && trimmed.at(-1) === '"') || (trimmed[0] === "'" && trimmed.at(-1) === "'"))) {
-    return trimmed.slice(1, -1);
-  }
-  return trimmed;
-}
-
-// Index of the `:` that separates a key from its value, skipping quoted regions.
-function keySeparator(text) {
-  let quote = null;
-  for (let index = 0; index < text.length; index += 1) {
-    const char = text[index];
-    if (quote) {
-      if (char === quote) quote = null;
-      continue;
-    }
-    if (char === '"' || char === "'") {
-      quote = char;
-      continue;
-    }
-    if (char === ":" && (index === text.length - 1 || text[index + 1] === " ")) return index;
-  }
-  return -1;
-}
-
-function splitFlow(text) {
-  const parts = [];
-  let depth = 0;
-  let quote = null;
-  let current = "";
-  for (const char of text) {
-    if (quote) {
-      current += char;
-      if (char === quote) quote = null;
-      continue;
-    }
-    if (char === '"' || char === "'") {
-      quote = char;
-      current += char;
-      continue;
-    }
-    if (char === "[" || char === "{") depth += 1;
-    if (char === "]" || char === "}") depth -= 1;
-    if (char === "," && depth === 0) {
-      parts.push(current);
-      current = "";
-      continue;
-    }
-    current += char;
-  }
-  if (current.trim()) parts.push(current);
-  return parts;
-}
-
-function parseScalar(text) {
-  const trimmed = text.trim();
-  if (trimmed === "{}") return {};
-  if (trimmed === "[]") return [];
-  if (trimmed.startsWith("[") && trimmed.endsWith("]")) return splitFlow(trimmed.slice(1, -1)).map(parseScalar);
-  if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
-    const out = {};
-    for (const pair of splitFlow(trimmed.slice(1, -1))) {
-      const separator = keySeparator(pair);
-      if (separator === -1) continue;
-      out[unquote(pair.slice(0, separator))] = parseScalar(pair.slice(separator + 1));
-    }
-    return out;
-  }
-  if (trimmed === "true") return true;
-  if (trimmed === "false") return false;
-  if (trimmed === "null" || trimmed === "~") return null;
-  if (/^-?\d+$/.test(trimmed)) return Number(trimmed);
-  return unquote(trimmed);
-}
-
-function tokenize(text) {
-  return text.split("\n").map((raw) => ({
-    raw,
-    indent: raw.length - raw.trimStart().length,
-    text: raw.trim(),
-  }));
-}
-
-function nextSignificant(tokens, index) {
-  for (let cursor = index; cursor < tokens.length; cursor += 1) {
-    if (tokens[cursor].text && !tokens[cursor].text.startsWith("#")) return cursor;
-  }
-  return -1;
-}
-
-function readBlockScalar(tokens, index, parentIndent) {
-  const body = [];
-  let cursor = index;
-  while (cursor < tokens.length && (tokens[cursor].raw.trim() === "" || tokens[cursor].indent > parentIndent)) {
-    body.push(tokens[cursor].raw);
-    cursor += 1;
-  }
-  return [body.join("\n").trim(), cursor];
-}
-
-function parseMapping(tokens, start, indent) {
-  const out = {};
-  let cursor = start;
-  for (;;) {
-    const index = nextSignificant(tokens, cursor);
-    if (index === -1) return [out, tokens.length];
-    const token = tokens[index];
-    if (token.indent !== indent || token.text.startsWith("- ")) return [out, index];
-    const separator = keySeparator(token.text);
-    if (separator === -1) return [out, index];
-    const key = unquote(token.text.slice(0, separator));
-    const rest = token.text.slice(separator + 1).trim();
-    if (/^[|>][+-]?$/.test(rest)) {
-      const [body, next] = readBlockScalar(tokens, index + 1, indent);
-      out[key] = body;
-      cursor = next;
-      continue;
-    }
-    if (rest !== "") {
-      out[key] = parseScalar(rest);
-      cursor = index + 1;
-      continue;
-    }
-    const [value, next] = parseNode(tokens, index + 1, indent + 1);
-    out[key] = value;
-    cursor = next;
-  }
-}
-
-function parseSequence(tokens, start, indent) {
-  const out = [];
-  let cursor = start;
-  for (;;) {
-    const index = nextSignificant(tokens, cursor);
-    if (index === -1) return [out, tokens.length];
-    const token = tokens[index];
-    if (token.indent !== indent || !token.text.startsWith("-")) return [out, index];
-    const rest = token.text.slice(1).trim();
-    if (rest === "") {
-      const [value, next] = parseNode(tokens, index + 1, indent + 1);
-      out.push(value);
-      cursor = next;
-      continue;
-    }
-    const separator = keySeparator(rest);
-    if (separator === -1) {
-      out.push(parseScalar(rest));
-      cursor = index + 1;
-      continue;
-    }
-    // `- key: value` starts a mapping whose remaining keys sit at the key's own column.
-    const keyColumn = indent + (token.text.length - token.text.slice(1).trimStart().length);
-    const key = unquote(rest.slice(0, separator));
-    const valueText = rest.slice(separator + 1).trim();
-    const entry = {};
-    let next;
-    if (valueText === "") {
-      const [value, after] = parseNode(tokens, index + 1, keyColumn + 1);
-      entry[key] = value;
-      next = after;
-    } else {
-      entry[key] = parseScalar(valueText);
-      next = index + 1;
-    }
-    const sibling = nextSignificant(tokens, next);
-    if (sibling !== -1 && tokens[sibling].indent === keyColumn && !tokens[sibling].text.startsWith("- ")) {
-      const [more, after] = parseMapping(tokens, sibling, keyColumn);
-      Object.assign(entry, more);
-      next = after;
-    }
-    out.push(entry);
-    cursor = next;
-  }
-}
-
-function parseNode(tokens, start, indent) {
-  const index = nextSignificant(tokens, start);
-  if (index === -1) return [null, tokens.length];
-  if (tokens[index].indent < indent) return [null, index];
-  if (tokens[index].text.startsWith("- ")) return parseSequence(tokens, index, tokens[index].indent);
-  return parseMapping(tokens, index, tokens[index].indent);
-}
-
-/**
- * Parses the YAML subset GitHub Actions workflows use.
- *
- * @param {string} text
- * @returns {Record<string, unknown>}
- */
-export function parseYaml(text) {
-  const [value] = parseNode(tokenize(text), 0, 0);
-  return value ?? {};
-}
-
-// ---------------------------------------------------------------------------
 // [shared] reading the harness-eval workflow
 // ---------------------------------------------------------------------------
 
@@ -363,6 +147,234 @@ function needsOf(job) {
   return needs === undefined || needs === null ? [] : [String(needs)];
 }
 
+// Every step must do something: `run: "true"` is not an install, a record or a transfer.
+function checkNoOpSteps(yaml, jobs) {
+  const failures = [];
+  for (const [name, job] of Object.entries(jobs)) {
+    const steps = stepsOf(job);
+    if (steps.length === 0) failures.push(`jobs.${name} has no steps`);
+    for (const step of steps) {
+      const label = `${name}/${String(step?.name ?? step?.uses ?? "unnamed step")}`;
+      if (step?.uses) continue;
+      const body = String(step?.run ?? "").trim();
+      if (body === "" || NOOP_BODY.test(body)) failures.push(`step ${label} runs no real command (${JSON.stringify(body)})`);
+    }
+  }
+  return failures;
+}
+
+// The workflow's name, its triggers and the dispatch input the flows grade: `gh workflow
+// list` and `gh workflow run harness-eval` both resolve the name; the banned triggers may
+// never appear and workflow_dispatch must. Hands the declared shape back because the return
+// assembly reports it.
+function checkTriggersAndDispatchInput(yaml, jobs) {
+  const failures = [];
+  if (yaml?.name !== WORKFLOW_NAME) failures.push(`workflow name is ${String(yaml?.name)}, expected ${WORKFLOW_NAME}`);
+
+  const triggers = yaml?.on && typeof yaml.on === "object" ? Object.keys(yaml.on) : [];
+  for (const banned of BANNED_TRIGGERS) {
+    if (triggers.includes(banned)) failures.push(`banned trigger declared: ${banned}`);
+  }
+  if (!triggers.includes("workflow_dispatch")) failures.push(`no workflow_dispatch trigger (declared: ${triggers.join(", ") || "none"})`);
+
+  const input = yaml?.on?.workflow_dispatch?.inputs?.install_mode;
+  if (!input) failures.push("on.workflow_dispatch.inputs.install_mode is missing");
+  if (input && input.type !== "choice") failures.push(`install_mode type is ${input.type}, expected choice`);
+  if (input && input.default !== "checkout") failures.push(`install_mode default is ${String(input.default)}, expected checkout`);
+  const options = Array.isArray(input?.options) ? input.options : [];
+  for (const required of ["checkout", "published"]) {
+    if (!options.includes(required)) failures.push(`install_mode options missing ${required}`);
+  }
+  return { triggers, installModeDefault: input?.default ?? null, installModeOptions: options, failures };
+}
+
+// The workflow-level permissions block (must exist and be empty) and the concurrency group.
+// Hands `permissions` back because the return assembly reports it.
+function checkWorkflowPermissionsAndConcurrency(yaml, jobs) {
+  const failures = [];
+  const permissions = yaml?.permissions;
+  if (permissions === null || permissions === undefined) failures.push("workflow-level permissions block is missing");
+  else if (typeof permissions !== "object" || Object.keys(permissions).length > 0) {
+    failures.push(`workflow-level permissions is not empty: ${JSON.stringify(permissions)}`);
+  }
+
+  if (yaml?.concurrency?.group !== WORKFLOW_NAME) failures.push(`concurrency group is ${String(yaml?.concurrency?.group)}, expected ${WORKFLOW_NAME}`);
+  if (yaml?.concurrency?.["cancel-in-progress"] !== false) failures.push("concurrency cancel-in-progress must be false");
+  return { permissions, failures };
+}
+
+// The smoke job's own shape, and then every job's permission block: each job opts in
+// explicitly and no job ever holds a write scope. A scope named `actions` is allowed at read
+// level only (T8 needs it to read the run's job metadata).
+function checkJobPermissions(yaml, jobs) {
+  const failures = [];
+  const smoke = jobs.smoke;
+  if (!smoke) failures.push("jobs.smoke is missing");
+  if (smoke?.strategy?.["fail-fast"] !== false) failures.push("jobs.smoke strategy.fail-fast must be false");
+  if (smoke?.environment !== "harness-smoke") failures.push(`jobs.smoke environment is ${String(smoke?.environment)}, expected harness-smoke`);
+  for (const [name, job] of Object.entries(jobs)) {
+    const jobPermissions = job?.permissions;
+    if (!jobPermissions || typeof jobPermissions !== "object") {
+      failures.push(`jobs.${name} declares no permissions block`);
+      continue;
+    }
+    for (const [scope, level] of Object.entries(jobPermissions)) {
+      if (!["contents", "actions"].includes(scope)) failures.push(`jobs.${name} requests the unexpected scope ${scope}`);
+      if (level !== "read") failures.push(`jobs.${name} permissions ${scope}: ${String(level)} is not read`);
+    }
+    if (!("contents" in jobPermissions)) failures.push(`jobs.${name} permissions is missing contents: read`);
+  }
+  if (Object.keys(smoke?.permissions ?? {}).some((scope) => scope !== "contents")) {
+    failures.push(`jobs.smoke permissions is ${JSON.stringify(smoke?.permissions)}, expected only contents: read`);
+  }
+  return failures;
+}
+
+// The one step that writes cell/cell.json — the cell's own recording step (T9's anchor).
+function recorderStepOf(jobs) {
+  return Object.entries(jobs).flatMap(([name, job]) =>
+    stepsOf(job).map((step) => ({ job: name, step })),
+  ).find(({ step }) => /cell\/cell\.json/.test(String(step?.run ?? "")));
+}
+
+// The dispatch input must reach the record, not a literal that happens to look like it.
+function checkRecorderInterpolation(yaml, jobs) {
+  const recorder = recorderStepOf(jobs);
+  if (!recorder) return ["no step writes cell/cell.json, so nothing records the cell"];
+  const failures = [];
+  const run = String(recorder.step.run);
+  if (!run.includes("${{ inputs.install_mode }}")) {
+    failures.push(`step ${recorder.job}/${recorder.step.name} does not interpolate the install_mode input into the record`);
+  }
+  if (/"install_mode"\s*:\s*"(?:checkout|published)"/.test(run)) {
+    failures.push(`step ${recorder.job}/${recorder.step.name} writes a hardcoded install_mode`);
+  }
+  return failures;
+}
+
+// A harness key may only ever sit in the cell's own recording step `env:` block (T9). Any
+// other surface — a `run:` body, a `with:` input, a step name — is a leak, whatever the step
+// is called, no non-smoke job may hold one, and no *other* smoke step may either (the install
+// slot sits in the same job). An `env:` map above step level is checked too: it binds the key
+// into every step that inherits it without any step declaring it, so the step scan is blind
+// to exactly the leak this rule exists to prevent.
+function checkSecretSurfaces(yaml, jobs) {
+  const failures = [];
+  const recorder = recorderStepOf(jobs);
+  for (const [surface, env] of [
+    ["workflow", yaml?.env],
+    ...Object.entries(jobs).map(([name, job]) => [`jobs.${name}`, job?.env]),
+  ]) {
+    if (SECRET_REF.test(JSON.stringify(env ?? {}))) {
+      failures.push(`the ${surface} env binds a secret, so every step below it inherits the key`);
+    }
+  }
+  for (const [name, job] of Object.entries(jobs)) {
+    for (const step of stepsOf(job)) {
+      const label = `${name}/${String(step?.name ?? "unnamed step")}`;
+      if (SECRET_REF.test(stepText(step))) failures.push(`step ${label} references a secret outside its env block`);
+      const envSecrets = SECRET_REF.test(JSON.stringify(step?.env ?? {}));
+      // [T9] A cell's own smoke model step is where that harness's key is bound; T9's own panel in
+      // grd-06 proves exactly one key per cell and none on any install, record, upload or drift
+      // step. Everything else keeps the rule above: the key lives on the cell's own step, nowhere
+      // else.
+      const isModelStep = /^Smoke model step\b/.test(String(step?.name ?? ""));
+      if (envSecrets && name !== "smoke") failures.push(`step ${label} binds a secret in a non-smoke job`);
+      else if (envSecrets && step !== recorder?.step && !isModelStep) failures.push(`step ${label} binds a secret outside the cell's own recording step`);
+    }
+  }
+  return failures;
+}
+
+// The skeleton chain has to be wired: cells in, cells through, receipt out.
+function checkNeedsChain(yaml, jobs) {
+  const failures = [];
+  const needs = {
+    download: needsOf(jobs.download),
+    grade: needsOf(jobs.grade),
+  };
+  if (jobs.download && !needs.download.includes("smoke")) failures.push(`jobs.download needs ${JSON.stringify(needs.download)}, expected smoke`);
+  if (jobs.grade && !needs.grade.includes("download")) failures.push(`jobs.grade needs ${JSON.stringify(needs.grade)}, expected download`);
+  for (const [name, required] of [["download", "download-artifact"], ["grade", "download-artifact"], ["grade", "upload-artifact"]]) {
+    const used = stepsOf(jobs[name]).some((step) => new RegExp(`actions/${required}`).test(String(step?.uses ?? "")));
+    if (!used) failures.push(`jobs.${name} never uses actions/${required}`);
+  }
+  return failures;
+}
+
+// The declared matrix: its cells, and the uniqueness/completeness rules over them. Hands the
+// shape back because the return assembly reports it.
+function checkMatrix(yaml, jobs) {
+  const failures = [];
+  const smoke = jobs.smoke;
+  const matrix = smoke?.strategy?.matrix ?? {};
+  const harnesses = Array.isArray(matrix.harness) ? matrix.harness : [];
+  const tracks = Array.isArray(matrix.track) ? matrix.track : [];
+  const cells = harnesses.flatMap((harness) => tracks.map((track) => ({ harness, track })));
+  if (cells.length !== 12) failures.push(`matrix declares ${cells.length} cells, expected 12`);
+  if (new Set(cells.map((cell) => `${cell.harness}/${cell.track}`)).size !== cells.length) failures.push("matrix cells are not unique");
+  for (const harness of HARNESSES) {
+    if (!harnesses.includes(harness)) failures.push(`matrix is missing harness ${harness}`);
+  }
+  if (!harnesses.includes("cursor")) failures.push("matrix is missing cursor");
+  for (const track of TRACKS) {
+    if (!tracks.includes(track)) failures.push(`matrix is missing track ${track}`);
+  }
+  return { harnesses, tracks, cells, failures };
+}
+
+function checkSmokeSteps(yaml, jobs) {
+  const failures = [];
+  const smoke = jobs.smoke;
+  const smokeSteps = stepsOf(smoke);
+  const cacheSteps = smokeSteps.filter((step) => /actions\/cache/.test(step?.uses ?? "") || "cache" in (step?.with ?? {}));
+  if (cacheSteps.length > 0) failures.push(`jobs.smoke has a cache step: ${cacheSteps.map((step) => step.name).join(", ")}`);
+  if (!smokeSteps.some((step) => /actions\/upload-artifact/.test(step?.uses ?? ""))) failures.push("jobs.smoke uploads no artifact");
+
+  // The install slot must speak for the cell it runs in, not for one hardcoded harness.
+  const installSlot = smokeSteps.find((step) => step?.run && /matrix\.harness/.test(String(step.run)));
+  if (!installSlot) failures.push("jobs.smoke has no step whose command names ${{ matrix.harness }}");
+
+  // A checkout dispatch evaluates the dispatch commit, so the cell must not pin another ref.
+  const checkout = smokeSteps.find((step) => /actions\/checkout/.test(step?.uses ?? ""));
+  if (!checkout) failures.push("jobs.smoke has no actions/checkout step");
+  if (checkout && "ref" in (checkout.with ?? {})) failures.push("jobs.smoke checkout pins a ref, so candidate_sha would not be the dispatch commit");
+  if (checkout && checkout.with?.["persist-credentials"] !== false) failures.push("jobs.smoke checkout must set persist-credentials: false");
+  return failures;
+}
+
+function checkSkeletonFetch(yaml, jobs) {
+  const failures = [];
+  for (const skeleton of ["download", "grade"]) {
+    const job = jobs[skeleton];
+    if (!job) {
+      failures.push(`jobs.${skeleton} skeleton job is missing`);
+      continue;
+    }
+    if (!stepsOf(job).some((step) => /actions\/download-artifact/.test(step?.uses ?? ""))) {
+      failures.push(`jobs.${skeleton} does not fetch artifacts`);
+    }
+  }
+  return failures;
+}
+
+// Every upload must run on failure and carry this attempt in its physical name.
+function checkUploadQualification(yaml, jobs) {
+  const failures = [];
+  const uploads = ["smoke", "download", "grade"]
+    .flatMap((name) => stepsOf(jobs[name]).map((step) => ({ job: name, step })))
+    .filter(({ step }) => /actions\/upload-artifact/.test(step?.uses ?? ""));
+  if (uploads.length === 0) failures.push("no upload-artifact step anywhere");
+  for (const { job, step } of uploads) {
+    if (!/always\(\)/.test(String(step.if ?? ""))) failures.push(`${job} upload "${step.name}" does not use if: always()`);
+    const name = String(step.with?.name ?? "");
+    if (!name.includes("github.run_id") || !name.includes("github.run_attempt")) {
+      failures.push(`${job} upload "${step.name}" is not attempt-qualified: ${name}`);
+    }
+  }
+  return failures;
+}
+
 /**
  * Reads what the workflow DECLARES: its triggers, the dispatch input default, permissions,
  * the matrix shape and the skeleton jobs. Pure: takes the parsed workflow, returns the
@@ -374,185 +386,39 @@ function needsOf(job) {
  */
 export function inspectWorkflowDeclaration(yaml) {
   const failures = [];
-  const fail = (message) => failures.push(message);
-
-  // `gh workflow list` and `gh workflow run harness-eval` both resolve this name.
-  if (yaml?.name !== WORKFLOW_NAME) fail(`workflow name is ${String(yaml?.name)}, expected ${WORKFLOW_NAME}`);
-
-  const triggers = yaml?.on && typeof yaml.on === "object" ? Object.keys(yaml.on) : [];
-  for (const banned of BANNED_TRIGGERS) {
-    if (triggers.includes(banned)) fail(`banned trigger declared: ${banned}`);
-  }
-  if (!triggers.includes("workflow_dispatch")) fail(`no workflow_dispatch trigger (declared: ${triggers.join(", ") || "none"})`);
-
-  const input = yaml?.on?.workflow_dispatch?.inputs?.install_mode;
-  if (!input) fail("on.workflow_dispatch.inputs.install_mode is missing");
-  if (input && input.type !== "choice") fail(`install_mode type is ${input.type}, expected choice`);
-  if (input && input.default !== "checkout") fail(`install_mode default is ${String(input.default)}, expected checkout`);
-  const options = Array.isArray(input?.options) ? input.options : [];
-  for (const required of ["checkout", "published"]) {
-    if (!options.includes(required)) fail(`install_mode options missing ${required}`);
-  }
-
-  const permissions = yaml?.permissions;
-  if (permissions === null || permissions === undefined) fail("workflow-level permissions block is missing");
-  else if (typeof permissions !== "object" || Object.keys(permissions).length > 0) {
-    fail(`workflow-level permissions is not empty: ${JSON.stringify(permissions)}`);
-  }
-
-  if (yaml?.concurrency?.group !== WORKFLOW_NAME) fail(`concurrency group is ${String(yaml?.concurrency?.group)}, expected ${WORKFLOW_NAME}`);
-  if (yaml?.concurrency?.["cancel-in-progress"] !== false) fail("concurrency cancel-in-progress must be false");
-
   const jobs = yaml?.jobs ?? {};
-  const smoke = jobs.smoke;
-  if (!smoke) fail("jobs.smoke is missing");
-  if (smoke?.strategy?.["fail-fast"] !== false) fail("jobs.smoke strategy.fail-fast must be false");
-  if (smoke?.environment !== "harness-smoke") fail(`jobs.smoke environment is ${String(smoke?.environment)}, expected harness-smoke`);
-  // Every job opts in explicitly and no job ever holds a write scope. A scope named `actions`
-  // is allowed at read level only (T8 needs it to read the run's job metadata).
-  for (const [name, job] of Object.entries(jobs)) {
-    const jobPermissions = job?.permissions;
-    if (!jobPermissions || typeof jobPermissions !== "object") {
-      fail(`jobs.${name} declares no permissions block`);
-      continue;
-    }
-    for (const [scope, level] of Object.entries(jobPermissions)) {
-      if (!["contents", "actions"].includes(scope)) fail(`jobs.${name} requests the unexpected scope ${scope}`);
-      if (level !== "read") fail(`jobs.${name} permissions ${scope}: ${String(level)} is not read`);
-    }
-    if (!("contents" in jobPermissions)) fail(`jobs.${name} permissions is missing contents: read`);
-  }
-  if (Object.keys(smoke?.permissions ?? {}).some((scope) => scope !== "contents")) {
-    fail(`jobs.smoke permissions is ${JSON.stringify(smoke?.permissions)}, expected only contents: read`);
-  }
 
-  // Every step must do something: `run: "true"` is not an install, a record or a transfer.
-  for (const [name, job] of Object.entries(jobs)) {
-    const steps = stepsOf(job);
-    if (steps.length === 0) fail(`jobs.${name} has no steps`);
-    for (const step of steps) {
-      const label = `${name}/${String(step?.name ?? step?.uses ?? "unnamed step")}`;
-      if (step?.uses) continue;
-      const body = String(step?.run ?? "").trim();
-      if (body === "" || NOOP_BODY.test(body)) fail(`step ${label} runs no real command (${JSON.stringify(body)})`);
-    }
-  }
+  const declaredTriggers = checkTriggersAndDispatchInput(yaml, jobs);
+  failures.push(...declaredTriggers.failures);
+  const triggers = declaredTriggers.triggers;
 
-  // The dispatch input must reach the record, not a literal that happens to look like it.
-  const recorder = Object.entries(jobs).flatMap(([name, job]) =>
-    stepsOf(job).map((step) => ({ job: name, step })),
-  ).find(({ step }) => /cell\/cell\.json/.test(String(step?.run ?? "")));
+  const declaredLimits = checkWorkflowPermissionsAndConcurrency(yaml, jobs);
+  failures.push(...declaredLimits.failures);
+  const permissions = declaredLimits.permissions;
 
-  // A harness key may only ever sit in the cell's own recording step `env:` block (T9). Any
-  // other surface — a `run:` body, a `with:` input, a step name — is a leak, whatever the step
-  // is called, no non-smoke job may hold one, and no *other* smoke step may either (the install
-  // slot sits in the same job). An `env:` map above step level is checked too: it binds the key
-  // into every step that inherits it without any step declaring it, so the step scan is blind
-  // to exactly the leak this rule exists to prevent.
-  for (const [surface, env] of [
-    ["workflow", yaml?.env],
-    ...Object.entries(jobs).map(([name, job]) => [`jobs.${name}`, job?.env]),
-  ]) {
-    if (SECRET_REF.test(JSON.stringify(env ?? {}))) {
-      fail(`the ${surface} env binds a secret, so every step below it inherits the key`);
-    }
-  }
-  for (const [name, job] of Object.entries(jobs)) {
-    for (const step of stepsOf(job)) {
-      const label = `${name}/${String(step?.name ?? "unnamed step")}`;
-      if (SECRET_REF.test(stepText(step))) fail(`step ${label} references a secret outside its env block`);
-      const envSecrets = SECRET_REF.test(JSON.stringify(step?.env ?? {}));
-      // [T9] A cell's own smoke model step is where that harness's key is bound; T9's own panel in
-      // grd-06 proves exactly one key per cell and none on any install, record, upload or drift
-      // step. Everything else keeps the rule above: the key lives on the cell's own step, nowhere
-      // else.
-      const isModelStep = /^Smoke model step\b/.test(String(step?.name ?? ""));
-      if (envSecrets && name !== "smoke") fail(`step ${label} binds a secret in a non-smoke job`);
-      else if (envSecrets && step !== recorder?.step && !isModelStep) fail(`step ${label} binds a secret outside the cell's own recording step`);
-    }
-  }
+  failures.push(...checkJobPermissions(yaml, jobs));
 
-  if (!recorder) fail("no step writes cell/cell.json, so nothing records the cell");
-  else {
-    const run = String(recorder.step.run);
-    if (!run.includes("${{ inputs.install_mode }}")) {
-      fail(`step ${recorder.job}/${recorder.step.name} does not interpolate the install_mode input into the record`);
-    }
-    if (/"install_mode"\s*:\s*"(?:checkout|published)"/.test(run)) {
-      fail(`step ${recorder.job}/${recorder.step.name} writes a hardcoded install_mode`);
-    }
-  }
+  failures.push(...checkNoOpSteps(yaml, jobs));
+  failures.push(...checkSecretSurfaces(yaml, jobs));
+  failures.push(...checkRecorderInterpolation(yaml, jobs));
 
-  // The skeleton chain has to be wired: cells in, cells through, receipt out.
-  const needs = {
-    download: needsOf(jobs.download),
-    grade: needsOf(jobs.grade),
-  };
-  if (jobs.download && !needs.download.includes("smoke")) fail(`jobs.download needs ${JSON.stringify(needs.download)}, expected smoke`);
-  if (jobs.grade && !needs.grade.includes("download")) fail(`jobs.grade needs ${JSON.stringify(needs.grade)}, expected download`);
-  for (const [name, required] of [["download", "download-artifact"], ["grade", "download-artifact"], ["grade", "upload-artifact"]]) {
-    const used = stepsOf(jobs[name]).some((step) => new RegExp(`actions/${required}`).test(String(step?.uses ?? "")));
-    if (!used) fail(`jobs.${name} never uses actions/${required}`);
-  }
+  failures.push(...checkNeedsChain(yaml, jobs));
 
-  const matrix = smoke?.strategy?.matrix ?? {};
-  const harnesses = Array.isArray(matrix.harness) ? matrix.harness : [];
-  const tracks = Array.isArray(matrix.track) ? matrix.track : [];
-  const cells = harnesses.flatMap((harness) => tracks.map((track) => ({ harness, track })));
-  if (cells.length !== 12) fail(`matrix declares ${cells.length} cells, expected 12`);
-  if (new Set(cells.map((cell) => `${cell.harness}/${cell.track}`)).size !== cells.length) fail("matrix cells are not unique");
-  for (const harness of HARNESSES) {
-    if (!harnesses.includes(harness)) fail(`matrix is missing harness ${harness}`);
-  }
-  if (!harnesses.includes("cursor")) fail("matrix is missing cursor");
-  for (const track of TRACKS) {
-    if (!tracks.includes(track)) fail(`matrix is missing track ${track}`);
-  }
+  const declared = checkMatrix(yaml, jobs);
+  failures.push(...declared.failures);
+  const harnesses = declared.harnesses;
+  const tracks = declared.tracks;
+  const cells = declared.cells;
 
-  const smokeSteps = stepsOf(smoke);
-  const cacheSteps = smokeSteps.filter((step) => /actions\/cache/.test(step?.uses ?? "") || "cache" in (step?.with ?? {}));
-  if (cacheSteps.length > 0) fail(`jobs.smoke has a cache step: ${cacheSteps.map((step) => step.name).join(", ")}`);
-  if (!smokeSteps.some((step) => /actions\/upload-artifact/.test(step?.uses ?? ""))) fail("jobs.smoke uploads no artifact");
-
-  // The install slot must speak for the cell it runs in, not for one hardcoded harness.
-  const installSlot = smokeSteps.find((step) => step?.run && /matrix\.harness/.test(String(step.run)));
-  if (!installSlot) fail("jobs.smoke has no step whose command names ${{ matrix.harness }}");
-
-  // A checkout dispatch evaluates the dispatch commit, so the cell must not pin another ref.
-  const checkout = smokeSteps.find((step) => /actions\/checkout/.test(step?.uses ?? ""));
-  if (!checkout) fail("jobs.smoke has no actions/checkout step");
-  if (checkout && "ref" in (checkout.with ?? {})) fail("jobs.smoke checkout pins a ref, so candidate_sha would not be the dispatch commit");
-  if (checkout && checkout.with?.["persist-credentials"] !== false) fail("jobs.smoke checkout must set persist-credentials: false");
-
-  for (const skeleton of ["download", "grade"]) {
-    const job = jobs[skeleton];
-    if (!job) {
-      fail(`jobs.${skeleton} skeleton job is missing`);
-      continue;
-    }
-    if (!stepsOf(job).some((step) => /actions\/download-artifact/.test(step?.uses ?? ""))) {
-      fail(`jobs.${skeleton} does not fetch artifacts`);
-    }
-  }
-
-  // Every upload must run on failure and carry this attempt in its physical name.
-  const uploads = ["smoke", "download", "grade"]
-    .flatMap((name) => stepsOf(jobs[name]).map((step) => ({ job: name, step })))
-    .filter(({ step }) => /actions\/upload-artifact/.test(step?.uses ?? ""));
-  if (uploads.length === 0) fail("no upload-artifact step anywhere");
-  for (const { job, step } of uploads) {
-    if (!/always\(\)/.test(String(step.if ?? ""))) fail(`${job} upload "${step.name}" does not use if: always()`);
-    const name = String(step.with?.name ?? "");
-    if (!name.includes("github.run_id") || !name.includes("github.run_attempt")) {
-      fail(`${job} upload "${step.name}" is not attempt-qualified: ${name}`);
-    }
-  }
+  failures.push(...checkSmokeSteps(yaml, jobs));
+  failures.push(...checkSkeletonFetch(yaml, jobs));
+  failures.push(...checkUploadQualification(yaml, jobs));
 
   return {
     triggers,
     event: triggers.includes("workflow_dispatch") && triggers.length === 1 ? "workflow_dispatch" : null,
-    install_mode: input?.default ?? null,
-    install_mode_options: options,
+    install_mode: declaredTriggers.installModeDefault,
+    install_mode_options: declaredTriggers.installModeOptions,
     install_mode_source: "declared default of on.workflow_dispatch.inputs.install_mode",
     permissions,
     concurrency: yaml?.concurrency ?? null,
@@ -644,13 +510,6 @@ export function latestRun({ repo }) {
   return { ok: true, run: runs[0] };
 }
 
-/** Downloads one attempt-qualified artifact. */
-export function downloadArtifact({ repo, runId, name, dir }) {
-  rmSync(dir, { recursive: true, force: true });
-  mkdirSync(dir, { recursive: true });
-  return runCommand("gh", ["run", "download", String(runId), "--repo", repo, "-n", name, "-D", dir]);
-}
-
 /**
  * Which tier can prove this flow? A live dispatch wins whenever one is possible — once
  * `harness-eval.yml` is registered on the default branch the declaration is no longer evidence,
@@ -660,11 +519,94 @@ export function chooseProofTier({ dispatch = false, run = null, available = fals
   return dispatch || run || available ? "live-dispatch" : "workflow-declaration";
 }
 
+/**
+ * The identity the declaration alone can state: its event and install-mode default, the cell
+ * grid, and a null candidate_sha — a branch cannot know the dispatch commit. A live run
+ * record overwrites the event and the candidate fields (the mutations in run02Hand's tier A).
+ */
+function identityFromDeclaration(declaration) {
+  return {
+    event: declaration.event,
+    install_mode: declaration.install_mode,
+    install_mode_source: declaration.install_mode_source,
+    candidate_sha: null,
+    candidate_sha_source: "awaiting a hosted dispatch: the dispatch commit is not knowable from this branch",
+    harnesses: [...declaration.harnesses].sort(),
+    cell_count: declaration.cells.length,
+    cells: declaration.cells,
+  };
+}
+
+/**
+ * Tier B never claims AC-1, so the artifact must name exactly what a hosted run still has to
+ * prove before the declaration deferral can expire. Fresh array per call: the artifact owns
+ * its copy.
+ */
+function awaitingHostedRun() {
+  return [
+    "run.event == workflow_dispatch",
+    "the run's artifact records install_mode == checkout for a no-input dispatch",
+    "run.headSha == the dispatch commit (candidate_sha)",
+    "twelve cells run on a hosted runner",
+  ];
+}
+
+/**
+ * What a GitHub run record must satisfy before it can carry AC-1's identity: a
+ * workflow_dispatch event, a commit-shaped headSha, and — for a --dispatch run — the same
+ * headSha as the commit this checkout dispatched. Pure: takes the record, returns failure
+ * strings.
+ */
+function runRecordFindings(run, { dispatch = false, dispatchCommit = null } = {}) {
+  const failures = [];
+  if (run.event !== "workflow_dispatch") failures.push(`run event is ${run.event}, expected workflow_dispatch`);
+  if (!/^[0-9a-f]{40}$/.test(String(run.headSha ?? ""))) failures.push(`run headSha ${String(run.headSha)} is not a commit sha`);
+  if (dispatch && dispatchCommit && run.headSha !== dispatchCommit) {
+    failures.push(`run headSha ${run.headSha} does not equal the dispatch commit ${dispatchCommit}`);
+  }
+  return failures;
+}
+
+/**
+ * Tier A without a replay: start the hosted dispatch and read back the run it produced.
+ * Records what happened onto `liveDispatch` (mode, local head, acceptance, message, and —
+ * for a --dispatch run — the dispatch commit) and returns the run (null when none was
+ * readable) plus the failures to add to the artifact. The dispatcher and run lister are
+ * injected so a test can replay this leg without touching gh.
+ */
+function dispatchAndFindRun({ repo, inputs, dispatch, liveDispatch, dispatchWorkflow, latestRun }) {
+  liveDispatch.mode = dispatch ? "dispatch" : "auto";
+  const head = runCommand("git", ["rev-parse", "HEAD"]);
+  const localHead = head.ok ? head.stdout.trim() : null;
+  const attempt = dispatchWorkflow({ repo, inputs });
+  liveDispatch.local_head = localHead;
+  liveDispatch.accepted = attempt.ok;
+  liveDispatch.message = attempt.ok ? attempt.stdout.trim() : attempt.stderr || `gh exited ${attempt.status}`;
+  let run = null;
+  const failures = [];
+  if (!attempt.ok) failures.push(`dispatch rejected: ${liveDispatch.message}`);
+  else {
+    const latest = latestRun({ repo });
+    if (!latest.ok) failures.push(`dispatch produced no readable run: ${latest.reason}`);
+    else run = latest.run;
+  }
+  if (dispatch) liveDispatch.dispatch_commit = localHead;
+  return { run, failures };
+}
+
 async function run02Hand(options = {}) {
   const repo = options.repo ?? "hackerpug-ai/pixel-perfect";
   // The probe is injected only by the negative control that proves the deferral expires;
   // every real run asks GitHub.
   const probe = options.probe ?? probeLiveDispatch;
+  // The gh collaborators are injectable for the same reason: a test replays a run record or
+  // a rejected dispatch without touching the network, while every real run calls the gh
+  // wrappers below.
+  const gh = {
+    dispatchWorkflow: options.dispatchWorkflow ?? dispatchWorkflow,
+    readRun: options.readRun ?? readRun,
+    latestRun: options.latestRun ?? latestRun,
+  };
   const artifact = {
     flow: "FLOW-RUN-02-HAND",
     uc_ref: "UC-RUN-02",
@@ -700,15 +642,7 @@ async function run02Hand(options = {}) {
   // fails instead of grading the declaration - a broken environment is never an honest proof.
   if (live.error) artifact.failures.push(live.error);
 
-  const identity = {
-    event: declaration.event,
-    install_mode: declaration.install_mode,
-    install_mode_source: declaration.install_mode_source,
-    candidate_sha: null,
-    candidate_sha_source: "awaiting a hosted dispatch: the dispatch commit is not knowable from this branch",
-    harnesses: [...declaration.harnesses].sort(),
-    cell_count: declaration.cells.length,
-  };
+  const identity = identityFromDeclaration(declaration);
 
   // Tier A — live: the flow performs the hand start itself (or replays one). This is the only
   // tier that can report AC-1 met, and it is the tier that takes over automatically as soon as
@@ -721,54 +655,41 @@ async function run02Hand(options = {}) {
     let run = null;
     if (options.run) {
       artifact.live_dispatch.mode = "replay";
-      const replay = readRun({ repo, runId: options.run });
+      const replay = gh.readRun({ repo, runId: options.run });
       if (!replay.ok) artifact.failures.push(`run ${options.run} is unreadable: ${replay.reason}`);
       else run = replay.run;
     } else {
       // `--dispatch` demands that the graded commit is this checkout; without it the flow still
       // starts the grade (UC-RUN-02) but grades whatever the default branch holds.
-      artifact.live_dispatch.mode = options.dispatch ? "dispatch" : "auto";
-      const head = runCommand("git", ["rev-parse", "HEAD"]);
-      const localHead = head.ok ? head.stdout.trim() : null;
-      const dispatch = dispatchWorkflow({ repo, inputs: options.inputs ?? {} });
-      artifact.live_dispatch.local_head = localHead;
-      artifact.live_dispatch.accepted = dispatch.ok;
-      artifact.live_dispatch.message = dispatch.ok
-        ? dispatch.stdout.trim()
-        : dispatch.stderr || `gh exited ${dispatch.status}`;
-      if (!dispatch.ok) artifact.failures.push(`dispatch rejected: ${artifact.live_dispatch.message}`);
-      else {
-        const latest = latestRun({ repo });
-        if (!latest.ok) artifact.failures.push(`dispatch produced no readable run: ${latest.reason}`);
-        else run = latest.run;
-      }
-      if (options.dispatch) artifact.live_dispatch.dispatch_commit = localHead;
+      const found = dispatchAndFindRun({
+        repo,
+        inputs: options.inputs ?? {},
+        dispatch: Boolean(options.dispatch),
+        liveDispatch: artifact.live_dispatch,
+        dispatchWorkflow: gh.dispatchWorkflow,
+        latestRun: gh.latestRun,
+      });
+      artifact.failures.push(...found.failures);
+      run = found.run;
     }
     if (run) {
       artifact.live_dispatch.run = run;
       identity.event = run.event;
       identity.candidate_sha = run.headSha;
       identity.candidate_sha_source = `GitHub run record ${run.databaseId} headSha`;
-      if (run.event !== "workflow_dispatch") artifact.failures.push(`run event is ${run.event}, expected workflow_dispatch`);
-      if (!/^[0-9a-f]{40}$/.test(String(run.headSha ?? ""))) artifact.failures.push(`run headSha ${String(run.headSha)} is not a commit sha`);
-      if (options.dispatch && artifact.live_dispatch.dispatch_commit && run.headSha !== artifact.live_dispatch.dispatch_commit) {
-        artifact.failures.push(`run headSha ${run.headSha} does not equal the dispatch commit ${artifact.live_dispatch.dispatch_commit}`);
-      }
+      artifact.failures.push(...runRecordFindings(run, {
+        dispatch: Boolean(options.dispatch),
+        dispatchCommit: artifact.live_dispatch.dispatch_commit ?? null,
+      }));
     }
   } else {
     // Tier B — the declaration, honest only while a live dispatch is impossible, and it never
     // claims AC-1: ac1_satisfied stays false until a hosted run supplies candidate_sha.
     artifact.proof_tier = tier;
     artifact.live_dispatch.mode = "none";
-    artifact.awaiting_hosted_run = [
-      "run.event == workflow_dispatch",
-      "the run's artifact records install_mode == checkout for a no-input dispatch",
-      "run.headSha == the dispatch commit (candidate_sha)",
-      "twelve cells run on a hosted runner",
-    ];
+    artifact.awaiting_hosted_run = awaitingHostedRun();
   }
 
-  identity.cells = declaration.cells;
   artifact.identity = identity;
   if (declaration.event !== "workflow_dispatch") artifact.failures.push(`event is ${String(declaration.event)}, expected workflow_dispatch`);
   if (declaration.install_mode !== "checkout") artifact.failures.push(`install_mode default is ${String(declaration.install_mode)}, expected checkout`);
