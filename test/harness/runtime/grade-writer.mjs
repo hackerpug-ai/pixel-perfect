@@ -50,6 +50,13 @@ function nothingGradedBlock(required_facts) {
     : block("pass", null);
 }
 
+/** A required fact the record never observed is could-not-run: absence of evidence is not evidence. */
+function requiredFactBlocks(record, required_facts) {
+  const seen = observedFacts(record);
+  const missingFacts = required_facts.filter((fact) => !seen.has(fact.fact_id)).map((fact) => fact.fact_id);
+  return missingFacts.length === 0 ? [] : [block("could-not-run", "required-fact-unobserved", { missing: missingFacts })];
+}
+
 /**
  * Builds the graded cell from a capture record. The verdict comes from what the record observed —
  * termination kind, resolvable citations, required facts, required-read denials — and from nothing
@@ -95,9 +102,7 @@ export function gradeFromEvidence({
   }
   if (unresolved.length > 0) blocks.push(block("could-not-run", "evidence-unresolvable", { unresolved }));
 
-  const seen = observedFacts(record);
-  const missingFacts = required_facts.filter((fact) => !seen.has(fact.fact_id)).map((fact) => fact.fact_id);
-  if (missingFacts.length > 0) blocks.push(block("could-not-run", "required-fact-unobserved", { missing: missingFacts }));
+  blocks.push(...requiredFactBlocks(record, required_facts));
 
   // Absence of a requiredness declaration is not permission: an undeclared denial is not a pass.
   const undeclared = undeclaredDenials(record);
