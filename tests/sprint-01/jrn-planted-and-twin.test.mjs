@@ -21,11 +21,17 @@
 //           nothing to dispatch (probe: gh api .../actions/workflows/harness-eval.yml → 404);
 //        c. the flow's surface policy does not permit a dispatch from this ref at all (it
 //           bans a non-main ref, so a task branch may never dispatch).
-//      Every other way the live leg can fail — gh unauthenticated, an attempted dispatch
-//      that failed, the run list unreadable, no run appearing, a registered workflow whose
-//      probe cannot be read, a foreign commit — is a failure to execute the leg and goes
-//      RED. A catch-all deferral would let T7's gate step stay green while the journey's
-//      THEN was never observed.
+//      One carve-out, owner-approved (red-hat F-001, 2026-11-03): a dispatch GitHub refuses to
+//      START for a permission reason — 403 on a read-only token, bad credentials, not
+//      authenticated — is an environment that cannot dispatch at all, so resolveLiveRun
+//      returns the SAME named deferral as the probe (cause: runner-cannot-dispatch, classified
+//      by the shared dispatchDeferral in flow-runner.mjs) and the leg records not-executed
+//      with it. Every other way the live leg can fail — gh unauthenticated at `gh auth
+//      status`, a start failure outside the permission class (network, 422, a 5xx, an
+//      unregistered workflow name), the run list unreadable, no run appearing, a registered
+//      workflow whose probe cannot be read, a foreign commit — is a failure to execute the
+//      leg and goes RED. A catch-all deferral would let T7's gate step stay green while the
+//      journey's THEN was never observed.
 //
 // The seven shapes are reproducible as process exit codes (0 = the leg honestly records
 // not-executed, 1 = it goes red): `node tests/sprint-01/jrn-planted-and-twin.test.mjs
@@ -43,7 +49,7 @@ import { fileURLToPath } from "node:url";
 import { bindReport, prepareVerifyPair, runCheck } from "../../test/harness/adapters/claude-code.mjs";
 import { loadCase, sha256File } from "../../test/harness/kit/case-loader.mjs";
 import { validateDispatchIdentity } from "../../test/harness/validate.mjs";
-import { fixtureInstallation, missingPlantedReport, runVerifyCase } from "./flow-runner.mjs";
+import { dispatchDeferral, fixtureInstallation, missingPlantedReport, runVerifyCase } from "./flow-runner.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, "../..");
@@ -122,7 +128,9 @@ export function dispatchAllowedFrom(ref, { policyPath = path.join(REPO_ROOT, POL
  * The one place the three legitimate pre-dispatch impossibilities live. Each is established by
  * a probe, in order, BEFORE any dispatch is attempted, and each returns a named cause with its
  * reason. `null` means none of them applies: the leg must go on and earn a run — a dispatch it
- * then fails to start is a failure, never a deferral.
+ * then fails to start is a failure, unless GitHub refused the START itself for a permission
+ * reason (403 / bad credentials / not authenticated), which resolveLiveRun resolves as the
+ * owner-approved runner-cannot-dispatch deferral below.
  *
  *   workflow-file-absent     the file is not in this tree            (no gh consulted)
  *   remote-not-registered    gh api .../workflows/harness-eval.yml → 404
@@ -188,7 +196,21 @@ export function resolveLiveRun({
 
   const dispatch = runGh(["workflow", "run", WORKFLOW_SLUG, "--repo", REPO]);
   if (dispatch.status !== 0) {
-    return { ok: false, reason: `gh workflow run harness-eval failed: ${(dispatch.stderr || "").trim()}` };
+    // A start failure inside the permission class (owner-approved deferral, red-hat F-001,
+    // 2026-11-03) is an environment that cannot dispatch at all — the SAME named deferral as
+    // the probe, resolved through the shared classifier. Every other start failure keeps the
+    // fail path.
+    const dispatchDetail = (dispatch.stderr || "").trim() || `gh workflow run exited ${dispatch.status}`;
+    const deferral = dispatchDeferral(dispatchDetail);
+    if (deferral) {
+      return {
+        ok: false,
+        deferral: true,
+        cause: deferral,
+        reason: `${deferral}: gh workflow run ${WORKFLOW_SLUG} failed: ${dispatchDetail}`,
+      };
+    }
+    return { ok: false, reason: `gh workflow run ${WORKFLOW_SLUG} failed: ${dispatchDetail}` };
   }
   const list = runGh(["run", "list", "--repo", REPO, "--workflow", WORKFLOW_SLUG, "--limit", "1", "--json", "databaseId,attempt,status"]);
   if (list.status !== 0) return { ok: false, reason: `gh run list failed: ${(list.stderr || "").trim()}` };
@@ -199,7 +221,9 @@ export function resolveLiveRun({
 
 /**
  * Grade the live leg's resolution. Only `deferral: true` — one of `preDispatchRefusal`'s three
- * probed causes — may record not-executed; any other failure to start the leg fails the check.
+ * probed causes, or a dispatch-start failure inside the permission class (the shared
+ * runner-cannot-dispatch deferral) — may record not-executed; any other failure to start the
+ * leg fails the check.
  */
 export function gradeLiveRun(run, emitDiagnostic) {
   if (run.ok) return;
