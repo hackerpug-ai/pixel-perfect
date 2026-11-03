@@ -16,9 +16,9 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    # The locked-gate suite probes GitHub with `gh` (the run-02-hand proof-tier probe and its
-    # replay reads), so this job asks for its own read-only scopes. Job-level is deliberate:
-    # tighter than the workflow-level block above.
+    # `gh` reads kept here are supplementary, never load-bearing: grd-01's optional live version probes
+    # (run list/api, recorded as live_observation, asserted nowhere), grd-06's not-executed-gated secret
+    # names, and jrn's permission-class deferral probe on CI-main. Job-level: tighter than the block above.
     permissions:
       contents: read
       actions: read
@@ -41,7 +41,7 @@ jobs:
       - name: Verify release, package, skills, paths, and tests
         run: pnpm run ci
 
-      # The CI-runnable slice of the locked flow-gate suite (SN-1). Five locked files are excluded
+      # The CI-runnable slice of the locked flow-gate suite (SN-1). Six locked files are excluded
       # because their OWN contracts need hosted or local run state a bare runner does not have:
       #   t18-question-boundary — its dispatched-pass leg is owned by the hosted harness-eval gate.
       #   run-02-hand — its live tier asserts hosted evidence (a real dispatch plus its run artifact).
