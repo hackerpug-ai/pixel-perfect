@@ -163,6 +163,33 @@ function checkNoOpSteps(yaml, jobs) {
   return failures;
 }
 
+// The smoke job's own shape, and then every job's permission block: each job opts in
+// explicitly and no job ever holds a write scope. A scope named `actions` is allowed at read
+// level only (T8 needs it to read the run's job metadata).
+function checkJobPermissions(yaml, jobs) {
+  const failures = [];
+  const smoke = jobs.smoke;
+  if (!smoke) failures.push("jobs.smoke is missing");
+  if (smoke?.strategy?.["fail-fast"] !== false) failures.push("jobs.smoke strategy.fail-fast must be false");
+  if (smoke?.environment !== "harness-smoke") failures.push(`jobs.smoke environment is ${String(smoke?.environment)}, expected harness-smoke`);
+  for (const [name, job] of Object.entries(jobs)) {
+    const jobPermissions = job?.permissions;
+    if (!jobPermissions || typeof jobPermissions !== "object") {
+      failures.push(`jobs.${name} declares no permissions block`);
+      continue;
+    }
+    for (const [scope, level] of Object.entries(jobPermissions)) {
+      if (!["contents", "actions"].includes(scope)) failures.push(`jobs.${name} requests the unexpected scope ${scope}`);
+      if (level !== "read") failures.push(`jobs.${name} permissions ${scope}: ${String(level)} is not read`);
+    }
+    if (!("contents" in jobPermissions)) failures.push(`jobs.${name} permissions is missing contents: read`);
+  }
+  if (Object.keys(smoke?.permissions ?? {}).some((scope) => scope !== "contents")) {
+    failures.push(`jobs.smoke permissions is ${JSON.stringify(smoke?.permissions)}, expected only contents: read`);
+  }
+  return failures;
+}
+
 // The one step that writes cell/cell.json — the cell's own recording step (T9's anchor).
 function recorderStepOf(jobs) {
   return Object.entries(jobs).flatMap(([name, job]) =>
@@ -227,26 +254,7 @@ export function inspectWorkflowDeclaration(yaml) {
 
   const jobs = yaml?.jobs ?? {};
   const smoke = jobs.smoke;
-  if (!smoke) fail("jobs.smoke is missing");
-  if (smoke?.strategy?.["fail-fast"] !== false) fail("jobs.smoke strategy.fail-fast must be false");
-  if (smoke?.environment !== "harness-smoke") fail(`jobs.smoke environment is ${String(smoke?.environment)}, expected harness-smoke`);
-  // Every job opts in explicitly and no job ever holds a write scope. A scope named `actions`
-  // is allowed at read level only (T8 needs it to read the run's job metadata).
-  for (const [name, job] of Object.entries(jobs)) {
-    const jobPermissions = job?.permissions;
-    if (!jobPermissions || typeof jobPermissions !== "object") {
-      fail(`jobs.${name} declares no permissions block`);
-      continue;
-    }
-    for (const [scope, level] of Object.entries(jobPermissions)) {
-      if (!["contents", "actions"].includes(scope)) fail(`jobs.${name} requests the unexpected scope ${scope}`);
-      if (level !== "read") fail(`jobs.${name} permissions ${scope}: ${String(level)} is not read`);
-    }
-    if (!("contents" in jobPermissions)) fail(`jobs.${name} permissions is missing contents: read`);
-  }
-  if (Object.keys(smoke?.permissions ?? {}).some((scope) => scope !== "contents")) {
-    fail(`jobs.smoke permissions is ${JSON.stringify(smoke?.permissions)}, expected only contents: read`);
-  }
+  failures.push(...checkJobPermissions(yaml, jobs));
 
   // The dispatch input must reach the record, not a literal that happens to look like it.
   const recorder = recorderStepOf(jobs);
