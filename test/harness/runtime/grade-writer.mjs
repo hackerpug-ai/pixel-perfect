@@ -4,11 +4,12 @@
 // a temp file in the grade directory, fsyncs it, renames it in the same directory, then reads it back
 // from disk and compares the five identity fields. A mismatch, a partial file, or a citation that no
 // longer resolves is could-not-run — a grade that cannot be read back is not a pass.
-import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, statSync, writeSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 import { assertPassEvidence, validateAgainst } from "../validate.mjs";
 import { worstVerdict } from "../lib/verdict.mjs";
+import { ReadBackMismatch, writeDurable } from "../lib/write-durable.mjs";
 import { denials, observedFacts, resolveEvidencePath, resolveObservation, undeclaredDenials } from "./capture.mjs";
 
 export const GRADE_SCHEMA = "harness-cell/v1";
@@ -167,25 +168,30 @@ export function gradeFileName(cell) {
 export function writeGrade({ dir, cell, now = () => Date.now() }) {
   mkdirSync(dir, { recursive: true });
   const path = join(dir, gradeFileName(cell));
-  const tempPath = `${path}.tmp-${process.pid}-${now()}`;
   const text = `${JSON.stringify(cell, null, 2)}\n`;
-
-  const fd = openSync(tempPath, "w");
   try {
-    writeSync(fd, text);
-    fsyncSync(fd);
-  } finally {
-    closeSync(fd);
+    const written = writeDurable(path, text, {
+      now,
+      compare: (file) => {
+        const readBack = readGrade(file);
+        return { ...verifyReadBack(cell, readBack), read_back: readBack };
+      },
+    });
+    const identity = written.result;
+    return { ok: true, path, temp_path: written.temp_path, verdict: identity.verdict, reason: identity.reason, read_back: identity.read_back };
+  } catch (error) {
+    if (!(error instanceof ReadBackMismatch)) throw error;
+    const identity = error.result;
+    return {
+      ok: false,
+      path,
+      temp_path: error.temp_path,
+      verdict: identity.verdict,
+      reason: identity.reason,
+      mismatches: identity.mismatches,
+      read_back: identity.read_back,
+    };
   }
-  renameSync(tempPath, path);
-
-  const readBack = readGrade(path);
-  const identity = verifyReadBack(cell, readBack);
-  if (!identity.ok) {
-    rmSync(path, { force: true });
-    return { ok: false, path, temp_path: tempPath, verdict: identity.verdict, reason: identity.reason, mismatches: identity.mismatches, read_back: readBack };
-  }
-  return { ok: true, path, temp_path: tempPath, verdict: identity.verdict, reason: identity.reason, read_back: readBack };
 }
 
 /** Reads a grade file from disk. A missing or unparseable file is could-not-run, never a grade. */
