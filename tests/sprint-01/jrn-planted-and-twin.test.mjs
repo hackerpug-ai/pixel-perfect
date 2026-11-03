@@ -8,9 +8,13 @@
 //      run downgrades to fail `report-missing`, and a static replay with no live-run
 //      provenance grades `not-executed` — never pass;
 //   2. the live dispatch: resolve a run (HARNESS_EVAL_RUN_ID / HARNESS_EVAL_RUN_ATTEMPT,
-//      or dispatch `harness-eval` ourselves), download the attempt-qualified
-//      verify-reports artifact, and require its oracle transcript and both reports
-//      to agree with the case manifests;
+//      or dispatch `harness-eval` ourselves), WAIT for that run to finish, download the
+//      attempt-qualified verify-reports artifact, and require its oracle transcript and
+//      both reports to agree with the case manifests. The wait is not optional: a run is
+//      resolved seconds after it starts, still `in_progress`, while its artifact is published
+//      when it ends — run 41715244415 failed exactly there. `waitForRunCompletion` polls
+//      `gh run view` until GitHub reports `completed`; a run that outlives the deadline is a
+//      `dispatch-timeout` failure of the leg, never a not-executed record and never a download;
 //   3. honest not-executed for exactly THREE kinds of cause, all probed BEFORE any dispatch
 //      but only when NO run id is supplied,
 //      is attempted and all carried with their reason (one helper, `preDispatchRefusal`):
@@ -26,18 +30,23 @@
 //      authenticated — cannot dispatch at all, so it records the SAME named deferral as the
 //      probe (runner-cannot-dispatch, classified by the shared dispatchDeferral in
 //      flow-runner.mjs) wherever it surfaces: at the dispatch START resolveLiveRun returns
-//      it, and at the run-GRADE leg (gh auth status, a run read, a run list) gradeLiveRun
-//      classifies the failure reason itself. Every other way the live leg can fail — a start
-//      failure outside the permission class (network, 422, a 5xx, an unregistered workflow
-//      name), the run list unreadable, no run appearing, a registered workflow whose probe
-//      cannot be read, a foreign commit, a download that fails under working auth — is a
-//      failure to execute the leg and goes RED. A catch-all deferral would let T7's gate
-//      step stay green while the journey's THEN was never observed.
+//      it, and at the run-GRADE leg (gh auth status, a run read or a mid-poll `gh run view`,
+//      a run list) gradeLiveRun classifies the failure reason itself. A mid-poll 403 is
+//      therefore a CLASSIFICATION, not a deliberate red (round 3): the environment that cannot
+//      dispatch cannot read the run either, so it records the same named not-executed.
+//      Every other way the live leg can fail — a start failure outside the permission class
+//      (network, 422, a 5xx, an unregistered workflow name), the run list unreadable, no run
+//      appearing, a run that outlives the deadline, a registered workflow whose probe cannot be
+//      read, a foreign commit, a download that fails under working auth — is a failure to
+//      execute the leg and goes RED. A dispatch-timeout belongs on that red list and only
+//      there: the leg dispatched, so it must earn the run or say it failed — a timeout handed
+//      back as `deferral: true` would let T7's gate step stay green while the journey's THEN
+//      was never observed (review round 2, D-1a).
 //
-// The seven shapes are reproducible as process exit codes (0 = the leg honestly records
+// The eight shapes are reproducible as process exit codes (0 = the leg honestly records
 // not-executed, 1 = it goes red): `node tests/sprint-01/jrn-planted-and-twin.test.mjs
 // --shape=<absent|unregistered-remote|policy-refused|dispatch-failed|unauthenticated|
-// run-list-error|no-run>`.
+// run-list-error|no-run|dispatch-timeout>`.
 
 import assert from "node:assert/strict";
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
@@ -177,6 +186,10 @@ export function resolveLiveRun({
   env = process.env,
   ref = currentRef(),
   policyPath = path.join(REPO_ROOT, POLICY_PATH),
+  sleep = defaultSleep,
+  timeoutMs = DISPATCH_TIMEOUT_MS,
+  pollMs = DISPATCH_POLL_MS,
+  now = Date.now,
 } = {}) {
   // A pinned run wins over everything, including the three pre-dispatch refusals: the leg
   // already has the run it was told to grade, so no refusal is a reason to discard it. That
@@ -217,7 +230,15 @@ export function resolveLiveRun({
   if (list.status !== 0) return { ok: false, reason: `gh run list failed: ${(list.stderr || "").trim()}` };
   const [latest] = JSON.parse(list.stdout || "[]");
   if (!latest) return { ok: false, reason: "no harness-eval run appeared after dispatch" };
-  return { ok: true, runId: String(latest.databaseId), attempt: String(latest.attempt || 1), dispatched: true, status: latest.status };
+  const runId = String(latest.databaseId);
+  const attempt = String(latest.attempt || 1);
+  // The run list answers with the run as it is THIS second: for a run this leg just started,
+  // still `in_progress`. Its verify-reports artifact is published when it finishes, so resolve
+  // only what has finished — otherwise the caller downloads an artifact that does not exist
+  // (run 41715244415). A run that never finishes fails the leg; it is never returned as earned.
+  const awaited = waitForRunCompletion(runId, attempt, { runGh, sleep, timeoutMs, pollMs, now });
+  if (!awaited.ok) return { ok: false, reason: awaited.reason };
+  return { ok: true, runId, attempt, dispatched: true, status: awaited.status, conclusion: awaited.conclusion };
 }
 
 /**
@@ -247,6 +268,95 @@ export function gradeLiveRun(run, emitDiagnostic) {
 }
 
 /**
+ * How long the live leg waits for a run it dispatched (or was pinned), and how often it looks.
+ * One hour at ten seconds: a harness-eval run is minutes, and the deadline exists so a wedged
+ * run fails the leg instead of hanging the suite forever.
+ */
+export const DISPATCH_TIMEOUT_MS = 60 * 60 * 1000;
+export const DISPATCH_POLL_MS = 10 * 1000;
+
+/** A real sleep — the poll's only cost. Every test injects its own; nothing here waits on wall time. */
+function defaultSleep(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+/**
+ * Wait for one run to finish, so that the attempt-qualified artifact exists by the time the leg
+ * asks for it. This is the step the live leg never had: `gh run list` answers with the run as it
+ * is THIS second, which for a fresh dispatch is `in_progress`, and an artifact published at the
+ * end of a run cannot be downloaded at its start (run 41715244415).
+ *
+ * `gh run view <id> --repo <REPO> --json status,conclusion` is polled until GitHub reports
+ * `completed`. Every failure here is a failure to execute the leg, never a not-executed record —
+ * the leg dispatched, so it must earn the run it grades:
+ *
+ *   gh run view failed: <stderr>                                     an unreadable run, not retried
+ *   gh run view returned unparseable JSON / no status: <body>         a body that is not a run view
+ *   dispatch-timeout: run <id> did not complete within <ms>ms        a run that outlives the deadline
+ *
+ * One carve-out, and GRADE decides it, not this function: when the poll's stderr is inside the
+ * permission class (403 on a read-only token, bad credentials, not authenticated) the environment
+ * that cannot dispatch cannot read the run either, so gradeLiveRun classifies that reason through
+ * the shared dispatchDeferral and records the same named runner-cannot-dispatch not-executed
+ * (round 3). A mid-poll 403 is therefore a classification, NOT a deliberate red. A 404, a 5xx or a
+ * network failure names no such environment and stays red. `dispatch-timeout` is never deferrable
+ * in any of those places: this function returns no deferral marker, and a caller that adds one
+ * launders the leg's own failure into a green gate — review round 2's D-1a mutation, pinned in
+ * "a dispatched run that outlives the deadline is RED".
+ *
+ * Returns `{ ok: true, runId, attempt, status: "completed", conclusion, polls }`. The attempt is
+ * echoed so the caller names the artifact of the attempt it waited for.
+ */
+export function waitForRunCompletion(
+  runId,
+  attempt,
+  { runGh = gh, sleep = defaultSleep, timeoutMs = DISPATCH_TIMEOUT_MS, pollMs = DISPATCH_POLL_MS, now = Date.now } = {},
+) {
+  const id = String(runId);
+  const startedAt = now();
+  let polls = 0;
+  for (;;) {
+    polls += 1;
+    const view = runGh(["run", "view", id, "--repo", REPO, "--json", "status,conclusion"]);
+    if (view.status !== 0) return { ok: false, reason: `gh run view failed: ${(view.stderr || "").trim()}` };
+    let body;
+    try {
+      body = JSON.parse(view.stdout || "{}");
+    } catch (err) {
+      return { ok: false, reason: `gh run view returned unparseable JSON: ${err.message}` };
+    }
+    if (body === null || typeof body !== "object" || typeof body.status !== "string" || body.status === "") {
+      return { ok: false, reason: `gh run view returned no status: ${(view.stdout || "").trim()}` };
+    }
+    if (body.status === "completed") {
+      // gh prints both null and "" for a conclusion that does not exist; an unfinished run
+      // never reaches this branch, so a completed one reports its real conclusion.
+      const conclusion = body.conclusion === undefined || body.conclusion === "" ? null : body.conclusion;
+      return { ok: true, runId: id, attempt: String(attempt), status: body.status, conclusion, polls };
+    }
+    if (now() - startedAt >= timeoutMs) {
+      return { ok: false, reason: `dispatch-timeout: run ${id} did not complete within ${timeoutMs}ms` };
+    }
+    sleep(pollMs);
+  }
+}
+
+/**
+ * The live leg's last two steps, in the only order that works: wait for the run to finish, then
+ * fetch its attempt-qualified artifact. A pinned run needs this as much as a dispatched one —
+ * `resolveLiveRun` returns a pinned run the moment it is named, which says nothing about whether
+ * it has finished yet.
+ */
+export function awaitRunThenDownload(
+  run,
+  { runGh = gh, sleep = defaultSleep, timeoutMs = DISPATCH_TIMEOUT_MS, pollMs = DISPATCH_POLL_MS, now = Date.now } = {},
+) {
+  const awaited = waitForRunCompletion(run.runId, run.attempt, { runGh, sleep, timeoutMs, pollMs, now });
+  if (!awaited.ok) assert.fail(`live-dispatched-run could not read run ${run.runId}: ${awaited.reason}`);
+  return downloadVerifyReports(run.runId, run.attempt, { runGh });
+}
+
+/**
  * Fetch the attempt-qualified verify-reports artifact for one run. An unfetchable run throws:
  * the live leg has no third outcome, so a pinned run the remote cannot serve is red, never a
  * not-executed record.
@@ -263,6 +373,16 @@ export function downloadVerifyReports(runId, attempt, { runGh = gh } = {}) {
 }
 
 /**
+ * The JSON `gh run view <id> --repo <REPO> --json status,conclusion` really prints, one string
+ * per state. Pinned as bytes so a poll is checked against the CLI's own output, not against a
+ * shape this test invented: an unfinished run prints a null (or empty) conclusion, and only a
+ * completed run carries one.
+ */
+export const VIEW_IN_PROGRESS = '{"status":"in_progress","conclusion":null}';
+export const VIEW_QUEUED = '{"status":"queued","conclusion":""}';
+export const VIEW_COMPLETED = '{"status":"completed","conclusion":"success"}';
+
+/**
  * A `gh` TEST DOUBLE — never the thing under test. It models only the calls the live leg makes,
  * and exactly the three registration-probe outcomes a `gh api .../workflows/harness-eval.yml`
  * can answer with: `registered` (200), `unregistered` (404 — the file is not on main yet), and
@@ -273,14 +393,20 @@ export function downloadVerifyReports(runId, attempt, { runGh = gh } = {}) {
  * runner-cannot-dispatch classifier without inventing a network. Each shape is posed by name
  * instead of by hand-rolled ternaries, and any gh call it does not model throws, so a new call
  * cannot silently pass through it. `calls` is the probe log the controls assert on.
+ *
+ * `view` models `gh run view <id> --repo <REPO> --json status,conclusion`: one body printed
+ * forever, or an array of bodies consumed in order with the last one repeating. The bodies are
+ * the real gh JSON shapes (VIEW_* below) rather than objects, so a poll is pinned to the bytes
+ * the CLI actually prints. `viewStatus`/`viewStderr` pose an unreadable run instead.
  */
-export function modelGh({ auth = 0, registration = "registered", dispatch = 0, dispatchStderr = "could not find any workflows named harness-eval", listStatus = 0, runList = "[]", download = 0 } = {}) {
+export function modelGh({ auth = 0, registration = "registered", dispatch = 0, dispatchStderr = "could not find any workflows named harness-eval", listStatus = 0, runList = "[]", download = 0, view = VIEW_COMPLETED, viewStatus = 0, viewStderr = "gh: run not found (HTTP 404)" } = {}) {
   const outcomes = {
     registered: { status: 0, stdout: '{"id":1}', stderr: "" },
     unregistered: { status: 1, stdout: "", stderr: "gh: Not Found (HTTP 404)" },
     unreadable: { status: 1, stdout: "", stderr: "gh: Server Error (HTTP 502)" },
   };
   if (!outcomes[registration]) throw new Error(`modelGh: unknown registration outcome ${registration}`);
+  const views = Array.isArray(view) ? [...view] : [view];
   const calls = [];
   const double = (args) => {
     calls.push(args.join(" "));
@@ -295,6 +421,11 @@ export function modelGh({ auth = 0, registration = "registered", dispatch = 0, d
     if (args[0] === "run" && args[1] === "download") {
       return { status: download, stdout: "", stderr: download === 0 ? "" : "gh: run not found (HTTP 404)" };
     }
+    if (args[0] === "run" && args[1] === "view") {
+      if (viewStatus !== 0) return { status: viewStatus, stdout: "", stderr: viewStderr };
+      const body = views.length > 1 ? views.shift() : views[0];
+      return { status: 0, stdout: body, stderr: "" };
+    }
     throw new Error(`modelGh: does not model gh ${args.join(" ")}`);
   };
   double.calls = calls;
@@ -302,6 +433,25 @@ export function modelGh({ auth = 0, registration = "registered", dispatch = 0, d
 }
 
 const DISPATCH_CALL = `workflow run ${WORKFLOW_SLUG} --repo ${REPO}`;
+
+/**
+ * A clock whose only advance is the poll's injected sleep. A one-hour dispatch deadline is
+ * therefore provable in microseconds, the poll's cadence is the sleep log itself, and nothing
+ * here waits on wall time — no 10-second sleeps in the suite, no dependence on a machine's
+ * load to decide whether a deadline was reached.
+ */
+function fakeClock() {
+  const sleeps = [];
+  let t = 0;
+  return {
+    sleeps,
+    now: () => t,
+    sleep: (ms) => {
+      sleeps.push(ms);
+      t += ms;
+    },
+  };
+}
 
 /** Write a throwaway surface policy; `undefined` body means "no policy file at all". */
 function writePolicy(dir, name, body) {
@@ -638,11 +788,13 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
     // Negative controls: a reason OUTSIDE the permission class keeps today's red. A 500 or a
     // network failure is a broken GitHub (fix it, retry it) — not an environment that cannot
     // act — and a bad run id or a missing artifact under a working auth is the leg's own
-    // failure. None of these may launder into not-executed.
+    // failure. A dispatch-timeout is the third kind: the leg dispatched and the run never
+    // finished, so the leg failed to execute. None of these may launder into not-executed.
     const redShapes = [
       "gh workflow run harness-eval failed: gh: Server Error (HTTP 500)",
       "gh run list failed: dial tcp 140.82.112.4:443: connect: connection refused",
       "gh: run not found (HTTP 404)",
+      "dispatch-timeout: run 42 did not complete within 60000ms",
     ];
     for (const reason of redShapes) {
       assert.throws(
@@ -651,6 +803,261 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
         `a non-permission reason must stay red: ${reason}`,
       );
     }
+  });
+
+  // ---- D-1: a dispatched run must be WAITED FOR, not merely found ---------------------
+  // Measured on run 41715244415: resolveLiveRun dispatched harness-eval, took the newest run
+  // from `gh run list`, and returned it while it was still `in_progress`. The live leg asked
+  // for the attempt-qualified verify-reports artifact seconds later — an artifact that only
+  // exists once the run completes — so the leg could never pass in self-dispatch mode. The
+  // contract these pins hold: a run is resolved only once `gh run view` reports `completed`,
+  // and a run that never completes fails the leg with `dispatch-timeout` instead of being
+  // downloaded as if it had finished.
+  await t.test("a dispatched run is resolved only once gh reports it completed", () => {
+    const clock = fakeClock();
+    const ghDouble = modelGh({
+      runList: JSON.stringify([{ databaseId: 41715244415, attempt: 1, status: "in_progress" }]),
+      view: [VIEW_IN_PROGRESS, VIEW_QUEUED, VIEW_COMPLETED],
+    });
+    const run = resolveLiveRun({ env: {}, ref: "main", hasWorkflow: () => true, gh: ghDouble, sleep: clock.sleep, now: clock.now });
+
+    assert.equal(run.ok, true, `the leg earns its run: ${run.reason}`);
+    assert.equal(run.status, "completed", "a run still in progress when it is resolved is the 41715244415 bug");
+    assert.equal(run.conclusion, "success", "the completed run carries the conclusion gh reported");
+    assert.equal(run.dispatched, true, "the run was earned by dispatching, not supplied");
+    assert.deepEqual(clock.sleeps, [10_000, 10_000], "the poll waits between observations, and stops once the run completes");
+
+    const views = ghDouble.calls.filter((call) => call.startsWith("run view "));
+    assert.equal(views.length, 3, `one observation per scripted state: ${views.join(" | ")}`);
+    assert.ok(
+      ghDouble.calls.indexOf(views[0]) > ghDouble.calls.indexOf(DISPATCH_CALL),
+      "the observed run is observed only after the dispatch — it is ours, not a run that was already there",
+    );
+    assert.equal(
+      views[0],
+      `run view 41715244415 --repo ${REPO} --json status,conclusion`,
+      "the observation reads the status and conclusion of that run",
+    );
+  });
+
+  await t.test("waitForRunCompletion polls a scripted run to completion and names it", () => {
+    const clock = fakeClock();
+    const ghDouble = modelGh({ view: [VIEW_IN_PROGRESS, VIEW_QUEUED, VIEW_COMPLETED] });
+    const awaited = waitForRunCompletion("41715244415", "1", {
+      runGh: ghDouble,
+      sleep: clock.sleep,
+      now: clock.now,
+      pollMs: 10_000,
+      timeoutMs: 3_600_000,
+    });
+
+    assert.deepEqual(awaited, {
+      ok: true,
+      runId: "41715244415",
+      attempt: "1",
+      status: "completed",
+      conclusion: "success",
+      polls: 3,
+    });
+    assert.deepEqual(clock.sleeps, [10_000, 10_000], "one sleep between each pair of observations, none after completion");
+    assert.deepEqual(
+      ghDouble.calls,
+      Array.from({ length: 3 }, () => `run view 41715244415 --repo ${REPO} --json status,conclusion`),
+      "every observation is a status read of the same run",
+    );
+  });
+
+  await t.test("waitForRunCompletion fails on an unreadable run view and does not retry", () => {
+    const clock = fakeClock();
+    const ghDouble = modelGh({ viewStatus: 1, viewStderr: "gh: run 42 not found (HTTP 404)" });
+    const awaited = waitForRunCompletion("42", "2", { runGh: ghDouble, sleep: clock.sleep, now: clock.now });
+
+    assert.deepEqual(awaited, { ok: false, reason: "gh run view failed: gh: run 42 not found (HTTP 404)" });
+    assert.equal(ghDouble.calls.length, 1, "an unreadable run is not polled again");
+    assert.deepEqual(clock.sleeps, [], "and nothing sleeps on a run that cannot be read");
+
+    // A view that cannot be read AS A RUN is the same failure, never an hour of polling on a
+    // body nobody can interpret.
+    const noSleep = () => assert.fail("a body that is not a run view is never polled again");
+    const garbage = waitForRunCompletion("42", "2", { runGh: () => ({ status: 0, stdout: "not json", stderr: "" }), sleep: noSleep, now: clock.now });
+    assert.equal(garbage.ok, false);
+    assert.match(garbage.reason, /^gh run view returned unparseable JSON: /);
+    const empty = waitForRunCompletion("42", "2", { runGh: () => ({ status: 0, stdout: "{}", stderr: "" }), sleep: noSleep, now: clock.now });
+    assert.deepEqual(empty, { ok: false, reason: "gh run view returned no status: {}" });
+  });
+
+  await t.test("a permission-class mid-poll run-view failure defers at grade time; every other one is red", () => {
+    // Round 3's classifier reaches the poll too: the environment that cannot dispatch cannot
+    // READ the run either, so a 403 (or a revoked token, or an unauthenticated gh) surfacing on
+    // `gh run view` inside the wait is the SAME named deferral as the start — a classification
+    // by gradeLiveRun, not a deliberate red (review round 2, D-1c, pins that wording). Every
+    // other view failure is the leg's own: the run id is bad, GitHub is broken, the network is
+    // down. None of those names an environment that cannot act, so each one stays red.
+    const start = { env: {}, ref: "main", hasWorkflow: () => true, pollMs: 10_000, timeoutMs: 60_000 };
+    const runList = JSON.stringify([{ databaseId: 42, attempt: 1, status: "in_progress" }]);
+    const clock = fakeClock();
+    const forbidden = modelGh({ runList, viewStatus: 1, viewStderr: "gh: Resource not accessible by integration (HTTP 403)" });
+    const forbiddenRun = resolveLiveRun({ ...start, gh: forbidden, sleep: clock.sleep, now: clock.now });
+    assert.equal(forbiddenRun.ok, false);
+    assert.equal(forbiddenRun.deferral, undefined, "the poll's raw failure carries no marker — grading classifies it");
+    assert.equal(forbiddenRun.reason, "gh run view failed: gh: Resource not accessible by integration (HTTP 403)");
+    const emitted = [];
+    gradeLiveRun(forbiddenRun, (m) => emitted.push(m));
+    assert.deepEqual(emitted, [
+      "not-executed leg=live-dispatched-run owner=T7 obligation=obl-FLOW-JRN-PLANTED-AND-TWIN reason=runner-cannot-dispatch: gh run view failed: gh: Resource not accessible by integration (HTTP 403)",
+    ]);
+
+    // Negative controls, posed on the poll's OWN stderr: each is outside the permission class,
+    // so the leg failed to execute and no marker may launder it.
+    for (const viewStderr of [
+      "gh: run 42 not found (HTTP 404)",
+      "gh: Server Error (HTTP 500)",
+      "dial tcp 140.82.112.4:443: connect: connection refused",
+    ]) {
+      const polled = fakeClock();
+      const broken = modelGh({ runList, viewStatus: 1, viewStderr });
+      const run = resolveLiveRun({ ...start, gh: broken, sleep: polled.sleep, now: polled.now });
+      assert.equal(run.deferral, undefined, `${viewStderr} names no permission-class environment`);
+      assert.throws(
+        () => gradeLiveRun(run, () => {}),
+        { message: `live-dispatched-run could not execute: gh run view failed: ${viewStderr}` },
+        `a non-permission run-view failure must stay red: ${viewStderr}`,
+      );
+      assert.deepEqual(polled.sleeps, [], "an unreadable run is not polled again, whichever way it is unreadable");
+    }
+  });
+
+  await t.test("waitForRunCompletion times out with dispatch-timeout and stops polling", () => {
+    const clock = fakeClock();
+    const ghDouble = modelGh({ view: VIEW_IN_PROGRESS });
+    const awaited = waitForRunCompletion("42", "1", {
+      runGh: ghDouble,
+      sleep: clock.sleep,
+      now: clock.now,
+      pollMs: 10_000,
+      timeoutMs: 60_000,
+    });
+
+    assert.deepEqual(awaited, { ok: false, reason: "dispatch-timeout: run 42 did not complete within 60000ms" });
+    assert.equal(
+      ghDouble.calls.length,
+      7,
+      "bounded: one observation at t=0, then one per poll interval until the deadline (60s / 10s + 1) — and no more",
+    );
+    assert.equal(clock.sleeps.length, 6, "it stopped polling: no interval is left outstanding when the deadline passes");
+  });
+
+  await t.test("a dispatched run that outlives the deadline is RED, never a not-executed record", () => {
+    // Review round 2, D-1a. The timeout-as-red contract was asserted only in prose: changing
+    // resolveLiveRun's timeout return to `{ ok: false, deferral: true, cause:
+    // "runner-cannot-dispatch", reason: awaited.reason }` left this suite 24/24 GREEN, i.e. a
+    // dispatch timeout was laundered into an honest-looking not-executed record while T7's gate
+    // step stayed green and the journey's THEN was never observed. This pin kills that mutation
+    // at the one place it can be made: the resolve leg must hand back a plain failure — no
+    // marker, no cause — and grading that failure must throw.
+    const clock = fakeClock();
+    const ghDouble = modelGh({
+      runList: JSON.stringify([{ databaseId: 42, attempt: 1, status: "in_progress" }]),
+      view: VIEW_IN_PROGRESS,
+    });
+    const run = resolveLiveRun({
+      env: {},
+      ref: "main",
+      hasWorkflow: () => true,
+      gh: ghDouble,
+      sleep: clock.sleep,
+      now: clock.now,
+      pollMs: 10_000,
+      timeoutMs: 60_000,
+    });
+
+    assert.equal(run.ok, false, "a run that never completes earns nothing");
+    assert.equal(run.deferral, undefined, "the leg dispatched, so a timeout is its own failure and carries no deferral marker");
+    assert.equal(run.cause, undefined, "and therefore no not-executed cause to record");
+    assert.equal(run.reason, "dispatch-timeout: run 42 did not complete within 60000ms");
+    assert.ok(ghDouble.calls.includes(DISPATCH_CALL), "the leg really dispatched before it timed out");
+    assert.deepEqual(clock.sleeps, Array.from({ length: 6 }, () => 10_000), "it polled to the deadline rather than returning early");
+
+    const emitted = [];
+    assert.throws(
+      () => gradeLiveRun(run, (m) => emitted.push(m)),
+      { message: "live-dispatched-run could not execute: dispatch-timeout: run 42 did not complete within 60000ms" },
+      "a dispatch timeout is a red — the record says the leg failed, not that nothing was owed",
+    );
+    assert.deepEqual(emitted, [], "a timed-out leg emits no not-executed diagnostic");
+  });
+
+  await t.test("waitForRunCompletion returns an already-completed run without sleeping", () => {
+    const clock = fakeClock();
+    const ghDouble = modelGh({ view: VIEW_COMPLETED });
+    const awaited = waitForRunCompletion("4242", "2", {
+      runGh: ghDouble,
+      sleep: () => assert.fail("a completed run is returned on the first observation, never after a sleep"),
+      now: clock.now,
+    });
+
+    assert.deepEqual(awaited, { ok: true, runId: "4242", attempt: "2", status: "completed", conclusion: "success", polls: 1 });
+    assert.equal(ghDouble.calls.length, 1, "one observation is enough — the replay case costs one call, not one poll interval");
+  });
+
+  await t.test("the live leg downloads only after its run reports completed, and never for one that does not", () => {
+    // A pinned run has the same race: resolveLiveRun returns it the moment it is named, so an
+    // in-progress pin reaches the download a second later, before its artifact exists.
+    const clock = fakeClock();
+    const ghDouble = modelGh({ view: [VIEW_IN_PROGRESS, VIEW_COMPLETED] });
+    // The premise is pinned at its source (review round 2, D-1b): this is the object
+    // resolveLiveRun really returns for a pinned run, read out of its pinned branch instead of
+    // hand-written as a literal that could drift from it. A pinned run is returned the moment
+    // it is named — no status, no conclusion, no poll — which is exactly why it carries no
+    // completion evidence and why the download must still wait.
+    const pinGh = modelGh();
+    const pinned = resolveLiveRun({
+      env: { HARNESS_EVAL_RUN_ID: "41715244415", HARNESS_EVAL_RUN_ATTEMPT: "1" },
+      ref: T4_REF,
+      hasWorkflow: () => true,
+      gh: pinGh,
+    });
+    assert.deepEqual(
+      pinned,
+      { ok: true, runId: "41715244415", attempt: "1", dispatched: false },
+      "a pinned run is returned as named: it carries no completion evidence at all",
+    );
+    assert.deepEqual(pinGh.calls, [], "and it costs no gh call, so nothing about its state was observed");
+    const download = awaitRunThenDownload(pinned, { runGh: ghDouble, sleep: clock.sleep, now: clock.now });
+    try {
+      assert.equal(download.name, "harness-eval-verify-reports-41715244415-1", "the artifact is the one the attempt names");
+    } finally {
+      rmSync(download.dir, { recursive: true, force: true });
+    }
+
+    const views = ghDouble.calls.filter((call) => call.startsWith("run view "));
+    assert.equal(views.length, 2, "the leg observed the run until it completed before fetching anything");
+    assert.equal(
+      ghDouble.calls.findIndex((call) => call.startsWith("run download ")),
+      2,
+      "the download is the last thing the leg does, after both observations",
+    );
+    assert.match(
+      ghDouble.calls[2],
+      /^run download 41715244415 --repo .* -n harness-eval-verify-reports-41715244415-1 -D /,
+      `the attempt-qualified artifact is what gets fetched: ${ghDouble.calls[2]}`,
+    );
+    assert.deepEqual(clock.sleeps, [10_000], "one poll interval elapsed while the artifact did not exist yet");
+
+    // The failure direction the bug lived on: a run that never completes is never downloaded.
+    const stuck = modelGh({ view: VIEW_IN_PROGRESS });
+    const never = fakeClock();
+    assert.throws(
+      () =>
+        awaitRunThenDownload(pinned, { runGh: stuck, sleep: never.sleep, now: never.now, pollMs: 10_000, timeoutMs: 30_000 }),
+      /dispatch-timeout: run 41715244415 did not complete within 30000ms/,
+      "a run that never completes fails the leg — it is never downloaded as though it had finished",
+    );
+    assert.equal(
+      stuck.calls.filter((call) => call.startsWith("run download ")).length,
+      0,
+      "nothing is downloaded for a run that did not complete",
+    );
   });
 
   await t.test("one live dispatched run: oracle precheck, both reports, distinct invocation_ids", (tt) => {
@@ -680,7 +1087,7 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
       tt.diagnostic(emitted[0]);
       return;
     }
-    const download = downloadVerifyReports(run.runId, run.attempt);
+    const download = awaitRunThenDownload(run);
     tt.after(() => rmSync(download.dir, { recursive: true, force: true }));
 
     // Oracle transcript: planted exit 1 with the canonical drifted key, clean exit 0.
@@ -773,7 +1180,7 @@ test("FLOW-JRN-PLANTED-AND-TWIN", async (t) => {
 });
 
 // ---------------------------------------------------------------------------
-// Exit-code reproduction of the seven shapes, one process each, through the real
+// Exit-code reproduction of the eight shapes, one process each, through the real
 // `resolveLiveRun` + `gradeLiveRun`: 0 = the leg honestly records not-executed,
 // 1 = it goes red. `node --test` never passes --shape, so it never reaches here.
 // ---------------------------------------------------------------------------
@@ -788,6 +1195,17 @@ export const EXIT_SHAPES = {
   unauthenticated: () => ({ env: {}, ref: "main", hasWorkflow: () => true, gh: modelGh({ auth: 1 }) }),
   "run-list-error": () => ({ env: {}, ref: "main", hasWorkflow: () => true, gh: modelGh({ listStatus: 1 }) }),
   "no-run": () => ({ env: {}, ref: "main", hasWorkflow: () => true, gh: modelGh({ runList: "[]" }) }),
+  // The red the wait can reach, at the exit-code level: a dispatched run that never finishes.
+  // Its clock is the poll's own injected sleep, so the shape costs microseconds, not an hour.
+  "dispatch-timeout": () => ({
+    env: {},
+    ref: "main",
+    hasWorkflow: () => true,
+    gh: modelGh({ runList: JSON.stringify([{ databaseId: 42, attempt: 1, status: "in_progress" }]), view: VIEW_IN_PROGRESS }),
+    ...fakeClock(),
+    pollMs: 10_000,
+    timeoutMs: 60_000,
+  }),
 };
 
 function exitShape(name) {
