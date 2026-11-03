@@ -48,8 +48,6 @@ export const CONTROL_OBSERVATIONS_FIELD = "control_observations";
 /** The paired observations travel beside them, so `recordControl` can COMPUTE discrimination. */
 export const CONTROL_PAIRS_FIELD = "control_pairs";
 
-const IDS = Object.freeze(["missing-key", "stale-cache", "exit0-denied-read", "hidden-image-judge"]);
-
 /** A real observation, or null. Anything that cannot be observed is expressed as null, never a guess. */
 function observation(verdict, reason, evidence = {}) {
   return { verdict, reason, evidence: { ...evidence } };
@@ -341,9 +339,6 @@ export function observeHiddenImageJudge({ roots = [] } = {}) {
     findings: scan.findings.map((finding) => ({ file: finding.file, offset: finding.offset, kind: finding.kind })),
   });
 }
-
-/** The control ids this module produces, in the controls module's order. */
-export const OBSERVED_CONTROL_IDS = IDS;
 
 /**
  * What one graded claude-code leg produced, from what it measured: the four control observations it
