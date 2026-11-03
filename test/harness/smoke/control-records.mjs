@@ -10,9 +10,10 @@
 // leaves the smoke job (the upload ships that one path and nothing else). `cells/controls.json`
 // remains the ONLY thing the recorder routes into `.controls[]`, so a per-cell observation can
 // never impersonate one of the four rows.
-import { existsSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 
+import { ReadBackMismatch, writeDurable } from "../lib/write-durable.mjs";
 import { CONTROL_OBSERVATIONS_FIELD, CONTROL_PAIRS_FIELD, observeMissingKey } from "./observations.mjs";
 
 /**
@@ -122,12 +123,22 @@ export function attachMissingKey({ row, cellFile, capturePath = null } = {}) {
   }
   const carried = cell[CONTROL_PAIRS_FIELD]?.["missing-key"] ?? null;
   const next = attachObservation(cell, "missing-key", value);
-  const partial = `${cellFile}.partial`;
-  writeFileSync(partial, `${JSON.stringify(next, null, 2)}\n`, "utf8");
-  renameSync(partial, cellFile);
-  const back = JSON.parse(readFileSync(cellFile, "utf8"));
+  // The read-back a durable write is counted by: the observation must come back carrying the
+  // reason this step measured.
+  const compare = (path) => {
+    const back = JSON.parse(readFileSync(path, "utf8"));
+    return { ok: back[CONTROL_OBSERVATIONS_FIELD]?.["missing-key"]?.reason === value.reason, read_back: back };
+  };
+  let outcome;
+  try {
+    outcome = writeDurable(cellFile, `${JSON.stringify(next, null, 2)}\n`, { compare }).result;
+  } catch (error) {
+    if (!(error instanceof ReadBackMismatch)) throw error;
+    outcome = error.result;
+  }
+  const back = outcome.read_back;
   return {
-    ok: back[CONTROL_OBSERVATIONS_FIELD]?.["missing-key"]?.reason === value.reason,
+    ok: outcome.ok,
     reason: null,
     cell_file: cellFile,
     observation: value,
@@ -154,15 +165,24 @@ export function attachDeniedWriteProbe({ cellFile, probe } = {}) {
     return { ok: false, reason: "cell-record-unreadable", cell_file: cellFile };
   }
   const next = attachPair(attachObservation(cell, "exit0-denied-read", value), "exit0-denied-read", pair);
-  const partial = `${cellFile}.partial`;
-  writeFileSync(partial, `${JSON.stringify(next, null, 2)}\n`, "utf8");
-  renameSync(partial, cellFile);
-  const back = JSON.parse(readFileSync(cellFile, "utf8"));
-  const observationOk = value == null || back[CONTROL_OBSERVATIONS_FIELD]?.["exit0-denied-read"]?.reason === value.reason;
-  const pairOk = pair == null || back[CONTROL_PAIRS_FIELD]?.["exit0-denied-read"]?.reason === pair.reason;
+  // The read-back a durable write is counted by: observation and pair must come back together,
+  // each with the reason its own half measured.
+  const compare = (path) => {
+    const back = JSON.parse(readFileSync(path, "utf8"));
+    const observationOk = value == null || back[CONTROL_OBSERVATIONS_FIELD]?.["exit0-denied-read"]?.reason === value.reason;
+    const pairOk = pair == null || back[CONTROL_PAIRS_FIELD]?.["exit0-denied-read"]?.reason === pair.reason;
+    return { ok: observationOk && pairOk };
+  };
+  let ok;
+  try {
+    ok = writeDurable(cellFile, `${JSON.stringify(next, null, 2)}\n`, { compare }).result.ok;
+  } catch (error) {
+    if (!(error instanceof ReadBackMismatch)) throw error;
+    ok = error.result.ok;
+  }
   return {
-    ok: observationOk && pairOk,
-    reason: observationOk && pairOk ? null : "cell-record-write-unverified",
+    ok,
+    reason: ok ? null : "cell-record-write-unverified",
     cell_file: cellFile,
   };
 }
