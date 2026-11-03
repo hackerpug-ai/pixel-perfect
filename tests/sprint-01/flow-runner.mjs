@@ -665,6 +665,14 @@ async function run02Hand(options = {}) {
   // The probe is injected only by the negative control that proves the deferral expires;
   // every real run asks GitHub.
   const probe = options.probe ?? probeLiveDispatch;
+  // The gh collaborators are injectable for the same reason: a test replays a run record or
+  // a rejected dispatch without touching the network, while every real run calls the gh
+  // wrappers below.
+  const gh = {
+    dispatchWorkflow: options.dispatchWorkflow ?? dispatchWorkflow,
+    readRun: options.readRun ?? readRun,
+    latestRun: options.latestRun ?? latestRun,
+  };
   const artifact = {
     flow: "FLOW-RUN-02-HAND",
     uc_ref: "UC-RUN-02",
@@ -721,7 +729,7 @@ async function run02Hand(options = {}) {
     let run = null;
     if (options.run) {
       artifact.live_dispatch.mode = "replay";
-      const replay = readRun({ repo, runId: options.run });
+      const replay = gh.readRun({ repo, runId: options.run });
       if (!replay.ok) artifact.failures.push(`run ${options.run} is unreadable: ${replay.reason}`);
       else run = replay.run;
     } else {
@@ -730,7 +738,7 @@ async function run02Hand(options = {}) {
       artifact.live_dispatch.mode = options.dispatch ? "dispatch" : "auto";
       const head = runCommand("git", ["rev-parse", "HEAD"]);
       const localHead = head.ok ? head.stdout.trim() : null;
-      const dispatch = dispatchWorkflow({ repo, inputs: options.inputs ?? {} });
+      const dispatch = gh.dispatchWorkflow({ repo, inputs: options.inputs ?? {} });
       artifact.live_dispatch.local_head = localHead;
       artifact.live_dispatch.accepted = dispatch.ok;
       artifact.live_dispatch.message = dispatch.ok
@@ -738,7 +746,7 @@ async function run02Hand(options = {}) {
         : dispatch.stderr || `gh exited ${dispatch.status}`;
       if (!dispatch.ok) artifact.failures.push(`dispatch rejected: ${artifact.live_dispatch.message}`);
       else {
-        const latest = latestRun({ repo });
+        const latest = gh.latestRun({ repo });
         if (!latest.ok) artifact.failures.push(`dispatch produced no readable run: ${latest.reason}`);
         else run = latest.run;
       }
