@@ -43,6 +43,13 @@ function evidenceBlocks(evidencePaths, { record = null, root = null } = {}) {
   return blocks;
 }
 
+/** The block that fires when no earlier rule blocked: a pass only if a required fact was declared. */
+function nothingGradedBlock(required_facts) {
+  return required_facts.length === 0
+    ? block("could-not-run", "nothing-graded", { why: "no required fact was declared, so nothing was graded" })
+    : block("pass", null);
+}
+
 /**
  * Builds the graded cell from a capture record. The verdict comes from what the record observed —
  * termination kind, resolvable citations, required facts, required-read denials — and from nothing
@@ -105,11 +112,7 @@ export function gradeFromEvidence({
 
   if (blocks.length === 0) {
     // Reaching here means nothing was refused, but a required fact is what makes a pass a pass.
-    blocks.push(
-      required_facts.length === 0
-        ? block("could-not-run", "nothing-graded", { why: "no required fact was declared, so nothing was graded" })
-        : block("pass", null),
-    );
+    blocks.push(nothingGradedBlock(required_facts));
   }
 
   const verdict = worstVerdict(blocks.map((entry) => entry.verdict));
