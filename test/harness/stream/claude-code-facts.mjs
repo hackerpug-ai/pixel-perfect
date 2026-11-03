@@ -10,6 +10,7 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { sha256Hex } from "../pins.mjs";
+import { splitLines } from "../lib/lines.mjs";
 import { CaptureError, resolveEvidencePath } from "../runtime/index.mjs";
 
 export const PLUGIN_NAME = "pixel-perfect";
@@ -37,7 +38,10 @@ export const QUESTION_TOOL_NAMES = Object.freeze(["AskUserQuestion"]);
  */
 export const QUESTION_MARKER_PATTERN = /USER_CHOICE\([A-Za-z0-9][A-Za-z0-9_-]*\)/;
 
-/** The captured stdout, line by line, with the byte span each line occupies. */
+/**
+ * The captured stdout, line by line, with the byte span each line occupies. The whole-stream digest
+ * is verified first — a capture whose bytes no longer match the record is refused here, never split.
+ */
 export function capturedLines(record) {
   if (!record) return [];
   const cited = (record.evidence_paths ?? []).find((path) => path.endsWith(".stdout.bin"));
@@ -47,25 +51,7 @@ export function capturedLines(record) {
   if (sha256Hex(bytes) !== record.stdout?.sha256) {
     throw new CaptureError("captured-bytes-tampered", { path, expected: record.stdout?.sha256 });
   }
-  const out = [];
-  let start = 0;
-  while (start < bytes.length) {
-    const newline = bytes.indexOf(0x0a, start);
-    const end = newline === -1 ? bytes.length : newline + 1;
-    const raw = bytes.subarray(start, end);
-    const text = raw.toString("utf8").replace(/\r?\n$/, "");
-    if (text.length > 0) {
-      let json = null;
-      try {
-        json = JSON.parse(text);
-      } catch {
-        json = null;
-      }
-      out.push({ text, json, offset: start, end_offset: start + Buffer.byteLength(text) });
-    }
-    start = end;
-  }
-  return out;
+  return splitLines(bytes);
 }
 
 function eventsOf(record, type, subtype = null) {
