@@ -162,30 +162,56 @@ export function resolveCaptureEvidence(invocation, evidence = {}) {
 }
 
 /**
- * Reads the report at the case-declared path. Only an absent file is `fail report-missing`; a store
- * this process may not read is `could-not-run report-unavailable`.
+ * The raw report read every report reader shares: bind the case-declared path, read the bytes,
+ * parse them, and compare the body with the invocation/case binding. No verdicts and no reason
+ * strings live here — a refusal comes back as `why`, one of:
+ *
+ *   invalid-path   the declared path was refused (the raw bind refusal travels as `refusal`)
+ *   missing        no file at the bound path
+ *   storage        the store could not be read (`code` carries the errno)
+ *   unreadable     the bytes are not JSON
+ *   unbound        the body belongs to another invocation or case (`binding` carries the compare)
+ *
+ * A success carries the bytes, the parsed report and the bound path; hashing and the verdict
+ * mapping are the caller's business.
  */
-export function readVerifyReportAt({ caseManifest, invocation }) {
+function readReportCore({ caseManifest, invocation }) {
   const bound = classifyReportPath(caseManifest, invocation?.dir);
-  if (!bound.ok) return bound;
+  if (!bound.ok) return { ok: false, why: "invalid-path", refusal: bound };
   const target = bound.path;
   if (!existsSync(target) || !statSync(target).isFile()) {
-    return { ok: false, verdict: "fail", reason: REPORT_REASONS.missing, path: target };
+    return { ok: false, why: "missing", path: target };
   }
   let bytes;
   try {
     bytes = readFileSync(target);
   } catch (error) {
     if (!isStorageError(error)) throw error;
-    return { ok: false, verdict: "could-not-run", reason: REPORT_REASONS.unavailable, path: target, code: error.code };
+    return { ok: false, why: "storage", path: target, code: error.code };
   }
   let report;
   try {
     report = JSON.parse(bytes.toString("utf8"));
   } catch {
-    return { ok: false, verdict: "fail", reason: REPORT_REASONS.unreadable, path: target, byte_length: bytes.length };
+    return { ok: false, why: "unreadable", path: target, byte_length: bytes.length };
   }
   const binding = assertBound(caseManifest, invocation, report);
-  if (!binding.ok) return { ...binding, path: target };
-  return { ok: true, path: target, sha256: sha256(bytes), byte_length: bytes.length, report };
+  if (!binding.ok) return { ok: false, why: "unbound", binding, path: target };
+  return { ok: true, path: target, bytes, report };
+}
+
+/**
+ * Reads the report at the case-declared path. Only an absent file is `fail report-missing`; a store
+ * this process may not read is `could-not-run report-unavailable`.
+ */
+export function readVerifyReportAt({ caseManifest, invocation }) {
+  const raw = readReportCore({ caseManifest, invocation });
+  if (!raw.ok) {
+    if (raw.why === "invalid-path") return raw.refusal;
+    if (raw.why === "missing") return { ok: false, verdict: "fail", reason: REPORT_REASONS.missing, path: raw.path };
+    if (raw.why === "storage") return { ok: false, verdict: "could-not-run", reason: REPORT_REASONS.unavailable, path: raw.path, code: raw.code };
+    if (raw.why === "unreadable") return { ok: false, verdict: "fail", reason: REPORT_REASONS.unreadable, path: raw.path, byte_length: raw.byte_length };
+    return { ...raw.binding, path: raw.path };
+  }
+  return { ok: true, path: raw.path, sha256: sha256(raw.bytes), byte_length: raw.bytes.length, report: raw.report };
 }
