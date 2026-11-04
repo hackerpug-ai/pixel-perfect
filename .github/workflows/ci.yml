@@ -1,10 +1,9 @@
 name: CI
 
+# Automatic runs are intentionally off (owner decision 2026-11-03: stop runner spend).
+# Run manually with `gh workflow run ci.yml`, or locally with `pnpm run ci && pnpm run test:locked`.
 on:
-  pull_request:
-  push:
-    branches:
-      - "**"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -16,12 +15,6 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    # `gh` reads kept here are supplementary, never load-bearing: grd-01's optional live version probes
-    # (run list/api, recorded as live_observation, asserted nowhere), grd-06's not-executed-gated secret
-    # names, and jrn's permission-class deferral probe on CI-main. Job-level: tighter than the block above.
-    permissions:
-      contents: read
-      actions: read
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -40,17 +33,3 @@ jobs:
 
       - name: Verify release, package, skills, paths, and tests
         run: pnpm run ci
-
-      # The CI-runnable slice of the locked flow-gate suite (SN-1). Six locked files are excluded
-      # because their OWN contracts need hosted or local run state a bare runner does not have:
-      #   t18-question-boundary — its dispatched-pass leg is owned by the hosted harness-eval gate.
-      #   run-02-hand — its live tier asserts hosted evidence (a real dispatch plus its run artifact).
-      #   t11-controls-wiring, t13-smoke-observations — both execute the workflow's controls-producer,
-      #     which reads hosted Actions-run facts. t12-review-record — reads a gitignored run record.
-      #   t17-verify-report-writer — its count-guard re-runs the six locked siblings, incl. run-02-hand.
-      # `pnpm test:locked` (the full glob, unchanged) remains the local/hosted gate for all of them.
-      - name: Run the locked flow-gate suite (hosted/local-state files excluded — see comment)
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: pnpm run test:locked:ci
-        timeout-minutes: 15
